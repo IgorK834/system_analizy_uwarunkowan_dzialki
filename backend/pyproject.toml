@@ -1,0 +1,15 @@
+[project]
+name = "dzialki-backend"
+version = "0.0.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: testy wymagające uruchomionego Dockera",
+]
+
+[tool.coverage.run]
+source = ["tests"]
+omit = ["tests/__init__.py"]
