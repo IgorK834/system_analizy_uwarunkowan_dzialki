@@ -1,0 +1,48 @@
+# Lokalny kontekst roboczy / notatki dla asystenta AI
+context.md
+
+# Sekrety i konfiguracja lokalna
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env.local
+frontend/.env.*.local
+
+# Python
+.venv
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+.next/
+out/
+dist/
+
+# Docker / lokalne artefakty
+docker-compose.override.local.yml
+*.log
+
+# Katalogi tymczasowe
+tmp/
+backend/tmp/
+frontend/tmp/
+
+# Lokalne dane testowe, cache i dane GIS
+.data/
+.cache/
+*.sqlite
+*.gpkg
+*.shp
+*.dbf
+*.shx
+*.prj
+
+# Duże dokumenty pobierane z BIP w trakcie testów ręcznych
