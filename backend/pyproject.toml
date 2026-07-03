@@ -8,8 +8,9 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "integration: testy wymagające uruchomionego Dockera",
+    "docker_cli: testy wymagające docker CLI na hoście (subprocess)",
 ]
 
 [tool.coverage.run]
 source = ["tests"]
-omit = ["tests/__init__.py"]
+omit = ["tests/__init__.py", "tests/test_docker_integration.py"]
