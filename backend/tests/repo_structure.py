@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 REQUIRED_DIRECTORIES: tuple[str, ...] = (
@@ -48,6 +49,12 @@ ENV_FILE_NAMES: frozenset[str] = frozenset({".env", ".env.local"})
 
 def find_repo_root(start: Path | None = None) -> Path:
     """Szuka katalogu głównego repozytorium (zawiera README.md i backend/)."""
+    repo_root_env = os.environ.get("REPO_ROOT")
+    if repo_root_env:
+        candidate = Path(repo_root_env).resolve()
+        if (candidate / "README.md").is_file() and (candidate / "backend").is_dir():
+            return candidate
+
     current = (start or Path(__file__)).resolve()
     for candidate in (current, *current.parents):
         if (candidate / "README.md").is_file() and (candidate / "backend").is_dir():

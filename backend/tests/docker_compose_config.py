@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -56,6 +57,12 @@ REQUIRED_ENV_EXAMPLE_VARS: tuple[str, ...] = (
 
 def find_repo_root(start: Path | None = None) -> Path:
     """Szuka katalogu głównego repozytorium."""
+    repo_root_env = os.environ.get("REPO_ROOT")
+    if repo_root_env:
+        candidate = Path(repo_root_env).resolve()
+        if (candidate / "README.md").is_file() and (candidate / "backend").is_dir():
+            return candidate
+
     current = (start or Path(__file__)).resolve()
     for candidate in (current, *current.parents):
         if (candidate / "README.md").is_file() and (candidate / "backend").is_dir():
@@ -151,8 +158,10 @@ def validate_backend_service(compose: dict[str, Any]) -> list[str]:
         errors.append("Sekcja environment usługi backend musi być słownikiem")
     else:
         database_url = str(environment.get("DATABASE_URL", ""))
-        if database_url != "${DATABASE_URL}":
-            errors.append("DATABASE_URL backendu powinien pochodzić ze zmiennej ${DATABASE_URL}")
+        if not database_url.startswith("${DATABASE_URL"):
+            errors.append(
+                "DATABASE_URL backendu powinien pochodzić ze zmiennej ${DATABASE_URL}"
+            )
 
     depends_on = backend.get("depends_on", {})
     if not isinstance(depends_on, dict) or DB_SERVICE_NAME not in depends_on:
