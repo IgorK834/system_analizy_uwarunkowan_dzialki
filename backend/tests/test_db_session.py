@@ -1,10 +1,10 @@
 import inspect
-from pathlib import Path
 
 from sqlalchemy.orm import DeclarativeBase
 
 from app.db.base import Base
 from app.db import session
+from tests.repo_structure import find_repo_root
 
 
 def test_get_db_is_generator_function() -> None:
@@ -21,7 +21,7 @@ def test_session_local_disables_autocommit_and_autoflush() -> None:
 
 
 def test_env_example_database_url_uses_db_host() -> None:
-    env_example = Path(__file__).resolve().parents[2] / ".env.example"
+    env_example = find_repo_root() / ".env.example"
     content = env_example.read_text(encoding="utf-8")
     database_url_line = next(
         line for line in content.splitlines() if line.startswith("DATABASE_URL=")
