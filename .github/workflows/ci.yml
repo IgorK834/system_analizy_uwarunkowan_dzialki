@@ -1,0 +1,43 @@
+name: CI
+
+'on':
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend:
+    name: Backend — build i testy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Przygotuj zmienne środowiskowe
+        run: cp .env.example .env
+
+      - name: Zweryfikuj konfigurację Compose
+        run: docker compose config
+
+      - name: Zbuduj obraz backendu
+        run: docker compose build backend
+
+      # TODO: frontend build — odkomentuj gdy powstanie frontend/Dockerfile
+      # - name: Zbuduj obraz frontendu
+      #   run: docker compose build frontend
+
+      - name: Testy backendu wewnątrz kontenera
+        run: |
+          rm -f .env
+          docker compose run --rm \
+            -v "${{ github.workspace }}:/repo:ro" \
+            -e REPO_ROOT=/repo \
+            backend \
+            pytest -m 'not docker_cli' --cov=tests --cov-report=term-missing --cov-fail-under=80 -v
+
+      - name: Zatrzymaj kontenery i usuń volumeny
+        if: always()
+        run: docker compose down -v
