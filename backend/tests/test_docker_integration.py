@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from tests.docker_compose_config import find_repo_root
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.docker_cli]
 
 
 def _run(command: list[str], repo_root: Path) -> subprocess.CompletedProcess[str]:
