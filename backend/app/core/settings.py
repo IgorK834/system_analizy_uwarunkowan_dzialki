@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     ]
     app_title: str = "System analizy działki"
     app_version: str = "1.0.0"
+    # Domyślne techniczne odsunięcie od granicy działki w metrach. To NIE jest linia
+    # zabudowy z MPZP — to przybliżenie wynikające z przepisów o minimalnej odległości
+    # od granicy, które może zostać nadpisane przez konkretne ustalenia planistyczne.
+    default_technical_setback_m: float = 4.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
