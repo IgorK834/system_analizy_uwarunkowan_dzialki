@@ -1,3 +1,6 @@
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
+
 import httpx
 import pytest
 import respx
@@ -5,32 +8,39 @@ import respx
 from app.services.uldk import (
     InvalidParcelIdentifierError,
     InvalidUldkResponseError,
+    ParcelLookupResult,
     ParcelNotFoundError,
     ULDK_BASE_URL,
+    ULDK_MAX_RETRIES,
     UldkParcelResult,
     UldkServiceUnavailableError,
     get_parcel_by_id,
+    get_parcel_by_xy,
 )
-
 
 VALID_ID = "122101_1.0001.1234"
 VALID_ID_WITH_SHEET = "122101_1.0001.AR_1.1234"
 VALID_ID_WITH_FRACTION = "226301_5.0001.1234/5"
 SAMPLE_WKT = (
-    "MULTIPOLYGON(((500000 200000,500100 200000,"
-    "500100 200100,500000 200000)))"
+    "MULTIPOLYGON(((500000 200000,500100 200000," "500100 200100,500000 200000)))"
 )
 SAMPLE_WKT_EWKT = f"SRID=2180;{SAMPLE_WKT}"
 SAMPLE_TERYT = "122101"
 SAMPLE_RESPONSE = f"0\n{VALID_ID}|{SAMPLE_WKT}|{SAMPLE_TERYT}\n"
+SAMPLE_X = 500000.0
+SAMPLE_Y = 200000.0
+SAMPLE_XY_RESPONSE = f"0\n{VALID_ID}|{SAMPLE_WKT}|{SAMPLE_TERYT}\n"
 NOT_FOUND_RESPONSE = "0\n\n"
+NOT_FOUND_XY_RESPONSE = "0\n\n"
 ULDK_ERROR_RESPONSE = "-1\nPodany identyfikator działki jest niepoprawny.\n"
 MALFORMED_RESPONSE = "0\nno_pipe_separator\n"
 
 
 @respx.mock
 async def test_get_parcel_by_id_returns_uldk_parcel_result() -> None:
-    respx.get(ULDK_BASE_URL).mock(return_value=httpx.Response(200, text=SAMPLE_RESPONSE))
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_RESPONSE)
+    )
 
     result = await get_parcel_by_id(VALID_ID)
 
@@ -131,7 +141,9 @@ async def test_get_parcel_by_id_malformed_data_line_raises_invalid_response() ->
 @respx.mock
 async def test_get_parcel_by_id_point_wkt_raises_invalid_response() -> None:
     respx.get(ULDK_BASE_URL).mock(
-        return_value=httpx.Response(200, text=f"0\n{VALID_ID}|POINT(500000 200000)|122101\n")
+        return_value=httpx.Response(
+            200, text=f"0\n{VALID_ID}|POINT(500000 200000)|122101\n"
+        )
     )
 
     with pytest.raises(InvalidUldkResponseError):
@@ -178,7 +190,9 @@ async def test_valid_id_with_fraction_accepted() -> None:
 
 @respx.mock
 async def test_get_parcel_by_id_sends_correct_request_params() -> None:
-    respx.get(ULDK_BASE_URL).mock(return_value=httpx.Response(200, text=SAMPLE_RESPONSE))
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_RESPONSE)
+    )
 
     await get_parcel_by_id(VALID_ID)
     params = respx.calls.last.request.url.params
@@ -204,3 +218,161 @@ async def test_get_parcel_by_id_empty_wkt_raises_invalid_response() -> None:
 
     with pytest.raises(InvalidUldkResponseError):
         await get_parcel_by_id(VALID_ID)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_returns_parcel_lookup_result() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_XY_RESPONSE)
+    )
+
+    result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert isinstance(result, ParcelLookupResult)
+    assert result.parcel_identifier == VALID_ID
+    assert result.wkt == SAMPLE_WKT
+    assert result.teryt == SAMPLE_TERYT
+
+
+@respx.mock
+async def test_get_parcel_by_xy_source_metadata_has_uldk_name() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_XY_RESPONSE)
+    )
+
+    result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert result.source_metadata.source_name == "ULDK"
+
+
+@respx.mock
+async def test_get_parcel_by_xy_source_metadata_fetched_at_is_datetime() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_XY_RESPONSE)
+    )
+
+    result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert isinstance(result.source_metadata.fetched_at, datetime)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_source_metadata_confidence_is_one() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_XY_RESPONSE)
+    )
+
+    result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert result.source_metadata.confidence == 1.0
+
+
+@respx.mock
+async def test_get_parcel_by_xy_sends_correct_params() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=SAMPLE_XY_RESPONSE)
+    )
+
+    await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+    params = respx.calls.last.request.url.params
+
+    assert params["request"] == "GetParcelByXY"
+    assert params["xy"] == f"{SAMPLE_X},{SAMPLE_Y},2180"
+    assert params["result"] == "id,geom_wkt,teryt"
+
+
+@respx.mock
+async def test_get_parcel_by_xy_not_found_raises_parcel_not_found() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=NOT_FOUND_XY_RESPONSE)
+    )
+
+    with pytest.raises(ParcelNotFoundError):
+        await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_uldk_error_raises_service_unavailable() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=ULDK_ERROR_RESPONSE)
+    )
+
+    with pytest.raises(UldkServiceUnavailableError):
+        await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_http_500_raises_service_unavailable() -> None:
+    respx.get(ULDK_BASE_URL).mock(return_value=httpx.Response(500))
+
+    with pytest.raises(UldkServiceUnavailableError):
+        await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_timeout_raises_service_unavailable() -> None:
+    respx.get(ULDK_BASE_URL).mock(side_effect=httpx.TimeoutException("timeout"))
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        with pytest.raises(UldkServiceUnavailableError):
+            await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_timeout_retries_max_retries_plus_one_times() -> None:
+    route = respx.get(ULDK_BASE_URL).mock(side_effect=httpx.TimeoutException("timeout"))
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with pytest.raises(UldkServiceUnavailableError):
+            await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert route.call_count == ULDK_MAX_RETRIES + 1
+    assert mock_sleep.call_count == ULDK_MAX_RETRIES
+
+
+@respx.mock
+async def test_get_parcel_by_xy_retries_then_succeeds() -> None:
+    route = respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.TimeoutException("timeout"),
+            httpx.Response(200, text=SAMPLE_XY_RESPONSE),
+        ]
+    )
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert route.call_count == 2
+    assert isinstance(result, ParcelLookupResult)
+
+
+@respx.mock
+async def test_get_parcel_by_xy_http_500_retries_then_succeeds() -> None:
+    route = respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.Response(500),
+            httpx.Response(200, text=SAMPLE_XY_RESPONSE),
+        ]
+    )
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        result = await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert route.call_count == 2
+    assert isinstance(result, ParcelLookupResult)
+
+
+@respx.mock
+async def test_get_parcel_by_id_retries_on_timeout_then_succeeds() -> None:
+    route = respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.TimeoutException("timeout"),
+            httpx.Response(200, text=SAMPLE_RESPONSE),
+        ]
+    )
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        result = await get_parcel_by_id(VALID_ID)
+
+    assert route.call_count == 2
+    assert result.parcel_identifier == VALID_ID
