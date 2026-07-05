@@ -3,11 +3,14 @@ import math
 import pytest
 from shapely import wkt as shapely_wkt
 
+from app.core.settings import settings
 from app.services.geometry import (
     CoordinatesOutsidePolandError,
     InvalidParcelGeometryError,
     ParcelGeometryMetrics,
+    TechnicalSetbackResult,
     calculate_geometry_metrics,
+    calculate_technical_setback,
     parse_parcel_geometry,
     to_puwg1992,
     to_wgs84,
@@ -40,6 +43,10 @@ SELF_INTERSECTING_WKT = (
 )
 INVALID_WKT_STRING = "NOT A VALID WKT"
 POINT_WKT = "POINT(500000 200000)"
+NARROW_5X100_WKT = (
+    "POLYGON((500000 200000, 500005 200000, 500005 200100, "
+    "500000 200100, 500000 200000))"
+)
 
 
 def test_to_puwg1992_reference_point_x_within_1m_tolerance() -> None:
@@ -305,3 +312,120 @@ def test_calculate_geometry_metrics_area_units_consistency() -> None:
 
     assert metrics.area_are == pytest.approx(metrics.area_sqm / 100.0)
     assert metrics.area_ha == pytest.approx(metrics.area_sqm / 10000.0)
+
+
+def test_calculate_technical_setback_default_square_area() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.buildable_area_sqm == pytest.approx(8464.0, abs=1.0)
+
+
+def test_calculate_technical_setback_default_uses_settings_value() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert settings.default_technical_setback_m == 4.0
+    assert result.setback_m == settings.default_technical_setback_m
+
+
+def test_calculate_technical_setback_is_marked_as_technical_approximation() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.is_technical_approximation is True
+
+
+def test_calculate_technical_setback_normal_case_has_no_warning() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.warning is None
+
+
+def test_calculate_technical_setback_narrow_parcel_returns_zero_without_error() -> None:
+    geometry = parse_parcel_geometry(NARROW_5X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.buildable_area_sqm == 0.0
+
+
+def test_calculate_technical_setback_narrow_parcel_warning_mentions_width() -> None:
+    geometry = parse_parcel_geometry(NARROW_5X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.warning is not None
+    assert "wąska" in result.warning or "zbyt wąsk" in result.warning
+
+
+def test_calculate_technical_setback_custom_two_meter_area() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry, setback_m=2.0)
+
+    assert result.buildable_area_sqm == pytest.approx(9216.0, abs=1.0)
+
+
+def test_calculate_technical_setback_larger_setback_has_smaller_area() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    smaller_setback = calculate_technical_setback(geometry, setback_m=2.0)
+    larger_setback = calculate_technical_setback(geometry, setback_m=10.0)
+
+    assert larger_setback.buildable_area_sqm < smaller_setback.buildable_area_sqm
+
+
+def test_calculate_technical_setback_zero_setback_equals_original_area() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry, setback_m=0.0)
+
+    assert result.buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+
+
+def test_calculate_technical_setback_returns_dataclass_instance() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert isinstance(result, TechnicalSetbackResult)
+
+
+def test_calculate_technical_setback_multipolygon_area() -> None:
+    geometry = parse_parcel_geometry(MULTIPOLYGON_WKT)
+
+    result = calculate_technical_setback(geometry, setback_m=4.0)
+
+    assert result.buildable_area_sqm == pytest.approx(3528.0, abs=1.0)
+
+
+def test_calculate_technical_setback_uses_monkeypatched_default_setting(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+    monkeypatch.setattr(settings, "default_technical_setback_m", 2.0)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.buildable_area_sqm == pytest.approx(9216.0, abs=1.0)
+    assert result.setback_m == 2.0
+
+
+def test_calculate_technical_setback_warning_mentions_technical_and_mpzp() -> None:
+    geometry = parse_parcel_geometry(NARROW_5X100_WKT)
+
+    result = calculate_technical_setback(geometry)
+
+    assert result.warning is not None
+    assert "techniczne" in result.warning
+    assert (
+        "MPZP" in result.warning
+        or "linii zabudowy" in result.warning
+        or "planistyczn" in result.warning
+    )
