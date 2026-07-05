@@ -1,13 +1,17 @@
 import math
 
 import pytest
+from shapely import wkt as shapely_wkt
 
 from app.services.geometry import (
     CoordinatesOutsidePolandError,
+    InvalidParcelGeometryError,
+    ParcelGeometryMetrics,
+    calculate_geometry_metrics,
+    parse_parcel_geometry,
     to_puwg1992,
     to_wgs84,
 )
-
 
 TOLERANCE_M = 1.0
 TOLERANCE_DEG = 1e-6
@@ -15,6 +19,27 @@ REF_LON = 19.01
 REF_LAT = 49.86
 REF_X = 500718.53
 REF_Y = 221407.52
+SQUARE_100X100_WKT = (
+    "POLYGON((500000 200000, 500100 200000, 500100 200100, "
+    "500000 200100, 500000 200000))"
+)
+TRIANGLE_WKT = "POLYGON((500000 200000, 500100 200000, 500050 200100, 500000 200000))"
+MULTIPOLYGON_WKT = (
+    "MULTIPOLYGON(((500000 200000, 500050 200000, 500050 200050, "
+    "500000 200050, 500000 200000)), ((500100 200100, 500150 200100, "
+    "500150 200150, 500100 200150, 500100 200100)))"
+)
+SQUARE_WITH_HOLE_WKT = (
+    "POLYGON((500000 200000, 500100 200000, 500100 200100, "
+    "500000 200100, 500000 200000), (500020 200020, 500080 200020, "
+    "500080 200080, 500020 200080, 500020 200020))"
+)
+SELF_INTERSECTING_WKT = (
+    "POLYGON((500000 200000, 500100 200100, 500100 200000, "
+    "500000 200100, 500000 200000))"
+)
+INVALID_WKT_STRING = "NOT A VALID WKT"
+POINT_WKT = "POINT(500000 200000)"
 
 
 def test_to_puwg1992_reference_point_x_within_1m_tolerance() -> None:
@@ -125,3 +150,158 @@ def test_reference_roundtrip_distance_is_small() -> None:
     delta = math.hypot(lon_back - REF_LON, lat_back - REF_LAT)
 
     assert delta < TOLERANCE_DEG
+
+
+def test_parse_parcel_geometry_accepts_polygon() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    assert geometry.geom_type == "Polygon"
+
+
+def test_parse_parcel_geometry_accepts_multipolygon() -> None:
+    geometry = parse_parcel_geometry(MULTIPOLYGON_WKT)
+
+    assert geometry.geom_type == "MultiPolygon"
+
+
+def test_parse_parcel_geometry_invalid_wkt_raises() -> None:
+    with pytest.raises(InvalidParcelGeometryError):
+        parse_parcel_geometry(INVALID_WKT_STRING)
+
+
+def test_parse_parcel_geometry_point_raises_unsupported_type() -> None:
+    with pytest.raises(InvalidParcelGeometryError):
+        parse_parcel_geometry(POINT_WKT)
+
+
+def test_parse_parcel_geometry_preserves_hole() -> None:
+    geometry = parse_parcel_geometry(SQUARE_WITH_HOLE_WKT)
+
+    assert len(list(geometry.interiors)) == 1
+
+
+def test_calculate_geometry_metrics_square_area_sqm() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_sqm == pytest.approx(10000.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_square_area_are() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_are == pytest.approx(100.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_square_area_ha() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_ha == pytest.approx(1.0, abs=0.0001)
+
+
+def test_calculate_geometry_metrics_square_perimeter() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.perimeter_m == pytest.approx(400.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_square_centroid() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.centroid_x == pytest.approx(500050.0, abs=0.01)
+    assert metrics.centroid_y == pytest.approx(200050.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_square_is_valid_true_not_repaired() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.is_valid is True
+    assert metrics.geometry_repaired is False
+    assert metrics.repair_warning is None
+
+
+def test_calculate_geometry_metrics_triangle_area() -> None:
+    geometry = parse_parcel_geometry(TRIANGLE_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_sqm == pytest.approx(5000.0, abs=1.0)
+
+
+def test_calculate_geometry_metrics_triangle_perimeter() -> None:
+    geometry = parse_parcel_geometry(TRIANGLE_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.perimeter_m == pytest.approx(323.607, abs=1.0)
+
+
+def test_calculate_geometry_metrics_multipolygon_area() -> None:
+    geometry = parse_parcel_geometry(MULTIPOLYGON_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_sqm == pytest.approx(5000.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_multipolygon_perimeter() -> None:
+    geometry = parse_parcel_geometry(MULTIPOLYGON_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.perimeter_m == pytest.approx(400.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_polygon_with_hole_subtracts_area() -> None:
+    geometry = parse_parcel_geometry(SQUARE_WITH_HOLE_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_sqm == pytest.approx(6400.0, abs=0.01)
+
+
+def test_calculate_geometry_metrics_self_intersecting_is_repaired() -> None:
+    geometry = shapely_wkt.loads(SELF_INTERSECTING_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.is_valid is False
+    assert metrics.geometry_repaired is True
+    assert metrics.repair_warning is not None
+    assert "napraw" in metrics.repair_warning.lower()
+
+
+def test_calculate_geometry_metrics_repaired_geometry_has_positive_area() -> None:
+    geometry = shapely_wkt.loads(SELF_INTERSECTING_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_sqm > 0
+
+
+def test_calculate_geometry_metrics_returns_dataclass_instance() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert isinstance(metrics, ParcelGeometryMetrics)
+
+
+def test_calculate_geometry_metrics_area_units_consistency() -> None:
+    geometry = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    metrics = calculate_geometry_metrics(geometry)
+
+    assert metrics.area_are == pytest.approx(metrics.area_sqm / 100.0)
+    assert metrics.area_ha == pytest.approx(metrics.area_sqm / 10000.0)
