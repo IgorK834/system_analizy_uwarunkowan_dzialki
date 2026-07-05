@@ -1,19 +1,23 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import re
+from typing import Final
 
 import httpx
 
+from app.schemas.analyze import SourceMetadata
 
-ULDK_BASE_URL = "https://uldk.gugik.gov.pl/"
-ULDK_TIMEOUT_S = 10.0
+ULDK_BASE_URL: Final[str] = "https://uldk.gugik.gov.pl/"
+ULDK_TIMEOUT_S: Final[float] = 10.0
+ULDK_MAX_RETRIES: Final[int] = 2
+ULDK_BACKOFF_S: Final[float] = 1.0
 
 # Format ULDK jest walidowany przed zapytaniem sieciowym, żeby nie obciążać
 # publicznej usługi oczywiście błędnymi identyfikatorami.
-_PARCEL_ID_RE = re.compile(
-    r"^\d{6}_\d{1,2}\.\d{4}(\.[A-Z]+_\d+)?\.([\d]+(/[\d]+)*)$"
-)
+_PARCEL_ID_RE = re.compile(r"^\d{6}_\d{1,2}\.\d{4}(\.[A-Z]+_\d+)?\.([\d]+(/[\d]+)*)$")
 
 
 class InvalidParcelIdentifierError(ValueError):
@@ -34,9 +38,21 @@ class InvalidUldkResponseError(Exception):
 
 @dataclass(frozen=True)
 class UldkParcelResult:
+    """Wewnętrzny wynik parsowania odpowiedzi ULDK, bez metadanych źródła."""
+
     parcel_identifier: str
     geometry_wkt: str
     teryt: str
+
+
+@dataclass(frozen=True)
+class ParcelLookupResult:
+    """Publiczny wynik wyszukiwania działki po współrzędnych, z metadanymi źródła."""
+
+    parcel_identifier: str
+    wkt: str
+    teryt: str
+    source_metadata: SourceMetadata
 
 
 async def get_parcel_by_id(parcel_identifier: str) -> UldkParcelResult:
@@ -57,21 +73,42 @@ async def get_parcel_by_id(parcel_identifier: str) -> UldkParcelResult:
         "id": parcel_identifier,
         "result": "id,geom_wkt,teryt",
     }
-
-    async with httpx.AsyncClient(timeout=ULDK_TIMEOUT_S) as client:
-        try:
-            response = await client.get(ULDK_BASE_URL, params=params)
-            response.raise_for_status()
-        except httpx.TimeoutException as exc:
-            raise UldkServiceUnavailableError(
-                "Usługa ULDK nie odpowiedziała w wymaganym czasie."
-            ) from exc
-        except httpx.HTTPStatusError as exc:
-            raise UldkServiceUnavailableError(
-                "Usługa ULDK zwróciła błąd HTTP podczas pobierania działki."
-            ) from exc
-
+    response = await _request_with_retry(params)
     return _parse_uldk_response(response.text, parcel_identifier)
+
+
+async def get_parcel_by_xy(x: float, y: float) -> ParcelLookupResult:
+    """
+    Wyszukuje w ULDK działkę zawierającą punkt w układzie EPSG:2180.
+
+    Zapytanie używa parametru ``xy=X,Y,2180`` z jawnym SRID, żeby nie zależeć od
+    domyślnego układu usługi GUGiK. Geometria w wyniku jest zwracana jako WKT w
+    EPSG:2180 bez prefiksu SRID i zawiera metadane źródła wymagane dla danych
+    zewnętrznych. Funkcja może rzucić ParcelNotFoundError dla punktu poza
+    działkami, UldkServiceUnavailableError dla timeoutu, błędu HTTP 5xx albo
+    statusu -1 z ULDK oraz InvalidUldkResponseError dla nieoczekiwanego formatu.
+    """
+    params = {
+        "request": "GetParcelByXY",
+        "xy": f"{x},{y},2180",
+        "result": "id,geom_wkt,teryt",
+    }
+    fetched_at = datetime.now(timezone.utc)
+    response = await _request_with_retry(params)
+    raw = _parse_uldk_response(response.text, f"punkt ({x}, {y})")
+    source = SourceMetadata(
+        source_name="ULDK",
+        source_url=str(response.url),
+        fetched_at=fetched_at,
+        confidence=1.0,
+        manual_review_required=False,
+    )
+    return ParcelLookupResult(
+        parcel_identifier=raw.parcel_identifier,
+        wkt=raw.geometry_wkt,
+        teryt=raw.teryt,
+        source_metadata=source,
+    )
 
 
 def _validate_parcel_identifier(identifier: str) -> None:
@@ -81,7 +118,7 @@ def _validate_parcel_identifier(identifier: str) -> None:
         )
 
 
-def _parse_uldk_response(text: str, parcel_identifier: str) -> UldkParcelResult:
+def _parse_uldk_response(text: str, location_hint: str) -> UldkParcelResult:
     lines = text.strip().splitlines()
     if not lines:
         raise InvalidUldkResponseError("Usługa ULDK zwróciła pustą odpowiedź.")
@@ -97,7 +134,7 @@ def _parse_uldk_response(text: str, parcel_identifier: str) -> UldkParcelResult:
     data_line = lines[1].strip() if len(lines) > 1 else ""
     if not data_line:
         raise ParcelNotFoundError(
-            f"Działka o identyfikatorze {parcel_identifier} nie została znaleziona."
+            f"Działka dla lokalizacji {location_hint} nie została znaleziona."
         )
 
     parts = data_line.split("|")
@@ -128,3 +165,36 @@ def _strip_srid_prefix(geometry_wkt: str) -> str:
     if geometry_wkt.upper().startswith("SRID="):
         return geometry_wkt.split(";", maxsplit=1)[-1].strip()
     return geometry_wkt
+
+
+async def _request_with_retry(params: dict[str, str]) -> httpx.Response:
+    """
+    Wykonuje GET do ULDK z retry dla timeoutów i błędów HTTP 5xx.
+
+    Między próbami stosuje łagodny backoff liniowy, żeby nie przeciążać publicznej
+    usługi GUGiK. Dla błędów HTTP 4xx nie ponawia, bo wskazują na błędne żądanie.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(ULDK_MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=ULDK_TIMEOUT_S) as client:
+                response = await client.get(ULDK_BASE_URL, params=params)
+                response.raise_for_status()
+                return response
+        except httpx.TimeoutException as exc:
+            last_exc = exc
+            if attempt < ULDK_MAX_RETRIES:
+                await asyncio.sleep(ULDK_BACKOFF_S * (attempt + 1))
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code >= 500:
+                last_exc = exc
+                if attempt < ULDK_MAX_RETRIES:
+                    await asyncio.sleep(ULDK_BACKOFF_S * (attempt + 1))
+            else:
+                raise UldkServiceUnavailableError(
+                    f"Usługa ULDK zwróciła błąd HTTP {exc.response.status_code}."
+                ) from exc
+
+    raise UldkServiceUnavailableError(
+        f"Usługa ULDK jest niedostępna po {ULDK_MAX_RETRIES + 1} próbach."
+    ) from last_exc
