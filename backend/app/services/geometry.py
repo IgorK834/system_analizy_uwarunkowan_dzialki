@@ -6,6 +6,8 @@ from shapely import wkt as shapely_wkt
 from shapely.geometry.base import BaseGeometry
 from shapely.validation import explain_validity, make_valid
 
+from app.core.settings import settings
+
 
 class CoordinatesOutsidePolandError(ValueError):
     """Współrzędne WGS84 leżą poza przybliżonymi granicami Polski."""
@@ -165,3 +167,57 @@ def _ensure_supported_parcel_geometry_type(geometry: BaseGeometry) -> None:
             f"Nieobsługiwany typ geometrii: {geometry.geom_type}. "
             "Oczekiwano Polygon lub MultiPolygon."
         )
+
+
+@dataclass(frozen=True)
+class TechnicalSetbackResult:
+    """
+    Wynik wstępnego technicznego odsunięcia geometrii działki od jej granicy.
+
+    To odsunięcie nie jest linią zabudowy z MPZP, tylko technicznym
+    przybliżeniem minimalnej odległości od granicy działki. Pole
+    is_technical_approximation jest zawsze True, aby dalsze warstwy API i UI
+    nie prezentowały wyniku jako ostatecznego ustalenia planistycznego.
+    """
+
+    buildable_area_sqm: float
+    setback_m: float
+    is_technical_approximation: bool
+    warning: str | None
+
+
+def calculate_technical_setback(
+    geometry: BaseGeometry, setback_m: float | None = None
+) -> TechnicalSetbackResult:
+    """
+    Liczy wstępny obszar po technicznym odsunięciu od granicy działki.
+
+    Obliczenia zakładają geometrię w EPSG:2180, więc bufor i powierzchnia są
+    wyrażone w metrach oraz m². Wynik jest wyłącznie technicznym przybliżeniem
+    minimalnej odległości od granicy i nie zastępuje linii zabudowy ani innych
+    ustaleń MPZP. Jeżeli bufor ujemny usuwa całą geometrię, funkcja zwraca pole
+    0 m² oraz ostrzeżenie zamiast rzucać wyjątek.
+    """
+    if setback_m is None:
+        setback_m = settings.default_technical_setback_m
+
+    buffered = geometry.buffer(-setback_m)
+    if buffered.is_empty or buffered.area <= 0.0:
+        return TechnicalSetbackResult(
+            buildable_area_sqm=0.0,
+            setback_m=setback_m,
+            is_technical_approximation=True,
+            warning=(
+                "Działka jest zbyt wąska dla technicznego odsunięcia "
+                f"{setback_m:.1f} m od granicy i po odsunięciu nie pozostaje "
+                "żaden obszar do zabudowy. To odsunięcie techniczne, nie "
+                "ostateczna linia zabudowy z MPZP."
+            ),
+        )
+
+    return TechnicalSetbackResult(
+        buildable_area_sqm=buffered.area,
+        setback_m=setback_m,
+        is_technical_approximation=True,
+        warning=None,
+    )
