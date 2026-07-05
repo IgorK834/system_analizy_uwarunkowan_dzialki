@@ -14,12 +14,15 @@ from app.schemas.analyze import (
     SourceMetadata,
     WarningMessage,
 )
+from app.schemas.geocode import GeocodeResponse, GeocodeSuggestionResponse
 
 __all__ = [
     "AddressAnalyzeRequest",
     "AnalyzeRequest",
     "AnalyzeResponse",
     "ErrorResponse",
+    "GeocodeResponse",
+    "GeocodeSuggestionResponse",
     "GeometryMetrics",
     "InfrastructureResult",
     "MapAnalyzeRequest",
