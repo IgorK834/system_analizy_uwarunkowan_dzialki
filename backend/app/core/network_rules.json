@@ -1,0 +1,50 @@
+[
+  {
+    "network_type": "water",
+    "default_buffer_m": 1.5,
+    "source": "Rozporządzenie w sprawie warunków technicznych, jakim powinny odpowiadać sieci wodociągowe (przybliżenie)",
+    "confidence": 0.7,
+    "note": "Minimalna odległość zabudowy od sieci wodociągowej — wartość przybliżona, wymaga weryfikacji z lokalnymi warunkami technicznymi.",
+    "apply_even_outside_parcel": false
+  },
+  {
+    "network_type": "sewage",
+    "default_buffer_m": 1.5,
+    "source": "Rozporządzenie w sprawie warunków technicznych, jakim powinny odpowiadać sieci kanalizacyjne (przybliżenie)",
+    "confidence": 0.7,
+    "note": "Analogicznie do sieci wodociągowej.",
+    "apply_even_outside_parcel": false
+  },
+  {
+    "network_type": "gas",
+    "default_buffer_m": 4.0,
+    "source": "Rozporządzenie w sprawie warunków technicznych dla sieci gazowych (przybliżenie, strefa kontrolowana)",
+    "confidence": 0.6,
+    "note": "Strefa kontrolowana dla gazociągów niskiego/średniego ciśnienia — realna wartość zależy od ciśnienia i średnicy, wymaga weryfikacji.",
+    "apply_even_outside_parcel": true
+  },
+  {
+    "network_type": "power",
+    "default_buffer_m": 2.0,
+    "source": "Przybliżenie ogólne dla linii kablowych nn/SN (przybliżenie)",
+    "confidence": 0.5,
+    "note": "Napowietrzne linie WN mają znacznie większe strefy — ta wartość dotyczy tylko sieci kablowych niskiego i średniego napięcia.",
+    "apply_even_outside_parcel": false
+  },
+  {
+    "network_type": "telecoms",
+    "default_buffer_m": 0.5,
+    "source": "Przybliżenie ogólne dla sieci teletechnicznych",
+    "confidence": 0.6,
+    "note": "Sieci teletechniczne mają zwykle najmniejsze strefy ochronne spośród sieci uzbrojenia.",
+    "apply_even_outside_parcel": false
+  },
+  {
+    "network_type": "heating",
+    "default_buffer_m": 2.0,
+    "source": "Przybliżenie ogólne dla sieci ciepłowniczych",
+    "confidence": 0.6,
+    "note": "Zależne od średnicy i sposobu ułożenia (kanałowe/preizolowane) — wymaga weryfikacji.",
+    "apply_even_outside_parcel": false
+  }
+]
