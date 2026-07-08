@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     # zabudowy z MPZP — to przybliżenie wynikające z przepisów o minimalnej odległości
     # od granicy, które może zostać nadpisane przez konkretne ustalenia planistyczne.
     default_technical_setback_m: float = 4.0
+    # Adres WFS KIUT/GESUT jest placeholderem opartym o publicznie znaną domenę GUGiK.
+    # Rzeczywisty kontrakt zapytania (typename, wersja WFS, przestrzenie nazw) zostanie
+    # doprecyzowany, gdy będzie dostępna pełna dokumentacja usługi.
+    kiut_wfs_base_url: str = (
+        "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIUT/WFS/GESUT"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
