@@ -22,6 +22,15 @@ class Settings(BaseSettings):
     kiut_wfs_base_url: str = (
         "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIUT/WFS/GESUT"
     )
+    # Adres WFS ISOK (mapy zagrożenia i ryzyka powodziowego) jest placeholderem
+    # opartym o publicznie znaną domenę ISOK/GUGiK. Rzeczywisty kontrakt zapytania
+    # (typename, wersja WFS, nazwy warstw dla Q1%/Q10%/Q0,2%) zostanie doprecyzowany,
+    # gdy będzie dostępna pełna dokumentacja usługi.
+    isok_wfs_base_url: str = "https://wms.isok.gov.pl/isap/services/PZGIK/ISOK/WFS"
+    # WMS jest wyłącznie referencyjnym linkiem do ręcznej weryfikacji wizualnej.
+    # Analiza rastra WMS NIE jest zaimplementowana — fetch_flood_risks korzysta
+    # tylko z WFS. Zobacz docstring fetch_flood_risks w app/services/isok.py.
+    isok_wms_fallback_url: str = "https://wms.isok.gov.pl/isap/services/PZGIK/ISOK/WMS"
 
     model_config = SettingsConfigDict(
         env_file=".env",
