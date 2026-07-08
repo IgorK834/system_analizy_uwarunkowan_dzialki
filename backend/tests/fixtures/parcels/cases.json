@@ -1,0 +1,321 @@
+[
+  {
+    "case_id": "mpzp_vector_single_zone",
+    "name": "MPZP wektorowy, jedna strefa",
+    "gmina": "Nowawieś Górna (syntetyczna)",
+    "parcel_identifier": "146101_1.0001.123/4",
+    "scenario_type": "mpzp_vector",
+    "description": "Działka w całości leży w jednej strefie MPZP, a dane pochodzą z wektorowego źródła (WFS/GeoJSON) o wysokiej pewności. To najprostszy przypadek referencyjny, na którym można zweryfikować podstawową ścieżkę parsowania i przecięcia geometrii bez dodatkowej niepewności.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146101_1.0001.123/4"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "MN",
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": [],
+    "fixture_files": {
+      "uldk_response": "responses/mpzp_vector_single_zone/uldk.txt",
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "Jedyny przypadek z nagraną, syntetyczną odpowiedzią ULDK w tym zadaniu — wzorzec formatu do rozbudowy w przyszłych zadaniach. mpzp_response jest null, bo app/services/mpzp.py jeszcze nie istnieje (TODO)."
+  },
+  {
+    "case_id": "mpzp_raster_manual_symbol",
+    "name": "MPZP rastrowy z ręcznie podanym symbolem strefy",
+    "gmina": "Sucha Podgórna (syntetyczna)",
+    "parcel_identifier": "146102_2.0002.55/1",
+    "scenario_type": "mpzp_raster",
+    "description": "Gmina publikuje MPZP wyłącznie jako usługę WMS bez warstwy wektorowej, dlatego zgodnie z sekcją 8 context.md symbol strefy musi zostać podany ręcznie przez użytkownika. Wynik ma obniżoną pewność i wymaga ręcznej weryfikacji, bo geometria WMS nie jest traktowana jako pełna geometria obliczeniowa.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146102_2.0002.55/1"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "U",
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": true
+    },
+    "expected_warnings": ["MPZP_RASTER_MANUAL_SYMBOL"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: brak jeszcze app/services/mpzp.py i app/services/mpzp_fetch.py — fixture_files zostają null do czasu implementacji serwisu WMS/rastrowego."
+  },
+  {
+    "case_id": "mpzp_multi_zone_dominant",
+    "name": "MPZP wielostrefowy z jasną strefą dominującą",
+    "gmina": "Lipowa Wola (syntetyczna)",
+    "parcel_identifier": "146103_3.0003.10/2",
+    "scenario_type": "mpzp_multi_zone",
+    "description": "Działka przecina dwie strefy MPZP, przy czym jedna zajmuje ponad 50% powierzchni. Zgodnie z sekcją 8 context.md wynik musi zawierać listę wszystkich stref z udziałem procentowym oraz ostrzeżenie, że parametry zabudowy mogą się różnić między częściami działki — nie wolno sprowadzać wyniku do jednej strefy przez centroid.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146103_3.0003.10/2"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 2,
+      "dominant_zone_symbol": "MN",
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": ["MPZP_MULTI_ZONE_WARNING"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "Druga strefa (mniejszościowa) to symbol 'ZP' — do uzupełnienia w expected.json parsera MPZP, gdy powstanie Task dot. mpzp_parser.py."
+  },
+  {
+    "case_id": "ouz_full_inside",
+    "name": "Działka w całości wewnątrz OUZ",
+    "gmina": "Brzozowy Kąt (syntetyczna)",
+    "parcel_identifier": "146104_4.0004.77/3",
+    "scenario_type": "ouz_inside",
+    "description": "Działka leży w całości wewnątrz Obszaru Uzupełnienia Zabudowy, czyli powierzchniowe przecięcie z OUZ wynosi 100%. Zgodnie z sekcją 9 context.md sam predykat intersects() nie wystarcza — wynik musi opierać się na polu przecięcia, a touches_ouz_boundary musi być False, bo działka nie tylko styka się z granicą.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146104_4.0004.77/3"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 0,
+      "dominant_zone_symbol": null,
+      "pog_status": "adopted",
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": true,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": [],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: brak jeszcze app/services/pog.py — pog_response zostaje null do czasu implementacji serwisu POG/OUZ."
+  },
+  {
+    "case_id": "ouz_completely_outside",
+    "name": "Działka całkowicie poza OUZ",
+    "gmina": "Brzozowy Kąt (syntetyczna)",
+    "parcel_identifier": "146104_4.0004.88/1",
+    "scenario_type": "ouz_outside",
+    "description": "Działka nie ma żadnego przecięcia powierzchniowego z Obszarem Uzupełnienia Zabudowy tej gminy. Przypadek kontrastowy do ouz_full_inside — weryfikuje, że system prawidłowo zwraca brak przecięcia, a nie fałszywie dodatnią flagę wynikającą z błędu w obliczeniach geometrycznych.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146104_4.0004.88/1"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 0,
+      "dominant_zone_symbol": null,
+      "pog_status": "adopted",
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": [],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: pog_response null do czasu implementacji app/services/pog.py."
+  },
+  {
+    "case_id": "ouz_touches_boundary_only",
+    "name": "Działka styka się jedynie z granicą OUZ",
+    "gmina": "Wysoka Łąka (syntetyczna)",
+    "parcel_identifier": "146105_5.0005.14/9",
+    "scenario_type": "ouz_touches_boundary",
+    "description": "Działka jedynie dotyka granicy OUZ bez rzeczywistego przecięcia powierzchniowego (pole przecięcia bliskie zeru). Zgodnie z sekcją 9 context.md to musi być odróżnione od realnego przecięcia przez osobną flagę touches_ouz_boundary=True, a ouz_intersection_expected powinno pozostać False.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146105_5.0005.14/9"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 0,
+      "dominant_zone_symbol": null,
+      "pog_status": "adopted",
+      "touches_ouz_boundary": true,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": ["OUZ_BOUNDARY_TOUCH_ONLY"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: pog_response null do czasu implementacji app/services/pog.py z obliczeniem calculate_ouz_status."
+  },
+  {
+    "case_id": "flood_risk_zone_overlap",
+    "name": "Działka częściowo w obszarze zagrożenia powodziowego",
+    "gmina": "Rzeczna Dolina (syntetyczna)",
+    "parcel_identifier": "146106_6.0006.201/5",
+    "scenario_type": "flood_risk",
+    "description": "Część działki znajduje się w obszarze zagrożenia powodziowego wg map ISOK. Przypadek weryfikuje, że sekcja ryzyk zawiera typ 'flood_zone' z czytelnym opisem dla użytkownika i metadanymi źródła ISOK, zgodnie ze wzorcem RiskResult z app/schemas/analyze.py.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146106_6.0006.201/5"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "R",
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": ["flood_zone"],
+      "requires_manual_review": false
+    },
+    "expected_warnings": [],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: brak jeszcze app/services/isok.py — nagranie odpowiedzi ISOK zostanie dodane w przyszłym zadaniu."
+  },
+  {
+    "case_id": "nature_protection_natura2000",
+    "name": "Działka w pobliżu obszaru Natura 2000",
+    "gmina": "Leśna Kraina (syntetyczna)",
+    "parcel_identifier": "146107_7.0007.312/8",
+    "scenario_type": "nature_protection",
+    "description": "Działka sąsiaduje z obszarem Natura 2000 zgłoszonym przez GDOŚ jako forma ochrony przyrody. Przypadek weryfikuje sekcję ryzyk środowiskowych risk_types_expected zawierającą 'natura_2000' oraz obecność ostrzeżenia o konieczności uwzględnienia ograniczeń środowiskowych przy planowaniu inwestycji.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146107_7.0007.312/8"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "ZL",
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": ["natura_2000"],
+      "requires_manual_review": false
+    },
+    "expected_warnings": [],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: brak jeszcze app/services/gdos.py — nagranie odpowiedzi GDOŚ zostanie dodane w przyszłym zadaniu."
+  },
+  {
+    "case_id": "pog_not_yet_adopted",
+    "name": "Gmina bez uchwalonego Planu Ogólnego Gminy",
+    "gmina": "Zapadła Struga (syntetyczna)",
+    "parcel_identifier": "146108_8.0008.44/2",
+    "scenario_type": "pog_missing",
+    "description": "Gmina jeszcze nie uchwaliła Planu Ogólnego, dlatego wynik POG musi mieć status 'not_available' albo 'in_progress' zgodnie z enum z sekcji 9 context.md, a nie fałszywie sugerować brak ograniczeń planistycznych. To weryfikuje zasadę z sekcji 22: brak danych nie oznacza braku ograniczeń.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146108_8.0008.44/2"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "MN",
+      "pog_status": "not_available",
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": false
+    },
+    "expected_warnings": ["POG_NOT_AVAILABLE"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: brak jeszcze app/services/pog.py — po implementacji dodać nagraną odpowiedź reprezentującą pustą/brakującą warstwę POG dla tej gminy."
+  },
+  {
+    "case_id": "mpzp_pog_conflict_zoning",
+    "name": "Potencjalny konflikt funkcji MPZP z ustaleniami POG",
+    "gmina": "Graniczna Niwa (syntetyczna)",
+    "parcel_identifier": "146109_9.0009.99/1",
+    "scenario_type": "mpzp_pog_conflict",
+    "description": "Funkcja terenu określona w MPZP (np. zabudowa usługowa) może być niezgodna z ustaleniami nowego POG dla tej strefy planistycznej. Zgodnie z sekcją 9.6 context.md ocena zgodności musi korzystać z jawnej tabeli zgodności funkcji, a nie z niejawnej heurystyki, a wynik musi wymagać ręcznej weryfikacji.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146109_9.0009.99/1"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": "U",
+      "pog_status": "adopted",
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": true
+    },
+    "expected_warnings": ["MPZP_POG_CONFLICT_WARNING"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: tabela zgodności funkcji MPZP-POG jeszcze nie istnieje w kodzie — do dodania razem z serwisem POG."
+  },
+  {
+    "case_id": "mpzp_scanned_pdf_no_text_layer",
+    "name": "Uchwała MPZP jako skan bez warstwy tekstowej",
+    "gmina": "Czarny Bór (syntetyczna)",
+    "parcel_identifier": "146110_1.0010.7/1",
+    "scenario_type": "mpzp_problematic_pdf",
+    "description": "Uchwała MPZP dostępna jest jako zeskanowany PDF bez warstwy tekstowej, więc parser wymaga OCR zgodnie z sekcją 8 context.md. Wynik ma niską pewność, a manual_review_required musi być True — to test na zasadę z sekcji 22: nie zakładaj, że każdy PDF ma tekst.",
+    "input": {
+      "method": "parcel_id",
+      "parcel_identifier": "146110_1.0010.7/1"
+    },
+    "expected_result": {
+      "mpzp_zones_count": 1,
+      "dominant_zone_symbol": null,
+      "pog_status": null,
+      "touches_ouz_boundary": false,
+      "ouz_intersection_expected": false,
+      "risk_types_expected": [],
+      "requires_manual_review": true
+    },
+    "expected_warnings": ["MPZP_OCR_REQUIRED", "MPZP_LOW_CONFIDENCE"],
+    "fixture_files": {
+      "uldk_response": null,
+      "mpzp_response": null,
+      "pog_response": null,
+      "additional": []
+    },
+    "notes": "TODO: docelowy fixture dla tego przypadku powinien trafić także do backend/tests/fixtures/mpzp/czarny_bor/ (sekcja 16 context.md) razem z document.pdf (skan) i README opisującym gminę, gdy powstanie mpzp_parser.py."
+  }
+]
