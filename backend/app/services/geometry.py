@@ -4,8 +4,10 @@ from pyproj import Transformer
 import shapely
 from shapely import wkt as shapely_wkt
 from shapely.geometry.base import BaseGeometry
+from shapely.ops import unary_union
 from shapely.validation import explain_validity, make_valid
 
+from app.core.network_rules import NetworkRule, load_network_rules
 from app.core.settings import settings
 
 
@@ -220,4 +222,133 @@ def calculate_technical_setback(
         setback_m=setback_m,
         is_technical_approximation=True,
         warning=None,
+    )
+
+
+@dataclass(frozen=True)
+class NetworkGeometryInput:
+    """
+    Lekki, lokalny typ wejściowy dla calculate_network_protection_zones.
+
+    geometry.py nie importuje niczego z app.services.kiut, żeby uniknąć
+    zależności w niewłaściwym kierunku (kiut.py może w przyszłości importować
+    geometry.py, nie odwrotnie — sekcja 4 context.md: serwisy jednoodpowiedzialne).
+    Wywołujący kod (przyszła fasada np. initiation.py) mapuje NetworkFeature
+    z kiut.py na ten typ przed wywołaniem tej funkcji.
+    """
+
+    network_type: str
+    geometry: BaseGeometry
+
+
+@dataclass(frozen=True)
+class NetworkProtectionZone:
+    """Pojedyncza strefa ochronna wynikająca z jednej sieci uzbrojenia, przycięta do granic działki."""
+
+    network_type: str
+    buffer_m: float
+    zone_area_sqm: float
+    source: str
+    confidence: float
+    note: str
+
+
+@dataclass(frozen=True)
+class NetworkProtectionZonesResult:
+    """
+    Wynik odjęcia stref ochronnych sieci uzbrojenia od technicznego obszaru zabudowy.
+
+    Nie modyfikuje samego obszaru zabudowy z calculate_technical_setback — zwraca
+    nową, pomniejszoną wartość netto.
+    """
+
+    net_buildable_area_sqm: float
+    zones: list[NetworkProtectionZone]
+    warnings: list[str]
+
+
+def calculate_network_protection_zones(
+    parcel: BaseGeometry,
+    buildable_area: BaseGeometry,
+    networks: list[NetworkGeometryInput],
+    rules: dict[str, NetworkRule] | None = None,
+) -> NetworkProtectionZonesResult:
+    """
+    Liczy strefy ochronne sieci uzbrojenia terenu i odejmuje je od obszaru zabudowy.
+
+    Dla każdej sieci przecinającej działkę tworzymy bufor wokół linii, przycinamy
+    go do granic działki i odejmujemy zsumowane strefy od obszaru zabudowy.
+    Promień bufora pochodzi wyłącznie z konfiguracji (network_rules.json) przez
+    load_network_rules() — nigdy z zahardkodowanej liczby w kodzie. Sieci
+    leżące poza działką nie zmniejszają obszaru netto, chyba że reguła ma
+    apply_even_outside_parcel=True (np. strefa kontrolowana gazociągu, która
+    może obejmować teren poza samą siecią). Sieci o nieznanym typie (brak
+    reguły w konfiguracji) są pomijane z ostrzeżeniem, nie z domyślnym buforem.
+    Wszystkie obliczenia zakładają, że parcel, buildable_area i geometrie sieci
+    są już w EPSG:2180.
+    """
+    if rules is None:
+        rules = load_network_rules()
+
+    warnings: list[str] = []
+    clipped_zone_geometries: list[BaseGeometry] = []
+    zones: list[NetworkProtectionZone] = []
+
+    for network in networks:
+        rule = rules.get(network.network_type)
+        if rule is None:
+            warnings.append(
+                f"Brak reguły strefy ochronnej dla typu sieci "
+                f"{network.network_type!r} — sieć pominięta w obliczeniach."
+            )
+            continue
+
+        line = network.geometry
+        # cap_style='flat' — linie sieci są zazwyczaj fragmentami dłuższej
+        # infrastruktury obciętymi do BBOX zapytania WFS, a nie rzeczywistymi
+        # zakończeniami, więc płaskie zakończenia bufora unikają sztucznych
+        # zaokrągleń na granicy zapytania.
+        buffered = line.buffer(rule.default_buffer_m, cap_style="flat")
+
+        # Filtr "sieć poza działką nie zmniejsza obszaru" sprawdzamy na
+        # oryginalnej linii, nie na buforze — chyba że reguła jawnie mówi,
+        # że strefa ochronna ma zastosowanie nawet dla sieci leżącej poza
+        # działką (np. strefa kontrolowana gazociągu).
+        applies = (
+            line.intersects(parcel)
+            if not rule.apply_even_outside_parcel
+            else buffered.intersects(parcel)
+        )
+        if not applies:
+            continue
+
+        clipped = buffered.intersection(parcel)
+        if clipped.is_empty:
+            continue
+
+        clipped_zone_geometries.append(clipped)
+        zones.append(
+            NetworkProtectionZone(
+                network_type=network.network_type,
+                buffer_m=rule.default_buffer_m,
+                zone_area_sqm=clipped.area,
+                source=rule.source,
+                confidence=rule.confidence,
+                note=rule.note,
+            )
+        )
+
+    if not clipped_zone_geometries:
+        return NetworkProtectionZonesResult(
+            net_buildable_area_sqm=buildable_area.area,
+            zones=[],
+            warnings=warnings,
+        )
+
+    union_zone = unary_union(clipped_zone_geometries)
+    net_geometry = buildable_area.difference(union_zone)
+    return NetworkProtectionZonesResult(
+        net_buildable_area_sqm=net_geometry.area,
+        zones=zones,
+        warnings=warnings,
     )
