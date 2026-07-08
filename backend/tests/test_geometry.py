@@ -2,14 +2,20 @@ import math
 
 import pytest
 from shapely import wkt as shapely_wkt
+from shapely.geometry import LineString
 
+from app.core.network_rules import NetworkRule, load_network_rules
 from app.core.settings import settings
 from app.services.geometry import (
     CoordinatesOutsidePolandError,
     InvalidParcelGeometryError,
+    NetworkGeometryInput,
+    NetworkProtectionZone,
+    NetworkProtectionZonesResult,
     ParcelGeometryMetrics,
     TechnicalSetbackResult,
     calculate_geometry_metrics,
+    calculate_network_protection_zones,
     calculate_technical_setback,
     parse_parcel_geometry,
     to_puwg1992,
@@ -429,3 +435,206 @@ def test_calculate_technical_setback_warning_mentions_technical_and_mpzp() -> No
         or "linii zabudowy" in result.warning
         or "planistyczn" in result.warning
     )
+
+
+# --- calculate_network_protection_zones -------------------------------------
+
+# Osobny zestaw reguł testowych z okrągłymi wartościami, niezależny od
+# produkcyjnego network_rules.json, dla deterministycznych obliczeń.
+CUSTOM_TEST_RULES = {
+    "water": NetworkRule(
+        network_type="water",
+        default_buffer_m=2.0,
+        source="test",
+        confidence=0.9,
+        note="test",
+        apply_even_outside_parcel=False,
+    ),
+    "gas": NetworkRule(
+        network_type="gas",
+        default_buffer_m=2.0,
+        source="test",
+        confidence=0.9,
+        note="test",
+        apply_even_outside_parcel=True,
+    ),
+}
+
+
+def test_calculate_network_protection_zones_line_through_center_reduces_area_predictably() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200050), (500100, 200050)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    # Bufor 2m wokół linii na pełną szerokość działki (flat caps) = pasek
+    # 100m x 4m = 400 m², w całości wewnątrz działki.
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0 - 400.0, abs=1.0)
+    assert len(result.zones) == 1
+    assert result.zones[0].zone_area_sqm == pytest.approx(400.0, abs=1.0)
+
+
+def test_calculate_network_protection_zones_network_outside_parcel_does_not_reduce_area() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500200, 200050), (500300, 200050)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+    assert result.zones == []
+
+
+def test_calculate_network_protection_zones_gas_rule_applies_even_outside_parcel() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="gas",
+        geometry=LineString([(500101, 200000), (500101, 200100)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.net_buildable_area_sqm < 10000.0
+    assert len(result.zones) == 1
+    assert result.zones[0].network_type == "gas"
+
+
+def test_calculate_network_protection_zones_water_rule_ignores_network_just_outside_without_override() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500101, 200000), (500101, 200100)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+    assert result.zones == []
+
+
+def test_calculate_network_protection_zones_unknown_type_skipped_with_warning() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="unknown",
+        geometry=LineString([(500000, 200050), (500100, 200050)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+    assert len(result.warnings) == 1
+    assert "unknown" in result.warnings[0] or "nieznan" in result.warnings[0].lower()
+
+
+def test_calculate_network_protection_zones_each_zone_has_source_and_confidence() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200050), (500100, 200050)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.zones[0].source == "test"
+    assert result.zones[0].confidence == 0.9
+
+
+def test_calculate_network_protection_zones_empty_networks_list_returns_full_area() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+
+
+def test_calculate_network_protection_zones_multiple_networks_sum_correctly() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    # Dwie równoległe linie wodociągowe w różnych częściach działki,
+    # nieprzecinające swoich buforów (bufor 2m, linie oddalone o 20m).
+    network_a = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200020), (500100, 200020)]),
+    )
+    network_b = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200080), (500100, 200080)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network_a, network_b],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    # Mniej niż redukcja tylko jednej sieci (9600), bo dwie strefy się sumują.
+    assert result.net_buildable_area_sqm < 10000.0 - 400.0
+
+
+def test_calculate_network_protection_zones_uses_default_rules_when_none_passed() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200050), (500100, 200050)]),
+    )
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+    )
+
+    assert result.zones[0].buffer_m == load_network_rules()["water"].default_buffer_m
+
+
+def test_calculate_network_protection_zones_returns_dataclass_instance() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[],
+        rules=CUSTOM_TEST_RULES,
+    )
+
+    assert isinstance(result, NetworkProtectionZonesResult)
