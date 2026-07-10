@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     # Analiza rastra WMS NIE jest zaimplementowana — fetch_flood_risks korzysta
     # tylko z WFS. Zobacz docstring fetch_flood_risks w app/services/isok.py.
     isok_wms_fallback_url: str = "https://wms.isok.gov.pl/isap/services/PZGIK/ISOK/WMS"
+    # Adres WFS GDOŚ (formy ochrony przyrody) jest placeholderem opartym o publicznie
+    # znaną domenę Generalnej Dyrekcji Ochrony Środowiska. Rzeczywisty kontrakt
+    # zapytania (typename, wersja WFS, nazwy warstw) zostanie doprecyzowany po
+    # udostępnieniu pełnej dokumentacji usługi.
+    gdos_wfs_base_url: str = "https://sdi.gdos.gov.pl/wfs"
 
     model_config = SettingsConfigDict(
         env_file=".env",
