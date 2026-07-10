@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     # zapytania (typename, wersja WFS, nazwy warstw) zostanie doprecyzowany po
     # udostępnieniu pełnej dokumentacji usługi.
     gdos_wfs_base_url: str = "https://sdi.gdos.gov.pl/wfs"
+    # Adres WMS KIMPZP (Krajowa Integracja Miejscowych Planów Zagospodarowania
+    # Przestrzennego) jest placeholderem opartym o publicznie znaną domenę GUGiK.
+    # Rzeczywisty kontrakt GetFeatureInfo, w tym sposób sygnalizowania gmin bez
+    # wektoryzacji MPZP, wymaga potwierdzenia w dokumentacji usługi.
+    kimpzp_wms_base_url: str = (
+        "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIMPZP/WMS"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
