@@ -100,13 +100,15 @@ def test_warning_message_has_expected_fields() -> None:
         {
             "code": "POG_NOT_AVAILABLE",
             "message": "Plan Ogólny Gminy nie jest dostępny.",
-            "section": "pog",
+            "severity": "warning",
+            "source_name": "pog",
         }
     )
 
     assert warning.code == "POG_NOT_AVAILABLE"
     assert warning.message == "Plan Ogólny Gminy nie jest dostępny."
-    assert warning.section == "pog"
+    assert warning.severity == "warning"
+    assert warning.source_name == "pog"
 
 
 def test_analyze_response_can_be_built_with_required_fields() -> None:
@@ -125,7 +127,8 @@ def test_analyze_response_can_be_built_with_required_fields() -> None:
                 {
                     "code": "ANALYSIS_NOT_IMPLEMENTED",
                     "message": "Analiza nie jest jeszcze zaimplementowana.",
-                    "section": None,
+                    "severity": "error",
+                    "source_name": None,
                 }
             ],
             "sources": [],

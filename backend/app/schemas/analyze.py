@@ -5,6 +5,8 @@ from typing import Annotated, Any, Literal, Union
 
 from pydantic import BaseModel, Field
 
+from app.schemas.source import SourceMetadata, WarningMessage
+
 
 class MapAnalyzeRequest(BaseModel):
     method: Literal["map"] = Field(
@@ -64,51 +66,6 @@ AnalyzeRequest = Annotated[
     Union[MapAnalyzeRequest, AddressAnalyzeRequest, ParcelIdAnalyzeRequest],
     Field(discriminator="method"),
 ]
-
-
-class SourceMetadata(BaseModel):
-    source_name: str = Field(
-        description="Nazwa zewnętrznego źródła danych.",
-        json_schema_extra={"example": "ULDK"},
-    )
-    source_url: str | None = Field(
-        default=None,
-        description="Adres URL źródła danych, jeżeli jest dostępny.",
-        json_schema_extra={"example": "https://uldk.gugik.gov.pl/"},
-    )
-    fetched_at: datetime | None = Field(
-        default=None,
-        description="Data i czas pobrania danych ze źródła.",
-        json_schema_extra={"example": "2026-07-02T12:00:00Z"},
-    )
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Poziom pewności danych 0-1.",
-        json_schema_extra={"example": 0.95},
-    )
-    manual_review_required: bool = Field(
-        description="Czy wynik wymaga ręcznej weryfikacji.",
-        json_schema_extra={"example": False},
-    )
-
-
-class WarningMessage(BaseModel):
-    code: str = Field(
-        description="Krótki identyfikator ostrzeżenia.",
-        json_schema_extra={"example": "MPZP_PARTIAL"},
-    )
-    message: str = Field(
-        description="Czytelny komunikat dla użytkownika, bez informacji technicznych.",
-        json_schema_extra={
-            "example": "Nie udało się pobrać pełnych danych MPZP dla działki."
-        },
-    )
-    section: str | None = Field(
-        default=None,
-        description="Sekcja wyniku, której dotyczy ostrzeżenie.",
-        json_schema_extra={"example": "mpzp"},
-    )
 
 
 class GeometryMetrics(BaseModel):
