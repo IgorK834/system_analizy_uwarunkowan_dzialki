@@ -91,6 +91,7 @@ class NatureProtectionFeature:
 
 async def fetch_nature_protection_areas(
     parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient | None = None,
 ) -> list[NatureProtectionFeature]:
     """Wykrywa rzeczywiste przecięcia działki z formami ochrony przyrody.
 
@@ -107,21 +108,16 @@ async def fetch_nature_protection_areas(
         "bbox": f"{minx},{miny},{maxx},{maxy},EPSG:2180",
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=GDOS_TIMEOUT_S) as client:
-            response = await client.get(settings.gdos_wfs_base_url, params=params)
-            response.raise_for_status()
-    except httpx.TimeoutException as exc:
-        raise GdosServiceUnavailableError(
-            "Usługa GDOŚ nie odpowiedziała w wymaganym czasie."
-        ) from exc
-    except httpx.HTTPError as exc:
-        raise GdosServiceUnavailableError(
-            f"Usługa GDOŚ zwróciła błąd: {exc}"
-        ) from exc
+    if client is not None:
+        response_text, source_url = await _fetch_gdos_response_text(client, params)
+    else:
+        async with httpx.AsyncClient() as owned_client:
+            response_text, source_url = await _fetch_gdos_response_text(
+                owned_client, params
+            )
 
     fetched_at = datetime.now(timezone.utc)
-    zone_features = _parse_zone_response(response.text)
+    zone_features = _parse_zone_response(response_text)
 
     results: list[NatureProtectionFeature] = []
     for zone_geometry, properties in zone_features:
@@ -129,12 +125,33 @@ async def fetch_nature_protection_areas(
             parcel_geometry,
             zone_geometry,
             properties,
-            str(response.url),
+            source_url,
             fetched_at,
         )
         if feature is not None:
             results.append(feature)
     return results
+
+
+async def _fetch_gdos_response_text(
+    client: httpx.AsyncClient,
+    params: dict[str, str],
+) -> tuple[str, str]:
+    try:
+        response = await client.get(
+            settings.gdos_wfs_base_url,
+            params=params,
+            timeout=GDOS_TIMEOUT_S,
+        )
+        response.raise_for_status()
+    except httpx.TimeoutException as exc:
+        raise GdosServiceUnavailableError(
+            "Usługa GDOŚ nie odpowiedziała w wymaganym czasie."
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise GdosServiceUnavailableError(f"Usługa GDOŚ zwróciła błąd: {exc}") from exc
+
+    return response.text, str(response.url)
 
 
 def _parse_zone_response(text: str) -> list[tuple[BaseGeometry, dict]]:

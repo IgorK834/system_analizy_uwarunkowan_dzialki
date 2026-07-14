@@ -100,7 +100,10 @@ class RiskFeature:
     warnings: list[str] = field(default_factory=list)
 
 
-async def fetch_flood_risks(parcel_geometry: BaseGeometry) -> list[RiskFeature]:
+async def fetch_flood_risks(
+    parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient | None = None,
+) -> list[RiskFeature]:
     """
     Wykrywa ryzyko powodziowe dla działki przez rzeczywiste przecięcie geometrii
     ze strefami zagrożenia powodziowego ISOK.
@@ -129,30 +132,46 @@ async def fetch_flood_risks(parcel_geometry: BaseGeometry) -> list[RiskFeature]:
         "bbox": f"{minx},{miny},{maxx},{maxy},EPSG:2180",
     }
 
+    if client is not None:
+        response_text, source_url = await _fetch_isok_response_text(client, params)
+    else:
+        async with httpx.AsyncClient() as owned_client:
+            response_text, source_url = await _fetch_isok_response_text(
+                owned_client, params
+            )
+
+    fetched_at = datetime.now(timezone.utc)
+    zone_features = _parse_zone_response(response_text)
+
+    results: list[RiskFeature] = []
+    for zone_geometry, properties in zone_features:
+        risk = _build_risk_feature(
+            parcel_geometry, zone_geometry, properties, source_url, fetched_at
+        )
+        if risk is not None:
+            results.append(risk)
+    return results
+
+
+async def _fetch_isok_response_text(
+    client: httpx.AsyncClient,
+    params: dict[str, str],
+) -> tuple[str, str]:
     try:
-        async with httpx.AsyncClient(timeout=ISOK_TIMEOUT_S) as client:
-            response = await client.get(settings.isok_wfs_base_url, params=params)
-            response.raise_for_status()
+        response = await client.get(
+            settings.isok_wfs_base_url,
+            params=params,
+            timeout=ISOK_TIMEOUT_S,
+        )
+        response.raise_for_status()
     except httpx.TimeoutException as exc:
         raise IsokServiceUnavailableError(
             "Usługa ISOK nie odpowiedziała w wymaganym czasie."
         ) from exc
     except httpx.HTTPError as exc:
-        raise IsokServiceUnavailableError(
-            f"Usługa ISOK zwróciła błąd: {exc}"
-        ) from exc
+        raise IsokServiceUnavailableError(f"Usługa ISOK zwróciła błąd: {exc}") from exc
 
-    fetched_at = datetime.now(timezone.utc)
-    zone_features = _parse_zone_response(response.text)
-
-    results: list[RiskFeature] = []
-    for zone_geometry, properties in zone_features:
-        risk = _build_risk_feature(
-            parcel_geometry, zone_geometry, properties, str(response.url), fetched_at
-        )
-        if risk is not None:
-            results.append(risk)
-    return results
+    return response.text, str(response.url)
 
 
 def _parse_zone_response(text: str) -> list[tuple[BaseGeometry, dict]]:

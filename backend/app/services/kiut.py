@@ -74,6 +74,7 @@ def bbox_from_geometry(geometry: BaseGeometry) -> tuple[float, float, float, flo
 
 async def fetch_kiut_networks(
     parcel_bounds: tuple[float, float, float, float],
+    client: httpx.AsyncClient | None = None,
 ) -> list[NetworkFeature]:
     """
     Pobiera sieci uzbrojenia terenu z WFS KIUT/GESUT w obrębie BBOX działki.
@@ -93,10 +94,24 @@ async def fetch_kiut_networks(
         "bbox": f"{minx},{miny},{maxx},{maxy},EPSG:2180",
     }
 
+    if client is not None:
+        return await _fetch_kiut_with_client(client, params)
+
+    async with httpx.AsyncClient() as owned_client:
+        return await _fetch_kiut_with_client(owned_client, params)
+
+
+async def _fetch_kiut_with_client(
+    client: httpx.AsyncClient,
+    params: dict[str, str],
+) -> list[NetworkFeature]:
     try:
-        async with httpx.AsyncClient(timeout=KIUT_TIMEOUT_S) as client:
-            response = await client.get(settings.kiut_wfs_base_url, params=params)
-            response.raise_for_status()
+        response = await client.get(
+            settings.kiut_wfs_base_url,
+            params=params,
+            timeout=KIUT_TIMEOUT_S,
+        )
+        response.raise_for_status()
     except httpx.TimeoutException:
         # Graceful degradation (sekcja 9/10 context.md) — awaria usługi KIUT
         # nie może wywracać całej analizy /analyze.
