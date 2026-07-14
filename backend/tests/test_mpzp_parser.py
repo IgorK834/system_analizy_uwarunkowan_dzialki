@@ -12,6 +12,7 @@ from app.services.mpzp_parser import (
 )
 from app.services.mpzp_parser_extract import TextExtractionResult
 from app.services.mpzp_parser_segment import (
+    DocumentSegment,
     ZoneSectionCandidate,
     ZoneSectionResult,
 )
@@ -132,6 +133,10 @@ async def test_parse_mpzp_document_with_zone_symbols_uses_real_segmentation() ->
 
     assert result.zones[0].zone_evidence is not None
     assert "230_U" in (result.zones[0].zone_evidence.source_text or "")
+    # Mock jest ucięty na jednej linii wprowadzającej symbol strefy, bez
+    # dalszych parametrów planistycznych — parameters=[] jest tu poprawnym,
+    # uczciwym wynikiem, a nie regresją ekstraktorów.
+    assert result.zones[0].parameters == []
 
 
 @pytest.mark.asyncio
@@ -149,6 +154,18 @@ async def test_parse_calls_extract_document_text_with_document() -> None:
 
 
 def test_extract_parameters_returns_empty_parameters_and_evidence_per_zone() -> None:
+    # Segment "teren MN" nie zawiera żadnego wzorca liczbowego/opisowego, więc
+    # rzeczywiste zachowanie ekstraktorów po zmianie sygnatury to wciąż [] —
+    # ta konkretna wartość tekstowa jest po prostu za krótka na dopasowanie.
+    segments = [
+        DocumentSegment(
+            segment_id="seg-0001",
+            text="teren MN",
+            page_number=1,
+            heading=None,
+            source="paragraph",
+        )
+    ]
     section_results = [
         ZoneSectionResult(
             zone_symbol="MN",
@@ -166,7 +183,7 @@ def test_extract_parameters_returns_empty_parameters_and_evidence_per_zone() -> 
         ZoneSectionResult(zone_symbol="U"),
     ]
 
-    zones = extract_parameters(section_results)
+    zones = extract_parameters(section_results, segments)
 
     assert [zone.zone_symbol for zone in zones] == ["MN", "U"]
     assert all(zone.parameters == [] for zone in zones)
@@ -174,6 +191,33 @@ def test_extract_parameters_returns_empty_parameters_and_evidence_per_zone() -> 
     assert zones[0].zone_evidence.source_text == "teren MN"
     assert zones[0].zone_evidence.page_number == 1
     assert zones[1].zone_evidence is None
+
+
+def test_extract_parameters_without_segments_argument_returns_empty_parameters() -> (
+    None
+):
+    # Wywołanie bez segments (stary sposób) nadal działa: brak tekstu do
+    # przeszukania nie jest błędem tego etapu, tylko konsekwencją braku
+    # segmentacji dostarczonej przez wywołującego.
+    section_results = [
+        ZoneSectionResult(
+            zone_symbol="MN",
+            candidates=[
+                ZoneSectionCandidate(
+                    zone_symbol="MN",
+                    segment_id="seg-0001",
+                    source_text="teren MN",
+                    page_number=1,
+                    confidence=0.75,
+                    match_pattern=r"\bteren\w*\s+{symbol}\b",
+                )
+            ],
+        )
+    ]
+
+    zones = extract_parameters(section_results)
+
+    assert zones[0].parameters == []
 
 
 def test_validate_result_empty_zones_is_failed() -> None:
