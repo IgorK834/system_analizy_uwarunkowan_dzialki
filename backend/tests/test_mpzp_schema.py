@@ -137,6 +137,25 @@ def test_mpzp_zone_result_docstring_mentions_naming_collision() -> None:
     assert "analyze" in (MpzpZoneResult.__doc__ or "")
 
 
+def test_mpzp_parse_result_conflict_flags_defaults_to_empty_list() -> None:
+    result = MpzpParseResult(status="partial")
+
+    assert result.conflict_flags == []
+
+
+def test_mpzp_parse_result_conflict_flags_accepts_list_of_strings() -> None:
+    result = MpzpParseResult(
+        status="complete",
+        conflict_flags=[
+            "230_UMW: max_building_height_m ma sprzeczne wartości (15.0, 13.0)"
+        ],
+    )
+
+    assert result.conflict_flags == [
+        "230_UMW: max_building_height_m ma sprzeczne wartości (15.0, 13.0)"
+    ]
+
+
 def test_package_reexports_parser_zone_with_unambiguous_alias() -> None:
     from app.schemas import MpzpParserZoneResult
     from app.schemas import MpzpZoneResult as AnalyzeMpzpZoneResult

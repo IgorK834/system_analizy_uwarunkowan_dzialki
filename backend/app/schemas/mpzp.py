@@ -149,3 +149,10 @@ class MpzpParseResult(BaseModel):
         )
     )
     warnings: list[MpzpParserWarning] = Field(default_factory=list)
+    conflict_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Krótkie, ludzkie opisy wykrytych sprzeczności parametrów, np. "
+            '"230_UMW: max_building_height_m ma sprzeczne wartości (15.0, 13.0)".'
+        ),
+    )
