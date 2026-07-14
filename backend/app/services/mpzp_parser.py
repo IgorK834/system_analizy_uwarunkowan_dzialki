@@ -4,32 +4,45 @@
 nieoczekiwany błąd jest logowany i zamieniany na ``MpzpParseResult`` ze statusem
 ``failed``. Etapy klasyfikacji i ekstrakcji tekstu delegują do realnych
 implementacji w ``mpzp_parser_extract.py``. Segmentacja, ekstrakcja parametrów
-i walidacja są na tym etapie jawnie udokumentowanymi stubami; ich rzeczywista
-logika należy do przyszłych zadań parsera.
+i walidacja tworzą kolejne, jawnie rozdzielone etapy pipeline'u. Segmentacja
+korzysta z realnej implementacji zweryfikowanej na publicznej uchwale MPZP.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import Literal
 
-from app.schemas.mpzp import MpzpParseResult, MpzpParserWarning, MpzpZoneResult
+from app.schemas.mpzp import (
+    ExtractedEvidence,
+    MpzpParseResult,
+    MpzpParserWarning,
+    MpzpZoneResult,
+)
 from app.services.mpzp_fetch import DocumentBlob
 from app.services.mpzp_parser_extract import (
-    TextExtractionResult,
     classify_document,
     extract_document_text,
+)
+from app.services.mpzp_parser_segment import (
+    DocumentSegment,
+    ZoneSectionResult,
+    find_zone_sections,
+    segment_document,
 )
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class _DocumentSegment:
-    zone_symbol: str
-    text: str
-    page_number: int | None
+__all__ = [
+    "DocumentSegment",
+    "ZoneSectionResult",
+    "extract_parameters",
+    "find_zone_sections",
+    "parse_mpzp_document",
+    "segment_document",
+    "validate_result",
+]
 
 
 async def parse_mpzp_document(
@@ -79,8 +92,19 @@ async def _run_parse_pipeline(
         _extraction_warning_to_parser_warning(message)
         for message in extraction.warnings
     ]
-    segments = segment_document(extraction, zone_symbols)
-    zones = extract_parameters(segments)
+    if not zone_symbols:
+        zones = [
+            MpzpZoneResult(
+                zone_symbol="UNKNOWN",
+                zone_evidence=None,
+                parameters=[],
+            )
+        ]
+    else:
+        segments = segment_document(extraction)
+        zone_section_results = find_zone_sections(segments, zone_symbols)
+        warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
+        zones = extract_parameters(zone_section_results)
     status = validate_result(zones)
     return MpzpParseResult(
         plan_id=None,
@@ -102,37 +126,51 @@ def _extraction_warning_to_parser_warning(message: str) -> MpzpParserWarning:
     )
 
 
-def segment_document(
-    extraction: TextExtractionResult,
-    zone_symbols: list[str],
-) -> list[_DocumentSegment]:
-    """STUB: zwraca jeden segment całego tekstu dla pierwszego kandydata.
+def _zone_section_warnings_to_parser_warnings(
+    results: list[ZoneSectionResult],
+) -> list[MpzpParserWarning]:
+    warnings: list[MpzpParserWarning] = []
+    for result in results:
+        for warning in result.warnings:
+            code, separator, message = warning.partition(":")
+            warnings.append(
+                MpzpParserWarning(
+                    stage="segment_document",
+                    code=code,
+                    message=message.strip() if separator else warning,
+                    zone_symbol=result.zone_symbol,
+                    parameter_name=None,
+                    page_number=None,
+                    severity="warning",
+                )
+            )
+    return warnings
 
-    Rzeczywista segmentacja wielu stref na podstawie struktury uchwały będzie
-    wdrożona w przyszłym zadaniu. Brak kandydata jest jawnie oznaczany UNKNOWN.
-    """
-    zone_symbol = zone_symbols[0] if zone_symbols else "UNKNOWN"
-    combined_text = "\n".join(extraction.pages)
-    page_number = 1 if extraction.pages else None
-    return [
-        _DocumentSegment(
-            zone_symbol=zone_symbol,
-            text=combined_text,
-            page_number=page_number,
-        )
-    ]
 
-
-def extract_parameters(segments: list[_DocumentSegment]) -> list[MpzpZoneResult]:
+def extract_parameters(
+    zone_section_results: list[ZoneSectionResult],
+) -> list[MpzpZoneResult]:
     """STUB: tworzy strefy bez parametrów do czasu wdrożenia ekstraktorów."""
-    return [
-        MpzpZoneResult(
-            zone_symbol=segment.zone_symbol,
-            zone_evidence=None,
-            parameters=[],
+    zones: list[MpzpZoneResult] = []
+    for result in zone_section_results:
+        top_candidate = result.candidates[0] if result.candidates else None
+        zone_evidence = (
+            ExtractedEvidence(
+                raw_value=None,
+                source_text=top_candidate.source_text,
+                page_number=top_candidate.page_number,
+            )
+            if top_candidate is not None
+            else None
         )
-        for segment in segments
-    ]
+        zones.append(
+            MpzpZoneResult(
+                zone_symbol=result.zone_symbol,
+                zone_evidence=zone_evidence,
+                parameters=[],
+            )
+        )
+    return zones
 
 
 def validate_result(
