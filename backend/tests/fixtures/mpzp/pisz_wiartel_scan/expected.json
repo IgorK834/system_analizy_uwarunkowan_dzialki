@@ -1,0 +1,20 @@
+{
+  "document_format": "pdf_scan_real",
+  "zone_symbols_to_test": [
+    "SCAN_NO_TEXT"
+  ],
+  "structural_expectations": {
+    "needs_ocr": true,
+    "manual_review_required": true,
+    "status": "partial",
+    "warning_code": "TEXT_EXTRACTION_WARNING",
+    "warning_text_contains": "OCR"
+  },
+  "expectations": [
+    {
+      "zone_symbol": "SCAN_NO_TEXT",
+      "expected_manual_review_required": true,
+      "parameters": []
+    }
+  ]
+}
