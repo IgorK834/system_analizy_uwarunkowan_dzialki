@@ -68,6 +68,23 @@ AnalyzeRequest = Annotated[
 ]
 
 
+class AnalyzeResumeRequest(BaseModel):
+    analysis_id: int = Field(
+        gt=0,
+        description=(
+            "Identyfikator analizy oczekującej na ręczne podanie symbolu strefy "
+            "(status='waiting_for_zone_symbol')."
+        ),
+        json_schema_extra={"example": 123},
+    )
+    zone_symbol: str = Field(
+        min_length=1,
+        max_length=20,
+        description="Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej.",
+        json_schema_extra={"example": "230_U"},
+    )
+
+
 class GeometryMetrics(BaseModel):
     area_sqm: float = Field(
         ge=0.0,
@@ -346,6 +363,16 @@ class AnalyzeResponse(BaseModel):
         ge=0.0,
         description="Szacowana powierzchnia możliwa do zabudowy w metrach kwadratowych.",
         json_schema_extra={"example": 560.0},
+    )
+    manual_zone_required: bool = Field(
+        default=False,
+        description=(
+            "Czy analiza wymaga ręcznego podania symbolu strefy z mapy "
+            "rastrowej (gmina nie udostępnia wektorowych danych MPZP). Jeżeli "
+            "True, wznów analizę przez POST /analyze/resume z analysis_id "
+            "i odczytanym symbolem strefy."
+        ),
+        json_schema_extra={"example": False},
     )
     warnings: list[WarningMessage] = Field(
         description="Ostrzeżenia o niepewności lub brakujących sekcjach analizy.",
