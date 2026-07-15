@@ -1,0 +1,58 @@
+{
+  "document_format": "pdf_text",
+  "zone_symbols_to_test": [
+    "MN.1"
+  ],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "MN.1",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Dokument używa frazy „minimalny wskaźnik terenu biologicznie czynnego”, poza obecnym anchorem ekstraktora."
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Dokument wstawia słowo „wskaźnik” między maksymalny i powierzchnia zabudowy, czego obecny regex nie obsługuje."
+        },
+        {
+          "name": "min_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Dokument podaje zakres 0,01 – 0,5 bez etykiety „minimalna –” wymaganej przez ekstraktor."
+        },
+        {
+          "name": "max_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Dokument podaje zakres 0,01 – 0,5 bez etykiety „maksymalna –” wymaganej przez ekstraktor."
+        },
+        {
+          "name": "max_building_height_m",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": [
+            11.0,
+            9.5
+          ],
+          "min_confidence": 0.4,
+          "reason_if_not_found": null
+        }
+      ]
+    }
+  ]
+}
