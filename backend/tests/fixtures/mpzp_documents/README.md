@@ -4,6 +4,10 @@ Katalog zawiera statyczny tekst wyekstrahowany z prawdziwych, publicznych
 aktów prawa miejscowego. Testy `pytest` czytają wyłącznie zapisane pliki JSON
 i nigdy nie wykonują żądań HTTP.
 
+Każdy fixture ma `pages.json` oraz `source.json`. Opcjonalny `tables.json`
+jest tworzony wyłącznie wtedy, gdy produkcyjna ekstrakcja `pdfplumber`
+znajdzie natywną tabelę; zawiera listę obiektów z numerem strony i wierszami.
+
 ## Bielsko-Biała — Uchwała Nr VIII/187/2024
 
 - Gmina: Bielsko-Biała.
@@ -33,5 +37,6 @@ python -m scripts.build_mpzp_text_fixture \
 ```
 
 Skrypt korzysta z produkcyjnego, zabezpieczonego fetchera oraz produkcyjnej
-ekstrakcji `pdfplumber`. Jest reużywalny dla innych gmin i regionów: wystarczy
-zmienić `--url`, `--output-dir` oraz opcjonalny `--note`.
+ekstrakcji `pdfplumber`, włącznie z tabelami zapisywanymi do opcjonalnego
+`tables.json`. Jest reużywalny dla innych gmin i regionów: wystarczy zmienić
+`--url`, `--output-dir` oraz opcjonalny `--note`.

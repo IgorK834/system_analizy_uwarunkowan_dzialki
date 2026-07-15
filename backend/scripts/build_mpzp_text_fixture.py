@@ -1,4 +1,9 @@
-"""Buduje statyczny fixture tekstowy z publicznego dokumentu MPZP."""
+"""Buduje statyczny fixture tekstu i tabel z publicznego dokumentu MPZP.
+
+``tables.json`` jest opcjonalny: skrypt zapisuje go tylko wtedy, gdy
+produkcyjna ekstrakcja ``pdfplumber`` rzeczywiście znalazła co najmniej jedną
+tabelę. Dzięki temu zwykłe dokumenty tekstowe nie dostają pustego pliku.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +25,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Pobiera publiczny dokument MPZP produkcyjnym fetcherem i zapisuje "
-            "wynik ekstrakcji tekstu jako fixture JSON."
+            "wynik ekstrakcji tekstu oraz opcjonalnych tabel jako fixture JSON."
         )
     )
     parser.add_argument("--url", required=True, help="Publiczny URL dokumentu MPZP.")
@@ -28,7 +33,7 @@ def _parse_args() -> argparse.Namespace:
         "--output-dir",
         required=True,
         type=Path,
-        help="Katalog docelowy dla pages.json i source.json.",
+        help="Katalog docelowy dla pages.json, opcjonalnego tables.json i source.json.",
     )
     parser.add_argument(
         "--note",
@@ -53,6 +58,14 @@ async def build_fixture(url: str, output_dir: Path, note: str | None) -> None:
 
     fetched_at = document_blob.source_metadata.fetched_at
     _write_json(output_dir / "pages.json", {"pages": text_result.pages})
+    if text_result.tables:
+        _write_json(
+            output_dir / "tables.json",
+            [
+                {"page_number": table.page_number, "rows": table.rows}
+                for table in text_result.tables
+            ],
+        )
     _write_json(
         output_dir / "source.json",
         {
