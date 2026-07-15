@@ -1,0 +1,158 @@
+{
+  "document_format": "pdf_text",
+  "zone_symbols_to_test": [
+    "230_U",
+    "230_UMW",
+    "230_ZP"
+  ],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "230_U",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "max_building_height_m",
+          "expected_found": true,
+          "normalized_value": 15.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "min_intensity",
+          "expected_found": true,
+          "normalized_value": 0.1,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "max_intensity",
+          "expected_found": true,
+          "normalized_value": 3.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": true,
+          "normalized_value": 60.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": true,
+          "normalized_value": 10.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "roof_angle_min_deg",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": [
+            30.0,
+            0.0
+          ],
+          "min_confidence": 0.4,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "roof_angle_max_deg",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": [
+            50.0,
+            15.0
+          ],
+          "min_confidence": 0.4,
+          "reason_if_not_found": null
+        }
+      ]
+    },
+    {
+      "zone_symbol": "230_UMW",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "max_building_height_m",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": [
+            15.0,
+            13.0
+          ],
+          "min_confidence": 0.5,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "min_intensity",
+          "expected_found": true,
+          "normalized_value": 0.1,
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "max_intensity",
+          "expected_found": true,
+          "normalized_value": 2.5,
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": true,
+          "normalized_value": 50.0,
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": true,
+          "normalized_value": 20.0,
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        }
+      ]
+    },
+    {
+      "zone_symbol": "230_ZP",
+      "expected_manual_review_required": false,
+      "parameters": [
+        {
+          "name": "prohibition",
+          "expected_found": true,
+          "normalized_value": "zakaz zabudowy",
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": true,
+          "normalized_value": 75.0,
+          "allowed_values": null,
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "max_building_height_m",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Wartość 5 m dotyczy urządzeń sportu i rekreacji, a nie wysokości zabudowy."
+        }
+      ]
+    }
+  ]
+}
