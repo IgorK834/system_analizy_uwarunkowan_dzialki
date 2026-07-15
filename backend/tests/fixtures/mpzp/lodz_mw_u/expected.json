@@ -1,0 +1,31 @@
+{
+  "document_format": "html",
+  "zone_symbols_to_test": [
+    "6.8.MW/U"
+  ],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "6.8.MW/U",
+      "expected_manual_review_required": null,
+      "parameters": [
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Realne 40% jest współdzielone przez 6.5.MW/U i 6.8.MW/U oraz zapisane jako „wskaźnik ... maksimum”, poza anchorem ekstraktora."
+        },
+        {
+          "name": "setback_m",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Regex setback_m nie obsługuje wariantu „w odległości do 4,0 m od tej granicy”."
+        }
+      ]
+    }
+  ]
+}
