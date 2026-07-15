@@ -1,0 +1,102 @@
+{
+  "document_format": "pdf_table",
+  "zone_symbols_to_test": [
+    "1UZ",
+    "2UZ"
+  ],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "1UZ",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "min_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Ekstraktor wymaga etykiety „minimalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+        },
+        {
+          "name": "max_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Ekstraktor wymaga etykiety „maksymalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,60 bez znaku %, którego wymaga ekstraktor."
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,15 bez znaku %, którego wymaga ekstraktor."
+        },
+        {
+          "name": "max_building_height_m",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Wiersz używa frazy „maksymalna wysokość budynku funkcji usługowej”, a ekstraktor wymaga anchoru wysokości zabudowy."
+        }
+      ]
+    },
+    {
+      "zone_symbol": "2UZ",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "min_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Ekstraktor wymaga etykiety „minimalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+        },
+        {
+          "name": "max_intensity",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Ekstraktor wymaga etykiety „maksymalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,60 bez znaku %, którego wymaga ekstraktor."
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,15 bez znaku %, którego wymaga ekstraktor."
+        },
+        {
+          "name": "max_building_height_m",
+          "expected_found": false,
+          "normalized_value": null,
+          "allowed_values": null,
+          "min_confidence": null,
+          "reason_if_not_found": "Wiersz używa frazy „maksymalna wysokość budynku funkcji usługowej”, a ekstraktor wymaga anchoru wysokości zabudowy."
+        }
+      ]
+    }
+  ]
+}

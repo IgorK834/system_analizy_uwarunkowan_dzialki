@@ -1,0 +1,109 @@
+[
+  {
+    "page_number": 4,
+    "rows": [
+      [
+        "Przedmiot ustaleń",
+        "Wskaźniki\ni parametry"
+      ],
+      [
+        "nadziemna intensywność zabudowy",
+        "0,15 – 2,50"
+      ],
+      [
+        "maksymalny udział powierzchni zabudowy",
+        "0,60"
+      ],
+      [
+        "minimalny udział powierzchni biologicznie czynnej",
+        "0,15"
+      ],
+      [
+        "maksymalna wysokość budynku funkcji usługowej",
+        "16 m"
+      ],
+      [
+        "maksymalna wysokość obiektów budowlanych infrastruktury technicznej",
+        "9 m"
+      ]
+    ]
+  },
+  {
+    "page_number": 5,
+    "rows": [
+      [
+        "maksymalna wysokość urządzeń i budowli rekreacji i wypoczynku oraz obsługi\ngospodarczej",
+        "4 m"
+      ],
+      [
+        "maksymalna wysokość wolnostojących urządzeń i instalacji oze",
+        "3 m"
+      ],
+      [
+        "minimalna liczba miejsc do parkowania samochodów",
+        "10 m. p. / 1000\nm2 p.u."
+      ],
+      [
+        "minimalna liczba miejsc do parkowania rowerów",
+        "10 stanowisk /\n100 łóżek"
+      ],
+      [
+        "minimalna liczba miejsc do parkowania dla pojazdów zaopatrzonych w kartę parkingową",
+        "zgodnie z §13 ust.\n3"
+      ],
+      [
+        "linie zabudowy – zgodnie z rysunkiem planu miejscowego, usytuowane w odległości od\nlinii rozgraniczających w granicach",
+        "od 8 m do 20 m"
+      ]
+    ]
+  },
+  {
+    "page_number": 5,
+    "rows": [
+      [
+        "Symbol terenu komunikacji drogowej",
+        "Szerokość w liniach rozgraniczających"
+      ],
+      [
+        "Tereny komunikacji drogowej wewnętrznej",
+        null
+      ],
+      [
+        "1KR",
+        "od 10 m do 23 m"
+      ]
+    ]
+  },
+  {
+    "page_number": 6,
+    "rows": [
+      [
+        "Lp.",
+        "Kategorie obiektów",
+        "Minimalna liczba miejsc\npostojowych\ndla rowerów",
+        "Jednostka odniesienia"
+      ],
+      [
+        "1.",
+        "Biura",
+        "1,6",
+        "100 m2 powierzchni użytkowej"
+      ],
+      [
+        "2.",
+        "Szpitale",
+        "5",
+        "100 łóżek"
+      ]
+    ]
+  },
+  {
+    "page_number": 8,
+    "rows": [
+      [
+        "",
+        ""
+      ]
+    ]
+  }
+]
