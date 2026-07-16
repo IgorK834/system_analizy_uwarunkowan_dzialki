@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -24,7 +25,13 @@ class SourceRecord(Base):
     source_name: Mapped[str] = mapped_column(String(120), nullable=False)
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # API przechowuje liczbowy kod HTTP, ale warstwa audytowa musi również
+    # odróżnić brak wywołania od niedostępności i błędu sekcji. Dlatego baza
+    # zapisuje zarówno "200", jak i semantyczne "unavailable"/"error".
+    response_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     confidence: Mapped[float | None] = mapped_column(nullable=True)
     manual_review_required: Mapped[bool] = mapped_column(nullable=False, default=False)
+    warnings: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     analysis: Mapped[Analysis] = relationship(back_populates="source_records")

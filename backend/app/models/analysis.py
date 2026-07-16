@@ -37,7 +37,7 @@ class Analysis(Base):
         nullable=True,
     )
     buildable_area_sqm: Mapped[float | None] = mapped_column(nullable=True)
-    warnings: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    warnings: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
 
     # Pola trybu ręcznego wznowienia (status='waiting_for_zone_symbol'), gdy
     # discover_mpzp zwraca brak_wektorow=True. Nie przechowujemy bytes
