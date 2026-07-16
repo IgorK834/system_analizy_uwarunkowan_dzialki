@@ -1,19 +1,9 @@
-"""Router /analyze.
-
-Uwaga o zakresie: to zadanie podłącza ``discover_mpzp`` do ``/analyze`` po
-raz pierwszy i persystuje Parcel+Analysis WYŁĄCZNIE w gałęzi
-``brak_wektorow=True`` (gdy trzeba wznowić analizę ręcznie). Gałąź, w której
-discovery znajduje wektory, zachowuje dotychczasowe zachowanie
-(``status='partial'``, ``analysis_id=None``) — pełny silnik przecięć na
-realnych danych WFS jest osobnym, przyszłym zadaniem. Pełny, wersjonowany
-model provenance jest zalecany w ANALIZA_ARCHITEKTURY_I_PLAN.md (sekcja E,
-ADR-004/ADR-005) — ten router realizuje tylko minimalny, potrzebny wycinek.
-"""
+"""Cienka warstwa HTTP dla uruchamiania i ręcznego wznawiania analizy."""
 
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -30,9 +20,12 @@ from app.schemas.analyze import (
 )
 from app.schemas.source import SourceMetadata
 from app.services.geocoding import GeocodingServiceUnavailableError
-from app.services.geometry import CoordinatesOutsidePolandError, parse_parcel_geometry
-from app.services.initiation import AddressNotFoundError, resolve_parcel
-from app.services.mpzp import discover_mpzp
+from app.services.analysis_orchestrator import run_analysis
+from app.services.geometry import (
+    CoordinatesOutsidePolandError,
+    InvalidParcelGeometryError,
+)
+from app.services.initiation import AddressNotFoundError
 from app.services.mpzp_fetch import (
     MpzpDocumentFetchError,
     MpzpDocumentSecurityError,
@@ -45,7 +38,6 @@ from app.services.mpzp_zones import (
     map_parser_zone_to_analyze_response,
     validate_zone_symbol_format,
 )
-from app.services.persistence import get_or_create_parcel
 from app.services.uldk import (
     InvalidParcelIdentifierError,
     ParcelNotFoundError,
@@ -72,11 +64,15 @@ async def analyze(
         MapAnalyzeRequest | AddressAnalyzeRequest | ParcelIdAnalyzeRequest,
         Body(discriminator="method", title="AnalyzeRequest"),
     ],
+    force_refresh: bool = Query(
+        False,
+        description="Pomija świeży cache i uruchamia nową analizę.",
+    ),
     db: Session = Depends(get_db),
 ) -> AnalyzeResponse:
     try:
-        result = await resolve_parcel(request)
-    except CoordinatesOutsidePolandError as exc:
+        return await run_analysis(request, db, force_refresh=force_refresh)
+    except (CoordinatesOutsidePolandError, InvalidParcelGeometryError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except (AddressNotFoundError, ParcelNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -84,75 +80,6 @@ async def analyze(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except (UldkServiceUnavailableError, GeocodingServiceUnavailableError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-
-    warnings: list[WarningMessage] = []
-    parcel_geometry = parse_parcel_geometry(result.wkt)
-    discovery_result = await discover_mpzp(parcel_geometry)
-
-    if discovery_result.brak_wektorow:
-        # Persystencja jest ŚWIADOMIE ograniczona do tej gałęzi: tylko tutaj
-        # jest faktycznie potrzebna, bo trzeba wznowić analizę później przez
-        # POST /analyze/resume. Gałąź "found" (wektory dostępne) zachowuje
-        # dotychczasowe zachowanie i NIE zapisuje niczego — to osobne,
-        # świadomie odłożone zadanie (silnik przecięć na realnych danych WFS).
-        parcel = get_or_create_parcel(
-            db, result.parcel_identifier, parcel_geometry
-        )
-        analysis = Analysis(
-            parcel_id=parcel.id,
-            status="waiting_for_zone_symbol",
-            pending_uchwala_url=discovery_result.uchwala_url,
-            pending_plan_id=discovery_result.plan_id,
-            pending_zone_symbol_candidates=discovery_result.candidate_zone_symbols,
-        )
-        db.add(analysis)
-        db.commit()
-        db.refresh(analysis)
-
-        warnings.append(
-            WarningMessage(
-                code="MPZP_MANUAL_ZONE_REQUIRED",
-                message=(
-                    "Gmina nie udostępnia wektorowych danych MPZP dla tej "
-                    "działki. Podaj symbol strefy odczytany z mapy rastrowej "
-                    "MPZP i wznów analizę przez POST /analyze/resume."
-                ),
-                severity="warning",
-                source_name="mpzp",
-            )
-        )
-
-        return AnalyzeResponse(
-            analysis_id=analysis.id,
-            status="partial",
-            analyzed_at=datetime.now(timezone.utc),
-            parcel=None,
-            mpzp_zones=[],
-            pog=None,
-            infrastructure=[],
-            risks=[],
-            buildable_area_sqm=None,
-            manual_zone_required=True,
-            warnings=warnings,
-            sources=[result.source_metadata, discovery_result.source_metadata],
-        )
-
-    # Gałąź bez brak_wektorow=True: zachowujemy dotychczasowe zachowanie
-    # dokładnie bez zmian — poza tym zadaniem jest zbudowanie silnika
-    # przecięć na realnych danych wektorowych MPZP dla tej gałęzi.
-    return AnalyzeResponse(
-        analysis_id=None,
-        status="partial",
-        analyzed_at=datetime.now(timezone.utc),
-        parcel=None,
-        mpzp_zones=[],
-        pog=None,
-        infrastructure=[],
-        risks=[],
-        buildable_area_sqm=None,
-        warnings=warnings,
-        sources=[result.source_metadata],
-    )
 
 
 @router.post(
