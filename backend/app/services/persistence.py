@@ -16,11 +16,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from geoalchemy2.shape import from_shape
+from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.analysis import Analysis
 from app.models.infrastructure import Infrastructure
@@ -30,9 +30,20 @@ from app.models.parcel import Parcel
 from app.models.pog_data import PogData
 from app.models.risk import Risk
 from app.models.source_record import SourceRecord
-from app.schemas.analyze import AnalyzeResponse
+from app.schemas.analyze import (
+    AnalyzeResponse,
+    GeometryMetrics,
+    InfrastructureResult,
+    MpzpZoneResult,
+    ParcelGeometryResponse,
+    PogResult,
+    RiskResult,
+    WarningMessage,
+)
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextResult
+from app.services.geojson import parcel_geometry_to_geojson
+from app.services.geometry import calculate_geometry_metrics
 
 
 @dataclass(frozen=True)
@@ -161,6 +172,11 @@ def save_analysis(
     parcel_geometry: BaseGeometry,
     db: Session,
     context_result: ContextResult | None = None,
+    *,
+    database_status: str | None = None,
+    pending_uchwala_url: str | None = None,
+    pending_plan_id: str | None = None,
+    pending_zone_symbol_candidates: list[str] | None = None,
 ) -> Analysis:
     """Atomowo zapisuje wszystkie wypełnione sekcje ``AnalyzeResponse``.
 
@@ -168,6 +184,12 @@ def save_analysis(
     odpowiedzi API jest przeznaczony dla frontendu i nie jest transformowany
     z powrotem. Każde wywołanie tworzy nowy ``Analysis`` jako element historii;
     ponownie używany jest wyłącznie rekord ``Parcel``.
+
+    ``database_status`` rozdziela status publicznego API od stanu workflow.
+    Jest używany tylko dla trybu ręcznego MPZP: API zwraca
+    ``waiting_for_user_input``, podczas gdy istniejący endpoint resume wymaga
+    w bazie ``waiting_for_zone_symbol``. Pola ``pending_*`` są zapisywane w tej
+    samej transakcji, aby gałąź rastrowa nie wykonywała drugiego commita.
 
     Jakikolwiek błąd sekcji wycofuje całą transakcję i jest propagowany do
     wywołującego, który odpowiada za mapowanie go na odpowiedź HTTP.
@@ -177,12 +199,15 @@ def save_analysis(
         analysis = Analysis(
             parcel_id=parcel.id,
             analyzed_at=result.analyzed_at,
-            status=result.status,
+            status=database_status or result.status,
             buildable_area_sqm=result.buildable_area_sqm,
             warnings=(
                 [warning.model_dump(mode="json") for warning in result.warnings]
                 or None
             ),
+            pending_uchwala_url=pending_uchwala_url,
+            pending_plan_id=pending_plan_id,
+            pending_zone_symbol_candidates=pending_zone_symbol_candidates,
         )
         db.add(analysis)
         db.flush()
@@ -289,6 +314,139 @@ def save_analysis(
         raise
 
 
+def build_analyze_response_from_analysis(
+    analysis: Analysis,
+    db: Session,
+) -> AnalyzeResponse:
+    """Odtwarza kontrakt API z zapisanego snapshotu analizy.
+
+    Wszystkie relacje są ładowane jawnie w bieżącej sesji, dlatego wynik cache
+    nie zależy od wcześniejszego stanu lazy loading. Geometria działki pozostaje
+    w PostGIS jako EPSG:2180; dopiero przy budowaniu odpowiedzi jest zamieniana
+    przez ``to_shape`` i istniejący helper GeoJSON na WGS84.
+
+    Obecny schemat snapshotowy nie przechowuje ``supplementary_use`` ani udziału
+    OUZ. Pierwsza wartość wraca więc jako ``None``, a udział OUZ jest odtwarzany
+    z zapisanego pola przecięcia i powierzchni działki. Docelowo te ograniczenia
+    usuwa wersjonowany model provenance z ADR-004/005.
+    """
+    loaded = db.execute(
+        select(Analysis)
+        .where(Analysis.id == analysis.id)
+        .options(
+            selectinload(Analysis.parcel),
+            selectinload(Analysis.mpzp_zones).selectinload(MpzpZone.parameters),
+            selectinload(Analysis.pog_data),
+            selectinload(Analysis.infrastructure_records),
+            selectinload(Analysis.risk_records),
+            selectinload(Analysis.source_records),
+        )
+    ).scalar_one()
+
+    parcel_geometry = to_shape(loaded.parcel.geometry)
+    metrics = calculate_geometry_metrics(parcel_geometry)
+    sources = [_source_metadata_from_record(record) for record in loaded.source_records]
+    parcel_source_record = next(
+        (
+            record
+            for record in loaded.source_records
+            if record.source_name.casefold() == "uldk"
+        ),
+        None,
+    )
+    parcel_source = (
+        _source_metadata_from_record(parcel_source_record)
+        if parcel_source_record is not None
+        else SourceMetadata(
+            source_name="cache",
+            source_url=None,
+            fetched_at=loaded.analyzed_at,
+            confidence=0.0,
+            manual_review_required=True,
+        )
+    )
+    parcel_response = ParcelGeometryResponse(
+        parcel_identifier=loaded.parcel.parcel_identifier,
+        geometry_geojson=parcel_geometry_to_geojson(
+            parcel_geometry,
+            loaded.parcel.parcel_identifier,
+        ),
+        metrics=GeometryMetrics(
+            area_sqm=metrics.area_sqm,
+            area_ha=metrics.area_ha,
+            perimeter_m=metrics.perimeter_m,
+            is_valid=metrics.is_valid,
+            geometry_repaired=metrics.geometry_repaired,
+        ),
+        source=parcel_source,
+    )
+
+    zones = [
+        _mpzp_zone_response(zone, loaded.source_records)
+        for zone in loaded.mpzp_zones
+    ]
+    pog = (
+        _pog_response(
+            loaded.pog_data[0],
+            loaded.source_records,
+            metrics.area_sqm,
+        )
+        if loaded.pog_data
+        else None
+    )
+    infrastructure = [
+        InfrastructureResult(
+            network_type=item.network_type,
+            buffer_m=item.buffer_m or 0.0,
+            source=_source_for_child(
+                loaded.source_records,
+                item.source_url,
+                item.fetched_at,
+                fallback_name="KIUT",
+                confidence=item.confidence,
+                manual_review_required=item.manual_review_required,
+            ),
+        )
+        for item in loaded.infrastructure_records
+    ]
+    risks = [
+        RiskResult(
+            risk_type=item.risk_type,
+            description=item.description or "Brak opisu ryzyka.",
+            source=_source_for_child(
+                loaded.source_records,
+                item.source_url,
+                item.fetched_at,
+                fallback_name=(
+                    "ISOK" if item.risk_type == "flood_zone" else "GDOŚ"
+                ),
+                confidence=item.confidence,
+                manual_review_required=item.manual_review_required,
+            ),
+        )
+        for item in loaded.risk_records
+    ]
+    warnings = [
+        WarningMessage.model_validate(warning)
+        for warning in (loaded.warnings or [])
+    ]
+
+    return AnalyzeResponse(
+        analysis_id=loaded.id,
+        status=loaded.status,
+        analyzed_at=loaded.analyzed_at,
+        parcel=parcel_response,
+        mpzp_zones=zones,
+        pog=pog,
+        infrastructure=infrastructure,
+        risks=risks,
+        buildable_area_sqm=loaded.buildable_area_sqm,
+        manual_zone_required=loaded.status == "waiting_for_zone_symbol",
+        warnings=warnings,
+        sources=sources,
+    )
+
+
 def _source_record_data(
     source: SourceMetadata,
     result: AnalyzeResponse,
@@ -361,3 +519,164 @@ def _parameter_unit(parameter_name: str) -> str | None:
     if parameter_name.endswith("_pct"):
         return "percent"
     return None
+
+
+def _mpzp_zone_response(
+    zone: MpzpZone,
+    source_records: list[SourceRecord],
+) -> MpzpZoneResult:
+    parameters = {
+        parameter.parameter_name: parameter
+        for parameter in zone.parameters
+    }
+    manual_review_required = any(
+        parameter.manual_review_required for parameter in zone.parameters
+    )
+    return MpzpZoneResult(
+        zone_symbol=zone.zone_symbol,
+        primary_use=zone.primary_use,
+        supplementary_use=None,
+        max_building_height_m=_parameter_float(
+            parameters.get("max_building_height_m")
+        ),
+        max_floors=_parameter_int(parameters.get("max_floors")),
+        min_biologically_active_pct=_parameter_float(
+            parameters.get("min_biologically_active_pct")
+        ),
+        max_floor_area_ratio=_parameter_float(
+            parameters.get("max_floor_area_ratio")
+        ),
+        min_floor_area_ratio=_parameter_float(
+            parameters.get("min_floor_area_ratio")
+        ),
+        max_building_coverage_pct=_parameter_float(
+            parameters.get("max_building_coverage_pct")
+        ),
+        intersection_area_sqm=zone.intersection_area_sqm or 0.0,
+        intersection_pct=zone.intersection_pct or 0.0,
+        is_dominant=zone.is_dominant,
+        source=_source_for_child(
+            source_records,
+            zone.source_url,
+            zone.fetched_at,
+            fallback_name="MPZP",
+            confidence=zone.confidence,
+            manual_review_required=manual_review_required,
+        ),
+    )
+
+
+def _pog_response(
+    pog: PogData,
+    source_records: list[SourceRecord],
+    parcel_area_sqm: float,
+) -> PogResult:
+    area = pog.ouz_intersection_area_sqm
+    area_pct = (
+        area / parcel_area_sqm * 100.0
+        if area is not None and parcel_area_sqm > 0
+        else None
+    )
+    source_record = _find_source_record(
+        source_records,
+        pog.source_url,
+        pog.fetched_at,
+        preferred_name="POG",
+    )
+    source = (
+        _source_metadata_from_record(source_record)
+        if source_record is not None
+        else None
+    )
+    return PogResult(
+        status=pog.status,
+        planning_zone=pog.planning_zone,
+        ouz_intersection_area_sqm=area,
+        ouz_intersection_pct=area_pct,
+        touches_ouz_boundary=pog.touches_ouz_boundary,
+        source=source,
+    )
+
+
+def _source_for_child(
+    source_records: list[SourceRecord],
+    source_url: str | None,
+    fetched_at: datetime | None,
+    *,
+    fallback_name: str,
+    confidence: float | None,
+    manual_review_required: bool,
+) -> SourceMetadata:
+    matching = _find_source_record(
+        source_records,
+        source_url,
+        fetched_at,
+        preferred_name=fallback_name,
+    )
+    if matching is not None:
+        return _source_metadata_from_record(matching)
+    return SourceMetadata(
+        source_name=fallback_name,
+        source_url=source_url,
+        fetched_at=fetched_at,
+        confidence=confidence or 0.0,
+        manual_review_required=manual_review_required,
+    )
+
+
+def _find_source_record(
+    source_records: list[SourceRecord],
+    source_url: str | None,
+    fetched_at: datetime | None,
+    *,
+    preferred_name: str,
+) -> SourceRecord | None:
+    preferred = preferred_name.casefold()
+    if source_url is not None:
+        for record in source_records:
+            if (
+                record.source_url == source_url
+                and record.fetched_at == fetched_at
+            ):
+                return record
+    return next(
+        (
+            record
+            for record in source_records
+            if record.source_name.casefold() == preferred
+        ),
+        None,
+    )
+
+
+def _source_metadata_from_record(record: SourceRecord) -> SourceMetadata:
+    response_status = (
+        int(record.response_status)
+        if record.response_status and record.response_status.isdecimal()
+        else None
+    )
+    return SourceMetadata(
+        source_name=record.source_name,
+        source_url=record.source_url,
+        fetched_at=record.fetched_at,
+        response_status=response_status,
+        confidence=record.confidence or 0.0,
+        manual_review_required=(
+            record.manual_review_required
+            or record.response_status in {"unavailable", "error", "not_attempted"}
+        ),
+    )
+
+
+def _parameter_float(parameter: MpzpParameter | None) -> float | None:
+    if parameter is None or parameter.normalized_value is None:
+        return None
+    try:
+        return float(parameter.normalized_value)
+    except ValueError:
+        return None
+
+
+def _parameter_int(parameter: MpzpParameter | None) -> int | None:
+    value = _parameter_float(parameter)
+    return int(value) if value is not None else None
