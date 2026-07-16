@@ -129,7 +129,11 @@ def _finalize_section(
     oznacza dostępność sekcji.
     """
     if isinstance(outcome, (IsokServiceUnavailableError, GdosServiceUnavailableError)):
-        logger.warning("Sekcja %s niedostępna: %s", section, outcome)
+        logger.warning(
+            "Sekcja %s niedostępna; error_type=%s",
+            section,
+            type(outcome).__name__,
+        )
         return ContextSectionResult(
             section=section,
             status="unavailable",
@@ -140,7 +144,11 @@ def _finalize_section(
         )
 
     if isinstance(outcome, BaseException):
-        logger.error("Sekcja %s zakończona nieoczekiwanym błędem: %s", section, outcome)
+        logger.error(
+            "Sekcja %s zakończona nieoczekiwanym błędem; error_type=%s",
+            section,
+            type(outcome).__name__,
+        )
         return ContextSectionResult(
             section=section,
             status="error",

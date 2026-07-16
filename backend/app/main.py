@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.logging import configure_logging
 from app.core.settings import settings
 from app.routers.analyze import router as analyze_router
 from app.routers.geocode import router as geocode_router
 from app.routers.health import router as health_router
+
+configure_logging()
 
 app = FastAPI(title=settings.app_title, version=settings.app_version)
 
