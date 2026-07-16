@@ -3,16 +3,24 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 import pytest
+from sqlalchemy import delete, select
 
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
+from app.models.infrastructure import Infrastructure
+from app.models.mpzp_parameter import MpzpParameter as MpzpParameterRecord
+from app.models.mpzp_zone import MpzpZone
 from app.models.parcel import Parcel
+from app.models.pog_data import PogData
+from app.models.risk import Risk
+from app.models.source_record import SourceRecord
 from app.schemas.analyze import SourceMetadata
 from app.schemas.mpzp import MpzpParameter, MpzpParseResult
 from app.schemas.mpzp import MpzpZoneResult as ParserMpzpZoneResult
 from app.services.mpzp import MpzpDiscoveryResult
 from app.services.mpzp_fetch import DocumentBlob, MpzpDocumentFetchError
+from app.services.context import ContextResult, ContextSectionResult
 from app.services.uldk import ParcelLookupResult
 
 pytestmark = pytest.mark.integration
@@ -83,13 +91,20 @@ def cleanup_test_analyses():
     """Usuwa dane testowe po każdym teście, żeby testy integracyjne nie się kumulowały."""
     yield
     with SessionLocal() as db:
-        for analysis in db.query(Analysis).all():
-            db.delete(analysis)
-        db.commit()
-        for parcel in db.query(Parcel).filter(
+        parcel_ids = select(Parcel.id).where(
             Parcel.parcel_identifier.like("122101_1.0001.9%")
-        ):
-            db.delete(parcel)
+        )
+        analysis_ids = select(Analysis.id).where(Analysis.parcel_id.in_(parcel_ids))
+        zone_ids = select(MpzpZone.id).where(MpzpZone.analysis_id.in_(analysis_ids))
+        db.execute(
+            delete(MpzpParameterRecord).where(
+                MpzpParameterRecord.mpzp_zone_id.in_(zone_ids)
+            )
+        )
+        for model in (SourceRecord, Risk, Infrastructure, PogData, MpzpZone):
+            db.execute(delete(model).where(model.analysis_id.in_(analysis_ids)))
+        db.execute(delete(Analysis).where(Analysis.id.in_(analysis_ids)))
+        db.execute(delete(Parcel).where(Parcel.id.in_(parcel_ids)))
         db.commit()
 
 
@@ -108,16 +123,30 @@ def _document_blob() -> DocumentBlob:
     )
 
 
+def _empty_context() -> ContextResult:
+    return ContextResult(
+        kiut=ContextSectionResult(section="kiut", status="available"),
+        isok=ContextSectionResult(section="isok", status="available"),
+        gdos=ContextSectionResult(section="gdos", status="available"),
+    )
+
+
 # --- POST /analyze: brak_wektorow=True path -----------------------------
 
 
 def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
     with (
         patch(
-            "app.routers.analyze.resolve_parcel", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.resolve_parcel",
+            new_callable=AsyncMock,
         ) as mock_resolve,
         patch(
-            "app.routers.analyze.discover_mpzp", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.analyze_context",
+            new=AsyncMock(return_value=_empty_context()),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.discover_mpzp",
+            new_callable=AsyncMock,
         ) as mock_discover,
     ):
         mock_resolve.return_value = _uldk_result("122101_1.0001.9001")
@@ -130,8 +159,9 @@ def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["manual_zone_required"] is True
-    assert body["status"] == "partial"
+    assert body["status"] == "waiting_for_user_input"
     assert body["analysis_id"] is not None
+    assert body["parcel"] is not None
     assert body["mpzp_zones"] == []
     assert any(
         warning["code"] == "MPZP_MANUAL_ZONE_REQUIRED" for warning in body["warnings"]
@@ -141,10 +171,16 @@ def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
 def test_analyze_no_vectors_persists_parcel_and_analysis_in_db() -> None:
     with (
         patch(
-            "app.routers.analyze.resolve_parcel", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.resolve_parcel",
+            new_callable=AsyncMock,
         ) as mock_resolve,
         patch(
-            "app.routers.analyze.discover_mpzp", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.analyze_context",
+            new=AsyncMock(return_value=_empty_context()),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.discover_mpzp",
+            new_callable=AsyncMock,
         ) as mock_discover,
     ):
         mock_resolve.return_value = _uldk_result("122101_1.0001.9002")
@@ -168,14 +204,33 @@ def test_analyze_no_vectors_persists_parcel_and_analysis_in_db() -> None:
         assert parcel.parcel_identifier == "122101_1.0001.9002"
 
 
-def test_analyze_found_vectors_keeps_existing_behaviour_unchanged() -> None:
+def test_analyze_found_vectors_runs_orchestrator_and_persists_result() -> None:
+    parser_result = MpzpParseResult(
+        plan_id="MPZP/2020/1",
+        zones=[ParserMpzpZoneResult(zone_symbol="MN", parameters=[])],
+        status="partial",
+    )
     with (
         patch(
-            "app.routers.analyze.resolve_parcel", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.resolve_parcel",
+            new_callable=AsyncMock,
         ) as mock_resolve,
         patch(
-            "app.routers.analyze.discover_mpzp", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.analyze_context",
+            new=AsyncMock(return_value=_empty_context()),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.discover_mpzp",
+            new_callable=AsyncMock,
         ) as mock_discover,
+        patch(
+            "app.services.analysis_orchestrator.fetch_mpzp_document",
+            new=AsyncMock(return_value=_document_blob()),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.parse_mpzp_document",
+            new=AsyncMock(return_value=parser_result),
+        ),
     ):
         mock_resolve.return_value = _uldk_result("122101_1.0001.9003")
         mock_discover.return_value = _found_discovery()
@@ -185,19 +240,26 @@ def test_analyze_found_vectors_keeps_existing_behaviour_unchanged() -> None:
         )
 
     body = response.json()
-    assert body["analysis_id"] is None
+    assert body["analysis_id"] is not None
     assert body["status"] == "partial"
     assert body["manual_zone_required"] is False
-    assert body["mpzp_zones"] == []
+    assert body["parcel"] is not None
+    assert body["mpzp_zones"][0]["zone_symbol"] == "MN"
 
 
 def test_analyze_no_vectors_reusing_same_parcel_identifier_gets_or_creates() -> None:
     with (
         patch(
-            "app.routers.analyze.resolve_parcel", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.resolve_parcel",
+            new_callable=AsyncMock,
         ) as mock_resolve,
         patch(
-            "app.routers.analyze.discover_mpzp", new_callable=AsyncMock
+            "app.services.analysis_orchestrator.analyze_context",
+            new=AsyncMock(return_value=_empty_context()),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.discover_mpzp",
+            new_callable=AsyncMock,
         ) as mock_discover,
     ):
         mock_resolve.return_value = _uldk_result("122101_1.0001.9004")
