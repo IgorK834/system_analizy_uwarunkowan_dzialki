@@ -14,10 +14,6 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
-from geoalchemy2.shape import from_shape
-from shapely.geometry import MultiPolygon
-from shapely.geometry.base import BaseGeometry
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -49,6 +45,7 @@ from app.services.mpzp_zones import (
     map_parser_zone_to_analyze_response,
     validate_zone_symbol_format,
 )
+from app.services.persistence import get_or_create_parcel
 from app.services.uldk import (
     InvalidParcelIdentifierError,
     ParcelNotFoundError,
@@ -98,7 +95,7 @@ async def analyze(
         # POST /analyze/resume. Gałąź "found" (wektory dostępne) zachowuje
         # dotychczasowe zachowanie i NIE zapisuje niczego — to osobne,
         # świadomie odłożone zadanie (silnik przecięć na realnych danych WFS).
-        parcel = _get_or_create_parcel(
+        parcel = get_or_create_parcel(
             db, result.parcel_identifier, parcel_geometry
         )
         analysis = Analysis(
@@ -289,32 +286,3 @@ async def analyze_resume(
         warnings=warnings,
         sources=[source],
     )
-
-
-def _get_or_create_parcel(
-    db: Session, parcel_identifier: str, geometry: BaseGeometry
-) -> Parcel:
-    """Znajduje Parcel po parcel_identifier albo tworzy nowy rekord.
-
-    parcel_identifier jest unikalny (patrz migracja 001), więc get-or-create
-    jest bezpieczny dla ponownych analiz tej samej działki. Kolumna geometry
-    w bazie jest typu MULTIPOLYGON, dlatego pojedynczy Polygon z ULDK jest
-    owijany w MultiPolygon przed zapisem.
-    """
-    existing = db.execute(
-        select(Parcel).where(Parcel.parcel_identifier == parcel_identifier)
-    ).scalar_one_or_none()
-    if existing is not None:
-        return existing
-
-    multi_geometry = (
-        geometry if geometry.geom_type == "MultiPolygon" else MultiPolygon([geometry])
-    )
-    parcel = Parcel(
-        parcel_identifier=parcel_identifier,
-        geometry=from_shape(multi_geometry, srid=2180),
-        area_sqm=geometry.area,
-    )
-    db.add(parcel)
-    db.flush()
-    return parcel
