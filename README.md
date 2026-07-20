@@ -27,6 +27,22 @@ docker compose up -d db backend
 curl http://localhost:8000/health
 ```
 
+Po uruchomieniu całego zestawu frontend jest dostępny pod adresem
+`http://localhost:3000`, a API pod `http://localhost:8000`.
+
+### Testy frontendu
+
+Frontend używa Vitest i React Testing Library. Testy z wymaganym pokryciem można
+uruchomić bez lokalnego Node.js, w obrazie testowym:
+
+```bash
+docker build --target test -t dzialki-frontend-test ./frontend
+docker run --rm \
+  -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
+  dzialki-frontend-test \
+  npm run test:coverage
+```
+
 ## Wymagania
 
 - Docker
