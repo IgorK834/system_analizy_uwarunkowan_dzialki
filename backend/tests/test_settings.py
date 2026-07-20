@@ -7,8 +7,11 @@ def test_settings_has_database_url() -> None:
     assert settings.database_url
 
 
-def test_settings_loads_default_cors_origins_as_list() -> None:
-    settings = Settings()
+def test_settings_loads_default_cors_origins_as_list(monkeypatch) -> None:
+    # Test wartości domyślnej nie może zależeć od developerskiego pliku .env
+    # ani zmiennych wstrzykniętych przez Docker Compose.
+    monkeypatch.delenv("BACKEND_CORS_ORIGINS", raising=False)
+    settings = Settings(_env_file=None)
 
     assert isinstance(settings.backend_cors_origins, list)
     assert "http://localhost:3000" in settings.backend_cors_origins

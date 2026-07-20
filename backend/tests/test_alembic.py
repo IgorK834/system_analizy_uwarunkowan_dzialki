@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from tests.repo_structure import find_repo_root
+
 
 def test_alembic_files_exist() -> None:
     backend_dir = Path(__file__).resolve().parents[1]
@@ -38,7 +40,10 @@ def test_main_and_session_do_not_use_create_all() -> None:
 
 
 def test_backend_container_runs_alembic_before_starting_api() -> None:
-    backend_dir = Path(__file__).resolve().parents[1]
+    # Obraz runtime celowo nie kopiuje Dockerfile. W CI repozytorium jest
+    # montowane tylko do odczytu pod REPO_ROOT, więc test musi sprawdzać źródła,
+    # a nie przypadkową zawartość /app w zbudowanym obrazie.
+    backend_dir = find_repo_root() / "backend"
     dockerfile = (backend_dir / "Dockerfile").read_text(encoding="utf-8")
     entrypoint = (backend_dir / "docker-entrypoint.sh").read_text(encoding="utf-8")
 
