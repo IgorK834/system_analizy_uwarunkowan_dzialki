@@ -1,0 +1,649 @@
+"""Generator raportu PDF analizy uwarunkowań przestrzennych działki.
+
+Raport jest budowany wyłącznie z zapisanego snapshotu analizy — nie uruchamia
+ponownie analizy ani nie odpytuje usług zewnętrznych (ULDK, WMS, WFS, BIP).
+Dane pochodzą z ``build_analyze_response_from_analysis``, czyli z tego samego
+kontraktu, który zasila API i frontend, dzięki czemu sekcje, ostrzeżenia i
+poziom pewności w PDF odpowiadają panelowi wyników (reguła 10 z context.md).
+
+Odpowiedzialności są rozdzielone na małe funkcje: pobranie danych, przygotowanie
+kontekstu prezentacyjnego, wygenerowanie miniatury mapy, renderowanie HTML i
+utworzenie PDF. Dane z bazy są escapowane automatycznie przez Jinja2
+(``autoescape=True``) przed umieszczeniem w HTML.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import date, datetime
+from typing import Any
+
+from jinja2 import Environment, select_autoescape
+from sqlalchemy.orm import Session
+
+from app.core.report_config import (
+    REPORT_DISCLAIMER,
+    REPORT_SYSTEM_NAME,
+    REPORT_TITLE,
+    describe_confidence,
+)
+from app.models.analysis import Analysis
+from app.schemas.analyze import AnalyzeResponse
+from app.schemas.source import SourceMetadata, WarningMessage
+from app.services.persistence import build_analyze_response_from_analysis
+from app.services.report_map import png_to_data_uri, render_analysis_map_png
+
+logger = logging.getLogger(__name__)
+
+
+class AnalysisReportNotFoundError(Exception):
+    """Analiza o podanym identyfikatorze nie istnieje w bazie."""
+
+
+class AnalysisReportRenderError(Exception):
+    """Nie udało się wygenerować dokumentu PDF z gotowego szablonu HTML."""
+
+
+def generate_analysis_report_pdf(analysis_id: int, db: Session) -> bytes:
+    """Generuje kompletny raport PDF dla zapisanej analizy.
+
+    Nie uruchamia ponownie analizy — czyta istniejący snapshot z bazy. Brak
+    pojedynczej sekcji obniża kompletność raportu, ale nie przerywa generowania:
+    niedostępne sekcje są jawnie opisane jako brak danych. Zgłasza
+    ``AnalysisReportNotFoundError``, gdy analiza nie istnieje, oraz
+    ``AnalysisReportRenderError`` przy błędzie samego renderowania PDF.
+    """
+    analysis = db.get(Analysis, analysis_id)
+    if analysis is None:
+        raise AnalysisReportNotFoundError(
+            f"Analiza o identyfikatorze {analysis_id} nie istnieje."
+        )
+
+    response = build_analyze_response_from_analysis(analysis, db)
+
+    map_data_uri, map_warning = _render_map_data_uri(response)
+    context = _build_report_context(response, map_data_uri, map_warning)
+    html = _render_report_html(context)
+
+    logger.info("Wygenerowano HTML raportu dla analizy %s", analysis_id)
+    return _html_to_pdf(html)
+
+
+def _render_map_data_uri(response: AnalyzeResponse) -> tuple[str | None, str | None]:
+    """Renderuje miniaturę mapy i zwraca (data_uri, ostrzeżenie).
+
+    Awaria opcjonalnego renderera mapy albo brak geometrii nie może zablokować
+    raportu. W obu przypadkach zwracamy ``data_uri=None`` i czytelne ostrzeżenie
+    dołączane później do sekcji ograniczeń raportu.
+    """
+    try:
+        png_bytes = render_analysis_map_png(response)
+    except Exception:  # noqa: BLE001 - granica orkiestracji: mapa jest opcjonalna
+        logger.exception("Renderowanie miniatury mapy nie powiodło się")
+        return None, (
+            "Nie udało się wygenerować miniatury mapy. Pozostała część raportu "
+            "jest kompletna."
+        )
+
+    if png_bytes is None:
+        return None, (
+            "Miniatura mapy jest niedostępna, ponieważ analiza nie zawiera "
+            "geometrii możliwej do narysowania."
+        )
+    return png_to_data_uri(png_bytes), None
+
+
+def _build_report_context(
+    response: AnalyzeResponse,
+    map_data_uri: str | None,
+    map_warning: str | None,
+) -> dict[str, Any]:
+    """Przygotowuje dane prezentacyjne raportu, spójne z formatowaniem frontendu."""
+    parcel = response.parcel
+    limitations = _build_limitations(response, map_warning)
+
+    return {
+        "title": REPORT_TITLE,
+        "system_name": REPORT_SYSTEM_NAME,
+        "disclaimer": REPORT_DISCLAIMER,
+        "generated_at": _format_datetime(datetime.now(response.analyzed_at.tzinfo)),
+        "analysis_id": response.analysis_id,
+        "status": response.status,
+        "analyzed_at": _format_datetime(response.analyzed_at),
+        "parcel_identifier": parcel.parcel_identifier if parcel else None,
+        "map_data_uri": map_data_uri,
+        "map_warning": map_warning,
+        "geometry": _geometry_context(response),
+        "mpzp_zones": [_mpzp_context(zone) for zone in response.mpzp_zones],
+        "pog": _pog_context(response.pog),
+        "infrastructure": [
+            _infrastructure_context(item) for item in response.infrastructure
+        ],
+        "risks": [_risk_context(item) for item in response.risks],
+        "sources": [_source_context(source) for source in response.sources],
+        "warnings": [_warning_context(warning) for warning in response.warnings],
+        "manual_zone_required": response.manual_zone_required,
+        "limitations": limitations,
+    }
+
+
+def _geometry_context(response: AnalyzeResponse) -> dict[str, Any] | None:
+    parcel = response.parcel
+    if parcel is None:
+        return None
+    metrics = parcel.metrics
+    return {
+        "area_sqm": _format_number(metrics.area_sqm),
+        "area_ha": _format_number(metrics.area_ha, decimals=4),
+        "perimeter_m": _format_number(metrics.perimeter_m),
+        "is_valid": _format_bool(metrics.is_valid),
+        "geometry_repaired": _format_bool(metrics.geometry_repaired),
+        "buildable_area_sqm": (
+            _format_number(response.buildable_area_sqm)
+            if response.buildable_area_sqm is not None
+            else None
+        ),
+    }
+
+
+def _mpzp_context(zone: Any) -> dict[str, Any]:
+    return {
+        "zone_symbol": zone.zone_symbol,
+        "primary_use": zone.primary_use,
+        "supplementary_use": zone.supplementary_use,
+        "is_dominant": zone.is_dominant,
+        "intersection_pct": _format_percent(zone.intersection_pct),
+        "intersection_area_sqm": _format_number(zone.intersection_area_sqm),
+        "max_building_height_m": _format_optional_number(zone.max_building_height_m, "m"),
+        "max_floors": (str(zone.max_floors) if zone.max_floors is not None else None),
+        "min_biologically_active_pct": _format_optional_percent(
+            zone.min_biologically_active_pct
+        ),
+        "max_floor_area_ratio": _format_optional_number(zone.max_floor_area_ratio),
+        "min_floor_area_ratio": _format_optional_number(zone.min_floor_area_ratio),
+        "max_building_coverage_pct": _format_optional_percent(
+            zone.max_building_coverage_pct
+        ),
+        "confidence": _confidence_context(zone.source),
+    }
+
+
+def _pog_context(pog: Any) -> dict[str, Any] | None:
+    if pog is None:
+        return None
+    return {
+        "status": pog.status,
+        "planning_zone": pog.zone_type or pog.planning_zone,
+        "in_ouz": _format_bool(pog.in_ouz),
+        "in_downtown_area": _format_bool(pog.in_downtown_area),
+        "touches_ouz_boundary": _format_bool(pog.touches_ouz_boundary),
+        "ouz_intersection_pct": (
+            _format_percent(pog.ouz_intersection_pct)
+            if pog.ouz_intersection_pct is not None
+            else None
+        ),
+        "ouz_intersection_area_sqm": (
+            _format_number(pog.ouz_intersection_area_sqm)
+            if pog.ouz_intersection_area_sqm is not None
+            else None
+        ),
+        "uchwala_nr": pog.uchwala_nr,
+        "uchwala_date": _format_date(pog.uchwala_date),
+        "conflict_with_mpzp": pog.conflict_with_mpzp,
+        "manual_review_required": pog.manual_review_required,
+        "confidence": _confidence_context(pog.source),
+    }
+
+
+def _infrastructure_context(item: Any) -> dict[str, Any]:
+    return {
+        "network_type": item.network_type,
+        "buffer_m": _format_number(item.buffer_m),
+        "zone_area_sqm": _format_number(item.zone_area_sqm),
+        "affects_buildable_area": item.affects_buildable_area,
+        "rule_source": item.rule_source,
+        "rule_note": item.rule_note,
+        "confidence": _confidence_context(item.source),
+    }
+
+
+def _risk_context(item: Any) -> dict[str, Any]:
+    return {
+        "risk_type": item.risk_type,
+        "description": item.description,
+        "confidence": _confidence_context(item.source),
+    }
+
+
+def _source_context(source: SourceMetadata) -> dict[str, Any]:
+    return {
+        "source_name": source.source_name,
+        "source_url": source.source_url,
+        "fetched_at": _format_datetime(source.fetched_at) if source.fetched_at else None,
+        "response_status": (
+            str(source.response_status)
+            if source.response_status is not None
+            else "brak danych"
+        ),
+        "confidence_pct": _format_percent(source.confidence * 100.0),
+        "confidence_label": describe_confidence(
+            source.confidence, source.manual_review_required
+        ),
+        "manual_review_required": source.manual_review_required,
+    }
+
+
+def _warning_context(warning: WarningMessage) -> dict[str, Any]:
+    labels = {"info": "Informacja", "warning": "Ostrzeżenie", "error": "Błąd"}
+    return {
+        "code": warning.code,
+        "message": warning.message,
+        "severity": warning.severity,
+        "severity_label": labels.get(warning.severity, warning.severity),
+        "source_name": warning.source_name,
+    }
+
+
+def _confidence_context(source: SourceMetadata | None) -> dict[str, Any] | None:
+    if source is None:
+        return None
+    return {
+        "pct": _format_percent(source.confidence * 100.0),
+        "label": describe_confidence(source.confidence, source.manual_review_required),
+        "manual_review_required": source.manual_review_required,
+    }
+
+
+def _build_limitations(
+    response: AnalyzeResponse,
+    map_warning: str | None,
+) -> list[str]:
+    """Buduje sekcję ograniczeń, spójną z zapisanymi ostrzeżeniami analizy.
+
+    Ograniczenia wynikają wprost z danych snapshotu — brak sekcji, dane ręczne
+    MPZP, fallback WMS, ``manual_review_required`` i niepewny parser dokumentów.
+    Nie tworzymy sprzecznych statusów: informacje pochodzą z tych samych pól,
+    które napędzają panel wyników.
+    """
+    limitations: list[str] = []
+
+    if map_warning is not None:
+        limitations.append(map_warning)
+
+    if response.parcel is None:
+        limitations.append("Nie ustalono geometrii działki — analiza jest niepełna.")
+    if not response.mpzp_zones:
+        limitations.append(
+            "Brak stref MPZP w wyniku — nie sprawdzono planu albo działka nie "
+            "przecina wektorowych danych MPZP."
+        )
+    if response.manual_zone_required:
+        limitations.append(
+            "Gmina nie udostępnia wektorowych danych MPZP. Symbol strefy wymaga "
+            "ręcznego odczytania z mapy rastrowej (fallback WMS)."
+        )
+    if response.pog is None:
+        limitations.append("Brak danych Planu Ogólnego Gminy (POG) dla tej działki.")
+    elif response.pog.manual_review_required:
+        limitations.append("Wynik POG wymaga ręcznej weryfikacji.")
+
+    manual_mpzp_zones = [
+        zone
+        for zone in response.mpzp_zones
+        if zone.source.source_name.casefold() == "manual_user_input"
+    ]
+    if manual_mpzp_zones:
+        limitations.append(
+            "Symbol strefy MPZP podano ręcznie na podstawie rastrowej nakładki "
+            "WMS. Dane mają obniżoną pewność i wymagają weryfikacji w materiale "
+            "źródłowym."
+        )
+
+    if any(
+        zone.source.manual_review_required
+        and zone.source.source_name.casefold() != "manual_user_input"
+        for zone in response.mpzp_zones
+    ):
+        limitations.append(
+            "Część parametrów MPZP pochodzi z niepewnego parsera dokumentów i "
+            "wymaga ręcznej weryfikacji."
+        )
+    if any(item.source.manual_review_required for item in response.infrastructure):
+        limitations.append(
+            "Dane o uzbrojeniu terenu wymagają ręcznej weryfikacji u gestora sieci."
+        )
+    if any(item.source.manual_review_required for item in response.risks):
+        limitations.append("Dane o ryzykach wymagają ręcznej weryfikacji.")
+
+    return limitations
+
+
+# --- Renderowanie HTML i PDF ---
+
+_JINJA_ENV = Environment(
+    autoescape=select_autoescape(default=True, default_for_string=True),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
+
+
+def _render_report_html(context: dict[str, Any]) -> str:
+    """Renderuje szablon HTML raportu z automatycznym escapowaniem danych."""
+    template = _JINJA_ENV.from_string(_REPORT_TEMPLATE)
+    return template.render(**context)
+
+
+def _html_to_pdf(html: str) -> bytes:
+    """Zamienia HTML na PDF przez WeasyPrint.
+
+    WeasyPrint jest importowany leniwie, ponieważ wymaga bibliotek systemowych
+    (Pango/Cairo) obecnych w obrazie Docker, ale nie zawsze na maszynie
+    developera. Dzięki temu import modułu i całej aplikacji nie zależy od tych
+    bibliotek. Szczegóły wyjątku WeasyPrint nie są propagowane do warstwy HTTP.
+    """
+    try:
+        from weasyprint import HTML  # import leniwy: patrz docstring
+    except ImportError as exc:  # pragma: no cover - zależne od środowiska
+        raise AnalysisReportRenderError(
+            "Biblioteka WeasyPrint nie jest dostępna w tym środowisku."
+        ) from exc
+
+    try:
+        return HTML(string=html).write_pdf()
+    except Exception as exc:  # noqa: BLE001 - granica: nie ujawniamy detali WeasyPrint
+        logger.exception("WeasyPrint nie wygenerował PDF")
+        raise AnalysisReportRenderError(
+            "Nie udało się wygenerować dokumentu PDF."
+        ) from exc
+
+
+def _format_datetime(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    return value.strftime("%d.%m.%Y %H:%M")
+
+
+def _format_date(value: date | None) -> str | None:
+    if value is None:
+        return None
+    return value.strftime("%d.%m.%Y")
+
+
+def _format_number(value: float | None, decimals: int = 2) -> str | None:
+    """Formatuje liczbę ze spacją jako separatorem tysięcy, spójnie z pl-PL."""
+    if value is None:
+        return None
+    formatted = f"{value:,.{decimals}f}"
+    # pl-PL: separator tysięcy to spacja, separator dziesiętny to przecinek.
+    return formatted.replace(",", "\u00a0").replace(".", ",")
+
+
+def _format_optional_number(value: float | None, unit: str | None = None) -> str | None:
+    if value is None:
+        return None
+    number = _format_number(value)
+    return f"{number}\u00a0{unit}" if unit else number
+
+
+def _format_percent(value: float | None) -> str | None:
+    if value is None:
+        return None
+    return f"{_format_number(value, decimals=1)}%"
+
+
+def _format_optional_percent(value: float | None) -> str | None:
+    return _format_percent(value) if value is not None else None
+
+
+def _format_bool(value: bool) -> str:
+    return "Tak" if value else "Nie"
+
+
+# Szablon HTML raportu. Wszystkie wartości dynamiczne przechodzą przez
+# autoescape Jinja2. Układ jest zoptymalizowany pod A4 i czytelność w druku.
+_REPORT_TEMPLATE = """<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>{{ title }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {
+      content: "{{ system_name }} — strona " counter(page) " z " counter(pages);
+      font-size: 8pt;
+      color: #667085;
+    }
+  }
+  body {
+    font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+    color: #1a2027;
+    font-size: 10pt;
+    line-height: 1.45;
+  }
+  h1 { font-size: 20pt; margin: 0 0 4mm 0; color: #0d5137; }
+  h2 { font-size: 13pt; margin: 6mm 0 2mm 0; color: #0d5137;
+       border-bottom: 1px solid #d0d5dd; padding-bottom: 1mm; }
+  .cover { text-align: center; padding: 30mm 0 10mm 0; }
+  .cover .subtitle { font-size: 12pt; color: #475467; margin-top: 2mm; }
+  .cover .meta { margin-top: 12mm; font-size: 11pt; }
+  .cover .meta div { margin: 1.5mm 0; }
+  .status-badge {
+    display: inline-block; padding: 1mm 3mm; border-radius: 3mm;
+    background: #eef3f0; color: #0d5137; font-weight: bold;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0; }
+  th, td { text-align: left; padding: 1.5mm 2mm; border-bottom: 1px solid #e4e7ec;
+           vertical-align: top; }
+  th { background: #f8f9fb; font-weight: bold; width: 42%; }
+  .section { margin-top: 4mm; }
+  .empty { color: #98a2b3; font-style: italic; }
+  .map-figure { text-align: center; margin: 3mm 0; }
+  .map-figure img { max-width: 100%; border: 1px solid #d0d5dd; }
+  .item { border: 1px solid #e4e7ec; border-radius: 2mm; padding: 2mm 3mm;
+          margin: 2mm 0; break-inside: avoid; }
+  .item .item-title { font-weight: bold; font-size: 11pt; }
+  .tag { display: inline-block; padding: 0.3mm 2mm; border-radius: 2mm;
+         font-size: 8pt; margin-left: 2mm; }
+  .tag-dominant { background: #eef3f0; color: #0d5137; }
+  .tag-review { background: #fdeceb; color: #8f2525; }
+  .confidence { font-size: 8.5pt; color: #475467; margin-top: 1mm; }
+  .warning-info { border-left: 3px solid #1769aa; }
+  .warning-warning { border-left: 3px solid #c96a1f; }
+  .warning-error { border-left: 3px solid #c43d3d; }
+  ul.limitations { margin: 2mm 0; padding-left: 6mm; }
+  ul.limitations li { margin: 1mm 0; }
+  .disclaimer {
+    margin-top: 8mm; padding: 3mm; border: 1px solid #c96a1f;
+    background: #fff7ef; color: #6b3a10; font-size: 9.5pt; break-inside: avoid;
+  }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <h1>{{ title }}</h1>
+  <div class="subtitle">{{ system_name }}</div>
+  <div class="meta">
+    <div><strong>Działka:</strong> {{ parcel_identifier if parcel_identifier else "nieustalona" }}</div>
+    <div><strong>Identyfikator analizy:</strong> {{ analysis_id if analysis_id is not none else "—" }}</div>
+    <div><strong>Data analizy:</strong> {{ analyzed_at if analyzed_at else "—" }}</div>
+    <div><strong>Status:</strong> <span class="status-badge">{{ status }}</span></div>
+    <div><strong>Raport wygenerowano:</strong> {{ generated_at if generated_at else "—" }}</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Mapa działki</h2>
+  {% if map_data_uri %}
+  <div class="map-figure">
+    <img src="{{ map_data_uri }}" alt="Miniatura mapy działki i warstw analizy" />
+  </div>
+  {% else %}
+  <p class="empty">{{ map_warning if map_warning else "Miniatura mapy jest niedostępna." }}</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Parametry geometryczne</h2>
+  {% if geometry %}
+  <table>
+    <tr><th>Powierzchnia</th><td>{{ geometry.area_sqm }} m²</td></tr>
+    <tr><th>Powierzchnia (ha)</th><td>{{ geometry.area_ha }} ha</td></tr>
+    <tr><th>Obwód</th><td>{{ geometry.perimeter_m }} m</td></tr>
+    <tr><th>Geometria poprawna</th><td>{{ geometry.is_valid }}</td></tr>
+    <tr><th>Geometria naprawiana</th><td>{{ geometry.geometry_repaired }}</td></tr>
+    {% if geometry.buildable_area_sqm %}
+    <tr><th>Szacowany obszar zabudowy (przybliżenie techniczne)</th><td>{{ geometry.buildable_area_sqm }} m²</td></tr>
+    {% endif %}
+  </table>
+  {% else %}
+  <p class="empty">Dane niedostępne — nie ustalono geometrii działki.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Miejscowy Plan Zagospodarowania Przestrzennego (MPZP)</h2>
+  {% if mpzp_zones %}
+    {% for zone in mpzp_zones %}
+    <div class="item">
+      <div class="item-title">{{ zone.zone_symbol }}
+        {% if zone.is_dominant %}<span class="tag tag-dominant">dominująca</span>{% endif %}
+      </div>
+      <table>
+        {% if zone.primary_use %}<tr><th>Przeznaczenie podstawowe</th><td>{{ zone.primary_use }}</td></tr>{% endif %}
+        {% if zone.supplementary_use %}<tr><th>Przeznaczenie uzupełniające</th><td>{{ zone.supplementary_use }}</td></tr>{% endif %}
+        <tr><th>Udział w powierzchni działki</th><td>{{ zone.intersection_pct }} ({{ zone.intersection_area_sqm }} m²)</td></tr>
+        {% if zone.max_building_height_m %}<tr><th>Maks. wysokość zabudowy</th><td>{{ zone.max_building_height_m }}</td></tr>{% endif %}
+        {% if zone.max_floors %}<tr><th>Maks. liczba kondygnacji</th><td>{{ zone.max_floors }}</td></tr>{% endif %}
+        {% if zone.min_biologically_active_pct %}<tr><th>Min. pow. biologicznie czynna</th><td>{{ zone.min_biologically_active_pct }}</td></tr>{% endif %}
+        {% if zone.max_floor_area_ratio %}<tr><th>Maks. wskaźnik intensywności zabudowy</th><td>{{ zone.max_floor_area_ratio }}</td></tr>{% endif %}
+        {% if zone.min_floor_area_ratio %}<tr><th>Min. wskaźnik intensywności zabudowy</th><td>{{ zone.min_floor_area_ratio }}</td></tr>{% endif %}
+        {% if zone.max_building_coverage_pct %}<tr><th>Maks. powierzchnia zabudowy</th><td>{{ zone.max_building_coverage_pct }}</td></tr>{% endif %}
+      </table>
+      {% if zone.confidence %}
+      <div class="confidence">Pewność danych: {{ zone.confidence.pct }} ({{ zone.confidence.label }})</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="empty">Dane niedostępne — nie znaleziono ani nie sprawdzono stref MPZP przecinających działkę.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Plan Ogólny Gminy (POG) i Obszar Uzupełnienia Zabudowy (OUZ)</h2>
+  {% if pog %}
+  <table>
+    <tr><th>Status</th><td>{{ pog.status }}</td></tr>
+    <tr><th>Strefa planistyczna</th><td>{{ pog.planning_zone if pog.planning_zone else "—" }}</td></tr>
+    <tr><th>Obszar Uzupełnienia Zabudowy (OUZ)</th><td>{{ pog.in_ouz }}</td></tr>
+    {% if pog.ouz_intersection_pct %}<tr><th>Udział OUZ w działce</th><td>{{ pog.ouz_intersection_pct }} ({{ pog.ouz_intersection_area_sqm }} m²)</td></tr>{% endif %}
+    <tr><th>Dotyka granicy OUZ</th><td>{{ pog.touches_ouz_boundary }}</td></tr>
+    <tr><th>Obszar śródmiejski</th><td>{{ pog.in_downtown_area }}</td></tr>
+    {% if pog.uchwala_nr %}<tr><th>Numer uchwały</th><td>{{ pog.uchwala_nr }}</td></tr>{% endif %}
+    {% if pog.uchwala_date %}<tr><th>Data uchwały</th><td>{{ pog.uchwala_date }}</td></tr>{% endif %}
+    {% if pog.conflict_with_mpzp is not none %}
+    <tr><th>Zgodność z MPZP</th><td>{{ "Wykryto niezgodność — wymaga weryfikacji" if pog.conflict_with_mpzp else "Zgodność potwierdzona wstępnie" }}</td></tr>
+    {% endif %}
+  </table>
+  {% if pog.manual_review_required %}<p><span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span></p>{% endif %}
+  {% if pog.confidence %}<div class="confidence">Pewność danych: {{ pog.confidence.pct }} ({{ pog.confidence.label }})</div>{% endif %}
+  {% else %}
+  <p class="empty">Dane niedostępne — brak danych POG/OUZ dla tej działki.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Infrastruktura i sieci uzbrojenia terenu</h2>
+  {% if infrastructure %}
+    {% for item in infrastructure %}
+    <div class="item">
+      <div class="item-title">{{ item.network_type }}</div>
+      <table>
+        <tr><th>Bufor techniczny</th><td>{{ item.buffer_m }} m</td></tr>
+        {% if item.affects_buildable_area %}<tr><th>Wpływ na obszar zabudowy</th><td>pomniejszył o {{ item.zone_area_sqm }} m²</td></tr>{% endif %}
+        {% if item.rule_source %}<tr><th>Podstawa reguły bufora</th><td>{{ item.rule_source }}</td></tr>{% endif %}
+        {% if item.rule_note %}<tr><th>Uwagi</th><td>{{ item.rule_note }}</td></tr>{% endif %}
+      </table>
+      {% if item.confidence %}<div class="confidence">Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }})</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono sieci uzbrojenia terenu.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Ryzyka i formy ochrony</h2>
+  {% if risks %}
+    {% for item in risks %}
+    <div class="item">
+      <div class="item-title">{{ item.risk_type }}</div>
+      <p>{{ item.description }}</p>
+      {% if item.confidence %}<div class="confidence">Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }})</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono ryzyk ani form ochrony.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Źródła danych</h2>
+  {% if sources %}
+  <table>
+    <tr>
+      <th style="width:18%">Źródło</th>
+      <th style="width:22%">Data pobrania</th>
+      <th style="width:20%">Pewność</th>
+      <th style="width:15%">Status</th>
+      <th style="width:25%">Weryfikacja</th>
+    </tr>
+    {% for source in sources %}
+    <tr>
+      <td>{{ source.source_name }}</td>
+      <td>{{ source.fetched_at if source.fetched_at else "brak danych" }}</td>
+      <td>{{ source.confidence_pct }} ({{ source.confidence_label }})</td>
+      <td>{{ source.response_status }}</td>
+      <td>{{ "wymaga ręcznej weryfikacji" if source.manual_review_required else "nie wymaga" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">Dane niedostępne — brak zarejestrowanych źródeł dla tej analizy.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Ostrzeżenia</h2>
+  {% if warnings %}
+    {% for warning in warnings %}
+    <div class="item warning-{{ warning.severity }}">
+      <div class="item-title">{{ warning.severity_label }}{% if warning.source_name %} — {{ warning.source_name }}{% endif %}</div>
+      <p>{{ warning.message }}</p>
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="empty">Brak ostrzeżeń dla tej analizy.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Ograniczenia analizy</h2>
+  {% if limitations %}
+  <ul class="limitations">
+    {% for limitation in limitations %}<li>{{ limitation }}</li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Nie zidentyfikowano dodatkowych ograniczeń dla tej analizy.</p>
+  {% endif %}
+</section>
+
+<div class="disclaimer">{{ disclaimer }}</div>
+
+</body>
+</html>
+"""
