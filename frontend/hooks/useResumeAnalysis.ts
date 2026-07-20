@@ -2,47 +2,40 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { analyzeParcel, ApiError } from "@/lib/api";
-import type { AnalyzeRequest, AnalyzeResponse } from "@/lib/types";
+import { ApiError, resumeAnalysis } from "@/lib/api";
+import type { AnalyzeResponse, AnalyzeResumeRequest } from "@/lib/types";
 
-type RunOptions = {
-  forceRefresh?: boolean;
-};
-
-export function useAnalyzeParcel() {
+export function useResumeAnalysis() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
   const run = useCallback(
-    async (payload: AnalyzeRequest, options: RunOptions = {}) => {
+    async (payload: AnalyzeResumeRequest): Promise<AnalyzeResponse | null> => {
       controllerRef.current?.abort();
       const controller = new AbortController();
       controllerRef.current = controller;
 
       setLoading(true);
       setError(null);
-      setResult(null);
 
       try {
-        const response = await analyzeParcel(payload, {
-          forceRefresh: options.forceRefresh,
+        const response = await resumeAnalysis(payload, {
           signal: controller.signal,
         });
-
-        if (controllerRef.current === controller) {
-          setResult(response);
-        }
+        return controllerRef.current === controller ? response : null;
       } catch (caught) {
-        if (controllerRef.current !== controller) return;
-        if (caught instanceof DOMException && caught.name === "AbortError") return;
+        if (controllerRef.current !== controller) return null;
+        if (caught instanceof DOMException && caught.name === "AbortError") {
+          return null;
+        }
 
         setError(
           caught instanceof ApiError
             ? caught.message
-            : "Wystąpił nieoczekiwany błąd podczas analizy.",
+            : "Wystąpił nieoczekiwany błąd podczas wznawiania analizy.",
         );
+        return null;
       } finally {
         if (controllerRef.current === controller) {
           controllerRef.current = null;
@@ -58,7 +51,6 @@ export function useAnalyzeParcel() {
     controllerRef.current = null;
     setLoading(false);
     setError(null);
-    setResult(null);
   }, []);
 
   useEffect(
@@ -69,5 +61,5 @@ export function useAnalyzeParcel() {
     [],
   );
 
-  return { loading, error, result, run, reset, setResult };
+  return { loading, error, run, reset };
 }
