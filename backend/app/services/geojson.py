@@ -99,8 +99,26 @@ def buildable_area_geometry_to_geojson(
     )
 
 
-# Kolejne warstwy (sieci uzbrojenia, ryzyka powodziowe, strefy MPZP) będą używać
-# tych samych funkcji pomocniczych w kolejnych zadaniach.
+def analysis_layer_geometry_to_geojson(
+    geometry: BaseGeometry,
+    layer: str,
+    properties: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """Buduje GeoJSON warstwy analizy z geometrii w EPSG:2180.
+
+    Pusta geometria nie jest wysyłana jako pozornie dostępna warstwa. Nazwa
+    domenowa ``layer`` i przekazane atrybuty trafiają do ``properties``, aby
+    frontend mógł renderować kolekcje sieci, stref ochronnych i ryzyk bez
+    odgadywania znaczenia obiektów po kolejności.
+    """
+    if geometry.is_empty:
+        return None
+    return geometry_to_geojson_feature(
+        transform_geometry_to_wgs84(geometry),
+        properties={"layer": layer, **(properties or {})},
+    )
+
+
 def _json_compatible(value: Any) -> Any:
     if isinstance(value, tuple):
         return [_json_compatible(item) for item in value]

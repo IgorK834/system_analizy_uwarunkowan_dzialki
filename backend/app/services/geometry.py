@@ -242,6 +242,7 @@ class NetworkGeometryInput:
 
     network_type: str
     geometry: BaseGeometry
+    input_index: int | None = None
 
 
 @dataclass(frozen=True)
@@ -254,6 +255,8 @@ class NetworkProtectionZone:
     source: str
     confidence: float
     note: str
+    geometry: BaseGeometry
+    input_index: int | None
 
 
 @dataclass(frozen=True)
@@ -355,6 +358,8 @@ def calculate_network_protection_zones(
                 source=rule.source,
                 confidence=rule.confidence,
                 note=rule.note,
+                geometry=effective_zone,
+                input_index=network.input_index,
             )
         )
 
