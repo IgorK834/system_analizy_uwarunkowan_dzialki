@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
+import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import {
   BUILDABLE_AREA_FILL_COLOR,
   BUILDABLE_AREA_FILL_LAYER_ID,
@@ -318,6 +319,12 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         Wynik ma charakter informacyjny i nie zastępuje dokumentów planistycznych
         ani decyzji administracyjnej.
       </p>
+
+      <ReportDownloadButton
+        key={result.analysis_id ?? "unsaved-analysis"}
+        analysisId={result.analysis_id}
+        parcelIdentifier={result.parcel?.parcel_identifier ?? null}
+      />
 
       <LayerToggle items={toggleItems} onChange={handleToggleChange} legendLabel="Warstwy na mapie" />
 

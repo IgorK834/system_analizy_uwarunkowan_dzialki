@@ -427,6 +427,30 @@ input:disabled {
   line-height: 1.45;
 }
 
+.report-download {
+  margin-bottom: 14px;
+}
+
+.report-download-button {
+  margin-top: 0;
+}
+
+.report-download-note,
+.report-download-error {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.report-download-note {
+  color: var(--muted);
+}
+
+.report-download-error {
+  color: var(--danger);
+  font-weight: 650;
+}
+
 .result-section {
   margin-top: 16px;
   padding-top: 14px;
