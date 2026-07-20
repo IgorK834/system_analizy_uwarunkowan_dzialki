@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     kimpzp_wms_base_url: str = (
         "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIMPZP/WMS"
     )
+    # Rejestr Urbanistyczny jest opcjonalnym, eksperymentalnym kanałem discovery.
+    # W lipcu 2026 publiczny kontrakt API ani adres usługi nie są potwierdzone,
+    # dlatego brak wartości jest bezpiecznym ustawieniem domyślnym. Adresy WMS/BIP
+    # POG przekazuje się per gmina do discover_pog, a nie przez globalny endpoint.
+    rejestr_urbanistyczny_base_url: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
