@@ -140,6 +140,7 @@ def collect_source_records(
             context_result.gdos,
         ):
             source = section.source_metadata
+            response_status: str | None
             if section.status in {"unavailable", "error"}:
                 response_status = section.status
             elif source is not None and source.response_status is not None:
@@ -202,8 +203,7 @@ def save_analysis(
             status=database_status or result.status,
             buildable_area_sqm=result.buildable_area_sqm,
             warnings=(
-                [warning.model_dump(mode="json") for warning in result.warnings]
-                or None
+                [warning.model_dump(mode="json") for warning in result.warnings] or None
             ),
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
@@ -213,96 +213,88 @@ def save_analysis(
         db.flush()
 
         for zone in result.mpzp_zones:
-            zone_record = MpzpZone(
-                analysis_id=analysis.id,
-                zone_symbol=zone.zone_symbol,
-                primary_use=zone.primary_use,
-                intersection_area_sqm=zone.intersection_area_sqm,
-                intersection_pct=zone.intersection_pct,
-                is_dominant=zone.is_dominant,
-                source_url=zone.source.source_url,
-                fetched_at=zone.source.fetched_at,
-                confidence=zone.source.confidence,
-            )
-            db.add(zone_record)
-            db.flush()
-
-            for parameter_name in _NUMERIC_ZONE_PARAMETERS:
-                value = getattr(zone, parameter_name)
-                if value is None:
-                    continue
-                db.add(
-                    MpzpParameter(
-                        mpzp_zone_id=zone_record.id,
-                        parameter_name=parameter_name,
-                        normalized_value=str(value),
-                        unit=_parameter_unit(parameter_name),
-                        confidence=zone.source.confidence,
-                        manual_review_required=(
-                            zone.source.manual_review_required
-                        ),
-                    )
-                )
+            add_mpzp_zone_snapshot(db, analysis.id, zone)
 
         if result.pog is not None:
-            source = result.pog.source
+            pog_source = result.pog.source
             db.add(
                 PogData(
                     analysis_id=analysis.id,
                     status=result.pog.status,
                     planning_zone=result.pog.planning_zone,
-                    ouz_intersection_area_sqm=(
-                        result.pog.ouz_intersection_area_sqm
+                    zone_type=(result.pog.zone_type or result.pog.planning_zone),
+                    # ``in_ouz`` jest decyzją domenową z jawnych progów OUZ,
+                    # nie prostym testem dodatniego pola przecięcia.
+                    in_ouz=result.pog.in_ouz,
+                    area_ratio=result.pog.area_ratio,
+                    in_downtown_area=result.pog.in_downtown_area,
+                    uchwala_nr=result.pog.uchwala_nr,
+                    uchwala_date=result.pog.uchwala_date,
+                    manual_review_required=(
+                        result.pog.manual_review_required
+                        or (
+                            pog_source.manual_review_required
+                            if pog_source
+                            else False
+                        )
                     ),
+                    conflict_with_mpzp=result.pog.conflict_with_mpzp,
+                    raw_attributes=result.pog.raw_attributes,
+                    ouz_intersection_area_sqm=(result.pog.ouz_intersection_area_sqm),
                     touches_ouz_boundary=result.pog.touches_ouz_boundary,
-                    source_url=source.source_url if source else None,
-                    fetched_at=source.fetched_at if source else None,
-                    confidence=source.confidence if source else None,
+                    source_url=pog_source.source_url if pog_source else None,
+                    fetched_at=pog_source.fetched_at if pog_source else None,
+                    confidence=pog_source.confidence if pog_source else None,
                 )
             )
 
-        for item in result.infrastructure:
+        for infrastructure_item in result.infrastructure:
             db.add(
                 Infrastructure(
                     analysis_id=analysis.id,
-                    network_type=item.network_type,
-                    buffer_m=item.buffer_m,
-                    source_url=item.source.source_url,
-                    fetched_at=item.source.fetched_at,
-                    confidence=item.source.confidence,
+                    network_type=infrastructure_item.network_type,
+                    buffer_m=infrastructure_item.buffer_m,
+                    zone_area_sqm=infrastructure_item.zone_area_sqm,
+                    rule_source=infrastructure_item.rule_source,
+                    rule_confidence=infrastructure_item.rule_confidence,
+                    rule_note=infrastructure_item.rule_note,
+                    affects_buildable_area=(
+                        infrastructure_item.affects_buildable_area
+                    ),
+                    source_url=infrastructure_item.source.source_url,
+                    fetched_at=infrastructure_item.source.fetched_at,
+                    confidence=infrastructure_item.source.confidence,
                     manual_review_required=(
-                        item.source.manual_review_required
+                        infrastructure_item.source.manual_review_required
                     ),
                 )
             )
 
-        for item in result.risks:
+        for risk_item in result.risks:
             db.add(
                 Risk(
                     analysis_id=analysis.id,
-                    risk_type=item.risk_type,
-                    description=item.description,
-                    source_url=item.source.source_url,
-                    fetched_at=item.source.fetched_at,
-                    confidence=item.source.confidence,
-                    manual_review_required=(
-                        item.source.manual_review_required
-                    ),
+                    risk_type=risk_item.risk_type,
+                    description=risk_item.description,
+                    source_url=risk_item.source.source_url,
+                    fetched_at=risk_item.source.fetched_at,
+                    confidence=risk_item.source.confidence,
+                    manual_review_required=(risk_item.source.manual_review_required),
                 )
             )
 
-        for source in collect_source_records(result, context_result):
+        for source_data in collect_source_records(result, context_result):
             db.add(
                 SourceRecord(
                     analysis_id=analysis.id,
-                    source_name=source.source_name,
-                    source_url=source.source_url,
-                    fetched_at=source.fetched_at,
-                    response_status=source.response_status,
-                    confidence=source.confidence,
-                    manual_review_required=source.manual_review_required,
-                    warnings=source.warnings or None,
-                    checksum=source.checksum,
+                    source_name=source_data.source_name,
+                    source_url=source_data.source_url,
+                    fetched_at=source_data.fetched_at,
+                    response_status=source_data.response_status,
+                    confidence=source_data.confidence,
+                    manual_review_required=source_data.manual_review_required,
+                    warnings=source_data.warnings or None,
+                    checksum=source_data.checksum,
                 )
             )
 
@@ -312,6 +304,43 @@ def save_analysis(
     except Exception:
         db.rollback()
         raise
+
+
+def add_mpzp_zone_snapshot(
+    db: Session,
+    analysis_id: int,
+    zone: MpzpZoneResult,
+) -> MpzpZone:
+    """Dodaje strefę MPZP i jej płaskie parametry bez zamykania transakcji."""
+    zone_record = MpzpZone(
+        analysis_id=analysis_id,
+        zone_symbol=zone.zone_symbol,
+        primary_use=zone.primary_use,
+        intersection_area_sqm=zone.intersection_area_sqm,
+        intersection_pct=zone.intersection_pct,
+        is_dominant=zone.is_dominant,
+        source_url=zone.source.source_url,
+        fetched_at=zone.source.fetched_at,
+        confidence=zone.source.confidence,
+    )
+    db.add(zone_record)
+    db.flush()
+
+    for parameter_name in _NUMERIC_ZONE_PARAMETERS:
+        value = getattr(zone, parameter_name)
+        if value is None:
+            continue
+        db.add(
+            MpzpParameter(
+                mpzp_zone_id=zone_record.id,
+                parameter_name=parameter_name,
+                normalized_value=str(value),
+                unit=_parameter_unit(parameter_name),
+                confidence=zone.source.confidence,
+                manual_review_required=zone.source.manual_review_required,
+            )
+        )
+    return zone_record
 
 
 def build_analyze_response_from_analysis(
@@ -382,8 +411,7 @@ def build_analyze_response_from_analysis(
     )
 
     zones = [
-        _mpzp_zone_response(zone, loaded.source_records)
-        for zone in loaded.mpzp_zones
+        _mpzp_zone_response(zone, loaded.source_records) for zone in loaded.mpzp_zones
     ]
     pog = (
         _pog_response(
@@ -398,6 +426,11 @@ def build_analyze_response_from_analysis(
         InfrastructureResult(
             network_type=item.network_type,
             buffer_m=item.buffer_m or 0.0,
+            zone_area_sqm=item.zone_area_sqm or 0.0,
+            rule_source=item.rule_source,
+            rule_confidence=item.rule_confidence,
+            rule_note=item.rule_note,
+            affects_buildable_area=item.affects_buildable_area,
             source=_source_for_child(
                 loaded.source_records,
                 item.source_url,
@@ -417,9 +450,7 @@ def build_analyze_response_from_analysis(
                 loaded.source_records,
                 item.source_url,
                 item.fetched_at,
-                fallback_name=(
-                    "ISOK" if item.risk_type == "flood_zone" else "GDOŚ"
-                ),
+                fallback_name=("ISOK" if item.risk_type == "flood_zone" else "GDOŚ"),
                 confidence=item.confidence,
                 manual_review_required=item.manual_review_required,
             ),
@@ -427,8 +458,7 @@ def build_analyze_response_from_analysis(
         for item in loaded.risk_records
     ]
     warnings = [
-        WarningMessage.model_validate(warning)
-        for warning in (loaded.warnings or [])
+        WarningMessage.model_validate(warning) for warning in (loaded.warnings or [])
     ]
 
     return AnalyzeResponse(
@@ -525,10 +555,7 @@ def _mpzp_zone_response(
     zone: MpzpZone,
     source_records: list[SourceRecord],
 ) -> MpzpZoneResult:
-    parameters = {
-        parameter.parameter_name: parameter
-        for parameter in zone.parameters
-    }
+    parameters = {parameter.parameter_name: parameter for parameter in zone.parameters}
     manual_review_required = any(
         parameter.manual_review_required for parameter in zone.parameters
     )
@@ -536,19 +563,13 @@ def _mpzp_zone_response(
         zone_symbol=zone.zone_symbol,
         primary_use=zone.primary_use,
         supplementary_use=None,
-        max_building_height_m=_parameter_float(
-            parameters.get("max_building_height_m")
-        ),
+        max_building_height_m=_parameter_float(parameters.get("max_building_height_m")),
         max_floors=_parameter_int(parameters.get("max_floors")),
         min_biologically_active_pct=_parameter_float(
             parameters.get("min_biologically_active_pct")
         ),
-        max_floor_area_ratio=_parameter_float(
-            parameters.get("max_floor_area_ratio")
-        ),
-        min_floor_area_ratio=_parameter_float(
-            parameters.get("min_floor_area_ratio")
-        ),
+        max_floor_area_ratio=_parameter_float(parameters.get("max_floor_area_ratio")),
+        min_floor_area_ratio=_parameter_float(parameters.get("min_floor_area_ratio")),
         max_building_coverage_pct=_parameter_float(
             parameters.get("max_building_coverage_pct")
         ),
@@ -591,6 +612,15 @@ def _pog_response(
     return PogResult(
         status=pog.status,
         planning_zone=pog.planning_zone,
+        zone_type=pog.zone_type,
+        in_ouz=pog.in_ouz,
+        area_ratio=pog.area_ratio,
+        in_downtown_area=pog.in_downtown_area,
+        uchwala_nr=pog.uchwala_nr,
+        uchwala_date=pog.uchwala_date,
+        manual_review_required=pog.manual_review_required,
+        conflict_with_mpzp=pog.conflict_with_mpzp,
+        raw_attributes=pog.raw_attributes,
         ouz_intersection_area_sqm=area,
         ouz_intersection_pct=area_pct,
         touches_ouz_boundary=pog.touches_ouz_boundary,
@@ -634,10 +664,7 @@ def _find_source_record(
     preferred = preferred_name.casefold()
     if source_url is not None:
         for record in source_records:
-            if (
-                record.source_url == source_url
-                and record.fetched_at == fetched_at
-            ):
+            if record.source_url == source_url and record.fetched_at == fetched_at:
                 return record
     return next(
         (

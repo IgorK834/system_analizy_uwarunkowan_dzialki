@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 from shapely.geometry import box
@@ -25,7 +25,7 @@ from app.schemas.analyze import (
 )
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextResult, ContextSectionResult
-from app.services.persistence import save_analysis
+from app.services.persistence import build_analyze_response_from_analysis, save_analysis
 
 pytestmark = pytest.mark.integration
 
@@ -125,6 +125,18 @@ def _rich_response() -> AnalyzeResponse:
         pog=PogResult(
             status="adopted",
             planning_zone="SJ",
+            zone_type="SJ",
+            in_ouz=True,
+            area_ratio=0.75,
+            in_downtown_area=True,
+            uchwala_nr="X/42/2026",
+            uchwala_date=date(2026, 2, 10),
+            manual_review_required=True,
+            conflict_with_mpzp=False,
+            raw_attributes={
+                "zone_type": "SJ",
+                "source_layer": "StrefaPlanistyczna",
+            },
             ouz_intersection_area_sqm=2500.0,
             ouz_intersection_pct=25.0,
             touches_ouz_boundary=False,
@@ -134,6 +146,11 @@ def _rich_response() -> AnalyzeResponse:
             InfrastructureResult(
                 network_type="water",
                 buffer_m=4.0,
+                zone_area_sqm=320.0,
+                rule_source="konfiguracja testowa",
+                rule_confidence=0.65,
+                rule_note="Bufor techniczny wymaga uzgodnienia z gestorem.",
+                affects_buildable_area=True,
                 source=_source(
                     "KIUT",
                     "https://kiut.example.test",
@@ -230,39 +247,60 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert saved.buildable_area_sqm == 6000.0
         assert saved.warnings[0]["code"] == "ISOK_WARNING"
 
-        assert db.scalar(
-            select(func.count()).select_from(MpzpZone).where(
-                MpzpZone.analysis_id == analysis_id
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(MpzpZone)
+                .where(MpzpZone.analysis_id == analysis_id)
             )
-        ) == 1
-        assert db.scalar(
-            select(func.count()).select_from(MpzpParameter).join(MpzpZone).where(
-                MpzpZone.analysis_id == analysis_id
+            == 1
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(MpzpParameter)
+                .join(MpzpZone)
+                .where(MpzpZone.analysis_id == analysis_id)
             )
-        ) == 6
-        assert db.scalar(
-            select(func.count()).select_from(PogData).where(
-                PogData.analysis_id == analysis_id
+            == 6
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(PogData)
+                .where(PogData.analysis_id == analysis_id)
             )
-        ) == 1
-        assert db.scalar(
-            select(func.count()).select_from(Infrastructure).where(
-                Infrastructure.analysis_id == analysis_id
+            == 1
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(Infrastructure)
+                .where(Infrastructure.analysis_id == analysis_id)
             )
-        ) == 1
-        assert db.scalar(
-            select(func.count()).select_from(Risk).where(
-                Risk.analysis_id == analysis_id
+            == 1
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(Risk)
+                .where(Risk.analysis_id == analysis_id)
             )
-        ) == 1
-        assert db.scalar(
-            select(func.count()).select_from(SourceRecord).where(
-                SourceRecord.analysis_id == analysis_id
+            == 1
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(SourceRecord)
+                .where(SourceRecord.analysis_id == analysis_id)
             )
-        ) == 8
+            == 8
+        )
 
         height = db.scalar(
-            select(MpzpParameter).join(MpzpZone).where(
+            select(MpzpParameter)
+            .join(MpzpZone)
+            .where(
                 MpzpZone.analysis_id == analysis_id,
                 MpzpParameter.parameter_name == "max_building_height_m",
             )
@@ -281,6 +319,121 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert unavailable.warnings == ["Usługa ISOK jest niedostępna."]
         assert unavailable.checksum is None
 
+        saved_pog = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert saved_pog.zone_type == "SJ"
+        assert saved_pog.in_ouz is True
+        assert saved_pog.area_ratio == pytest.approx(0.75)
+        assert saved_pog.in_downtown_area is True
+        assert saved_pog.uchwala_nr == "X/42/2026"
+        assert saved_pog.uchwala_date == date(2026, 2, 10)
+        assert saved_pog.manual_review_required is True
+        assert saved_pog.conflict_with_mpzp is False
+        assert saved_pog.raw_attributes == {
+            "zone_type": "SJ",
+            "source_layer": "StrefaPlanistyczna",
+        }
+
+        saved_infrastructure = db.scalar(
+            select(Infrastructure).where(Infrastructure.analysis_id == analysis_id)
+        )
+        assert saved_infrastructure.zone_area_sqm == pytest.approx(320.0)
+        assert saved_infrastructure.rule_source == "konfiguracja testowa"
+        assert saved_infrastructure.rule_confidence == pytest.approx(0.65)
+        assert saved_infrastructure.affects_buildable_area is True
+
+        cached_response = build_analyze_response_from_analysis(saved, db)
+        assert cached_response.pog is not None
+        assert cached_response.pog.zone_type == "SJ"
+        assert cached_response.pog.area_ratio == pytest.approx(0.75)
+        assert cached_response.pog.in_ouz is True
+        assert cached_response.pog.in_downtown_area is True
+        assert cached_response.pog.conflict_with_mpzp is False
+        assert cached_response.pog.raw_attributes == saved_pog.raw_attributes
+        assert cached_response.infrastructure[0].zone_area_sqm == pytest.approx(320.0)
+        assert cached_response.infrastructure[0].rule_source == "konfiguracja testowa"
+        assert cached_response.infrastructure[0].affects_buildable_area is True
+
+
+def test_not_available_pog_status_and_review_flag_are_persisted() -> None:
+    response = _minimal_response().model_copy(
+        update={
+            "pog": PogResult(
+                status="not_available",
+                planning_zone=None,
+                in_ouz=False,
+                manual_review_required=True,
+                touches_ouz_boundary=False,
+                source=None,
+            ),
+            "warnings": [
+                WarningMessage(
+                    code="POG_TRANSITIONAL_STATUS",
+                    message="Brak uchwalonego POG wymaga ręcznej weryfikacji.",
+                    severity="warning",
+                    source_name="pog",
+                )
+            ],
+        }
+    )
+    identifier = f"{_PARCEL_PREFIX}POG_MISSING"
+
+    with SessionLocal() as db:
+        analysis = save_analysis(
+            response,
+            identifier,
+            box(500000, 200000, 500010, 200010),
+            db,
+        )
+        analysis_id = analysis.id
+
+    with SessionLocal() as db:
+        saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        analysis = db.get(Analysis, analysis_id)
+
+        assert saved.status == "not_available"
+        assert saved.in_ouz is False
+        assert saved.manual_review_required is True
+        assert analysis.warnings[0]["code"] == "POG_TRANSITIONAL_STATUS"
+
+        cached_response = build_analyze_response_from_analysis(analysis, db)
+        assert cached_response.pog is not None
+        assert cached_response.pog.status == "not_available"
+        assert cached_response.pog.manual_review_required is True
+        assert cached_response.warnings[0].code == "POG_TRANSITIONAL_STATUS"
+
+
+def test_persistence_preserves_ouz_threshold_decision_for_tiny_sliver() -> None:
+    response = _minimal_response().model_copy(
+        update={
+            "pog": PogResult(
+                status="adopted",
+                planning_zone="SJ",
+                in_ouz=False,
+                ouz_intersection_area_sqm=0.5,
+                ouz_intersection_pct=0.005,
+                touches_ouz_boundary=True,
+                manual_review_required=True,
+                source=_source("POG", "https://pog.example.test"),
+            )
+        }
+    )
+    identifier = f"{_PARCEL_PREFIX}OUZ_SLIVER"
+
+    with SessionLocal() as db:
+        analysis = save_analysis(
+            response,
+            identifier,
+            box(500000, 200000, 500100, 200100),
+            db,
+        )
+        analysis_id = analysis.id
+
+    with SessionLocal() as db:
+        saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert saved is not None
+        assert saved.ouz_intersection_area_sqm == pytest.approx(0.5)
+        assert saved.in_ouz is False
+
 
 def test_save_analysis_reuses_parcel_but_keeps_analysis_history() -> None:
     identifier = f"{_PARCEL_PREFIX}HISTORY"
@@ -293,19 +446,23 @@ def test_save_analysis_reuses_parcel_but_keeps_analysis_history() -> None:
 
     assert first_id != second_id
     with SessionLocal() as db:
-        assert db.scalar(
-            select(func.count()).select_from(Parcel).where(
-                Parcel.parcel_identifier == identifier
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(Parcel)
+                .where(Parcel.parcel_identifier == identifier)
             )
-        ) == 1
-        parcel = db.scalar(
-            select(Parcel).where(Parcel.parcel_identifier == identifier)
+            == 1
         )
-        assert db.scalar(
-            select(func.count()).select_from(Analysis).where(
-                Analysis.parcel_id == parcel.id
+        parcel = db.scalar(select(Parcel).where(Parcel.parcel_identifier == identifier))
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(Analysis)
+                .where(Analysis.parcel_id == parcel.id)
             )
-        ) == 2
+            == 2
+        )
 
 
 def test_save_analysis_stores_parcel_geometry_with_srid_2180() -> None:
