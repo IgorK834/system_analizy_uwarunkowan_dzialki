@@ -135,6 +135,70 @@ export async function resumeAnalysis(
   });
 }
 
+export async function getAnalysisReport(
+  analysisId: number,
+  options: { signal?: AbortSignal } = {},
+): Promise<Blob> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}`, {
+      method: "GET",
+      headers: { Accept: "application/pdf" },
+      signal: options.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw error;
+    }
+    throw new ApiError(
+      0,
+      "Nie udało się połączyć z usługą raportów. Spróbuj ponownie.",
+    );
+  }
+
+  if (!response.ok) {
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      // Błąd HTTP bez JSON nadal mapujemy na bezpieczny komunikat poniżej.
+    }
+    const detail = extractDetail(body);
+    const message =
+      response.status === 404
+        ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
+        : `Nie udało się wygenerować raportu PDF.${detail ? ` ${detail}` : ""}`;
+    throw new ApiError(response.status, message);
+  }
+
+  const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/pdf")) {
+    throw new ApiError(
+      response.status,
+      "Serwer zwrócił raport w nieprawidłowym formacie.",
+    );
+  }
+
+  const blob = await response.blob();
+  const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  if (
+    blob.size === 0 ||
+    signature.length !== 4 ||
+    signature[0] !== 0x25 ||
+    signature[1] !== 0x50 ||
+    signature[2] !== 0x44 ||
+    signature[3] !== 0x46
+  ) {
+    throw new ApiError(
+      response.status,
+      "Wygenerowany plik nie jest prawidłowym dokumentem PDF.",
+    );
+  }
+
+  return blob;
+}
+
 export async function getAddressSuggestions(
   query: string,
   options: { signal?: AbortSignal } = {},

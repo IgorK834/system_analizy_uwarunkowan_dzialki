@@ -4,6 +4,7 @@ import {
   analyzeParcel,
   ApiError,
   getAddressSuggestions,
+  getAnalysisReport,
   resumeAnalysis,
 } from "@/lib/api";
 import { buildAnalyzeResponse } from "@/test/fixtures";
@@ -14,6 +15,13 @@ function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+function pdfResponse(content = "%PDF-1.7 test") {
+  return new Response(content, {
+    status: 200,
+    headers: { "Content-Type": "application/pdf" },
   });
 }
 
@@ -81,6 +89,65 @@ describe("klient API", () => {
         body: JSON.stringify({ analysis_id: 42, zone_symbol: "230_U" }),
       }),
     );
+  });
+
+  it("pobiera i weryfikuje raport PDF zapisanej analizy", async () => {
+    fetchMock.mockResolvedValue(pdfResponse());
+    const controller = new AbortController();
+
+    const report = await getAnalysisReport(42, { signal: controller.signal });
+
+    expect(report).toBeInstanceOf(Blob);
+    expect(report.type).toBe("application/pdf");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/report/42",
+      expect.objectContaining({
+        method: "GET",
+        headers: { Accept: "application/pdf" },
+        signal: controller.signal,
+      }),
+    );
+  });
+
+  it("odrzuca udaną odpowiedź raportu, która nie jest PDF", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ status: "ok" }));
+
+    await expect(getAnalysisReport(42)).rejects.toThrow(
+      "nieprawidłowym formacie",
+    );
+  });
+
+  it("odrzuca raport bez sygnatury %PDF", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("not-a-pdf", {
+        status: 200,
+        headers: { "Content-Type": "application/pdf" },
+      }),
+    );
+
+    await expect(getAnalysisReport(42)).rejects.toThrow(
+      "nie jest prawidłowym dokumentem PDF",
+    );
+  });
+
+  it("mapuje brak zapisanej analizy na błąd raportu 404", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ detail: "Analiza nie istnieje." }, 404),
+    );
+
+    await expect(getAnalysisReport(404)).rejects.toMatchObject({
+      status: 404,
+      message: expect.stringContaining("Nie znaleziono zapisanej analizy"),
+    });
+  });
+
+  it("mapuje awarię sieci raportu i zachowuje jego AbortError", async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError("network down"));
+    await expect(getAnalysisReport(42)).rejects.toMatchObject({ status: 0 });
+
+    const abortError = new DOMException("aborted", "AbortError");
+    fetchMock.mockRejectedValueOnce(abortError);
+    await expect(getAnalysisReport(42)).rejects.toBe(abortError);
   });
 
   it("koduje zapytanie geokodowania i zwraca kontrakt sugestii", async () => {
