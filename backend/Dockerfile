@@ -23,5 +23,8 @@ COPY alembic.ini .
 COPY alembic/ ./alembic/
 COPY app/ ./app/
 COPY tests/ ./tests/
+COPY docker-entrypoint.sh /usr/local/bin/dzialki-entrypoint
+RUN chmod +x /usr/local/bin/dzialki-entrypoint
 
+ENTRYPOINT ["dzialki-entrypoint"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
