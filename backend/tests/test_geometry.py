@@ -479,6 +479,7 @@ def test_calculate_network_protection_zones_line_through_center_reduces_area_pre
     assert result.net_buildable_area_sqm == pytest.approx(10000.0 - 400.0, abs=1.0)
     assert len(result.zones) == 1
     assert result.zones[0].zone_area_sqm == pytest.approx(400.0, abs=1.0)
+    assert result.zones[0].geometry.area == pytest.approx(400.0, abs=1.0)
 
 
 def test_calculate_network_protection_zones_network_outside_parcel_does_not_reduce_area() -> None:

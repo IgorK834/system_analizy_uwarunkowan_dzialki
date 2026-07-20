@@ -270,6 +270,13 @@ async def test_full_parcel_id_flow_builds_response_and_persists_analysis() -> No
     assert response.analysis_id is not None
     assert response.parcel is not None
     assert response.parcel.metrics.area_sqm == 10000.0
+    assert response.parcel.buildable_area_geojson is not None
+    assert (
+        response.parcel.buildable_area_geojson["properties"][
+            "is_technical_approximation"
+        ]
+        is True
+    )
     assert response.mpzp_zones[0].zone_symbol == "MN"
     assert response.mpzp_zones[0].max_building_height_m == 9.0
     assert any(source.source_name == "ULDK" for source in response.sources)
@@ -426,10 +433,16 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
     assert response.infrastructure[0].zone_area_sqm == pytest.approx(276.0)
     assert response.infrastructure[0].affects_buildable_area is True
     assert response.infrastructure[0].rule_source is not None
+    assert response.infrastructure[0].network_geometry_geojson is not None
+    assert response.infrastructure[0].network_geometry_geojson["properties"]["layer"] == "network"
+    assert response.infrastructure[0].protection_zone_geojson is not None
+    assert response.infrastructure[0].protection_zone_geojson["properties"]["layer"] == "protection_zone"
     assert response.buildable_area_sqm == pytest.approx(8188.0)
     assert response.risks[0].risk_type == "natura_2000"
     assert "100.00%" in response.risks[0].description
     assert "1.00%" not in response.risks[0].description
+    assert response.risks[0].geometry_geojson is not None
+    assert response.risks[0].geometry_geojson["properties"]["layer"] == "risk"
     assert any(warning.source_name == "isok" for warning in response.warnings)
 
     with SessionLocal() as db:
@@ -441,11 +454,16 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
         assert saved_infrastructure is not None
         assert saved_infrastructure.zone_area_sqm == pytest.approx(276.0)
         assert saved_infrastructure.affects_buildable_area is True
+        assert saved_infrastructure.network_geometry_geojson is not None
+        assert saved_infrastructure.protection_zone_geojson is not None
         cached = db.get(Analysis, response.analysis_id)
         assert cached is not None
         rebuilt = build_analyze_response_from_analysis(cached, db)
         assert rebuilt.buildable_area_sqm == pytest.approx(8188.0)
         assert rebuilt.infrastructure[0].rule_source is not None
+        assert rebuilt.infrastructure[0].network_geometry_geojson is not None
+        assert rebuilt.infrastructure[0].protection_zone_geojson is not None
+        assert rebuilt.risks[0].geometry_geojson is not None
 
 
 @pytest.mark.asyncio

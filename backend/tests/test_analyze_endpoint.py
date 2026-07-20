@@ -5,7 +5,12 @@ from fastapi.testclient import TestClient
 import pytest
 
 from app.main import app
-from app.schemas.analyze import AnalyzeResponse, SourceMetadata
+from app.schemas.analyze import (
+    AnalyzeResponse,
+    GeometryMetrics,
+    ParcelGeometryResponse,
+    SourceMetadata,
+)
 from app.services.geocoding import GeocodingServiceUnavailableError
 from app.services.geometry import CoordinatesOutsidePolandError
 from app.services.initiation import AddressNotFoundError
@@ -113,6 +118,84 @@ def test_analyze_force_refresh_query_is_forwarded_to_orchestrator(
 
     assert response.status_code == 200
     assert mock_run.await_args.kwargs["force_refresh"] is True
+
+
+def test_analyze_response_parcel_includes_buildable_area_geojson(
+    mock_parcel_result: ParcelLookupResult,
+) -> None:
+    response_with_parcel = _analyze_response(mock_parcel_result).model_copy(
+        update={
+            "parcel": ParcelGeometryResponse(
+                parcel_identifier=mock_parcel_result.parcel_identifier,
+                geometry_geojson={"type": "Polygon", "coordinates": []},
+                metrics=GeometryMetrics(
+                    area_sqm=10000.0,
+                    area_ha=1.0,
+                    perimeter_m=400.0,
+                    is_valid=True,
+                    geometry_repaired=False,
+                ),
+                source=mock_parcel_result.source_metadata,
+                buildable_area_geojson={
+                    "type": "Feature",
+                    "geometry": {"type": "Polygon", "coordinates": []},
+                    "properties": {
+                        "layer": "buildable_area",
+                        "setback_m": 4.0,
+                        "is_technical_approximation": True,
+                    },
+                },
+            )
+        }
+    )
+    with patch(
+        "app.routers.analyze.run_analysis", new_callable=AsyncMock
+    ) as mock_resolve:
+        mock_resolve.return_value = response_with_parcel
+
+        response = client.post(
+            "/analyze", json={"method": "map", "lon": 19.94, "lat": 50.06}
+        )
+
+    parcel = response.json()["parcel"]
+    assert parcel is not None
+    assert parcel["buildable_area_geojson"]["properties"][
+        "is_technical_approximation"
+    ] is True
+
+
+def test_analyze_response_parcel_allows_null_buildable_area_geojson(
+    mock_parcel_result: ParcelLookupResult,
+) -> None:
+    # None jest sygnałem, że techniczne odsunięcie zredukowało obszar do zera
+    # albo wynik pochodzi z cache bez przeliczonej geometrii.
+    response_with_parcel = _analyze_response(mock_parcel_result).model_copy(
+        update={
+            "parcel": ParcelGeometryResponse(
+                parcel_identifier=mock_parcel_result.parcel_identifier,
+                geometry_geojson={"type": "Polygon", "coordinates": []},
+                metrics=GeometryMetrics(
+                    area_sqm=10000.0,
+                    area_ha=1.0,
+                    perimeter_m=400.0,
+                    is_valid=True,
+                    geometry_repaired=False,
+                ),
+                source=mock_parcel_result.source_metadata,
+                buildable_area_geojson=None,
+            )
+        }
+    )
+    with patch(
+        "app.routers.analyze.run_analysis", new_callable=AsyncMock
+    ) as mock_resolve:
+        mock_resolve.return_value = response_with_parcel
+
+        response = client.post(
+            "/analyze", json={"method": "map", "lon": 19.94, "lat": 50.06}
+        )
+
+    assert response.json()["parcel"]["buildable_area_geojson"] is None
 
 
 def test_analyze_response_contains_sources(

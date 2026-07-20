@@ -297,6 +297,41 @@ def test_parse_response_with_feature_and_alternate_attribute_names() -> None:
     assert result.uchwala_url == "https://example.local/p7.pdf"
 
 
+def test_parse_official_kimpzp_html_vector_response() -> None:
+    response = """
+    <html><body><table>
+      <tr><th>Uchwalenie</th><th>Oznaczenie</th><th>WWW</th></tr>
+      <tr><td>LIII/1464/21</td><td>KDLT.2</td>
+          <td>https://example.local/plan</td></tr>
+    </table></body></html>
+    """
+
+    result = _parse_get_feature_info_response(response)
+
+    assert result.found is True
+    assert result.plan_id == "LIII/1464/21"
+    assert result.zone_symbol == "KDLT.2"
+    assert result.uchwala_url == "https://example.local/plan"
+    assert result.vector_available is True
+
+
+def test_parse_official_kimpzp_html_raster_response() -> None:
+    response = """
+    <html><body><table>
+      <tr><th>Uchwała</th><td>XVII/136/96</td></tr>
+      <tr><th>Poziom informatyzacji</th><td>rastrowy</td></tr>
+      <tr><th>Treść uchwały</th><td>https://example.local/plan.pdf</td></tr>
+    </table></body></html>
+    """
+
+    result = _parse_get_feature_info_response(response)
+
+    assert result.found is True
+    assert result.plan_id == "XVII/136/96"
+    assert result.zone_symbol is None
+    assert result.vector_available is False
+
+
 def test_aggregate_point_results_ignores_exceptions_gracefully() -> None:
     results = [
         httpx.TimeoutException("x"),
@@ -346,6 +381,8 @@ async def test_fetch_sends_get_feature_info_request_params() -> None:
 
     params = route.calls.last.request.url.params
     assert params["request"] == "GetFeatureInfo"
-    assert params["crs"] == "EPSG:2180"
+    assert params["version"] == "1.1.1"
+    assert params["srs"] == "EPSG:2180"
+    assert params["layers"] == "plany_granice"
     assert params["width"] == "2"
-    assert params["i"] == "1"
+    assert params["x"] == "1"
