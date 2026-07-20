@@ -26,6 +26,8 @@ node_modules/
 .next/
 out/
 dist/
+coverage/
+*.tsbuildinfo
 
 # Docker / lokalne artefakty
 docker-compose.override.local.yml
