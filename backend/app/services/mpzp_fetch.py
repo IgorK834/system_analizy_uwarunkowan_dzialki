@@ -43,6 +43,14 @@ _ALLOWED_CONTENT_TYPES: Final[frozenset[str]] = frozenset(
         "application/zip",
         "application/x-zip-compressed",
         "application/octet-stream",
+        # Te typy są współdzielone z pog_fetch.py, który ponownie używa tego
+        # samego strumieniowania, limitu rozmiaru i walidacji przekierowań dla
+        # publikowanych przez gminy danych APP/GML i GeoJSON.
+        "application/gml+xml",
+        "application/geo+json",
+        "application/json",
+        "application/xml",
+        "text/xml",
         "text/html",
     }
 )
