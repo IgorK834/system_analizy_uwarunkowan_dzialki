@@ -43,3 +43,127 @@ def test_parcels_geometry_has_gist_index_after_migration() -> None:
         ).scalars()
 
     assert "ix_parcels_geometry_gist" in set(rows)
+
+
+def test_pog_data_has_audit_columns_after_migration() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+
+    columns = {
+        column["name"]: column for column in inspect(engine).get_columns("pog_data")
+    }
+
+    assert columns["zone_type"]["nullable"] is True
+    assert columns["in_ouz"]["nullable"] is False
+    assert columns["area_ratio"]["nullable"] is True
+    assert columns["in_downtown_area"]["nullable"] is False
+    assert columns["manual_review_required"]["nullable"] is False
+    assert columns["conflict_with_mpzp"]["nullable"] is True
+    assert columns["raw_attributes"]["nullable"] is True
+
+
+def test_infrastructure_has_buildable_area_audit_columns_after_migration() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+
+    columns = {
+        column["name"]: column
+        for column in inspect(engine).get_columns("infrastructure_records")
+    }
+
+    assert columns["zone_area_sqm"]["nullable"] is True
+    assert columns["rule_source"]["nullable"] is True
+    assert columns["rule_confidence"]["nullable"] is True
+    assert columns["rule_note"]["nullable"] is True
+    assert columns["affects_buildable_area"]["nullable"] is False
+
+
+def test_pog_audit_upgrade_downgrade_preserves_existing_columns() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+    parcel_identifier = "ALEMBIC_POG_AUDIT_ROUNDTRIP"
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "DELETE FROM pog_data WHERE analysis_id IN ("
+                "SELECT analyses.id FROM analyses JOIN parcels "
+                "ON parcels.id = analyses.parcel_id "
+                "WHERE parcels.parcel_identifier = :identifier)"
+            ),
+            {"identifier": parcel_identifier},
+        )
+        connection.execute(
+            text(
+                "DELETE FROM analyses WHERE parcel_id IN ("
+                "SELECT id FROM parcels WHERE parcel_identifier = :identifier)"
+            ),
+            {"identifier": parcel_identifier},
+        )
+        connection.execute(
+            text("DELETE FROM parcels WHERE parcel_identifier = :identifier"),
+            {"identifier": parcel_identifier},
+        )
+        parcel_id = connection.execute(
+            text(
+                "INSERT INTO parcels (parcel_identifier, geometry) "
+                "VALUES (:identifier, ST_Multi(ST_GeomFromText("
+                "'POLYGON((0 0,10 0,10 10,0 10,0 0))', 2180))) "
+                "RETURNING id"
+            ),
+            {"identifier": parcel_identifier},
+        ).scalar_one()
+        analysis_id = connection.execute(
+            text(
+                "INSERT INTO analyses (parcel_id, status) "
+                "VALUES (:parcel_id, 'complete') RETURNING id"
+            ),
+            {"parcel_id": parcel_id},
+        ).scalar_one()
+        connection.execute(
+            text(
+                "INSERT INTO pog_data "
+                "(analysis_id, status, planning_zone, touches_ouz_boundary, raw_attributes) "
+                "VALUES (:analysis_id, 'adopted', 'SJ', false, CAST(:raw AS jsonb))"
+            ),
+            {"analysis_id": analysis_id, "raw": '{"zone_type": "SJ"}'},
+        )
+
+    try:
+        command.downgrade(config, "003_source_audit")
+        with engine.connect() as connection:
+            old_values = connection.execute(
+                text(
+                    "SELECT status, planning_zone, touches_ouz_boundary "
+                    "FROM pog_data WHERE analysis_id = :analysis_id"
+                ),
+                {"analysis_id": analysis_id},
+            ).one()
+        assert tuple(old_values) == ("adopted", "SJ", False)
+
+        command.upgrade(config, "head")
+        with engine.connect() as connection:
+            restored = connection.execute(
+                text(
+                    "SELECT status, planning_zone, in_ouz, in_downtown_area, "
+                    "manual_review_required FROM pog_data "
+                    "WHERE analysis_id = :analysis_id"
+                ),
+                {"analysis_id": analysis_id},
+            ).one()
+        assert tuple(restored) == ("adopted", "SJ", False, False, False)
+    finally:
+        command.upgrade(config, "head")
+        with engine.begin() as connection:
+            connection.execute(
+                text("DELETE FROM pog_data WHERE analysis_id = :analysis_id"),
+                {"analysis_id": analysis_id},
+            )
+            connection.execute(
+                text("DELETE FROM analyses WHERE id = :analysis_id"),
+                {"analysis_id": analysis_id},
+            )
+            connection.execute(
+                text("DELETE FROM parcels WHERE id = :parcel_id"),
+                {"parcel_id": parcel_id},
+            )

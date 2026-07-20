@@ -39,3 +39,51 @@ def test_domain_model_classes_have_expected_table_names() -> None:
     assert Infrastructure.__tablename__ == "infrastructure_records"
     assert Risk.__tablename__ == "risk_records"
     assert SourceRecord.__tablename__ == "source_records"
+
+
+def test_pog_data_has_audit_and_scenario_columns() -> None:
+    expected_columns = {
+        "zone_type",
+        "in_ouz",
+        "area_ratio",
+        "in_downtown_area",
+        "uchwala_nr",
+        "uchwala_date",
+        "manual_review_required",
+        "conflict_with_mpzp",
+        "raw_attributes",
+    }
+
+    assert expected_columns.issubset(PogData.__table__.c.keys())
+    assert PogData.__table__.c.in_ouz.nullable is False
+    assert PogData.__table__.c.in_downtown_area.nullable is False
+    assert PogData.__table__.c.manual_review_required.nullable is False
+
+
+def test_pog_raw_attributes_uses_jsonb() -> None:
+    assert isinstance(PogData.__table__.c.raw_attributes.type, JSONB)
+
+
+def test_infrastructure_has_buildable_area_audit_columns() -> None:
+    expected_columns = {
+        "zone_area_sqm",
+        "rule_source",
+        "rule_confidence",
+        "rule_note",
+        "affects_buildable_area",
+    }
+
+    assert expected_columns.issubset(Infrastructure.__table__.c.keys())
+    assert Infrastructure.__table__.c.affects_buildable_area.nullable is False
+
+
+def test_source_record_remains_generic_audit_model() -> None:
+    assert "zone_type" not in SourceRecord.__table__.c
+    assert "in_ouz" not in SourceRecord.__table__.c
+    assert {
+        "source_name",
+        "confidence",
+        "manual_review_required",
+        "warnings",
+        "checksum",
+    }.issubset(SourceRecord.__table__.c.keys())
