@@ -149,6 +149,31 @@ class ParcelGeometryResponse(BaseModel):
             }
         },
     )
+    buildable_area_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Obszar zabudowy po technicznym odsunięciu od granicy działki, "
+            "jako GeoJSON Feature w WGS84 (EPSG:4326). To techniczne "
+            "przybliżenie (is_technical_approximation=True w properties), "
+            "nie ostateczna linia zabudowy z MPZP i nie geometria netto po "
+            "odjęciu stref ochronnych sieci. None gdy odsunięcie zredukowało "
+            "obszar do zera."
+        ),
+        json_schema_extra={
+            "example": {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[19.941, 50.061], [19.949, 50.061], [19.941, 50.061]]],
+                },
+                "properties": {
+                    "layer": "buildable_area",
+                    "setback_m": 4.0,
+                    "is_technical_approximation": True,
+                },
+            }
+        },
+    )
 
 
 class MpzpZoneResult(BaseModel):
@@ -350,6 +375,17 @@ class InfrastructureResult(BaseModel):
         default=False,
         description="Czy strefa faktycznie pomniejszyła obszar zabudowy.",
     )
+    network_geometry_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description="Geometria sieci w WGS84 jako GeoJSON Feature.",
+    )
+    protection_zone_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Efektywna strefa ochronna pomniejszająca obszar zabudowy, "
+            "w WGS84 jako GeoJSON Feature."
+        ),
+    )
     source: SourceMetadata = Field(
         description="Metadane źródła danych o uzbrojeniu terenu.",
         json_schema_extra={
@@ -374,6 +410,12 @@ class RiskResult(BaseModel):
         json_schema_extra={
             "example": "Część działki znajduje się w obszarze zagrożenia powodziowego."
         },
+    )
+    geometry_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Geometria przecięcia ryzyka z działką w WGS84 jako GeoJSON Feature."
+        ),
     )
     source: SourceMetadata = Field(
         description="Metadane źródła danych o ryzyku.",
