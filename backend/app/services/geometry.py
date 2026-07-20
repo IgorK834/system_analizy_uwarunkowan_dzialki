@@ -183,6 +183,7 @@ class TechnicalSetbackResult:
     """
 
     buildable_area_sqm: float
+    buildable_geometry: BaseGeometry
     setback_m: float
     is_technical_approximation: bool
     warning: str | None
@@ -207,6 +208,7 @@ def calculate_technical_setback(
     if buffered.is_empty or buffered.area <= 0.0:
         return TechnicalSetbackResult(
             buildable_area_sqm=0.0,
+            buildable_geometry=buffered,
             setback_m=setback_m,
             is_technical_approximation=True,
             warning=(
@@ -219,6 +221,7 @@ def calculate_technical_setback(
 
     return TechnicalSetbackResult(
         buildable_area_sqm=buffered.area,
+        buildable_geometry=buffered,
         setback_m=setback_m,
         is_technical_approximation=True,
         warning=None,
@@ -322,16 +325,33 @@ def calculate_network_protection_zones(
         if not applies:
             continue
 
-        clipped = buffered.intersection(parcel)
+        # Raportowana powierzchnia strefy odpowiada faktycznej redukcji
+        # technicznego obszaru zabudowy. Część bufora leżąca wyłącznie w pasie
+        # odsunięcia od granicy działki nie może zawyżać audytowanej dedukcji.
+        clipped = buffered.intersection(buildable_area)
         if clipped.is_empty:
             continue
 
+        # Przy nakładających się buforach przypisujemy kolejnej sieci tylko
+        # jeszcze nieodjętą część. Dzięki temu suma ``zone_area_sqm`` jest
+        # równa faktycznej redukcji netto i pozwala odtworzyć rachunek bez
+        # podwójnego liczenia wspólnego fragmentu stref.
+        previously_covered = (
+            unary_union(clipped_zone_geometries)
+            if clipped_zone_geometries
+            else None
+        )
+        effective_zone = (
+            clipped.difference(previously_covered)
+            if previously_covered is not None
+            else clipped
+        )
         clipped_zone_geometries.append(clipped)
         zones.append(
             NetworkProtectionZone(
                 network_type=network.network_type,
                 buffer_m=rule.default_buffer_m,
-                zone_area_sqm=clipped.area,
+                zone_area_sqm=effective_zone.area,
                 source=rule.source,
                 confidence=rule.confidence,
                 note=rule.note,

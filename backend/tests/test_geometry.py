@@ -10,7 +10,6 @@ from app.services.geometry import (
     CoordinatesOutsidePolandError,
     InvalidParcelGeometryError,
     NetworkGeometryInput,
-    NetworkProtectionZone,
     NetworkProtectionZonesResult,
     ParcelGeometryMetrics,
     TechnicalSetbackResult,
@@ -609,6 +608,9 @@ def test_calculate_network_protection_zones_multiple_networks_sum_correctly() ->
 
     # Mniej niż redukcja tylko jednej sieci (9600), bo dwie strefy się sumują.
     assert result.net_buildable_area_sqm < 10000.0 - 400.0
+    assert sum(zone.zone_area_sqm for zone in result.zones) == pytest.approx(
+        parcel.area - result.net_buildable_area_sqm
+    )
 
 
 def test_calculate_network_protection_zones_uses_default_rules_when_none_passed() -> None:
