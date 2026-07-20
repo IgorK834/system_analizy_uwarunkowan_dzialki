@@ -4,6 +4,7 @@ import {
   analyzeParcel,
   ApiError,
   getAddressSuggestions,
+  resumeAnalysis,
 } from "@/lib/api";
 import { buildAnalyzeResponse } from "@/test/fixtures";
 
@@ -63,6 +64,24 @@ describe("klient API", () => {
       );
     },
   );
+
+  it("wysyła wznowienie analizy jako JSON do /analyze/resume", async () => {
+    const response = buildAnalyzeResponse({ status: "complete" });
+    fetchMock.mockResolvedValue(jsonResponse(response));
+
+    await expect(
+      resumeAnalysis({ analysis_id: 42, zone_symbol: "230_U" }),
+    ).resolves.toEqual(response);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/analyze/resume",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysis_id: 42, zone_symbol: "230_U" }),
+      }),
+    );
+  });
 
   it("koduje zapytanie geokodowania i zwraca kontrakt sugestii", async () => {
     const geocode = {

@@ -2,6 +2,7 @@ import { getApiBaseUrl } from "@/lib/config";
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
+  AnalyzeResumeRequest,
   GeocodeResponse,
 } from "@/lib/types";
 
@@ -120,6 +121,18 @@ export async function analyzeParcel(
       signal: options.signal,
     },
   );
+}
+
+export async function resumeAnalysis(
+  payload: AnalyzeResumeRequest,
+  options: { signal?: AbortSignal } = {},
+): Promise<AnalyzeResponse> {
+  return requestJson<AnalyzeResponse>(`${getApiBaseUrl()}/analyze/resume`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: options.signal,
+  });
 }
 
 export async function getAddressSuggestions(
