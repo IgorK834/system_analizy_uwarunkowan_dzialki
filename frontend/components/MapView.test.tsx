@@ -43,7 +43,11 @@ describe("MapView", () => {
     const { unmount } = render(<MapView onMapClick={onMapClick} />);
 
     expect(mapState.constructor).toHaveBeenCalledWith(
-      expect.objectContaining({ center: [19.5, 52.1], zoom: 6 }),
+      expect.objectContaining({
+        center: [19.5, 52.1],
+        zoom: 6,
+        cancelPendingTileRequestsWhileZooming: true,
+      }),
     );
     expect(mapState.addControl).toHaveBeenCalledWith(expect.anything(), "top-right");
 
@@ -72,5 +76,26 @@ describe("MapView", () => {
     expect(firstCallback).not.toHaveBeenCalled();
     expect(secondCallback).toHaveBeenCalledWith(18, 51);
     expect(mapState.constructor).toHaveBeenCalledOnce();
+  });
+
+  it("wywołuje onMapReady z instancją mapy po zdarzeniu load i odrejestrowuje handler przy odmontowaniu", () => {
+    const onMapClick = vi.fn();
+    const onMapReady = vi.fn();
+    const { unmount } = render(
+      <MapView onMapClick={onMapClick} onMapReady={onMapReady} />,
+    );
+
+    const loadHandler = mapState.on.mock.calls.find(
+      ([eventName]) => eventName === "load",
+    )?.[1] as () => void;
+    act(() => loadHandler());
+
+    expect(onMapReady).toHaveBeenCalledOnce();
+    expect(onMapReady).toHaveBeenCalledWith(
+      expect.objectContaining({ on: expect.anything() }),
+    );
+
+    unmount();
+    expect(mapState.off).toHaveBeenCalledWith("load", loadHandler);
   });
 });
