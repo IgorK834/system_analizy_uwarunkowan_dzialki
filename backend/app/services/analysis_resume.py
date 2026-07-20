@@ -247,9 +247,10 @@ def _resume_warnings(
         WarningMessage(
             code="MPZP_MANUAL_ZONE_FALLBACK",
             message=(
-                "Symbol strefy podano ręcznie bez wektorowej granicy. Całą "
-                "działkę przypisano technicznie do tej strefy, dlatego wynik "
-                "pozostaje częściowy i wymaga weryfikacji."
+                "Symbol strefy podano ręcznie na podstawie rastrowej nakładki "
+                "WMS, bez wektorowej granicy. Całą działkę przypisano technicznie "
+                "do tej strefy, dlatego wynik pozostaje częściowy i wymaga "
+                "weryfikacji."
             ),
             severity="warning",
             source_name="mpzp",
