@@ -36,13 +36,30 @@ class Settings(BaseSettings):
     # zapytania (typename, wersja WFS, nazwy warstw) zostanie doprecyzowany po
     # udostępnieniu pełnej dokumentacji usługi.
     gdos_wfs_base_url: str = "https://sdi.gdos.gov.pl/wfs"
-    # Adres WMS KIMPZP (Krajowa Integracja Miejscowych Planów Zagospodarowania
-    # Przestrzennego) jest placeholderem opartym o publicznie znaną domenę GUGiK.
-    # Rzeczywisty kontrakt GetFeatureInfo, w tym sposób sygnalizowania gmin bez
-    # wektoryzacji MPZP, wymaga potwierdzenia w dokumentacji usługi.
+    # Oficjalny endpoint prezentacyjny WMS Krajowej Integracji MPZP. Discovery
+    # używa queryable warstwy ``plany_granice`` i kontraktu GetFeatureInfo
+    # opublikowanego w bieżącym GetCapabilities usługi.
     kimpzp_wms_base_url: str = (
-        "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIMPZP/WMS"
+        "https://mapy.geoportal.gov.pl/wss/ext/"
+        "KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego"
     )
+    # Warstwy używane przez serwerowy proxy kafelków. Frontend nie przekazuje
+    # nazw warstw ani adresu upstreamu, dzięki czemu endpoint nie staje się
+    # otwartym proxy SSRF.
+    kimpzp_wms_layers: str = (
+        "plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,"
+        "wektor-pow,wektor-pkt,granice"
+    )
+    map_tile_cache_dir: str = "/tmp/dzialki-map-tile-cache"
+    map_tile_cache_ttl_seconds: int = 86_400
+    map_tile_stale_ttl_seconds: int = 604_800
+    map_tile_browser_ttl_seconds: int = 3_600
+    map_tile_cache_max_bytes: int = 5 * 1024 * 1024 * 1024
+    map_tile_upstream_connect_timeout_seconds: float = 2.0
+    map_tile_upstream_read_timeout_seconds: float = 8.0
+    map_tile_upstream_max_concurrency: int = 8
+    map_tile_min_zoom: int = 11
+    map_tile_max_zoom: int = 18
     # Rejestr Urbanistyczny jest opcjonalnym, eksperymentalnym kanałem discovery.
     # W lipcu 2026 publiczny kontrakt API ani adres usługi nie są potwierdzone,
     # dlatego brak wartości jest bezpiecznym ustawieniem domyślnym. Adresy WMS/BIP
