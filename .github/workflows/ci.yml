@@ -25,9 +25,16 @@ jobs:
       - name: Zbuduj obraz backendu
         run: docker compose build backend
 
-      # TODO: frontend build — odkomentuj gdy powstanie frontend/Dockerfile
-      # - name: Zbuduj obraz frontendu
-      #   run: docker compose build frontend
+      - name: Zbuduj obraz frontendu
+        run: docker compose build frontend
+
+      - name: Testy frontendu i coverage wewnątrz kontenera
+        run: |
+          docker build --target test -t dzialki-frontend-test ./frontend
+          docker run --rm \
+            -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
+            dzialki-frontend-test \
+            npm run test:coverage
 
       - name: Testy backendu wewnątrz kontenera
         run: |
