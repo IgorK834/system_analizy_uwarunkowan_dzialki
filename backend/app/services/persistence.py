@@ -42,8 +42,11 @@ from app.schemas.analyze import (
 )
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextResult
-from app.services.geojson import parcel_geometry_to_geojson
-from app.services.geometry import calculate_geometry_metrics
+from app.services.geojson import (
+    buildable_area_geometry_to_geojson,
+    parcel_geometry_to_geojson,
+)
+from app.services.geometry import calculate_geometry_metrics, calculate_technical_setback
 
 
 @dataclass(frozen=True)
@@ -261,6 +264,12 @@ def save_analysis(
                     affects_buildable_area=(
                         infrastructure_item.affects_buildable_area
                     ),
+                    network_geometry_geojson=(
+                        infrastructure_item.network_geometry_geojson
+                    ),
+                    protection_zone_geojson=(
+                        infrastructure_item.protection_zone_geojson
+                    ),
                     source_url=infrastructure_item.source.source_url,
                     fetched_at=infrastructure_item.source.fetched_at,
                     confidence=infrastructure_item.source.confidence,
@@ -276,6 +285,7 @@ def save_analysis(
                     analysis_id=analysis.id,
                     risk_type=risk_item.risk_type,
                     description=risk_item.description,
+                    geometry_geojson=risk_item.geometry_geojson,
                     source_url=risk_item.source.source_url,
                     fetched_at=risk_item.source.fetched_at,
                     confidence=risk_item.source.confidence,
@@ -374,6 +384,7 @@ def build_analyze_response_from_analysis(
 
     parcel_geometry = to_shape(loaded.parcel.geometry)
     metrics = calculate_geometry_metrics(parcel_geometry)
+    setback = calculate_technical_setback(parcel_geometry)
     sources = [_source_metadata_from_record(record) for record in loaded.source_records]
     parcel_source_record = next(
         (
@@ -408,6 +419,15 @@ def build_analyze_response_from_analysis(
             geometry_repaired=metrics.geometry_repaired,
         ),
         source=parcel_source,
+        buildable_area_geojson=(
+            buildable_area_geometry_to_geojson(
+                setback.buildable_geometry,
+                setback.setback_m,
+            )
+            if not setback.buildable_geometry.is_empty
+            and setback.buildable_area_sqm > 0.0
+            else None
+        ),
     )
 
     zones = [
@@ -431,6 +451,8 @@ def build_analyze_response_from_analysis(
             rule_confidence=item.rule_confidence,
             rule_note=item.rule_note,
             affects_buildable_area=item.affects_buildable_area,
+            network_geometry_geojson=item.network_geometry_geojson,
+            protection_zone_geojson=item.protection_zone_geojson,
             source=_source_for_child(
                 loaded.source_records,
                 item.source_url,
@@ -446,6 +468,7 @@ def build_analyze_response_from_analysis(
         RiskResult(
             risk_type=item.risk_type,
             description=item.description or "Brak opisu ryzyka.",
+            geometry_geojson=item.geometry_geojson,
             source=_source_for_child(
                 loaded.source_records,
                 item.source_url,

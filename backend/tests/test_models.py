@@ -71,10 +71,18 @@ def test_infrastructure_has_buildable_area_audit_columns() -> None:
         "rule_confidence",
         "rule_note",
         "affects_buildable_area",
+        "network_geometry_geojson",
+        "protection_zone_geojson",
     }
 
     assert expected_columns.issubset(Infrastructure.__table__.c.keys())
     assert Infrastructure.__table__.c.affects_buildable_area.nullable is False
+    assert isinstance(Infrastructure.__table__.c.network_geometry_geojson.type, JSONB)
+    assert isinstance(Infrastructure.__table__.c.protection_zone_geojson.type, JSONB)
+
+
+def test_risk_geometry_uses_jsonb() -> None:
+    assert isinstance(Risk.__table__.c.geometry_geojson.type, JSONB)
 
 
 def test_source_record_remains_generic_audit_model() -> None:

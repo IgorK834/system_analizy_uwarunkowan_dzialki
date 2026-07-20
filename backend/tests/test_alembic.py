@@ -37,6 +37,16 @@ def test_main_and_session_do_not_use_create_all() -> None:
         assert "create_all" not in checked_file.read_text(encoding="utf-8")
 
 
+def test_backend_container_runs_alembic_before_starting_api() -> None:
+    backend_dir = Path(__file__).resolve().parents[1]
+    dockerfile = (backend_dir / "Dockerfile").read_text(encoding="utf-8")
+    entrypoint = (backend_dir / "docker-entrypoint.sh").read_text(encoding="utf-8")
+
+    assert 'ENTRYPOINT ["dzialki-entrypoint"]' in dockerfile
+    assert "alembic upgrade head" in entrypoint
+    assert 'exec "$@"' in entrypoint
+
+
 def test_pog_audit_migration_extends_existing_table_without_renames() -> None:
     migration_path = (
         Path(__file__).resolve().parents[1]
@@ -71,3 +81,19 @@ def test_infrastructure_audit_migration_follows_pog_migration() -> None:
     assert '"rule_source"' in migration
     assert '"affects_buildable_area"' in migration
     assert "server_default=sa.false()" in migration
+
+
+def test_map_layer_geojson_migration_follows_infrastructure_audit() -> None:
+    migration = (
+        Path(__file__).resolve().parents[1]
+        / "alembic"
+        / "versions"
+        / "006_add_map_layer_geojson.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'revision: str = "006_map_layer_geojson"' in migration
+    assert 'down_revision: Union[str, None] = "005_infrastructure_audit"' in migration
+    assert '"network_geometry_geojson"' in migration
+    assert '"protection_zone_geojson"' in migration
+    assert '"geometry_geojson"' in migration
+    assert "postgresql.JSONB" in migration

@@ -151,6 +151,16 @@ def _rich_response() -> AnalyzeResponse:
                 rule_confidence=0.65,
                 rule_note="Bufor techniczny wymaga uzgodnienia z gestorem.",
                 affects_buildable_area=True,
+                network_geometry_geojson={
+                    "type": "Feature",
+                    "geometry": {"type": "LineString", "coordinates": []},
+                    "properties": {"layer": "network"},
+                },
+                protection_zone_geojson={
+                    "type": "Feature",
+                    "geometry": {"type": "Polygon", "coordinates": []},
+                    "properties": {"layer": "protection_zone"},
+                },
                 source=_source(
                     "KIUT",
                     "https://kiut.example.test",
@@ -163,6 +173,11 @@ def _rich_response() -> AnalyzeResponse:
             RiskResult(
                 risk_type="flood_zone",
                 description="Część działki leży w strefie zagrożenia powodziowego.",
+                geometry_geojson={
+                    "type": "Feature",
+                    "geometry": {"type": "Polygon", "coordinates": []},
+                    "properties": {"layer": "risk"},
+                },
                 source=_source("ISOK", "https://isok.example.test"),
             )
         ],
@@ -340,6 +355,11 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert saved_infrastructure.rule_source == "konfiguracja testowa"
         assert saved_infrastructure.rule_confidence == pytest.approx(0.65)
         assert saved_infrastructure.affects_buildable_area is True
+        assert saved_infrastructure.network_geometry_geojson["properties"]["layer"] == "network"
+        assert saved_infrastructure.protection_zone_geojson["properties"]["layer"] == "protection_zone"
+
+        saved_risk = db.scalar(select(Risk).where(Risk.analysis_id == analysis_id))
+        assert saved_risk.geometry_geojson["properties"]["layer"] == "risk"
 
         cached_response = build_analyze_response_from_analysis(saved, db)
         assert cached_response.pog is not None
@@ -352,6 +372,9 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert cached_response.infrastructure[0].zone_area_sqm == pytest.approx(320.0)
         assert cached_response.infrastructure[0].rule_source == "konfiguracja testowa"
         assert cached_response.infrastructure[0].affects_buildable_area is True
+        assert cached_response.infrastructure[0].network_geometry_geojson == saved_infrastructure.network_geometry_geojson
+        assert cached_response.infrastructure[0].protection_zone_geojson == saved_infrastructure.protection_zone_geojson
+        assert cached_response.risks[0].geometry_geojson == saved_risk.geometry_geojson
 
 
 def test_not_available_pog_status_and_review_flag_are_persisted() -> None:

@@ -78,6 +78,25 @@ def test_infrastructure_has_buildable_area_audit_columns_after_migration() -> No
     assert columns["affects_buildable_area"]["nullable"] is False
 
 
+def test_map_layer_geojson_columns_exist_after_migration() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+
+    infrastructure_columns = {
+        column["name"]
+        for column in inspect(engine).get_columns("infrastructure_records")
+    }
+    risk_columns = {
+        column["name"] for column in inspect(engine).get_columns("risk_records")
+    }
+
+    assert {
+        "network_geometry_geojson",
+        "protection_zone_geojson",
+    }.issubset(infrastructure_columns)
+    assert "geometry_geojson" in risk_columns
+
+
 def test_pog_audit_upgrade_downgrade_preserves_existing_columns() -> None:
     config = Config("alembic.ini")
     command.upgrade(config, "head")
