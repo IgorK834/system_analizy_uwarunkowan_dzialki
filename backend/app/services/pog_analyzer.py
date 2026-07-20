@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import Final, Literal
 
 from shapely import make_valid
@@ -12,8 +11,10 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
+from app.core.planning_compatibility import PogPlanningZoneType
 from app.schemas.analyze import PogResult
 from app.schemas.source import SourceMetadata, WarningMessage
+from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 
 # Przecięcia poniżej tolerancji numerycznej nie są interpretowane domenowo jako
@@ -21,25 +22,6 @@ from app.services.pog_fetch import PogVectorData, PogVectorFeature
 # a nie ustanawia minimalnej prawnej powierzchni.
 INTERSECTION_AREA_TOLERANCE_SQM: Final[float] = 1e-6
 ZONE_RATIO_SUM_TOLERANCE: Final[float] = 0.001
-
-
-class PogPlanningZoneType(StrEnum):
-    """Ustawowe typy stref planistycznych POG oraz jawny wariant nieznany."""
-
-    MULTIFUNCTIONAL_MULTI_FAMILY = "SW"
-    MULTIFUNCTIONAL_SINGLE_FAMILY = "SJ"
-    MULTIFUNCTIONAL_FARMSTEAD = "SZ"
-    SERVICES = "SU"
-    LARGE_FORMAT_RETAIL = "SH"
-    ECONOMIC = "SP"
-    AGRICULTURAL_PRODUCTION = "SR"
-    INFRASTRUCTURE = "SI"
-    GREENERY_AND_RECREATION = "SN"
-    CEMETERY = "SC"
-    MINING = "SG"
-    OPEN = "SO"
-    TRANSPORT = "SK"
-    UNKNOWN = "unknown"
 
 
 @dataclass(frozen=True)
@@ -62,6 +44,7 @@ class PogAnalysisResult:
     status: Literal["adopted", "unknown"]
     zones: list[PogZoneIntersection]
     dominant_zone: PogZoneIntersection | None
+    ouz_status: OuzStatusResult
     ouz_intersection_area_sqm: float
     ouz_intersection_pct: float
     touches_ouz_boundary: bool
@@ -234,9 +217,7 @@ def analyze_pog_adopted(
             )
         )
 
-    ouz_area, ouz_pct, touches_ouz = _analyze_area_layer(
-        parcel, pog_vector_data.ouz_areas
-    )
+    ouz_status = calculate_ouz_status(parcel, pog_vector_data.ouz_areas)
     downtown_area, downtown_pct, _ = _analyze_area_layer(
         parcel, pog_vector_data.downtown_areas
     )
@@ -260,9 +241,10 @@ def analyze_pog_adopted(
         status="adopted",
         zones=zone_intersections,
         dominant_zone=dominant_zone,
-        ouz_intersection_area_sqm=ouz_area,
-        ouz_intersection_pct=ouz_pct,
-        touches_ouz_boundary=touches_ouz,
+        ouz_status=ouz_status,
+        ouz_intersection_area_sqm=ouz_status.intersection_area_sqm,
+        ouz_intersection_pct=ouz_status.area_ratio,
+        touches_ouz_boundary=ouz_status.touches_ouz_boundary,
         downtown_intersection_area_sqm=downtown_area,
         downtown_intersection_pct=downtown_pct,
         source_metadata=source_metadata,
@@ -283,6 +265,17 @@ def to_pog_result(analysis: PogAnalysisResult) -> PogResult:
     return PogResult(
         status=analysis.status,
         planning_zone=planning_zone,
+        zone_type=planning_zone,
+        in_ouz=analysis.ouz_status.in_ouz,
+        area_ratio=(
+            analysis.dominant_zone.area_ratio if analysis.dominant_zone else None
+        ),
+        in_downtown_area=analysis.downtown_intersection_area_sqm
+        > INTERSECTION_AREA_TOLERANCE_SQM,
+        manual_review_required=(
+            analysis.source_metadata.manual_review_required
+            or analysis.ouz_status.manual_review_required
+        ),
         ouz_intersection_area_sqm=analysis.ouz_intersection_area_sqm,
         ouz_intersection_pct=analysis.ouz_intersection_pct,
         touches_ouz_boundary=analysis.touches_ouz_boundary,
@@ -369,6 +362,12 @@ def _unknown_analysis(
         status="unknown",
         zones=[],
         dominant_zone=None,
+        ouz_status=calculate_ouz_status(
+            # Brak danych OUZ ma w wyniku nieznanym pozostać jawnie
+            # nierozstrzygnięty, niezależnie od przyczyny braku analizy POG.
+            MultiPolygon(),
+            None,
+        ),
         ouz_intersection_area_sqm=0.0,
         ouz_intersection_pct=0.0,
         touches_ouz_boundary=False,

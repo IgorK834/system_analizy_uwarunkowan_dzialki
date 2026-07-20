@@ -139,6 +139,19 @@ def test_multiple_overlapping_ouz_features_are_not_double_counted() -> None:
     assert result.ouz_intersection_pct == pytest.approx(100.0)
 
 
+def test_tiny_ouz_sliver_uses_shared_threshold_in_api_mapping() -> None:
+    parcel = Polygon.from_bounds(0, 0, 100, 100)
+    ouz = _feature(Polygon.from_bounds(0, 0, 0.005, 100), "ouz")
+
+    result = analyze_pog_adopted(parcel, _vector_data(ouz=[ouz]))
+    api_result = to_pog_result(result)
+
+    assert result.ouz_intersection_area_sqm == pytest.approx(0.5)
+    assert result.ouz_status.in_ouz is False
+    assert result.touches_ouz_boundary is True
+    assert api_result.in_ouz is False
+
+
 def test_downtown_area_is_calculated_separately() -> None:
     parcel = Polygon.from_bounds(0, 0, 20, 20)
     downtown = _feature(Polygon.from_bounds(0, 0, 10, 20), "downtown_area")
