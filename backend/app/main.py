@@ -9,6 +9,7 @@ from app.routers.analyze import router as analyze_router
 from app.routers.geocode import router as geocode_router
 from app.routers.health import router as health_router
 from app.routers.map_tiles import router as map_tiles_router
+from app.routers.report import router as report_router
 from app.services.wms_tiles import wms_tile_proxy
 
 configure_logging()
@@ -39,3 +40,4 @@ app.include_router(analyze_router)
 app.include_router(health_router)
 app.include_router(geocode_router)
 app.include_router(map_tiles_router)
+app.include_router(report_router)
