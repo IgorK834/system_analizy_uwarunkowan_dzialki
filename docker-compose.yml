@@ -21,11 +21,25 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://app:app@db:5432/dzialki}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
+      KIMPZP_WMS_BASE_URL: ${KIMPZP_WMS_BASE_URL:-https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego}
+      KIMPZP_WMS_LAYERS: ${KIMPZP_WMS_LAYERS:-plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,wektor-pow,wektor-pkt,granice}
+      MAP_TILE_CACHE_DIR: /var/cache/dzialki/map-tiles
+      MAP_TILE_CACHE_TTL_SECONDS: ${MAP_TILE_CACHE_TTL_SECONDS:-86400}
+      MAP_TILE_STALE_TTL_SECONDS: ${MAP_TILE_STALE_TTL_SECONDS:-604800}
+      MAP_TILE_BROWSER_TTL_SECONDS: ${MAP_TILE_BROWSER_TTL_SECONDS:-3600}
+      MAP_TILE_CACHE_MAX_BYTES: ${MAP_TILE_CACHE_MAX_BYTES:-5368709120}
+      MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS:-2}
+      MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS:-8}
+      MAP_TILE_UPSTREAM_MAX_CONCURRENCY: ${MAP_TILE_UPSTREAM_MAX_CONCURRENCY:-8}
+      MAP_TILE_MIN_ZOOM: ${MAP_TILE_MIN_ZOOM:-11}
+      MAP_TILE_MAX_ZOOM: ${MAP_TILE_MAX_ZOOM:-18}
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8000:8000"
+    volumes:
+      - map_tile_cache:/var/cache/dzialki/map-tiles
     healthcheck:
       test:
         [
@@ -44,6 +58,9 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+        NEXT_PUBLIC_KIMPZP_TILE_URL: ${NEXT_PUBLIC_KIMPZP_TILE_URL:-}
+        NEXT_PUBLIC_POG_WMS_URL: ${NEXT_PUBLIC_POG_WMS_URL:-https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin}
+        NEXT_PUBLIC_POG_WMS_LAYERS: ${NEXT_PUBLIC_POG_WMS_LAYERS:-strefaPlanistyczna,obszarUzupelnieniaZabudowy,obszarZabSrodmiejskiej,aktPlanowaniaprzestrzennego}
     environment:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     depends_on:
@@ -66,3 +83,4 @@ services:
 
 volumes:
   postgres_data:
+  map_tile_cache:
