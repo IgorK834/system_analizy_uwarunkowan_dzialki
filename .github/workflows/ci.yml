@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Przygotuj zmienne środowiskowe
         run: cp .env.example .env
@@ -43,7 +43,7 @@ jobs:
             -v "${{ github.workspace }}:/repo:ro" \
             -e REPO_ROOT=/repo \
             backend \
-            pytest -m 'not docker_cli' --cov=tests --cov-report=term-missing --cov-fail-under=80 -v
+            pytest -m 'not docker_cli' --cov=app --cov-report=term-missing --cov-fail-under=80 -v
 
       - name: Zatrzymaj kontenery i usuń volumeny
         if: always()
