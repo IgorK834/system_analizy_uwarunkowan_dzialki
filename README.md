@@ -30,6 +30,18 @@ curl http://localhost:8000/health
 Po uruchomieniu całego zestawu frontend jest dostępny pod adresem
 `http://localhost:3000`, a API pod `http://localhost:8000`.
 
+### Cache kafelków MPZP
+
+Nakładka MPZP nie odpytuje Geoportalu bezpośrednio. Frontend korzysta z
+endpointu `GET /api/v1/map/tiles/mpzp/{z}/{x}/{y}.png`, a backend zapisuje
+zweryfikowane obrazy PNG w named volume `map_tile_cache`. Dzięki temu kolejne
+wejście w ten sam obszar mapy nie czeka ponownie na wygenerowanie `GetMap`.
+
+Domyślnie kafel jest świeży przez 24 godziny, może zostać podany jako `STALE`
+przez 7 dni podczas awarii WMS, a cache ma limit 5 GB. Parametry można zmienić
+zmiennymi `MAP_TILE_*` opisanymi w `.env.example`. Nagłówek `X-Tile-Cache`
+pozwala rozróżnić odpowiedzi `MISS`, `HIT` i `STALE`.
+
 ### Testy frontendu
 
 Frontend używa Vitest i React Testing Library. Testy z wymaganym pokryciem można
@@ -52,7 +64,8 @@ docker run --rm \
 
 Baza działa jako kontener `db` w sieci Docker. Backend łączy się z nią po hoście `db:5432` — **nie** przez `localhost`.
 
-Dane są przechowywane w named volume `postgres_data`:
+Dane są przechowywane w named volume `postgres_data`, a kafelki MPZP w
+`map_tile_cache`:
 
 - `docker compose down` — zatrzymuje kontenery, **zachowuje** dane w wolumenie,
 - `docker compose down -v` — zatrzymuje kontenery i **usuwa** wolumen wraz z danymi bazy.
