@@ -5,9 +5,10 @@ całej funkcji: awaria jednego lub wszystkich punktów próbki trafia do ostrze�
 Centroid nigdy nie jest jedynym planowanym punktem — zawsze uwzględniamy także
 ``representative_point``, a dla dużych i wieloczęściowych działek dalsze próbki.
 
-Przyjęty kontrakt JSON KIMPZP (``features`` oraz ``vector_available``) jest
-uproszczonym założeniem do potwierdzenia po uzyskaniu dokumentacji usługi.
-Wynik pozostaje discovery, nie finalnym przecięciem geometrii wektorowej MPZP.
+Parser obsługuje faktyczną odpowiedź HTML zbiorczej warstwy
+``plany_granice`` oraz zachowuje zgodność z odpowiedzią GeoJSON używaną przez
+część usług gminnych i testów kontraktowych. Wynik pozostaje discovery, nie
+finalnym przecięciem geometrii wektorowej MPZP.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from datetime import datetime, timezone
 from typing import Final, Literal
 
 import httpx
+from bs4 import BeautifulSoup
 from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
 
@@ -38,16 +40,26 @@ _KNOWN_SYMBOL_ATTRIBUTES: Final[tuple[str, ...]] = (
     "symbol",
     "zone_symbol",
     "symbol_strefy",
+    "oznaczenie",
+    "rodzaj oznaczenia",
 )
 _KNOWN_PLAN_ID_ATTRIBUTES: Final[tuple[str, ...]] = (
     "plan_id",
     "id_planu",
     "numer_uchwaly",
+    "uchwalenie",
+    "uchwała",
+    "numer planu",
+    "identyfikator",
 )
 _KNOWN_URL_ATTRIBUTES: Final[tuple[str, ...]] = (
     "uchwala_url",
     "url_uchwaly",
     "link",
+    "www",
+    "treść uchwały",
+    "rysunek planu",
+    "usługa przeglądania",
 )
 
 
@@ -203,23 +215,24 @@ def _grid_sample_points(parcel: BaseGeometry) -> list[tuple[float, float]]:
 def _build_get_feature_info_params(x: float, y: float) -> dict[str, str]:
     """Buduje GetFeatureInfo dla centralnego piksela BBOX 1x1 m wokół punktu.
 
-    WMS 1.3.0 jest operacją pikselową. Obraz 2x2 i środkowy piksel pozwalają
-    odpytać dokładnie próbkę bez udawania zapytania geometrią działki.
+    WMS 1.1.1 zachowuje kolejność x/y dla EPSG:2180. Obraz 2x2 i środkowy
+    piksel pozwalają odpytać dokładnie próbkę bez ryzyka odwrócenia osi przez
+    reguły WMS 1.3.0.
     """
     half = 0.5
     return {
         "service": "WMS",
-        "version": "1.3.0",
+        "version": "1.1.1",
         "request": "GetFeatureInfo",
-        "layers": "mpzp",
-        "query_layers": "mpzp",
-        "crs": "EPSG:2180",
+        "layers": "plany_granice",
+        "query_layers": "plany_granice",
+        "srs": "EPSG:2180",
         "bbox": f"{x - half},{y - half},{x + half},{y + half}",
         "width": "2",
         "height": "2",
-        "i": "1",
-        "j": "1",
-        "info_format": "application/json",
+        "x": "1",
+        "y": "1",
+        "info_format": "text/html",
         "feature_count": "5",
     }
 
@@ -241,6 +254,9 @@ async def _query_point_safe(
 
 def _parse_get_feature_info_response(text: str) -> _PointQueryResult:
     stripped = text.strip()
+    if stripped.startswith("<"):
+        return _parse_html_get_feature_info_response(stripped)
+
     data = json.loads(stripped) if stripped else {}
     features = data.get("features", [])
     vector_available = bool(data.get("vector_available", True))
@@ -261,6 +277,74 @@ def _parse_get_feature_info_response(text: str) -> _PointQueryResult:
         zone_symbol=_first_matching_attribute(properties, _KNOWN_SYMBOL_ATTRIBUTES),
         uchwala_url=_first_matching_attribute(properties, _KNOWN_URL_ATTRIBUTES),
         vector_available=True,
+    )
+
+
+def _parse_html_get_feature_info_response(text: str) -> _PointQueryResult:
+    """Normalizuje tabele HTML zwracane przez zbiorczą usługę KIMPZP."""
+    soup = BeautifulSoup(text, "html.parser")
+    records: list[dict[str, str]] = []
+    for table in soup.find_all("table"):
+        rows = table.find_all("tr")
+        if not rows:
+            continue
+
+        header_cells = rows[0].find_all("th")
+        if len(header_cells) > 1:
+            headers = [cell.get_text(" ", strip=True) for cell in header_cells]
+            for row in rows[1:]:
+                values = [cell.get_text(" ", strip=True) for cell in row.find_all("td")]
+                if values:
+                    records.append(dict(zip(headers, values, strict=False)))
+            continue
+
+        record: dict[str, str] = {}
+        for row in rows:
+            key_cell = row.find("th")
+            value_cell = row.find("td")
+            if key_cell is not None and value_cell is not None:
+                record[key_cell.get_text(" ", strip=True)] = value_cell.get_text(
+                    " ", strip=True
+                )
+        if record:
+            records.append(record)
+
+    if not records:
+        return _PointQueryResult(
+            found=False,
+            plan_id=None,
+            zone_symbol=None,
+            uchwala_url=None,
+            vector_available=True,
+        )
+
+    selected = next(
+        (
+            record
+            for record in records
+            if _first_matching_attribute(record, _KNOWN_SYMBOL_ATTRIBUTES)
+        ),
+        records[0],
+    )
+    zone_symbol = _first_matching_attribute(selected, _KNOWN_SYMBOL_ATTRIBUTES)
+    informatization = next(
+        (
+            value.casefold()
+            for key, value in selected.items()
+            if key.casefold() == "poziom informatyzacji"
+        ),
+        "",
+    )
+    vector_available = zone_symbol is not None or "wektor" in informatization
+    if "raster" in informatization:
+        vector_available = False
+
+    return _PointQueryResult(
+        found=True,
+        plan_id=_first_matching_attribute(selected, _KNOWN_PLAN_ID_ATTRIBUTES),
+        zone_symbol=zone_symbol,
+        uchwala_url=_first_matching_attribute(selected, _KNOWN_URL_ATTRIBUTES),
+        vector_available=vector_available,
     )
 
 

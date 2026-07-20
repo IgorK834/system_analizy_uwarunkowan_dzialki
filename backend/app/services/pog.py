@@ -52,20 +52,24 @@ class PogLayerNames:
     """Konfigurowalne kandydaty nazw warstw logicznych gminnego WMS."""
 
     planning_act: tuple[str, ...] = (
+        "aktPlanowaniaprzestrzennego",
         "akt_planowania_przestrzennego",
         "AktPlanowaniaPrzestrzennego",
         "pog",
     )
     downtown_area: tuple[str, ...] = (
+        "obszarZabSrodmiejskiej",
         "obszar_zabudowy_srodmiejskiej",
         "ObszarZabudowySrodmiejskiej",
     )
     ouz: tuple[str, ...] = (
+        "obszarUzupelnieniaZabudowy",
         "obszar_uzupelnienia_zabudowy",
         "ObszarUzupelnieniaZabudowy",
         "ouz",
     )
     planning_zones: tuple[str, ...] = (
+        "strefaPlanistyczna",
         "strefa_planistyczna",
         "StrefaPlanistyczna",
         "strefy_planistyczne",

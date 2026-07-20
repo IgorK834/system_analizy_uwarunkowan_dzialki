@@ -43,7 +43,11 @@ from app.services.context import (
     ContextSectionResult,
     analyze_context,
 )
-from app.services.geojson import parcel_geometry_to_geojson
+from app.services.geojson import (
+    analysis_layer_geometry_to_geojson,
+    buildable_area_geometry_to_geojson,
+    parcel_geometry_to_geojson,
+)
 from app.services.geometry import (
     NetworkGeometryInput,
     calculate_geometry_metrics,
@@ -135,6 +139,18 @@ async def run_analysis(
             geometry_repaired=metrics.geometry_repaired,
         ),
         source=lookup.source_metadata,
+        # Techniczne odsunięcie od granicy, nie ostateczna linia zabudowy z
+        # MPZP. Gdy bufor ujemny zredukował obszar do zera, buildable_geometry
+        # jest pustą geometrią i nie ma sensu wysyłać jej jako warstwy mapowej.
+        buildable_area_geojson=(
+            buildable_area_geometry_to_geojson(
+                setback.buildable_geometry,
+                setback.setback_m,
+            )
+            if not setback.buildable_geometry.is_empty
+            and setback.buildable_area_sqm > 0.0
+            else None
+        ),
     )
 
     warnings = _geometry_warnings(metrics.repair_warning, setback.warning)
@@ -457,12 +473,12 @@ def _map_context(
             NetworkGeometryInput(
                 network_type=feature.network_type,
                 geometry=feature.geometry,
+                input_index=index,
             )
-            for feature in context.kiut.data
+            for index, feature in enumerate(context.kiut.data)
         ],
         rules=rules,
     )
-    remaining_zones = list(network_result.zones)
     warnings.extend(
         WarningMessage(
             code="NETWORK_PROTECTION_RULE_WARNING",
@@ -486,7 +502,7 @@ def _map_context(
             )
         )
     infrastructure: list[InfrastructureResult] = []
-    for feature in context.kiut.data:
+    for index, feature in enumerate(context.kiut.data):
         rule = rules.get(feature.network_type)
         if rule is None:
             warnings.append(
@@ -500,17 +516,37 @@ def _map_context(
                     source_name="kiut",
                 )
             )
+            infrastructure.append(
+                InfrastructureResult(
+                    network_type=feature.network_type,
+                    buffer_m=0.0,
+                    zone_area_sqm=0.0,
+                    rule_source=None,
+                    rule_confidence=None,
+                    rule_note="Brak skonfigurowanej reguły bufora.",
+                    affects_buildable_area=False,
+                    network_geometry_geojson=analysis_layer_geometry_to_geojson(
+                        feature.geometry,
+                        "network",
+                        {
+                            "network_type": feature.network_type,
+                            "input_index": index,
+                        },
+                    ),
+                    protection_zone_geojson=None,
+                    source=feature.source_metadata,
+                )
+            )
+            sources.append(feature.source_metadata)
             continue
         matching_zone = next(
             (
                 zone
-                for zone in remaining_zones
-                if zone.network_type == feature.network_type
+                for zone in network_result.zones
+                if zone.input_index == index
             ),
             None,
         )
-        if matching_zone is not None:
-            remaining_zones.remove(matching_zone)
         infrastructure.append(
             InfrastructureResult(
                 network_type=feature.network_type,
@@ -532,6 +568,28 @@ def _map_context(
                 affects_buildable_area=(
                     matching_zone is not None and matching_zone.zone_area_sqm > 0.0
                 ),
+                network_geometry_geojson=analysis_layer_geometry_to_geojson(
+                    feature.geometry,
+                    "network",
+                    {
+                        "network_type": feature.network_type,
+                        "input_index": index,
+                    },
+                ),
+                protection_zone_geojson=(
+                    analysis_layer_geometry_to_geojson(
+                        matching_zone.geometry,
+                        "protection_zone",
+                        {
+                            "network_type": feature.network_type,
+                            "buffer_m": matching_zone.buffer_m,
+                            "rule_source": matching_zone.source,
+                            "rule_confidence": matching_zone.confidence,
+                        },
+                    )
+                    if matching_zone is not None
+                    else None
+                ),
                 source=feature.source_metadata,
             )
         )
@@ -543,6 +601,14 @@ def _map_context(
             description=(
                 f"Ryzyko powodziowe: poziom {feature.severity}, "
                 f"udział przecięcia {feature.area_ratio * 100:.2f}%."
+            ),
+            geometry_geojson=analysis_layer_geometry_to_geojson(
+                feature.geometry.intersection(parcel_geometry),
+                "risk",
+                {
+                    "risk_type": feature.risk_type,
+                    "severity": feature.severity,
+                },
             ),
             source=feature.source_metadata,
         )
@@ -560,6 +626,19 @@ def _map_context(
                 f"{feature.name or feature.protection_type}; "
                 f"poziom {feature.severity}, "
                 f"udział {feature.area_ratio * 100:.2f}%."
+            ),
+            geometry_geojson=analysis_layer_geometry_to_geojson(
+                feature.geometry.intersection(parcel_geometry),
+                "risk",
+                {
+                    "risk_type": (
+                        "natura_2000"
+                        if feature.protection_type == "natura2000"
+                        else feature.protection_type
+                    ),
+                    "severity": feature.severity,
+                    "name": feature.name,
+                },
             ),
             source=feature.source_metadata,
         )
