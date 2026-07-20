@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Any, Literal, Union
 
 from pydantic import BaseModel, Field
@@ -243,6 +243,45 @@ class PogResult(BaseModel):
         description="Strefa planistyczna POG, jeżeli została ustalona.",
         json_schema_extra={"example": "SJ"},
     )
+    zone_type: str | None = Field(
+        default=None,
+        description="Znormalizowany typ dominującej strefy POG.",
+        json_schema_extra={"example": "SJ"},
+    )
+    in_ouz: bool = Field(
+        default=False,
+        description="Czy działka ma istotne powierzchniowe przecięcie z OUZ.",
+    )
+    area_ratio: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Udział dominującej strefy POG w powierzchni działki, w skali 0-1.",
+    )
+    in_downtown_area: bool = Field(
+        default=False,
+        description="Czy działka ma powierzchniowe przecięcie z obszarem śródmiejskim POG.",
+    )
+    uchwala_nr: str | None = Field(
+        default=None,
+        description="Numer uchwały POG, jeżeli jest dostępny.",
+    )
+    uchwala_date: date | None = Field(
+        default=None,
+        description="Data uchwalenia POG, jeżeli jest dostępna.",
+    )
+    manual_review_required: bool = Field(
+        default=False,
+        description="Czy wynik POG wymaga ręcznej weryfikacji.",
+    )
+    conflict_with_mpzp: bool | None = Field(
+        default=None,
+        description="Jawny wynik tabeli zgodności MPZP-POG; None oznacza brak rozstrzygnięcia.",
+    )
+    raw_attributes: dict[str, Any] | None = Field(
+        default=None,
+        description="Surowe atrybuty APP/GML lub WMS zachowane dla audytu parsera.",
+    )
     ouz_intersection_area_sqm: float | None = Field(
         default=None,
         ge=0.0,
@@ -285,6 +324,32 @@ class InfrastructureResult(BaseModel):
         description="Bufor techniczny wokół sieci w metrach.",
         json_schema_extra={"example": 4.0},
     )
+    zone_area_sqm: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "Powierzchnia technicznego obszaru zabudowy odjęta przez tę "
+            "strefę ochronną, w metrach kwadratowych."
+        ),
+    )
+    rule_source: str | None = Field(
+        default=None,
+        description="Źródło lub podstawa konfiguracji reguły bufora.",
+    )
+    rule_confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Pewność technicznej reguły bufora w skali 0-1.",
+    )
+    rule_note: str | None = Field(
+        default=None,
+        description="Uwagi i ograniczenia zastosowanej reguły bufora.",
+    )
+    affects_buildable_area: bool = Field(
+        default=False,
+        description="Czy strefa faktycznie pomniejszyła obszar zabudowy.",
+    )
     source: SourceMetadata = Field(
         description="Metadane źródła danych o uzbrojeniu terenu.",
         json_schema_extra={
@@ -306,7 +371,9 @@ class RiskResult(BaseModel):
     )
     description: str = Field(
         description="Czytelny opis ryzyka dla użytkownika.",
-        json_schema_extra={"example": "Część działki znajduje się w obszarze zagrożenia powodziowego."},
+        json_schema_extra={
+            "example": "Część działki znajduje się w obszarze zagrożenia powodziowego."
+        },
     )
     source: SourceMetadata = Field(
         description="Metadane źródła danych o ryzyku.",
