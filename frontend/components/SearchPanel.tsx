@@ -1,0 +1,238 @@
+"use client";
+
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+
+import { ApiError, getAddressSuggestions } from "@/lib/api";
+import type { AnalyzeRequest, GeocodeSuggestion } from "@/lib/types";
+
+type Tab = "map" | "address" | "parcel";
+
+type SearchPanelProps = {
+  loading: boolean;
+  onAnalyze: (payload: AnalyzeRequest) => void | Promise<void>;
+};
+
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "map", label: "Mapa" },
+  { id: "address", label: "Adres" },
+  { id: "parcel", label: "Identyfikator działki" },
+];
+
+const PARCEL_IDENTIFIER_PATTERN = /^[0-9._/]+$/;
+
+export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
+  const [activeTab, setActiveTab] = useState<Tab>("map");
+  const [addressQuery, setAddressQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [parcelIdentifier, setParcelIdentifier] = useState("");
+  const [parcelError, setParcelError] = useState<string | null>(null);
+  const committedAddressRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const query = addressQuery.trim();
+
+    if (committedAddressRef.current === query) {
+      committedAddressRef.current = null;
+      setSuggestions([]);
+      setSuggestionsLoading(false);
+      return;
+    }
+
+    if (query.length < 3) {
+      setSuggestions([]);
+      setSuggestionsLoading(false);
+      setSuggestionsError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setSuggestionsLoading(true);
+      setSuggestionsError(null);
+
+      try {
+        const response = await getAddressSuggestions(query, {
+          signal: controller.signal,
+        });
+        setSuggestions(response.suggestions);
+        setActiveSuggestion(-1);
+      } catch (caught) {
+        if (caught instanceof DOMException && caught.name === "AbortError") return;
+        setSuggestions([]);
+        setSuggestionsError(
+          caught instanceof ApiError
+            ? caught.message
+            : "Nie udało się pobrać sugestii adresowych.",
+        );
+      } finally {
+        if (!controller.signal.aborted) setSuggestionsLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [addressQuery]);
+
+  const chooseSuggestion = (suggestion: GeocodeSuggestion) => {
+    committedAddressRef.current = suggestion.label;
+    setAddressQuery(suggestion.label);
+    setSuggestions([]);
+    setActiveSuggestion(-1);
+    void onAnalyze({ method: "address", query: suggestion.label });
+  };
+
+  const handleAddressKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown" && suggestions.length) {
+      event.preventDefault();
+      setActiveSuggestion((current) =>
+        current >= suggestions.length - 1 ? 0 : current + 1,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp" && suggestions.length) {
+      event.preventDefault();
+      setActiveSuggestion((current) =>
+        current <= 0 ? suggestions.length - 1 : current - 1,
+      );
+      return;
+    }
+
+    if (event.key === "Enter" && activeSuggestion >= 0) {
+      event.preventDefault();
+      chooseSuggestion(suggestions[activeSuggestion]);
+    }
+  };
+
+  const submitParcel = () => {
+    const value = parcelIdentifier.trim();
+    if (value.length < 5 || !PARCEL_IDENTIFIER_PATTERN.test(value)) {
+      setParcelError(
+        "Wpisz co najmniej 5 znaków. Dozwolone są cyfry oraz znaki: kropka, podkreślenie i ukośnik.",
+      );
+      return;
+    }
+
+    setParcelError(null);
+    void onAnalyze({ method: "parcel_id", parcel_identifier: value });
+  };
+
+  return (
+    <section className="search-panel" aria-label="Wybór działki do analizy">
+      <h2>Znajdź działkę</h2>
+      <div className="tabs" role="tablist" aria-label="Metoda wyszukiwania">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`search-${tab.id}`}
+            className={activeTab === tab.id ? "tab tab-active" : "tab"}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "map" && (
+        <div id="search-map" role="tabpanel" className="panel-content">
+          <p className="instruction">
+            Kliknij wybrane miejsce na mapie. Współrzędne WGS84 zostaną wysłane
+            bezpośrednio do analizy.
+          </p>
+        </div>
+      )}
+
+      {activeTab === "address" && (
+        <div id="search-address" role="tabpanel" className="panel-content">
+          <label htmlFor="address-query">Adres</label>
+          <input
+            id="address-query"
+            type="search"
+            autoComplete="off"
+            value={addressQuery}
+            disabled={loading}
+            aria-autocomplete="list"
+            aria-controls="address-suggestions"
+            aria-activedescendant={
+              activeSuggestion >= 0
+                ? `address-suggestion-${activeSuggestion}`
+                : undefined
+            }
+            placeholder="Np. Marszałkowska 1, Warszawa"
+            onChange={(event) => setAddressQuery(event.target.value)}
+            onKeyDown={handleAddressKeyDown}
+          />
+          <p className="field-hint">
+            Wybierz konkretną sugestię — samo wpisywanie nie uruchamia analizy.
+          </p>
+          {suggestionsLoading && <p className="inline-status">Szukam adresów…</p>}
+          {suggestionsError && <p className="field-error">{suggestionsError}</p>}
+          {suggestions.length > 0 && (
+            <ul id="address-suggestions" className="suggestions" role="listbox">
+              {suggestions.map((suggestion, index) => (
+                <li key={`${suggestion.teryt}-${suggestion.x}-${suggestion.y}`}>
+                  <button
+                    id={`address-suggestion-${index}`}
+                    type="button"
+                    role="option"
+                    aria-selected={activeSuggestion === index}
+                    className={
+                      activeSuggestion === index
+                        ? "suggestion suggestion-active"
+                        : "suggestion"
+                    }
+                    onMouseEnter={() => setActiveSuggestion(index)}
+                    onFocus={() => setActiveSuggestion(index)}
+                    onClick={() => chooseSuggestion(suggestion)}
+                  >
+                    <span>{suggestion.label}</span>
+                    <small>
+                      EPSG:2180 · X {suggestion.x.toFixed(0)} · Y{" "}
+                      {suggestion.y.toFixed(0)}
+                    </small>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === "parcel" && (
+        <form
+          id="search-parcel"
+          role="tabpanel"
+          className="panel-content"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitParcel();
+          }}
+        >
+          <label htmlFor="parcel-identifier">Identyfikator działki</label>
+          <input
+            id="parcel-identifier"
+            value={parcelIdentifier}
+            disabled={loading}
+            placeholder="Np. 122101_1.0001.1234/2"
+            onChange={(event) => {
+              setParcelIdentifier(event.target.value);
+              setParcelError(null);
+            }}
+          />
+          {parcelError && <p className="field-error">{parcelError}</p>}
+          <button className="primary-button" type="submit" disabled={loading}>
+            {loading ? "Analizuję…" : "Analizuj działkę"}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
