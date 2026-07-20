@@ -28,6 +28,7 @@ export default defineConfig({
         "components/ResultPanel.tsx",
         "components/LayerToggle.tsx",
         "components/PlanningOverlay.tsx",
+        "components/ReportDownloadButton.tsx",
       ],
       thresholds: {
         lines: 80,
