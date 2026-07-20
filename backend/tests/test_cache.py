@@ -10,6 +10,7 @@ from app.models.analysis import Analysis
 from app.models.parcel import Parcel
 from app.services.cache import (
     DEFAULT_CACHE_MAX_AGE_DAYS,
+    DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES,
     get_cached_analysis,
     should_refresh_analysis,
 )
@@ -130,7 +131,7 @@ def test_non_cacheable_status_is_ignored(status: str) -> None:
         assert get_cached_analysis(identifier, db) is None
 
 
-def test_cache_returns_newest_eligible_analysis() -> None:
+def test_stale_partial_does_not_hide_fresh_complete_analysis() -> None:
     identifier = f"{_PREFIX}NEWEST"
     older_id = _create_analysis(
         identifier,
@@ -150,8 +151,38 @@ def test_cache_returns_newest_eligible_analysis() -> None:
     with SessionLocal() as db:
         cached = get_cached_analysis(identifier, db)
 
-    assert cached.id == newer_id
-    assert cached.id != older_id
+    assert DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES == 15
+    assert cached.id == older_id
+    assert cached.id != newer_id
+
+
+def test_recent_partial_is_short_lived_cache_hit() -> None:
+    identifier = f"{_PREFIX}RECENT_PARTIAL"
+    analysis_id = _create_analysis(
+        identifier,
+        analyzed_at=_NOW - timedelta(minutes=5),
+        status="partial",
+    )
+
+    with SessionLocal() as db:
+        cached = get_cached_analysis(identifier, db)
+
+    assert cached is not None
+    assert cached.id == analysis_id
+
+
+def test_partial_older_than_short_ttl_requires_refresh() -> None:
+    identifier = f"{_PREFIX}STALE_PARTIAL"
+    _create_analysis(
+        identifier,
+        analyzed_at=_NOW - timedelta(minutes=16),
+        status="partial",
+    )
+
+    with SessionLocal() as db:
+        cached = get_cached_analysis(identifier, db)
+
+    assert cached is None
 
 
 def test_cache_logs_hit_and_miss(caplog: pytest.LogCaptureFixture) -> None:
