@@ -297,11 +297,55 @@ def _create_waiting_analysis(parcel_identifier: str = "122101_1.0001.9010") -> i
         analysis = Analysis(
             parcel_id=parcel.id,
             status="waiting_for_zone_symbol",
+            buildable_area_sqm=64.0,
             pending_uchwala_url="https://bip.example.test/uchwala.pdf",
             pending_plan_id="MPZP/2020/1",
             pending_zone_symbol_candidates=["230_U"],
         )
         db.add(analysis)
+        db.flush()
+        db.add(
+            PogData(
+                analysis_id=analysis.id,
+                status="unknown",
+                planning_zone=None,
+                zone_type=None,
+                in_ouz=False,
+                area_ratio=None,
+                in_downtown_area=False,
+                manual_review_required=True,
+                conflict_with_mpzp=None,
+                raw_attributes={"ouz": {"status": "unknown"}},
+                touches_ouz_boundary=False,
+                source_url="https://pog.example.test",
+                confidence=0.2,
+            )
+        )
+        db.add(
+            Infrastructure(
+                analysis_id=analysis.id,
+                network_type="water",
+                buffer_m=1.5,
+                zone_area_sqm=12.0,
+                rule_source="test rule",
+                rule_confidence=0.8,
+                rule_note="test note",
+                affects_buildable_area=True,
+                source_url="https://kiut.example.test",
+                confidence=0.8,
+                manual_review_required=False,
+            )
+        )
+        db.add(
+            Risk(
+                analysis_id=analysis.id,
+                risk_type="flood_zone",
+                description="Testowe ryzyko powodziowe.",
+                source_url="https://isok.example.test",
+                confidence=0.8,
+                manual_review_required=False,
+            )
+        )
         db.commit()
         return analysis.id
 
@@ -362,7 +406,7 @@ def test_resume_returns_503_when_document_fetch_fails() -> None:
     analysis_id = _create_waiting_analysis("122101_1.0001.9014")
 
     with patch(
-        "app.routers.analyze.fetch_mpzp_document", new_callable=AsyncMock
+        "app.services.analysis_resume.fetch_mpzp_document", new_callable=AsyncMock
     ) as mock_fetch:
         mock_fetch.side_effect = MpzpDocumentFetchError("dokument zniknął")
 
@@ -396,10 +440,10 @@ def test_resume_success_updates_status_and_returns_manual_source() -> None:
 
     with (
         patch(
-            "app.routers.analyze.fetch_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.fetch_mpzp_document", new_callable=AsyncMock
         ) as mock_fetch,
         patch(
-            "app.routers.analyze.parse_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.parse_mpzp_document", new_callable=AsyncMock
         ) as mock_parse,
     ):
         mock_fetch.return_value = _document_blob()
@@ -413,7 +457,14 @@ def test_resume_success_updates_status_and_returns_manual_source() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["manual_zone_required"] is False
-    assert body["status"] == "complete"
+    assert body["status"] == "partial"
+    assert body["parcel"] is not None
+    assert body["parcel"]["parcel_identifier"] == "122101_1.0001.9015"
+    assert body["pog"] is not None
+    assert body["infrastructure"][0]["network_type"] == "water"
+    assert body["infrastructure"][0]["zone_area_sqm"] == 12.0
+    assert body["risks"][0]["risk_type"] == "flood_zone"
+    assert body["buildable_area_sqm"] == 64.0
     assert len(body["mpzp_zones"]) == 1
     zone = body["mpzp_zones"][0]
     assert zone["zone_symbol"] == "230_U"
@@ -424,8 +475,25 @@ def test_resume_success_updates_status_and_returns_manual_source() -> None:
 
     with SessionLocal() as db:
         analysis = db.get(Analysis, analysis_id)
-        assert analysis.status == "complete"
+        assert analysis.status == "partial"
         assert analysis.resolved_zone_symbol == "230_U"
+        assert analysis.pending_uchwala_url is None
+        assert analysis.pending_plan_id is None
+        assert analysis.pending_zone_symbol_candidates is None
+        saved_zone = db.scalar(
+            select(MpzpZone).where(MpzpZone.analysis_id == analysis_id)
+        )
+        assert saved_zone is not None
+        assert saved_zone.zone_symbol == "230_U"
+        assert saved_zone.parameters[0].normalized_value == "9.0"
+        manual_source = db.scalar(
+            select(SourceRecord).where(
+                SourceRecord.analysis_id == analysis_id,
+                SourceRecord.source_name == "manual_user_input",
+            )
+        )
+        assert manual_source is not None
+        assert manual_source.manual_review_required is True
 
 
 def test_resume_keeps_partial_status_when_parser_result_is_not_complete() -> None:
@@ -438,10 +506,10 @@ def test_resume_keeps_partial_status_when_parser_result_is_not_complete() -> Non
 
     with (
         patch(
-            "app.routers.analyze.fetch_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.fetch_mpzp_document", new_callable=AsyncMock
         ) as mock_fetch,
         patch(
-            "app.routers.analyze.parse_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.parse_mpzp_document", new_callable=AsyncMock
         ) as mock_parse,
     ):
         mock_fetch.return_value = _document_blob()
@@ -478,10 +546,10 @@ def test_resume_warns_about_parameters_not_in_flat_contract() -> None:
 
     with (
         patch(
-            "app.routers.analyze.fetch_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.fetch_mpzp_document", new_callable=AsyncMock
         ) as mock_fetch,
         patch(
-            "app.routers.analyze.parse_mpzp_document", new_callable=AsyncMock
+            "app.services.analysis_resume.parse_mpzp_document", new_callable=AsyncMock
         ) as mock_parse,
     ):
         mock_fetch.return_value = _document_blob()
@@ -503,3 +571,42 @@ def test_resume_uses_manual_zone_symbol_confidence_constant() -> None:
     from app.services.mpzp_zones import MANUAL_ZONE_SYMBOL_CONFIDENCE
 
     assert MANUAL_ZONE_SYMBOL_CONFIDENCE == 0.5
+
+
+@pytest.mark.asyncio
+async def test_resume_rolls_back_all_snapshot_changes_when_persistence_fails() -> None:
+    from app.services.analysis_resume import resume_analysis_with_zone
+
+    analysis_id = _create_waiting_analysis("122101_1.0001.9018")
+    parser_result = MpzpParseResult(
+        plan_id="MPZP/2020/1",
+        zones=[ParserMpzpZoneResult(zone_symbol="230_U", parameters=[])],
+        status="partial",
+    )
+    with (
+        patch(
+            "app.services.analysis_resume.fetch_mpzp_document",
+            new=AsyncMock(return_value=_document_blob()),
+        ),
+        patch(
+            "app.services.analysis_resume.parse_mpzp_document",
+            new=AsyncMock(return_value=parser_result),
+        ),
+        patch(
+            "app.services.analysis_resume.add_mpzp_zone_snapshot",
+            side_effect=RuntimeError("kontrolowany błąd zapisu"),
+        ),
+        SessionLocal() as db,
+    ):
+        with pytest.raises(RuntimeError, match="kontrolowany błąd zapisu"):
+            await resume_analysis_with_zone(analysis_id, "230_U", db)
+
+    with SessionLocal() as db:
+        analysis = db.get(Analysis, analysis_id)
+        assert analysis is not None
+        assert analysis.status == "waiting_for_zone_symbol"
+        assert analysis.resolved_zone_symbol is None
+        assert analysis.pending_uchwala_url == "https://bip.example.test/uchwala.pdf"
+        assert db.scalar(
+            select(MpzpZone).where(MpzpZone.analysis_id == analysis_id)
+        ) is None
