@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -31,6 +32,14 @@ class Infrastructure(Base):
         Boolean,
         nullable=False,
         default=False,
+    )
+    network_geometry_geojson: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+    protection_zone_geojson: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
     )
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

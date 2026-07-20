@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -23,6 +24,7 @@ class Risk(Base):
     )
     risk_type: Mapped[str] = mapped_column(String(80), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    geometry_geojson: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     confidence: Mapped[float | None] = mapped_column(nullable=True)
