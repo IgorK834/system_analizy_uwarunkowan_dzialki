@@ -1,10 +1,12 @@
 """Generator raportu PDF analizy uwarunkowań przestrzennych działki.
 
 Raport jest budowany wyłącznie z zapisanego snapshotu analizy — nie uruchamia
-ponownie analizy ani nie odpytuje usług zewnętrznych (ULDK, WMS, WFS, BIP).
-Dane pochodzą z ``build_analyze_response_from_analysis``, czyli z tego samego
-kontraktu, który zasila API i frontend, dzięki czemu sekcje, ostrzeżenia i
-poziom pewności w PDF odpowiadają panelowi wyników (reguła 10 z context.md).
+ponownie analizy ani nie odpytuje usług domenowych (ULDK, WFS, BIP). Dane
+pochodzą z ``build_analyze_response_from_analysis``, czyli z tego samego
+kontraktu, który zasila API i frontend. Jedyny opcjonalny outbound HTTP to
+podkład miniatury mapy (WMS GetMap, krótki timeout); awaria podkładu nie
+blokuje raportu — miniatura powstaje na tle fallback z ostrzeżeniem po polsku
+(TODO ADR-009: świadomy wyjątek UX względem offline snapshotu).
 
 Odpowiedzialności są rozdzielone na małe funkcje: pobranie danych, przygotowanie
 kontekstu prezentacyjnego, wygenerowanie miniatury mapy, renderowanie HTML i
@@ -77,7 +79,7 @@ def _render_map_data_uri(response: AnalyzeResponse) -> tuple[str | None, str | N
     dołączane później do sekcji ograniczeń raportu.
     """
     try:
-        png_bytes = render_analysis_map_png(response)
+        map_result = render_analysis_map_png(response)
     except Exception:  # noqa: BLE001 - granica orkiestracji: mapa jest opcjonalna
         logger.exception("Renderowanie miniatury mapy nie powiodło się")
         return None, (
@@ -85,12 +87,12 @@ def _render_map_data_uri(response: AnalyzeResponse) -> tuple[str | None, str | N
             "jest kompletna."
         )
 
-    if png_bytes is None:
+    if map_result.png_bytes is None:
         return None, (
             "Miniatura mapy jest niedostępna, ponieważ analiza nie zawiera "
             "geometrii możliwej do narysowania."
         )
-    return png_to_data_uri(png_bytes), None
+    return png_to_data_uri(map_result.png_bytes), map_result.warning
 
 
 def _build_report_context(
