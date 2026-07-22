@@ -97,8 +97,11 @@ describe("klient API", () => {
 
     const report = await getAnalysisReport(42, { signal: controller.signal });
 
-    expect(report).toBeInstanceOf(Blob);
     expect(report.type).toBe("application/pdf");
+    expect(report.size).toBeGreaterThan(4);
+    expect(new TextDecoder().decode(await report.slice(0, 4).arrayBuffer())).toBe(
+      "%PDF",
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.test/report/42",
       expect.objectContaining({
