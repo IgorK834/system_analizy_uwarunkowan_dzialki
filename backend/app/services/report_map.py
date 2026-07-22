@@ -1,14 +1,17 @@
 """Deterministyczny generator miniatury mapy PNG dla raportu PDF.
 
-Ścieżka MVP jest celowo niezależna od zewnętrznych kafelków (Geoportal, WMS):
-miniatura jest rysowana wyłącznie z geometrii GeoJSON zapisanej w wyniku
-analizy. Dzięki temu podstawowy raport nie zależy od dostępności usług
-publicznych, a wynik jest powtarzalny w testach.
+Ścieżka MVP rysuje geometrie na jednolitym tle (``MAP_BACKGROUND_RGB``) bez
+pobierania kafelków — raport nie zależy wtedy od sieci. Ścieżka rozszerzona
+opcjonalnie nakłada podkład z synchronicznego WMS GetMap (``report_map_basemap``);
+przy aktywnym podkładzie wektory używają tej samej afinicznej projekcji co raster
+(liniowe mapowanie BBOX→piksele, bez letterboxu rozjeżdżającego obrys).
+
+TODO (ADR-009): PDF offline ze snapshotu; podkład WMS to świadomy wyjątek UX.
+Awaria WMS nigdy nie blokuje raportu — fallback MVP + ostrzeżenie po polsku.
 
 Wejściowe geometrie są w WGS84 (EPSG:4326), tak jak w odpowiedzi ``/analyze``.
-Do rzutowania na piksele stosujemy proste skalowanie równopostaciowe z korektą
-``cos(lat)`` na osi długości geograficznej, aby proporcje działki w polskich
-szerokościach nie były wizualnie zniekształcone. To wizualizacja, nie warstwa
+W ścieżce MVP do rzutowania stosujemy skalowanie równopostaciowe z korektą
+``cos(lat)`` na osi długości geograficznej. To wizualizacja, nie warstwa
 obliczeniowa — pól powierzchni tu nie liczymy (zgodnie z regułą GIS: pola liczy
 się w EPSG:2180 po stronie analizy).
 """
@@ -37,12 +40,32 @@ from app.core.report_config import (
     RISK_LAYER_STYLE,
     MapLayerStyle,
 )
+from app.core.settings import settings
+from app.services.report_map_basemap import (
+    BasemapLayout,
+    compute_basemap_layout,
+    fetch_report_basemap_png,
+)
 
 logger = logging.getLogger(__name__)
+
+BASEMAP_FAILURE_WARNING: str = (
+    "Nie udało się pobrać podkładu mapowego. "
+    "Miniatura pokazuje tylko geometrię działki."
+)
 
 # Minimalny rozmiar rzutowanego BBOX w stopniach, gdy geometria jest punktem
 # albo bardzo małym obiektem. Bez tego skala byłaby nieskończona.
 _MIN_SPAN_DEGREES = 1e-5
+
+
+@dataclass
+class MapRenderResult:
+    """Wynik renderowania miniatury mapy dla raportu PDF."""
+
+    png_bytes: bytes | None
+    basemap_used: bool = False
+    warning: str | None = None
 
 
 @dataclass
@@ -80,19 +103,19 @@ def render_analysis_map_png(
     *,
     width: int = MAP_IMAGE_WIDTH,
     height: int = MAP_IMAGE_HEIGHT,
-) -> bytes | None:
+) -> MapRenderResult:
     """Renderuje miniaturę mapy działki i warstw analizy jako PNG.
 
     ``response`` to ``AnalyzeResponse`` (przyjmowany strukturalnie, aby moduł
-    był testowalny bez bazy danych). Zwraca bajty PNG albo ``None``, gdy w
-    wyniku nie ma żadnej geometrii do narysowania. Brak geometrii nie jest
-    błędem — wywołujący ma wtedy dodać czytelne ostrzeżenie i wygenerować PDF
-    bez miniatury.
+    był testowalny bez bazy danych). Zwraca ``MapRenderResult`` z bajtami PNG
+    albo ``png_bytes=None``, gdy w wyniku nie ma geometrii do narysowania.
+    Opcjonalny podkład WMS nie blokuje raportu — przy awarii jest fallback MVP
+    i ``warning`` po polsku.
     """
     layers = _collect_map_layers(response)
     drawable = [layer for layer in layers if not layer.is_empty()]
     if not drawable:
-        return None
+        return MapRenderResult(png_bytes=None)
 
     # Kadr raportu opisuje wybraną działkę, nie zasięg wszystkich danych
     # kontekstowych. Zewnętrzne warstwy (np. długa sieć albo rozległy obszar
@@ -106,10 +129,41 @@ def render_analysis_map_png(
     )
     bounds = _compute_bounds([parcel_layer] if parcel_layer is not None else drawable)
     if bounds is None:
-        return None
+        return MapRenderResult(png_bytes=None)
 
-    projector = _Projector(bounds, width, height, MAP_IMAGE_PADDING_PX)
-    return _draw_png(drawable, projector, width, height)
+    warning: str | None = None
+    basemap_image: Image.Image | None = None
+    basemap_used = False
+    basemap_enabled = settings.report_map_basemap_enabled
+    basemap_layout: BasemapLayout | None = None
+
+    if basemap_enabled:
+        basemap_layout = compute_basemap_layout(bounds, width, height)
+
+    basemap_bytes = (
+        fetch_report_basemap_png(basemap_layout) if basemap_layout is not None else None
+    )
+    if basemap_bytes is not None and basemap_layout is not None:
+        basemap_image = Image.open(io.BytesIO(basemap_bytes))
+        basemap_used = True
+        projector: _Projector | _BasemapProjector = _BasemapProjector(basemap_layout)
+    else:
+        if basemap_enabled:
+            warning = BASEMAP_FAILURE_WARNING
+        projector = _Projector(bounds, width, height, MAP_IMAGE_PADDING_PX)
+
+    png_bytes = _draw_png(
+        drawable,
+        projector,
+        width,
+        height,
+        basemap_image=basemap_image,
+    )
+    return MapRenderResult(
+        png_bytes=png_bytes,
+        basemap_used=basemap_used,
+        warning=warning,
+    )
 
 
 def png_to_data_uri(png_bytes: bytes) -> str:
@@ -291,6 +345,28 @@ def _compute_bounds(layers: list[_MapLayer]) -> _Bounds | None:
     )
 
 
+class _BasemapProjector:
+    """Rzutuje WGS84 na piksele zgodnie z kadrem podkładu WMS (Web Mercator).
+
+    BBOX i wymiary muszą pochodzić z tego samego ``BasemapLayout`` co raster GetMap.
+    """
+
+    def __init__(self, layout: BasemapLayout) -> None:
+        from pyproj import Transformer
+
+        self._layout = layout
+        self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+        self._min_x, self._min_y, self._max_x, self._max_y = layout.bbox_3857
+        self._span_x = max(self._max_x - self._min_x, 1e-6)
+        self._span_y = max(self._max_y - self._min_y, 1e-6)
+
+    def to_pixel(self, lon: float, lat: float) -> tuple[float, float]:
+        x_m, y_m = self._transformer.transform(lon, lat)
+        x = self._layout.offset_x + (x_m - self._min_x) / self._span_x * self._layout.map_width
+        y = self._layout.offset_y + (self._max_y - y_m) / self._span_y * self._layout.map_height
+        return (x, y)
+
+
 class _Projector:
     """Rzutuje współrzędne WGS84 na piksele z zachowaniem proporcji i wycentrowaniem."""
 
@@ -323,11 +399,16 @@ class _Projector:
 
 def _draw_png(
     layers: list[_MapLayer],
-    projector: _Projector,
+    projector: _Projector | _BasemapProjector,
     width: int,
     height: int,
+    *,
+    basemap_image: Image.Image | None = None,
 ) -> bytes:
-    base = Image.new("RGBA", (width, height), (*MAP_BACKGROUND_RGB, 255))
+    if basemap_image is not None:
+        base = basemap_image.convert("RGBA")
+    else:
+        base = Image.new("RGBA", (width, height), (*MAP_BACKGROUND_RGB, 255))
 
     # Najpierw wypełnienia (od spodu do wierzchu), każde na osobnej nakładce,
     # aby otwory jednej warstwy nie kasowały wypełnień warstw pod spodem.
