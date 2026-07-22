@@ -66,8 +66,9 @@ MAP_IMAGE_WIDTH: int = 900
 MAP_IMAGE_HEIGHT: int = 600
 # Wewnętrzny margines miniatury w pikselach (letterbox wokół geometrii).
 MAP_IMAGE_PADDING_PX: int = 24
-# Kolor tła miniatury (jasny, neutralny). Nie pobieramy podkładu kafelkowego w
-# ścieżce MVP, aby raport nie zależał od dostępności Geoportalu.
+# Kolor tła FALLBACK miniatury (jasny, neutralny). Docelowy wygląd to opcjonalny
+# podkład WMS GetMap; ten kolor jest używany tylko gdy basemap jest wyłączony
+# albo pobranie podkładu się nie powiodło (ścieżka MVP offline).
 MAP_BACKGROUND_RGB: tuple[int, int, int] = (245, 247, 249)
 # Współczynnik rozszerzenia BBOX o 10% z każdej strony, zgodnie z kontraktem.
 MAP_BBOX_EXPANSION_RATIO: float = 0.10

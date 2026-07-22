@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     map_tile_upstream_max_concurrency: int = 8
     map_tile_min_zoom: int = 11
     map_tile_max_zoom: int = 18
+    # Podkład miniatury raportu: OSM WMS (działa bez autoryzacji). ORTO/TOPO
+    # Geoportalu zwracają 401 — nie używać jako domyślne. Nakładka KIMPZP
+    # (``report_map_kimpzp_overlay_enabled``) odwzorowuje widok MPZP z UI.
+    report_map_basemap_enabled: bool = True
+    report_map_wms_base_url: str = "https://ows.terrestris.de/osm/service?"
+    report_map_wms_layers: str = "OSM-WMS"
+    report_map_kimpzp_overlay_enabled: bool = True
+    report_map_wms_timeout_seconds: float = 8.0
+    report_map_wms_max_response_bytes: int = 8 * 1024 * 1024
     # Rejestr Urbanistyczny jest opcjonalnym, eksperymentalnym kanałem discovery.
     # W lipcu 2026 publiczny kontrakt API ani adres usługi nie są potwierdzone,
     # dlatego brak wartości jest bezpiecznym ustawieniem domyślnym. Adresy WMS/BIP
