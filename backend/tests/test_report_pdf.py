@@ -13,13 +13,16 @@ import re
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pdfplumber
 import pytest
+import respx
 from fastapi.testclient import TestClient
 from shapely.geometry import box
 from sqlalchemy import delete, select
 
 from app.core.report_config import REPORT_DISCLAIMER
+from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -117,6 +120,12 @@ def cleanup_report_rows():
     _cleanup()
     yield
     _cleanup()
+
+
+@pytest.fixture(autouse=True)
+def disable_report_basemap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Integracyjne testy PDF nie odpytują WMS — domyślnie ścieżka MVP offline."""
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", False)
 
 
 def _source(
@@ -593,8 +602,14 @@ def test_report_without_context_data_still_generates() -> None:
 def test_report_without_drawable_geometry_adds_warning_not_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Symulujemy brak geometrii do narysowania: renderer zwraca None.
-    monkeypatch.setattr(report_module, "render_analysis_map_png", lambda *a, **k: None)
+    # Symulujemy brak geometrii do narysowania: renderer zwraca pusty wynik.
+    from app.services.report_map import MapRenderResult
+
+    monkeypatch.setattr(
+        report_module,
+        "render_analysis_map_png",
+        lambda *a, **k: MapRenderResult(png_bytes=None),
+    )
     identifier = f"{_PARCEL_PREFIX}NOGEO"
     analysis_id = _save(_full_response(identifier), identifier)
     with SessionLocal() as db:
@@ -604,6 +619,29 @@ def test_report_without_drawable_geometry_adds_warning_not_error(
     assert pdf_bytes.startswith(_PDF_SIGNATURE)
     assert _count_images(pdf_bytes) == 0
     assert "Miniatura mapy jest niedostępna" in text
+
+
+@respx.mock
+def test_report_survives_basemap_failure_with_warning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Awaria podkładu WMS nie blokuje PDF — obrys na fallback + ostrzeżenie."""
+    wms_url = "https://wms.example.test/report-osm"
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", True)
+    monkeypatch.setattr(settings, "report_map_wms_base_url", wms_url)
+    monkeypatch.setattr(settings, "report_map_wms_layers", "OSM-WMS")
+    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+    respx.get(wms_url).mock(return_value=httpx.Response(503))
+
+    identifier = f"{_PARCEL_PREFIX}BASEFAIL"
+    analysis_id = _save(_full_response(identifier), identifier)
+    with SessionLocal() as db:
+        pdf_bytes = generate_analysis_report_pdf(analysis_id, db)
+
+    text = _extract_text(pdf_bytes)
+    assert pdf_bytes.startswith(_PDF_SIGNATURE)
+    assert _count_images(pdf_bytes) >= 1
+    assert "Nie udało się pobrać podkładu mapowego" in text
 
 
 def test_report_survives_map_backdrop_failure(
