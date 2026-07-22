@@ -2,16 +2,21 @@
 
 Testy nie wymagają bazy danych ani WeasyPrint — sprawdzają wyłącznie
 deterministyczne renderowanie PNG z geometrii GeoJSON, dlatego działają także
-lokalnie poza kontenerem.
+lokalnie poza kontenerem. Wywołań WMS w CI nie ma — basemap jest mockowany
+przez respx albo wyłączany fixturem autouse.
 """
 
 from __future__ import annotations
 
 import io
 
+import httpx
+import pytest
+import respx
 from PIL import Image
 
-from app.core.report_config import MAP_IMAGE_HEIGHT, MAP_IMAGE_WIDTH
+from app.core.report_config import MAP_BACKGROUND_RGB, MAP_IMAGE_HEIGHT, MAP_IMAGE_WIDTH
+from app.core.settings import Settings, settings
 from app.schemas.analyze import (
     AnalyzeResponse,
     GeometryMetrics,
@@ -21,15 +26,55 @@ from app.schemas.analyze import (
 )
 from app.schemas.source import SourceMetadata
 from app.services.report_map import (
+    BASEMAP_FAILURE_WARNING,
+    _BasemapProjector,
+    _Bounds,
     _extract_primitives,
     png_to_data_uri,
     render_analysis_map_png,
 )
+from app.services.report_map_basemap import (
+    BasemapLayout,
+    bounds_to_web_mercator_bbox,
+    compute_basemap_layout,
+    fetch_report_basemap_png,
+)
+from pyproj import Transformer
 
 from datetime import datetime, timezone
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_OSM_WMS_URL = "https://wms.example.test/report-osm"
+_KIMPZP_WMS_URL = "https://wms.example.test/report-kimpzp"
 _FETCHED_AT = datetime(2026, 7, 16, 10, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture(autouse=True)
+def _disable_basemap_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Domyślnie testujemy ścieżkę MVP offline bez sieci."""
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", False)
+    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+
+
+def _basemap_settings(**updates: object) -> Settings:
+    values: dict[str, object] = {
+        "report_map_basemap_enabled": True,
+        "report_map_wms_base_url": _OSM_WMS_URL,
+        "report_map_wms_layers": "OSM-WMS",
+        "report_map_kimpzp_overlay_enabled": False,
+        "kimpzp_wms_base_url": _KIMPZP_WMS_URL,
+        "kimpzp_wms_layers": "raster",
+        "report_map_wms_timeout_seconds": 2.0,
+        "report_map_wms_max_response_bytes": 8 * 1024 * 1024,
+    }
+    values.update(updates)
+    return Settings(_env_file=None, **values)
+
+
+def _make_color_png(width: int, height: int, color: tuple[int, int, int]) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), color).save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def _source() -> SourceMetadata:
@@ -99,37 +144,40 @@ def _empty_response() -> AnalyzeResponse:
 
 
 def test_render_returns_png_with_valid_signature_and_dimensions() -> None:
-    png_bytes = render_analysis_map_png(_response_with_parcel())
+    result = render_analysis_map_png(_response_with_parcel())
 
-    assert png_bytes is not None
-    assert len(png_bytes) > 0
-    assert png_bytes.startswith(_PNG_SIGNATURE)
+    assert result.png_bytes is not None
+    assert len(result.png_bytes) > 0
+    assert result.png_bytes.startswith(_PNG_SIGNATURE)
+    assert result.basemap_used is False
+    assert result.warning is None
 
-    image = Image.open(io.BytesIO(png_bytes))
+    image = Image.open(io.BytesIO(result.png_bytes))
     assert image.format == "PNG"
     assert image.size == (MAP_IMAGE_WIDTH, MAP_IMAGE_HEIGHT)
 
 
 def test_render_respects_custom_dimensions() -> None:
-    png_bytes = render_analysis_map_png(_response_with_parcel(), width=400, height=300)
+    result = render_analysis_map_png(_response_with_parcel(), width=400, height=300)
 
-    assert png_bytes is not None
-    image = Image.open(io.BytesIO(png_bytes))
+    assert result.png_bytes is not None
+    image = Image.open(io.BytesIO(result.png_bytes))
     assert image.size == (400, 300)
 
 
 def test_render_returns_none_without_any_geometry() -> None:
-    assert render_analysis_map_png(_empty_response()) is None
+    result = render_analysis_map_png(_empty_response())
+    assert result.png_bytes is None
 
 
 def test_render_centers_geometry_with_bbox_margin() -> None:
-    # Działka wypełniająca cały kadr musi mieć 10% marginesu, więc narożniki
+    # Działka wypełniający cały kadr musi mieć 10% marginesu, więc narożniki
     # obrazu pozostają w kolorze tła, a geometria jest wycentrowana.
-    png_bytes = render_analysis_map_png(_response_with_parcel())
-    assert png_bytes is not None
-    image = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+    result = render_analysis_map_png(_response_with_parcel())
+    assert result.png_bytes is not None
+    image = Image.open(io.BytesIO(result.png_bytes)).convert("RGB")
 
-    background = (245, 247, 249)
+    background = MAP_BACKGROUND_RGB
     # Narożniki kadru powinny pozostać tłem dzięki marginesowi BBOX i letterbox.
     assert image.getpixel((2, 2)) == background
     assert image.getpixel((MAP_IMAGE_WIDTH - 3, MAP_IMAGE_HEIGHT - 3)) == background
@@ -163,13 +211,13 @@ def test_remote_context_layer_does_not_change_parcel_centered_viewport() -> None
         }
     )
 
-    parcel_png = render_analysis_map_png(parcel_only)
-    context_png = render_analysis_map_png(with_remote_risk)
+    parcel_result = render_analysis_map_png(parcel_only)
+    context_result = render_analysis_map_png(with_remote_risk)
 
     # Warstwa całkowicie poza kadrem jest przycięta. Nie może zmienić skali ani
     # położenia działki zaznaczonej przez użytkownika.
-    assert parcel_png is not None
-    assert context_png == parcel_png
+    assert parcel_result.png_bytes is not None
+    assert context_result.png_bytes == parcel_result.png_bytes
 
 
 def test_render_draws_all_layers_without_error() -> None:
@@ -231,9 +279,9 @@ def test_render_draws_all_layers_without_error() -> None:
             ],
         }
     )
-    png_bytes = render_analysis_map_png(response)
-    assert png_bytes is not None
-    assert png_bytes.startswith(_PNG_SIGNATURE)
+    result = render_analysis_map_png(response)
+    assert result.png_bytes is not None
+    assert result.png_bytes.startswith(_PNG_SIGNATURE)
 
 
 def test_render_handles_single_point_geometry() -> None:
@@ -252,9 +300,9 @@ def test_render_handles_single_point_geometry() -> None:
             ]
         }
     )
-    png_bytes = render_analysis_map_png(response)
-    assert png_bytes is not None
-    image = Image.open(io.BytesIO(png_bytes))
+    result = render_analysis_map_png(response)
+    assert result.png_bytes is not None
+    image = Image.open(io.BytesIO(result.png_bytes))
     assert image.size == (MAP_IMAGE_WIDTH, MAP_IMAGE_HEIGHT)
 
 
@@ -276,7 +324,8 @@ def test_render_ignores_broken_geometry_without_raising() -> None:
     )
     # Uszkodzona geometria jest jedyną warstwą, więc miniatura jest pusta,
     # ale generator nie może rzucić wyjątku.
-    assert render_analysis_map_png(response) is None
+    result = render_analysis_map_png(response)
+    assert result.png_bytes is None
 
 
 def test_extract_primitives_supports_feature_collection() -> None:
@@ -331,14 +380,168 @@ def test_extract_primitives_ignores_non_dict() -> None:
 
 
 def test_png_to_data_uri_is_valid_base64_png() -> None:
-    png_bytes = render_analysis_map_png(_response_with_parcel())
-    assert png_bytes is not None
-    data_uri = png_to_data_uri(png_bytes)
+    result = render_analysis_map_png(_response_with_parcel())
+    assert result.png_bytes is not None
+    data_uri = png_to_data_uri(result.png_bytes)
     assert data_uri.startswith("data:image/png;base64,")
 
     import base64
 
     payload = data_uri.split(",", 1)[1]
     decoded = base64.b64decode(payload)
-    assert decoded == png_bytes
+    assert decoded == result.png_bytes
     assert decoded.startswith(_PNG_SIGNATURE)
+
+
+def _mock_png_response(request: httpx.Request) -> httpx.Response:
+    width = int(request.url.params.get("width", MAP_IMAGE_WIDTH))
+    height = int(request.url.params.get("height", MAP_IMAGE_HEIGHT))
+    color = (30, 120, 200)
+    if "kimpzp" in str(request.url) or "KrajowaIntegracja" in str(request.url):
+        color = (255, 0, 0)
+    return httpx.Response(
+        200,
+        content=_make_color_png(width, height, color),
+        headers={"content-type": "image/png"},
+    )
+
+
+def test_basemap_layout_fills_canvas_and_expands_bbox() -> None:
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    core_bbox = bounds_to_web_mercator_bbox(bounds)
+    layout = compute_basemap_layout(bounds, MAP_IMAGE_WIDTH, MAP_IMAGE_HEIGHT)
+
+    span_x = layout.bbox_3857[2] - layout.bbox_3857[0]
+    span_y = layout.bbox_3857[3] - layout.bbox_3857[1]
+
+    assert layout.map_width == MAP_IMAGE_WIDTH
+    assert layout.map_height == MAP_IMAGE_HEIGHT
+    assert layout.offset_x == 0.0
+    assert layout.offset_y == 0.0
+    assert span_x / span_y == pytest.approx(
+        MAP_IMAGE_WIDTH / MAP_IMAGE_HEIGHT,
+        rel=0.01,
+    )
+    assert layout.bbox_3857[0] < core_bbox[0]
+    assert layout.bbox_3857[2] > core_bbox[2]
+
+
+def test_basemap_projector_maps_expanded_bbox_corners_to_canvas_edges() -> None:
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    projector = _BasemapProjector(layout)
+    transformer = Transformer.from_crs("EPSG:3857", "EPSG:4326", always_xy=True)
+    min_x, min_y, max_x, max_y = layout.bbox_3857
+
+    nw_lon, nw_lat = transformer.transform(min_x, max_y)
+    se_lon, se_lat = transformer.transform(max_x, min_y)
+
+    nw = projector.to_pixel(nw_lon, nw_lat)
+    se = projector.to_pixel(se_lon, se_lat)
+
+    assert nw[0] == pytest.approx(0.0, abs=2.0)
+    assert nw[1] == pytest.approx(0.0, abs=2.0)
+    assert se[0] == pytest.approx(900.0, abs=2.0)
+    assert se[1] == pytest.approx(600.0, abs=2.0)
+
+
+@respx.mock
+def test_fetch_report_basemap_png_validates_wms_request() -> None:
+    route = respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings()
+
+    result = fetch_report_basemap_png(layout, config=cfg)
+
+    assert result is not None
+    assert result.startswith(_PNG_SIGNATURE)
+    assert route.call_count == 1
+    params = route.calls[0].request.url.params
+    assert params["request"] == "GetMap"
+    assert params["version"] == "1.1.1"
+    assert params["srs"] == "EPSG:3857"
+    assert params["layers"] == "OSM-WMS"
+    assert params["width"] == str(layout.map_width)
+    assert params["height"] == str(layout.map_height)
+    assert params["bbox"].startswith("2219")
+
+
+@respx.mock
+def test_render_with_mocked_basemap_uses_non_uniform_background(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", True)
+    monkeypatch.setattr(settings, "report_map_wms_base_url", _OSM_WMS_URL)
+    monkeypatch.setattr(settings, "report_map_wms_layers", "OSM-WMS")
+    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+
+    basemap_color = (30, 120, 200)
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+
+    result = render_analysis_map_png(_response_with_parcel())
+
+    assert result.png_bytes is not None
+    assert result.basemap_used is True
+    assert result.warning is None
+
+    image = Image.open(io.BytesIO(result.png_bytes)).convert("RGB")
+    assert image.getpixel((8, 8)) == basemap_color
+
+
+@respx.mock
+def test_render_basemap_failure_falls_back_with_warning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", True)
+    monkeypatch.setattr(settings, "report_map_wms_base_url", _OSM_WMS_URL)
+    monkeypatch.setattr(settings, "report_map_wms_layers", "OSM-WMS")
+    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+
+    respx.get(_OSM_WMS_URL).mock(return_value=httpx.Response(503))
+
+    result = render_analysis_map_png(_response_with_parcel())
+
+    assert result.png_bytes is not None
+    assert result.basemap_used is False
+    assert result.warning == BASEMAP_FAILURE_WARNING
+
+    image = Image.open(io.BytesIO(result.png_bytes)).convert("RGB")
+    assert image.getpixel((2, 2)) == MAP_BACKGROUND_RGB
+    assert image.getpixel((MAP_IMAGE_WIDTH // 2, MAP_IMAGE_HEIGHT // 2)) != MAP_BACKGROUND_RGB
+
+
+@respx.mock
+def test_fetch_report_basemap_png_returns_none_on_invalid_content() -> None:
+    respx.get(_OSM_WMS_URL).mock(
+        return_value=httpx.Response(
+            200,
+            text="<ServiceException>error</ServiceException>",
+            headers={"content-type": "application/vnd.ogc.se_xml"},
+        )
+    )
+    bounds = _Bounds(min_lon=19.0, min_lat=50.0, max_lon=20.0, max_lat=51.0)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings()
+
+    assert fetch_report_basemap_png(layout, config=cfg) is None
+
+
+@respx.mock
+def test_fetch_report_basemap_composites_kimpzp_overlay() -> None:
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIMPZP_WMS_URL).mock(side_effect=_mock_png_response)
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings(
+        report_map_kimpzp_overlay_enabled=True,
+        kimpzp_wms_base_url=_KIMPZP_WMS_URL,
+    )
+
+    result = fetch_report_basemap_png(layout, config=cfg)
+
+    assert result is not None
+    image = Image.open(io.BytesIO(result)).convert("RGB")
+    sample_x = int(layout.offset_x + 10)
+    sample_y = int(layout.offset_y + 10)
+    assert image.getpixel((sample_x, sample_y)) == (255, 0, 0)
