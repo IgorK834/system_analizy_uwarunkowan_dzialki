@@ -21,10 +21,14 @@ from app.schemas.mpzp import (
     MpzpParseResult,
     MpzpParserWarning,
     MpzpZoneResult,
+    ParserDocumentAudit,
+    ParserDocumentPage,
+    ParserDocumentSegment,
 )
 from app.services.mpzp_fetch import DocumentBlob
 from app.services.mpzp_parser_descriptive import extract_descriptive_parameters
 from app.services.mpzp_parser_extract import (
+    OcrProvider,
     classify_document,
     extract_document_text,
 )
@@ -32,6 +36,7 @@ from app.services.mpzp_parser_numeric import extract_numeric_parameters
 from app.services.mpzp_parser_segment import (
     DocumentSegment,
     ZoneSectionResult,
+    discover_zone_symbols,
     find_zone_sections,
     segment_document,
 )
@@ -54,6 +59,7 @@ __all__ = [
 async def parse_mpzp_document(
     document: DocumentBlob,
     zone_symbols: list[str] | None = None,
+    ocr_provider: OcrProvider | None = None,
 ) -> MpzpParseResult:
     """Uruchamia pipeline i NIGDY nie podnosi niekontrolowanego wyjątku.
 
@@ -62,7 +68,7 @@ async def parse_mpzp_document(
     """
     zone_symbols = zone_symbols or []
     try:
-        return await _run_parse_pipeline(document, zone_symbols)
+        return await _run_parse_pipeline(document, zone_symbols, ocr_provider)
     except Exception:
         # Granica fasady celowo łapie wszystkie przyszłe tryby awarii etapów,
         # ponieważ publiczny kontrakt gwarantuje wynik failed zamiast wyjątku.
@@ -91,14 +97,26 @@ async def parse_mpzp_document(
 async def _run_parse_pipeline(
     document: DocumentBlob,
     zone_symbols: list[str],
+    ocr_provider: OcrProvider | None,
 ) -> MpzpParseResult:
     _document_kind = classify_document(document)
-    extraction = await extract_document_text(document)
+    extraction = (
+        await extract_document_text(document, ocr_provider)
+        if ocr_provider is not None
+        else await extract_document_text(document)
+    )
     warnings = [
         _extraction_warning_to_parser_warning(message)
         for message in extraction.warnings
     ]
-    if not zone_symbols:
+    segments = segment_document(extraction)
+    inferred_symbols = False
+    active_zone_symbols = zone_symbols
+    if not active_zone_symbols:
+        active_zone_symbols = discover_zone_symbols(segments)
+        inferred_symbols = bool(active_zone_symbols)
+
+    if not active_zone_symbols:
         zones = [
             MpzpZoneResult(
                 zone_symbol="UNKNOWN",
@@ -106,17 +124,70 @@ async def _run_parse_pipeline(
                 parameters=[],
             )
         ]
+        warnings.append(
+            MpzpParserWarning(
+                stage="segment_document",
+                code="ZONE_SYMBOL_NOT_DISCOVERED",
+                message=(
+                    "Nie przekazano symbolu strefy i nie udało się go "
+                    "jednoznacznie odkryć w dokumencie. Wynik wymaga ręcznej "
+                    "weryfikacji."
+                ),
+                zone_symbol="UNKNOWN",
+                parameter_name=None,
+                page_number=None,
+                severity="warning",
+            )
+        )
     else:
-        segments = segment_document(extraction)
-        zone_section_results = find_zone_sections(segments, zone_symbols)
+        zone_section_results = find_zone_sections(segments, active_zone_symbols)
         warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
         zones = extract_parameters(zone_section_results, segments)
+        if inferred_symbols:
+            warnings.append(
+                MpzpParserWarning(
+                    stage="segment_document",
+                    code="ZONE_SYMBOLS_INFERRED",
+                    message=(
+                        "Symbole stref odkryto w tekście bez potwierdzenia z "
+                        "geometrii planu; wszystkie wartości wymagają ręcznej "
+                        "weryfikacji."
+                    ),
+                    zone_symbol=None,
+                    parameter_name=None,
+                    page_number=None,
+                    severity="warning",
+                )
+            )
+            zones = [
+                zone.model_copy(
+                    update={
+                        "parameters": [
+                            parameter.model_copy(
+                                update={
+                                    "confidence": parameter.confidence * 0.65,
+                                    "manual_review_required": True,
+                                }
+                            )
+                            for parameter in zone.parameters
+                        ]
+                    }
+                )
+                for zone in zones
+            ]
     status = validate_result(zones)
+    if inferred_symbols and status == "complete":
+        status = "partial"
     result = MpzpParseResult(
         plan_id=None,
         zones=zones,
         status=status,
         warnings=warnings,
+        document_audit=_build_document_audit(
+            document.media_type,
+            extraction,
+            segments,
+        ),
     )
     # Walidacja systemowa (etap 5 w pełnym znaczeniu) jest ostatnim krokiem
     # pipeline'u: dokłada kary confidence i wykrywa konflikty parametrów już
@@ -125,14 +196,65 @@ async def _run_parse_pipeline(
 
 
 def _extraction_warning_to_parser_warning(message: str) -> MpzpParserWarning:
+    lowered = message.lower()
+    if "ocr nie powiódł" in lowered or "bez czytelnego tekstu" in lowered:
+        code = "OCR_FAILED"
+    elif "odczytano przez ocr" in lowered:
+        code = "OCR_APPLIED"
+    elif "ocr" in lowered:
+        code = "NEEDS_OCR"
+    else:
+        code = "TEXT_EXTRACTION_WARNING"
     return MpzpParserWarning(
         stage="extract_text",
-        code="TEXT_EXTRACTION_WARNING",
+        code=code,
         message=message,
         zone_symbol=None,
         parameter_name=None,
         page_number=None,
         severity="warning",
+    )
+
+
+def _build_document_audit(
+    media_type: str,
+    extraction,
+    segments: list[DocumentSegment],
+) -> ParserDocumentAudit:
+    return ParserDocumentAudit(
+        media_type=media_type,
+        extraction_method=extraction.extraction_method,
+        ocr_engine_version=extraction.ocr_engine_version,
+        quality_score=extraction.quality_score,
+        manual_review_required=extraction.manual_review_required,
+        pages=[
+            ParserDocumentPage(
+                page_number=index,
+                text=text,
+                ocr_used=extraction.ocr_used,
+                quality=(
+                    extraction.page_qualities[index - 1]
+                    if index <= len(extraction.page_qualities)
+                    else None
+                ),
+                blocks=(
+                    extraction.blocks[index - 1]
+                    if index <= len(extraction.blocks)
+                    else []
+                ),
+            )
+            for index, text in enumerate(extraction.pages, start=1)
+        ],
+        segments=[
+            ParserDocumentSegment(
+                segment_id=segment.segment_id,
+                text=segment.text,
+                page_number=segment.page_number,
+                heading=segment.heading,
+                source=segment.source,
+            )
+            for segment in segments
+        ],
     )
 
 

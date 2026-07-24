@@ -9,7 +9,7 @@ generyczne parametry i ślad dowodowy każdej wartości. Kolizja nazw jest
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -137,6 +137,38 @@ class MpzpParseRequest(BaseModel):
     )
 
 
+class ParserDocumentPage(BaseModel):
+    """Wewnętrzny ślad strony używany do trwałego persistence."""
+
+    page_number: int
+    text: str
+    ocr_used: bool
+    quality: float | None = None
+    blocks: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ParserDocumentSegment(BaseModel):
+    """Wewnętrzny ślad segmentu zachowujący stronę i identyfikator."""
+
+    segment_id: str
+    text: str
+    page_number: int | None
+    heading: str | None
+    source: Literal["paragraph", "table"]
+
+
+class ParserDocumentAudit(BaseModel):
+    """Metadane umożliwiające zapis stron i jednostek bez ponownej ekstrakcji."""
+
+    media_type: str
+    extraction_method: Literal["pdf_text", "html", "ocr", "unsupported"]
+    ocr_engine_version: str | None = None
+    quality_score: float
+    manual_review_required: bool
+    pages: list[ParserDocumentPage] = Field(default_factory=list)
+    segments: list[ParserDocumentSegment] = Field(default_factory=list)
+
+
 class MpzpParseResult(BaseModel):
     """Zagregowany, pełny, częściowy albo nieudany wynik parsowania dokumentu."""
 
@@ -154,5 +186,13 @@ class MpzpParseResult(BaseModel):
         description=(
             "Krótkie, ludzkie opisy wykrytych sprzeczności parametrów, np. "
             '"230_UMW: max_building_height_m ma sprzeczne wartości (15.0, 13.0)".'
+        ),
+    )
+    document_audit: ParserDocumentAudit | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "Wewnętrzny ślad persistence; nie jest elementem publicznego "
+            "kontraktu odpowiedzi parsera."
         ),
     )

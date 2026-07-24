@@ -55,17 +55,45 @@ class TextExtractionResult:
 
     pages: list[str]
     tables: list[ExtractedTable] = field(default_factory=list)
+    page_qualities: list[float | None] = field(default_factory=list)
+    blocks: list[list[dict[str, object]]] = field(default_factory=list)
     quality_score: float = 0.0
     needs_ocr: bool = False
+    ocr_used: bool = False
+    extraction_method: Literal["pdf_text", "html", "ocr", "unsupported"] = (
+        "pdf_text"
+    )
+    ocr_engine_version: str | None = None
     manual_review_required: bool = False
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class OcrPageResult:
+    """Wynik OCR jednej strony wraz z confidence i pozycjami bloków."""
+
+    page_number: int
+    text: str
+    quality: float | None = None
+    blocks: list[dict[str, object]] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class OcrExtractionResult:
+    """Neutralny kontrakt adaptera OCR, niezależny od Tesseracta."""
+
+    pages: list[OcrPageResult]
+    engine_version: str
+    quality_score: float
+
+
 @runtime_checkable
 class OcrProvider(Protocol):
-    """Opcjonalny adapter przyszłej integracji OCR; MVP go nie implementuje."""
+    """Adapter OCR wywoływany dla PDF bez wystarczającej warstwy tekstowej."""
 
-    async def extract_text_from_scan(self, pdf_bytes: bytes) -> str: ...
+    async def extract_text_from_scan(
+        self, pdf_bytes: bytes
+    ) -> OcrExtractionResult | str: ...
 
 
 def classify_document(document: DocumentBlob) -> DocumentKind:
@@ -89,9 +117,8 @@ async def extract_document_text(
 
     Typ ``unsupported`` kończy się przed jakimkolwiek użyciem pdfplumber. Dla
     PDF ``quality_score`` jest udziałem stron z wystarczającą warstwą tekstową.
-    ``ocr_provider`` jest opcjonalnym kontraktem przyszłościowym: w MVP, gdy
-    ``needs_ocr=True``, brak providera daje ostrzeżenie, a przekazany provider
-    jest odnotowany, ale nie jest jeszcze wywoływany.
+    Gdy PDF wymaga OCR i przekazano provider, wynik OCR zastępuje puste strony,
+    a wersja silnika i współrzędne bloków pozostają w śladzie audytowym.
     """
     kind = classify_document(document)
     if kind == "unsupported":
@@ -100,6 +127,7 @@ async def extract_document_text(
             tables=[],
             quality_score=0.0,
             needs_ocr=False,
+            extraction_method="unsupported",
             manual_review_required=True,
             warnings=[
                 f"Nieobsługiwany typ dokumentu: {document.media_type!r} — "
@@ -142,19 +170,111 @@ async def _extract_pdf_text(
             "Dokument PDF ma bardzo mało tekstu na stronę — prawdopodobnie "
             "skan wymagający OCR. Wynik ekstrakcji może być niepełny."
         )
-        if ocr_provider is not None:
-            logger.info(
-                "OcrProvider przekazany, ale realna integracja OCR nie jest "
-                "zaimplementowana w MVP."
-            )
-
-    return TextExtractionResult(
+    extraction = TextExtractionResult(
         pages=pages,
         tables=tables,
+        page_qualities=[
+            (
+                1.0
+                if len(page.strip()) >= MIN_CHARS_PER_PAGE_FOR_TEXT_LAYER
+                else 0.0
+            )
+            for page in pages
+        ],
+        blocks=[[] for _ in pages],
         quality_score=quality_score,
         needs_ocr=needs_ocr,
+        extraction_method="pdf_text",
         manual_review_required=needs_ocr,
         warnings=warnings,
+    )
+    if needs_ocr and ocr_provider is not None:
+        return await apply_ocr_to_extraction(document, extraction, ocr_provider)
+    return extraction
+
+
+async def apply_ocr_to_extraction(
+    document: DocumentBlob,
+    extraction: TextExtractionResult,
+    ocr_provider: OcrProvider,
+) -> TextExtractionResult:
+    """Uruchamia realny provider OCR i zachowuje kontrolowany wynik awarii."""
+    try:
+        raw_result = await ocr_provider.extract_text_from_scan(document.content)
+    except Exception as exc:
+        logger.exception("Adapter OCR nie zdołał przetworzyć dokumentu MPZP.")
+        return TextExtractionResult(
+            pages=extraction.pages,
+            tables=extraction.tables,
+            page_qualities=extraction.page_qualities,
+            blocks=extraction.blocks,
+            quality_score=extraction.quality_score,
+            needs_ocr=True,
+            ocr_used=False,
+            extraction_method=extraction.extraction_method,
+            ocr_engine_version=None,
+            manual_review_required=True,
+            warnings=[
+                *extraction.warnings,
+                "OCR nie powiódł się; dokument wymaga ręcznej weryfikacji "
+                f"({type(exc).__name__}).",
+            ],
+        )
+
+    if isinstance(raw_result, str):
+        texts = raw_result.split("\f")
+        pages = [
+            OcrPageResult(page_number=index, text=text)
+            for index, text in enumerate(texts, start=1)
+            if text or len(texts) == 1
+        ]
+        engine_version = type(ocr_provider).__name__
+        quality_score = (
+            sum(bool(page.text.strip()) for page in pages) / len(pages)
+            if pages
+            else 0.0
+        )
+    else:
+        pages = raw_result.pages
+        engine_version = raw_result.engine_version
+        quality_score = raw_result.quality_score
+
+    extracted_pages = [page.text for page in pages]
+    if not any(page.strip() for page in extracted_pages):
+        return TextExtractionResult(
+            pages=extracted_pages,
+            tables=extraction.tables,
+            page_qualities=[page.quality for page in pages],
+            blocks=[page.blocks for page in pages],
+            quality_score=quality_score,
+            needs_ocr=True,
+            ocr_used=True,
+            extraction_method="ocr",
+            ocr_engine_version=engine_version,
+            manual_review_required=True,
+            warnings=[
+                *extraction.warnings,
+                "OCR zakończył się bez czytelnego tekstu; dokument wymaga "
+                "ręcznej weryfikacji.",
+            ],
+        )
+
+    return TextExtractionResult(
+        pages=extracted_pages,
+        tables=extraction.tables,
+        page_qualities=[page.quality for page in pages],
+        blocks=[page.blocks for page in pages],
+        quality_score=quality_score,
+        needs_ocr=False,
+        ocr_used=True,
+        extraction_method="ocr",
+        ocr_engine_version=engine_version,
+        # OCR nie jest automatycznie promowany do zweryfikowanego źródła.
+        manual_review_required=True,
+        warnings=[
+            *extraction.warnings,
+            "Tekst odczytano przez OCR; wynik zachowano do ręcznej weryfikacji.",
+        ],
     )
 
 
@@ -168,8 +288,14 @@ def _extract_html_text(document: DocumentBlob) -> TextExtractionResult:
     for element in soup.find_all(True):
         if element.parent is None:
             continue
-        classes = element.get("class") or []
-        identifiers = " ".join([*classes, element.get("id") or ""]).lower()
+        raw_classes = element.get("class")
+        classes: list[str] = (
+            [str(value) for value in raw_classes]
+            if isinstance(raw_classes, list)
+            else []
+        )
+        identifier = str(element.get("id") or "")
+        identifiers = " ".join([*classes, identifier]).lower()
         if any(keyword in identifiers for keyword in _BIP_NAVIGATION_KEYWORDS):
             element.decompose()
 
@@ -186,8 +312,11 @@ def _extract_html_text(document: DocumentBlob) -> TextExtractionResult:
     return TextExtractionResult(
         pages=[cleaned_text],
         tables=[],
+        page_qualities=[quality_score],
+        blocks=[[]],
         quality_score=quality_score,
         needs_ocr=False,
+        extraction_method="html",
         manual_review_required=not bool(cleaned_text),
         warnings=warnings,
     )

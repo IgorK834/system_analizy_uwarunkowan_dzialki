@@ -37,6 +37,14 @@ _PARAGRAPH_MARKER_PATTERN: Final[re.Pattern[str]] = re.compile(
 )
 _SOURCE_EXCERPT_MAX_CHARS: Final[int] = 200
 _SOURCE_EXCERPT_LEFT_CONTEXT_CHARS: Final[int] = 80
+_DISCOVER_ZONE_SYMBOL_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"(?:oznaczon\w*\s+symbolem|teren\w*\s+oznaczon\w*)\s+"
+    r"(?P<symbol>[0-9A-ZĄĆĘŁŃÓŚŹŻ][0-9A-ZĄĆĘŁŃÓŚŹŻ._/-]{0,30})\b",
+    re.IGNORECASE,
+)
+_SYMBOL_STOP_WORDS: Final[frozenset[str]] = frozenset(
+    {"PLANU", "TERENU", "OBSZARU", "NR", "N", "M"}
+)
 
 
 @dataclass(frozen=True)
@@ -227,6 +235,27 @@ def find_zone_sections(
             )
         )
     return results
+
+
+def discover_zone_symbols(segments: list[DocumentSegment]) -> list[str]:
+    """Ostrożnie odkrywa symbole wyłącznie z jawnych fraz dokumentu.
+
+    Funkcja nie zgaduje symbolu na podstawie dowolnego ciągu wielkich liter.
+    Wynik pozostaje kandydatem do ręcznej weryfikacji w fasadzie parsera.
+    """
+    symbols: list[str] = []
+    seen: set[str] = set()
+    for segment in segments:
+        for match in _DISCOVER_ZONE_SYMBOL_PATTERN.finditer(segment.text):
+            symbol = match.group("symbol").strip(".,;:")
+            normalized = symbol.upper()
+            if normalized in _SYMBOL_STOP_WORDS or normalized in seen:
+                continue
+            if not any(character.isalpha() for character in symbol):
+                continue
+            seen.add(normalized)
+            symbols.append(symbol)
+    return symbols
 
 
 def _find_candidates_for_symbol(

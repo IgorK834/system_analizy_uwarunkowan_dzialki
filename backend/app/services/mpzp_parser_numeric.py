@@ -25,6 +25,11 @@ from typing import Final
 
 from app.schemas.mpzp import MpzpParameter
 from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionResult
+from app.shared.numbers import parse_polish_number
+
+# Tymczasowy alias kompatybilności dla istniejących testów/wywołań prywatnej
+# funkcji; jedyna implementacja pozostaje w app.shared.numbers.
+_parse_polish_number = parse_polish_number
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +41,12 @@ _CONFLICTING_VALUE_CONFIDENCE_PENALTY: Final[float] = 0.6
 _BASE_CONFIDENCE: Final[float] = 0.85
 _WINDOW_AFTER_ANCHOR_CHARS: Final[int] = 400
 _INTENSITY_WINDOW_CHARS: Final[int] = 150
+_HEIGHT_SECTION_BOUNDARY_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"\.\s+(?=(?:Wskaźnik|Maksymalna|Minimalna|Udział|Powierzchnia|"
+    r"Dachy|Ustala|Linię|Zapewnia|Obowiązuje|Nakaz|Zakaz)\b)"
+    r"|^\s*[a-z]\)\s+",
+    re.MULTILINE | re.IGNORECASE,
+)
 
 _HEIGHT_ANCHOR_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"maksymaln\w*\s+wysoko\w*\s+zabudowy|wysoko\w*\s+(?:zabudowy\s+)?do\s+",
@@ -109,22 +120,6 @@ class _RawMatch:
     source_text: str
 
 
-def _parse_polish_number(raw: str) -> float:
-    """Zamienia polski zapis liczby na float.
-
-    Polskie dokumenty planistyczne używają przecinka jako separatora
-    dziesiętnego (np. '0,1'), a czasem spacji jako separatora tysięcy
-    (rzadkie dla parametrów planistycznych, ale obsługiwane dla pewności).
-    """
-    cleaned = raw.strip().replace(" ", "")
-    # Jeśli występuje i przecinek, i kropka, kropka jest separatorem tysięcy.
-    if "," in cleaned and "." in cleaned:
-        cleaned = cleaned.replace(".", "").replace(",", ".")
-    else:
-        cleaned = cleaned.replace(",", ".")
-    return float(cleaned)
-
-
 def _context_excerpt(text: str, start: int, end: int, pad: int = 40) -> str:
     left = max(0, start - pad)
     right = min(len(text), end + pad)
@@ -185,9 +180,15 @@ def _extract_max_building_height_m(text: str) -> list[_RawMatch]:
         window_start = anchor.end()
         window_end = min(len(text), window_start + _WINDOW_AFTER_ANCHOR_CHARS)
         window = text[window_start:window_end]
+        boundary = _HEIGHT_SECTION_BOUNDARY_PATTERN.search(window)
+        if boundary is not None:
+            window = window[: boundary.start()]
+        # Sekcja może zawierać kilka warunkowych wysokości (realny przypadek
+        # Bielska-Białej: 15 m i 13 m), ale nie może przeciekać do kolejnego
+        # zdania/elementu z odsunięciem albo szerokością drogi.
         for value_match in _METERS_VALUE_PATTERN.finditer(window):
             try:
-                normalized = _parse_polish_number(value_match.group(1))
+                normalized = parse_polish_number(value_match.group(1))
             except ValueError:
                 logger.debug(
                     "Nie udało się sparsować liczby wysokości: %r",
@@ -200,7 +201,9 @@ def _extract_max_building_height_m(text: str) -> list[_RawMatch]:
                 _RawMatch(
                     normalized_value=normalized,
                     raw_value=value_match.group(0).strip(),
-                    source_text=_context_excerpt(text, absolute_start, absolute_end),
+                    source_text=_context_excerpt(
+                        text, absolute_start, absolute_end
+                    ),
                 )
             )
     return matches
@@ -217,7 +220,7 @@ def _extract_intensity(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
         min_match = _INTENSITY_MIN_PATTERN.search(window)
         if min_match is not None:
             try:
-                normalized = _parse_polish_number(min_match.group(1))
+                normalized = parse_polish_number(min_match.group(1))
             except ValueError:
                 logger.debug(
                     "Nie udało się sparsować minimalnej intensywności: %r",
@@ -239,7 +242,7 @@ def _extract_intensity(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
         max_match = _INTENSITY_MAX_PATTERN.search(window)
         if max_match is not None:
             try:
-                normalized = _parse_polish_number(max_match.group(1))
+                normalized = parse_polish_number(max_match.group(1))
             except ValueError:
                 logger.debug(
                     "Nie udało się sparsować maksymalnej intensywności: %r",
@@ -266,7 +269,7 @@ def _extract_percent_pattern(
     matches: list[_RawMatch] = []
     for match in pattern.finditer(text):
         try:
-            normalized = _parse_polish_number(match.group(1))
+            normalized = parse_polish_number(match.group(1))
         except ValueError:
             logger.debug("Nie udało się sparsować wartości procentowej: %r", match.group(1))
             continue
@@ -345,7 +348,7 @@ def _extract_setback_m(text: str) -> list[_RawMatch]:
     matches: list[_RawMatch] = []
     for match in _SETBACK_PATTERN.finditer(text):
         try:
-            normalized = _parse_polish_number(match.group(1))
+            normalized = parse_polish_number(match.group(1))
         except ValueError:
             logger.debug("Nie udało się sparsować odległości od granicy: %r", match.group(1))
             continue
@@ -363,7 +366,7 @@ def _extract_parking_minimum(text: str) -> list[_RawMatch]:
     matches: list[_RawMatch] = []
     for match in _PARKING_MINIMUM_PATTERN.finditer(text):
         try:
-            normalized = _parse_polish_number(match.group(1))
+            normalized = parse_polish_number(match.group(1))
         except ValueError:
             logger.debug("Nie udało się sparsować wskaźnika parkingowego: %r", match.group(1))
             continue
