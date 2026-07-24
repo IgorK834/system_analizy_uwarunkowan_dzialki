@@ -41,16 +41,39 @@ def test_map_analyze_request_requires_lat() -> None:
 
 def test_address_analyze_request_validates_successfully() -> None:
     request = AddressAnalyzeRequest.model_validate(
-        {"method": "address", "query": "ul. Marszałkowska 1"}
+        {
+            "method": "address",
+            "query": "ul. Marszałkowska 1",
+            "selected_lon": 21.012,
+            "selected_lat": 52.23,
+        }
     )
 
     assert request.method == "address"
     assert request.query == "ul. Marszałkowska 1"
+    assert request.selected_lon == 21.012
+    assert request.selected_lat == 52.23
 
 
 def test_address_analyze_request_rejects_too_short_query() -> None:
     with pytest.raises(ValidationError):
-        AddressAnalyzeRequest.model_validate({"method": "address", "query": ""})
+        AddressAnalyzeRequest.model_validate(
+            {
+                "method": "address",
+                "query": "",
+                "selected_lon": 21.0,
+                "selected_lat": 52.0,
+            }
+        )
+
+
+def test_address_analyze_request_requires_selected_coordinates() -> None:
+    # Bez jawnie wybranych współrzędnych analiza adresowa jest odrzucana —
+    # nie ma cichego wyboru pierwszej sugestii.
+    with pytest.raises(ValidationError):
+        AddressAnalyzeRequest.model_validate(
+            {"method": "address", "query": "ul. Marszałkowska 1"}
+        )
 
 
 def test_parcel_id_analyze_request_validates_successfully() -> None:

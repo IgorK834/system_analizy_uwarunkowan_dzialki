@@ -9,9 +9,8 @@ from app.schemas.analyze import (
     ParcelIdAnalyzeRequest,
     SourceMetadata,
 )
-from app.services.geocoding import GeocodeSuggestion, GeocodingServiceUnavailableError
 from app.services.geometry import CoordinatesOutsidePolandError
-from app.services.initiation import AddressNotFoundError, resolve_parcel
+from app.services.initiation import resolve_parcel
 from app.services.uldk import (
     InvalidParcelIdentifierError,
     ParcelLookupResult,
@@ -40,19 +39,6 @@ def mock_result() -> ParcelLookupResult:
     )
 
 
-def _suggestion(x: float = 644234.29, y: float = 499514.03) -> GeocodeSuggestion:
-    return GeocodeSuggestion(
-        label="Marki, Andersa 1",
-        x=x,
-        y=y,
-        confidence=0.9,
-        teryt="143402",
-        city="Marki",
-        street="Andersa",
-        number="1",
-    )
-
-
 async def test_resolve_parcel_map_calls_to_puwg1992_and_get_parcel_by_xy(
     mock_result: ParcelLookupResult,
 ) -> None:
@@ -75,61 +61,53 @@ async def test_resolve_parcel_map_calls_to_puwg1992_and_get_parcel_by_xy(
     assert result == mock_result
 
 
-async def test_resolve_parcel_address_calls_geocode_then_get_parcel_by_xy(
+async def test_resolve_parcel_address_uses_selected_coordinates(
     mock_result: ParcelLookupResult,
 ) -> None:
-    payload = AddressAnalyzeRequest(method="address", query="Marki, Andersa 1")
+    # Analiza adresowa używa DOKŁADNIE wybranych współrzędnych sugestii (WGS84),
+    # bez ponownego geokodowania i bez cichego wyboru pierwszego wyniku.
+    payload = AddressAnalyzeRequest(
+        method="address",
+        query="Marki, Andersa 1",
+        selected_lon=21.105,
+        selected_lat=52.32,
+    )
 
     with (
         patch(
-            "app.services.initiation.geocode_address", new_callable=AsyncMock
-        ) as mock_geocode,
+            "app.services.initiation.to_puwg1992", return_value=(644234.29, 499514.03)
+        ) as mock_to_puwg,
         patch(
             "app.services.initiation.get_parcel_by_xy", new_callable=AsyncMock
         ) as mock_get_by_xy,
     ):
-        mock_geocode.return_value = [_suggestion()]
         mock_get_by_xy.return_value = mock_result
 
         result = await resolve_parcel(payload)
 
-    mock_geocode.assert_awaited_once_with("Marki, Andersa 1")
+    mock_to_puwg.assert_called_once_with(21.105, 52.32)
     mock_get_by_xy.assert_awaited_once_with(644234.29, 499514.03)
     assert result == mock_result
 
 
-async def test_resolve_parcel_address_uses_first_suggestion(
-    mock_result: ParcelLookupResult,
-) -> None:
-    payload = AddressAnalyzeRequest(method="address", query="Marki, Andersa 1")
+async def test_resolve_parcel_address_does_not_regeocode() -> None:
+    # initiation nie może w ogóle importować geokodera — dowód, że nie ma ścieżki
+    # ponownego geokodowania ani wyboru suggestions[0].
+    import app.services.initiation as initiation_module
 
-    with (
-        patch(
-            "app.services.initiation.geocode_address", new_callable=AsyncMock
-        ) as mock_geocode,
-        patch(
-            "app.services.initiation.get_parcel_by_xy", new_callable=AsyncMock
-        ) as mock_get_by_xy,
-    ):
-        mock_geocode.return_value = [_suggestion(1.0, 2.0), _suggestion(3.0, 4.0)]
-        mock_get_by_xy.return_value = mock_result
-
-        await resolve_parcel(payload)
-
-    mock_get_by_xy.assert_awaited_once_with(1.0, 2.0)
+    assert not hasattr(initiation_module, "geocode_address")
 
 
-async def test_resolve_parcel_address_empty_geocoding_raises_address_not_found() -> (
-    None
-):
-    payload = AddressAnalyzeRequest(method="address", query="Nieistniejące miejsce 999")
+async def test_resolve_parcel_address_propagates_outside_poland_error() -> None:
+    payload = AddressAnalyzeRequest(
+        method="address", query="Adres", selected_lon=13.0, selected_lat=50.0
+    )
 
     with patch(
-        "app.services.initiation.geocode_address", new_callable=AsyncMock
-    ) as mock_geocode:
-        mock_geocode.return_value = []
-
-        with pytest.raises(AddressNotFoundError):
+        "app.services.initiation.to_puwg1992",
+        side_effect=CoordinatesOutsidePolandError("Poza granicami"),
+    ):
+        with pytest.raises(CoordinatesOutsidePolandError):
             await resolve_parcel(payload)
 
 
@@ -220,18 +198,6 @@ async def test_resolve_parcel_map_propagates_uldk_unavailable() -> None:
             await resolve_parcel(payload)
 
 
-async def test_resolve_parcel_address_propagates_geocoding_unavailable() -> None:
-    payload = AddressAnalyzeRequest(method="address", query="Marki, Andersa 1")
-
-    with patch(
-        "app.services.initiation.geocode_address",
-        new_callable=AsyncMock,
-        side_effect=GeocodingServiceUnavailableError("Timeout"),
-    ):
-        with pytest.raises(GeocodingServiceUnavailableError):
-            await resolve_parcel(payload)
-
-
 async def test_resolve_parcel_parcel_id_propagates_parcel_not_found() -> None:
     payload = ParcelIdAnalyzeRequest(
         method="parcel_id", parcel_identifier="122101_1.0001.1"
@@ -273,19 +239,13 @@ async def test_resolve_parcel_returns_parcel_lookup_result_for_all_methods(
         map_result = await resolve_parcel(
             MapAnalyzeRequest(method="map", lon=19.01, lat=49.86)
         )
-
-    with (
-        patch(
-            "app.services.initiation.geocode_address", new_callable=AsyncMock
-        ) as mock_geocode,
-        patch(
-            "app.services.initiation.get_parcel_by_xy", new_callable=AsyncMock
-        ) as mock_get_by_xy,
-    ):
-        mock_geocode.return_value = [_suggestion()]
-        mock_get_by_xy.return_value = mock_result
         address_result = await resolve_parcel(
-            AddressAnalyzeRequest(method="address", query="Marki, Andersa 1")
+            AddressAnalyzeRequest(
+                method="address",
+                query="Marki, Andersa 1",
+                selected_lon=21.1,
+                selected_lat=52.3,
+            )
         )
 
     with patch(

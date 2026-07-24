@@ -81,7 +81,12 @@ def test_analyze_address_request_returns_200_partial(
 
         response = client.post(
             "/analyze",
-            json={"method": "address", "query": "ul. Testowa 1, Kraków"},
+            json={
+                "method": "address",
+                "query": "ul. Testowa 1, Kraków",
+                "selected_lon": 19.94,
+                "selected_lat": 50.06,
+            },
         )
 
     assert response.status_code == 200
@@ -236,7 +241,12 @@ def test_analyze_address_not_found_returns_404() -> None:
 
         response = client.post(
             "/analyze",
-            json={"method": "address", "query": "Nieistniejące miejsce 999"},
+            json={
+                "method": "address",
+                "query": "Nieistniejące miejsce 999",
+                "selected_lon": 19.94,
+                "selected_lat": 50.06,
+            },
         )
 
     assert response.status_code == 404
@@ -263,7 +273,12 @@ def test_analyze_geocoding_unavailable_returns_503() -> None:
 
         response = client.post(
             "/analyze",
-            json={"method": "address", "query": "ul. Testowa 1, Kraków"},
+            json={
+                "method": "address",
+                "query": "ul. Testowa 1, Kraków",
+                "selected_lon": 19.94,
+                "selected_lat": 50.06,
+            },
         )
 
     assert response.status_code == 503

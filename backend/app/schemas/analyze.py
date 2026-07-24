@@ -32,17 +32,37 @@ class MapAnalyzeRequest(BaseModel):
 
 class AddressAnalyzeRequest(BaseModel):
     method: Literal["address"] = Field(
-        description="Metoda wejścia oparta o adres wymagający geokodowania.",
+        description="Metoda wejścia oparta o jawnie wybraną sugestię adresową.",
         json_schema_extra={"example": "address"},
     )
     query: str = Field(
         min_length=3,
         max_length=500,
         description=(
-            "Adres w formacie czytelnym dla geokodowania EMUiA/UUG, np. ulica, "
-            "numer, miejscowość."
+            "Etykieta wybranego adresu (do kontekstu i audytu). NIE jest ponownie "
+            "geokodowana — analiza używa jawnie wybranych współrzędnych."
         ),
-        json_schema_extra={"example": "ul. Marszałkowska 1, Warszawa"},
+        json_schema_extra={"example": "Marki, Generała Władysława Andersa 1"},
+    )
+    # Współrzędne DOKŁADNIE wybranej przez użytkownika sugestii (WGS84). Wymagane,
+    # aby analiza nigdy nie wybierała po cichu pierwszego wyniku geokodowania.
+    selected_lon: float = Field(
+        ge=-180.0,
+        le=180.0,
+        description="Długość geograficzna wybranej sugestii w WGS84 (EPSG:4326).",
+        json_schema_extra={"example": 21.105},
+    )
+    selected_lat: float = Field(
+        ge=-90.0,
+        le=90.0,
+        description="Szerokość geograficzna wybranej sugestii w WGS84 (EPSG:4326).",
+        json_schema_extra={"example": 52.32},
+    )
+    selected_result_id: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Opcjonalny, stabilny identyfikator wybranej sugestii z wyszukiwarki.",
+        json_schema_extra={"example": "hash:9f2c1a0b4d5e6f70"},
     )
 
 

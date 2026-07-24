@@ -8,7 +8,6 @@ from app.schemas.analyze import (
     ParcelIdAnalyzeRequest,
     SourceMetadata,
 )
-from app.services.geocoding import geocode_address
 from app.services.geometry import to_puwg1992
 from app.services.uldk import (
     ParcelLookupResult,
@@ -29,26 +28,25 @@ async def resolve_parcel(
     Normalizuje trzy ścieżki wejścia użytkownika do jednego ParcelLookupResult.
 
     Routing jest deterministyczny i oparty wyłącznie o isinstance(), bez heurystyk
-    ani interpretowania tekstowych pól metody. Ścieżka mapy może propagować
+    ani interpretowania tekstowych pól metody. Ścieżki mapy i adresu używają
+    jawnie wybranych współrzędnych (WGS84) i mogą propagować
     CoordinatesOutsidePolandError, ParcelNotFoundError i UldkServiceUnavailableError.
-    Ścieżka adresu może propagować GeocodingServiceUnavailableError,
-    AddressNotFoundError, ParcelNotFoundError i UldkServiceUnavailableError.
     Ścieżka identyfikatora może propagować InvalidParcelIdentifierError,
     ParcelNotFoundError i UldkServiceUnavailableError.
+
+    Analiza adresowa NIE geokoduje ponownie tekstu zapytania i nigdy nie wybiera
+    po cichu pierwszej sugestii — wymaga współrzędnych jawnie wybranego wyniku.
     """
     if isinstance(payload, MapAnalyzeRequest):
         x, y = to_puwg1992(payload.lon, payload.lat)
         return await get_parcel_by_xy(x, y)
 
     if isinstance(payload, AddressAnalyzeRequest):
-        suggestions = await geocode_address(payload.query)
-        if not suggestions:
-            raise AddressNotFoundError(f"Nie znaleziono adresu: {payload.query!r}")
-
-        # UUG zwraca wyniki posortowane malejąco według accuracy, więc pierwsza
-        # sugestia jest najlepszym dopasowaniem do zapytania użytkownika.
-        best = suggestions[0]
-        return await get_parcel_by_xy(best.x, best.y)
+        # Analiza używa DOKŁADNIE wybranej przez użytkownika sugestii — nie
+        # geokoduje ponownie tekstu ani nie wybiera po cichu pierwszego wyniku.
+        # Współrzędne wybranej sugestii są w WGS84 i tu przeliczane do EPSG:2180.
+        x, y = to_puwg1992(payload.selected_lon, payload.selected_lat)
+        return await get_parcel_by_xy(x, y)
 
     if isinstance(payload, ParcelIdAnalyzeRequest):
         raw = await get_parcel_by_id(payload.parcel_identifier)
