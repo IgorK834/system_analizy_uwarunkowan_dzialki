@@ -1,0 +1,24 @@
+{
+  "type": "FeatureCollection",
+  "name": "parcels_warsaw_contract",
+  "crs": {
+    "type": "name",
+    "properties": {"name": "urn:ogc:def:crs:EPSG::2178"}
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ID_DZIALKI": "146501_8.0001.fixture",
+        "NUMER_DZIALKI": "1",
+        "NAZWA_OBREBU": "FIXTURE",
+        "NAZWA_GMINY": "Warszawa",
+        "POLE_EWIDENCYJNE": null
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[7500000, 5780000], [7500010, 5780000], [7500010, 5780010], [7500000, 5780010], [7500000, 5780000]]]
+      }
+    }
+  ]
+}

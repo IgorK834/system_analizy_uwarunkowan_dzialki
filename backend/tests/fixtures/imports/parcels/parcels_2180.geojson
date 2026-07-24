@@ -1,0 +1,38 @@
+{
+  "type": "FeatureCollection",
+  "name": "parcels",
+  "crs": {
+    "type": "name",
+    "properties": {"name": "urn:ogc:def:crs:EPSG::2180"}
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ID_DZIALKI": "146501_8.0001.1",
+        "NUMER_DZIALKI": "1",
+        "NAZWA_OBREBU": "TEST",
+        "NAZWA_GMINY": "Warszawa",
+        "POLE_EWIDENCYJNE": "100"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[637000, 486000], [637010, 486000], [637010, 486010], [637000, 486010], [637000, 486000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ID_DZIALKI": "146501_8.0001.2",
+        "NUMER_DZIALKI": "2",
+        "NAZWA_OBREBU": "TEST",
+        "NAZWA_GMINY": "Warszawa",
+        "POLE_EWIDENCYJNE": "100"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[637010, 486000], [637020, 486000], [637020, 486010], [637010, 486010], [637010, 486000]]]
+      }
+    }
+  ]
+}
