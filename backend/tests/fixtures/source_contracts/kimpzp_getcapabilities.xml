@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zanonimizowany, przycięty fragment odpowiedzi GetCapabilities usługi WMS
+  KIMPZP (Krajowa Integracja MPZP), GUGiK / Geoportal.gov.pl.
+  Zachowano wyłącznie elementy potrzebne do potwierdzenia kontraktu użytego
+  w katalogu: wersję WMS, obsługiwany CRS EPSG:2180 oraz nazwy warstw,
+  w tym queryable warstwę `plany_granice` wykorzystywaną przez discovery.
+  Nie zawiera danych osobowych ani pełnej listy metadanych usługi.
+-->
+<WMT_MS_Capabilities version="1.1.1">
+  <Service>
+    <Name>OGC:WMS</Name>
+    <Title>Krajowa Integracja Miejscowych Planow Zagospodarowania Przestrzennego</Title>
+    <OnlineResource xlink:href="https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego"/>
+  </Service>
+  <Capability>
+    <Request>
+      <GetCapabilities>
+        <Format>application/vnd.ogc.wms_xml</Format>
+      </GetCapabilities>
+      <GetMap>
+        <Format>image/png</Format>
+      </GetMap>
+      <GetFeatureInfo>
+        <Format>text/html</Format>
+      </GetFeatureInfo>
+    </Request>
+    <Layer>
+      <Title>KIMPZP</Title>
+      <SRS>EPSG:2180</SRS>
+      <Layer queryable="1">
+        <Name>plany_granice</Name>
+        <Title>Granice planow miejscowych</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="0">
+        <Name>raster</Name>
+        <Title>Rysunki rastrowe planow</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="1">
+        <Name>wektor-str</Name>
+        <Title>Strefy wektorowe</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="1">
+        <Name>wektor-lzb</Name>
+        <Title>Linie zabudowy</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="1">
+        <Name>wektor-lin</Name>
+        <Title>Obiekty liniowe</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="1">
+        <Name>wektor-pow</Name>
+        <Title>Obiekty powierzchniowe</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="1">
+        <Name>wektor-pkt</Name>
+        <Title>Obiekty punktowe</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+      <Layer queryable="0">
+        <Name>granice</Name>
+        <Title>Granice administracyjne</Title>
+        <SRS>EPSG:2180</SRS>
+      </Layer>
+    </Layer>
+  </Capability>
+</WMT_MS_Capabilities>
