@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libffi-dev \
     fonts-dejavu-core \
+    tesseract-ocr \
+    tesseract-ocr-pol \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
