@@ -17,7 +17,7 @@ Zasady wersjonowania (zakres prawostronnie otwarty [valid_from, valid_to)):
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from geoalchemy2 import Geometry
@@ -25,6 +25,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -268,6 +269,14 @@ class PlanningActVersion(Base, _VersionMixin):
     )
     legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    resolution_number: Mapped[str | None] = mapped_column(
+        String(200), nullable=True
+    )
+    resolution_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    manual_review_required: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=sql_text("false")
+    )
     source_artifact_id: Mapped[int] = mapped_column(
         ForeignKey("source_artifacts.id"), nullable=False, index=True
     )
@@ -334,6 +343,7 @@ class LandUseArea(Base):
         ForeignKey("planning_symbols.id"), nullable=True, index=True
     )
     symbol: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
     geometry: Mapped[Any] = mapped_column(
         Geometry("MULTIPOLYGON", srid=2180, spatial_index=False),
         nullable=False,
