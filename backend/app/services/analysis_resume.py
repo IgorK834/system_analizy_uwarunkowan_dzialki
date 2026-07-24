@@ -29,6 +29,10 @@ from app.services.persistence import (
     build_analyze_response_from_analysis,
 )
 from app.services.pog_scenarios import PogScenarioResult, build_pog_scenario_result
+from app.modules.documents.composition import (
+    build_ocr_provider,
+    persist_parser_audit,
+)
 
 
 class AnalysisResumeNotFoundError(Exception):
@@ -67,7 +71,35 @@ async def resume_analysis_with_zone(
 
     document_url = analysis.pending_uchwala_url
     document = await fetch_mpzp_document(document_url)
-    parse_result = await parse_mpzp_document(document, [zone_symbol])
+    parse_result = await parse_mpzp_document(
+        document,
+        [zone_symbol],
+        build_ocr_provider(),
+    )
+    persistence_warning: WarningMessage | None = None
+    try:
+        persist_parser_audit(
+            db,
+            planning_act_identifier=(
+                analysis.pending_plan_id
+                or f"mpzp-document:{analysis.pending_uchwala_url}"
+            ),
+            document=document,
+            parse_result=parse_result,
+        )
+    except Exception:
+        db.rollback()
+        analysis = db.get(Analysis, analysis_id)
+        assert analysis is not None
+        persistence_warning = WarningMessage(
+            code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
+            message=(
+                "Nie udało się zapisać cytowalnej struktury dokumentu MPZP. "
+                "Wznowiony wynik pozostaje częściowy."
+            ),
+            severity="error",
+            source_name="mpzp",
+        )
     source = SourceMetadata(
         source_name="manual_user_input",
         source_url=document_url,
@@ -101,6 +133,8 @@ async def resume_analysis_with_zone(
         skipped_parameters,
         matching_zone is None,
     )
+    if persistence_warning is not None:
+        new_warnings.append(persistence_warning)
     pog_record = db.scalar(select(PogData).where(PogData.analysis_id == analysis.id))
     pog_scenario = _pog_scenario_for_resume(
         pog_record,

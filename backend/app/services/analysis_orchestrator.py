@@ -73,6 +73,10 @@ from app.services.persistence import (
     build_analyze_response_from_analysis,
     save_analysis,
 )
+from app.modules.documents.composition import (
+    build_ocr_provider,
+    persist_parser_audit,
+)
 
 
 async def run_analysis(
@@ -227,6 +231,7 @@ async def run_analysis(
             discovery,
             metrics.area_sqm,
             parcel_identifier,
+            db,
         )
     )
     warnings.extend(mpzp_warnings)
@@ -325,6 +330,7 @@ async def _analyze_mpzp_best_effort(
     discovery: MpzpDiscoveryResult | None,
     parcel_area_sqm: float,
     parcel_identifier: str,
+    db: Session,
 ) -> tuple[
     list[MpzpZoneResult],
     list[WarningMessage],
@@ -361,6 +367,7 @@ async def _analyze_mpzp_best_effort(
         parsed = await parse_mpzp_document(
             document,
             discovery.candidate_zone_symbols,
+            build_ocr_provider(),
         )
     except Exception as exc:
         # Pobieranie dokumentu jest sekcją best-effort. Poza kontrolowanymi
@@ -384,6 +391,39 @@ async def _analyze_mpzp_best_effort(
             )
         ], [], None
 
+    persistence_warnings: list[WarningMessage] = []
+    try:
+        persist_parser_audit(
+            db,
+            planning_act_identifier=(
+                discovery.plan_id or f"mpzp-document:{discovery.uchwala_url}"
+            ),
+            document=document,
+            parse_result=parsed,
+        )
+    except Exception as exc:
+        # Brak zapisu nie może wyglądać jak sukces: wycofujemy niedokończony
+        # lineage i dokładamy jawny warning do częściowego wyniku analizy.
+        db.rollback()
+        log_analysis_event(
+            "section_error",
+            section="mpzp_document_persistence",
+            status=type(exc).__name__,
+            parcel_identifier=parcel_identifier,
+        )
+        persistence_warnings.append(
+            WarningMessage(
+                code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
+                message=(
+                    "Tekst dokumentu został przeanalizowany, ale nie udało się "
+                    "zapisać jego cytowalnej struktury. Wynik wymaga ręcznej "
+                    "weryfikacji."
+                ),
+                severity="error",
+                source_name="mpzp",
+            )
+        )
+
     # Sam dokument może być wiarygodny, ale przypisanie kandydata strefy nadal
     # pochodzi z punktowego discovery, nie z lokalnego przecięcia wektorowego.
     zone_source = document.source_metadata.model_copy(
@@ -404,7 +444,7 @@ async def _analyze_mpzp_best_effort(
             source_name="mpzp",
         )
         for warning in parsed.warnings
-    ]
+    ] + persistence_warnings
     skipped: list[str] = []
     for parser_zone in parsed.zones:
         mapped, skipped_parameters = map_parser_zone_to_analyze_response(
