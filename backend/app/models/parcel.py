@@ -28,6 +28,10 @@ class Parcel(Base):
         nullable=False,
     )
     area_sqm: Mapped[float | None] = mapped_column(nullable=True)
+    # Rozszerzenie kompatybilne (nullable) dla wersjonowanego modelu: stabilna
+    # tożsamość działki niesie kod TERYT. Kolumna jest addytywna — nie zmienia
+    # dotychczasowego kontraktu tabeli ``parcels`` (patrz migracja 007).
+    teryt: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
