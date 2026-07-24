@@ -1,0 +1,1 @@
+"""Adaptery źródeł działek."""
