@@ -1,0 +1,63 @@
+{
+  "type": "FeatureCollection",
+  "name": "zones",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2180"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-a",
+        "Uchwalenie": "I/1/2026",
+        "Data_uchwalenia": "2026-01-10",
+        "Oznaczenie": "1MN",
+        "Rodzaj_oznaczenia": "single_family_housing"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565000, 244000], [565050, 244000], [565050, 244100], [565000, 244100], [565000, 244000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-a",
+        "Uchwalenie": "I/1/2026",
+        "Data_uchwalenia": "2026-01-10",
+        "Oznaczenie": "2U",
+        "Rodzaj_oznaczenia": "services"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565050, 244000], [565100, 244000], [565100, 244100], [565050, 244100], [565050, 244000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-b",
+        "Uchwalenie": "I/2/2026",
+        "Data_uchwalenia": "2026-01-11",
+        "Oznaczenie": "1MW",
+        "Rodzaj_oznaczenia": "multi_family_housing"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565100, 244000], [565150, 244000], [565150, 244100], [565100, 244100], [565100, 244000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-b",
+        "Uchwalenie": "I/2/2026",
+        "Data_uchwalenia": "2026-01-11",
+        "Oznaczenie": "2ZP",
+        "Rodzaj_oznaczenia": "greenery"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565150, 244000], [565200, 244000], [565200, 244100], [565150, 244100], [565150, 244000]]]
+      }
+    }
+  ]
+}

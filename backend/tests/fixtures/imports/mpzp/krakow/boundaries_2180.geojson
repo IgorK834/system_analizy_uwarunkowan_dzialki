@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "name": "boundaries",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2180"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-a",
+        "Uchwała": "I/1/2026",
+        "Data_uchwalenia": "2026-01-10",
+        "Nazwa_planu": "Plan testowy A"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565000, 244000], [565100, 244000], [565100, 244100], [565000, 244100], [565000, 244000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_pg": "pilot-b",
+        "Uchwała": "I/2/2026",
+        "Data_uchwalenia": "2026-01-11",
+        "Nazwa_planu": "Plan testowy B"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565100, 244000], [565200, 244000], [565200, 244100], [565100, 244100], [565100, 244000]]]
+      }
+    }
+  ]
+}
