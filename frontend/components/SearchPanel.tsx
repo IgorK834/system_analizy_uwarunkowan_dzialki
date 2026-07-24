@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import type maplibregl from "maplibre-gl";
 
-import { ApiError, getAddressSuggestions } from "@/lib/api";
-import type { AnalyzeRequest, GeocodeSuggestion } from "@/lib/types";
+import { ApiError, searchAddresses } from "@/lib/api";
+import type { AddressSearchResult, AnalyzeRequest } from "@/lib/types";
 
 type Tab = "map" | "address" | "parcel";
 
 type SearchPanelProps = {
   loading: boolean;
   onAnalyze: (payload: AnalyzeRequest) => void | Promise<void>;
+  map?: maplibregl.Map | null;
 };
 
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -20,16 +22,26 @@ const TABS: Array<{ id: Tab; label: string }> = [
 
 const PARCEL_IDENTIFIER_PATTERN = /^[0-9._/]+$/;
 
-export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
+const RESULT_TYPE_LABELS: Record<string, string> = {
+  city: "Miejscowość",
+  street: "Ulica",
+  house_number: "Adres",
+};
+
+export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("map");
   const [addressQuery, setAddressQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSearchResult[]>([]);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [resolvedSuggestionQuery, setResolvedSuggestionQuery] = useState<
+    string | null
+  >(null);
   const [parcelIdentifier, setParcelIdentifier] = useState("");
   const [parcelError, setParcelError] = useState<string | null>(null);
   const committedAddressRef = useRef<string | null>(null);
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const query = addressQuery.trim();
@@ -38,6 +50,7 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
       committedAddressRef.current = null;
       setSuggestions([]);
       setSuggestionsLoading(false);
+      setResolvedSuggestionQuery(null);
       return;
     }
 
@@ -45,6 +58,7 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
       setSuggestions([]);
       setSuggestionsLoading(false);
       setSuggestionsError(null);
+      setResolvedSuggestionQuery(null);
       return;
     }
 
@@ -52,16 +66,30 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
     const timer = window.setTimeout(async () => {
       setSuggestionsLoading(true);
       setSuggestionsError(null);
+      setResolvedSuggestionQuery(null);
 
       try {
-        const response = await getAddressSuggestions(query, {
+        const center = map?.getCenter();
+        const bounds = map?.getBounds();
+        const response = await searchAddresses(query, {
           signal: controller.signal,
+          bias: center ? { lon: center.lng, lat: center.lat } : undefined,
+          bbox: bounds
+            ? [
+                bounds.getWest(),
+                bounds.getSouth(),
+                bounds.getEast(),
+                bounds.getNorth(),
+              ]
+            : undefined,
         });
-        setSuggestions(response.suggestions);
+        setSuggestions(response.results);
+        setResolvedSuggestionQuery(query);
         setActiveSuggestion(-1);
       } catch (caught) {
         if (caught instanceof DOMException && caught.name === "AbortError") return;
         setSuggestions([]);
+        setResolvedSuggestionQuery(null);
         setSuggestionsError(
           caught instanceof ApiError
             ? caught.message
@@ -76,14 +104,40 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [addressQuery]);
+  }, [addressQuery, map]);
 
-  const chooseSuggestion = (suggestion: GeocodeSuggestion) => {
-    committedAddressRef.current = suggestion.label;
-    setAddressQuery(suggestion.label);
+  const chooseSuggestion = (suggestion: AddressSearchResult) => {
+    const isCompleteAddress = suggestion.result_type === "house_number";
+    const nextQuery = isCompleteAddress
+      ? suggestion.label
+      : suggestion.result_type === "city"
+        ? `${suggestion.label}, `
+        : `${suggestion.label} `;
+    committedAddressRef.current = nextQuery.trim();
+    setAddressQuery(nextQuery);
     setSuggestions([]);
+    setResolvedSuggestionQuery(null);
     setActiveSuggestion(-1);
-    void onAnalyze({ method: "address", query: suggestion.label });
+    if (!isCompleteAddress) {
+      window.requestAnimationFrame(() => {
+        addressInputRef.current?.focus();
+        addressInputRef.current?.setSelectionRange(
+          nextQuery.length,
+          nextQuery.length,
+        );
+      });
+      return;
+    }
+    // Wysyłamy DOKŁADNIE wybraną sugestię (współrzędne WGS84 + jej identyfikator),
+    // dzięki czemu backend nie geokoduje ponownie i nie wybiera pierwszego wyniku.
+    const [lon, lat] = suggestion.point.coordinates;
+    void onAnalyze({
+      method: "address",
+      query: suggestion.label,
+      selected_lon: lon,
+      selected_lat: lat,
+      selected_result_id: suggestion.id,
+    });
   };
 
   const handleAddressKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -154,6 +208,7 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
         <div id="search-address" role="tabpanel" className="panel-content">
           <label htmlFor="address-query">Adres</label>
           <input
+            ref={addressInputRef}
             id="address-query"
             type="search"
             autoComplete="off"
@@ -166,7 +221,7 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
                 ? `address-suggestion-${activeSuggestion}`
                 : undefined
             }
-            placeholder="Np. Marszałkowska 1, Warszawa"
+            placeholder="Np. Warszawa, Marszałkowska 1"
             onChange={(event) => setAddressQuery(event.target.value)}
             onKeyDown={handleAddressKeyDown}
           />
@@ -175,10 +230,19 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
           </p>
           {suggestionsLoading && <p className="inline-status">Szukam adresów…</p>}
           {suggestionsError && <p className="field-error">{suggestionsError}</p>}
+          {!suggestionsLoading &&
+            !suggestionsError &&
+            suggestions.length === 0 &&
+            resolvedSuggestionQuery === addressQuery.trim() && (
+              <p className="inline-status" role="status">
+                Brak podpowiedzi. Dopisz miejscowość, ulicę albo numer, aby
+                zawęzić wyszukiwanie.
+              </p>
+            )}
           {suggestions.length > 0 && (
             <ul id="address-suggestions" className="suggestions" role="listbox">
               {suggestions.map((suggestion, index) => (
-                <li key={`${suggestion.teryt}-${suggestion.x}-${suggestion.y}`}>
+                <li key={suggestion.id}>
                   <button
                     id={`address-suggestion-${index}`}
                     type="button"
@@ -195,8 +259,10 @@ export function SearchPanel({ loading, onAnalyze }: SearchPanelProps) {
                   >
                     <span>{suggestion.label}</span>
                     <small>
-                      EPSG:2180 · X {suggestion.x.toFixed(0)} · Y{" "}
-                      {suggestion.y.toFixed(0)}
+                      {RESULT_TYPE_LABELS[suggestion.result_type] ?? "Lokalizacja"}
+                      {suggestion.address_parts.voivodeship
+                        ? ` · ${suggestion.address_parts.voivodeship}`
+                        : ""}
                     </small>
                   </button>
                 </li>

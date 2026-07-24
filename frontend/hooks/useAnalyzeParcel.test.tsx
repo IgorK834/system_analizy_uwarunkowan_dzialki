@@ -55,7 +55,12 @@ describe("useAnalyzeParcel", () => {
     const { result } = renderHook(() => useAnalyzeParcel());
 
     await act(async () => {
-      await result.current.run({ method: "address", query: "Warszawa" });
+      await result.current.run({
+        method: "address",
+        query: "Warszawa",
+        selected_lon: 21.012,
+        selected_lat: 52.23,
+      });
     });
     expect(result.current.error).toBe("Serwis niedostępny");
 
