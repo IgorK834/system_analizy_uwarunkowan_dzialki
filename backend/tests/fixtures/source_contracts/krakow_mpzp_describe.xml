@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Wycinek DescribeFeatureType pobrany 2026-07-24 z oficjalnego WFS MSIP. -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:gml="http://www.opengis.net/gml/3.2">
+  <xsd:complexType name="PrzeznaczeniaFeatureType">
+    <xsd:sequence>
+      <xsd:element name="id_pg" type="xsd:int"/>
+      <xsd:element name="Uchwalenie" type="xsd:string"/>
+      <xsd:element name="Data_uchwalenia" type="xsd:dateTime"/>
+      <xsd:element name="Oznaczenie" type="xsd:string"/>
+      <xsd:element name="Rodzaj_oznaczenia" type="xsd:string"/>
+      <xsd:element name="geom" type="gml:MultiSurfacePropertyType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="PlanyObowiazujaceFeatureType">
+    <xsd:sequence>
+      <xsd:element name="id_pg" type="xsd:int"/>
+      <xsd:element name="Uchwała" type="xsd:string"/>
+      <xsd:element name="Data_uchwalenia" type="xsd:dateTime"/>
+      <xsd:element name="Nazwa_planu" type="xsd:string"/>
+      <xsd:element name="geom" type="gml:MultiSurfacePropertyType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

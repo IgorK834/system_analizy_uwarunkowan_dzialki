@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Wycinek oficjalnego GetCapabilities pobranego 2026-07-24 z WFS MSIP Kraków.
+  Pełna odpowiedź nie jest potrzebna do testu kontraktu.
+-->
+<wfs:WFS_Capabilities version="2.0.0"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0">
+  <wfs:FeatureTypeList>
+    <wfs:FeatureType>
+      <wfs:Name>Obserwatorium_BP_MPZP:Plany_obowiązujące</wfs:Name>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2178</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000</wfs:Name>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2178</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000</wfs:Name>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2178</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000</wfs:Name>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2178</wfs:DefaultCRS>
+    </wfs:FeatureType>
+  </wfs:FeatureTypeList>
+</wfs:WFS_Capabilities>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zanonimizowany wycinek oficjalnej odpowiedzi GetCapabilities pobranej
+  2026-07-24 z https://wms2.um.warszawa.pl/geoserver/wfs/wfs .
+-->
+<wfs:WFS_Capabilities version="2.0.0"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0"
+  xmlns:ows="http://www.opengis.net/ows/1.1">
+  <ows:ServiceIdentification>
+    <ows:Title>Server WFS m.st. Warszawy</ows:Title>
+    <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+    <ows:AccessConstraints>NONE</ows:AccessConstraints>
+  </ows:ServiceIdentification>
+  <wfs:FeatureTypeList>
+    <wfs:FeatureType>
+      <wfs:Name>wfs:dzialki</wfs:Name>
+      <wfs:Title>Działki</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2178</wfs:DefaultCRS>
+    </wfs:FeatureType>
+  </wfs:FeatureTypeList>
+</wfs:WFS_Capabilities>

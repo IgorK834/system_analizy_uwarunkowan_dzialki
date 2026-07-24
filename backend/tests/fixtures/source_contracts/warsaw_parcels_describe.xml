@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Wycinek DescribeFeatureType wfs:dzialki, pobrany 2026-07-24. -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:gml="http://www.opengis.net/gml/3.2">
+  <xsd:complexType name="dzialkiType">
+    <xsd:sequence>
+      <xsd:element name="ID_DZIALKI" type="xsd:string"/>
+      <xsd:element name="NUMER_DZIALKI" type="xsd:string"/>
+      <xsd:element name="NUMER_OBREBU" type="xsd:string"/>
+      <xsd:element name="NAZWA_OBREBU" type="xsd:string"/>
+      <xsd:element name="NAZWA_GMINY" type="xsd:string"/>
+      <xsd:element name="POLE_EWIDENCYJNE" type="xsd:string"/>
+      <xsd:element name="GEOMETRY" type="gml:MultiSurfacePropertyType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
