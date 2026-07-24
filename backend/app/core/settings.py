@@ -74,6 +74,21 @@ class Settings(BaseSettings):
     # dlatego brak wartości jest bezpiecznym ustawieniem domyślnym. Adresy WMS/BIP
     # POG przekazuje się per gmina do discover_pog, a nie przez globalny endpoint.
     rejestr_urbanistyczny_base_url: str | None = None
+    # Oficjalne słowniki off-line GUGiK zasilają lokalny indeks autocomplete.
+    # Synchronizacja jest osobnym zadaniem utrzymaniowym; API nie pobiera paczek
+    # w ścieżce żądania użytkownika.
+    address_dictionary_soap_url: str = (
+        "https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline"
+    )
+    address_index_teryt_scopes: str = (
+        "02,04,06,08,10,12,14,16,18,20,22,24,26,28,30,32"
+    )
+    address_index_connect_timeout_seconds: float = 5.0
+    address_index_read_timeout_seconds: float = 60.0
+    address_index_max_package_bytes: int = 512 * 1024 * 1024
+    address_index_max_uncompressed_bytes: int = 2 * 1024 * 1024 * 1024
+    address_index_import_batch_size: int = 5_000
+    address_index_uug_fallback_enabled: bool = True
 
     model_config = SettingsConfigDict(
         env_file=".env",
