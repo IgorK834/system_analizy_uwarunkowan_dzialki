@@ -41,6 +41,7 @@ services:
       ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES: ${ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES:-2147483648}
       ADDRESS_INDEX_IMPORT_BATCH_SIZE: ${ADDRESS_INDEX_IMPORT_BATCH_SIZE:-5000}
       ADDRESS_INDEX_UUG_FALLBACK_ENABLED: ${ADDRESS_INDEX_UUG_FALLBACK_ENABLED:-true}
+      IMPORT_ARTIFACT_STORAGE_DIR: /var/lib/dzialki/import-artifacts
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +49,7 @@ services:
       - "8000:8000"
     volumes:
       - map_tile_cache:/var/cache/dzialki/map-tiles
+      - import_artifacts:/var/lib/dzialki/import-artifacts
       # Katalog źródeł danych (jedyne źródło prawdy dla kontraktów) jest
       # potrzebny w runtime do guardu adapterów; obraz go nie kopiuje, więc
       # montujemy go tylko do odczytu. Loader wykrywa /app/docs/data_sources.
@@ -124,3 +126,4 @@ services:
 volumes:
   postgres_data:
   map_tile_cache:
+  import_artifacts:

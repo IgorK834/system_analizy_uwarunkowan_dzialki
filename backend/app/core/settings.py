@@ -89,6 +89,13 @@ class Settings(BaseSettings):
     address_index_max_uncompressed_bytes: int = 2 * 1024 * 1024 * 1024
     address_index_import_batch_size: int = 5_000
     address_index_uug_fallback_enabled: bool = True
+    # Oryginały importów są deduplikowane po SHA-256 i przechowywane lokalnie.
+    # S3/MinIO pozostaje poza zakresem, dopóki projekt nie ma object storage.
+    import_artifact_storage_dir: str = "/tmp/dzialki-import-artifacts"
+    import_area_tolerance_ratio: float = 0.02
+    import_overlap_tolerance_sqm: float = 0.01
+    import_topology_tolerance_m: float = 0.05
+    import_topology_area_tolerance_sqm: float = 0.01
 
     model_config = SettingsConfigDict(
         env_file=".env",
