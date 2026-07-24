@@ -42,6 +42,39 @@ przez 7 dni podczas awarii WMS, a cache ma limit 5 GB. Parametry można zmienić
 zmiennymi `MAP_TILE_*` opisanymi w `.env.example`. Nagłówek `X-Tile-Cache`
 pozwala rozróżnić odpowiedzi `MISS`, `HIT` i `STALE`.
 
+### Lokalny indeks podpowiedzi adresowych
+
+Autocomplete korzysta z lokalnego PostgreSQL/PostGIS zasilanego oficjalnymi,
+pełnymi i przyrostowymi paczkami słowników PRG Adresy / EMUiA GUGiK. Pierwszy
+pełny import jest zadaniem utrzymaniowym i może pobierać duży wolumen danych:
+
+```bash
+docker compose --profile maintenance run --rm address-index-sync
+```
+
+Podczas developmentu można ograniczyć import do województwa, powiatu albo
+gminy (TERYT ma odpowiednio 2, 4 albo 7 cyfr):
+
+```bash
+docker compose --profile maintenance run --rm address-index-sync \
+  python -m app.modules.location.infrastructure.dictionary_import \
+  sync --mode full --scope 14
+```
+
+Kolejne aktualizacje używają checkpointu `verId` poprzedniego wydania:
+
+```bash
+docker compose --profile maintenance run --rm address-index-sync \
+  python -m app.modules.location.infrastructure.dictionary_import \
+  sync --mode incremental --scope 14
+```
+
+Gotowość można sprawdzić przez
+`GET /api/v1/search/addresses/status` albo polecenie `status`. Nowe wydanie jest
+publikowane atomowo po kontroli jakości; w czasie importu API nadal czyta
+poprzednie. Dopóki nie istnieje pierwsze wydanie, działa ograniczony fallback
+UUG, który nie zapewnia pełnych sugestii dla krótkich prefiksów.
+
 ### Testy frontendu
 
 Frontend używa Vitest i React Testing Library. Testy z wymaganym pokryciem można
