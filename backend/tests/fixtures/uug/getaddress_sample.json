@@ -1,0 +1,23 @@
+{
+  "returned objects": 2,
+  "results": {
+    "0": {
+      "city": "Marki",
+      "street": "Generała Władysława Andersa",
+      "number": "1",
+      "teryt": "143402",
+      "x": "644234.29",
+      "y": "499514.03",
+      "accuracy": "0.95"
+    },
+    "1": {
+      "city": "Marki",
+      "street": "Główna",
+      "number": null,
+      "teryt": "143402",
+      "x": "645000.00",
+      "y": "500000.00",
+      "accuracy": "0.60"
+    }
+  }
+}
