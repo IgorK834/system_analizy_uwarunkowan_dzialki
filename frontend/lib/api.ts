@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "@/lib/config";
 import type {
+  AddressSearchResponse,
   AnalyzeRequest,
   AnalyzeResponse,
   AnalyzeResumeRequest,
@@ -206,6 +207,40 @@ export async function getAddressSuggestions(
   const parameters = new URLSearchParams({ q: query });
   return requestJson<GeocodeResponse>(
     `${getApiBaseUrl()}/geocode/suggest?${parameters.toString()}`,
+    {
+      method: "GET",
+      signal: options.signal,
+    },
+  );
+}
+
+/**
+ * Wyszukiwarka adresów (Faza 11.1). Zwraca wyniki z punktem GeoJSON w WGS84 i
+ * stabilnym identyfikatorem, dzięki czemu analiza używa dokładnie wybranej
+ * sugestii zamiast ponownego geokodowania tekstu.
+ */
+export async function searchAddresses(
+  query: string,
+  options: {
+    signal?: AbortSignal;
+    limit?: number;
+    bias?: { lon: number; lat: number };
+    bbox?: [number, number, number, number];
+  } = {},
+): Promise<AddressSearchResponse> {
+  const parameters = new URLSearchParams({ q: query });
+  if (options.limit !== undefined) {
+    parameters.set("limit", String(options.limit));
+  }
+  if (options.bias) {
+    parameters.set("bias_lon", String(options.bias.lon));
+    parameters.set("bias_lat", String(options.bias.lat));
+  }
+  if (options.bbox) {
+    parameters.set("bbox", options.bbox.join(","));
+  }
+  return requestJson<AddressSearchResponse>(
+    `${getApiBaseUrl()}/api/v1/search/addresses?${parameters.toString()}`,
     {
       method: "GET",
       signal: options.signal,

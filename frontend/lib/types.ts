@@ -6,7 +6,14 @@ export type MapAnalyzeRequest = {
 
 export type AddressAnalyzeRequest = {
   method: "address";
+  /** Etykieta wybranego adresu (kontekst/audyt) — nie jest ponownie geokodowana. */
   query: string;
+  /** Długość geograficzna DOKŁADNIE wybranej sugestii (WGS84). */
+  selected_lon: number;
+  /** Szerokość geograficzna DOKŁADNIE wybranej sugestii (WGS84). */
+  selected_lat: number;
+  /** Opcjonalny, stabilny identyfikator wybranej sugestii. */
+  selected_result_id?: string | null;
 };
 
 export type ParcelIdAnalyzeRequest = {
@@ -162,5 +169,44 @@ export type GeocodeSuggestion = {
 export type GeocodeResponse = {
   query: string;
   suggestions: GeocodeSuggestion[];
+  total_returned: number;
+};
+
+// --- Wyszukiwarka adresów /api/v1/search/addresses (Faza 11.1) ---
+
+export type PointGeoJSON = {
+  type: string;
+  /** [lon, lat] w WGS84 (EPSG:4326). */
+  coordinates: [number, number];
+};
+
+export type MatchRange = { start: number; end: number };
+
+export type AddressPartsResponse = {
+  country: string | null;
+  voivodeship: string | null;
+  county: string | null;
+  municipality: string | null;
+  city: string | null;
+  street: string | null;
+  house_number: string | null;
+};
+
+export type AddressSourceInfo = { source_id: string; attribution: string };
+
+export type AddressSearchResult = {
+  id: string;
+  label: string;
+  match_ranges: MatchRange[];
+  point: PointGeoJSON;
+  address_parts: AddressPartsResponse;
+  result_type: string;
+  confidence: number;
+  source: AddressSourceInfo;
+};
+
+export type AddressSearchResponse = {
+  query: string;
+  results: AddressSearchResult[];
   total_returned: number;
 };

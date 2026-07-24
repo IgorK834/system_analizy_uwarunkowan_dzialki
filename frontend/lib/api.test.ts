@@ -6,6 +6,7 @@ import {
   getAddressSuggestions,
   getAnalysisReport,
   resumeAnalysis,
+  searchAddresses,
 } from "@/lib/api";
 import { buildAnalyzeResponse } from "@/test/fixtures";
 
@@ -183,6 +184,8 @@ describe("klient API", () => {
       const promise = analyzeParcel({
         method: "address",
         query: "Warszawa",
+        selected_lon: 21.012,
+        selected_lat: 52.23,
       });
 
       await expect(promise).rejects.toMatchObject({
@@ -192,6 +195,58 @@ describe("klient API", () => {
       await expect(promise).rejects.toThrow(expectedMessage as string);
     },
   );
+
+  it("wyszukuje adresy przez /api/v1/search/addresses i zwraca wyniki", async () => {
+    const payload = {
+      query: "Marki",
+      results: [
+        {
+          id: "hash:abc",
+          label: "Marki, Andersa 1",
+          match_ranges: [],
+          point: { type: "Point", coordinates: [21.1, 52.32] },
+          address_parts: {
+            country: "Polska",
+            voivodeship: null,
+            county: null,
+            municipality: null,
+            city: "Marki",
+            street: "Andersa",
+            house_number: "1",
+          },
+          result_type: "house_number",
+          confidence: 0.9,
+          source: { source_id: "emuia_uug", attribution: "GUGiK / EMUiA" },
+        },
+      ],
+      total_returned: 1,
+    };
+    fetchMock.mockResolvedValue(jsonResponse(payload));
+
+    const result = await searchAddresses("Marki", {
+      limit: 5,
+      bias: { lon: 21.1, lat: 52.3 },
+      bbox: [21, 52, 21.2, 52.4],
+    });
+
+    expect(result.total_returned).toBe(1);
+    expect(result.results[0].id).toBe("hash:abc");
+    const requestedUrl = String(fetchMock.mock.calls[0][0]);
+    expect(requestedUrl).toContain("/api/v1/search/addresses");
+    expect(requestedUrl).toContain("q=Marki");
+    expect(requestedUrl).toContain("limit=5");
+    expect(requestedUrl).toContain("bias_lon=21.1");
+    expect(requestedUrl).toContain("bias_lat=52.3");
+    expect(requestedUrl).toContain("bbox=21%2C52%2C21.2%2C52.4");
+  });
+
+  it("mapuje błąd wyszukiwarki adresów na ApiError", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: "SOURCE_UNAVAILABLE", detail: "x" }, 503));
+    await expect(searchAddresses("Marki")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 503,
+    });
+  });
 
   it("zgłasza nieprawidłowy format udanej odpowiedzi", async () => {
     fetchMock.mockResolvedValue(new Response("not-json", { status: 200 }));
