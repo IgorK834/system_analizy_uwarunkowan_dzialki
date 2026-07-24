@@ -10,6 +10,7 @@ from app.core.logging import configure_logging
 from app.schemas.analyze import ErrorResponse
 from app.core.settings import settings
 from app.modules.location.api.router import router as address_search_router
+from app.modules.documents.api.router import router as documents_router
 from app.routers.analyze import router as analyze_router
 from app.routers.geocode import router as geocode_router
 from app.routers.health import router as health_router
@@ -64,3 +65,4 @@ app.include_router(geocode_router)
 app.include_router(map_tiles_router)
 app.include_router(report_router)
 app.include_router(address_search_router)
+app.include_router(documents_router)
