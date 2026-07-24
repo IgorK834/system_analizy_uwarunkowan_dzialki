@@ -102,7 +102,7 @@ async def test_parse_defaults_zone_symbol_to_unknown() -> None:
 
 
 @pytest.mark.asyncio
-async def test_parse_empty_zone_symbols_preserves_unknown_without_segmentation() -> None:
+async def test_parse_empty_zone_symbols_attempts_general_segmentation() -> None:
     with (
         patch(
             "app.services.mpzp_parser.extract_document_text",
@@ -112,8 +112,12 @@ async def test_parse_empty_zone_symbols_preserves_unknown_without_segmentation()
     ):
         result = await parse_mpzp_document(PDF_DOCUMENT, [])
 
-    segment_mock.assert_not_called()
+    segment_mock.assert_called_once()
     assert result.zones[0].zone_symbol == "UNKNOWN"
+    assert any(
+        warning.code == "ZONE_SYMBOL_NOT_DISCOVERED"
+        for warning in result.warnings
+    )
 
 
 @pytest.mark.asyncio

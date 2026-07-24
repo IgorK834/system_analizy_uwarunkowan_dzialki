@@ -62,6 +62,7 @@ _REQUIRED_TABLES = {
     "legal_units",
     "symbol_legal_units",
     "manual_reviews",
+    "planning_rules",
 }
 
 
@@ -214,6 +215,45 @@ def test_source_artifacts_unique_dedup_constraint() -> None:
         c["name"] for c in inspect(engine).get_unique_constraints("source_artifacts")
     }
     assert "uq_source_artifacts_dedup" in uniques
+
+
+def test_document_legal_structure_and_planning_rule_constraints_present() -> None:
+    document_columns = {
+        column["name"] for column in inspect(engine).get_columns("document_versions")
+    }
+    assert {
+        "media_type",
+        "extraction_method",
+        "ocr_engine_version",
+        "quality_score",
+    } <= document_columns
+    page_columns = {
+        column["name"] for column in inspect(engine).get_columns("document_pages")
+    }
+    assert "blocks" in page_columns
+    legal_columns = {
+        column["name"] for column in inspect(engine).get_columns("legal_units")
+    }
+    assert {
+        "unit_type",
+        "number",
+        "parent_id",
+        "order_index",
+        "page_from",
+        "page_to",
+        "source_text",
+        "normalized_text",
+    } <= legal_columns
+    checks = {
+        check["name"]
+        for check in inspect(engine).get_check_constraints("planning_rules")
+    }
+    assert {
+        "ck_planning_rules_review_status",
+        "ck_planning_rules_confidence",
+        "ck_planning_rules_evidence_required",
+        "ck_planning_rules_value_range",
+    } <= checks
 
 
 # --- Reguły temporalne i geometryczne ----------------------------------------

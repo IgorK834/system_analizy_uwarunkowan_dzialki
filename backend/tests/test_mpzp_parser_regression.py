@@ -57,13 +57,34 @@ def _build_extraction(
         else []
     )
     needs_ocr = bool(source["needs_ocr"])
+    ocr_used = bool(source.get("ocr_used", False))
+    manual_review_required = bool(
+        source.get("manual_review_required", needs_ocr)
+    )
+    if ocr_used:
+        warnings = [
+            "Tekst odczytano przez OCR; wynik zachowano do ręcznej weryfikacji."
+        ]
+    elif needs_ocr:
+        warnings = [_OCR_WARNING]
+    else:
+        warnings = []
     extraction = TextExtractionResult(
         pages=pages,
         tables=tables,
+        page_qualities=[
+            float(source["quality_score"]) for _ in pages
+        ],
+        blocks=[[] for _ in pages],
         quality_score=float(source["quality_score"]),
         needs_ocr=needs_ocr,
-        manual_review_required=needs_ocr,
-        warnings=[_OCR_WARNING] if needs_ocr else [],
+        ocr_used=ocr_used,
+        extraction_method=source.get(
+            "extraction_method", "ocr" if ocr_used else "pdf_text"
+        ),
+        ocr_engine_version=source.get("ocr_engine_version"),
+        manual_review_required=manual_review_required,
+        warnings=warnings,
     )
     return extraction, source
 
@@ -208,6 +229,13 @@ async def test_mpzp_parser_regression_fixture(fixture_dir: Path) -> None:
     if expected["document_format"] == "pdf_scan_real":
         assert extraction.pages
         assert all(not page.strip() for page in extraction.pages)
+    if expected["document_format"] == "pdf_scan_ocr_real":
+        assert extraction.pages
+        assert all(page.strip() for page in extraction.pages)
+        assert extraction.ocr_used is True
+        assert extraction.extraction_method == "ocr"
+        assert extraction.ocr_engine_version
+        assert "Tesseract" in extraction.ocr_engine_version
 
     extract_mock = AsyncMock(return_value=extraction)
     with patch(

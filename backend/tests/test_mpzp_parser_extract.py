@@ -181,7 +181,7 @@ def test_ocr_provider_protocol_is_structurally_checkable() -> None:
 
 
 @pytest.mark.asyncio
-async def test_ocr_provider_is_not_invoked_in_mvp() -> None:
+async def test_ocr_provider_is_invoked_for_scan() -> None:
     class DummyOcr:
         def __init__(self) -> None:
             self.called = False
@@ -197,6 +197,9 @@ async def test_ocr_provider_is_not_invoked_in_mvp() -> None:
     ):
         result = await extract_document_text(PDF_DOCUMENT, provider)
 
-    assert result.needs_ocr is True
-    assert provider.called is False
-
+    assert result.needs_ocr is False
+    assert result.ocr_used is True
+    assert result.pages == ["tekst OCR"]
+    assert result.ocr_engine_version == "DummyOcr"
+    assert result.manual_review_required is True
+    assert provider.called is True
