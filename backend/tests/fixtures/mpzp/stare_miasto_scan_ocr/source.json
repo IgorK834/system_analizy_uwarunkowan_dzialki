@@ -1,0 +1,16 @@
+{
+  "url": "https://bip.stare-miasto.pl/files/file_add/download/1686_d8ekpl2.PDF",
+  "fetched_at": "2026-07-24T18:00:00+00:00",
+  "media_type": "application/pdf",
+  "filename": "1686_d8ekpl2.PDF",
+  "quality_score": 0.9403596287703015,
+  "needs_ocr": false,
+  "ocr_used": true,
+  "extraction_method": "ocr",
+  "ocr_engine_version": "Tesseract 5.5.0",
+  "manual_review_required": true,
+  "source_page_number": 4,
+  "synthetic": false,
+  "note": "Uchwała Nr XLIV/305/2002 Rady Gminy w Starym Mieście; rzeczywisty skan, strona źródłowa 4.",
+  "legal_basis": "Akt prawa miejscowego opublikowany w publicznym BIP gminy."
+}

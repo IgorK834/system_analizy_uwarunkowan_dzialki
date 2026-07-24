@@ -1,0 +1,18 @@
+{
+  "document_format": "pdf_text",
+  "zone_symbols_to_test": ["3MN/U"],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "3MN/U",
+      "expected_manual_review_required": false,
+      "parameters": [
+        {"name": "max_building_height_m", "expected_found": true, "normalized_value": 12.5, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "min_intensity", "expected_found": true, "normalized_value": 0.25, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "max_intensity", "expected_found": true, "normalized_value": 1.5, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "max_building_coverage_percent", "expected_found": true, "normalized_value": 42.5, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "min_biologically_active_percent", "expected_found": true, "normalized_value": 30.5, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "document_format": "pdf_text",
+  "zone_symbols_to_test": ["1.MN"],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "1.MN",
+      "expected_manual_review_required": false,
+      "parameters": [
+        {"name": "max_building_height_m", "expected_found": true, "normalized_value": 9.5, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "min_intensity", "expected_found": true, "normalized_value": 0.1, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "max_intensity", "expected_found": true, "normalized_value": 0.75, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "max_building_coverage_percent", "expected_found": true, "normalized_value": 35.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "min_biologically_active_percent", "expected_found": true, "normalized_value": 45.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "roof_angle_min_deg", "expected_found": true, "normalized_value": 30.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "roof_angle_max_deg", "expected_found": true, "normalized_value": 45.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "max_storeys", "expected_found": true, "normalized_value": 2.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "setback_m", "expected_found": true, "normalized_value": 6.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "parking_minimum", "expected_found": true, "normalized_value": 2.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null}
+      ]
+    }
+  ]
+}

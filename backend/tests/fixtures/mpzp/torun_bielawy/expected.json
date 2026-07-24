@@ -1,0 +1,17 @@
+{
+  "document_format": "pdf_text",
+  "zone_symbols_to_test": ["4P/U"],
+  "structural_expectations": null,
+  "expectations": [
+    {
+      "zone_symbol": "4P/U",
+      "expected_manual_review_required": false,
+      "parameters": [
+        {"name": "max_building_height_m", "expected_found": true, "normalized_value": 18.0, "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "environmental_restriction", "expected_found": true, "normalized_value": "nakaz ochrony istniejącego szpaleru drzew", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "large_retail_restriction", "expected_found": true, "normalized_value": "zakaz obiektów handlowych o powierzchni sprzedaży > 2000 m²", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "parking_requirement_descriptive", "expected_found": true, "normalized_value": "Nakaz lokalizacji miejsc przeznaczonych na parkowanie:", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null}
+      ]
+    }
+  ]
+}

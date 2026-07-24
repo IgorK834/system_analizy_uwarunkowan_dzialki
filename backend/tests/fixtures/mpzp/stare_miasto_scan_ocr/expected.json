@@ -1,0 +1,37 @@
+{
+  "document_format": "pdf_scan_ocr_real",
+  "zone_symbols_to_test": [
+    "146 MN"
+  ],
+  "structural_expectations": {
+    "needs_ocr": false,
+    "manual_review_required": true,
+    "status": "complete",
+    "warning_code": "OCR_APPLIED",
+    "warning_text_contains": "OCR"
+  },
+  "expectations": [
+    {
+      "zone_symbol": "146 MN",
+      "expected_manual_review_required": true,
+      "parameters": [
+        {
+          "name": "max_storeys",
+          "expected_found": true,
+          "normalized_value": 2.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "setback_m",
+          "expected_found": true,
+          "normalized_value": 6.0,
+          "allowed_values": null,
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
+        }
+      ]
+    }
+  ]
+}

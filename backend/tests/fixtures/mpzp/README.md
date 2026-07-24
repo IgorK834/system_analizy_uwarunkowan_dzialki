@@ -11,12 +11,20 @@ wszystkich gmin Polski ani źródłem aktualnego stanu prawnego.
 | Łódź, LXXVIII/2337/23, 6.8.MW/U | statyczny HTML | <https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html> | 2026-07-15 | nie |
 | Kraków, „Morelowa” | PDF tekstowy | <https://www.bip.krakow.pl/_inc/rada/posiedzenia/show_pdfdoc.php?id=121322> | 2026-07-15 | nie |
 | Pisz, XXV/254/98, Wiartel | realny PDF rastrowy | <https://bip.pisz.hi.pl/download.php?id=9857> | 2026-07-15 | nie |
+| Stare Miasto, XLIV/305/2002 | realny PDF rastrowy po OCR | <https://bip.stare-miasto.pl/files/file_add/download/1686_d8ekpl2.PDF> | 2026-07-24 | nie |
+| Gdańsk-Wrzeszcz | PDF tekstowy | dane testowe (`example.invalid`) | 2026-07-24 | tak |
+| Poznań-Naramowice | PDF tekstowy | dane testowe (`example.invalid`) | 2026-07-24 | tak |
+| Wrocław-Wojszyce | PDF tekstowy | dane testowe (`example.invalid`) | 2026-07-24 | tak |
+| Toruń-Bielawy | PDF tekstowy | dane testowe (`example.invalid`) | 2026-07-24 | tak |
 
 `expected.json` ma jednolity rdzeń: `document_format`, symbole stref i listę
 oczekiwań parametrów. Opcjonalne `structural_expectations` służy przypadkowi
 OCR. Ponieważ ograniczone wyszukiwanie znalazło prawdziwy skan, format piątego
 fixture'a to uczciwe `pdf_scan_real`, a nie przewidziane dla fallbacku
-`pdf_scan_synthetic`.
+`pdf_scan_synthetic`. Drugi rzeczywisty skan, ze Starego Miasta, został
+przetworzony przez produkcyjny adapter Tesseract + PyMuPDF. Cztery dodatkowe
+przypadki syntetyczne są jawnie oznaczone i służą wyłącznie do pokrycia
+wariantów językowych/liczbowych — nie udają obowiązujących aktów.
 
 ## Odtwarzanie snapshotów
 

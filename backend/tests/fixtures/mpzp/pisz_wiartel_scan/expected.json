@@ -7,7 +7,7 @@
     "needs_ocr": true,
     "manual_review_required": true,
     "status": "partial",
-    "warning_code": "TEXT_EXTRACTION_WARNING",
+    "warning_code": "NEEDS_OCR",
     "warning_text_contains": "OCR"
   },
   "expectations": [

@@ -1,0 +1,12 @@
+{
+  "url": "https://example.invalid/mpzp/gdansk-wrzeszcz",
+  "fetched_at": "2026-07-24T18:00:00+00:00",
+  "media_type": "application/pdf",
+  "filename": "syntetyczny-gdansk-wrzeszcz.pdf",
+  "quality_score": 1.0,
+  "needs_ocr": false,
+  "manual_review_required": false,
+  "synthetic": true,
+  "note": "Syntetyczny przypadek regresyjny wariantu z przecinkiem dziesiętnym.",
+  "legal_basis": "Brak; dane wyłącznie testowe, nie są źródłem prawa."
+}
