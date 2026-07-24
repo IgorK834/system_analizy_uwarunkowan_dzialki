@@ -1,0 +1,335 @@
+# Katalog źródeł danych — jedyne źródło prawdy dla kontraktów urzędowych
+# i licencjonowanych danych wykorzystywanych przez system.
+#
+# ZASADY (patrz ANALIZA_ARCHITEKTURY_I_PLAN.md sekcja D oraz context.md pkt 10):
+#   * Adresy, warstwy, licencje, CRS, SLA i częstotliwości aktualizacji NIE są
+#     wymyślane. Jeżeli kontraktu lub licencji nie udało się potwierdzić w
+#     oficjalnej dokumentacji właściciela danych, źródło ma status `research`
+#     (lub `contract_required` / `no_redistribution` / `placeholder`) oraz
+#     `production_ready: false`.
+#   * Źródło może zostać uruchomione przez produkcyjny orchestrator wyłącznie,
+#     gdy `status: production`, `production_ready: true` oraz
+#     `contract_confirmed: true` (funkcja `ensure_source_runnable`).
+#   * Geometria kanoniczna całego systemu jest w EPSG:2180, dlatego `target_crs`
+#     każdego wpisu musi być równy `EPSG:2180`.
+#
+# Weryfikacja ręczna źródeł produkcyjnych: 2026-07-22 (oficjalna dokumentacja
+# Geoportal.gov.pl / GUGiK — usługi ULDK, UUG oraz WMS KIMPZP).
+
+schema_version: "1.0"
+
+sources:
+  # --- ŹRÓDŁA PRODUKCYJNE (kontrakt potwierdzony) ---------------------------
+
+  - source_id: uldk
+    name: "Usługa Lokalizacji Działek Katastralnych (ULDK)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: rest
+    capabilities_url: "https://uldk.gugik.gov.pl/"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "ULDK/1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane ewidencyjne udostępniane nieodpłatnie przez GUGiK w usłudze ULDK;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Usługa Lokalizacji Działek Katastralnych (ULDK), GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    notes: >-
+      Kontrakt REST GetParcelById/GetParcelByXY potwierdzony w publicznej
+      dokumentacji GUGiK; usługa przyjmuje i zwraca współrzędne w EPSG:2180.
+      Adapter: app/services/uldk.py (ULDK_BASE_URL).
+
+  - source_id: emuia_uug
+    name: "Usługa Uniwersalnego Geokodera (UUG) / EMUiA"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: rest
+    capabilities_url: "https://services.gugik.gov.pl/uug/"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "UUG/1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane adresowe (EMUiA) udostępniane nieodpłatnie przez GUGiK w usłudze UUG;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    notes: >-
+      Kontrakt REST GetAddress potwierdzony; usługa zwraca punkty w EPSG:2180
+      gotowe do przekazania do ULDK GetParcelByXY. Adapter: app/services/geocoding.py.
+
+  - source_id: prg_address_dictionary
+    name: "Słowniki adresowe off-line (PRG Adresy / EMUiA)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: soap
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline?wsdl"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "SOAP 1.1 / slowniki-offline-service 1.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane referencyjne PRG Adresy i EMUiA są udostępniane przez publiczną usługę
+      słowników GUGiK; wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
+    attribution: "Źródło: Słowniki adresowe PRG Adresy / EMUiA, GUGiK."
+    expected_update_interval: "incremental_updates_available"
+    sla: "not_published"
+    last_manual_verification: 2026-07-23
+    notes: >-
+      Oficjalna usługa SOAP udostępnia pełne i przyrostowe paczki ZIP dla
+      miejscowości, ulic i adresów. Pełny rekord adresu zawiera hierarchię
+      administracyjną oraz punkt w EPSG:2180. Lokalny indeks używa wyłącznie
+      rekordów aktualnych; identyfikator verId służy jako checkpoint przyrostu.
+
+  - source_id: kimpzp
+    name: "Krajowa Integracja Miejscowych Planów Zagospodarowania Przestrzennego (WMS)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wms
+    capabilities_url: >-
+      https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego
+    file_url: null
+    type_names: null
+    layers:
+      - plany_granice
+      - raster
+      - wektor-str
+      - wektor-lzb
+      - wektor-lin
+      - wektor-pow
+      - wektor-pkt
+      - granice
+    protocol_version: "1.1.1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa przeglądania WMS udostępniana nieodpłatnie przez GUGiK; wykorzystanie
+      zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Krajowa Integracja MPZP (KIMPZP), GUGiK / Geoportal.gov.pl."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    notes: >-
+      WMS jest warstwą prezentacyjną i kanałem discovery (GetFeatureInfo), NIE
+      źródłem geometrii wektorowej do obliczeń przestrzennych (context.md pkt 6).
+      Endpoint i warstwa `plany_granice` potwierdzone w bieżącym GetCapabilities
+      usługi (fixture: tests/fixtures/source_contracts/kimpzp_getcapabilities.xml).
+      Adapter: app/services/mpzp.py (settings.kimpzp_wms_base_url).
+
+  # --- ŹRÓDŁA WYMAGAJĄCE UMOWY (dostęp reglamentowany) ----------------------
+
+  - source_id: egib
+    name: "Ewidencja Gruntów i Budynków (EGiB) — pełny zakres atrybutów"
+    owner: "Starostwa powiatowe / GUGiK (PZGiK)"
+    status: no_redistribution
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Pełny zakres EGiB obejmuje dane osobowe właścicieli i podlega
+      reglamentowanemu dostępowi PZGiK. Nawet po uzyskaniu dostępu redystrybucja
+      danych osobowych jest prawnie zabroniona — dlatego status no_redistribution.
+    attribution: "Źródło: Ewidencja Gruntów i Budynków (EGiB), właściwe starostwo powiatowe."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Kontrakt WFS (typeNames, wersja, licencja per powiat) NIE został potwierdzony,
+      a redystrybucja danych osobowych jest zabroniona. Nie uruchamiać w
+      produkcyjnym orchestratorze; ewentualne użycie wymaga jawnie spełnionych
+      warunków prawnych i ograniczenia do danych nieosobowych.
+
+  - source_id: kiut_gesut
+    name: "Krajowa Integracja Uzbrojenia Terenu / GESUT"
+    owner: "Starostwa powiatowe / GUGiK (GESUT)"
+    status: contract_required
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane GESUT o sieciach uzbrojenia terenu mają dostęp reglamentowany;
+      udostępnienie i redystrybucja wymagają umowy z organem prowadzącym zasób.
+    attribution: "Źródło: GESUT / KIUT, właściwe starostwo powiatowe."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Adres WFS w app/core/settings.py jest jawnym placeholderem — kontrakt
+      (typeNames, wersja WFS, przestrzenie nazw) niepotwierdzony. Nie uruchamiać
+      w produkcji bez umowy.
+
+  # --- ŹRÓDŁA BADAWCZE (kontrakt / licencja niepotwierdzone) ----------------
+
+  - source_id: pog_app
+    name: "Plan Ogólny Gminy / Akt Planowania Przestrzennego (APP)"
+    owner: "Gminy / Ministerstwo Rozwoju i Technologii (Rejestr Urbanistyczny)"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: wms
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin"
+    file_url: null
+    type_names: null
+    layers:
+      - strefaPlanistyczna
+      - obszarUzupelnieniaZabudowy
+      - obszarZabSrodmiejskiej
+      - aktPlanowaniaprzestrzennego
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa przeglądania WMS PlanyOgolneGmin (Geoportal.gov.pl) jest prezentacyjna;
+      kontrakt wektorowy APP/GML per gmina oraz warunki licencyjne nie zostały
+      potwierdzone.
+    attribution: "Źródło: Plany Ogólne Gmin, Geoportal.gov.pl / właściwa gmina."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Dostępność i format APP/GML różnią się per gmina i nie zostały zweryfikowane.
+      WMS jest wyłącznie prezentacyjny (context.md pkt 6, 9). Status research.
+
+  - source_id: gdos
+    name: "Formy ochrony przyrody (GDOŚ)"
+    owner: "Generalna Dyrekcja Ochrony Środowiska (GDOŚ)"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Warunki licencyjne i kontrakt WFS (typeNames, nazwy warstw) usługi GDOŚ nie
+      zostały potwierdzone w oficjalnej dokumentacji.
+    attribution: "Źródło: Generalna Dyrekcja Ochrony Środowiska (GDOŚ)."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Adres WFS w app/core/settings.py jest jawnym placeholderem. Status research.
+
+  - source_id: isok
+    name: "Zagrożenie i ryzyko powodziowe (ISOK)"
+    owner: "Państwowe Gospodarstwo Wodne Wody Polskie / ISOK"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Warunki licencyjne i kontrakt WFS (typeNames dla Q1%/Q10%/Q0,2%) usługi ISOK
+      nie zostały potwierdzone w oficjalnej dokumentacji.
+    attribution: "Źródło: ISOK / PGW Wody Polskie."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Adres WFS w app/core/settings.py jest jawnym placeholderem. Analiza rastra
+      WMS nie jest zaimplementowana. Status research.
+
+  - source_id: nmt
+    name: "Numeryczny Model Terenu (NMT/NMPT)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: file
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      NMT/NMPT są udostępniane przez GUGiK jako dane otwarte, jednak kontrakt
+      pobierania (format, arkusze, endpoint) nie został zintegrowany ani
+      zweryfikowany w tym systemie.
+    attribution: "Źródło: Numeryczny Model Terenu, GUGiK."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Brak adaptera i potwierdzonego kontraktu pobierania. Status research.
+
+  # --- WARSTWY PLANOWANE (brak potwierdzonych źródeł) -----------------------
+
+  - source_id: planned_restrictions
+    name: "Planowane warstwy ograniczeń (strefy ochronne, konserwatorskie itp.)"
+    owner: "różni gestorzy danych (planowane)"
+    status: placeholder
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: "Brak — źródła nie zostały jeszcze zidentyfikowane ani zakontraktowane."
+    attribution: "Do ustalenia po wyborze konkretnych gestorów danych."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Placeholder dla przyszłych warstw ograniczeń. Nie wolno uruchamiać w
+      produkcji — brak potwierdzonych źródeł, kontraktów i licencji.
