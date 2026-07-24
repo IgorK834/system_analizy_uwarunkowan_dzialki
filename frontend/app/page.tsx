@@ -76,7 +76,7 @@ export default function HomePage() {
 
       <div className="workspace">
         <MapViewLoader onMapClick={handleMapClick} onMapReady={handleMapReady} />
-        <SearchPanel loading={loading} onAnalyze={run} />
+        <SearchPanel loading={loading} onAnalyze={run} map={map} />
         <PlanningOverlay result={result} map={map} />
 
         {loading && (
