@@ -53,6 +53,22 @@ REVIEW_STATUS_VALUES: tuple[str, ...] = (
 
 _REVIEW_STATUS_SQL = ", ".join(f"'{value}'" for value in REVIEW_STATUS_VALUES)
 
+DOCUMENT_TYPE_VALUES: tuple[str, ...] = (
+    "uchwala",
+    "zalacznik_tekstowy",
+    "rysunek",
+    "uzasadnienie",
+)
+_DOCUMENT_TYPE_SQL = ", ".join(f"'{value}'" for value in DOCUMENT_TYPE_VALUES)
+
+PLANNING_RULE_REVIEW_STATUS_VALUES: tuple[str, ...] = (
+    *REVIEW_STATUS_VALUES,
+    "ai_candidate",
+)
+_PLANNING_RULE_REVIEW_STATUS_SQL = ", ".join(
+    f"'{value}'" for value in PLANNING_RULE_REVIEW_STATUS_VALUES
+)
+
 
 def _timestamp_column(nullable: bool = False) -> Mapped[datetime]:
     return mapped_column(DateTime(timezone=True), nullable=nullable)
@@ -401,6 +417,13 @@ class SourceDocument(Base):
     document_type: Mapped[str | None] = mapped_column(String(60), nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
+    __table_args__ = (
+        CheckConstraint(
+            f"document_type IS NULL OR document_type IN ({_DOCUMENT_TYPE_SQL})",
+            name="ck_source_documents_document_type",
+        ),
+    )
+
 
 class DocumentVersion(Base, _VersionMixin):
     __tablename__ = "document_versions"
@@ -415,9 +438,23 @@ class DocumentVersion(Base, _VersionMixin):
     data_release_id: Mapped[int] = mapped_column(
         ForeignKey("data_releases.id"), nullable=False, index=True
     )
+    media_type: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    extraction_method: Mapped[str | None] = mapped_column(
+        String(40), nullable=True
+    )
+    ocr_engine_version: Mapped[str | None] = mapped_column(
+        String(120), nullable=True
+    )
+    quality_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
-    __table_args__ = _version_constraints("document_versions", "source_document_id")
+    __table_args__ = (
+        *_version_constraints("document_versions", "source_document_id"),
+        CheckConstraint(
+            "quality_score IS NULL OR (quality_score >= 0 AND quality_score <= 1)",
+            name="ck_document_versions_quality_score",
+        ),
+    )
 
 
 class DocumentPage(Base):
@@ -433,6 +470,7 @@ class DocumentPage(Base):
         Boolean, nullable=False, server_default=sql_text("false")
     )
     quality: Mapped[float | None] = mapped_column(Float, nullable=True)
+    blocks: Mapped[Any] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
     __table_args__ = (
@@ -450,13 +488,33 @@ class LegalUnit(Base):
     document_version_id: Mapped[int] = mapped_column(
         ForeignKey("document_versions.id"), nullable=False, index=True
     )
-    chapter: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    paragraph: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    section: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    point: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    position: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    unit_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    number: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("legal_units.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_from: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    page_to: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_text: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        CheckConstraint("order_index >= 0", name="ck_legal_units_order_index"),
+        CheckConstraint(
+            "page_from IS NULL OR page_from >= 1",
+            name="ck_legal_units_page_from",
+        ),
+        CheckConstraint(
+            "page_to IS NULL OR page_to >= 1",
+            name="ck_legal_units_page_to",
+        ),
+        CheckConstraint(
+            "page_from IS NULL OR page_to IS NULL OR page_to >= page_from",
+            name="ck_legal_units_page_range",
+        ),
+    )
 
 
 class SymbolLegalUnit(Base):
@@ -467,7 +525,7 @@ class SymbolLegalUnit(Base):
         ForeignKey("planning_symbols.id"), nullable=False, index=True
     )
     legal_unit_id: Mapped[int] = mapped_column(
-        ForeignKey("legal_units.id"), nullable=False, index=True
+        ForeignKey("legal_units.id", ondelete="CASCADE"), nullable=False, index=True
     )
     relation_type: Mapped[str] = mapped_column(
         String(40), nullable=False, server_default="describes"
@@ -517,5 +575,55 @@ class ManualReview(Base):
         CheckConstraint(
             f"review_status IN ({_REVIEW_STATUS_SQL})",
             name="ck_manual_reviews_review_status",
+        ),
+    )
+
+
+class PlanningRule(Base):
+    """Ustrukturyzowane ustalenie planu z dosłownym dowodem prawnym."""
+
+    __tablename__ = "planning_rules"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    legal_unit_id: Mapped[int] = mapped_column(
+        ForeignKey("legal_units.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    code: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    operator: Mapped[str] = mapped_column(String(20), nullable=False)
+    value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    min_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    max_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    text_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    conditions: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    raw_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parser_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    review_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="unreviewed"
+    )
+    conflict_group: Mapped[str | None] = mapped_column(
+        String(36), nullable=True, index=True
+    )
+    created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        CheckConstraint(
+            f"review_status IN ({_PLANNING_RULE_REVIEW_STATUS_SQL})",
+            name="ck_planning_rules_review_status",
+        ),
+        CheckConstraint(
+            "confidence >= 0 AND confidence <= 1",
+            name="ck_planning_rules_confidence",
+        ),
+        CheckConstraint(
+            "NOT ((source_text IS NULL OR btrim(source_text) = '') "
+            "AND (review_status = 'verified' OR confidence > 0.8))",
+            name="ck_planning_rules_evidence_required",
+        ),
+        CheckConstraint(
+            "min_value IS NULL OR max_value IS NULL OR min_value <= max_value",
+            name="ck_planning_rules_value_range",
         ),
     )
