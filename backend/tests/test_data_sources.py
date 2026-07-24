@@ -429,6 +429,31 @@ def test_catalog_kimpzp_matches_settings() -> None:
     assert set(entry.layers or []) == set(settings.kimpzp_wms_layers.split(","))
 
 
+def test_catalog_has_narrow_runnable_warsaw_parcel_contract() -> None:
+    catalog_path = find_repo_root() / "docs" / "data_sources" / "catalog.yaml"
+    entry = load_catalog(catalog_path).get("egib_geometry_warsaw")
+    assert entry.is_runnable is True
+    assert entry.type_names == ["wfs:dzialki"]
+    assert entry.source_crs == "EPSG:2178"
+    assert entry.teryt_scope == ["1465011"]
+    assert entry.field_mapping["parcel_identifier"] == "ID_DZIALKI"
+
+
+def test_catalog_blocks_krakow_mpzp_until_reuse_permission() -> None:
+    catalog_path = find_repo_root() / "docs" / "data_sources" / "catalog.yaml"
+    entry = load_catalog(catalog_path).get("mpzp_pilot_krakow")
+    assert entry.status is SourceStatus.CONTRACT_REQUIRED
+    assert entry.production_ready is False
+    assert [resource.role for resource in entry.resources] == [
+        "boundaries",
+        "zones",
+        "zones",
+        "zones",
+    ]
+    with pytest.raises(SourceNotRunnableError):
+        ensure_source_runnable(entry.source_id, load_catalog(catalog_path))
+
+
 # --- Kontrakt potwierdzony fixture GetCapabilities ---------------------------
 
 

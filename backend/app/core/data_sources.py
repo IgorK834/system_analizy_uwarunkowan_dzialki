@@ -78,6 +78,35 @@ class AccessType(str, Enum):
     SOAP = "soap"
 
 
+class SourceResource(BaseModel):
+    """Pojedynczy, uporządkowany zasób składający się na kontrakt źródła.
+
+    Kolejność elementów ``resources`` jest kolejnością prób odczytu. Dzięki
+    temu adapter nie zgaduje, czy ma najpierw użyć WFS, GML czy pliku.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    role: str = Field(min_length=1)
+    access_type: AccessType
+    url: str = Field(min_length=1)
+    type_name: str | None = None
+    layer: str | None = None
+    source_crs: str
+    field_mapping: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _validate_resource(self) -> SourceResource:
+        if self.source_crs not in ALLOWED_SOURCE_CRS:
+            raise ValueError(
+                f"Niedozwolony lub nieznany CRS {self.source_crs!r} zasobu "
+                f"{self.role!r}."
+            )
+        if self.access_type is AccessType.WFS and not self.type_name:
+            raise ValueError(f"Zasób WFS {self.role!r} musi deklarować type_name.")
+        return self
+
+
 # Statusy, których adapter NIE może uruchomić w produkcyjnym orchestratorze,
 # niezależnie od pozostałych pól.
 _NON_RUNNABLE_STATUSES: frozenset[SourceStatus] = frozenset(
@@ -148,6 +177,8 @@ class DataSourceEntry(BaseModel):
     sla: str = Field(min_length=1)
     last_manual_verification: date | None = None
     notes: str | None = None
+    field_mapping: dict[str, str] = Field(default_factory=dict)
+    resources: list[SourceResource] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate_contract(self) -> DataSourceEntry:
