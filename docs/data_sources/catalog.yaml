@@ -140,6 +140,56 @@ sources:
       usługi (fixture: tests/fixtures/source_contracts/kimpzp_getcapabilities.xml).
       Adapter: app/services/mpzp.py (settings.kimpzp_wms_base_url).
 
+  - source_id: egib_geometry_warsaw
+    name: "Działki EGiB Warszawy — geometria i atrybuty uwolnione"
+    owner: "Urząd m.st. Warszawy / Biuro Geodezji i Katastru"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: "https://wms2.um.warszawa.pl/geoserver/wfs/wfs"
+    file_url: null
+    type_names: ["wfs:dzialki"]
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2178"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["1465011"]
+    license: >-
+      Publiczna usługa WFS danych bezpłatnych, wskazana przez Urząd m.st.
+      Warszawy jako kanał ponownego wykorzystywania informacji przestrzennej.
+      Importer zapisuje wyłącznie geometrię, identyfikator, numer, obręb,
+      jednostkę i pole; pomija grupę rejestrową i klasoużytki.
+    attribution: "Źródło: Urząd m.st. Warszawy, publiczna usługa WFS BGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-24
+    field_mapping:
+      parcel_identifier: "ID_DZIALKI"
+      number: "NUMER_DZIALKI"
+      precinct: "NAZWA_OBREBU"
+      cadastral_unit: "NAZWA_GMINY"
+      reported_area_sqm: "POLE_EWIDENCYJNE"
+    resources:
+      - role: parcels
+        access_type: wfs
+        url: "https://wms2.um.warszawa.pl/geoserver/wfs/wfs"
+        type_name: "wfs:dzialki"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          parcel_identifier: "ID_DZIALKI"
+          number: "NUMER_DZIALKI"
+          precinct: "NAZWA_OBREBU"
+          cadastral_unit: "NAZWA_GMINY"
+          reported_area_sqm: "POLE_EWIDENCYJNE"
+    notes: >-
+      GetCapabilities i DescribeFeatureType zweryfikowano 2026-07-24.
+      Oficjalna strona BIP Warszawy wskazuje ten endpoint jako WFS danych
+      bezpłatnych i kanał ponownego wykorzystywania. Kontrakt ma CRS EPSG:2178
+      i typ wfs:dzialki. Fixture kontraktu:
+      tests/fixtures/source_contracts/warsaw_parcels_*.xml.
+
   # --- ŹRÓDŁA WYMAGAJĄCE UMOWY (dostęp reglamentowany) ----------------------
 
   - source_id: egib
@@ -197,6 +247,93 @@ sources:
       Adres WFS w app/core/settings.py jest jawnym placeholderem — kontrakt
       (typeNames, wersja WFS, przestrzenie nazw) niepotwierdzony. Nie uruchamiać
       w produkcji bez umowy.
+
+  - source_id: mpzp_pilot_krakow
+    name: "MPZP Kraków — pilotażowy wektor WFS"
+    owner: "Gmina Miejska Kraków / Miejski System Informacji Przestrzennej"
+    status: contract_required
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: >-
+      https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer
+    file_url: null
+    type_names:
+      - "Obserwatorium_BP_MPZP:Plany_obowiązujące"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2178"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["1261011"]
+    license: >-
+      Publiczny odczyt WFS jest dostępny, ale regulamin MSIP wymaga pisemnej
+      zgody administratora na ciągłe i zorganizowane dalsze udostępnianie
+      fragmentów serwisu w systemie niekomercyjnym. Do czasu uzyskania zgody
+      źródło nie może być publikowane przez produkcyjny importer.
+    attribution: "Źródło: Miejski System Informacji Przestrzennej UMK, MPZP Kraków."
+    expected_update_interval: "daily"
+    sla: "not_published"
+    last_manual_verification: 2026-07-24
+    resources:
+      - role: boundaries
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Plany_obowiązujące"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwała"
+          resolution_date: "Data_uchwalenia"
+          name: "Nazwa_planu"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+    notes: >-
+      Kontrakt techniczny WFS, typeNames, pola i CRS EPSG:2178 potwierdzono
+      2026-07-24 w oficjalnym BIP i odpowiedziach GetCapabilities /
+      DescribeFeatureType. Brakuje wymaganej zgody na stałe dalsze
+      udostępnianie, więc guard celowo blokuje publikację. Dozwolony jest
+      wyłącznie jawny dry-run na małych fixtures.
 
   # --- ŹRÓDŁA BADAWCZE (kontrakt / licencja niepotwierdzone) ----------------
 
