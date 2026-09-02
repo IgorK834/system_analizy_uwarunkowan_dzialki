@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated, Any
 
 from pydantic import field_validator
@@ -22,20 +23,33 @@ class Settings(BaseSettings):
     kiut_wfs_base_url: str = (
         "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIUT/WFS/GESUT"
     )
-    # Adres WFS ISOK (mapy zagrożenia i ryzyka powodziowego) jest placeholderem
-    # opartym o publicznie znaną domenę ISOK/GUGiK. Rzeczywisty kontrakt zapytania
-    # (typename, wersja WFS, nazwy warstw dla Q1%/Q10%/Q0,2%) zostanie doprecyzowany,
-    # gdy będzie dostępna pełna dokumentacja usługi.
-    isok_wfs_base_url: str = "https://wms.isok.gov.pl/isap/services/PZGIK/ISOK/WFS"
+    # Usługa pobierania INSPIRE Map Zagrożenia i Ryzyka Powodziowego (MZP/MRP)
+    # prowadzona przez PGW Wody Polskie. Kontrakt (WFS 2.0.0, typeNames
+    # nz-core:HazardArea, wymagane srsName w formie URN) potwierdzono realnym
+    # GetCapabilities i GetFeature 2026-07-30 — patrz app/services/isok.py oraz
+    # tests/fixtures/source_contracts/isok_getcapabilities.xml.
+    # Poprzedni adres wms.isok.gov.pl był placeholderem i jego nazwa domenowa
+    # nie rozwiązuje się już w DNS.
+    isok_wfs_base_url: str = (
+        "https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS"
+    )
     # WMS jest wyłącznie referencyjnym linkiem do ręcznej weryfikacji wizualnej.
     # Analiza rastra WMS NIE jest zaimplementowana — fetch_flood_risks korzysta
     # tylko z WFS. Zobacz docstring fetch_flood_risks w app/services/isok.py.
-    isok_wms_fallback_url: str = "https://wms.isok.gov.pl/isap/services/PZGIK/ISOK/WMS"
-    # Adres WFS GDOŚ (formy ochrony przyrody) jest placeholderem opartym o publicznie
-    # znaną domenę Generalnej Dyrekcji Ochrony Środowiska. Rzeczywisty kontrakt
-    # zapytania (typename, wersja WFS, nazwy warstw) zostanie doprecyzowany po
-    # udostępnieniu pełnej dokumentacji usługi.
+    isok_wms_fallback_url: str = (
+        "https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WMS"
+    )
+    # Usługa pobierania WFS Generalnej Dyrekcji Ochrony Środowiska (formy ochrony
+    # przyrody). Kontrakt (WFS 2.0.0, nazwy warstw GDOS:*, EPSG:2180, brak opłat
+    # i ograniczeń dostępu) potwierdzono realnym GetCapabilities,
+    # DescribeFeatureType i GetFeature 2026-07-30 — patrz app/services/gdos.py
+    # oraz tests/fixtures/source_contracts/gdos_getcapabilities.xml.
     gdos_wfs_base_url: str = "https://sdi.gdos.gov.pl/wfs"
+    # Usługa NMT GUGiK (rzeźba terenu). Zapytania REST GET bez autoryzacji;
+    # współrzędne w PUWG92 (EPSG:2180). Kontrakt GetMinMaxByPolygon potwierdzono
+    # realnym zapytaniem 2026-07-30 — patrz app/services/nmt.py oraz
+    # tests/fixtures/source_contracts/nmt_getminmaxbypolygon.txt.
+    nmt_base_url: str = "https://services.gugik.gov.pl/nmt/"
     # Oficjalny endpoint prezentacyjny WMS Krajowej Integracji MPZP. Discovery
     # używa queryable warstwy ``plany_granice`` i kontraktu GetFeatureInfo
     # opublikowanego w bieżącym GetCapabilities usługi.
@@ -50,6 +64,12 @@ class Settings(BaseSettings):
         "plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,"
         "wektor-pow,wektor-pkt,granice"
     )
+    # Konfiguracja prezentacyjnych źródeł WMS jest współdzielona przez proxy
+    # kafelków i endpoint metadanych dla frontendu. Alternatywny plik pozwala
+    # nadpisać cały rejestr bez wystawiania dowolnego URL-a w publicznym API.
+    wms_preview_sources_path: str = str(
+        Path(__file__).with_name("wms_preview_sources.json")
+    )
     map_tile_cache_dir: str = "/tmp/dzialki-map-tile-cache"
     map_tile_cache_ttl_seconds: int = 86_400
     map_tile_stale_ttl_seconds: int = 604_800
@@ -63,10 +83,13 @@ class Settings(BaseSettings):
     # Podkład miniatury raportu: OSM WMS (działa bez autoryzacji). ORTO/TOPO
     # Geoportalu zwracają 401 — nie używać jako domyślne. Nakładka KIMPZP
     # (``report_map_kimpzp_overlay_enabled``) odwzorowuje widok MPZP z UI.
+    # Nakładka KIUT jest tym samym świadomym wyjątkiem UX co KIMPZP: rastrowy
+    # GetMap w chwili generowania PDF, nie geometria ze snapshotu analizy.
     report_map_basemap_enabled: bool = True
     report_map_wms_base_url: str = "https://ows.terrestris.de/osm/service?"
     report_map_wms_layers: str = "OSM-WMS"
     report_map_kimpzp_overlay_enabled: bool = True
+    report_map_kiut_overlay_enabled: bool = True
     report_map_wms_timeout_seconds: float = 8.0
     report_map_wms_max_response_bytes: int = 8 * 1024 * 1024
     # Rejestr Urbanistyczny jest opcjonalnym, eksperymentalnym kanałem discovery.

@@ -15,8 +15,9 @@ from app.routers.analyze import router as analyze_router
 from app.routers.geocode import router as geocode_router
 from app.routers.health import router as health_router
 from app.routers.map_tiles import router as map_tiles_router
+from app.routers.raster_admin import router as raster_admin_router
 from app.routers.report import router as report_router
-from app.services.wms_tiles import wms_tile_proxy
+from app.services.wms_tiles import wms_tile_registry
 
 configure_logging()
 
@@ -24,7 +25,7 @@ configure_logging()
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     yield
-    await wms_tile_proxy.aclose()
+    await wms_tile_registry.aclose()
 
 
 app = FastAPI(
@@ -63,6 +64,7 @@ app.include_router(analyze_router)
 app.include_router(health_router)
 app.include_router(geocode_router)
 app.include_router(map_tiles_router)
+app.include_router(raster_admin_router)
 app.include_router(report_router)
 app.include_router(address_search_router)
 app.include_router(documents_router)
