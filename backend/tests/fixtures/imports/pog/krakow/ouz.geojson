@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "name": "obszarUzupelnieniaZabudowy",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2178"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"OZNACZENIE": "OUZ-1"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565000, 244000], [565080, 244000], [565080, 244060], [565000, 244060], [565000, 244000]]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "name": "planning_zone",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2180"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"zone_code": "SW/1", "zone_name": "wielofunkcyjna", "function": "mixed_use"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[300000, 400000], [300060, 400000], [300060, 400060], [300000, 400060], [300000, 400000]]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "name": "strefaPlanistyczna",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2178"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"SYMBOL": "SJ-01", "STREFA": "strefa wielofunkcyjna", "PROFIL": "MW/U"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565000, 244000], [565050, 244000], [565050, 244100], [565000, 244100], [565000, 244000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"SYMBOL": "SJ-02", "STREFA": "strefa gospodarcza", "PROFIL": "P/U"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[565050, 244000], [565100, 244000], [565100, 244100], [565050, 244100], [565050, 244000]]]
+      }
+    }
+  ]
+}

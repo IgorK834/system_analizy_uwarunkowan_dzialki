@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "name": "planning_zone",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::999999"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"SYMBOL": "SJ-01"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
+      }
+    }
+  ]
+}

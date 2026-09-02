@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "name": "social_infrastructure_standard",
+  "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2180"}},
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"service": "przedszkole", "distance_m": "800"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[300000, 400000], [300060, 400000], [300060, 400060], [300000, 400060], [300000, 400000]]]
+      }
+    }
+  ]
+}
