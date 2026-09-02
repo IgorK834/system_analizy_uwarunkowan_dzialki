@@ -23,6 +23,7 @@ from app.modules.imports.domain.mpzp import (
 from app.modules.imports.infrastructure.vector import VectorFeature, read_vector_features
 from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsResource
 from app.shared.geometry import GeometryPayload
+from app.shared.safe_archive import extract_zip
 
 
 @dataclass(frozen=True)
@@ -77,8 +78,10 @@ class WfsMpzpReader:
         content = self._fetcher.fetch(self._resources)
         layers: list[tuple[VectorLayerResource, tuple[VectorFeature, ...]]] = []
         with tempfile.TemporaryDirectory(prefix="mpzp-wfs-") as temporary:
-            with zipfile.ZipFile(io.BytesIO(content)) as archive:
-                archive.extractall(temporary)
+            # Odpowiedź WFS jest pakowana w ZIP; rozpakowujemy ją przez wspólny,
+            # bezpieczny mechanizm (Zip Slip, zip bomb, limity), a nie
+            # niekontrolowane extractall.
+            extract_zip(content, temporary, allowed_suffixes=(".gml",))
             paths = sorted(Path(temporary).glob("*.gml"))
             for resource, path in zip(self._resources, paths, strict=True):
                 local = VectorLayerResource(

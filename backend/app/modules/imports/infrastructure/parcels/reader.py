@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import io
 import tempfile
-import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +10,7 @@ from app.modules.imports.application.parcels_import import ParcelSourceBatch
 from app.modules.imports.domain.parcels import ParcelRecord
 from app.modules.imports.infrastructure.vector import read_vector_features
 from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsResource
+from app.shared.safe_archive import extract_zip
 
 
 class PyogrioParcelReader:
@@ -87,8 +86,9 @@ class WfsParcelReader:
     def read(self) -> ParcelSourceBatch:
         content = self._fetcher.fetch((self._resource,))
         with tempfile.TemporaryDirectory(prefix="dzialki-wfs-") as temporary:
-            with zipfile.ZipFile(io.BytesIO(content)) as archive:
-                archive.extractall(temporary)
+            # Wspólny, bezpieczny mechanizm rozpakowania (Zip Slip, zip bomb,
+            # limity) zamiast niekontrolowanego extractall.
+            extract_zip(content, temporary, allowed_suffixes=(".gml",))
             gml = next(Path(temporary).glob("*.gml"))
             reader = PyogrioParcelReader(
                 gml,

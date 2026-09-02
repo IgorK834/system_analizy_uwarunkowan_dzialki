@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -18,7 +19,9 @@ from app.core.settings import settings
 from app.modules.imports.application.common import ImportRelease
 from app.modules.imports.application.mpzp_import import run_mpzp_import
 from app.modules.imports.application.parcels_import import run_parcel_import
+from app.modules.imports.application.pog_import import run_pog_import
 from app.modules.imports.domain.mpzp import PlanningActRecord
+from app.modules.imports.domain.pog import normalize_legal_status
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
 from app.modules.imports.infrastructure.mpzp.reader import (
     PyogrioMpzpReader,
@@ -29,6 +32,20 @@ from app.modules.imports.infrastructure.mpzp.reader import (
 from app.modules.imports.infrastructure.parcels.reader import (
     PyogrioParcelReader,
     WfsParcelReader,
+)
+from app.modules.imports.application.raster_import import (
+    RasterSource,
+    run_raster_import,
+)
+from app.modules.imports.infrastructure.pog.reader import (
+    PogActMetadata,
+    PogBoundaryResource,
+    PogLayerResource,
+    PyogrioPogReader,
+)
+from app.modules.imports.infrastructure.raster.gdal import GdalRasterProcessor
+from app.modules.imports.infrastructure.raster.repository import (
+    SqlAlchemyRasterRepository,
 )
 from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
 from app.modules.imports.infrastructure.wfs import WfsResource
@@ -191,6 +208,146 @@ def run_mpzp_command(
             source_id,
             _repository(session, source),
             release=release,
+        )
+        if outcome.status == "succeeded":
+            session.commit()
+        else:
+            session.rollback()
+        return outcome
+    except Exception:
+        session.rollback()
+        raise
+
+
+def run_pog_command(
+    session: Session,
+    *,
+    source_id: str,
+    dry_run: bool,
+    local_resources: tuple[tuple[str, str], ...] = (),
+    act_identifier: str | None = None,
+    resolution_number: str | None = None,
+    resolution_date: date | None = None,
+    teryt: str | None = None,
+    legal_status: str | None = None,
+    name_label: str | None = None,
+    boundary_path: str | None = None,
+):
+    source = get_catalog().get(source_id)
+    effective_teryt = teryt or next(
+        (item for item in source.teryt_scope if item != "*"), ""
+    )
+    if not act_identifier:
+        raise ValueError("Import POG wymaga jawnego --act-id.")
+    if not effective_teryt:
+        raise ValueError("Import POG wymaga TERYT (--teryt lub jednoznaczny katalog).")
+    if not local_resources:
+        raise ValueError(
+            "Import POG wymaga co najmniej jednej warstwy: "
+            "--resource FEATURE_TYPE=PATH."
+        )
+
+    # Kontrakt CRS/pól per warstwa pochodzi z katalogu, jeśli źródło deklaruje
+    # zasoby dla danego typu warstwy; inaczej używamy CRS źródła bez mapowania.
+    by_role = {resource.role: resource for resource in source.resources}
+    layers: list[PogLayerResource] = []
+    for feature_type, path in local_resources:
+        contract = by_role.get(feature_type)
+        layers.append(
+            PogLayerResource(
+                feature_type=feature_type,
+                path=Path(path),
+                source_crs=contract.source_crs if contract else source.source_crs,
+                field_mapping=contract.field_mapping if contract else {},
+            )
+        )
+    boundary = None
+    if boundary_path:
+        boundary_contract = by_role.get("boundaries") or by_role.get("act")
+        boundary = PogBoundaryResource(
+            path=Path(boundary_path),
+            source_crs=(
+                boundary_contract.source_crs if boundary_contract else source.source_crs
+            ),
+        )
+    metadata = PogActMetadata(
+        act_identifier=act_identifier,
+        teryt=effective_teryt,
+        legal_status=normalize_legal_status(legal_status),
+        resolution_number=resolution_number,
+        resolution_date=resolution_date,
+        name=name_label or source.name,
+    )
+    reader = PyogrioPogReader(tuple(layers), metadata=metadata, boundary=boundary)
+    release = _release(source, dry_run=dry_run)
+    try:
+        outcome = run_pog_import(
+            reader,
+            source_id,
+            _repository(session, source),
+            release=release,
+        )
+        if outcome.status == "succeeded":
+            session.commit()
+        else:
+            session.rollback()
+        return outcome
+    except Exception:
+        session.rollback()
+        raise
+
+
+def _raster_media_type(path: Path) -> str:
+    return {
+        ".pdf": "application/pdf",
+        ".tif": "image/tiff",
+        ".tiff": "image/tiff",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+    }.get(path.suffix.casefold(), "application/octet-stream")
+
+
+def run_raster_command(
+    session: Session,
+    *,
+    source_id: str,
+    dry_run: bool,
+    input_path: str,
+    control_points_path: str,
+    page: int = 0,
+    act_version_id: int | None = None,
+    transform_method: str = "gcp_affine",
+    nodata: float | None = None,
+):
+    source = get_catalog().get(source_id)
+    raster_path = Path(input_path)
+    control_points = json.loads(Path(control_points_path).read_text(encoding="utf-8"))
+    if not isinstance(control_points, list):
+        raise ValueError("Plik punktów kontrolnych musi być listą obiektów JSON.")
+    raster_source = RasterSource(
+        content=raster_path.read_bytes(),
+        filename=raster_path.name,
+        media_type=_raster_media_type(raster_path),
+        page_number=page,
+        source_crs=source.source_crs,
+    )
+    repository = SqlAlchemyRasterRepository(
+        session,
+        source,
+        LocalArtifactStore(settings.import_artifact_storage_dir),
+    )
+    release = _release(source, dry_run=dry_run)
+    try:
+        outcome = run_raster_import(
+            raster_source,
+            control_points,
+            GdalRasterProcessor(),
+            repository,
+            release=release,
+            planning_act_version_id=act_version_id,
+            transform_method=transform_method or "gcp_affine",
+            nodata=nodata,
         )
         if outcome.status == "succeeded":
             session.commit()

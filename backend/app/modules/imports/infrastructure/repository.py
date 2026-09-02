@@ -25,6 +25,7 @@ from app.models.versioned import (
     PlanBoundary,
     PlanningAct,
     PlanningActVersion,
+    PlanningFeature,
     PlanningSymbol,
     SourceArtifact,
 )
@@ -39,7 +40,12 @@ from app.modules.imports.application.parcels_import import (
     PublishParcel,
     RepairedGeometry,
 )
+from app.modules.imports.application.pog_import import (
+    PogPublicationResult,
+    PogSourceBatch,
+)
 from app.modules.imports.domain.mpzp import PlanningActRecord
+from app.modules.imports.domain.pog import PogActRecord
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
 from app.shared.crs import CANONICAL_CRS, is_allowed_crs
 from app.shared.geometry import GeometryPayload
@@ -371,6 +377,125 @@ class SqlAlchemyImportRepository:
                 new, changed, unchanged, run.id, data_release.id
             )
 
+    def publish_pog(
+        self,
+        *,
+        release: ImportRelease,
+        batch: PogSourceBatch,
+        artifact_hash: str,
+        acts: tuple[tuple[PogActRecord, str], ...],
+        stats: MutableImportStats,
+        warnings: tuple[str, ...],
+    ) -> PogPublicationResult:
+        """Publikuje akty POG (kind='pog') z czterema warstwami i statusem prawnym."""
+        uri = self.artifact_store.save(
+            source_id=release.source_id,
+            content_hash=artifact_hash,
+            filename=batch.filename,
+            content=batch.content,
+        )
+        transaction = (
+            self.session.begin_nested()
+            if self.session.in_transaction()
+            else self.session.begin()
+        )
+        with transaction:
+            source = self._source_row()
+            artifact = self._artifact_row(
+                source.id, uri, batch.media_type, artifact_hash, len(batch.content)
+            )
+            data_release = self._release_row(source.id, release, artifact_hash)
+            run = self._run_row(source.id, data_release.id, artifact_hash)
+            now = datetime.now(timezone.utc)
+            new = changed = unchanged = 0
+            for act_record, snapshot_hash in acts:
+                act = self.session.execute(
+                    select(PlanningAct).where(
+                        PlanningAct.act_identifier == act_record.act_identifier
+                    )
+                ).scalar_one_or_none()
+                if act is None:
+                    act = PlanningAct(
+                        act_identifier=act_record.act_identifier,
+                        teryt=act_record.teryt,
+                        kind="pog",
+                    )
+                    self.session.add(act)
+                    self.session.flush()
+                latest = self.session.execute(
+                    select(PlanningActVersion)
+                    .where(
+                        PlanningActVersion.planning_act_id == act.id,
+                        PlanningActVersion.valid_to.is_(None),
+                    )
+                    .order_by(PlanningActVersion.valid_from.desc())
+                    .limit(1)
+                ).scalar_one_or_none()
+                if latest is not None and latest.content_hash == snapshot_hash:
+                    unchanged += 1
+                    continue
+                if latest is not None:
+                    latest.valid_to = now
+                    changed += 1
+                else:
+                    new += 1
+                # Akt niewiążący (projekt/w trakcie) wymaga ręcznej weryfikacji i
+                # nigdy nie jest źródłem obowiązujących ustaleń — status prawny
+                # jest przenoszony bez zmian.
+                binding = act_record.is_binding
+                version = PlanningActVersion(
+                    planning_act_id=act.id,
+                    legal_status=act_record.legal_status,
+                    version_label=release.version_label,
+                    resolution_number=act_record.resolution_number,
+                    resolution_date=act_record.resolution_date,
+                    name=act_record.name,
+                    manual_review_required=not binding,
+                    source_artifact_id=artifact.id,
+                    data_release_id=data_release.id,
+                    valid_from=now,
+                    valid_to=None,
+                    published_at=release.published_at,
+                    content_hash=snapshot_hash,
+                    review_status="verified" if binding else "unreviewed",
+                )
+                self.session.add(version)
+                self.session.flush()
+                if act_record.boundary is not None:
+                    self.session.add(
+                        PlanBoundary(
+                            planning_act_version_id=version.id,
+                            geometry=WKTElement(act_record.boundary.wkt, srid=2180),
+                        )
+                    )
+                for feature in act_record.features:
+                    self.session.add(
+                        PlanningFeature(
+                            planning_act_version_id=version.id,
+                            feature_type=feature.feature_type,
+                            geometry=WKTElement(feature.geometry.wkt, srid=2180),
+                        )
+                    )
+            if new or changed or data_release.is_active:
+                self._activate_release(source.id, data_release)
+            final_stats = stats.as_dict() | {
+                "new": new,
+                "changed": changed,
+                "unchanged": unchanged,
+            }
+            run.status = "succeeded"
+            run.stats = final_stats
+            run.checkpoint = {
+                "artifact_hash": artifact_hash,
+                "processed": len(acts),
+                "warnings": list(warnings),
+            }
+            run.finished_at = now
+            self.session.flush()
+            return PogPublicationResult(
+                new, changed, unchanged, run.id, data_release.id
+            )
+
     def _source_row(self) -> DataSource:
         row = self.session.execute(
             select(DataSource).where(DataSource.source_id == self.source.source_id)
@@ -474,7 +599,11 @@ class SqlAlchemyImportRepository:
 def find_plan_intersections(
     session: Session, parcel_geometry: GeometryPayload
 ) -> list[dict[str, int | str | float]]:
-    """Zwraca wszystkie akty przecinające działkę i rzeczywiste pola przecięć."""
+    """Zwraca akty MPZP przecinające działkę i rzeczywiste pola przecięć.
+
+    Filtr ``kind='mpzp'`` gwarantuje, że akty POG (osobno wersjonowane) nie
+    przenikają do analizy MPZP; POG ma własne ``find_pog_intersections``.
+    """
     rows = session.execute(
         text(
             """
@@ -487,7 +616,8 @@ def find_plan_intersections(
               AND pav.valid_to IS NULL
               AND pav.legal_status <> 'raster_only'
             JOIN plan_boundaries pb ON pb.planning_act_version_id=pav.id
-            WHERE pb.geometry && ST_GeomFromText(:parcel_wkt, 2180)
+            WHERE pa.kind = 'mpzp'
+              AND pb.geometry && ST_GeomFromText(:parcel_wkt, 2180)
               AND ST_Intersects(pb.geometry, ST_GeomFromText(:parcel_wkt, 2180))
             ORDER BY pa.act_identifier
             """
@@ -498,6 +628,47 @@ def find_plan_intersections(
         {
             "id": int(row["id"]),
             "act_identifier": str(row["act_identifier"]),
+            "intersection_area_sqm": float(row["intersection_area_sqm"]),
+        }
+        for row in rows
+    ]
+
+
+def find_pog_intersections(
+    session: Session, parcel_geometry: GeometryPayload
+) -> list[dict[str, int | str | float]]:
+    """Zwraca obowiązujące akty POG przecinające działkę wraz z polami warstw.
+
+    Zwracane są WYŁĄCZNIE akty o statusie ``adopted`` (uchwalone i obowiązujące).
+    Projekty i akty w trakcie sporządzania nie są prezentowane jako wiążące
+    ograniczenie planistyczne (context.md pkt 9). Pole przecięcia liczone jest na
+    obiektach warstw POG (``planning_features``) rozbite na typ warstwy.
+    """
+    rows = session.execute(
+        text(
+            """
+            SELECT pa.id, pa.act_identifier, pf.feature_type,
+                   ST_Area(ST_Intersection(
+                       pf.geometry, ST_GeomFromText(:parcel_wkt, 2180)
+                   )) AS intersection_area_sqm
+            FROM planning_acts pa
+            JOIN planning_act_versions pav ON pav.planning_act_id=pa.id
+              AND pav.valid_to IS NULL
+              AND pav.legal_status = 'adopted'
+            JOIN planning_features pf ON pf.planning_act_version_id=pav.id
+            WHERE pa.kind = 'pog'
+              AND pf.geometry && ST_GeomFromText(:parcel_wkt, 2180)
+              AND ST_Intersects(pf.geometry, ST_GeomFromText(:parcel_wkt, 2180))
+            ORDER BY pa.act_identifier, pf.feature_type
+            """
+        ),
+        {"parcel_wkt": parcel_geometry.wkt},
+    ).mappings()
+    return [
+        {
+            "id": int(row["id"]),
+            "act_identifier": str(row["act_identifier"]),
+            "feature_type": str(row["feature_type"]),
             "intersection_area_sqm": float(row["intersection_area_sqm"]),
         }
         for row in rows
