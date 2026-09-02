@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Annotated, Any, Literal, Union
+from typing import Annotated, Any, Literal, Self, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.source import SourceMetadata, WarningMessage
 
@@ -420,6 +420,45 @@ class InfrastructureResult(BaseModel):
     )
 
 
+class UtilitiesPreviewResult(BaseModel):
+    coverage_status: Literal["covered", "not_covered", "unknown"] = Field(
+        description=(
+            "Czy powiat publikuje dane GESUT w publicznej warstwie podglądowej "
+            "KIUT. Wartość unknown oznacza, że nie udało się tego rozstrzygnąć."
+        ),
+        json_schema_extra={"example": "covered"},
+    )
+    county_name: str | None = Field(
+        default=None,
+        description="Nazwa powiatu zwrócona przez KIUT, jeżeli była dostępna.",
+        json_schema_extra={"example": "powiat krakowski"},
+    )
+    layer_available: bool = Field(
+        description=(
+            "True wyłącznie wtedy, gdy KIUT potwierdził publikację danych GESUT "
+            "dla powiatu. Nie opisuje obecności sieci na samej działce."
+        ),
+        json_schema_extra={"example": True},
+    )
+    note: str = Field(
+        description=(
+            "Nota wyjaśniająca ograniczenia podglądu. Nie zawiera odległości "
+            "ani liczby obiektów sieciowych."
+        ),
+    )
+    source: SourceMetadata = Field(
+        description="Metadane zapytania do publicznej warstwy WMS KIUT.",
+    )
+
+    @model_validator(mode="after")
+    def validate_layer_available(self) -> Self:
+        if self.layer_available != (self.coverage_status == "covered"):
+            raise ValueError(
+                "layer_available musi być True wyłącznie dla statusu covered"
+            )
+        return self
+
+
 class RiskResult(BaseModel):
     risk_type: str = Field(
         description="Typ ryzyka środowiskowego lub przestrzennego.",
@@ -482,6 +521,14 @@ class AnalyzeResponse(BaseModel):
     infrastructure: list[InfrastructureResult] = Field(
         description="Lista wykrytych sieci uzbrojenia terenu.",
         json_schema_extra={"example": []},
+    )
+    utilities_preview: UtilitiesPreviewResult | None = Field(
+        default=None,
+        description=(
+            "Trzystanowy wynik sprawdzenia, czy powiat publikuje podgląd GESUT "
+            "w KIUT. Pole prezentacyjne nie jest analizą odległości do sieci."
+        ),
+        json_schema_extra={"example": None},
     )
     risks: list[RiskResult] = Field(
         description="Lista ryzyk środowiskowych i przestrzennych.",
