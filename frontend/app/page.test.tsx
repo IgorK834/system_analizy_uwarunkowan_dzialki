@@ -3,7 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import HomePage from "@/app/page";
-import { analyzeParcel } from "@/lib/api";
+import { analyzeParcel, getPreviewSources } from "@/lib/api";
+import type { PreviewSource } from "@/lib/types";
 import { buildAnalyzeResponse } from "@/test/fixtures";
 
 vi.mock("@/components/MapViewLoader", () => ({
@@ -20,36 +21,79 @@ vi.mock("@/components/MapViewLoader", () => ({
 
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
-  return { ...actual, analyzeParcel: vi.fn() };
+  return { ...actual, analyzeParcel: vi.fn(), getPreviewSources: vi.fn() };
 });
 
 const analyzeParcelMock = vi.mocked(analyzeParcel);
+const getPreviewSourcesMock = vi.mocked(getPreviewSources);
+const previewSources: PreviewSource[] = [
+  {
+    source_key: "mpzp",
+    label: "Miejscowe plany zagospodarowania przestrzennego",
+    attribution: "KIMPZP",
+    min_zoom: 11,
+    max_zoom: 18,
+    tile_size: 256,
+    tile_url_template: "/api/v1/map/tiles/mpzp/{z}/{x}/{y}.png",
+    legal_note: "Podgląd poglądowy.",
+    info_url: "https://info.example.test/mpzp",
+    catalog_status: "production",
+  },
+  {
+    source_key: "pog",
+    label: "Plany ogólne gmin",
+    attribution: "POG",
+    min_zoom: 11,
+    max_zoom: 18,
+    tile_size: 256,
+    tile_url_template: "/api/v1/map/tiles/pog/{z}/{x}/{y}.png",
+    legal_note: "Podgląd poglądowy.",
+    info_url: "https://info.example.test/pog",
+    catalog_status: "production",
+  },
+  {
+    source_key: "kiut",
+    label: "Uzbrojenie terenu",
+    attribution: "KIUT",
+    min_zoom: 17,
+    max_zoom: 20,
+    tile_size: 512,
+    tile_url_template: "/api/v1/map/tiles/kiut/{z}/{x}/{y}.png",
+    legal_note: "Podgląd poglądowy.",
+    info_url: "https://info.example.test/kiut",
+    catalog_status: "production",
+  },
+];
 
 describe("strona główna", () => {
   beforeEach(() => {
     analyzeParcelMock.mockReset();
+    getPreviewSourcesMock.mockReset();
+    getPreviewSourcesMock.mockResolvedValue(previewSources);
     window.localStorage.clear();
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.test");
-    vi.stubEnv("NEXT_PUBLIC_KIMPZP_TILE_URL", "");
   });
 
   afterEach(() => vi.unstubAllEnvs());
 
-  it("pokazuje przełączniki nakładek planistycznych jeszcze przed analizą", () => {
-    vi.stubEnv("NEXT_PUBLIC_POG_WMS_URL", "https://wms.example.test/pog");
-
+  it("pokazuje przełączniki warstw podglądowych jeszcze przed analizą", async () => {
     render(<HomePage />);
 
     expect(
-      screen.getByRole("complementary", { name: "Nakładki planistyczne" }),
+      screen.getByRole("complementary", { name: "Warstwy podglądowe" }),
     ).toBeVisible();
-    expect(screen.getByRole("switch", { name: /MPZP/ })).toHaveAttribute(
+    expect(await screen.findByRole("switch", { name: /MPZP/ })).toHaveAttribute(
       "aria-checked",
       "true",
     );
     expect(
       screen.getByRole("switch", { name: /Plan Ogólny Gminy/ }),
     ).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("switch", { name: /Uzbrojenie/ })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    expect(screen.getByText(/Brak obiektów na mapie nie potwierdza/)).toBeVisible();
   });
 
   it("łączy klik mapy z POST /analyze i pokazuje krótki wynik", async () => {

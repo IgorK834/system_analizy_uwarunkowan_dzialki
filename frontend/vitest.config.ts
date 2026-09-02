@@ -27,7 +27,8 @@ export default defineConfig({
         "components/SearchPanel.tsx",
         "components/ResultPanel.tsx",
         "components/LayerToggle.tsx",
-        "components/PlanningOverlay.tsx",
+        "components/PreviewOverlays.tsx",
+        "components/LayerAvailabilityNote.tsx",
         "components/ReportDownloadButton.tsx",
       ],
       thresholds: {
