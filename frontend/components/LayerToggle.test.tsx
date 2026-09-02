@@ -60,4 +60,20 @@ describe("LayerToggle", () => {
       screen.getByText("Nakładka POG niedostępna dla tej gminy."),
     ).toBeVisible();
   });
+
+  it("pokazuje jawny status warstwy pod przełącznikiem", () => {
+    render(
+      <LayerToggle
+        items={[
+          {
+            ...baseItems[0],
+            status: "Podgląd krajowy. Analiza parametrów: dostępna.",
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/Analiza parametrów: dostępna/)).toBeVisible();
+  });
 });

@@ -5,7 +5,7 @@
  *
  * Używany zarówno dla warstw GeoJSON (obrys działki, obszar zabudowy), jak
  * i dla nakładek WMS (MPZP, POG) — logika włączania/wyłączania konkretnej
- * warstwy na mapie należy do wywołującego (ResultPanel/PlanningOverlay),
+ * warstwy na mapie należy do wywołującego (ResultPanel/PreviewOverlays),
  * ten komponent tylko renderuje stan i zgłasza zmiany przez onChange.
  */
 
@@ -16,6 +16,7 @@ export type LayerToggleItem = {
   checked: boolean;
   disabled?: boolean;
   disabledReason?: string;
+  status?: string;
 };
 
 export type LayerToggleProps = {
@@ -58,6 +59,9 @@ export function LayerToggle({
             </button>
             {item.disabled && item.disabledReason && (
               <p className="layer-toggle-disabled-reason">{item.disabledReason}</p>
+            )}
+            {item.status && (
+              <p className="layer-toggle-status">{item.status}</p>
             )}
           </li>
         ))}

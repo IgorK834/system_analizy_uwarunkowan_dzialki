@@ -596,6 +596,13 @@ input:disabled {
   line-height: 1.4;
 }
 
+.layer-toggle-status {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .planning-overlay-control {
   position: absolute;
   z-index: 6;
@@ -608,6 +615,8 @@ input:disabled {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 8px 24px rgba(22, 41, 31, 0.13);
   backdrop-filter: blur(8px);
+  max-height: min(52vh, 520px);
+  overflow-y: auto;
 }
 
 .planning-overlay-control .layer-toggle {
@@ -619,6 +628,59 @@ input:disabled {
   color: var(--muted);
   font-size: 0.75rem;
   line-height: 1.4;
+}
+
+.layer-availability-note {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.layer-availability-details {
+  margin-top: 8px;
+}
+
+.layer-availability-summary {
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-size: 0.73rem;
+  font-weight: 600;
+  user-select: none;
+}
+
+.layer-availability-summary:hover {
+  text-decoration: underline;
+}
+
+.layer-availability-note p {
+  margin: 8px 0 0;
+}
+
+.layer-availability-note ul {
+  margin: 7px 0 0;
+  padding-left: 18px;
+}
+
+.layer-availability-note a {
+  color: var(--accent-strong);
+}
+
+.layer-availability-note.compact li {
+  display: inline;
+}
+
+.layer-availability-note.compact li:not(:last-child)::after {
+  content: " · ";
+}
+
+.preview-legal-footer {
+  padding: 9px 20px;
+  border-top: 1px solid rgba(33, 53, 43, 0.14);
+  background: #f7faf8;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .manual-zone-form h3 {
@@ -665,6 +727,7 @@ input:disabled {
     bottom: 10px;
     width: calc(100% - 20px);
     padding: 11px;
+    max-height: 45vh;
   }
 
   .tabs {

@@ -14,7 +14,7 @@ export type MapViewProps = {
   onMapClick: (lon: number, lat: number) => void;
   /**
    * Wywoływane po pełnym załadowaniu stylu mapy z instancją maplibregl.Map.
-   * Komponenty nakładające dodatkowe warstwy (ResultPanel, PlanningOverlay)
+   * Komponenty nakładające dodatkowe warstwy (ResultPanel, PreviewOverlays)
    * nie tworzą własnej instancji mapy — otrzymują tę samą instancję przez
    * współdzielony stan w page.tsx, a nie przez bezpośrednią manipulację DOM.
    */

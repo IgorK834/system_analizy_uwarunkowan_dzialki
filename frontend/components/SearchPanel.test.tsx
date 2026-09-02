@@ -169,6 +169,7 @@ describe("SearchPanel", () => {
     await user.type(input, "Wars");
     await user.click(await screen.findByRole("option", { name: /Warszawa/ }));
 
+    await waitFor(() => expect(input).toHaveFocus());
     expect(input).toHaveValue("Warszawa, ");
     expect(onAnalyze).not.toHaveBeenCalled();
 

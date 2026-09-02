@@ -103,7 +103,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     if (!map) return;
 
     // Kolejność dodawania jest równocześnie kolejnością renderowania. WMS-y są
-    // dodawane wcześniej przez PlanningOverlay, a warstwy wynikowe układamy od
+    // dodawane wcześniej przez PreviewOverlays, a warstwy wynikowe układamy od
     // powierzchniowych ryzyk do najważniejszego obrysu działki na samej górze.
     addOrUpdateGeojsonLayer(map, {
       sourceId: RISK_SOURCE_ID,

@@ -4,7 +4,7 @@ import { useCallback, useState, type FormEvent } from "react";
 import type maplibregl from "maplibre-gl";
 
 import { MapViewLoader } from "@/components/MapViewLoader";
-import { PlanningOverlay } from "@/components/PlanningOverlay";
+import { PreviewOverlays } from "@/components/PreviewOverlays";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { useAnalyzeParcel } from "@/hooks/useAnalyzeParcel";
@@ -77,7 +77,7 @@ export default function HomePage() {
       <div className="workspace">
         <MapViewLoader onMapClick={handleMapClick} onMapReady={handleMapReady} />
         <SearchPanel loading={loading} onAnalyze={run} map={map} />
-        <PlanningOverlay result={result} map={map} />
+        <PreviewOverlays result={result} map={map} />
 
         {loading && (
           <div className="analysis-card analysis-loading" role="status">
@@ -157,6 +157,10 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      <footer className="preview-legal-footer">
+        Warstwy MPZP, POG i uzbrojenia są podglądem oficjalnych usług
+        publicznych. Brak obiektów na mapie nie potwierdza braku planu ani sieci.
+      </footer>
     </main>
   );
 }
