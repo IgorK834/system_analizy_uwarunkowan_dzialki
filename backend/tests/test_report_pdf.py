@@ -41,6 +41,7 @@ from app.schemas.analyze import (
     ParcelGeometryResponse,
     PogResult,
     RiskResult,
+    UtilitiesPreviewResult,
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata
@@ -126,6 +127,7 @@ def cleanup_report_rows():
 def disable_report_basemap(monkeypatch: pytest.MonkeyPatch) -> None:
     """Integracyjne testy PDF nie odpytują WMS — domyślnie ścieżka MVP offline."""
     monkeypatch.setattr(settings, "report_map_basemap_enabled", False)
+    monkeypatch.setattr(settings, "report_map_kiut_overlay_enabled", False)
 
 
 def _source(
@@ -235,6 +237,19 @@ def _full_response(identifier: str) -> AnalyzeResponse:
                 source=_source("KIUT", "https://kiut.example.test", confidence=0.7),
             )
         ],
+        utilities_preview=UtilitiesPreviewResult(
+            coverage_status="covered",
+            county_name="powiat krakowski",
+            layer_available=True,
+            note=(
+                "Powiat publikuje dane GESUT. Brak obiektów na podglądzie nie "
+                "oznacza braku sieci; podgląd nie służy do obliczania odległości."
+            ),
+            source=_source(
+                "KIUT (GUGiK)",
+                "https://integracja.example.test/kiut",
+            ),
+        ),
         risks=[
             RiskResult(
                 risk_type="flood_zone",
@@ -372,6 +387,7 @@ def test_full_analysis_pdf_contains_all_sections_and_polish_characters() -> None
     assert "Parametry geometryczne" in text
     assert "MPZP" in text
     assert "Plan Ogólny Gminy" in text
+    assert "Podgląd uzbrojenia terenu" in text
     assert "Infrastruktura" in text
     assert "Ryzyka" in text
     assert "Źródła danych" in text
@@ -386,6 +402,10 @@ def test_full_analysis_pdf_contains_all_sections_and_polish_characters() -> None
     assert identifier in text
     assert str(analysis_id) in text
     assert "complete" in text
+    assert "powiat publikuje dane GESUT w KIUT" in text
+    assert "powiat krakowski" in text
+    assert "Raport nie zawiera odległości ani liczby sieci" in text
+    assert "Nie da się na podstawie podglądu WMS stwierdzić" in text
 
 
 def test_full_analysis_pdf_contains_disclaimer_clause() -> None:

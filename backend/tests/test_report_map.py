@@ -23,6 +23,7 @@ from app.schemas.analyze import (
     InfrastructureResult,
     ParcelGeometryResponse,
     RiskResult,
+    UtilitiesPreviewResult,
 )
 from app.schemas.source import SourceMetadata
 from app.services.report_map import (
@@ -39,9 +40,11 @@ from app.services.report_map_basemap import (
     compute_basemap_layout,
     fetch_report_basemap_png,
 )
+from datetime import datetime, timezone
+
 from pyproj import Transformer
 
-from datetime import datetime, timezone
+from app.services.wms_tiles import WmsPreviewSource
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _OSM_WMS_URL = "https://wms.example.test/report-osm"
@@ -54,6 +57,7 @@ def _disable_basemap_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
     """Domyślnie testujemy ścieżkę MVP offline bez sieci."""
     monkeypatch.setattr(settings, "report_map_basemap_enabled", False)
     monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+    monkeypatch.setattr(settings, "report_map_kiut_overlay_enabled", False)
 
 
 def _basemap_settings(**updates: object) -> Settings:
@@ -62,6 +66,7 @@ def _basemap_settings(**updates: object) -> Settings:
         "report_map_wms_base_url": _OSM_WMS_URL,
         "report_map_wms_layers": "OSM-WMS",
         "report_map_kimpzp_overlay_enabled": False,
+        "report_map_kiut_overlay_enabled": False,
         "kimpzp_wms_base_url": _KIMPZP_WMS_URL,
         "kimpzp_wms_layers": "raster",
         "report_map_wms_timeout_seconds": 2.0,
@@ -397,7 +402,10 @@ def _mock_png_response(request: httpx.Request) -> httpx.Response:
     width = int(request.url.params.get("width", MAP_IMAGE_WIDTH))
     height = int(request.url.params.get("height", MAP_IMAGE_HEIGHT))
     color = (30, 120, 200)
-    if "kimpzp" in str(request.url) or "KrajowaIntegracja" in str(request.url):
+    url = str(request.url).casefold()
+    if "kiut" in url:
+        color = (0, 200, 80)
+    elif "kimpzp" in url or "krajowaintegracja" in url:
         color = (255, 0, 0)
     return httpx.Response(
         200,
@@ -545,3 +553,190 @@ def test_fetch_report_basemap_composites_kimpzp_overlay() -> None:
     sample_x = int(layout.offset_x + 10)
     sample_y = int(layout.offset_y + 10)
     assert image.getpixel((sample_x, sample_y)) == (255, 0, 0)
+
+
+_KIUT_WMS_URL = "https://wms.example.test/kiut"
+_KIUT_WORKER_URL = (
+    "https://integracja02.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu"
+)
+
+
+def _kiut_source() -> WmsPreviewSource:
+    return WmsPreviewSource(
+        source_key="kiut",
+        base_url=_KIUT_WMS_URL,
+        layers="przewod_wodociagowy,przewod_elektroenergetyczny",
+        version="1.1.1",
+        min_zoom=16,
+        max_zoom=20,
+        tile_size=512,
+        fresh_ttl_s=21600,
+        stale_ttl_s=172800,
+        upstream_concurrency=4,
+        read_timeout_s=8.0,
+        source_id="kiut_wms",
+        label="Uzbrojenie terenu",
+        attribution="KIUT, GUGiK",
+        legal_note="Podgląd poglądowy.",
+        info_url=_KIUT_WMS_URL,
+        catalog_status="production",
+        allowed_redirect_host_suffixes=(".gugik.gov.pl",),
+        max_redirects=3,
+    )
+
+
+def _covered_preview() -> UtilitiesPreviewResult:
+    return UtilitiesPreviewResult(
+        coverage_status="covered",
+        county_name="powiat bielski",
+        layer_available=True,
+        note="Powiat publikuje dane GESUT w KIUT.",
+        source=SourceMetadata(
+            source_name="KIUT (GUGiK)",
+            source_url=_KIUT_WMS_URL,
+            fetched_at=_FETCHED_AT,
+            response_status=200,
+            confidence=0.9,
+            manual_review_required=False,
+        ),
+    )
+
+
+@respx.mock
+def test_fetch_report_basemap_composites_kiut_on_top_of_kimpzp() -> None:
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIMPZP_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIUT_WMS_URL).mock(side_effect=_mock_png_response)
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings(
+        report_map_kimpzp_overlay_enabled=True,
+        report_map_kiut_overlay_enabled=True,
+        kimpzp_wms_base_url=_KIMPZP_WMS_URL,
+    )
+
+    result = fetch_report_basemap_png(
+        layout, config=cfg, kiut_source=_kiut_source()
+    )
+
+    assert result is not None
+    image = Image.open(io.BytesIO(result)).convert("RGB")
+    sample_x = int(layout.offset_x + 10)
+    sample_y = int(layout.offset_y + 10)
+    assert image.getpixel((sample_x, sample_y)) == (0, 200, 80)
+
+
+@respx.mock
+def test_fetch_report_basemap_follows_allowed_kiut_redirect() -> None:
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIUT_WMS_URL).mock(
+        return_value=httpx.Response(
+            302, headers={"Location": _KIUT_WORKER_URL}
+        )
+    )
+    worker = respx.get(_KIUT_WORKER_URL).mock(
+        return_value=httpx.Response(
+            200,
+            content=_make_color_png(900, 600, (0, 200, 80)),
+            headers={"content-type": "image/png"},
+        )
+    )
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings(report_map_kiut_overlay_enabled=True)
+
+    result = fetch_report_basemap_png(
+        layout, config=cfg, kiut_source=_kiut_source()
+    )
+
+    assert result is not None
+    assert worker.call_count == 1
+    image = Image.open(io.BytesIO(result)).convert("RGB")
+    assert image.getpixel((10, 10)) == (0, 200, 80)
+
+
+@respx.mock
+def test_fetch_report_basemap_keeps_osm_when_kiut_redirect_is_rejected() -> None:
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIUT_WMS_URL).mock(
+        return_value=httpx.Response(
+            302, headers={"Location": "https://evil.example/steal"}
+        )
+    )
+    evil = respx.get("https://evil.example/steal").mock(side_effect=_mock_png_response)
+    bounds = _Bounds(min_lon=19.94, min_lat=50.06, max_lon=19.945, max_lat=50.064)
+    layout = compute_basemap_layout(bounds, 900, 600)
+    cfg = _basemap_settings(report_map_kiut_overlay_enabled=True)
+
+    result = fetch_report_basemap_png(
+        layout, config=cfg, kiut_source=_kiut_source()
+    )
+
+    assert result is not None
+    assert evil.call_count == 0
+    image = Image.open(io.BytesIO(result)).convert("RGB")
+    assert image.getpixel((10, 10)) == (30, 120, 200)
+
+
+def test_kiut_overlay_source_only_for_covered_counties(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.services.report_map import _kiut_overlay_source
+
+    monkeypatch.setattr(settings, "report_map_kiut_overlay_enabled", True)
+    covered = _response_with_parcel().model_copy(
+        update={"utilities_preview": _covered_preview()}
+    )
+    not_covered = _response_with_parcel().model_copy(
+        update={
+            "utilities_preview": UtilitiesPreviewResult(
+                coverage_status="not_covered",
+                county_name=None,
+                layer_available=False,
+                note="KIUT nie potwierdził publikacji.",
+                source=SourceMetadata(
+                    source_name="KIUT (GUGiK)",
+                    source_url=_KIUT_WMS_URL,
+                    fetched_at=_FETCHED_AT,
+                    response_status=200,
+                    confidence=0.9,
+                    manual_review_required=False,
+                ),
+            )
+        }
+    )
+
+    source = _kiut_overlay_source(covered)
+    assert source is not None
+    assert source.source_key == "kiut"
+    assert _kiut_overlay_source(not_covered) is None
+    assert _kiut_overlay_source(_response_with_parcel()) is None
+
+
+@respx.mock
+def test_render_marks_kiut_overlay_when_county_is_covered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "report_map_basemap_enabled", True)
+    monkeypatch.setattr(settings, "report_map_wms_base_url", _OSM_WMS_URL)
+    monkeypatch.setattr(settings, "report_map_wms_layers", "OSM-WMS")
+    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
+    monkeypatch.setattr(settings, "report_map_kiut_overlay_enabled", True)
+    monkeypatch.setattr(
+        "app.services.report_map._kiut_overlay_source",
+        lambda _response: _kiut_source(),
+    )
+    respx.get(_OSM_WMS_URL).mock(side_effect=_mock_png_response)
+    respx.get(_KIUT_WMS_URL).mock(side_effect=_mock_png_response)
+
+    result = render_analysis_map_png(
+        _response_with_parcel().model_copy(
+            update={"utilities_preview": _covered_preview()}
+        )
+    )
+
+    assert result.png_bytes is not None
+    assert result.basemap_used is True
+    assert result.kiut_overlay_used is True
+    image = Image.open(io.BytesIO(result.png_bytes)).convert("RGB")
+    assert image.getpixel((8, 8)) == (0, 200, 80)

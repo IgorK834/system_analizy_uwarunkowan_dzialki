@@ -2,8 +2,9 @@
 
 Ścieżka MVP rysuje geometrie na jednolitym tle (``MAP_BACKGROUND_RGB``) bez
 pobierania kafelków — raport nie zależy wtedy od sieci. Ścieżka rozszerzona
-opcjonalnie nakłada podkład z synchronicznego WMS GetMap (``report_map_basemap``);
-przy aktywnym podkładzie wektory używają tej samej afinicznej projekcji co raster
+opcjonalnie nakłada podkład z synchronicznego WMS GetMap (``report_map_basemap``):
+OSM, KIMPZP oraz KIUT gdy snapshot ma ``utilities_preview.coverage_status=covered``.
+Przy aktywnym podkładzie wektory używają tej samej afinicznej projekcji co raster
 (liniowe mapowanie BBOX→piksele, bez letterboxu rozjeżdżającego obrys).
 
 TODO (ADR-009): PDF offline ze snapshotu; podkład WMS to świadomy wyjątek UX.
@@ -46,6 +47,7 @@ from app.services.report_map_basemap import (
     compute_basemap_layout,
     fetch_report_basemap_png,
 )
+from app.services.wms_tiles import WmsPreviewSource, wms_tile_registry
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,7 @@ class MapRenderResult:
 
     png_bytes: bytes | None
     basemap_used: bool = False
+    kiut_overlay_used: bool = False
     warning: str | None = None
 
 
@@ -134,18 +137,26 @@ def render_analysis_map_png(
     warning: str | None = None
     basemap_image: Image.Image | None = None
     basemap_used = False
+    kiut_overlay_used = False
     basemap_enabled = settings.report_map_basemap_enabled
     basemap_layout: BasemapLayout | None = None
+    kiut_source = _kiut_overlay_source(response)
 
     if basemap_enabled:
         basemap_layout = compute_basemap_layout(bounds, width, height)
 
     basemap_bytes = (
-        fetch_report_basemap_png(basemap_layout) if basemap_layout is not None else None
+        fetch_report_basemap_png(
+            basemap_layout,
+            kiut_source=kiut_source,
+        )
+        if basemap_layout is not None
+        else None
     )
     if basemap_bytes is not None and basemap_layout is not None:
         basemap_image = Image.open(io.BytesIO(basemap_bytes))
         basemap_used = True
+        kiut_overlay_used = kiut_source is not None
         projector: _Projector | _BasemapProjector = _BasemapProjector(basemap_layout)
     else:
         if basemap_enabled:
@@ -162,6 +173,7 @@ def render_analysis_map_png(
     return MapRenderResult(
         png_bytes=png_bytes,
         basemap_used=basemap_used,
+        kiut_overlay_used=kiut_overlay_used,
         warning=warning,
     )
 
@@ -170,6 +182,25 @@ def png_to_data_uri(png_bytes: bytes) -> str:
     """Koduje bajty PNG jako data URI do bezpiecznego osadzenia w HTML."""
     encoded = base64.b64encode(png_bytes).decode("ascii")
     return f"data:image/png;base64,{encoded}"
+
+
+def _kiut_overlay_source(response: Any) -> WmsPreviewSource | None:
+    """Zwraca źródło KIUT tylko gdy snapshot potwierdza publikację GESUT.
+
+    Nakładka jest rastrem WMS z chwili generowania PDF — nie geometrią ze
+    snapshotu. Pobieramy ją wyłącznie dla ``covered``, żeby nie obciążać
+    kaskady KIUT tam, gdzie powiat i tak nic nie publikuje.
+    """
+    if not settings.report_map_kiut_overlay_enabled:
+        return None
+    preview = getattr(response, "utilities_preview", None)
+    if preview is None or getattr(preview, "coverage_status", None) != "covered":
+        return None
+    try:
+        return wms_tile_registry.get("kiut").source
+    except KeyError:
+        logger.warning("report_kiut_overlay_skipped reason=unknown_source")
+        return None
 
 
 def _collect_map_layers(response: Any) -> list[_MapLayer]:

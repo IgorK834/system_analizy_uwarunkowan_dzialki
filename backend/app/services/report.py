@@ -63,16 +63,20 @@ def generate_analysis_report_pdf(analysis_id: int, db: Session) -> bytes:
 
     response = build_analyze_response_from_analysis(analysis, db)
 
-    map_data_uri, map_warning = _render_map_data_uri(response)
-    context = _build_report_context(response, map_data_uri, map_warning)
+    map_data_uri, map_warning, map_kiut_overlay = _render_map_data_uri(response)
+    context = _build_report_context(
+        response, map_data_uri, map_warning, map_kiut_overlay
+    )
     html = _render_report_html(context)
 
     logger.info("Wygenerowano HTML raportu dla analizy %s", analysis_id)
     return _html_to_pdf(html)
 
 
-def _render_map_data_uri(response: AnalyzeResponse) -> tuple[str | None, str | None]:
-    """Renderuje miniaturę mapy i zwraca (data_uri, ostrzeżenie).
+def _render_map_data_uri(
+    response: AnalyzeResponse,
+) -> tuple[str | None, str | None, bool]:
+    """Renderuje miniaturę mapy i zwraca (data_uri, ostrzeżenie, nakładka KIUT).
 
     Awaria opcjonalnego renderera mapy albo brak geometrii nie może zablokować
     raportu. W obu przypadkach zwracamy ``data_uri=None`` i czytelne ostrzeżenie
@@ -85,20 +89,25 @@ def _render_map_data_uri(response: AnalyzeResponse) -> tuple[str | None, str | N
         return None, (
             "Nie udało się wygenerować miniatury mapy. Pozostała część raportu "
             "jest kompletna."
-        )
+        ), False
 
     if map_result.png_bytes is None:
         return None, (
             "Miniatura mapy jest niedostępna, ponieważ analiza nie zawiera "
             "geometrii możliwej do narysowania."
-        )
-    return png_to_data_uri(map_result.png_bytes), map_result.warning
+        ), False
+    return (
+        png_to_data_uri(map_result.png_bytes),
+        map_result.warning,
+        map_result.kiut_overlay_used,
+    )
 
 
 def _build_report_context(
     response: AnalyzeResponse,
     map_data_uri: str | None,
     map_warning: str | None,
+    map_kiut_overlay: bool = False,
 ) -> dict[str, Any]:
     """Przygotowuje dane prezentacyjne raportu, spójne z formatowaniem frontendu."""
     parcel = response.parcel
@@ -115,12 +124,14 @@ def _build_report_context(
         "parcel_identifier": parcel.parcel_identifier if parcel else None,
         "map_data_uri": map_data_uri,
         "map_warning": map_warning,
+        "map_kiut_overlay": map_kiut_overlay,
         "geometry": _geometry_context(response),
         "mpzp_zones": [_mpzp_context(zone) for zone in response.mpzp_zones],
         "pog": _pog_context(response.pog),
         "infrastructure": [
             _infrastructure_context(item) for item in response.infrastructure
         ],
+        "utilities_preview": _utilities_preview_context(response),
         "risks": [_risk_context(item) for item in response.risks],
         "sources": [_source_context(source) for source in response.sources],
         "warnings": [_warning_context(warning) for warning in response.warnings],
@@ -209,6 +220,34 @@ def _infrastructure_context(item: Any) -> dict[str, Any]:
     }
 
 
+def _utilities_preview_context(response: AnalyzeResponse) -> dict[str, Any] | None:
+    preview = response.utilities_preview
+    if preview is None:
+        return None
+    status_labels = {
+        "covered": "powiat publikuje dane GESUT w KIUT",
+        "not_covered": "KIUT nie potwierdził publikacji danych GESUT przez powiat",
+        "unknown": "nie udało się sprawdzić pokrycia powiatu",
+    }
+    return {
+        "coverage_status": preview.coverage_status,
+        "coverage_label": status_labels[preview.coverage_status],
+        "county_name": preview.county_name,
+        "layer_available": _format_bool(preview.layer_available),
+        "note": preview.note,
+        "style_legend": (
+            "Kolory poglądowego obrazu WMS (styl GUGiK): energetyka — czerwony, "
+            "woda — niebieski, kanalizacja — brązowy, gaz — żółty."
+        ),
+        "source_name": preview.source.source_name,
+        "fetched_at": (
+            _format_datetime(preview.source.fetched_at)
+            if preview.source.fetched_at
+            else None
+        ),
+    }
+
+
 def _risk_context(item: Any) -> dict[str, Any]:
     return {
         "risk_type": item.risk_type,
@@ -289,6 +328,22 @@ def _build_limitations(
     elif response.pog.manual_review_required:
         limitations.append("Wynik POG wymaga ręcznej weryfikacji.")
 
+    if response.utilities_preview is None:
+        limitations.append(
+            "Snapshot nie zawiera wyniku sprawdzenia pokrycia KIUT; brak danych "
+            "nie może być interpretowany jako brak sieci."
+        )
+    elif response.utilities_preview.coverage_status == "unknown":
+        limitations.append(
+            "Nie udało się sprawdzić pokrycia KIUT. Pusty podgląd nie oznacza "
+            "braku sieci."
+        )
+    elif response.utilities_preview.coverage_status == "not_covered":
+        limitations.append(
+            "KIUT nie potwierdził publikacji GESUT przez powiat. Nie jest to "
+            "potwierdzenie braku sieci na działce."
+        )
+
     manual_mpzp_zones = [
         zone
         for zone in response.mpzp_zones
@@ -345,9 +400,9 @@ def _html_to_pdf(html: str) -> bytes:
     """
     try:
         from weasyprint import HTML  # import leniwy: patrz docstring
-    except ImportError as exc:  # pragma: no cover - zależne od środowiska
+    except (ImportError, OSError) as exc:  # pragma: no cover - zależne od środowiska
         raise AnalysisReportRenderError(
-            "Biblioteka WeasyPrint nie jest dostępna w tym środowisku."
+            "Biblioteka WeasyPrint lub jej zależności systemowe nie są dostępne."
         ) from exc
 
     try:
@@ -443,6 +498,7 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   .empty { color: #98a2b3; font-style: italic; }
   .map-figure { text-align: center; margin: 3mm 0; }
   .map-figure img { max-width: 100%; border: 1px solid #d0d5dd; }
+  .map-caption { font-size: 8.5pt; color: #475467; margin: 1.5mm 0 0; text-align: left; }
   .item { border: 1px solid #e4e7ec; border-radius: 2mm; padding: 2mm 3mm;
           margin: 2mm 0; break-inside: avoid; }
   .item .item-title { font-weight: bold; font-size: 11pt; }
@@ -482,6 +538,14 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   {% if map_data_uri %}
   <div class="map-figure">
     <img src="{{ map_data_uri }}" alt="Miniatura mapy działki i warstw analizy" />
+    <p class="map-caption">
+      Miniatura poglądowa: obrys działki na podkładzie mapowym
+      {%- if map_kiut_overlay %}
+      z nakładką uzbrojenia terenu (KIUT) pobraną przy generowaniu raportu
+      {%- endif -%}.
+      Nakładka WMS nie jest geometrią sieci ze snapshotu analizy i nie pozwala
+      stwierdzić, czy dana sieć leży na działce.
+    </p>
   </div>
   {% else %}
   <p class="empty">{{ map_warning if map_warning else "Miniatura mapy jest niedostępna." }}</p>
@@ -555,6 +619,26 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   {% if pog.confidence %}<div class="confidence">Pewność danych: {{ pog.confidence.pct }} ({{ pog.confidence.label }})</div>{% endif %}
   {% else %}
   <p class="empty">Dane niedostępne — brak danych POG/OUZ dla tej działki.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Podgląd uzbrojenia terenu (KIUT)</h2>
+  {% if utilities_preview %}
+  <table>
+    <tr><th>Status pokrycia</th><td>{{ utilities_preview.coverage_label }}</td></tr>
+    {% if utilities_preview.county_name %}<tr><th>Powiat</th><td>{{ utilities_preview.county_name }}</td></tr>{% endif %}
+    <tr><th>Warstwa podglądowa potwierdzona</th><td>{{ utilities_preview.layer_available }}</td></tr>
+    <tr><th>Źródło</th><td>{{ utilities_preview.source_name }}</td></tr>
+    {% if utilities_preview.fetched_at %}<tr><th>Sprawdzono</th><td>{{ utilities_preview.fetched_at }}</td></tr>{% endif %}
+  </table>
+  <p>{{ utilities_preview.note }}</p>
+  {% if utilities_preview.style_legend %}<p>{{ utilities_preview.style_legend }}</p>{% endif %}
+  <p><strong>Raport nie zawiera odległości ani liczby sieci wyliczonych z podglądu WMS.</strong></p>
+  <p><strong>Nie da się na podstawie podglądu WMS stwierdzić, czy konkretna sieć leży na działce.</strong>
+     Brak linii na obrazie nie oznacza braku sieci, a linia na obrazie nie jest geometrią do pomiaru przecięcia.</p>
+  {% else %}
+  <p class="empty">Nie sprawdzono pokrycia KIUT dla tego snapshotu. Brak danych nie oznacza braku sieci.</p>
   {% endif %}
 </section>
 

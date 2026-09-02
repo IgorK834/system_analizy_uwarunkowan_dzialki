@@ -2,7 +2,7 @@
 
 Miniatura raportu potrzebuje jednego obrazu dla całego BBOX (np. 900×600), a nie
 kafelków XYZ z ``wms_tiles``. Stos mapy odwzorowuje UI: publiczny podkład
-lokalizacyjny (OSM WMS) + opcjonalna przezroczysta nakładka KIMPZP/MPZP.
+lokalizacyjny (OSM WMS) + opcjonalne przezroczyste nakładki KIMPZP i KIUT.
 
 GetMap używa pełnego kadru miniatury (np. 900×600). Gdy BBOX działki ma inną
 proporcję, rozszerzamy zasięg mapy (więcej kontekstu po bokach/górze), zamiast
@@ -11,7 +11,8 @@ są liczone w tym samym ``BasemapLayout`` co raster WMS.
 
 TODO (ADR-009): raport PDF jest offline ze snapshotu analizy; ten moduł to
 świadomy, opcjonalny wyjątek UX — jedyny outbound przy generowaniu PDF. Awaria
-WMS nigdy nie blokuje raportu (fallback w ``report_map``).
+WMS nigdy nie blokuje raportu (fallback w ``report_map``). Awaria samej
+nakładki KIUT nie blokuje podkładu OSM.
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from PIL import Image
 from pyproj import Transformer
 
 from app.core.settings import Settings, settings
+from app.services.wms_tiles import WmsPreviewSource
 
 if TYPE_CHECKING:
     from app.services.report_map import _Bounds
@@ -128,8 +130,9 @@ def fetch_report_basemap_png(
     layout: BasemapLayout,
     *,
     config: Settings | None = None,
+    kiut_source: WmsPreviewSource | None = None,
 ) -> bytes | None:
-    """Pobiera PNG podkładu (OSM + opcjonalnie KIMPZP) wg ``BasemapLayout``."""
+    """Pobiera PNG podkładu (OSM + opcjonalnie KIMPZP i KIUT) wg ``BasemapLayout``."""
     cfg = config or settings
     if not cfg.report_map_basemap_enabled:
         return None
@@ -166,6 +169,23 @@ def fetch_report_basemap_png(
         if overlay is not None:
             base_image = Image.alpha_composite(base_image, overlay)
 
+    if cfg.report_map_kiut_overlay_enabled and kiut_source is not None:
+        overlay = _fetch_wms_rgba(
+            kiut_source.base_url,
+            kiut_source.layers,
+            layout.bbox_3857,
+            layout.map_width,
+            layout.map_height,
+            transparent=True,
+            timeout=timeout,
+            max_bytes=cfg.report_map_wms_max_response_bytes,
+            allowed_redirect_host_suffixes=kiut_source.allowed_redirect_host_suffixes,
+            max_redirects=kiut_source.max_redirects,
+        )
+        if overlay is not None:
+            # KIUT nad planem, pod wektorami działki — jak w UI.
+            base_image = Image.alpha_composite(base_image, overlay)
+
     buffer = io.BytesIO()
     base_image.convert("RGB").save(buffer, format="PNG")
     return buffer.getvalue()
@@ -190,6 +210,8 @@ def _fetch_wms_rgba(
     transparent: bool,
     timeout: httpx.Timeout,
     max_bytes: int,
+    allowed_redirect_host_suffixes: tuple[str, ...] = (),
+    max_redirects: int = 0,
 ) -> Image.Image | None:
     if not base_url or not layers:
         return None
@@ -215,7 +237,13 @@ def _fetch_wms_rgba(
             headers={"User-Agent": "dzialki-report-map/1.0"},
             follow_redirects=False,
         ) as client:
-            response = client.get(base_url, params=params)
+            response = _get_with_allowed_redirects(
+                client,
+                base_url,
+                params,
+                allowed_redirect_host_suffixes=allowed_redirect_host_suffixes,
+                max_redirects=max_redirects,
+            )
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         logger.warning(
@@ -252,3 +280,47 @@ def _fetch_wms_rgba(
     if image.size != (width, height):
         image = image.resize((width, height), Image.Resampling.LANCZOS)
     return image
+
+
+_REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+
+
+def _get_with_allowed_redirects(
+    client: httpx.Client,
+    url: str,
+    params: dict[str, str] | None,
+    *,
+    allowed_redirect_host_suffixes: tuple[str, ...],
+    max_redirects: int,
+) -> httpx.Response:
+    """Podąża wyłącznie za HTTPS-owymi przekierowaniami z allowlisty źródła.
+
+    Front KIUT rozdziela GetMap kodem 302 na węzły integracja01/02. Ogólne
+    ``follow_redirects=True`` otworzyłoby SSRF przez nagłówek Location.
+    """
+    current_url = url
+    current_params = params
+    for _ in range(max_redirects + 1):
+        response = client.get(
+            current_url, params=current_params, follow_redirects=False
+        )
+        if response.status_code not in _REDIRECT_STATUS_CODES:
+            return response
+        location = response.headers.get("location")
+        if not location:
+            raise httpx.HTTPError("Przekierowanie WMS bez nagłówka Location.")
+        target = httpx.URL(current_url).join(location)
+        host = (target.host or "").lower()
+        if target.scheme != "https" or not any(
+            host.endswith(suffix) for suffix in allowed_redirect_host_suffixes
+        ):
+            logger.warning(
+                "report_basemap_redirect_rejected host=%s",
+                host or "?",
+            )
+            raise httpx.HTTPError(
+                f"Odrzucono przekierowanie WMS na niedozwolony adres: {host or '?'}"
+            )
+        logger.info("report_basemap_redirected host=%s", host)
+        current_url, current_params = str(target), None
+    raise httpx.HTTPError("Przekroczono limit przekierowań WMS.")
