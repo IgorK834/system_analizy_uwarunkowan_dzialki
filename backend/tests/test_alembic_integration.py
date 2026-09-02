@@ -97,6 +97,17 @@ def test_map_layer_geojson_columns_exist_after_migration() -> None:
     assert "geometry_geojson" in risk_columns
 
 
+def test_analysis_has_utilities_preview_snapshot_column() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+
+    columns = {
+        column["name"]: column for column in inspect(engine).get_columns("analyses")
+    }
+
+    assert columns["utilities_preview"]["nullable"] is True
+
+
 def test_pog_audit_upgrade_downgrade_preserves_existing_columns() -> None:
     config = Config("alembic.ini")
     command.upgrade(config, "head")

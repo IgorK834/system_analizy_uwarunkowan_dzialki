@@ -264,6 +264,12 @@ class ParcelVersion(Base, _VersionMixin):
 # --- Akty planistyczne (wersjonowane) ----------------------------------------
 
 
+# Rodzaje aktów planistycznych obsługiwane przez wersjonowany model. MPZP i POG
+# są odrębnymi aktami prawa miejscowego wersjonowanymi niezależnie.
+PLANNING_ACT_KIND_VALUES: tuple[str, ...] = ("mpzp", "pog")
+_PLANNING_ACT_KIND_SQL = ", ".join(f"'{value}'" for value in PLANNING_ACT_KIND_VALUES)
+
+
 class PlanningAct(Base):
     __tablename__ = "planning_acts"
 
@@ -274,6 +280,12 @@ class PlanningAct(Base):
     teryt: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     kind: Mapped[str] = mapped_column(String(30), nullable=False)
     created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        CheckConstraint(
+            f"kind IN ({_PLANNING_ACT_KIND_SQL})", name="ck_planning_acts_kind"
+        ),
+    )
 
 
 class PlanningActVersion(Base, _VersionMixin):
@@ -401,6 +413,68 @@ class PlanningFeature(Base):
 
 
 # --- Dokumenty źródłowe (wersjonowane) ---------------------------------------
+
+
+class RasterAsset(Base):
+    """Zgeoreferencjonowany rysunek planu (raster) skonwertowany do COG.
+
+    Raster służy do prezentacji i wspomagania weryfikacji, a NIE do udawania
+    wektorowej granicy strefy. Dopóki ``review_status`` nie jest ``verified``
+    (ręczna akceptacja), raster nie może być źródłem precyzyjnych przecięć ani
+    publikowany do warstwy mapy.
+
+    Pełny ślad pochodzenia: ``source_artifact_id`` wskazuje oryginał (PDF/GeoTIFF),
+    ``cog_artifact_id`` wskazuje wynikowy, zwalidowany COG. Oba są zapisane w tym
+    samym content-addressed magazynie co pozostałe importy (LocalArtifactStore).
+    """
+
+    __tablename__ = "raster_assets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # Nullable: raster może istnieć bez powiązania z konkretną wersją aktu
+    # (np. samodzielny rysunek pomocniczy do weryfikacji).
+    planning_act_version_id: Mapped[int | None] = mapped_column(
+        ForeignKey("planning_act_versions.id"), nullable=True, index=True
+    )
+    source_artifact_id: Mapped[int] = mapped_column(
+        ForeignKey("source_artifacts.id"), nullable=False, index=True
+    )
+    cog_artifact_id: Mapped[int] = mapped_column(
+        ForeignKey("source_artifacts.id"), nullable=False, index=True
+    )
+    transform_method: Mapped[str] = mapped_column(String(40), nullable=False)
+    # Punkty kontrolne (piksel -> współrzędna 2180) jako dowód georeferencji.
+    control_points: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    rmse_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    pixel_size: Mapped[float | None] = mapped_column(Float, nullable=True)
+    nodata: Mapped[float | None] = mapped_column(Float, nullable=True)
+    width_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height_px: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Zasięg jako geometria (a nie luźne liczby) — spójne z resztą schematu i z
+    # indeksem GiST do szybkiego filtrowania po obszarze.
+    bounds: Mapped[Any] = mapped_column(
+        Geometry("POLYGON", srid=2180, spatial_index=False),
+        nullable=False,
+    )
+    review_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="unreviewed"
+    )
+    qa_report: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        CheckConstraint(
+            f"review_status IN ({_REVIEW_STATUS_SQL})",
+            name="ck_raster_assets_review_status",
+        ),
+        CheckConstraint(
+            "rmse_m IS NULL OR rmse_m >= 0", name="ck_raster_assets_rmse"
+        ),
+        CheckConstraint(
+            "NOT ST_IsEmpty(bounds)", name="ck_raster_assets_bounds_not_empty"
+        ),
+        Index("ix_raster_assets_bounds_gist", "bounds", postgresql_using="gist"),
+    )
 
 
 class SourceDocument(Base):

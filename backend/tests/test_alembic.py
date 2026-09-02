@@ -102,3 +102,19 @@ def test_map_layer_geojson_migration_follows_infrastructure_audit() -> None:
     assert '"protection_zone_geojson"' in migration
     assert '"geometry_geojson"' in migration
     assert "postgresql.JSONB" in migration
+
+
+def test_utilities_preview_migration_extends_analysis_snapshot() -> None:
+    migration = (
+        Path(__file__).resolve().parents[1]
+        / "alembic"
+        / "versions"
+        / "014_utilities_preview.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'revision: str = "014_utilities_preview"' in migration
+    assert 'down_revision: Union[str, None] = "013_raster_assets"' in migration
+    assert '"analyses"' in migration
+    assert '"utilities_preview"' in migration
+    assert "postgresql.JSONB" in migration
+    assert 'op.drop_column("analyses", "utilities_preview")' in migration
