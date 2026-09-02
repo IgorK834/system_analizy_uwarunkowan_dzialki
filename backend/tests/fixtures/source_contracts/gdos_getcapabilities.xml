@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Przycięty wycinek oficjalnej odpowiedzi GetCapabilities pobranej 2026-07-30 z
+  https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetCapabilities
+
+  Zakres: wersja WFS 2.0.0, brak opłat i ograniczeń dostępu oraz nazwy warstw
+  wykorzystywanych przez adapter app/services/gdos.py wraz z DefaultCRS.
+
+  UWAGA (kolejność osi): DefaultCRS jest podany w formie URN
+  (urn:ogc:def:crs:EPSG::2180), a nie jako skrót "EPSG:2180". Forma URN wymusza
+  kolejność osi zdefiniowaną w rejestrze EPSG, czyli dla EPSG:2180 (northing,
+  easting) — odwrotną do kolejności (easting, northing) używanej w geometrii
+  kanonicznej systemu (ULDK). Weryfikacja empiryczna: zapytanie
+  GetFeature&typeNames=GDOS:ParkiNarodowe&bbox=605600,493700,605700,493900,EPSG:2180
+  (okno w Puszczy Kampinoskiej) zwróciło 2 cechy o kopercie
+  486726..508957 / 581371..632378 — okno pokrywa się z tą kopertą wyłącznie przy
+  odczycie pierwszej wartości jako northing. Parametr bbox jest natomiast
+  przyjmowany w kolejności (minE,minN,maxE,maxN) — zapytanie z odwróconym bbox
+  zwraca numberReturned="0".
+
+  Pełna lista warstw usługi liczy 23 pozycje; poniżej pozostawiono wyłącznie te
+  warstwy, które adapter faktycznie odpytuje, oraz pominięto metadane kontaktowe.
+-->
+<wfs:WFS_Capabilities version="2.0.0"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0"
+  xmlns:ows="http://www.opengis.net/ows/1.1">
+  <ows:ServiceIdentification>
+    <ows:Title>Usługa pobierania (Web Feature Service) Generalnej Dyrekcji Ochrony Środowiska</ows:Title>
+    <ows:ServiceType>WFS</ows:ServiceType>
+    <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+    <ows:Fees>brak</ows:Fees>
+    <ows:AccessConstraints>brak</ows:AccessConstraints>
+  </ows:ServiceIdentification>
+  <ows:ServiceProvider>
+    <ows:ProviderName>Generalna Dyrekcja Ochrony Środowiska</ows:ProviderName>
+  </ows:ServiceProvider>
+  <wfs:FeatureTypeList>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:ParkiNarodowe</wfs:Name>
+      <wfs:Title>Parki Narodowe</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:Rezerwaty</wfs:Name>
+      <wfs:Title>Rezerwaty</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:ParkiKrajobrazowe</wfs:Name>
+      <wfs:Title>Parki Krajobrazowe</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:ObszaryChronionegoKrajobrazu</wfs:Name>
+      <wfs:Title>Obszary Chronionego Krajobrazu</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:ObszarySpecjalnejOchrony</wfs:Name>
+      <wfs:Title>Natura 2000 Obszary Specjalnej Ochrony</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:SpecjalneObszaryOchrony</wfs:Name>
+      <wfs:Title>Natura 2000 Specjalne Obszary Ochrony</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:PomnikiPrzyrodyPowierzchniowe</wfs:Name>
+      <wfs:Title>Pomniki Przyrody (powierzchniowe)</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:UzytkiEkologiczne</wfs:Name>
+      <wfs:Title>Użytki Ekologiczne</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:ZespolyPrzyrodniczoKrajobrazowe</wfs:Name>
+      <wfs:Title>Zespoły Przyrodniczo-Krajobrazowe</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+    <wfs:FeatureType>
+      <wfs:Name>GDOS:StanowiskaDokumentacyjne</wfs:Name>
+      <wfs:Title>Stanowiska Dokumentacyjne</wfs:Title>
+      <wfs:DefaultCRS>urn:ogc:def:crs:EPSG::2180</wfs:DefaultCRS>
+    </wfs:FeatureType>
+  </wfs:FeatureTypeList>
+</wfs:WFS_Capabilities>

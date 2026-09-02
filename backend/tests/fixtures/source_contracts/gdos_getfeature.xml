@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Pełna, niezmieniona odpowiedź GetFeature (jedna cecha) pobrana 2026-07-30 z
+  https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS:PomnikiPrzyrodyPowierzchniowe&count=1
+  Sformatowano wyłącznie wcięcia; wartości i struktura są oryginalne.
+
+  Fixture dokumentuje trzy elementy kontraktu istotne dla parsera:
+    1. Geometria jest zapakowana w gml:MultiSurface, a srsName występuje na
+       elemencie MultiSurface, NIE na gml:Polygon — parser musi szukać srsName
+       u przodków elementu Polygon.
+    2. srsName ma formę URN (urn:ogc:def:crs:EPSG::2180), czyli kolejność osi
+       (northing, easting) — patrz komentarz w gdos_getcapabilities.xml.
+    3. Element GDOS:nazwa jest opcjonalny (nillable, minOccurs=0) i w tej realnej
+       cesze go nie ma — adapter musi tolerować brak nazwy.
+-->
+<wfs:FeatureCollection numberMatched="260" numberReturned="1"
+  timeStamp="2026-07-30T13:40:06.129Z"
+  xmlns:GDOS="GDOS"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0">
+  <wfs:boundedBy>
+    <gml:Envelope>
+      <gml:lowerCorner>389350.7812798405 706474.2321411583</gml:lowerCorner>
+      <gml:upperCorner>389404.2980652526 706508.336675826</gml:upperCorner>
+    </gml:Envelope>
+  </wfs:boundedBy>
+  <wfs:member>
+    <GDOS:PomnikiPrzyrodyPowierzchniowe gml:id="PomnikiPrzyrodyPowierzchniowe.fid-59d8d109_19fb33205cf_-4004">
+      <gml:boundedBy>
+        <gml:Envelope srsDimension="2" srsName="urn:ogc:def:crs:EPSG::2180">
+          <gml:lowerCorner>389350.7812798405 706474.2321411583</gml:lowerCorner>
+          <gml:upperCorner>389404.2980652526 706508.336675826</gml:upperCorner>
+        </gml:Envelope>
+      </gml:boundedBy>
+      <GDOS:gid>235340</GDOS:gid>
+      <GDOS:geom>
+        <gml:MultiSurface srsDimension="2" srsName="urn:ogc:def:crs:EPSG::2180">
+          <gml:surfaceMember>
+            <gml:Polygon srsDimension="2">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>389404.2980652526 706484.0692057285 389398.4147478342 706490.7575222959 389383.37131739594 706502.5826487034 389372.5659496216 706508.336675826 389356.86013250146 706503.2189293043 389350.7812798405 706496.8614300267 389369.0579482112 706481.3582800645 389378.6137113385 706475.8552066938 389387.2226949921 706474.2321411583 389404.2980652526 706484.0692057285</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </GDOS:geom>
+      <GDOS:kodinspire>PL.ZIPOP.1393.PP.0614043.1918</GDOS:kodinspire>
+      <GDOS:typ>jednoobiektowy</GDOS:typ>
+      <GDOS:obiekt>inne</GDOS:obiekt>
+      <GDOS:fop_id>120849</GDOS:fop_id>
+      <GDOS:data_utwor>1990-07-18Z</GDOS:data_utwor>
+      <GDOS:powierzchn>0.1000</GDOS:powierzchn>
+      <GDOS:link>http://crfop.gdos.gov.pl/CRFOP/widok/viewpomnikprzyrody.jsf?fop=PL.ZIPOP.1393.PP.0614043.1918</GDOS:link>
+    </GDOS:PomnikiPrzyrodyPowierzchniowe>
+  </wfs:member>
+</wfs:FeatureCollection>

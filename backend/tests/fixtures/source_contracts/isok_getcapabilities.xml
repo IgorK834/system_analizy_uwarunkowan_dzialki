@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Przycięty wycinek oficjalnej odpowiedzi GetCapabilities pobranej 2026-07-30 z
+  https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS?service=WFS&version=2.0.0&request=GetCapabilities
+
+  Endpoint zastępuje wcześniejszy placeholder wms.isok.gov.pl, którego nazwa
+  domenowa nie rozwiązuje się w DNS (potwierdzone 2026-07-30: "Could not
+  resolve host: wms.isok.gov.pl") — dotyczy to zarówno wariantu WFS, jak i WMS.
+
+  Zakres fixture: wersja WFS 2.0.0, brak opłat i ograniczeń dostępu, właściciel
+  oraz warstwy z deklarowanymi układami współrzędnych.
+
+  UWAGA (CRS): DefaultCRS to EPSG:4258 (stopnie), a EPSG:2180 występuje wyłącznie
+  jako OtherCRS. Adapter musi więc jawnie żądać srsName=EPSG:2180, inaczej
+  otrzyma geometrię w stopniach, która nigdy nie przecięłaby się z metryczną
+  geometrią działki. Dodatkowo serwer akceptuje wyłącznie formę URN parametru
+  srsName (urn:ogc:def:crs:EPSG::2180); skrócona forma "EPSG:2180" powoduje
+  HTTP 500 (java.lang.RuntimeException: Invalid server response).
+
+  UWAGA (kolejność osi): przy srsName w formie URN odpowiedź ma srsName
+  http://www.opengis.net/def/crs/EPSG/0/2180 i kolejność osi (northing,
+  easting), natomiast parametr bbox jest przyjmowany w kolejności
+  (minE,minN,maxE,maxN) — tak samo jak w usłudze GDOŚ.
+-->
+<wfs:WFS_Capabilities version="2.0.0"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0"
+  xmlns:ows="http://www.opengis.net/ows/1.1"
+  xmlns:nz-core="http://inspire.ec.europa.eu/schemas/nz-core/4.0">
+  <ows:ServiceIdentification>
+    <ows:Title>Usługa pobierania INSPIRE danych Map Zagrożenia Powodziowego i Mapy Ryzyka Powodziowego (MZP/MRP) dla tematu INSPIRE Strefy zagrożenia naturalnego</ows:Title>
+    <ows:ServiceType>WFS</ows:ServiceType>
+    <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+    <ows:Fees>Brak warunków dostępu i użytkowania</ows:Fees>
+    <ows:AccessConstraints>Brak ograniczeń w publicznym dostępie</ows:AccessConstraints>
+  </ows:ServiceIdentification>
+  <ows:ServiceProvider>
+    <ows:ProviderName>Państwowe Gospodarstwo Wodne Wody Polskie</ows:ProviderName>
+  </ows:ServiceProvider>
+  <ows:OperationsMetadata>
+    <ows:Operation name="GetFeature">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS"
+            xmlns:xlink="http://www.w3.org/1999/xlink"/>
+        </ows:HTTP>
+      </ows:DCP>
+      <ows:Parameter name="resultType">
+        <ows:AllowedValues>
+          <ows:Value>results</ows:Value>
+          <ows:Value>hits</ows:Value>
+        </ows:AllowedValues>
+      </ows:Parameter>
+    </ows:Operation>
+  </ows:OperationsMetadata>
+  <FeatureTypeList xmlns="http://www.opengis.net/wfs/2.0">
+    <FeatureType>
+      <Name>nz-core:HazardArea</Name>
+      <Title>HazardArea</Title>
+      <Abstract>Obszary zagrożenia. Dyskretne obiekty przestrzenne stanowiące zagrożenia naturalne.</Abstract>
+      <DefaultCRS>http://www.opengis.net/def/crs/EPSG/0/4258</DefaultCRS>
+      <OtherCRS>http://www.opengis.net/def/crs/EPSG/0/2180</OtherCRS>
+    </FeatureType>
+    <FeatureType>
+      <Name>nz-core:RiskZone</Name>
+      <Title>RiskZone</Title>
+      <DefaultCRS>http://www.opengis.net/def/crs/EPSG/0/4258</DefaultCRS>
+      <OtherCRS>http://www.opengis.net/def/crs/EPSG/0/2180</OtherCRS>
+    </FeatureType>
+    <FeatureType>
+      <Name>nz-core:ExposedElement</Name>
+      <Title>ExposedElement</Title>
+      <DefaultCRS>http://www.opengis.net/def/crs/EPSG/0/4258</DefaultCRS>
+      <OtherCRS>http://www.opengis.net/def/crs/EPSG/0/2180</OtherCRS>
+    </FeatureType>
+  </FeatureTypeList>
+</wfs:WFS_Capabilities>

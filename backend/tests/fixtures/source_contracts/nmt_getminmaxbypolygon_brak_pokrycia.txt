@@ -1,0 +1,10 @@
+Polygon:	POLYGON((400000 900000,400100 900000,400100 900100,400000 900100,400000 900000))
+Polygon area:	10000
+Points count:	676
+Grid size [m]:	4
+Hmin:	2500
+Hmax:	0
+Hmin geom:
+	0:	POINT(0 0 2500)
+Hmax geom:
+	0:	POINT(0 0 0)

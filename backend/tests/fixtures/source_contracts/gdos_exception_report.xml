@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Pełna, niezmieniona odpowiedź pobrana 2026-07-30 z
+  https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&bbox=605600,493700,605700,493900,EPSG:2180
+  czyli z zapytania GetFeature BEZ parametru typeNames.
+
+  To najważniejszy fixture regresyjny dla tego źródła: usługa odpowiada
+  ows:ExceptionReport ze statusem HTTP **200**, a nie 4xx/5xx. Odpowiedź jest
+  przy tym poprawnym XML-em bez elementów wfs:member, więc naiwny parser
+  zwróciłby pustą listę cech, a orchestrator zinterpretowałby to jako
+  "sprawdzono, brak form ochrony przyrody na działce". Dla źródła istotnego
+  dla decyzji inwestycyjnej byłoby to fałszywe poczucie bezpieczeństwa,
+  dlatego parser musi rozpoznawać ExceptionReport jawnie i podnosić błąd
+  niedostępności usługi.
+
+  Ten sam kształt odpowiedzi (HTTP 200 + ExceptionReport) usługa zwraca przy
+  próbie podania wielu warstw naraz w jednym zapytaniu, np.
+  typeNames=GDOS:ParkiNarodowe,GDOS:ObszaryChronionegoKrajobrazu
+  → exceptionCode="NoApplicableCode", ExceptionText
+  "java.lang.IllegalStateException: Join filter inconsistent with regard to
+  feature types". Dlatego adapter odpytuje każdą warstwę osobnym żądaniem.
+-->
+<ows:ExceptionReport version="2.0.0"
+  xsi:schemaLocation="http://www.opengis.net/ows/1.1 http://sdi.gdos.gov.pl/schemas/ows/1.1.0/owsAll.xsd"
+  xmlns:ows="http://www.opengis.net/ows/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ows:Exception exceptionCode="MissingParameterValue" locator="GetFeature">
+    <ows:ExceptionText>The query should specify either typeName, featureId filter, or a stored query id</ows:ExceptionText>
+  </ows:Exception>
+</ows:ExceptionReport>

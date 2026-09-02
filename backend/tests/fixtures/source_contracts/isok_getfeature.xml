@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Przycięty wycinek oficjalnej odpowiedzi GetFeature pobranej 2026-07-30 z
+  https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS?service=WFS&version=2.0.0&request=GetFeature&typeNames=nz-core:HazardArea&srsName=urn:ogc:def:crs:EPSG::2180&bbox=637000,486000,637500,486500,EPSG:2180&count=1
+
+  Zachowano oryginalne atrybuty cechy oraz oryginalne wartości współrzędnych.
+  Przycięto wyłącznie długość pierścieni: realny pierścień zewnętrzny tej cechy
+  ma 154 440 wierzchołków, a cecha ma kilkaset pierścieni wewnętrznych (cała
+  odpowiedź to ok. 8 MB). Poniżej pozostawiono początkowe realne wierzchołki
+  pierścienia zewnętrznego (domknięte) oraz dwa realne pierścienie wewnętrzne.
+
+  Fixture dokumentuje kontrakt istotny dla klasyfikacji zagrożenia:
+    1. Klasa prawdopodobieństwa jest w nz-core:qualitativeLikelihood jako tekst
+       "scenariusz Q 0,2% (raz na 500 lat)" — realne warianty w danych to
+       "scenariusz Q 1% (raz na 100 lat)" i "scenariusz Q 10% (raz na 10 lat)".
+    2. nz-core:probabilityOfOccurrence jest NIESPÓJNE w danych źródłowych: dla
+       scenariusza 0,2% spotykane są zarówno 0.002, jak i 0.02. Dlatego adapter
+       klasyfikuje po tekście qualitativeLikelihood, a returnPeriod (10/100/500)
+       traktuje jako zapas, nie po probabilityOfOccurrence.
+    3. Geometria jest w gml:Polygon z gml:exterior i wieloma gml:interior
+       (dziury), srsName na elemencie Polygon, kolejność osi (northing, easting).
+-->
+<wfs:FeatureCollection numberMatched="3" numberReturned="1"
+  timeStamp="2026-07-30T13:29:39.530Z"
+  xmlns:wfs="http://www.opengis.net/wfs/2.0"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:nz-core="http://inspire.ec.europa.eu/schemas/nz-core/4.0"
+  xmlns:base="http://inspire.ec.europa.eu/schemas/base/3.3"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <wfs:member>
+    <nz-core:HazardArea gml:id="http://iip.wody.gov.pl/so/NZ/HazardArea/PL.ZIPGW.6453/MZP-MRP/ID_R2.02-773">
+      <gml:identifier codeSpace="http://inspire.jrc.ec.europa.eu/ids">ID_R2.02-773</gml:identifier>
+      <gml:location>
+        <gml:LocationString>region wodny Środkowej Wisły</gml:LocationString>
+      </gml:location>
+      <nz-core:beginLifeSpanVersion xsi:nil="true" nilReason="other:unpopulated"/>
+      <nz-core:determinationMethod>modelling</nz-core:determinationMethod>
+      <nz-core:inspireId>
+        <base:Identifier>
+          <base:localId>ID_R2.02-773</base:localId>
+          <base:namespace>PL.ZIPGW.6453/MZP-MRP</base:namespace>
+        </base:Identifier>
+      </nz-core:inspireId>
+      <nz-core:typeOfHazard>
+        <nz-core:NaturalHazardClassification>
+          <nz-core:hazardCategory
+            xlink:href="http://dd.eionet.europa.eu/vocabulary/inspire/NaturalHazardCategoryValue/fluvial"
+            xlink:title="fluvial"/>
+          <nz-core:specificHazardType xsi:nil="true" nilReason="other:unpopulated"/>
+        </nz-core:NaturalHazardClassification>
+      </nz-core:typeOfHazard>
+      <nz-core:validityPeriod>
+        <gml:TimePeriod gml:id="validityTime.7188">
+          <gml:beginPosition>2022-09-07</gml:beginPosition>
+          <gml:endPosition>2025-12-22</gml:endPosition>
+        </gml:TimePeriod>
+      </nz-core:validityPeriod>
+      <nz-core:geometry>
+        <gml:Polygon gml:id="geometry.7188" srsDimension="2"
+          srsName="http://www.opengis.net/def/crs/EPSG/0/2180">
+          <gml:exterior>
+            <gml:LinearRing>
+              <gml:posList>374899.17669432 698899.32390091 374880.95459432 698899.27810091 374875.81759432 698900.14510091 374872.64369433 698902.71260091 374871.48739432 698907.99320091 374899.17669432 698899.32390091</gml:posList>
+            </gml:LinearRing>
+          </gml:exterior>
+          <gml:interior>
+            <gml:LinearRing>
+              <gml:posList>374888.06009432 698897.71000091 374899.17669432 698899.32390091 374895.93999432 698898.84000091 374888.06009432 698897.71000091</gml:posList>
+            </gml:LinearRing>
+          </gml:interior>
+          <gml:interior>
+            <gml:LinearRing>
+              <gml:posList>374790.11999439 698531.1800009 374790.09819438 698531.8951009 374791.15999438 698526.0100009 374790.11999439 698531.1800009</gml:posList>
+            </gml:LinearRing>
+          </gml:interior>
+        </gml:Polygon>
+      </nz-core:geometry>
+      <nz-core:likelihoodOfOccurrence>
+        <nz-core:LikelihoodOfOccurrence>
+          <nz-core:qualitativeLikelihood>scenariusz Q 0,2% (raz na 500 lat)</nz-core:qualitativeLikelihood>
+          <nz-core:quantitativeLikelihood>
+            <nz-core:QuantitativeLikelihood>
+              <nz-core:probabilityOfOccurrence>0.02</nz-core:probabilityOfOccurrence>
+              <nz-core:returnPeriod>500.0</nz-core:returnPeriod>
+            </nz-core:QuantitativeLikelihood>
+          </nz-core:quantitativeLikelihood>
+          <nz-core:assessmentMethod xsi:nil="true" nilReason="other:unpopulated"/>
+        </nz-core:LikelihoodOfOccurrence>
+      </nz-core:likelihoodOfOccurrence>
+      <nz-core:magnitudeOrIntensity xsi:nil="true" nilReason="other:unpopulated"/>
+    </nz-core:HazardArea>
+  </wfs:member>
+</wfs:FeatureCollection>

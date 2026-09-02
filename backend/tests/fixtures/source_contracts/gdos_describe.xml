@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Przycięty wycinek oficjalnej odpowiedzi DescribeFeatureType pobranej 2026-07-30 z
+  https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType
+
+  Kluczowe ustalenie kontraktu: warstwy form ochrony przyrody NIE mają atrybutu
+  opisującego rodzaj ochrony (brak pól typu "forma_ochrony", "typ_ochrony",
+  "kategoria", "rodzaj"). Dostępne są wyłącznie gid, nazwa, kodinspire, czasem
+  kod oraz geometria geom. Rodzaj formy ochrony wynika więc z odpytanej warstwy
+  (typeName), a nie z zawartości cechy — dlatego adapter app/services/gdos.py
+  odpytuje każdą warstwę osobno i przypisuje typ ochrony na podstawie typeName.
+
+  Pozostawiono reprezentatywne typy; pominięto warstwy nieużywane przez adapter.
+-->
+<xsd:schema xmlns:GDOS="GDOS" xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+  targetNamespace="GDOS">
+  <xsd:import namespace="http://www.opengis.net/gml/3.2"
+    schemaLocation="http://sdi.gdos.gov.pl/schemas/gml/3.2.1/gml.xsd"/>
+
+  <xsd:complexType name="ParkiNarodoweType">
+    <xsd:complexContent>
+      <xsd:extension base="gml:AbstractFeatureType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="gid" nillable="true" type="xsd:int"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="nazwa" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="kodinspire" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="geom" nillable="true" type="gml:GeometryPropertyType"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="ParkiNarodowe" substitutionGroup="gml:AbstractFeature" type="GDOS:ParkiNarodoweType"/>
+
+  <xsd:complexType name="RezerwatyType">
+    <xsd:complexContent>
+      <xsd:extension base="gml:AbstractFeatureType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="gid" nillable="true" type="xsd:int"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="nazwa" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="kodinspire" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="geom" nillable="true" type="gml:GeometryPropertyType"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="Rezerwaty" substitutionGroup="gml:AbstractFeature" type="GDOS:RezerwatyType"/>
+
+  <xsd:complexType name="ObszarySpecjalnejOchronyType">
+    <xsd:complexContent>
+      <xsd:extension base="gml:AbstractFeatureType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="gid" nillable="true" type="xsd:int"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="nazwa" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="kod" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="kodinspire" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="geom" nillable="true" type="gml:GeometryPropertyType"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="ObszarySpecjalnejOchrony" substitutionGroup="gml:AbstractFeature" type="GDOS:ObszarySpecjalnejOchronyType"/>
+
+  <xsd:complexType name="PomnikiPrzyrodyPowierzchnioweType">
+    <xsd:complexContent>
+      <xsd:extension base="gml:AbstractFeatureType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="gid" nillable="true" type="xsd:int"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="geom" nillable="true" type="gml:GeometryPropertyType"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="kodinspire" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="typ" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="podtyp" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="obiekt" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="nazwa" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="fop_id" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="gatunek" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="data_utwor" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="powierzchn" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="link" nillable="true" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="PomnikiPrzyrodyPowierzchniowe" substitutionGroup="gml:AbstractFeature" type="GDOS:PomnikiPrzyrodyPowierzchnioweType"/>
+</xsd:schema>
