@@ -15,7 +15,7 @@ from app.models.parcel import Parcel
 from app.models.pog_data import PogData
 from app.models.risk import Risk
 from app.models.source_record import SourceRecord
-from app.schemas.analyze import ParcelIdAnalyzeRequest
+from app.schemas.analyze import ParcelIdAnalyzeRequest, UtilitiesPreviewResult
 from app.schemas.mpzp import MpzpParameter as ParserParameter
 from app.schemas.mpzp import MpzpParseResult
 from app.schemas.mpzp import MpzpZoneResult as ParserZone
@@ -81,6 +81,24 @@ def _source(
         confidence=confidence,
         manual_review_required=manual,
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_kiut_coverage(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    coverage = AsyncMock(
+        return_value=UtilitiesPreviewResult(
+            coverage_status="covered",
+            county_name="powiat testowy",
+            layer_available=True,
+            note="Powiat publikuje dane; podgląd nie służy do obliczania odległości.",
+            source=_source("KIUT (GUGiK)", "https://kiut.example.test/wms"),
+        )
+    )
+    monkeypatch.setattr(
+        "app.services.analysis_orchestrator.check_kiut_coverage_for_geometry",
+        coverage,
+    )
+    return coverage
 
 
 def _lookup(identifier: str) -> ParcelLookupResult:
@@ -282,6 +300,8 @@ async def test_full_parcel_id_flow_builds_response_and_persists_analysis() -> No
     assert any(source.source_name == "ULDK" for source in response.sources)
     assert response.pog is not None
     assert response.pog.status == "unknown"
+    assert response.utilities_preview is not None
+    assert response.utilities_preview.coverage_status == "covered"
     assert any(warning.code == "POG_SCENARIO_UNKNOWN" for warning in response.warnings)
     assert not any(warning.code == "POG_NOT_IMPLEMENTED" for warning in response.warnings)
 
@@ -289,6 +309,8 @@ async def test_full_parcel_id_flow_builds_response_and_persists_analysis() -> No
         saved = db.get(Analysis, response.analysis_id)
         assert saved is not None
         assert saved.status == "partial"
+        assert saved.utilities_preview is not None
+        assert saved.utilities_preview["coverage_status"] == "covered"
         assert saved.parcel.parcel_identifier == identifier
 
 

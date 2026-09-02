@@ -12,6 +12,7 @@ discovery KIMPZP i dokumencie uchwały.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 from datetime import date, datetime, timezone
@@ -34,6 +35,7 @@ from app.schemas.analyze import (
     ParcelIdAnalyzeRequest,
     PogResult,
     RiskResult,
+    UtilitiesPreviewResult,
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata, warnings_from_domain_messages
@@ -56,6 +58,10 @@ from app.services.geometry import (
     parse_parcel_geometry,
 )
 from app.services.initiation import resolve_parcel
+from app.services.kiut_coverage import (
+    check_kiut_coverage_for_geometry,
+    unknown_kiut_coverage_result,
+)
 from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp
 from app.services.mpzp_fetch import fetch_mpzp_document
 from app.services.mpzp_parser import parse_mpzp_document
@@ -158,7 +164,10 @@ async def run_analysis(
     )
 
     warnings = _geometry_warnings(metrics.repair_warning, setback.warning)
-    context = await _analyze_context_safely(parcel_geometry)
+    context, utilities_preview = await asyncio.gather(
+        _analyze_context_safely(parcel_geometry),
+        _check_kiut_coverage_safely(parcel_geometry, lookup.teryt),
+    )
     (
         infrastructure,
         risks,
@@ -180,7 +189,12 @@ async def run_analysis(
     )
     warnings.extend(pog_warnings)
 
-    sources = [lookup.source_metadata, *context_sources, *pog_sources]
+    sources = [
+        lookup.source_metadata,
+        utilities_preview.source,
+        *context_sources,
+        *pog_sources,
+    ]
     if discovery is not None:
         sources.append(discovery.source_metadata)
 
@@ -205,6 +219,7 @@ async def run_analysis(
             mpzp_zones=[],
             pog=pog,
             infrastructure=infrastructure,
+            utilities_preview=utilities_preview,
             risks=risks,
             buildable_area_sqm=buildable_area_sqm,
             manual_zone_required=True,
@@ -251,6 +266,7 @@ async def run_analysis(
         mpzp_zones=mpzp_zones,
         pog=pog,
         infrastructure=infrastructure,
+        utilities_preview=utilities_preview,
         risks=risks,
         buildable_area_sqm=buildable_area_sqm,
         manual_zone_required=False,
@@ -286,7 +302,7 @@ async def _analyze_context_safely(parcel_geometry: BaseGeometry) -> ContextResul
         )
         message = (
             "Nie udało się uruchomić analizy kontekstowej. Wszystkie sekcje "
-            "KIUT, ISOK i GDOŚ wymagają ręcznej weryfikacji."
+            "KIUT, ISOK, GDOŚ i NMT wymagają ręcznej weryfikacji."
         )
         return ContextResult(
             kiut=ContextSectionResult(
@@ -298,7 +314,31 @@ async def _analyze_context_safely(parcel_geometry: BaseGeometry) -> ContextResul
             gdos=ContextSectionResult(
                 section="gdos", status="error", warnings=[message]
             ),
+            nmt=ContextSectionResult(
+                section="nmt", status="error", warnings=[message]
+            ),
         )
+
+
+async def _check_kiut_coverage_safely(
+    parcel_geometry: BaseGeometry,
+    county_teryt: str | None,
+) -> UtilitiesPreviewResult:
+    try:
+        return await check_kiut_coverage_for_geometry(
+            parcel_geometry,
+            county_teryt=county_teryt,
+        )
+    except Exception as exc:
+        # Pokrycie jest sekcją prezentacyjną. Błąd konfiguracji lub parsera nie
+        # może przerwać analizy i nigdy nie może być przedstawiony jako brak
+        # publikacji danych przez powiat.
+        log_analysis_event(
+            "section_error",
+            section="kiut_coverage",
+            status=type(exc).__name__,
+        )
+        return unknown_kiut_coverage_result()
 
 
 async def _discover_mpzp_safely(
@@ -491,7 +531,7 @@ def _map_context(
 ]:
     warnings: list[WarningMessage] = []
     sources: list[SourceMetadata] = []
-    for section in (context.kiut, context.isok, context.gdos):
+    for section in context.sections():
         severity: Literal["warning", "error"] = (
             "error" if section.status in {"unavailable", "error"} else "warning"
         )
@@ -1005,9 +1045,10 @@ def _result_status(
     pog: PogResult | None,
     sources: list[SourceMetadata],
 ) -> str:
+    # NMT jest pominięty świadomie: brak danych o rzeźbie terenu nie oznacza,
+    # że analiza ograniczeń prawnych jest niepełna (patrz ContextResult).
     critical_context_available = all(
-        section.status == "available"
-        for section in (context.kiut, context.isok, context.gdos)
+        section.status == "available" for section in context.critical_sections()
     )
     if not mpzp_zones or pog is None or pog.status != "adopted":
         return "partial"

@@ -10,6 +10,7 @@ from app.schemas.analyze import (
     MapAnalyzeRequest,
     ParcelIdAnalyzeRequest,
     SourceMetadata,
+    UtilitiesPreviewResult,
     WarningMessage,
 )
 
@@ -132,6 +133,23 @@ def test_warning_message_has_expected_fields() -> None:
     assert warning.message == "Plan Ogólny Gminy nie jest dostępny."
     assert warning.severity == "warning"
     assert warning.source_name == "pog"
+
+
+def test_utilities_preview_rejects_ambiguous_coverage_status() -> None:
+    with pytest.raises(ValidationError):
+        UtilitiesPreviewResult.model_validate(
+            {
+                "coverage_status": "unavailable",
+                "county_name": None,
+                "layer_available": False,
+                "note": "Nie udało się sprawdzić.",
+                "source": {
+                    "source_name": "KIUT (GUGiK)",
+                    "confidence": 0.0,
+                    "manual_review_required": True,
+                },
+            }
+        )
 
 
 def test_analyze_response_can_be_built_with_required_fields() -> None:

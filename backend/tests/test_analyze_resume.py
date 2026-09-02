@@ -15,7 +15,7 @@ from app.models.parcel import Parcel
 from app.models.pog_data import PogData
 from app.models.risk import Risk
 from app.models.source_record import SourceRecord
-from app.schemas.analyze import SourceMetadata
+from app.schemas.analyze import SourceMetadata, UtilitiesPreviewResult
 from app.schemas.mpzp import MpzpParameter, MpzpParseResult
 from app.schemas.mpzp import MpzpZoneResult as ParserMpzpZoneResult
 from app.services.mpzp import MpzpDiscoveryResult
@@ -106,6 +106,27 @@ def cleanup_test_analyses():
         db.execute(delete(Analysis).where(Analysis.id.in_(analysis_ids)))
         db.execute(delete(Parcel).where(Parcel.id.in_(parcel_ids)))
         db.commit()
+
+
+@pytest.fixture(autouse=True)
+def mock_kiut_coverage(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.services.analysis_orchestrator.check_kiut_coverage_for_geometry",
+        AsyncMock(
+            return_value=UtilitiesPreviewResult(
+                coverage_status="covered",
+                county_name="powiat testowy",
+                layer_available=True,
+                note="Powiat publikuje dane; podgląd nie służy do odległości.",
+                source=SourceMetadata(
+                    source_name="KIUT (GUGiK)",
+                    source_url="https://kiut.example.test/wms",
+                    confidence=0.9,
+                    manual_review_required=False,
+                ),
+            )
+        ),
+    )
 
 
 def _document_blob() -> DocumentBlob:

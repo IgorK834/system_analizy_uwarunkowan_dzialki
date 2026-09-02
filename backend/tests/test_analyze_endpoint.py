@@ -10,6 +10,7 @@ from app.schemas.analyze import (
     GeometryMetrics,
     ParcelGeometryResponse,
     SourceMetadata,
+    UtilitiesPreviewResult,
 )
 from app.services.geocoding import GeocodingServiceUnavailableError
 from app.services.geometry import CoordinatesOutsidePolandError
@@ -218,6 +219,40 @@ def test_analyze_response_contains_sources(
     sources = response.json()["sources"]
     assert len(sources) == 1
     assert sources[0]["source_name"] == "ULDK"
+
+
+def test_analyze_response_exposes_utilities_preview(
+    mock_parcel_result: ParcelLookupResult,
+) -> None:
+    result = _analyze_response(mock_parcel_result).model_copy(
+        update={
+            "utilities_preview": UtilitiesPreviewResult(
+                coverage_status="not_covered",
+                county_name=None,
+                layer_available=False,
+                note="Pusty podgląd nie jest dowodem braku sieci.",
+                source=SourceMetadata(
+                    source_name="KIUT (GUGiK)",
+                    source_url="https://kiut.example.test/wms",
+                    confidence=0.9,
+                    manual_review_required=False,
+                ),
+            )
+        }
+    )
+    with patch(
+        "app.routers.analyze.run_analysis",
+        new=AsyncMock(return_value=result),
+    ):
+        response = client.post(
+            "/analyze", json={"method": "map", "lon": 19.94, "lat": 50.06}
+        )
+
+    assert response.status_code == 200
+    preview = response.json()["utilities_preview"]
+    assert preview["coverage_status"] == "not_covered"
+    assert preview["layer_available"] is False
+    assert "braku sieci" in preview["note"]
 
 
 def test_analyze_parcel_not_found_returns_404() -> None:

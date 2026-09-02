@@ -38,6 +38,7 @@ from app.schemas.analyze import (
     ParcelGeometryResponse,
     PogResult,
     RiskResult,
+    UtilitiesPreviewResult,
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata
@@ -134,14 +135,12 @@ def collect_source_records(
     records.extend(
         _source_record_data(item.source, result) for item in result.infrastructure
     )
+    if result.utilities_preview is not None:
+        records.append(_source_record_data(result.utilities_preview.source, result))
     records.extend(_source_record_data(item.source, result) for item in result.risks)
 
     if context_result is not None:
-        for section in (
-            context_result.kiut,
-            context_result.isok,
-            context_result.gdos,
-        ):
+        for section in context_result.sections():
             source = section.source_metadata
             response_status: str | None
             if section.status in {"unavailable", "error"}:
@@ -207,6 +206,11 @@ def save_analysis(
             buildable_area_sqm=result.buildable_area_sqm,
             warnings=(
                 [warning.model_dump(mode="json") for warning in result.warnings] or None
+            ),
+            utilities_preview=(
+                result.utilities_preview.model_dump(mode="json")
+                if result.utilities_preview is not None
+                else None
             ),
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
@@ -492,6 +496,11 @@ def build_analyze_response_from_analysis(
         mpzp_zones=zones,
         pog=pog,
         infrastructure=infrastructure,
+        utilities_preview=(
+            UtilitiesPreviewResult.model_validate(loaded.utilities_preview)
+            if loaded.utilities_preview is not None
+            else None
+        ),
         risks=risks,
         buildable_area_sqm=loaded.buildable_area_sqm,
         manual_zone_required=loaded.status == "waiting_for_zone_symbol",

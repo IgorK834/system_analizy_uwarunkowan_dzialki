@@ -1,9 +1,17 @@
-"""Równoległa orkiestracja kontekstu działki z KIUT, ISOK i GDOŚ.
+"""Równoległa orkiestracja kontekstu działki z KIUT, ISOK, GDOŚ i NMT.
 
 ``analyze_context`` używa jednego współdzielonego ``httpx.AsyncClient`` dla
-trzech sekcji, aby jedna analiza nie tworzyła trzech niezależnych pul połączeń.
-Każda sekcja jest finalizowana osobno, dzięki czemu niedostępność lub błąd
-jednego źródła nie usuwa poprawnych wyników pozostałych źródeł.
+wszystkich sekcji, aby jedna analiza nie tworzyła kilku niezależnych pul
+połączeń. Każda sekcja jest finalizowana osobno, dzięki czemu niedostępność lub
+błąd jednego źródła nie usuwa poprawnych wyników pozostałych źródeł.
+
+Sekcje nie są równorzędne pod względem wpływu na wynik analizy:
+
+* KIUT, ISOK i GDOŚ opisują ograniczenia istotne prawnie albo bezpieczeństwowo,
+  dlatego ich niedostępność obniża status całej analizy (``critical_sections``).
+* NMT opisuje rzeźbę terenu — informację kosztową i projektową, nie zakaz.
+  Brak danych wysokościowych nie może więc degradować statusu analizy, ale musi
+  być widoczny jako ostrzeżenie sekcji.
 
 Znanym i zaakceptowanym ograniczeniem jest zachowanie KIUT: istniejąca funkcja
 ``fetch_kiut_networks`` przechwytuje timeouty i błędy HTTP oraz zwraca ``[]``.
@@ -30,10 +38,19 @@ from app.services.gdos import (
 )
 from app.services.isok import IsokServiceUnavailableError, fetch_flood_risks
 from app.services.kiut import bbox_from_geometry, fetch_kiut_networks
+from app.services.nmt import NmtServiceUnavailableError, fetch_terrain_extremes
 
 logger = logging.getLogger(__name__)
 
-SectionName = Literal["kiut", "isok", "gdos"]
+SectionName = Literal["kiut", "isok", "gdos", "nmt"]
+
+# Kontrolowane wyjątki niedostępności — mapowane na status ``unavailable``
+# zamiast na nieoczekiwany błąd sekcji.
+_EXPECTED_UNAVAILABLE_ERRORS: tuple[type[Exception], ...] = (
+    IsokServiceUnavailableError,
+    GdosServiceUnavailableError,
+    NmtServiceUnavailableError,
+)
 
 
 @dataclass(frozen=True)
@@ -41,8 +58,8 @@ class ContextSectionResult:
     """Zunifikowany wynik jednej sekcji kontekstu działki.
 
     ``data`` zawiera surowe obiekty domenowe sekcji: ``NetworkFeature``,
-    ``RiskFeature`` albo ``NatureProtectionFeature``. Lista jest typowana jako
-    ``list[Any]`` z powodu heterogeniczności tych trzech modeli.
+    ``RiskFeature``, ``NatureProtectionFeature`` albo ``TerrainExtremes``. Lista
+    jest typowana jako ``list[Any]`` z powodu heterogeniczności tych modeli.
     """
 
     section: SectionName
@@ -54,27 +71,47 @@ class ContextSectionResult:
 
 @dataclass(frozen=True)
 class ContextResult:
-    """Zagregowany wynik z jedną sekcją KIUT, ISOK i GDOŚ."""
+    """Zagregowany wynik z jedną sekcją KIUT, ISOK, GDOŚ i NMT."""
 
     kiut: ContextSectionResult
     isok: ContextSectionResult
     gdos: ContextSectionResult
+    nmt: ContextSectionResult
+
+    def sections(self) -> tuple[ContextSectionResult, ...]:
+        """Wszystkie sekcje kontekstu w stałej kolejności prezentacji.
+
+        Metoda istnieje, aby dodanie kolejnej sekcji nie wymagało odnalezienia
+        każdego miejsca, które wylicza sekcje ręcznie — inaczej nowe źródło po
+        cichu nie trafiłoby do ostrzeżeń ani do rejestru źródeł.
+        """
+        return (self.kiut, self.isok, self.gdos, self.nmt)
+
+    def critical_sections(self) -> tuple[ContextSectionResult, ...]:
+        """Sekcje, których niedostępność obniża status całej analizy.
+
+        NMT jest celowo pominięty: rzeźba terenu jest informacją projektową,
+        a nie ograniczeniem prawnym, więc jej brak nie może oznaczać, że analiza
+        ograniczeń jest niepełna.
+        """
+        return (self.kiut, self.isok, self.gdos)
 
 
 async def analyze_context(parcel_geometry: BaseGeometry) -> ContextResult:
-    """Pobiera równolegle kontekst KIUT, ISOK i GDOŚ dla działki.
+    """Pobiera równolegle kontekst KIUT, ISOK, GDOŚ i NMT dla działki.
 
-    Trzy operacje współdzielą jeden ``httpx.AsyncClient`` i są uruchamiane
-    przez ``asyncio.gather(return_exceptions=True)``. Kontrolowana niedostępność
-    ISOK/GDOŚ oraz każdy nieoczekiwany wyjątek są mapowane na wynik konkretnej
-    sekcji i nigdy nie przerywają pozostałych operacji.
+    Operacje współdzielą jeden ``httpx.AsyncClient`` i są uruchamiane przez
+    ``asyncio.gather(return_exceptions=True)``. Kontrolowana niedostępność
+    ISOK/GDOŚ/NMT oraz każdy nieoczekiwany wyjątek są mapowane na wynik
+    konkretnej sekcji i nigdy nie przerywają pozostałych operacji.
     """
     parcel_bounds = bbox_from_geometry(parcel_geometry)
     async with httpx.AsyncClient() as client:
-        kiut_outcome, isok_outcome, gdos_outcome = await asyncio.gather(
+        kiut_outcome, isok_outcome, gdos_outcome, nmt_outcome = await asyncio.gather(
             _run_kiut_section(parcel_bounds, client),
             _run_isok_section(parcel_geometry, client),
             _run_gdos_section(parcel_geometry, client),
+            _run_nmt_section(parcel_geometry, client),
             return_exceptions=True,
         )
 
@@ -82,6 +119,7 @@ async def analyze_context(parcel_geometry: BaseGeometry) -> ContextResult:
         kiut=_finalize_section("kiut", kiut_outcome),
         isok=_finalize_section("isok", isok_outcome),
         gdos=_finalize_section("gdos", gdos_outcome),
+        nmt=_finalize_section("nmt", nmt_outcome),
     )
 
 
@@ -118,17 +156,36 @@ async def _run_gdos_section(
         logger.info("Sekcja GDOŚ zakończona po %.3fs.", time.monotonic() - start)
 
 
+async def _run_nmt_section(
+    parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient,
+) -> list[Any]:
+    """Uruchamia sekcję NMT i normalizuje jej wynik do listy.
+
+    ``fetch_terrain_extremes`` zwraca jeden obiekt albo ``None`` (brak pokrycia
+    danymi wysokościowymi). Pusta lista oznacza tu "sprawdzono, brak danych dla
+    tego obszaru" i jest finalizowana jako sekcja dostępna — brak pokrycia NMT
+    nie jest awarią usługi.
+    """
+    start = time.monotonic()
+    try:
+        extremes = await fetch_terrain_extremes(parcel_geometry, client=client)
+        return [] if extremes is None else [extremes]
+    finally:
+        logger.info("Sekcja NMT zakończona po %.3fs.", time.monotonic() - start)
+
+
 def _finalize_section(
     section: SectionName,
     outcome: list[Any] | BaseException,
 ) -> ContextSectionResult:
     """Mapuje wynik ``gather`` na dostępny, niedostępny albo błędny wynik.
 
-    Kontrolowane wyjątki ISOK/GDOŚ oznaczają oczekiwaną niedostępność usługi.
-    Inne wyjątki oznaczają nieoczekiwany błąd. Poprawna lista, także pusta,
-    oznacza dostępność sekcji.
+    Kontrolowane wyjątki ISOK/GDOŚ/NMT oznaczają oczekiwaną niedostępność
+    usługi. Inne wyjątki oznaczają nieoczekiwany błąd. Poprawna lista, także
+    pusta, oznacza dostępność sekcji.
     """
-    if isinstance(outcome, (IsokServiceUnavailableError, GdosServiceUnavailableError)):
+    if isinstance(outcome, _EXPECTED_UNAVAILABLE_ERRORS):
         logger.warning(
             "Sekcja %s niedostępna; error_type=%s",
             section,

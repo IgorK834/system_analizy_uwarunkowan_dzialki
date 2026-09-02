@@ -21,6 +21,7 @@ from app.schemas.analyze import (
     ParcelGeometryResponse,
     PogResult,
     RiskResult,
+    UtilitiesPreviewResult,
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata
@@ -169,6 +170,19 @@ def _rich_response() -> AnalyzeResponse:
                 ),
             )
         ],
+        utilities_preview=UtilitiesPreviewResult(
+            coverage_status="covered",
+            county_name="powiat krakowski",
+            layer_available=True,
+            note=(
+                "Powiat publikuje dane GESUT; podgląd nie służy do obliczania "
+                "odległości."
+            ),
+            source=_source(
+                "KIUT (GUGiK)",
+                "https://integracja.example.test/kiut",
+            ),
+        ),
         risks=[
             RiskResult(
                 risk_type="flood_zone",
@@ -309,7 +323,7 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
                 .select_from(SourceRecord)
                 .where(SourceRecord.analysis_id == analysis_id)
             )
-            == 8
+            == 9
         )
 
         height = db.scalar(
@@ -375,6 +389,10 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert cached_response.infrastructure[0].network_geometry_geojson == saved_infrastructure.network_geometry_geojson
         assert cached_response.infrastructure[0].protection_zone_geojson == saved_infrastructure.protection_zone_geojson
         assert cached_response.risks[0].geometry_geojson == saved_risk.geometry_geojson
+        assert cached_response.utilities_preview is not None
+        assert cached_response.utilities_preview.coverage_status == "covered"
+        assert cached_response.utilities_preview.county_name == "powiat krakowski"
+        assert cached_response.utilities_preview.layer_available is True
 
 
 def test_not_available_pog_status_and_review_flag_are_persisted() -> None:
