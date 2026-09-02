@@ -11,31 +11,60 @@ RiskFeature przy awarii usługi ISOK wygląda identycznie jak "sprawdzono, brak
 zagrożenia", co jest fałszywym poczuciem bezpieczeństwa dla użytkownika
 podejmującego decyzję inwestycyjną. Dlatego fetch_flood_risks musi odróżnić
 "sprawdzono, brak stref w BBOX" (zwróć []) od "nie udało się sprawdzić"
-(podnieś IsokServiceUnavailableError). Wywołujący kod (przyszły orchestrator)
-złapie ten wyjątek i ustawi status sekcji na 'unavailable' zamiast HTTP 500 —
-ale ta integracja nie jest częścią tego modułu.
+(podnieś IsokServiceUnavailableError). Orchestrator kontekstu łapie ten wyjątek
+i ustawia status sekcji na 'unavailable' zamiast HTTP 500.
+
+Kontrakt usługi potwierdzono realnymi zapytaniami 2026-07-30 (fixtures
+``tests/fixtures/source_contracts/isok_*``). Ustalenia, które kształtują ten
+adapter:
+
+1. **Endpoint.** Obowiązuje usługa INSPIRE PGW Wody Polskie
+   ``.../INSPIRE_NZ_HY_MZPMRP_WFS``. Wcześniejszy adres ``wms.isok.gov.pl`` nie
+   rozwiązuje się już w DNS, więc każde zapytanie kończyło się błędem połączenia.
+2. **``srsName`` jest obowiązkowe i tylko w formie URN.** Domyślnym układem
+   warstw jest EPSG:4258 (stopnie); bez wymuszenia EPSG:2180 geometria nigdy nie
+   przecięłaby się z metryczną geometrią działki. Skrócona forma ``EPSG:2180``
+   powoduje po stronie serwera HTTP 500, więc używamy ``urn:ogc:def:crs:EPSG::2180``.
+3. **Klasa prawdopodobieństwa jest w ``nz-core:qualitativeLikelihood``** jako
+   tekst "scenariusz Q 1% (raz na 100 lat)". Pola liczbowego
+   ``probabilityOfOccurrence`` NIE używamy, bo w danych źródłowych jest
+   niespójne (dla scenariusza 0,2% występują zarówno 0.002, jak i 0.02).
+   Zapasem jest ``returnPeriod`` (10/100/500 lat), spójny z tekstem.
+
+Zakres świadomie ograniczony do ``nz-core:HazardArea`` (obszary zagrożenia, MZP).
+Warstwa ``nz-core:RiskZone`` opisuje ryzyko dla elementów narażonych (ok. 1,7 mln
+cech) i odpowiada na inne pytanie niż "czy działka leży w obszarze zagrożenia",
+a ``nz-core:ExposedElement`` to pojedyncze obiekty narażone. Mieszanie ich w
+jednej sekcji zaciemniłoby znaczenie severity.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Final
-from xml.etree import ElementTree
 
 import httpx
-from shapely.geometry import MultiPolygon, Polygon, shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
 from app.schemas.analyze import SourceMetadata
-from app.services.kiut import _local_name, bbox_from_geometry
+from app.services.gml import GmlFeature, GmlResponseError, parse_feature_collection
+from app.services.kiut import bbox_from_geometry
 
 logger = logging.getLogger(__name__)
 
-ISOK_TIMEOUT_S: Final[float] = 10.0
+# Realne odpowiedzi są duże: jedna cecha HazardArea to poligon o ok. 150 tys.
+# wierzchołków, a odpowiedź dla małego BBOX-u działki osiągała 8-10 MB przy
+# czasie odpowiedzi 6-9 s. Limit 10 s był więc na granicy timeoutu.
+ISOK_TIMEOUT_S: Final[float] = 30.0
+
+# Warstwa obszarów zagrożenia powodziowego (Mapy Zagrożenia Powodziowego).
+ISOK_TYPE_NAME: Final[str] = "nz-core:HazardArea"
+
+# Wyłącznie forma URN jest akceptowana przez serwer (skrót daje HTTP 500).
+ISOK_SRS_NAME: Final[str] = "urn:ogc:def:crs:EPSG::2180"
 
 # Domyślna, ostrożnościowa klasyfikacja severity gdy atrybut prawdopodobieństwa
 # jest nierozpoznany albo brak go w danych źródłowych. Dla ryzyka bezpieczeństwa
@@ -43,8 +72,11 @@ ISOK_TIMEOUT_S: Final[float] = 10.0
 # To założenie produktowe, nie twardy wymóg — zmiana decyzji jest jednolinijkowa.
 UNKNOWN_PROBABILITY_SEVERITY: Final[str] = "medium"
 
-# Różne warstwy WFS ISOK mogą nazywać atrybut klasy prawdopodobieństwa inaczej.
+# Nazwy atrybutów klasy prawdopodobieństwa, w kolejności zaufania. Pierwsza
+# pozycja to realne pole INSPIRE usługi ISOK; pozostałe zachowano dla
+# uproszczonych i starszych odpowiedzi WFS.
 _KNOWN_PROBABILITY_ATTRIBUTES: Final[tuple[str, ...]] = (
+    "qualitativelikelihood",
     "prawdopodobienstwo",
     "prawdopodobieństwo",
     "klasa_prawdopodobienstwa",
@@ -61,6 +93,11 @@ _FLOOD_PROBABILITY_SEVERITY_RULES: Final[tuple[tuple[str, str], ...]] = (
     ("10%", "medium"),
     ("1%", "high"),
 )
+
+# Zapasowe odwzorowanie okresu powtarzalności na severity — spójne z regułami
+# tekstowymi powyżej (10 lat = p10%, 100 lat = p1%, 500 lat = p0,2%).
+_RETURN_PERIOD_SEVERITY: Final[dict[int, str]] = {10: "medium", 100: "high", 500: "low"}
+_RETURN_PERIOD_ATTRIBUTE: Final[str] = "returnperiod"
 
 # Próg poniżej którego przecięcie traktujemy jako czysto brzegowe (styk),
 # nie powierzchniowe — działki dotykające granicy strefy mają matematycznie
@@ -115,8 +152,9 @@ async def fetch_flood_risks(
     rozłączna z działką, jest odrzucana.
 
     Pusta lista oznacza "sprawdzono, brak stref w sąsiedztwie działki". Błąd
-    usługi lub nieparsowalna odpowiedź podnosi IsokServiceUnavailableError —
-    te dwa przypadki NIGDY nie są mylone, w odróżnieniu od fetch_kiut_networks
+    usługi, ``ows:ExceptionReport`` (usługi WFS zwracają go ze statusem HTTP
+    200) lub nieparsowalna odpowiedź podnoszą IsokServiceUnavailableError —
+    te przypadki NIGDY nie są mylone, w odróżnieniu od fetch_kiut_networks
     (patrz uzasadnienie w docstringu modułu), bo dla ryzyka powodziowego pusta
     lista przy awarii usługi byłaby fałszywym poczuciem bezpieczeństwa.
 
@@ -129,6 +167,13 @@ async def fetch_flood_risks(
         "service": "WFS",
         "version": "2.0.0",
         "request": "GetFeature",
+        "typeNames": ISOK_TYPE_NAME,
+        # Geometria musi wrócić w układzie metrycznym; bez tego byłaby w
+        # stopniach (EPSG:4258 jest DefaultCRS warstwy) i nigdy nie przecięłaby
+        # się z geometrią działki.
+        "srsName": ISOK_SRS_NAME,
+        # BBOX jest natomiast przyjmowany w kolejności (minE,minN,maxE,maxN),
+        # odwrotnie do kolejności osi w zwracanej geometrii — patrz gml.py.
         "bbox": f"{minx},{miny},{maxx},{maxy},EPSG:2180",
     }
 
@@ -144,9 +189,9 @@ async def fetch_flood_risks(
     zone_features = _parse_zone_response(response_text)
 
     results: list[RiskFeature] = []
-    for zone_geometry, properties in zone_features:
+    for zone in zone_features:
         risk = _build_risk_feature(
-            parcel_geometry, zone_geometry, properties, source_url, fetched_at
+            parcel_geometry, zone.geometry, zone.properties, source_url, fetched_at
         )
         if risk is not None:
             results.append(risk)
@@ -174,122 +219,73 @@ async def _fetch_isok_response_text(
     return response.text, str(response.url)
 
 
-def _parse_zone_response(text: str) -> list[tuple[BaseGeometry, dict]]:
-    stripped = text.strip()
-    if not stripped:
-        return []
+def _parse_zone_response(text: str) -> list[GmlFeature]:
+    """Parsuje odpowiedź WFS na listę cech powierzchniowych w EPSG:2180.
+
+    W odróżnieniu od kiut.py: błąd parsowania, nieoczekiwany układ współrzędnych
+    oraz ``ows:ExceptionReport`` podnoszą wyjątek, nie zwracają [] — patrz
+    critical_design_deviation w docstringu modułu.
+    """
     try:
-        if stripped.startswith("{"):
-            return _parse_geojson_zones(stripped)
-        return _parse_gml_zones(stripped)
-    except (json.JSONDecodeError, ElementTree.ParseError, ValueError) as exc:
-        # W odróżnieniu od kiut.py: błąd parsowania podnosi wyjątek, nie
-        # zwraca [] — patrz critical_design_deviation w docstringu modułu.
+        return parse_feature_collection(text)
+    except GmlResponseError as exc:
         raise IsokServiceUnavailableError(
             f"Nie udało się sparsować odpowiedzi ISOK: {exc}"
         ) from exc
 
 
-def _parse_geojson_zones(text: str) -> list[tuple[BaseGeometry, dict]]:
-    data = json.loads(text)
-    features = data.get("features", [])
-
-    results: list[tuple[BaseGeometry, dict]] = []
-    for feature in features:
-        geometry_dict = feature.get("geometry")
-        if not geometry_dict:
-            continue
-
-        geometry = shapely_shape(geometry_dict)
-        if geometry.geom_type not in ("Polygon", "MultiPolygon"):
-            logger.warning("Nieobsługiwany typ geometrii ISOK: %s", geometry.geom_type)
-            continue
-
-        results.append((geometry, feature.get("properties", {}) or {}))
-    return results
-
-
-def _parse_gml_zones(text: str) -> list[tuple[BaseGeometry, dict]]:
-    """
-    Parsuje uproszczoną strukturę GML dla stref powodziowych.
-
-    Analogicznie do kiut.py, rzeczywisty schemat ISOK nie jest w pełni znany.
-    Dziury w poligonach (gml:interior) NIE są obsługiwane w tej wersji — świadome
-    uproszczenie zakresu, bo strefy zagrożenia powodziowego z otworami są
-    rzadkim przypadkiem, a obsługa interior ringów wymagałaby dodatkowej
-    walidacji topologii bez pełnej dokumentacji schematu ISOK.
-    """
-    root = ElementTree.fromstring(text)  # ParseError propaguje się do _parse_zone_response
-
-    results: list[tuple[BaseGeometry, dict]] = []
-    for member in root.iter():
-        if _local_name(member.tag) not in ("member", "featureMember"):
-            continue
-        for feature_elem in list(member):
-            geometry = _extract_gml_polygon(feature_elem)
-            if geometry is None:
-                continue
-            properties = _extract_gml_properties(feature_elem)
-            results.append((geometry, properties))
-    return results
-
-
-def _extract_gml_polygon(feature_elem: ElementTree.Element) -> BaseGeometry | None:
-    for elem in feature_elem.iter():
-        local = _local_name(elem.tag)
-        if local == "Polygon":
-            ring = _find_exterior_ring_coords(elem)
-            return Polygon(ring) if ring else None
-        if local in ("MultiPolygon", "MultiSurface"):
-            polygons = []
-            for poly_elem in elem.iter():
-                if _local_name(poly_elem.tag) == "Polygon":
-                    ring = _find_exterior_ring_coords(poly_elem)
-                    if ring:
-                        polygons.append(Polygon(ring))
-            return MultiPolygon(polygons) if polygons else None
+def _severity_from_probability_text(value: str) -> str | None:
+    lowered = value.lower().replace(" ", "")
+    for token, severity in _FLOOD_PROBABILITY_SEVERITY_RULES:
+        if token in lowered:
+            return severity
     return None
 
 
-def _find_exterior_ring_coords(
-    polygon_elem: ElementTree.Element,
-) -> list[tuple[float, float]] | None:
-    # Bierze pierwszy napotkany posList w elemencie Polygon jako pierścień
-    # zewnętrzny — wystarczające dla uproszczonego, udokumentowanego zakresu
-    # bez dziur w poligonach (patrz docstring _parse_gml_zones).
-    for elem in polygon_elem.iter():
-        if _local_name(elem.tag) == "posList" and elem.text:
-            values = [float(v) for v in elem.text.split()]
-            pairs = list(zip(values[0::2], values[1::2]))
-            return pairs if len(pairs) >= 4 else None
-    return None
-
-
-def _extract_gml_properties(feature_elem: ElementTree.Element) -> dict:
-    properties: dict[str, str] = {}
-    for elem in feature_elem.iter():
-        local = _local_name(elem.tag)
-        if local.lower() in _KNOWN_PROBABILITY_ATTRIBUTES and elem.text:
-            properties[local] = elem.text
-    return properties
+def _severity_from_return_period(properties: dict) -> tuple[str | None, str | None]:
+    """Zapasowa klasyfikacja po okresie powtarzalności (10/100/500 lat)."""
+    for prop_key, value in properties.items():
+        if prop_key.lower() != _RETURN_PERIOD_ATTRIBUTE:
+            continue
+        try:
+            period = int(round(float(value)))
+        except (TypeError, ValueError):
+            continue
+        severity = _RETURN_PERIOD_SEVERITY.get(period)
+        if severity is not None:
+            return f"raz na {period} lat", severity
+    return None, None
 
 
 def _classify_flood_probability(properties: dict) -> tuple[str | None, str, str | None]:
     """Zwraca (surowa_wartość_lub_None, severity, warning_lub_None)."""
+    raw_value: str | None = None
     for key in _KNOWN_PROBABILITY_ATTRIBUTES:
         for prop_key, value in properties.items():
-            if prop_key.lower() == key and isinstance(value, str):
-                lowered = value.lower().replace(" ", "")
-                for token, severity in _FLOOD_PROBABILITY_SEVERITY_RULES:
-                    if token in lowered:
-                        return value, severity, None
-                return value, UNKNOWN_PROBABILITY_SEVERITY, (
-                    f"Nierozpoznana klasa prawdopodobieństwa powodzi: {value!r} — "
-                    f"przyjęto severity={UNKNOWN_PROBABILITY_SEVERITY} ostrożnościowo."
-                )
-    return None, UNKNOWN_PROBABILITY_SEVERITY, (
+            if prop_key.lower() != key or not isinstance(value, str):
+                continue
+            if raw_value is None:
+                raw_value = value
+            severity = _severity_from_probability_text(value)
+            if severity is not None:
+                return value, severity, None
+
+    period_label, period_severity = _severity_from_return_period(properties)
+    if period_severity is not None:
+        return raw_value or period_label, period_severity, None
+
+    if raw_value is not None:
+        return (
+            raw_value,
+            UNKNOWN_PROBABILITY_SEVERITY,
+            f"Nierozpoznana klasa prawdopodobieństwa powodzi: {raw_value!r} — "
+            f"przyjęto severity={UNKNOWN_PROBABILITY_SEVERITY} ostrożnościowo.",
+        )
+    return (
+        None,
+        UNKNOWN_PROBABILITY_SEVERITY,
         "Brak atrybutu klasy prawdopodobieństwa powodzi w danych źródłowych — "
-        f"przyjęto severity={UNKNOWN_PROBABILITY_SEVERITY} ostrożnościowo."
+        f"przyjęto severity={UNKNOWN_PROBABILITY_SEVERITY} ostrożnościowo.",
     )
 
 

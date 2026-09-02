@@ -4,30 +4,81 @@ Formy ochrony przyrody mogą stanowić twarde ograniczenie inwestycyjne. Awaria
 usługi nie może więc wyglądać tak samo jak poprawnie sprawdzony brak kolizji.
 Pusta lista oznacza wyłącznie "sprawdzono, brak przecięcia", natomiast timeout,
 błąd HTTP lub nieparsowalna odpowiedź podnoszą GdosServiceUnavailableError.
-Przyszły orchestrator analizy powinien zamienić ten wyjątek na niedostępność
-sekcji i ostrzeżenie, zachowując częściowe wyniki pozostałych usług.
+Orchestrator kontekstu zamienia ten wyjątek na niedostępność sekcji i
+ostrzeżenie, zachowując częściowe wyniki pozostałych usług.
+
+Kontrakt usługi potwierdzono realnymi zapytaniami 2026-07-30
+(GetCapabilities + DescribeFeatureType + GetFeature, fixtures
+``tests/fixtures/source_contracts/gdos_*``). Trzy ustalenia zmieniają kształt
+tego adaptera w stosunku do naiwnej implementacji:
+
+1. **``typeNames`` jest obowiązkowe.** Bez niego usługa zwraca
+   ``ows:ExceptionReport`` ze statusem HTTP **200**, co bez jawnego rozpoznania
+   wyglądałoby jak poprawna odpowiedź bez cech, czyli jak brak form ochrony
+   przyrody na działce.
+2. **Jedna warstwa na zapytanie.** Podanie kilku warstw naraz kończy się
+   błędem ``Join filter inconsistent with regard to feature types``, dlatego
+   każda warstwa jest odpytywana osobnym żądaniem, równolegle.
+3. **Rodzaj ochrony wynika z warstwy, nie z atrybutów cechy.** Schemat warstw
+   nie zawiera żadnego pola typu ``forma_ochrony`` — są wyłącznie ``gid``,
+   ``nazwa``, ``kodinspire`` (czasem ``kod``) i geometria. Klasyfikacja po
+   atrybutach dałaby więc dla realnych danych zawsze ``unknown``.
+
+Zakres świadomie pominięty: ``GDOS:PomnikiPrzyrodyPunktowe`` (geometria
+punktowa nie pasuje do modelu udziału powierzchni przecięcia) oraz warstwy
+proponowanych i konsultowanych zmian Natura 2000 (nie są obowiązującą formą
+ochrony), a także ``GDOS:korytarzeEkologiczne``, ``GDOS:Mezoregiony``,
+``GDOS:ramsar`` i ``GDOS:ElektrownieWiatrowe`` — nie są formami ochrony
+przyrody w rozumieniu art. 6 ustawy o ochronie przyrody, więc raportowanie ich
+w tej sekcji zawyżałoby ocenę ograniczeń.
 """
 
 from __future__ import annotations
 
-import json
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Final
-from xml.etree import ElementTree
 
 import httpx
-from shapely.geometry import MultiPolygon, Polygon, shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
 from app.schemas.analyze import SourceMetadata
-from app.services.kiut import _local_name, bbox_from_geometry
+from app.services.gml import GmlFeature, GmlResponseError, parse_feature_collection
+from app.services.kiut import bbox_from_geometry
 
 logger = logging.getLogger(__name__)
 
-GDOS_TIMEOUT_S: Final[float] = 10.0
+# Odpowiedź dla jednej warstwy bywa duża — pojedyncza cecha "Kampinoski Park
+# Narodowy" to ok. 0,9 MB GML-a (229 poligonów). Limit 10 s okazał się w realnych
+# pomiarach zbyt ciasny, gdy działka leży w dużym obszarze chronionym.
+GDOS_TIMEOUT_S: Final[float] = 20.0
+
+# Warstwy WFS odpytywane dla działki: typeName -> znormalizowany rodzaj ochrony.
+# Kolejność jest kolejnością malejącej istotności ograniczenia i jednocześnie
+# kolejnością prezentacji wyników.
+GDOS_PROTECTION_LAYERS: Final[dict[str, str]] = {
+    "GDOS:ParkiNarodowe": "park_narodowy",
+    "GDOS:Rezerwaty": "rezerwat_przyrody",
+    "GDOS:ObszarySpecjalnejOchrony": "natura2000",
+    "GDOS:SpecjalneObszaryOchrony": "natura2000",
+    "GDOS:ParkiKrajobrazowe": "park_krajobrazowy",
+    "GDOS:ObszaryChronionegoKrajobrazu": "obszar_chronionego_krajobrazu",
+    "GDOS:UzytkiEkologiczne": "uzytek_ekologiczny",
+    "GDOS:ZespolyPrzyrodniczoKrajobrazowe": "zespol_przyrodniczo_krajobrazowy",
+    "GDOS:StanowiskaDokumentacyjne": "stanowisko_dokumentacyjne",
+    "GDOS:PomnikiPrzyrodyPowierzchniowe": "pomnik_przyrody",
+}
+
+# Odpowiedź identyfikuje warstwę lokalną nazwą elementu cechy (bez prefiksu
+# przestrzeni nazw), dlatego klasyfikacja korzysta z klucza bez ``GDOS:``.
+_LAYER_LOCAL_NAME_TO_TYPE: Final[dict[str, str]] = {
+    type_name.split(":")[-1]: protection_type
+    for type_name, protection_type in GDOS_PROTECTION_LAYERS.items()
+}
+
 _INTERSECTION_AREA_EPSILON_SQM: Final[float] = 1e-6
 _FULL_COVERAGE_RATIO_THRESHOLD: Final[float] = 0.999
 _RATIO_HIGH_THRESHOLD: Final[float] = 0.5
@@ -39,6 +90,9 @@ _ALWAYS_HIGH_PROTECTION_TYPES: Final[frozenset[str]] = frozenset(
     {"rezerwat_przyrody", "park_narodowy"}
 )
 
+# Atrybutowa klasyfikacja rodzaju ochrony jest ścieżką zapasową, używaną tylko
+# gdy odpowiedź nie pozwala ustalić warstwy (np. GeoJSON bez nazwy typu cechy).
+# W realnym WFS GDOŚ takich atrybutów nie ma — patrz docstring modułu.
 _KNOWN_PROTECTION_TYPE_ATTRIBUTES: Final[tuple[str, ...]] = (
     "forma_ochrony",
     "typ_ochrony",
@@ -97,40 +151,80 @@ async def fetch_nature_protection_areas(
 
     Geometria wejściowa musi być w EPSG:2180, aby pola przecięć i udział
     powierzchni miały znaczenie metryczne. Pusta lista oznacza "sprawdzono,
-    brak przecięcia", a nie brak sekcji. Błąd usługi albo parsowania zawsze
-    podnosi GdosServiceUnavailableError i nigdy nie jest zamieniany na ``[]``.
+    brak przecięcia", a nie brak sekcji.
+
+    Każda warstwa z ``GDOS_PROTECTION_LAYERS`` jest odpytywana osobnym,
+    równoległym żądaniem (usługa nie przyjmuje wielu warstw w jednym zapytaniu).
+    Awaria dowolnej warstwy podnosi GdosServiceUnavailableError i NIE jest
+    zamieniana na częściowy wynik: gdyby jedna kategoria ochrony nie została
+    sprawdzona, wynik "brak kolizji" byłby nieprawdziwy.
     """
+    if client is not None:
+        return await _fetch_all_layers(parcel_geometry, client)
+
+    async with httpx.AsyncClient() as owned_client:
+        return await _fetch_all_layers(parcel_geometry, owned_client)
+
+
+async def _fetch_all_layers(
+    parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient,
+) -> list[NatureProtectionFeature]:
     minx, miny, maxx, maxy = bbox_from_geometry(parcel_geometry)
+    # Parametr bbox jest przyjmowany w kolejności (minE,minN,maxE,maxN) — inaczej
+    # niż kolejność osi w zwracanej geometrii (patrz app/services/gml.py).
+    bbox = f"{minx},{miny},{maxx},{maxy},EPSG:2180"
+
+    fetched_at = datetime.now(timezone.utc)
+    per_layer = await asyncio.gather(
+        *(
+            _fetch_layer(client, type_name, bbox)
+            for type_name in GDOS_PROTECTION_LAYERS
+        )
+    )
+
+    results: list[NatureProtectionFeature] = []
+    for type_name, (features, source_url) in zip(GDOS_PROTECTION_LAYERS, per_layer):
+        default_type = GDOS_PROTECTION_LAYERS[type_name]
+        for gml_feature in features:
+            feature = _build_nature_protection_feature(
+                parcel_geometry,
+                gml_feature.geometry,
+                gml_feature.properties,
+                source_url,
+                fetched_at,
+                protection_type=_resolve_protection_type(gml_feature, default_type),
+            )
+            if feature is not None:
+                results.append(feature)
+    return results
+
+
+def _resolve_protection_type(gml_feature: GmlFeature, default_type: str) -> str | None:
+    """Ustala rodzaj ochrony na podstawie warstwy, z której pochodzi cecha.
+
+    Zwrócenie ``None`` oznacza "nie wiadomo z warstwy" i uruchamia zapasową
+    klasyfikację po atrybutach w ``_build_nature_protection_feature``.
+    """
+    if not gml_feature.layer:
+        return None
+    return _LAYER_LOCAL_NAME_TO_TYPE.get(gml_feature.layer, default_type)
+
+
+async def _fetch_layer(
+    client: httpx.AsyncClient,
+    type_name: str,
+    bbox: str,
+) -> tuple[list[GmlFeature], str]:
     params = {
         "service": "WFS",
         "version": "2.0.0",
         "request": "GetFeature",
-        "bbox": f"{minx},{miny},{maxx},{maxy},EPSG:2180",
+        "typeNames": type_name,
+        "bbox": bbox,
     }
-
-    if client is not None:
-        response_text, source_url = await _fetch_gdos_response_text(client, params)
-    else:
-        async with httpx.AsyncClient() as owned_client:
-            response_text, source_url = await _fetch_gdos_response_text(
-                owned_client, params
-            )
-
-    fetched_at = datetime.now(timezone.utc)
-    zone_features = _parse_zone_response(response_text)
-
-    results: list[NatureProtectionFeature] = []
-    for zone_geometry, properties in zone_features:
-        feature = _build_nature_protection_feature(
-            parcel_geometry,
-            zone_geometry,
-            properties,
-            source_url,
-            fetched_at,
-        )
-        if feature is not None:
-            results.append(feature)
-    return results
+    response_text, source_url = await _fetch_gdos_response_text(client, params)
+    return _parse_layer_response(response_text, type_name), source_url
 
 
 async def _fetch_gdos_response_text(
@@ -154,101 +248,21 @@ async def _fetch_gdos_response_text(
     return response.text, str(response.url)
 
 
-def _parse_zone_response(text: str) -> list[tuple[BaseGeometry, dict]]:
-    stripped = text.strip()
-    if not stripped:
-        return []
-    try:
-        if stripped.startswith("{"):
-            return _parse_geojson_zones(stripped)
-        return _parse_gml_zones(stripped)
-    except (json.JSONDecodeError, ElementTree.ParseError, ValueError) as exc:
-        # Pusta lista jest zarezerwowana dla potwierdzonego braku przecięć;
-        # uszkodzona odpowiedź musi pozostać odróżnialna dla orchestratora.
-        raise GdosServiceUnavailableError(
-            f"Nie udało się sparsować odpowiedzi GDOŚ: {exc}"
-        ) from exc
+def _parse_layer_response(text: str, type_name: str = "") -> list[GmlFeature]:
+    """Parsuje odpowiedź jednej warstwy WFS.
 
-
-def _parse_geojson_zones(text: str) -> list[tuple[BaseGeometry, dict]]:
-    data = json.loads(text)
-    features = data.get("features", [])
-
-    results: list[tuple[BaseGeometry, dict]] = []
-    for feature in features:
-        geometry_dict = feature.get("geometry")
-        if not geometry_dict:
-            continue
-
-        geometry = shapely_shape(geometry_dict)
-        if geometry.geom_type not in ("Polygon", "MultiPolygon"):
-            logger.warning("Nieobsługiwany typ geometrii GDOŚ: %s", geometry.geom_type)
-            continue
-
-        results.append((geometry, feature.get("properties", {}) or {}))
-    return results
-
-
-def _parse_gml_zones(text: str) -> list[tuple[BaseGeometry, dict]]:
-    """Parsuje uproszczone GML Polygon/MultiPolygon bez pierścieni wewnętrznych.
-
-    Schemat WFS GDOŚ nie jest jeszcze udokumentowany w projekcie. Obsługa
-    otworów wymagałaby potwierdzenia kontraktu i walidacji topologii, dlatego
-    parser zachowuje świadomie ten sam ograniczony zakres co serwis ISOK.
+    Pusta lista jest zarezerwowana dla potwierdzonego braku cech w BBOX.
+    Uszkodzona odpowiedź oraz ``ows:ExceptionReport`` (który usługa zwraca ze
+    statusem HTTP 200) muszą pozostać odróżnialne dla orchestratora, dlatego
+    podnoszą GdosServiceUnavailableError.
     """
-    root = ElementTree.fromstring(text)
-
-    results: list[tuple[BaseGeometry, dict]] = []
-    for member in root.iter():
-        if _local_name(member.tag) not in ("member", "featureMember"):
-            continue
-        for feature_elem in list(member):
-            geometry = _extract_gml_polygon(feature_elem)
-            if geometry is None:
-                continue
-            properties = _extract_gml_properties(feature_elem)
-            results.append((geometry, properties))
-    return results
-
-
-def _extract_gml_polygon(feature_elem: ElementTree.Element) -> BaseGeometry | None:
-    for elem in feature_elem.iter():
-        local = _local_name(elem.tag)
-        if local == "Polygon":
-            ring = _find_exterior_ring_coords(elem)
-            return Polygon(ring) if ring else None
-        if local in ("MultiPolygon", "MultiSurface"):
-            polygons = []
-            for poly_elem in elem.iter():
-                if _local_name(poly_elem.tag) == "Polygon":
-                    ring = _find_exterior_ring_coords(poly_elem)
-                    if ring:
-                        polygons.append(Polygon(ring))
-            return MultiPolygon(polygons) if polygons else None
-    return None
-
-
-def _find_exterior_ring_coords(
-    polygon_elem: ElementTree.Element,
-) -> list[tuple[float, float]] | None:
-    # Pierwszy posList jest pierścieniem zewnętrznym w obsługiwanym,
-    # uproszczonym zakresie GML bez otworów opisanym w _parse_gml_zones.
-    for elem in polygon_elem.iter():
-        if _local_name(elem.tag) == "posList" and elem.text:
-            values = [float(value) for value in elem.text.split()]
-            pairs = list(zip(values[0::2], values[1::2]))
-            return pairs if len(pairs) >= 4 else None
-    return None
-
-
-def _extract_gml_properties(feature_elem: ElementTree.Element) -> dict:
-    properties: dict[str, str] = {}
-    known_attributes = _KNOWN_PROTECTION_TYPE_ATTRIBUTES + _KNOWN_NAME_ATTRIBUTES
-    for elem in feature_elem.iter():
-        local = _local_name(elem.tag)
-        if local.lower() in known_attributes and elem.text:
-            properties[local] = elem.text
-    return properties
+    try:
+        return parse_feature_collection(text)
+    except GmlResponseError as exc:
+        layer_info = f" (warstwa {type_name})" if type_name else ""
+        raise GdosServiceUnavailableError(
+            f"Nie udało się sparsować odpowiedzi GDOŚ{layer_info}: {exc}"
+        ) from exc
 
 
 def _normalize_protection_type_value(raw_value: str) -> str:
@@ -322,7 +336,14 @@ def _build_nature_protection_feature(
     properties: dict,
     source_url: str,
     fetched_at: datetime,
+    protection_type: str | None = None,
 ) -> NatureProtectionFeature | None:
+    """Buduje wynik dla jednej formy ochrony albo ``None`` przy braku przecięcia.
+
+    ``protection_type`` przekazany jawnie pochodzi z odpytanej warstwy WFS i ma
+    pierwszeństwo, bo realne cechy GDOŚ nie mają atrybutu rodzaju ochrony. Gdy
+    jest ``None``, uruchamiana jest zapasowa klasyfikacja po atrybutach.
+    """
     if not parcel.intersects(zone):
         return None
 
@@ -331,11 +352,12 @@ def _build_nature_protection_feature(
     parcel_area = parcel.area
     area_ratio = (intersection_area_sqm / parcel_area) if parcel_area > 0 else 0.0
 
-    protection_type, type_warning = _classify_protection_type(properties)
-    name = _extract_name(properties)
     warnings: list[str] = []
-    if type_warning:
-        warnings.append(type_warning)
+    if protection_type is None:
+        protection_type, type_warning = _classify_protection_type(properties)
+        if type_warning:
+            warnings.append(type_warning)
+    name = _extract_name(properties)
 
     if intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM:
         # Styk granicą nie jest powierzchniowym ograniczeniem, więc nadpisuje

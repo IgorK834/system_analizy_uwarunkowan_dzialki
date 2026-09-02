@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 import pytest
@@ -6,7 +7,10 @@ import respx
 from shapely.geometry import Polygon
 
 from app.core.settings import settings
+from app.services.gml import GmlFeature
 from app.services.isok import (
+    ISOK_SRS_NAME,
+    ISOK_TYPE_NAME,
     IsokServiceUnavailableError,
     RiskFeature,
     _build_risk_feature,
@@ -108,6 +112,18 @@ EMPTY_GML = '<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"><
 MALFORMED_GML = "<not><valid"
 
 FETCHED_AT = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
+_CONTRACTS = Path(__file__).resolve().parent / "fixtures" / "source_contracts"
+
+
+def _risks_from_zones(zones: list[GmlFeature]) -> list[RiskFeature]:
+    risks = []
+    for zone in zones:
+        risk = _build_risk_feature(
+            SQUARE_PARCEL, zone.geometry, zone.properties, "url", FETCHED_AT
+        )
+        if risk is not None:
+            risks.append(risk)
+    return risks
 
 
 # --- Główne kryteria akceptacji ----------------------------------------------
@@ -115,12 +131,7 @@ FETCHED_AT = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
 
 def test_zone_fully_overlapping_parcel_with_p1_gets_severity_high() -> None:
     zones = _parse_zone_response(MOCK_GML_ZONE_HIGH_OVERLAP)
-    result = [
-        f
-        for geom, props in zones
-        if (f := _build_risk_feature(SQUARE_PARCEL, geom, props, "url", FETCHED_AT))
-        is not None
-    ]
+    result = _risks_from_zones(zones)
 
     assert len(result) == 1
     assert result[0].severity == "high"
@@ -130,12 +141,7 @@ def test_zone_fully_overlapping_parcel_with_p1_gets_severity_high() -> None:
 
 def test_zone_boundary_touch_gets_boundary_touch_warning_not_full_risk() -> None:
     zones = _parse_zone_response(MOCK_GML_ZONE_BOUNDARY_TOUCH)
-    result = [
-        f
-        for geom, props in zones
-        if (f := _build_risk_feature(SQUARE_PARCEL, geom, props, "url", FETCHED_AT))
-        is not None
-    ]
+    result = _risks_from_zones(zones)
 
     assert len(result) == 1
     assert result[0].severity == "low"
@@ -145,36 +151,21 @@ def test_zone_boundary_touch_gets_boundary_touch_warning_not_full_risk() -> None
 
 def test_zone_outside_parcel_is_not_included_in_results() -> None:
     zones = _parse_zone_response(MOCK_GML_ZONE_OUTSIDE)
-    result = [
-        f
-        for geom, props in zones
-        if (f := _build_risk_feature(SQUARE_PARCEL, geom, props, "url", FETCHED_AT))
-        is not None
-    ]
+    result = _risks_from_zones(zones)
 
     assert result == []
 
 
 def test_zone_medium_probability_10_percent() -> None:
     zones = _parse_zone_response(MOCK_GEOJSON_ZONE_MEDIUM)
-    result = [
-        f
-        for geom, props in zones
-        if (f := _build_risk_feature(SQUARE_PARCEL, geom, props, "url", FETCHED_AT))
-        is not None
-    ]
+    result = _risks_from_zones(zones)
 
     assert result[0].severity == "medium"
 
 
 def test_zone_unknown_probability_gets_conservative_severity_and_warning() -> None:
     zones = _parse_zone_response(MOCK_GML_ZONE_UNKNOWN_PROBABILITY)
-    result = [
-        f
-        for geom, props in zones
-        if (f := _build_risk_feature(SQUARE_PARCEL, geom, props, "url", FETCHED_AT))
-        is not None
-    ]
+    result = _risks_from_zones(zones)
 
     assert result[0].severity == "medium"
     assert len(result[0].warnings) >= 1
@@ -324,3 +315,135 @@ def test_risk_feature_is_dataclass_instance() -> None:
     )
 
     assert isinstance(result, RiskFeature)
+
+
+# --- Kontrakt realnej usługi INSPIRE (potwierdzony 2026-07-30) ----------------
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_requests_hazard_area_layer_and_projected_srs() -> None:
+    """Bez jawnego srsName usługa zwróciłaby geometrię w stopniach (EPSG:4258).
+
+    Serwer akceptuje wyłącznie formę URN — skrót ``EPSG:2180`` powoduje HTTP 500,
+    dlatego kształt tego parametru jest częścią kontraktu, nie kosmetyką.
+    """
+    route = respx.get(settings.isok_wfs_base_url).mock(
+        return_value=httpx.Response(200, text=EMPTY_GML)
+    )
+
+    await fetch_flood_risks(SQUARE_PARCEL)
+
+    params = route.calls.last.request.url.params
+    assert params["typeNames"] == ISOK_TYPE_NAME == "nz-core:HazardArea"
+    assert params["srsName"] == ISOK_SRS_NAME
+    assert params["srsName"].startswith("urn:ogc:def:crs:EPSG:")
+
+
+def test_real_getfeature_fixture_parsed_with_swapped_axes_and_holes() -> None:
+    """Realna cecha ma srsName w formie HTTP, czyli kolejność (northing, easting).
+
+    Współrzędne w fixture to 374871..374899 (northing) i 698899..698907 (easting),
+    więc po sprowadzeniu do konwencji systemu easting musi być pierwszą osią.
+    Cecha ma też pierścienie wewnętrzne, które muszą trafić do geometrii.
+    """
+    payload = (_CONTRACTS / "isok_getfeature.xml").read_text(encoding="utf-8")
+
+    zones = _parse_zone_response(payload)
+
+    assert len(zones) == 1
+    minx, miny, maxx, maxy = zones[0].geometry.bounds
+    assert 698890 <= minx <= 698910
+    assert 374860 <= miny <= 374910
+    assert 698890 <= maxx <= 698910
+    assert 374860 <= maxy <= 374910
+    assert len(zones[0].geometry.interiors) == 2
+
+
+def test_real_getfeature_fixture_classifies_probability_from_inspire_field() -> None:
+    payload = (_CONTRACTS / "isok_getfeature.xml").read_text(encoding="utf-8")
+
+    zones = _parse_zone_response(payload)
+    probability_class, severity, warning = _classify_flood_probability(
+        zones[0].properties
+    )
+
+    assert probability_class == "scenariusz Q 0,2% (raz na 500 lat)"
+    assert severity == "low"
+    assert warning is None
+
+
+def test_probability_ignores_inconsistent_numeric_field() -> None:
+    """probabilityOfOccurrence bywa 0.02 dla scenariusza 0,2% — nie używamy go.
+
+    Klasyfikacja opiera się na tekście qualitativeLikelihood, więc niespójna
+    wartość liczbowa nie może zmienić wyniku.
+    """
+    properties = {
+        "qualitativeLikelihood": "scenariusz Q 1% (raz na 100 lat)",
+        "probabilityOfOccurrence": "0.02",
+        "returnPeriod": "100.0",
+    }
+
+    assert _classify_flood_probability(properties)[1] == "high"
+
+
+@pytest.mark.parametrize(
+    ("scenario", "expected"),
+    [
+        ("scenariusz Q 10% (raz na 10 lat)", "medium"),
+        ("scenariusz Q 1% (raz na 100 lat)", "high"),
+        ("scenariusz Q 0,2% (raz na 500 lat)", "low"),
+    ],
+)
+def test_real_inspire_scenarios_map_to_expected_severity(
+    scenario: str, expected: str
+) -> None:
+    assert _classify_flood_probability({"qualitativeLikelihood": scenario})[1] == (
+        expected
+    )
+
+
+def test_return_period_is_used_when_scenario_text_is_unrecognized() -> None:
+    properties = {"qualitativeLikelihood": "brak opisu", "returnPeriod": "100.0"}
+
+    _, severity, warning = _classify_flood_probability(properties)
+
+    assert severity == "high"
+    assert warning is None
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_exception_report_http_200_raises_not_empty_list() -> None:
+    """Usługi WFS zgłaszają błędy statusem 200, więc raise_for_status milczy."""
+    payload = (_CONTRACTS / "gdos_exception_report.xml").read_text(encoding="utf-8")
+    respx.get(settings.isok_wfs_base_url).mock(
+        return_value=httpx.Response(200, text=payload)
+    )
+
+    with pytest.raises(IsokServiceUnavailableError):
+        await fetch_flood_risks(SQUARE_PARCEL)
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_unexpected_crs_raises_instead_of_silent_miss() -> None:
+    """Geometria w innym układzie nie może cicho dać "brak zagrożenia"."""
+    payload = """<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:nz="http://inspire.example/">
+  <wfs:member>
+    <nz:HazardArea>
+      <nz:geometry>
+        <gml:Polygon srsName="urn:ogc:def:crs:EPSG::4258">
+          <gml:exterior><gml:LinearRing><gml:posList>52.2 21.0 52.3 21.0 52.3 21.1 52.2 21.1 52.2 21.0</gml:posList></gml:LinearRing></gml:exterior>
+        </gml:Polygon>
+      </nz:geometry>
+    </nz:HazardArea>
+  </wfs:member>
+</wfs:FeatureCollection>"""
+    respx.get(settings.isok_wfs_base_url).mock(
+        return_value=httpx.Response(200, text=payload)
+    )
+
+    with pytest.raises(IsokServiceUnavailableError):
+        await fetch_flood_risks(SQUARE_PARCEL)
