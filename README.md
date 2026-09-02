@@ -30,17 +30,30 @@ curl http://localhost:8000/health
 Po uruchomieniu całego zestawu frontend jest dostępny pod adresem
 `http://localhost:3000`, a API pod `http://localhost:8000`.
 
-### Cache kafelków MPZP
+### Warstwy podglądowe WMS
 
-Nakładka MPZP nie odpytuje Geoportalu bezpośrednio. Frontend korzysta z
-endpointu `GET /api/v1/map/tiles/mpzp/{z}/{x}/{y}.png`, a backend zapisuje
-zweryfikowane obrazy PNG w named volume `map_tile_cache`. Dzięki temu kolejne
-wejście w ten sam obszar mapy nie czeka ponownie na wygenerowanie `GetMap`.
+Nakładki MPZP, POG i uzbrojenia terenu KIUT nie odpytują usług Geoportalu
+bezpośrednio z przeglądarki. Frontend pobiera bezpieczny rejestr z
+`GET /api/v1/map/preview-sources`, a kafle z
+`GET /api/v1/map/tiles/{mpzp|pog|kiut}/{z}/{x}/{y}.png`. Backend weryfikuje PNG
+i zapisuje je w named volume `map_tile_cache`.
 
-Domyślnie kafel jest świeży przez 24 godziny, może zostać podany jako `STALE`
-przez 7 dni podczas awarii WMS, a cache ma limit 5 GB. Parametry można zmienić
-zmiennymi `MAP_TILE_*` opisanymi w `.env.example`. Nagłówek `X-Tile-Cache`
-pozwala rozróżnić odpowiedzi `MISS`, `HIT` i `STALE`.
+Każde źródło ma osobny timeout, limit współbieżności i okres ważności w
+`backend/app/core/wms_preview_sources.json`. MPZP i POG są świeże przez 24
+godziny, KIUT przez 6 godzin; podczas przejściowej awarii może zostać podany
+starszy kafel. Nagłówek `X-Tile-Cache` rozróżnia odpowiedzi `MISS`, `HIT` i
+`STALE`.
+
+Warstwy służą wyłącznie do podglądu. Brak obiektów nie potwierdza braku planu
+ani sieci, a KIUT nie jest używany do wyznaczania odległości do przyłączy.
+Źródła, ograniczenia i informacje o buforowaniu są stale widoczne w panelu
+warstw oraz w nocie strony.
+
+`GET /api/v1/map/coverage/kiut?lon=&lat=` odpytuje wskaźnikową warstwę WMS
+`gesut` i zwraca `covered`, `not_covered` albo `unknown`. Timeout i błąd usługi
+zawsze dają `unknown`, nigdy `not_covered`. Ten sam wynik jest zapisywany jako
+`utilities_preview` w snapshotcie analizy i trafia do panelu oraz raportu PDF;
+nie zawiera odległości ani liczby sieci.
 
 ### Lokalny indeks podpowiedzi adresowych
 
@@ -97,7 +110,7 @@ docker run --rm \
 
 Baza działa jako kontener `db` w sieci Docker. Backend łączy się z nią po hoście `db:5432` — **nie** przez `localhost`.
 
-Dane są przechowywane w named volume `postgres_data`, a kafelki MPZP w
+Dane są przechowywane w named volume `postgres_data`, a kafelki WMS w
 `map_tile_cache`:
 
 - `docker compose down` — zatrzymuje kontenery, **zachowuje** dane w wolumenie,
