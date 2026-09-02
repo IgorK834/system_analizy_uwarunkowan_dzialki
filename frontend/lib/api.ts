@@ -5,6 +5,7 @@ import type {
   AnalyzeResponse,
   AnalyzeResumeRequest,
   GeocodeResponse,
+  PreviewSource,
 } from "@/lib/types";
 
 type AnalyzeOptions = {
@@ -134,6 +135,18 @@ export async function resumeAnalysis(
     body: JSON.stringify(payload),
     signal: options.signal,
   });
+}
+
+export async function getPreviewSources(
+  options: { signal?: AbortSignal } = {},
+): Promise<PreviewSource[]> {
+  return requestJson<PreviewSource[]>(
+    `${getApiBaseUrl()}/api/v1/map/preview-sources`,
+    {
+      method: "GET",
+      signal: options.signal,
+    },
+  );
 }
 
 export async function getAnalysisReport(

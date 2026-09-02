@@ -11,6 +11,7 @@ export function buildAnalyzeResponse(
     mpzp_zones: [],
     pog: null,
     infrastructure: [],
+    utilities_preview: null,
     risks: [],
     buildable_area_sqm: null,
     manual_zone_required: false,

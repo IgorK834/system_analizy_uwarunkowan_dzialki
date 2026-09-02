@@ -41,6 +41,22 @@ export type SourceMetadata = {
   manual_review_required: boolean;
 };
 
+export type PreviewSourceKey = "mpzp" | "pog" | "kiut";
+
+/** Publiczny, bezpieczny kontrakt źródła podglądowego zwracany przez backend. */
+export type PreviewSource = {
+  source_key: PreviewSourceKey;
+  label: string;
+  attribution: string;
+  min_zoom: number;
+  max_zoom: number;
+  tile_size: 256 | 512;
+  tile_url_template: string;
+  legal_note: string;
+  info_url: string;
+  catalog_status: string;
+};
+
 export type WarningMessage = {
   code: string;
   message: string;
@@ -135,6 +151,16 @@ export type InfrastructureResult = {
   source: SourceMetadata;
 };
 
+export type UtilitiesPreviewResult = {
+  coverage_status: "covered" | "not_covered" | "unknown";
+  county_name: string | null;
+  /** True oznacza potwierdzoną publikację GESUT dla powiatu, nie obecność sieci. */
+  layer_available: boolean;
+  /** Nota poglądowa; nigdy nie zawiera wyliczonych odległości ani liczby sieci. */
+  note: string;
+  source: SourceMetadata;
+};
+
 export type RiskResult = {
   risk_type: string;
   description: string;
@@ -151,6 +177,7 @@ export type AnalyzeResponse = {
   mpzp_zones: MpzpZoneResult[];
   pog: PogResult | null;
   infrastructure: InfrastructureResult[];
+  utilities_preview: UtilitiesPreviewResult | null;
   risks: RiskResult[];
   buildable_area_sqm: number | null;
   manual_zone_required: boolean;

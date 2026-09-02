@@ -5,6 +5,7 @@ import {
   ApiError,
   getAddressSuggestions,
   getAnalysisReport,
+  getPreviewSources,
   resumeAnalysis,
   searchAddresses,
 } from "@/lib/api";
@@ -89,6 +90,33 @@ describe("klient API", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ analysis_id: 42, zone_symbol: "230_U" }),
       }),
+    );
+  });
+
+  it("pobiera rejestr źródeł podglądowych z własnego backendu", async () => {
+    const sources = [
+      {
+        source_key: "kiut",
+        label: "Uzbrojenie terenu",
+        attribution: "KIUT, GUGiK",
+        min_zoom: 17,
+        max_zoom: 20,
+        tile_size: 512,
+        tile_url_template: "/api/v1/map/tiles/kiut/{z}/{x}/{y}.png",
+        legal_note: "Podgląd poglądowy.",
+        info_url: "https://example.test/kiut",
+        catalog_status: "production",
+      },
+    ];
+    fetchMock.mockResolvedValue(jsonResponse(sources));
+    const controller = new AbortController();
+
+    await expect(
+      getPreviewSources({ signal: controller.signal }),
+    ).resolves.toEqual(sources);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/v1/map/preview-sources",
+      expect.objectContaining({ method: "GET", signal: controller.signal }),
     );
   });
 

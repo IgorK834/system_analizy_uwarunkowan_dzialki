@@ -1,6 +1,6 @@
 /**
  * Konfiguracja kolorów, identyfikatorów źródeł/warstw i opisów legendy dla
- * warstw mapowych dodawanych przez ResultPanel, LayerToggle i PlanningOverlay.
+ * warstw mapowych dodawanych przez ResultPanel, LayerToggle i PreviewOverlays.
  *
  * Kolory i identyfikatory są scentralizowane tutaj (nie jako inline hex w
  * JSX), żeby uniknąć rozjazdu między komponentem, który dodaje warstwę do
@@ -66,6 +66,11 @@ export const MPZP_WMS_LAYER_ID = "mpzp-wms-layer";
 export const POG_WMS_SOURCE_ID = "pog-wms-source";
 export const POG_WMS_LAYER_ID = "pog-wms-layer";
 
+// --- Nakładka WMS uzbrojenia terenu (KIUT) ---
+export const KIUT_WMS_SOURCE_ID = "kiut-wms-source";
+export const KIUT_WMS_LAYER_ID = "kiut-wms-layer";
+export const KIUT_DISPLAY_MIN_ZOOM = 17;
+
 // Nakładki planistyczne są domyślnie włączone, ale MapLibre nie pobiera ich
 // kafli przed osiągnięciem tej skali. Chroni to publiczne WMS-y przed serią
 // zapytań dla widoku całej Polski, a użytkownik dostaje szczegóły dopiero przy
@@ -80,6 +85,8 @@ export const PLANNING_WMS_MAX_ZOOM = 22;
 // Nakładki rastrowe WMS muszą być półprzezroczyste, żeby nie przykrywały
 // całkowicie podkładu OSM i warstw wektorowych działki/obszaru zabudowy.
 export const OVERLAY_OPACITY = 0.55;
+// Cienkie linie sieci KIUT wymagają wysokiego krycia, aby nie zlewać się z tłem.
+export const KIUT_OVERLAY_OPACITY = 0.95;
 
 export type LayerId =
   | "parcel"
@@ -88,7 +95,8 @@ export type LayerId =
   | "protection_zones"
   | "risks"
   | "mpzp_wms"
-  | "pog_wms";
+  | "pog_wms"
+  | "kiut_wms";
 
 export type LayerLegendEntry = {
   id: LayerId;
@@ -130,5 +138,10 @@ export const LAYER_LEGEND: Record<LayerId, LayerLegendEntry> = {
     id: "pog_wms",
     label: "Plan Ogólny Gminy (nakładka WMS)",
     color: "#7a3fae",
+  },
+  kiut_wms: {
+    id: "kiut_wms",
+    label: "Uzbrojenie terenu (nakładka WMS, KIUT)",
+    color: "#147d86",
   },
 };
