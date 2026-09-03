@@ -1,0 +1,1805 @@
+<?xml version="1.0" encoding="UTF-8"?><WMS_Capabilities xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs/1.0" xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0" version="1.3.0" updateSequence="2654" xmlns="http://www.opengis.net/wms" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wms https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/schemas/wms/1.3.0/capabilities_1_3_0.xsd http://inspire.ec.europa.eu/schemas/inspire_vs/1.0 https://inspire.ec.europa.eu/schemas/inspire_vs/1.0/inspire_vs.xsd">
+  <Service>
+    <Name>WMS</Name>
+    <Title>Usługa przeglądania planów ogólnych gmin – Rejestr Urbanistyczny</Title>
+    <Abstract>Usługa WMS umożliwia przeglądanie danych przestrzennych dla planów ogólnych gmin udostępnionych w Rejestrze Urbanistycznym. Jeśli masz pytania dotyczące aktu planowania przestrzennego, skontaktuj się z gminą, która odpowiada za jego przygotowanie. Jeśli masz problemy techniczne z usługami sieciowymi w Rejestrze Urbanistycznym, skontaktuj się z: Ministerstwem Cyfryzacji. Jeśli masz pytania w sprawie rozwoju usług sieciowych w Rejestrze Urbanistycznym, dane kontaktowe znajdziesz na stronie https://www.gov.pl/web/zagospodarowanieprzestrzenne/kontakt. Uwaga! Pytania lub zgłoszenia nie będą elementem konsultacji społecznych w procedurze planistycznej.</Abstract>
+    <KeywordList>
+      <Keyword vocabulary="GEMET - INSPIRE themes">Zagospodarowanie Przestrzenne</Keyword>
+      <Keyword vocabulary="INSPIRE registry">PlannedLandUse</Keyword>
+      <Keyword>WMS</Keyword>
+      <Keyword>Plan ogólny gminy</Keyword>
+      <Keyword vocabulary="ISO">infoMapAccessService</Keyword>
+    </KeywordList>
+    <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/"/>
+    <ContactInformation>
+      <ContactPersonPrimary>
+        <ContactPerson/>
+        <ContactOrganization>Ministerstwo Cyfryzacji</ContactOrganization>
+      </ContactPersonPrimary>
+      <ContactPosition/>
+      <ContactAddress>
+        <AddressType>postal</AddressType>
+        <Address>Królewska 27</Address>
+        <City>Warszawa</City>
+        <StateOrProvince>Mazowieckie</StateOrProvince>
+        <PostCode>00-060</PostCode>
+        <Country>Polska</Country>
+      </ContactAddress>
+      <ContactVoiceTelephone/>
+      <ContactFacsimileTelephone/>
+      <ContactElectronicMailAddress>surb.pomoc@cyfra.gov.pl</ContactElectronicMailAddress>
+    </ContactInformation>
+    <Fees>Brak ograniczeń w publicznym dostępie</Fees>
+    <AccessConstraints>Brak warunków dostępu i użytkowania</AccessConstraints>
+  </Service>
+  <Capability>
+    <Request>
+      <GetCapabilities>
+        <Format>text/xml</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?SERVICE=WMS&amp;"/>
+            </Get>
+            <Post>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?SERVICE=WMS&amp;"/>
+            </Post>
+          </HTTP>
+        </DCPType>
+      </GetCapabilities>
+      <GetMap>
+        <Format>image/png</Format>
+        <Format>image/geotiff</Format>
+        <Format>image/geotiff8</Format>
+        <Format>image/jpeg</Format>
+        <Format>image/png; mode=8bit</Format>
+        <Format>image/svg+xml</Format>
+        <Format>image/tiff</Format>
+        <Format>image/tiff8</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetMap>
+      <GetFeatureInfo>
+        <Format>text/plain</Format>
+        <Format>text/html</Format>
+        <Format>application/json</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetFeatureInfo>
+    </Request>
+    <Exception>
+      <Format>XML</Format>
+      <Format>INIMAGE</Format>
+      <Format>BLANK</Format>
+      <Format>JSON</Format>
+    </Exception>
+    <inspire_vs:ExtendedCapabilities>
+      <inspire_common:MetadataUrl>
+        <inspire_common:URL>https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw</inspire_common:URL>
+        <inspire_common:MediaType>application/vnd.ogc.csw.GetRecordByIdResponse_xml</inspire_common:MediaType>
+      </inspire_common:MetadataUrl>
+      <inspire_common:SupportedLanguages>
+        <inspire_common:DefaultLanguage>
+          <inspire_common:Language>pol</inspire_common:Language>
+        </inspire_common:DefaultLanguage>
+      </inspire_common:SupportedLanguages>
+      <inspire_common:ResponseLanguage>
+        <inspire_common:Language>pol</inspire_common:Language>
+      </inspire_common:ResponseLanguage>
+    </inspire_vs:ExtendedCapabilities>
+    <Layer>
+      <Title>Plany ogólne gmin</Title>
+      <Abstract>Dane przestrzennych dla planów ogólnych gmin udostępnionych w Rejestrze Urbanistycznym. Jeśli masz pytania dotyczące aktu planowania przestrzennego, skontaktuj się z gminą, która odpowiada za jego przygotowanie. Jeśli masz problemy techniczne z usługami sieciowymi w Rejestrze Urbanistycznym, skontaktuj się z: Ministerstwem Cyfryzacji. Jeśli masz pytania w sprawie rozwoju usług sieciowych w Rejestrze Urbanistycznym, dane kontaktowe znajdziesz na stronie https://www.gov.pl/web/zagospodarowanieprzestrzenne/kontakt. Uwaga! Pytania lub zgłoszenia nie będą elementem konsultacji społecznych w procedurze planistycznej.</Abstract>
+      <!--Limited list of EPSG projections:-->
+      <CRS>EPSG:2180</CRS>
+      <CRS>EPSG:4326</CRS>
+      <CRS>CRS:84</CRS>
+      <EX_GeographicBoundingBox>
+        <westBoundLongitude>13.5</westBoundLongitude>
+        <eastBoundLongitude>24.5</eastBoundLongitude>
+        <southBoundLatitude>48.5</southBoundLatitude>
+        <northBoundLatitude>55.0</northBoundLatitude>
+      </EX_GeographicBoundingBox>
+      <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+      <Layer queryable="0">
+        <Title>Obszary objęte planami ogólnymi gmin</Title>
+        <Abstract>Obszary objęte aktem planowania przestrzennego, o którym mowa w art. 13a ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (plany ogólne gmin).</Abstract>
+        <KeywordList/>
+        <CRS>EPSG:4326</CRS>
+        <EX_GeographicBoundingBox>
+          <westBoundLongitude>13.5</westBoundLongitude>
+          <eastBoundLongitude>24.5</eastBoundLongitude>
+          <southBoundLatitude>48.5</southBoundLatitude>
+          <northBoundLatitude>55.0</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+        <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+        <MetadataURL type="ISO19115:2003">
+          <Format>text/plain</Format>
+          <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+        </MetadataURL>
+        <Layer queryable="1" opaque="0">
+          <Name>APP.POG.PrawnieWiazacyLubRealizowany</Name>
+          <Title>Obszary objęte planami ogólnymi gmin – status: prawnie wiążący lub realizowany</Title>
+          <Abstract>Obszary objęte aktem planowania przestrzennego, o którym mowa w art. 13a ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (plany ogólne gmin), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany” (tj. obowiązujące plany ogólne gmin).</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <CRS>CRS:84</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <Style>
+            <Name>pog-act-status-legal-force-style</Name>
+            <Title>Obszary objęte planami ogólnymi gmin – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Styl warstwy</Abstract>
+            <LegendURL width="276" height="40">
+              <Format>image/png</Format>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.PrawnieWiazacyLubRealizowany"/>
+            </LegendURL>
+          </Style>
+        </Layer>
+        <Layer queryable="1" opaque="0">
+          <Name>APP.POG.WTrakciePrzyjmowania</Name>
+          <Title>Obszary objęte planami ogólnymi gmin – status: w trakcie przyjmowania</Title>
+          <Abstract>Obszary objęte aktem planowania przestrzennego, o którym mowa w art. 13a ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (plany ogólne gmin), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <CRS>CRS:84</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <Style>
+            <Name>pog-act-status-adoption-style</Name>
+            <Title>Obszary objęte planami ogólnymi gmin – status: w trakcie przyjmowania</Title>
+            <Abstract>Styl warstwy</Abstract>
+            <LegendURL width="225" height="40">
+              <Format>image/png</Format>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.WTrakciePrzyjmowania"/>
+            </LegendURL>
+          </Style>
+        </Layer>
+        <Layer queryable="1" opaque="0">
+          <Name>APP.POG.WOpracowaniu</Name>
+          <Title>Obszary objęte planami ogólnymi gmin – status: w opracowaniu</Title>
+          <Abstract>Obszary objęte aktem planowania przestrzennego, o którym mowa w art. 13a ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (plany ogólne gmin), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu” (tj. projekty planów ogólnych gmin w trakcie procedury planistycznej).</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <CRS>CRS:84</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <Style>
+            <Name>pog-act-status-elaboration-style</Name>
+            <Title>Obszary objęte planami ogólnymi gmin – status: w opracowaniu</Title>
+            <Abstract>Styl warstwy</Abstract>
+            <LegendURL width="178" height="40">
+              <Format>image/png</Format>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.WOpracowaniu"/>
+            </LegendURL>
+          </Style>
+        </Layer>
+      </Layer>
+      <Layer queryable="0">
+        <Title>Regulacje w planie ogólnym gminy</Title>
+        <Abstract>Obiekty przestrzenne będące ustaleniem aktu planowania przestrzennego powstające w wyniku potrzeby ustaleń uzupełniających wydzielenie planistyczne.</Abstract>
+        <KeywordList/>
+        <CRS>EPSG:4326</CRS>
+        <EX_GeographicBoundingBox>
+          <westBoundLongitude>13.5</westBoundLongitude>
+          <eastBoundLongitude>24.5</eastBoundLongitude>
+          <southBoundLatitude>48.5</southBoundLatitude>
+          <northBoundLatitude>55.0</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+        <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+        <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+        <Layer queryable="0">
+          <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy</Title>
+          <Abstract>Obszary, o których mowa art. 2 pkt 23 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarZabudowySrodmiejskiej.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Obszary, o których mowa w art. 2 pkt 23 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OZS-style</Name>
+              <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarZabudowySrodmiejskiej.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarZabudowySrodmiejskiej.WTrakciePrzyjmowania</Name>
+            <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Obszary, o których mowa w art. 2 pkt 23 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OZS-style</Name>
+              <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarZabudowySrodmiejskiej.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarZabudowySrodmiejskiej.WOpracowaniu</Name>
+            <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Obszary, o których mowa w art. 2 pkt 23 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OZS-style</Name>
+              <Title>Obszary zabudowy śródmiejskiej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarZabudowySrodmiejskiej.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+        <Layer queryable="0">
+          <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy</Title>
+          <Abstract>Obszary uzupełnienia zabudowy, o których mowa w art. 13a ust. 4 pkt 2 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarUzupelnieniaZabudowy.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Obszary uzupełnienia zabudowy, o których mowa w art. 13a ust. 4 pkt 2 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OUZ-style</Name>
+              <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarUzupelnieniaZabudowy.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarUzupelnieniaZabudowy.WTrakciePrzyjmowania</Name>
+            <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Obszary uzupełnienia zabudowy, o których mowa w art. 13a ust. 4 pkt 2 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OUZ-style</Name>
+              <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarUzupelnieniaZabudowy.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarUzupelnieniaZabudowy.WOpracowaniu</Name>
+            <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Obszary uzupełnienia zabudowy, o których mowa w art. 13a ust. 4 pkt 2 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OUZ-style</Name>
+              <Title>Obszary uzupełnienia zabudowy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarUzupelnieniaZabudowy.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+        <Layer queryable="0">
+          <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy</Title>
+          <Abstract>Obszary objęte gminnymi standardami dostępności infrastruktury społecznej, o których mowa w art. 13e ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Obszary objęte gminnymi standardami dostępności infrastruktury społecznej, o których mowa w art. 13e ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OSD-style</Name>
+              <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WTrakciePrzyjmowania</Name>
+            <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Obszary objęte gminnymi standardami dostępności infrastruktury społecznej, o których mowa w art. 13e ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OSD-style</Name>
+              <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WOpracowaniu</Name>
+            <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Obszary objęte gminnymi standardami dostępności infrastruktury społecznej, o których mowa w art. 13e ust. 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>OSD-style</Name>
+              <Title>Obszary standardów dostępności infrastruktury społecznej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+      </Layer>
+      <Layer queryable="0">
+        <Title>Strefy planistyczne w planie ogólnym gminy</Title>
+        <Abstract>Strefy planistyczne, o których mowa w art. 13a ust. 4 pkt 1 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</Abstract>
+        <KeywordList/>
+        <CRS>EPSG:4326</CRS>
+        <EX_GeographicBoundingBox>
+          <westBoundLongitude>13.5</westBoundLongitude>
+          <eastBoundLongitude>24.5</eastBoundLongitude>
+          <southBoundLatitude>48.5</southBoundLatitude>
+          <northBoundLatitude>55.0</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+        <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+        <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+        <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+        <Layer queryable="0">
+          <Title>Strefy planistyczne w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+          <Abstract>Strefy planistyczne, o których mowa w art. 13a ust. 4 pkt 1 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SW.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SW-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SW.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SJ.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SJ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SJ.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SZ.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 3 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową zagrodową), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SZ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SZ.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SU.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy usługowe w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 4 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy usługowe), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SU-style</Name>
+              <Title>Strefy usługowe w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SU.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SH.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 5 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy handlu wielkopowierzchniowego), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SH-style</Name>
+              <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SH.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SP.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy gospodarcze w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 6 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy gospodarcze), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SP-style</Name>
+              <Title>Strefy gospodarcze w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SP.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SR.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy produkcji rolniczej w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 7 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy produkcji rolniczej), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SR-style</Name>
+              <Title>Strefy produkcji rolniczej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SR.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SI.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy infrastrukturalne w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 8 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy infrastrukturalne), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SI-style</Name>
+              <Title>Strefy infrastrukturalne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SI.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SN.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy zieleni i rekreacji w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 9 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy zieleni i rekreacji), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SN-style</Name>
+              <Title>Strefy zieleni i rekreacji w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SN.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SC.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy cmentarzy w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 10 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (cmentarzy), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SC-style</Name>
+              <Title>Strefy cmentarzy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SC.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SG.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy górnictwa w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 11 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy górnictwa), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SG-style</Name>
+              <Title>Strefy górnictwa w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SG.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SO.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy otwarte w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 12 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy otwarte), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SO-style</Name>
+              <Title>Strefy otwarte w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SO.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SK.PrawnieWiazacyLubRealizowany</Name>
+            <Title>Strefy komunikacyjne w planie ogólnym gminy – status: prawnie wiążący lub realizowany</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 13 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy komunikacyjne), znajdujące się na etapie procesu planowania określanym jako „prawnie wiążący lub realizowany”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SK-style</Name>
+              <Title>Strefy komunikacyjne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SK.PrawnieWiazacyLubRealizowany"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+        <Layer queryable="0">
+          <Title>Strefy planistyczne w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+          <Abstract>Strefy planistyczne, o których mowa w art. 13a ust. 4 pkt 1 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SW.WTrakciePrzyjmowania</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SW-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SW.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SJ.WTrakciePrzyjmowania</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SJ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SJ.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SZ.WTrakciePrzyjmowania</Name>
+            <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 3 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową zagrodową), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SZ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SZ.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SU.WTrakciePrzyjmowania</Name>
+            <Title>Strefy usługowe w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 4 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy usługowe), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SU-style</Name>
+              <Title>Strefy usługowe w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SU.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SH.WTrakciePrzyjmowania</Name>
+            <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 5 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy handlu wielkopowierzchniowego), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SH-style</Name>
+              <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SH.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SP.WTrakciePrzyjmowania</Name>
+            <Title>Strefy gospodarcze w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 6 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy gospodarcze), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SP-style</Name>
+              <Title>Strefy gospodarcze w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SP.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SR.WTrakciePrzyjmowania</Name>
+            <Title>Strefy produkcji rolniczej w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 7 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy produkcji rolniczej), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SR-style</Name>
+              <Title>Strefy produkcji rolniczej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SR.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SI.WTrakciePrzyjmowania</Name>
+            <Title>Strefy infrastrukturalne w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 8 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy infrastrukturalne), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SI-style</Name>
+              <Title>Strefy infrastrukturalne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SI.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SN.WTrakciePrzyjmowania</Name>
+            <Title>Strefy zieleni i rekreacji w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 9 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy zieleni i rekreacji), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SN-style</Name>
+              <Title>Strefy zieleni i rekreacji w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SN.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SC.WTrakciePrzyjmowania</Name>
+            <Title>Strefy cmentarzy w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 10 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (cmentarzy), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SC-style</Name>
+              <Title>Strefy cmentarzy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SC.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SG.WTrakciePrzyjmowania</Name>
+            <Title>Strefy górnictwa w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 11 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy górnictwa), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SG-style</Name>
+              <Title>Strefy górnictwa w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SG.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SO.WTrakciePrzyjmowania</Name>
+            <Title>Strefy otwarte w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 12 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy otwarte), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SO-style</Name>
+              <Title>Strefy otwarte w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SO.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SK.WTrakciePrzyjmowania</Name>
+            <Title>Strefy komunikacyjne w planie ogólnym gminy – status: w trakcie przyjmowania</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 13 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy komunikacyjne), znajdujące się na etapie procesu planowania określanym jako „w trakcie przyjmowania” (tj. w trakcie procesu formalnego przyjmowania).</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SK-style</Name>
+              <Title>Strefy komunikacyjne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SK.WTrakciePrzyjmowania"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+        <Layer queryable="0">
+          <Title>Strefy planistyczne w planie ogólnym gminy – status: w opracowaniu</Title>
+          <Abstract>Strefy planistyczne, o których mowa w art. 13a ust. 4 pkt 1 lit. a ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym, znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+          <KeywordList/>
+          <CRS>EPSG:4326</CRS>
+          <EX_GeographicBoundingBox>
+            <westBoundLongitude>13.5</westBoundLongitude>
+            <eastBoundLongitude>24.5</eastBoundLongitude>
+            <southBoundLatitude>48.5</southBoundLatitude>
+            <northBoundLatitude>55.0</northBoundLatitude>
+          </EX_GeographicBoundingBox>
+          <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+          <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+          <MetadataURL type="ISO19115:2003">
+            <Format>text/plain</Format>
+            <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+          </MetadataURL>
+          <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SW.WOpracowaniu</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SW-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową wielorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SW.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SJ.WOpracowaniu</Name>
+            <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SJ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową mieszkaniową jednorodzinną w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SJ.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SZ.WOpracowaniu</Name>
+            <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 3 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy wielofunkcyjne z zabudową zagrodową), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SZ-style</Name>
+              <Title>Strefy wielofunkcyjne z zabudową zagrodową w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SZ.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SU.WOpracowaniu</Name>
+            <Title>Strefy usługowe w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 4 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy usługowe), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SU-style</Name>
+              <Title>Strefy usługowe w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SU.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SH.WOpracowaniu</Name>
+            <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 5 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy handlu wielkopowierzchniowego), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SH-style</Name>
+              <Title>Strefy handlu wielkopowierzchniowego w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SH.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SP.WOpracowaniu</Name>
+            <Title>Strefy gospodarcze w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 6 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy gospodarcze), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SP-style</Name>
+              <Title>Strefy gospodarcze w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SP.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SR.WOpracowaniu</Name>
+            <Title>Strefy produkcji rolniczej w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 7 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy produkcji rolniczej), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SR-style</Name>
+              <Title>Strefy produkcji rolniczej w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SR.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SI.WOpracowaniu</Name>
+            <Title>Strefy infrastrukturalne w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 8 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy infrastrukturalne), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SI-style</Name>
+              <Title>Strefy infrastrukturalne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SI.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SN.WOpracowaniu</Name>
+            <Title>Strefy zieleni i rekreacji w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 9 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy zieleni i rekreacji), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SN-style</Name>
+              <Title>Strefy zieleni i rekreacji w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SN.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SC.WOpracowaniu</Name>
+            <Title>Strefy cmentarzy w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 10 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (cmentarzy), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SC-style</Name>
+              <Title>Strefy cmentarzy w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SC.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SG.WOpracowaniu</Name>
+            <Title>Strefy górnictwa w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 11 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy górnictwa), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SG-style</Name>
+              <Title>Strefy górnictwa w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SG.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SO.WOpracowaniu</Name>
+            <Title>Strefy otwarte w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 12 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy otwarte), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SO-style</Name>
+              <Title>Strefy otwarte w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SO.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+          <Layer queryable="1" opaque="0">
+            <Name>APP.POG.SK.WOpracowaniu</Name>
+            <Title>Strefy komunikacyjne w planie ogólnym gminy – status: w opracowaniu</Title>
+            <Abstract>Strefy planistyczne, o których mowa w art. 13c ust. 2 pkt 13 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym (strefy komunikacyjne), znajdujące się na etapie procesu planowania określanym jako „w opracowaniu”.</Abstract>
+            <KeywordList/>
+            <CRS>EPSG:4326</CRS>
+            <CRS>CRS:84</CRS>
+            <EX_GeographicBoundingBox>
+              <westBoundLongitude>13.5</westBoundLongitude>
+              <eastBoundLongitude>24.5</eastBoundLongitude>
+              <southBoundLatitude>48.5</southBoundLatitude>
+              <northBoundLatitude>55.0</northBoundLatitude>
+            </EX_GeographicBoundingBox>
+            <BoundingBox CRS="CRS:84" minx="13.5" miny="48.5" maxx="24.5" maxy="55.0"/>
+            <BoundingBox CRS="EPSG:4326" minx="48.5" miny="13.5" maxx="55.0" maxy="24.5"/>
+            <MetadataURL type="ISO19115:2003">
+              <Format>text/plain</Format>
+              <OnlineResource xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"/>
+            </MetadataURL>
+            <Style>
+              <Name>SK-style</Name>
+              <Title>Strefy komunikacyjne w planie ogólnym gminy</Title>
+              <Abstract>Styl warstwy</Abstract>
+              <LegendURL width="20" height="20">
+                <Format>image/png</Format>
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/ows?service=WMS&amp;version=1.3.0&amp;request=GetLegendGraphic&amp;format=image%2Fpng&amp;width=20&amp;height=20&amp;layer=APP.POG.SK.WOpracowaniu"/>
+              </LegendURL>
+            </Style>
+            <MaxScaleDenominator>10000.0</MaxScaleDenominator>
+          </Layer>
+        </Layer>
+      </Layer>
+    </Layer>
+  </Capability>
+</WMS_Capabilities>
