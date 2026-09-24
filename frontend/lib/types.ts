@@ -33,6 +33,11 @@ export type AnalyzeResumeRequest = {
 };
 
 export type SourceMetadata = {
+  source_id?: string | null;
+  source_version?: string | null;
+  artifact_sha256?: string | null;
+  data_release_id?: number | null;
+  act_version?: string | null;
   source_name: string;
   source_url: string | null;
   fetched_at: string | null;
@@ -104,6 +109,21 @@ export type MpzpZoneResult = {
 };
 
 export type PogResult = {
+  schema_version: string;
+  legal_status: string;
+  coverage_status: string;
+  act: {
+    id: string;
+    version: string | null;
+    title: string | null;
+    resolution_number: string | null;
+    resolution_date: string | null;
+  } | null;
+  zones: PogZoneResult[];
+  dominant_zone_id: string | null;
+  ouz: PogAreaResult[];
+  downtown_areas: PogAreaResult[];
+  social_infrastructure_standard_areas: PogAreaResult[];
   status: string;
   planning_zone: string | null;
   /** Znormalizowany typ dominującej strefy POG. */
@@ -128,6 +148,38 @@ export type PogResult = {
   ouz_intersection_area_sqm: number | null;
   ouz_intersection_pct: number | null;
   touches_ouz_boundary: boolean;
+  source: SourceMetadata | null;
+};
+
+export type PogProfileResult = {
+  code: string;
+  label: string | null;
+  dictionary_source: string;
+};
+
+export type PogZoneResult = {
+  id: string;
+  symbol: string | null;
+  type: string;
+  label: string | null;
+  area_sqm: number;
+  area_pct: number;
+  max_overground_floor_area_ratio: number | null;
+  max_building_height_m: number | null;
+  max_building_coverage_pct: number | null;
+  min_biologically_active_pct: number | null;
+  primary_profile: PogProfileResult[];
+  additional_profiles: PogProfileResult[];
+  source: SourceMetadata | null;
+};
+
+export type PogAreaResult = {
+  id: string;
+  symbol: string | null;
+  label: string | null;
+  area_sqm: number;
+  area_pct: number;
+  touches_boundary: boolean;
   source: SourceMetadata | null;
 };
 
