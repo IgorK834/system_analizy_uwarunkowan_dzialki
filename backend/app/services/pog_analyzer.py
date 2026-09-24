@@ -12,7 +12,13 @@ from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from app.core.planning_compatibility import PogPlanningZoneType
-from app.schemas.analyze import PogResult
+from app.schemas.analyze import (
+    PogActResult,
+    PogAreaResult,
+    PogProfileResult,
+    PogResult,
+    PogZoneResult,
+)
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
@@ -35,6 +41,21 @@ class PogZoneIntersection:
     parameters: dict[str, object]
     parameters_informational: bool
     manual_review_required: bool
+    zone_id: str | None = None
+    symbol: str | None = None
+    label: str | None = None
+    primary_profiles: tuple[dict[str, str | None], ...] = ()
+    additional_profiles: tuple[dict[str, str | None], ...] = ()
+
+
+@dataclass(frozen=True)
+class PogAreaIntersection:
+    area_id: str
+    symbol: str | None
+    label: str | None
+    area_sqm: float
+    area_pct: float
+    touches_boundary: bool
 
 
 @dataclass(frozen=True)
@@ -52,6 +73,10 @@ class PogAnalysisResult:
     downtown_intersection_pct: float
     source_metadata: SourceMetadata
     warnings: list[WarningMessage] = field(default_factory=list)
+    ouz_areas: list[PogAreaIntersection] = field(default_factory=list)
+    downtown_areas: list[PogAreaIntersection] = field(default_factory=list)
+    social_infrastructure_standard_areas: list[PogAreaIntersection] = field(default_factory=list)
+    act_metadata: dict[str, object] = field(default_factory=dict)
 
 
 _ZONE_ATTRIBUTE_KEYS: Final[tuple[str, ...]] = (
@@ -165,7 +190,7 @@ def analyze_pog_adopted(
 
     zone_intersections: list[PogZoneIntersection] = []
     parameters_from_pdf = False
-    for feature in pog_vector_data.planning_zones:
+    for feature_index, feature in enumerate(pog_vector_data.planning_zones):
         intersection_area = parcel.intersection(feature.geometry).area
         if intersection_area <= INTERSECTION_AREA_TOLERANCE_SQM:
             continue
@@ -194,6 +219,14 @@ def analyze_pog_adopted(
                 parameters=parameters,
                 parameters_informational=informational,
                 manual_review_required=informational,
+                zone_id=_first_string_attribute(
+                    feature.attributes,
+                    ("feature_id", "id_iip", "idIIP", "identifier", "oznaczenie"),
+                ) or f"zone-{feature_index + 1}",
+                symbol=_first_string_attribute(feature.attributes, ("symbol", "oznaczenie")),
+                label=_first_string_attribute(feature.attributes, ("label", "nazwa")),
+                primary_profiles=_profiles_from_attributes(feature.attributes, "primary_profiles"),
+                additional_profiles=_profiles_from_attributes(feature.attributes, "additional_profiles"),
             )
         )
 
@@ -220,6 +253,13 @@ def analyze_pog_adopted(
     ouz_status = calculate_ouz_status(parcel, pog_vector_data.ouz_areas)
     downtown_area, downtown_pct, _ = _analyze_area_layer(
         parcel, pog_vector_data.downtown_areas
+    )
+    ouz_areas = _area_intersections(parcel, pog_vector_data.ouz_areas, "ouz")
+    downtown_areas = _area_intersections(parcel, pog_vector_data.downtown_areas, "downtown")
+    social_areas = _area_intersections(
+        parcel,
+        pog_vector_data.social_infrastructure_standard_areas,
+        "social-infrastructure-standard",
     )
     source_metadata = pog_vector_data.source_metadata
     if parameters_from_pdf:
@@ -249,21 +289,32 @@ def analyze_pog_adopted(
         downtown_intersection_pct=downtown_pct,
         source_metadata=source_metadata,
         warnings=warnings,
+        ouz_areas=ouz_areas,
+        downtown_areas=downtown_areas,
+        social_infrastructure_standard_areas=social_areas,
+        act_metadata=pog_vector_data.app_metadata,
     )
 
 
 def to_pog_result(analysis: PogAnalysisResult) -> PogResult:
-    """Mapuje bogaty wynik domenowy na istniejący, uproszczony kontrakt API.
-
-    Pola powierzchniowe pozostają wartościami obliczonymi w EPSG:2180. Lista
-    wszystkich stref i ostrzeżeń nie mieści się w obecnym ``PogResult`` i musi
-    być zachowana osobno przez przyszłą orkiestrację lub rozszerzony kontrakt.
-    """
+    """Mapuje pełny wynik domenowy na kontrakt POG v2 bez agregacji stref."""
     planning_zone = (
         analysis.dominant_zone.zone_type.value if analysis.dominant_zone else None
     )
     return PogResult(
+        schema_version="2.0",
         status=analysis.status,
+        legal_status=analysis.status if analysis.status == "adopted" else "not_available",
+        coverage_status=("complete" if analysis.zones else "unknown"),
+        act=_act_result(analysis),
+        zones=[_zone_result(zone, analysis.source_metadata) for zone in analysis.zones],
+        dominant_zone_id=(analysis.dominant_zone.zone_id if analysis.dominant_zone else None),
+        ouz=[_area_result(item, analysis.source_metadata) for item in analysis.ouz_areas],
+        downtown_areas=[_area_result(item, analysis.source_metadata) for item in analysis.downtown_areas],
+        social_infrastructure_standard_areas=[
+            _area_result(item, analysis.source_metadata)
+            for item in analysis.social_infrastructure_standard_areas
+        ],
         planning_zone=planning_zone,
         zone_type=planning_zone,
         in_ouz=analysis.ouz_status.in_ouz,
@@ -283,6 +334,75 @@ def to_pog_result(analysis: PogAnalysisResult) -> PogResult:
     )
 
 
+def _act_result(analysis: PogAnalysisResult) -> PogActResult | None:
+    source = analysis.source_metadata
+    metadata = analysis.act_metadata
+    act_id = str(metadata.get("act_identifier") or "") or source.source_id
+    if not act_id and not source.act_version:
+        return None
+    return PogActResult(
+        id=act_id or "pog",
+        version=(str(metadata.get("act_version")) if metadata.get("act_version") else source.act_version),
+        title=(str(metadata.get("act_name")) if metadata.get("act_name") else source.source_name),
+        resolution_number=(str(metadata.get("resolution_number")) if metadata.get("resolution_number") else None),
+        resolution_date=metadata.get("resolution_date"),
+    )
+
+
+def _float_parameter(parameters: dict[str, object], name: str) -> float | None:
+    value = parameters.get(name)
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        value = value.get("value")
+    try:
+        return float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _profile_results(items: tuple[dict[str, str | None], ...]) -> list[PogProfileResult]:
+    return [
+        PogProfileResult(
+            code=str(item.get("code") or ""),
+            label=item.get("label"),
+            dictionary_source=str(item.get("dictionary_source") or ""),
+        )
+        for item in items
+        if item.get("code") and item.get("dictionary_source")
+    ]
+
+
+def _zone_result(zone: PogZoneIntersection, source: SourceMetadata) -> PogZoneResult:
+    return PogZoneResult(
+        id=zone.zone_id or zone.symbol or zone.zone_type.value,
+        symbol=zone.symbol,
+        type=zone.zone_type.value,
+        label=zone.label,
+        area_sqm=zone.area_sqm,
+        area_pct=zone.area_ratio * 100.0,
+        max_overground_floor_area_ratio=_float_parameter(zone.parameters, "max_overground_floor_area_ratio"),
+        max_building_height_m=_float_parameter(zone.parameters, "max_building_height_m"),
+        max_building_coverage_pct=_float_parameter(zone.parameters, "max_building_coverage_pct"),
+        min_biologically_active_pct=_float_parameter(zone.parameters, "min_biologically_active_pct"),
+        primary_profile=_profile_results(zone.primary_profiles),
+        additional_profiles=_profile_results(zone.additional_profiles),
+        source=source,
+    )
+
+
+def _area_result(item: PogAreaIntersection, source: SourceMetadata) -> PogAreaResult:
+    return PogAreaResult(
+        id=item.area_id,
+        symbol=item.symbol,
+        label=item.label,
+        area_sqm=item.area_sqm,
+        area_pct=item.area_pct,
+        touches_boundary=item.touches_boundary,
+        source=source,
+    )
+
+
 def _analyze_area_layer(
     parcel: BaseGeometry,
     features: list[PogVectorFeature],
@@ -297,6 +417,49 @@ def _analyze_area_layer(
     boundary_touch = not has_surface_intersection and parcel.touches(combined)
     effective_area = intersection_area if has_surface_intersection else 0.0
     return effective_area, effective_area / parcel.area * 100, boundary_touch
+
+
+def _area_intersections(
+    parcel: BaseGeometry,
+    features: list[PogVectorFeature],
+    prefix: str,
+) -> list[PogAreaIntersection]:
+    result: list[PogAreaIntersection] = []
+    for index, feature in enumerate(features):
+        area = parcel.intersection(feature.geometry).area
+        touches = area <= INTERSECTION_AREA_TOLERANCE_SQM and parcel.touches(feature.geometry)
+        if area <= INTERSECTION_AREA_TOLERANCE_SQM and not touches:
+            continue
+        result.append(PogAreaIntersection(
+            area_id=_first_string_attribute(
+                feature.attributes,
+                ("feature_id", "id_iip", "idIIP", "identifier", "oznaczenie"),
+            ) or f"{prefix}-{index + 1}",
+            symbol=_first_string_attribute(feature.attributes, ("symbol", "oznaczenie")),
+            label=_first_string_attribute(feature.attributes, ("label", "nazwa")),
+            area_sqm=area if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
+            area_pct=(area / parcel.area * 100.0) if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
+            touches_boundary=touches,
+        ))
+    return result
+
+
+def _profiles_from_attributes(
+    attributes: dict[str, object], key: str
+) -> tuple[dict[str, str | None], ...]:
+    raw = attributes.get(key)
+    if not isinstance(raw, (list, tuple)):
+        return ()
+    result: list[dict[str, str | None]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        result.append({
+            "code": str(item.get("code") or ""),
+            "label": str(item["label"]) if item.get("label") is not None else None,
+            "dictionary_source": str(item.get("dictionary_source") or ""),
+        })
+    return tuple(result)
 
 
 def _normalize_zone_type(raw_value: str | None) -> PogPlanningZoneType:
