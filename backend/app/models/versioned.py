@@ -296,6 +296,8 @@ class PlanningActVersion(Base, _VersionMixin):
         ForeignKey("planning_acts.id"), nullable=False, index=True
     )
     legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    raw_legal_status: Mapped[str | None] = mapped_column(Text, nullable=True)
+    object_version_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
     version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     resolution_number: Mapped[str | None] = mapped_column(
         String(200), nullable=True
@@ -394,6 +396,17 @@ class PlanningFeature(Base):
         ForeignKey("planning_act_versions.id"), nullable=False, index=True
     )
     feature_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    feature_identifier: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    feature_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    act_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    raw_legal_status: Mapped[str | None] = mapped_column(Text, nullable=True)
+    symbol: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parameters: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    primary_profiles: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    additional_profiles: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
     # Geometria ogólna: linie zabudowy, osie, strefy ochronne itd.
     geometry: Mapped[Any] = mapped_column(
         Geometry("GEOMETRY", srid=2180, spatial_index=False),
@@ -408,6 +421,36 @@ class PlanningFeature(Base):
         ),
         Index(
             "ix_planning_features_geometry_gist", "geometry", postgresql_using="gist"
+        ),
+        UniqueConstraint(
+            "planning_act_version_id",
+            "feature_identifier",
+            name="uq_planning_features_version_identifier",
+        ),
+    )
+
+
+class PogFormalDocument(Base):
+    __tablename__ = "pog_formal_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    planning_act_version_id: Mapped[int] = mapped_column(
+        ForeignKey("planning_act_versions.id"), nullable=False, index=True
+    )
+    document_identifier: Mapped[str] = mapped_column(String(500), nullable=False)
+    document_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    act_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    link: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "planning_act_version_id",
+            "document_identifier",
+            name="uq_pog_documents_version_identifier",
         ),
     )
 

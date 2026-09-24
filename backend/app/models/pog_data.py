@@ -55,5 +55,12 @@ class PogData(Base):
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     confidence: Mapped[float | None] = mapped_column(nullable=True)
+    schema_version: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="2.0", server_default="1.0"
+    )
+    result_v2: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    legacy_partial: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
 
     analysis: Mapped[Analysis] = relationship(back_populates="pog_data")

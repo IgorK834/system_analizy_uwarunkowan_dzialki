@@ -33,5 +33,10 @@ class SourceRecord(Base):
     manual_review_required: Mapped[bool] = mapped_column(nullable=False, default=False)
     warnings: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    source_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    artifact_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    data_release_id: Mapped[int | None] = mapped_column(nullable=True)
+    act_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
     analysis: Mapped[Analysis] = relationship(back_populates="source_records")
