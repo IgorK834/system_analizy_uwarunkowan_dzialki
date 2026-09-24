@@ -745,3 +745,27 @@ input:disabled {
     animation: none;
   }
 }
+.result-table-scroll {
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.result-table caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.result-table th,
+.result-table td {
+  border: 1px solid var(--border, #d4d8dd);
+  padding: 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}

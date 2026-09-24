@@ -455,6 +455,38 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
               <dd>{pog.in_downtown_area ? "Tak" : "Nie"}</dd>
             </div>
           </dl>
+          {pog.zones.length > 0 && (
+            <div className="result-table-scroll">
+              <table className="result-table">
+                <caption>Strefy POG przecinające działkę</caption>
+                <thead>
+                  <tr>
+                    <th>Strefa</th><th>Powierzchnia</th><th>Udział</th>
+                    <th>Intensywność</th><th>Wysokość</th>
+                    <th>Zabudowa</th><th>Biologicznie czynna</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pog.zones.map((zone) => (
+                    <tr key={zone.id}>
+                      <th scope="row">{zone.symbol ?? zone.type}{zone.label ? ` — ${zone.label}` : ""}</th>
+                      <td>{zone.area_sqm.toFixed(1)} m²</td>
+                      <td>{zone.area_pct.toFixed(1)}%</td>
+                      <td>{formatOptional(zone.max_overground_floor_area_ratio)}</td>
+                      <td>{formatOptional(zone.max_building_height_m, "m")}</td>
+                      <td>{formatOptional(zone.max_building_coverage_pct, "%")}</td>
+                      <td>{formatOptional(zone.min_biologically_active_pct, "%")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {pog.social_infrastructure_standard_areas.length > 0 && (
+            <p className="result-preview">
+              Standardy dostępności infrastruktury społecznej: {pog.social_infrastructure_standard_areas.length}
+            </p>
+          )}
           {pog.conflict_with_mpzp !== null && (
             <p className={pog.conflict_with_mpzp ? "field-error" : "result-preview"}>
               {pog.conflict_with_mpzp
@@ -471,6 +503,10 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
       )}
     </section>
   );
+}
+
+function formatOptional(value: number | null, unit = ""): string {
+  return value === null ? "—" : `${value}${unit ? ` ${unit}` : ""}`;
 }
 
 function InfrastructureSection({ items }: { items: InfrastructureResult[] }) {
