@@ -290,16 +290,27 @@ describe("PreviewOverlays", () => {
         },
       ],
       pog: {
-        schema_version: "2.0",
-        legal_status: "adopted",
-        coverage_status: "complete",
+        schema_version: "2.1",
+        legal_status: "binding",
+        coverage_status: "available",
+        data_availability: "current",
+        status_confirmed_at: "2026-09-24T10:00:00Z",
+        legal_status_evidence: {
+          source_name: "RU",
+          official: true,
+          reference: null,
+          source_id: null,
+          raw_value: "legalForce",
+          confirmed_at: null,
+        },
+        coverage_evidence: null,
         act: null,
         zones: [],
         dominant_zone_id: null,
         ouz: [],
         downtown_areas: [],
         social_infrastructure_standard_areas: [],
-        status: "adopted",
+        status: "binding",
         planning_zone: "SJ",
         zone_type: "SJ",
         in_ouz: false,
@@ -321,7 +332,9 @@ describe("PreviewOverlays", () => {
     render(<PreviewOverlays result={result} map={map} />);
 
     expect(await screen.findByText(/Analiza parametrów: dostępna/)).toBeVisible();
-    expect(screen.getByText(/Status aktu w gminie: uchwalony/)).toBeVisible();
+    expect(
+      screen.getByText(/Status aktu w gminie: obowiązuje; dane przestrzenne dostępne/),
+    ).toBeVisible();
     expect(
       screen.getByText(/Pokrycie powiatu \(powiat krakowski\): publikuje dane GESUT/),
     ).toBeVisible();

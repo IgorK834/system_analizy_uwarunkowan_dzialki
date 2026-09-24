@@ -25,6 +25,7 @@ import {
   PROTECTION_ZONE_FILL_LAYER_ID,
   RISK_FILL_LAYER_ID,
 } from "@/lib/layerStyles";
+import { coverageStatusLabel, legalStatusShort } from "@/lib/pogStatus";
 import type {
   AnalyzeResponse,
   PreviewSource,
@@ -139,14 +140,11 @@ function mpzpStatus(result?: AnalyzeResponse | null): string {
 }
 
 function pogStatus(result?: AnalyzeResponse | null): string {
-  const status = result?.pog?.status ?? "unknown";
-  const labels: Record<string, string> = {
-    adopted: "uchwalony",
-    in_progress: "w przygotowaniu",
-    not_available: "niedostępny",
-    unknown: "nieznany",
-  };
-  return `Status aktu w gminie: ${labels[status] ?? status}.`;
+  const pog = result?.pog;
+  if (!pog) return "Status aktu w gminie: nieustalony.";
+  return `Status aktu w gminie: ${legalStatusShort(pog.legal_status)}; ${coverageStatusLabel(
+    pog.coverage_status,
+  )}.`;
 }
 
 function kiutCoverageStatus(result?: AnalyzeResponse | null): string {

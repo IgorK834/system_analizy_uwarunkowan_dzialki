@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type maplibregl from "maplibre-gl";
 
 import { ResultPanel } from "@/components/ResultPanel";
-import { buildAnalyzeResponse } from "@/test/fixtures";
+import { buildAnalyzeResponse, buildPogResult } from "@/test/fixtures";
 
 function createMapMock() {
   const sources = new Map<string, { setData: ReturnType<typeof vi.fn> }>();
@@ -426,9 +426,13 @@ describe("ResultPanel", () => {
   it("ConfidenceBadge pokazuje komunikat braku metadanych, gdy źródło POG jest null", () => {
     const result = buildAnalyzeResponse({
       pog: {
-        schema_version: "2.0",
-        legal_status: "not_available",
+        schema_version: "2.1",
+        legal_status: "unknown",
         coverage_status: "unknown",
+        data_availability: "unavailable",
+        status_confirmed_at: null,
+        legal_status_evidence: null,
+        coverage_evidence: null,
         act: null,
         zones: [],
         dominant_zone_id: null,
@@ -478,11 +482,19 @@ describe("ResultPanel", () => {
     });
     const result = buildAnalyzeResponse({
       pog: {
-        schema_version: "2.0", legal_status: "adopted", coverage_status: "complete",
+        schema_version: "2.1", legal_status: "binding", coverage_status: "available",
+        data_availability: "current", status_confirmed_at: "2026-09-24T10:00:00Z",
+        legal_status_evidence: {
+          source_name: "Rejestr Urbanistyczny (lokalne wydanie)", official: true,
+          reference: "data_release:1", source_id: "pog_app",
+          raw_value: "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+          confirmed_at: "2026-09-24T10:00:00Z",
+        },
+        coverage_evidence: null,
         act: { id: "pog-1", version: "v1", title: "POG", resolution_number: null, resolution_date: null },
         zones: [zone("sj", "SJ", 620, 62, 10), zone("su", "SU", 280, 28, 0), zone("sn", "SN", 100, 10, null)],
         dominant_zone_id: "sj", ouz: [], downtown_areas: [], social_infrastructure_standard_areas: [],
-        status: "adopted", planning_zone: "SJ", zone_type: "SJ", in_ouz: false,
+        status: "binding", planning_zone: "SJ", zone_type: "SJ", in_ouz: false,
         area_ratio: 0.62, in_downtown_area: false, uchwala_nr: null, uchwala_date: null,
         manual_review_required: false, conflict_with_mpzp: null, raw_attributes: null,
         ouz_intersection_area_sqm: null, ouz_intersection_pct: null,
@@ -497,6 +509,113 @@ describe("ResultPanel", () => {
     expect(screen.getByText("280.0 m²")).toBeVisible();
     expect(screen.getByText("100.0 m²")).toBeVisible();
     expect(screen.getByText("0 m")).toBeVisible();
+  });
+
+  describe("status prawny i pokrycie POG (BK-106)", () => {
+    const pogSectionText = () =>
+      (screen.getByRole("region", { name: "Plan Ogólny Gminy i OUZ" }).textContent ?? "").toLowerCase();
+
+    it.each([
+      ["project", "available"],
+      ["in_progress", "partial"],
+      ["unknown", "unknown"],
+    ] as const)("%s + %s nie jest prezentowany językiem obowiązywania", (legal, coverage) => {
+      render(
+        <ResultPanel
+          result={buildAnalyzeResponse({
+            pog: buildPogResult({ legal_status: legal, coverage_status: coverage }),
+          })}
+          map={null}
+        />,
+      );
+      expect(pogSectionText()).not.toMatch(/obowiązuj/);
+      expect(pogSectionText().replaceAll("braku planu", "")).not.toMatch(/brak planu/);
+    });
+
+    it("projekt z pełnymi danymi pokazuje status niewiążący i dostępne dane", () => {
+      render(
+        <ResultPanel
+          result={buildAnalyzeResponse({
+            pog: buildPogResult({ legal_status: "project", coverage_status: "available" }),
+          })}
+          map={null}
+        />,
+      );
+      expect(screen.getByTestId("pog-legal-status")).toHaveTextContent("projekt aktu — niewiążący");
+      expect(screen.getByTestId("pog-coverage-status")).toHaveTextContent(
+        "dane przestrzenne dostępne dla działki",
+      );
+      expect(
+        screen.getByText("Projekt aktu nie jest wiążący i nie może być traktowany jak prawo miejscowe."),
+      ).toBeVisible();
+    });
+
+    it("binding bez geometrii nie daje komunikatu o braku planu", () => {
+      render(
+        <ResultPanel
+          result={buildAnalyzeResponse({
+            pog: buildPogResult({
+              legal_status: "binding",
+              coverage_status: "act_without_spatial_data",
+            }),
+          })}
+          map={null}
+        />,
+      );
+      expect(screen.getByTestId("pog-legal-status")).toHaveTextContent(/^obowiązuje/);
+      expect(screen.getByTestId("pog-coverage-status")).toHaveTextContent(
+        "akt bez danych przestrzennych dla działki",
+      );
+      expect(
+        screen.getByText("Brak geometrii lub pusta odpowiedź usługi nie oznacza braku planu."),
+      ).toBeVisible();
+      expect(screen.getByText(/kod http:\/\/inspire/)).toBeVisible();
+      expect(pogSectionText().replaceAll("braku planu", "")).not.toMatch(/brak planu/);
+    });
+
+    it("wartość stale pokazuje datę ostatniego potwierdzenia", () => {
+      render(
+        <ResultPanel
+          result={buildAnalyzeResponse({
+            pog: buildPogResult({
+              legal_status: "binding",
+              coverage_status: "unknown",
+              data_availability: "stale",
+              status_confirmed_at: "2026-08-19T01:00:00Z",
+            }),
+          })}
+          map={null}
+        />,
+      );
+      expect(screen.getByTestId("pog-data-availability")).toHaveTextContent(
+        "ostatnia potwierdzona wartość — źródło było niedostępne (potwierdzono 19.08.2026)",
+      );
+      expect(screen.getByText(/ostatnią potwierdzoną wartość z dnia 19\.08\.2026/)).toBeVisible();
+    });
+
+    it("urzędowe potwierdzenie braku aktu jest pokazane ze wskazaniem dokumentu", () => {
+      render(
+        <ResultPanel
+          result={buildAnalyzeResponse({
+            pog: buildPogResult({
+              coverage_status: "no_act_confirmed",
+              status_confirmed_at: "invalid-date",
+              coverage_evidence: {
+                source_name: "Urząd Gminy",
+                official: true,
+                reference: "pismo UG.6720.1.2026",
+                source_id: null,
+                raw_value: null,
+                confirmed_at: null,
+              },
+            }),
+          })}
+          map={null}
+        />,
+      );
+      expect(screen.getByText("Urząd Gminy — pismo UG.6720.1.2026")).toBeVisible();
+      expect(screen.getByTestId("pog-data-availability")).toHaveTextContent("(potwierdzono invalid-date)");
+    });
   });
 
   it("odświeża warstwę GeoJSON (usuwa i dodaje ponownie), gdy geometria działki się zmienia", () => {

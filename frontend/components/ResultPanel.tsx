@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
+import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import {
   BUILDABLE_AREA_FILL_COLOR,
@@ -42,6 +43,14 @@ import {
   RISK_LINE_WIDTH,
   RISK_SOURCE_ID,
 } from "@/lib/layerStyles";
+import {
+  coverageStatusLabel,
+  dataAvailabilityLabel,
+  formatPlDate,
+  legalStatusLabel,
+  pogStatusNotes,
+} from "@/lib/pogStatus";
+import { verifiedHttpsHref } from "@/lib/safeLink";
 import type {
   AnalyzeResponse,
   InfrastructureResult,
@@ -437,11 +446,44 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
       )}
       {pog && (
         <>
-          <dl className="result-summary">
+          <dl className="result-summary" aria-label="Status POG">
             <div>
-              <dt>Status</dt>
-              <dd>{pog.status}</dd>
+              <dt>Status prawny aktu</dt>
+              <dd data-testid="pog-legal-status">{legalStatusLabel(pog.legal_status)}</dd>
             </div>
+            <div>
+              <dt>Zakres danych przestrzennych</dt>
+              <dd data-testid="pog-coverage-status">{coverageStatusLabel(pog.coverage_status)}</dd>
+            </div>
+            <div>
+              <dt>Aktualność źródła</dt>
+              <dd data-testid="pog-data-availability">
+                {dataAvailabilityLabel(pog.data_availability)}
+                {pog.status_confirmed_at
+                  ? ` (potwierdzono ${formatPlDate(pog.status_confirmed_at)})`
+                  : ""}
+              </dd>
+            </div>
+            {pog.legal_status_evidence && (
+              <div>
+                <dt>Podstawa statusu</dt>
+                <dd>
+                  {pog.legal_status_evidence.source_name}
+                  {pog.legal_status_evidence.raw_value
+                    ? ` — kod ${pog.legal_status_evidence.raw_value}`
+                    : ""}
+                </dd>
+              </div>
+            )}
+            {pog.coverage_evidence && (
+              <div>
+                <dt>Potwierdzenie braku aktu</dt>
+                <dd>
+                  {pog.coverage_evidence.source_name}
+                  {pog.coverage_evidence.reference ? ` — ${pog.coverage_evidence.reference}` : ""}
+                </dd>
+              </div>
+            )}
             <div>
               <dt>Strefa planistyczna</dt>
               <dd>{pog.zone_type ?? pog.planning_zone ?? "—"}</dd>
@@ -463,7 +505,7 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
                   <tr>
                     <th>Strefa</th><th>Powierzchnia</th><th>Udział</th>
                     <th>Intensywność</th><th>Wysokość</th>
-                    <th>Zabudowa</th><th>Biologicznie czynna</th>
+                    <th>Zabudowa</th><th>Biologicznie czynna</th><th>Źródło</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -476,6 +518,9 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
                       <td>{formatOptional(zone.max_building_height_m, "m")}</td>
                       <td>{formatOptional(zone.max_building_coverage_pct, "%")}</td>
                       <td>{formatOptional(zone.min_biologically_active_pct, "%")}</td>
+                      <td>
+                        <ZoneSourceLink href={verifiedHttpsHref(zone.gml_url, zone.gml_url_verified)} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -494,14 +539,30 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
                 : "Zgodność z dominującą strefą MPZP potwierdzona wstępnie."}
             </p>
           )}
+          {pogStatusNotes(pog).map((note) => (
+            <p key={note} className="field-hint pog-status-note">
+              {note}
+            </p>
+          ))}
           {pog.manual_review_required && (
             <p className="manual-review">Wynik POG wymaga ręcznej weryfikacji.</p>
           )}
+          {pog.act && <PogOfficialSources act={pog.act} />}
           {legalDisclaimer && <p className="legal-disclaimer">{legalDisclaimer}</p>}
           <ConfidenceBadge source={pog.source} />
         </>
       )}
     </section>
+  );
+}
+
+function ZoneSourceLink({ href }: { href: string | null }) {
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      GML
+    </a>
+  ) : (
+    <>—</>
   );
 }
 
