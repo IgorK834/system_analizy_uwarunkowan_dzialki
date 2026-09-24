@@ -1,0 +1,74 @@
+{
+  "case_id": "real-010-246101-1-0055-68-13",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 3,
+      "features": [
+        {
+          "area_ratio": 0.03607901,
+          "intersection_area_sqm": 163.965,
+          "name": null,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.03412951,
+          "intersection_area_sqm": 155.105,
+          "name": null,
+          "probability_class": "scenariusz Q 10% (raz na 10 lat)",
+          "severity": "medium",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.03535253,
+          "intersection_area_sqm": 160.663,
+          "name": null,
+          "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+          "severity": "high",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [],
+      "plan_id": null,
+      "status": "no_mpzp",
+      "uchwala_url": null,
+      "warnings": [
+        "Nie znaleziono miejscowego planu zagospodarowania przestrzennego dla żadnego z próbkowanych punktów działki.",
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 310.8,
+      "min_elevation_m": 307.2,
+      "relief_m": 3.6,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": {
+      "ouz_area_sqm": 4544.452,
+      "ouz_share_pct": 99.9968,
+      "zones": [
+        {
+          "area_sqm": 4544.555,
+          "local_id": "1POG-28SW",
+          "share_pct": 99.999056,
+          "symbol": "SW"
+        }
+      ]
+    }
+  },
+  "parcel_identifier": "246101_1.0055.68/13",
+  "verified_at": "2026-09-23"
+}

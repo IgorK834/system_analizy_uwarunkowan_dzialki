@@ -1,0 +1,55 @@
+{
+  "case_id": "real-028-246101-1-0004-737-26",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [],
+      "plan_id": null,
+      "status": "no_mpzp",
+      "uchwala_url": null,
+      "warnings": [
+        "Nie znaleziono miejscowego planu zagospodarowania przestrzennego dla żadnego z próbkowanych punktów działki.",
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 327.4,
+      "min_elevation_m": 323.7,
+      "relief_m": 3.7,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": {
+      "ouz_area_sqm": 723.058,
+      "ouz_share_pct": 80.34066,
+      "zones": [
+        {
+          "area_sqm": 176.932,
+          "local_id": "1POG-121SO",
+          "share_pct": 19.65934,
+          "symbol": "SO"
+        },
+        {
+          "area_sqm": 723.058,
+          "local_id": "1POG-78SJ",
+          "share_pct": 80.34066,
+          "symbol": "SJ"
+        }
+      ]
+    }
+  },
+  "parcel_identifier": "246101_1.0004.737/26",
+  "verified_at": "2026-09-23"
+}

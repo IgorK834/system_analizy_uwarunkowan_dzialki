@@ -1,0 +1,72 @@
+{
+  "case_id": "real-014-026201-1-0010-410-1",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 4,
+      "features": [
+        {
+          "area_ratio": 0.18428479,
+          "intersection_area_sqm": 664.117,
+          "name": null,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.0575356,
+          "intersection_area_sqm": 207.344,
+          "name": null,
+          "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+          "severity": "high",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.60668989,
+          "intersection_area_sqm": 2186.362,
+          "name": null,
+          "probability_class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+          "severity": "high",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 1.0,
+          "intersection_area_sqm": 3603.756,
+          "name": null,
+          "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+          "severity": "medium",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "MU9.9"
+      ],
+      "plan_id": null,
+      "status": "found",
+      "uchwala_url": null,
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 120.8,
+      "min_elevation_m": 118.8,
+      "relief_m": 2.0,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "026201_1.0010.410/1",
+  "verified_at": "2026-09-23"
+}

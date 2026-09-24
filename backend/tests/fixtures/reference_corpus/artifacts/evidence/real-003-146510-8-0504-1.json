@@ -1,0 +1,38 @@
+{
+  "case_id": "real-003-146510-8-0504-1",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "error": "Usługa GDOŚ zwróciła błąd: Server error '500 Internal Server Error' for url 'https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS%3ARezerwaty&bbox=637536.997121127%2C486371.225874029%2C637790.261896401%2C486472.231730355%2CEPSG%3A2180'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+      "error_type": "GdosServiceUnavailableError",
+      "status": "unknown"
+    },
+    "isok": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [],
+      "plan_id": null,
+      "status": "no_mpzp",
+      "uchwala_url": null,
+      "warnings": [
+        "Nie znaleziono miejscowego planu zagospodarowania przestrzennego dla żadnego z próbkowanych punktów działki.",
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 113.4,
+      "min_elevation_m": 112.1,
+      "relief_m": 1.3,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "146510_8.0504.1",
+  "verified_at": "2026-09-23"
+}

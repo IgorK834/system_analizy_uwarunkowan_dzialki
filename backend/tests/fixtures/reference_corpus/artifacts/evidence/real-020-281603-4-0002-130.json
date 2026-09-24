@@ -1,0 +1,48 @@
+{
+  "case_id": "real-020-281603-4-0002-130",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 1,
+      "features": [
+        {
+          "area_ratio": 0.00472655,
+          "intersection_area_sqm": 37.511,
+          "name": null,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "B-18UT"
+      ],
+      "plan_id": "XLVII/602/10",
+      "status": "found",
+      "uchwala_url": null,
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 117.0,
+      "min_elevation_m": 115.4,
+      "relief_m": 1.6,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "281603_4.0002.130",
+  "verified_at": "2026-09-23"
+}

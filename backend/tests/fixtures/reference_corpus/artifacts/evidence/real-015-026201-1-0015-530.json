@@ -1,0 +1,56 @@
+{
+  "case_id": "real-015-026201-1-0015-530",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 2,
+      "features": [
+        {
+          "area_ratio": 1.0,
+          "intersection_area_sqm": 2418.074,
+          "name": null,
+          "probability_class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+          "severity": "high",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 1.0,
+          "intersection_area_sqm": 2418.074,
+          "name": null,
+          "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+          "severity": "medium",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "KL 1/2"
+      ],
+      "plan_id": null,
+      "status": "found",
+      "uchwala_url": null,
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 120.9,
+      "min_elevation_m": 120.1,
+      "relief_m": 0.8,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "026201_1.0015.530",
+  "verified_at": "2026-09-23"
+}

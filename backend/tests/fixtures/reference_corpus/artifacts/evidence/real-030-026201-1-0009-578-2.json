@@ -1,0 +1,68 @@
+{
+  "case_id": "real-030-026201-1-0009-578-2",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 4,
+      "features": [
+        {
+          "area_ratio": 0.78337731,
+          "intersection_area_sqm": 4728.919,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.51953962,
+          "intersection_area_sqm": 3136.242,
+          "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+          "severity": "high",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.92778474,
+          "intersection_area_sqm": 5600.646,
+          "probability_class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+          "severity": "high",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 1.0,
+          "intersection_area_sqm": 6036.579,
+          "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+          "severity": "medium",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "6KD L"
+      ],
+      "plan_id": null,
+      "status": "found",
+      "uchwala_url": null,
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 121.0,
+      "min_elevation_m": 118.5,
+      "relief_m": 2.5,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "026201_1.0009.578/2",
+  "verified_at": "2026-09-23"
+}

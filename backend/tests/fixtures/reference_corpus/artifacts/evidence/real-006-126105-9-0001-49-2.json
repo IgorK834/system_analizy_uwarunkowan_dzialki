@@ -1,0 +1,121 @@
+{
+  "case_id": "real-006-126105-9-0001-49-2",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": {
+      "layers": [
+        {
+          "feature_count": 1,
+          "intersections": [
+            {
+              "area_sqm": 220.805,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "MW/U.4",
+                "Rodzaj_oznaczenia": "MW/U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFA70174E0630D0A1EACC972",
+                "id_pg": "3445",
+                "opis_oznac": "Tereny zabudowy mieszkaniowej wielorodzinnej z usługami"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "1b3b9f4e719222252f62a4683c89e4b67f881c0b42e3838144528fd26c4c6c79",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+        },
+        {
+          "feature_count": 1,
+          "intersections": [
+            {
+              "area_sqm": 220.805,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "MW/U.4",
+                "Rodzaj_oznaczenia": "MW/U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFA70174E0630D0A1EACC972",
+                "id_pg": "3445",
+                "opis_oznac": "Tereny zabudowy mieszkaniowej wielorodzinnej z usługami"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "897bf45c9cd951c5817645bcc3c46d043deb892a2c285eea597f7574d43114a4",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+        },
+        {
+          "feature_count": 1,
+          "intersections": [
+            {
+              "area_sqm": 220.805,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "MW/U.4",
+                "Rodzaj_oznaczenia": "MW/U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFA70174E0630D0A1EACC972",
+                "id_pg": "3445",
+                "opis_oznac": "Tereny zabudowy mieszkaniowej wielorodzinnej z usługami"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "357e2a8b92562dd11214aa4526ca7d8eb3f9f449d7987110ba55251c4804747c",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+        }
+      ],
+      "parcel_identifier": "126105_9.0001.49/2"
+    },
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "MW/U.4"
+      ],
+      "plan_id": "XII/131/11",
+      "status": "found",
+      "uchwala_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 215.5,
+      "min_elevation_m": 214.0,
+      "relief_m": 1.5,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "126105_9.0001.49/2",
+  "verified_at": "2026-09-23"
+}

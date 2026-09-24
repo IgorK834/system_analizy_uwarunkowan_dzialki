@@ -1,0 +1,73 @@
+{
+  "case_id": "real-025-281603-4-0001-431-66",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 1,
+      "features": [
+        {
+          "area_ratio": 6.63e-06,
+          "intersection_area_sqm": 1.574,
+          "name": "Puszczy i Jezior Piskich",
+          "probability_class": null,
+          "severity": "low",
+          "type": "obszar_chronionego_krajobrazu"
+        }
+      ],
+      "status": "available"
+    },
+    "isok": {
+      "count": 3,
+      "features": [
+        {
+          "area_ratio": 0.87607997,
+          "intersection_area_sqm": 208006.653,
+          "name": null,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.65071072,
+          "intersection_area_sqm": 154497.493,
+          "name": null,
+          "probability_class": "scenariusz Q 10% (raz na 10 lat)",
+          "severity": "medium",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.84866343,
+          "intersection_area_sqm": 201497.176,
+          "name": null,
+          "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+          "severity": "high",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "16.U/US",
+        "NULL",
+        "15.U"
+      ],
+      "plan_id": "XVI/139/15",
+      "status": "found",
+      "uchwala_url": null,
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "error": "Usługa NMT zgłosiła błąd: Powierzchnia poligonu (237428.842506199) większa niż 100000 m2",
+      "error_type": "NmtServiceUnavailableError",
+      "status": "unknown"
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "281603_4.0001.431/66",
+  "verified_at": "2026-09-23"
+}

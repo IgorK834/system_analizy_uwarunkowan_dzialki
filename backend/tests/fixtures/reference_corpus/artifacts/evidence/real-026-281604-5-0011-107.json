@@ -1,0 +1,53 @@
+{
+  "case_id": "real-026-281604-5-0011-107",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 2,
+      "features": [
+        {
+          "area_ratio": 1.0,
+          "intersection_area_sqm": 265703.139,
+          "name": "Puszcza Piska",
+          "probability_class": null,
+          "severity": "high",
+          "type": "natura2000"
+        },
+        {
+          "area_ratio": 0.01041285,
+          "intersection_area_sqm": 2766.727,
+          "name": "Ostoja Piska",
+          "probability_class": null,
+          "severity": "low",
+          "type": "natura2000"
+        }
+      ],
+      "status": "available"
+    },
+    "isok": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": null,
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [],
+      "plan_id": null,
+      "status": "no_mpzp",
+      "uchwala_url": null,
+      "warnings": [
+        "Nie znaleziono miejscowego planu zagospodarowania przestrzennego dla żadnego z próbkowanych punktów działki.",
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "error": "Usługa NMT zgłosiła błąd: Powierzchnia poligonu (265703.13863403) większa niż 100000 m2",
+      "error_type": "NmtServiceUnavailableError",
+      "status": "unknown"
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "281604_5.0011.107",
+  "verified_at": "2026-09-23"
+}

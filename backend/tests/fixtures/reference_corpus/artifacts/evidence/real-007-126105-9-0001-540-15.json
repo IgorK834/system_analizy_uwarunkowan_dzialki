@@ -1,0 +1,489 @@
+{
+  "case_id": "real-007-126105-9-0001-540-15",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "isok": {
+      "count": 3,
+      "features": [
+        {
+          "area_ratio": 0.28425836,
+          "intersection_area_sqm": 6887.016,
+          "name": null,
+          "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+          "severity": "low",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.30919532,
+          "intersection_area_sqm": 7491.189,
+          "name": null,
+          "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+          "severity": "medium",
+          "type": "flood"
+        },
+        {
+          "area_ratio": 0.47225315,
+          "intersection_area_sqm": 11441.757,
+          "name": null,
+          "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+          "severity": "medium",
+          "type": "flood"
+        }
+      ],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": {
+      "layers": [
+        {
+          "feature_count": 24,
+          "intersections": [
+            {
+              "area_sqm": 10.099,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "KD/L+T",
+                "Rodzaj_oznaczenia": "KD/L+T",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4F8CA0174E0630D0A1EACC972",
+                "id_pg": "3438",
+                "opis_oznac": "Tereny dróg publicznych - drogi klasy lokalnej z tramwajem"
+              },
+              "share_pct": 0.041682
+            },
+            {
+              "area_sqm": 0.032,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.18",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF840174E0630D0A1EACC972",
+                "id_pg": "3452",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 0.000132
+            },
+            {
+              "area_sqm": 0.031,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.10",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8C0174E0630D0A1EACC972",
+                "id_pg": "3516",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.00013
+            },
+            {
+              "area_sqm": 564.208,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.11",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8D0174E0630D0A1EACC972",
+                "id_pg": "3517",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 2.328743
+            },
+            {
+              "area_sqm": 23653.551,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "ZP.4",
+                "Rodzaj_oznaczenia": "ZP",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFDA0174E0630D0A1EACC972",
+                "id_pg": "3532",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 97.628921
+            },
+            {
+              "area_sqm": 0.013,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.16",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF870174E0630D0A1EACC972",
+                "id_pg": "3538",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 5.4e-05
+            },
+            {
+              "area_sqm": 0.063,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.9",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF890174E0630D0A1EACC972",
+                "id_pg": "3540",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.000261
+            }
+          ],
+          "response_sha256": "a7b00a34fe2d0824d6899260c7cc2956473e534a52558ce0d28491d3573e71ff",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+        },
+        {
+          "feature_count": 24,
+          "intersections": [
+            {
+              "area_sqm": 10.099,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "KD/L+T",
+                "Rodzaj_oznaczenia": "KD/L+T",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4F8CA0174E0630D0A1EACC972",
+                "id_pg": "3438",
+                "opis_oznac": "Tereny dróg publicznych - drogi klasy lokalnej z tramwajem"
+              },
+              "share_pct": 0.041682
+            },
+            {
+              "area_sqm": 0.032,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.18",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF840174E0630D0A1EACC972",
+                "id_pg": "3452",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 0.000132
+            },
+            {
+              "area_sqm": 0.031,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.10",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8C0174E0630D0A1EACC972",
+                "id_pg": "3516",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.00013
+            },
+            {
+              "area_sqm": 564.208,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.11",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8D0174E0630D0A1EACC972",
+                "id_pg": "3517",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 2.328743
+            },
+            {
+              "area_sqm": 23653.551,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "ZP.4",
+                "Rodzaj_oznaczenia": "ZP",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFDA0174E0630D0A1EACC972",
+                "id_pg": "3532",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 97.628921
+            },
+            {
+              "area_sqm": 0.013,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.16",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF870174E0630D0A1EACC972",
+                "id_pg": "3538",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 5.4e-05
+            },
+            {
+              "area_sqm": 0.063,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.9",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF890174E0630D0A1EACC972",
+                "id_pg": "3540",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.000261
+            }
+          ],
+          "response_sha256": "19a35eb2981b04060d4656ec0603353e57ebe6593a1e9925ef57988938390d21",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+        },
+        {
+          "feature_count": 24,
+          "intersections": [
+            {
+              "area_sqm": 10.099,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "KD/L+T",
+                "Rodzaj_oznaczenia": "KD/L+T",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4F8CA0174E0630D0A1EACC972",
+                "id_pg": "3438",
+                "opis_oznac": "Tereny dróg publicznych - drogi klasy lokalnej z tramwajem"
+              },
+              "share_pct": 0.041682
+            },
+            {
+              "area_sqm": 0.032,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.18",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF840174E0630D0A1EACC972",
+                "id_pg": "3452",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 0.000132
+            },
+            {
+              "area_sqm": 0.031,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.10",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8C0174E0630D0A1EACC972",
+                "id_pg": "3516",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.00013
+            },
+            {
+              "area_sqm": 564.208,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.11",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF8D0174E0630D0A1EACC972",
+                "id_pg": "3517",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 2.328743
+            },
+            {
+              "area_sqm": 23653.551,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "ZP.4",
+                "Rodzaj_oznaczenia": "ZP",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DFDA0174E0630D0A1EACC972",
+                "id_pg": "3532",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 97.628921
+            },
+            {
+              "area_sqm": 0.013,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "Uks.16",
+                "Rodzaj_oznaczenia": "UKs",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF870174E0630D0A1EACC972",
+                "id_pg": "3538",
+                "opis_oznac": "Tereny zabudowy usługowej - sakralnej"
+              },
+              "share_pct": 5.4e-05
+            },
+            {
+              "area_sqm": 0.063,
+              "attributes": {
+                "Data_DUWM": "2011-05-17T00:00:00",
+                "Data_obowiązywania": "2011-06-17T00:00:00",
+                "Data_uchwalenia": "2011-04-13T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "STARE MIASTO",
+                "Ogłoszenie": "2011.255.2059",
+                "Oznaczenie": "U.9",
+                "Rodzaj_oznaczenia": "U",
+                "Uchwalenie": "XII/131/11",
+                "WWW": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+                "gdb_id": "5BC2EBC4DF890174E0630D0A1EACC972",
+                "id_pg": "3540",
+                "opis_oznac": "Tereny zabudowy usługowej"
+              },
+              "share_pct": 0.000261
+            }
+          ],
+          "response_sha256": "90284b74d6c67e8c0d1461ef6db3b706bc2f89c5d4b73d365d1278d59930f1b6",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+        }
+      ],
+      "parcel_identifier": "126105_9.0001.540/15"
+    },
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "ZP.4",
+        "U.9"
+      ],
+      "plan_id": "XII/131/11",
+      "status": "found",
+      "uchwala_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 210.8,
+      "min_elevation_m": 203.6,
+      "relief_m": 7.2,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "126105_9.0001.540/15",
+  "verified_at": "2026-09-23"
+}

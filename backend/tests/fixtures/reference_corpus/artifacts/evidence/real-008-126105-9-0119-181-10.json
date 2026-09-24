@@ -1,0 +1,121 @@
+{
+  "case_id": "real-008-126105-9-0119-181-10",
+  "notes": "Znormalizowane obserwacje i własne pomiary faktów; brak danych osobowych i brak surowych geometrii MPZP Krakowa.",
+  "observations": {
+    "gdos": {
+      "error": "Nie udało się sparsować odpowiedzi GDOŚ (warstwa GDOS:UzytkiEkologiczne): Usługa zwróciła ows:ExceptionReport: NoApplicableCode; java.util.ConcurrentModificationException\nnull",
+      "error_type": "GdosServiceUnavailableError",
+      "status": "unknown"
+    },
+    "isok": {
+      "count": 0,
+      "features": [],
+      "status": "available"
+    },
+    "krakow_mpzp_derived": {
+      "layers": [
+        {
+          "feature_count": 5,
+          "intersections": [
+            {
+              "area_sqm": 307.503,
+              "attributes": {
+                "Data_DUWM": "2021-02-24T00:00:00",
+                "Data_obowiązywania": "2021-03-11T00:00:00",
+                "Data_uchwalenia": "2021-02-18T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "KLEPARZ",
+                "Ogłoszenie": "2021.1156",
+                "Oznaczenie": "ZPb.9",
+                "Rodzaj_oznaczenia": "ZPb",
+                "Uchwalenie": "LIII/1464/21",
+                "WWW": "https://www.bip.krakow.pl/?dok_id=137657",
+                "gdb_id": "5BC2EBC4FAA60174E0630D0A1EACC972",
+                "id_pg": "14703",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "3bc330946694694e851b31a1761ec395058ca30b10f38c35695ef4e20a630079",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+        },
+        {
+          "feature_count": 5,
+          "intersections": [
+            {
+              "area_sqm": 307.503,
+              "attributes": {
+                "Data_DUWM": "2021-02-24T00:00:00",
+                "Data_obowiązywania": "2021-03-11T00:00:00",
+                "Data_uchwalenia": "2021-02-18T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "KLEPARZ",
+                "Ogłoszenie": "2021.1156",
+                "Oznaczenie": "ZPb.9",
+                "Rodzaj_oznaczenia": "ZPb",
+                "Uchwalenie": "LIII/1464/21",
+                "WWW": "https://www.bip.krakow.pl/?dok_id=137657",
+                "gdb_id": "5BC2EBC4FAA60174E0630D0A1EACC972",
+                "id_pg": "14703",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "412634b0abfe77313bb0b934b20a5d3c4cefef3d956c0f226af830d7d294047c",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+        },
+        {
+          "feature_count": 5,
+          "intersections": [
+            {
+              "area_sqm": 307.503,
+              "attributes": {
+                "Data_DUWM": "2021-02-24T00:00:00",
+                "Data_obowiązywania": "2021-03-11T00:00:00",
+                "Data_uchwalenia": "2021-02-18T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "KLEPARZ",
+                "Ogłoszenie": "2021.1156",
+                "Oznaczenie": "ZPb.9",
+                "Rodzaj_oznaczenia": "ZPb",
+                "Uchwalenie": "LIII/1464/21",
+                "WWW": "https://www.bip.krakow.pl/?dok_id=137657",
+                "gdb_id": "5BC2EBC4FAA60174E0630D0A1EACC972",
+                "id_pg": "14703",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 100.0
+            }
+          ],
+          "response_sha256": "691ed46e160725b94588f48e2c7780931e7eea91ce35f2f0a0e540251cf393df",
+          "type_name": "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+        }
+      ],
+      "parcel_identifier": "126105_9.0119.181/10"
+    },
+    "mpzp_discovery": {
+      "brak_wektorow": false,
+      "candidate_zone_symbols": [
+        "ZPb.9"
+      ],
+      "plan_id": "LIII/1464/21",
+      "status": "found",
+      "uchwala_url": "https://www.bip.krakow.pl/?dok_id=137657",
+      "warnings": [
+        "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP."
+      ]
+    },
+    "nmt": {
+      "max_elevation_m": 208.7,
+      "min_elevation_m": 208.2,
+      "relief_m": 0.5,
+      "status": "available",
+      "warnings": []
+    },
+    "pog_ouz": null
+  },
+  "parcel_identifier": "126105_9.0119.181/10",
+  "verified_at": "2026-09-23"
+}
