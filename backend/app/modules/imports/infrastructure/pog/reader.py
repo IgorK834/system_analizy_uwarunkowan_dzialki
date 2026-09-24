@@ -13,12 +13,13 @@ niekontrolowane ``extractall``.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 import tempfile
 import zipfile
 from dataclasses import dataclass, field, replace
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
@@ -40,6 +41,13 @@ from app.modules.imports.domain.pog import (
     PogValidationError,
     normalize_feature_type,
     normalize_legal_status,
+    references_act,
+    resolve_act_documents,
+)
+from app.modules.imports.infrastructure.ogc_client import OgcClient
+from app.modules.imports.infrastructure.pog.csw_metadata import (
+    attach_metadata,
+    fetch_act_metadata,
 )
 from app.modules.imports.infrastructure.vector import VectorFeature, read_vector_features
 from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsResource
@@ -94,6 +102,7 @@ class PogActMetadata:
     resolution_number: str | None = None
     resolution_date: date | None = None
     name: str | None = None
+    raw_legal_status: str | None = None
 
 
 def _boundary_payload(
@@ -140,6 +149,7 @@ def _build_act(
         teryt=metadata.teryt,
         name=metadata.name,
         legal_status=metadata.legal_status,
+        raw_legal_status=metadata.raw_legal_status,
         boundary=boundary,
         features=_features_from_layers(layers),
     )
@@ -190,12 +200,16 @@ class WfsPogReader:
         *,
         metadata: PogActMetadata,
         fetcher: WfsFetcher | None = None,
+        csw_url: str | None = None,
+        csw_client: OgcClient | None = None,
     ) -> None:
         # Każdy element to (feature_type, zasób WFS). Kolejność == kolejność
         # plików GML w rozpakowanym artefakcie.
         self._resources = resources
         self._metadata = metadata
         self._fetcher = fetcher or WfsFetcher()
+        self._csw_url = csw_url
+        self._csw_client = csw_client
 
     def read(self) -> PogSourceBatch:
         wfs_resources = tuple(resource for _feature_type, resource in self._resources)
@@ -229,6 +243,7 @@ class WfsPogReader:
                 layers.append(
                     (local, read_vector_features(path, declared_crs=resource.source_crs))
                 )
+            warnings: tuple[str, ...] = ()
             if ru_parts:
                 objects = merge_ru_pog_objects(tuple(ru_parts))
                 acts = assemble_ru_pog_acts(objects)
@@ -236,6 +251,8 @@ class WfsPogReader:
                     raise PogValidationError(
                         "Odpowiedź RU zawiera obiekty zależne bez AktPlanowaniaPrzestrzennego."
                     )
+                if self._csw_url:
+                    acts, content, warnings = self._with_catalog_metadata(acts, content)
             else:
                 acts = (_build_act(self._metadata, layers, None),)
         return PogSourceBatch(
@@ -245,8 +262,39 @@ class WfsPogReader:
             acts=acts,
             complete=True,
             strict_identifiers=bool(ru_parts),
-            parser_config_id="ru-app-3.0-v2",
+            parser_config_id="ru-app-3.0-v3" if self._csw_url else "ru-app-3.0-v2",
+            warnings=warnings,
         )
+
+    def _with_catalog_metadata(
+        self,
+        acts: tuple[PogActRecord, ...],
+        content: bytes,
+    ) -> tuple[tuple[PogActRecord, ...], bytes, tuple[str, ...]]:
+        """Dołącza zamrożone rekordy CSW i ich odpowiedź do artefaktu importu."""
+        assert self._csw_url is not None
+        warnings: list[str] = []
+        responses: list[tuple[str, bytes]] = []
+        records = []
+        managed = self._csw_client is None
+        client = self._csw_client or OgcClient.for_urls(
+            source_id="pog_app",
+            urls=(self._csw_url,),
+            config_overrides={"read_timeout_seconds": 30.0, "total_timeout_seconds": 60.0},
+        )
+        try:
+            for teryt in sorted({act.teryt for act in acts}):
+                result = fetch_act_metadata(client, self._csw_url, teryt)
+                if result.error:
+                    warnings.append(f"{result.error}:{teryt}")
+                if result.response:
+                    responses.append((f"90-csw-{teryt}.xml", result.response))
+                records.extend(result.records)
+        finally:
+            if managed:
+                client.close()
+        linked, link_warnings = attach_metadata(acts, tuple(records))
+        return linked, _append_to_zip(content, responses), (*warnings, *link_warnings)
 
 
 def read_pog_archive(
@@ -290,6 +338,23 @@ def read_pog_archive(
         media_type="application/zip",
         acts=(act,),
     )
+
+
+def _append_to_zip(content: bytes, members: list[tuple[str, bytes]]) -> bytes:
+    """Deterministycznie dopisuje pliki do artefaktu ZIP (stały timestamp)."""
+    if not members:
+        return content
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(content)) as source, zipfile.ZipFile(
+        buffer, "w", compression=zipfile.ZIP_DEFLATED
+    ) as target:
+        for info in source.infolist():
+            target.writestr(info, source.read(info.filename))
+        for name, payload in members:
+            info = zipfile.ZipInfo(name)
+            info.date_time = (1980, 1, 1, 0, 0, 0)
+            target.writestr(info, payload)
+    return buffer.getvalue()
 
 
 def _pack_local_resources(
@@ -391,9 +456,13 @@ def parse_ru_app_feature_collection(
             )
             document_refs = tuple(
                 _parse_reference(child) for child in element
-                if _local_name(child.tag) in {"dokumentPrzystepujacy", "dokumentUchwalajacy"} and child.get(_XLINK_HREF)
+                if _local_name(child.tag) in _ACT_DOCUMENT_RELATIONS and child.get(_XLINK_HREF)
             )
             acts.append(PogActRecord(
+                publication_id=_text(_gml_child(element, "identifier")),
+                version_started_at=_datetime(_child(element, "poczatekWersjiObiektu")),
+                valid_from=_date(_child(element, "obowiazujeOd")),
+                valid_to=_date(_child(element, "obowiazujeDo")),
                 act_identifier=object_id.stable_id,
                 resolution_number=None,
                 resolution_date=None,
@@ -411,7 +480,7 @@ def parse_ru_app_feature_collection(
 
         if local == "DokumentFormalny":
             act_ref_element = next(
-                (child for child in element if _local_name(child.tag) in {"przystapienie", "uchwalenie", "zmiana"} and child.get(_XLINK_HREF)),
+                (child for child in element if _local_name(child.tag) in _DOCUMENT_ACT_RELATIONS and child.get(_XLINK_HREF)),
                 None,
             )
             documents.append(PogFormalDocumentRecord(
@@ -421,6 +490,17 @@ def parse_ru_app_feature_collection(
                 act_reference=_parse_reference(act_ref_element) if act_ref_element is not None else None,
                 source_reference=source_reference,
                 raw_attributes=raw,
+                publication_id=_text(_gml_child(element, "identifier")),
+                short_name=_text(_child(element, "nazwaSkrocona")),
+                identification_number=_text(_child(element, "numerIdentyfikacyjny")),
+                relation=(
+                    _DOCUMENT_ACT_RELATIONS[_local_name(act_ref_element.tag)]
+                    if act_ref_element is not None else None
+                ),
+                document_date=_date(_first_descendant(_child(element, "data"), "Date")),
+                effective_date=_date(_child(element, "dataWejsciaWZycie")),
+                repeal_date=_date(_child(element, "dataUchylenia")),
+                record_sha256=canonical_record_sha256(element),
             ))
             continue
 
@@ -454,12 +534,19 @@ def parse_ru_app_feature_collection(
 
 
 def assemble_ru_pog_acts(objects: RuPogObjects) -> tuple[PogActRecord, ...]:
-    """Łączy akty, cechy i dokumenty po stabilnym xlinku, zachowując sieroty."""
+    """Łączy akty, cechy i dokumenty po identyfikatorze i wersji idIIP.
+
+    Cecha należy do aktu, gdy jej ``plan`` wskazuje dokładnie ten akt (wersja
+    w odwołaniu, jeśli podana, musi się zgadzać). Dokumenty są rozstrzygane
+    przez :func:`resolve_act_documents` — nigdy po tytule ani sufiksie URI.
+    """
     assembled: list[PogActRecord] = []
     for act in objects.acts:
-        stable = act.object_id.stable_id if act.object_id else act.act_identifier
-        features = tuple(f for f in objects.features if f.act_reference and _same_reference(f.act_reference.href, stable))
-        documents = tuple(d for d in objects.documents if d.act_reference and _same_reference(d.act_reference.href, stable))
+        features = tuple(
+            f for f in objects.features
+            if f.act_reference and references_act(f.act_reference.href, act)
+        )
+        documents = resolve_act_documents(act, objects.documents)
         assembled.append(replace(act, features=features, documents=documents))
     return tuple(assembled)
 
@@ -579,5 +666,62 @@ def _raw_attributes(element: ElementTree.Element) -> dict[str, Any]:
     return result
 
 
-def _same_reference(href: str, stable_id: str) -> bool:
-    return href.rstrip("/").endswith(stable_id.rstrip("/"))
+_ACT_DOCUMENT_RELATIONS = frozenset(
+    {
+        "dokument", "dokumentPrzystepujacy", "dokumentUchwalajacy",
+        "dokumentZmieniajacy", "dokumentUchylajacy",
+    }
+)
+# Relacje DokumentFormalny → akt z APP 3.0 (nazwy XSD) na kanoniczne etykiety.
+_DOCUMENT_ACT_RELATIONS: dict[str, str] = {
+    "przystapienie": "przystapienie",
+    "uchwala": "uchwala",
+    "zmienia": "zmienia",
+    "uchyla": "uchyla",
+    "uniewaznia": "uniewaznia",
+}
+_GML_NAMESPACE = "http://www.opengis.net/gml/3.2"
+
+
+def canonical_record_sha256(element: ElementTree.Element) -> str:
+    """SHA-256 kanonicznej postaci (C14N 2.0) rekordu XML.
+
+    Hash nie zależy od prefiksów przestrzeni nazw ani kolejności atrybutów w
+    serializacji, więc ten sam rekord z innej odpowiedzi daje ten sam SHA.
+    """
+    canonical = ElementTree.canonicalize(
+        ElementTree.tostring(element, encoding="unicode"),
+        strip_text=True,
+        rewrite_prefixes=True,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _gml_child(element: ElementTree.Element, name: str) -> ElementTree.Element | None:
+    return element.find(f"{{{_GML_NAMESPACE}}}{name}")
+
+
+def _first_descendant(element: ElementTree.Element | None, name: str) -> ElementTree.Element | None:
+    if element is None:
+        return None
+    return next((node for node in element.iter() if _local_name(node.tag) == name), None)
+
+
+def _date(element: ElementTree.Element | None) -> date | None:
+    raw = _text(element)
+    if raw is None:
+        return None
+    try:
+        return date.fromisoformat(raw[:10])
+    except ValueError as exc:
+        raise PogValidationError(f"Niepoprawna data APP: {raw!r}.") from exc
+
+
+def _datetime(element: ElementTree.Element | None) -> datetime | None:
+    raw = _text(element)
+    if raw is None:
+        return None
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise PogValidationError(f"Niepoprawny znacznik czasu APP: {raw!r}.") from exc

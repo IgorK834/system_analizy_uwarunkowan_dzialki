@@ -247,6 +247,7 @@ def run_pog_command(
         act_identifier=act_identifier,
         teryt=effective_teryt,
         legal_status=normalize_legal_status(legal_status),
+        raw_legal_status=legal_status,
         resolution_number=resolution_number,
         resolution_date=resolution_date,
         name=name_label or source.name,
@@ -334,7 +335,15 @@ def run_pog_command(
         )
         if not remote_resources:
             raise ValueError("Zasób WFS POG nie deklaruje wymaganych typów APP.")
-        reader = WfsPogReader(remote_resources, metadata=metadata)
+        csw_resource = next(
+            (item for item in source.resources if item.role == "ru_csw"),
+            None,
+        )
+        reader = WfsPogReader(
+            remote_resources,
+            metadata=metadata,
+            csw_url=csw_resource.url if csw_resource else None,
+        )
     release = _release(source, dry_run=dry_run)
     try:
         outcome = run_pog_import(

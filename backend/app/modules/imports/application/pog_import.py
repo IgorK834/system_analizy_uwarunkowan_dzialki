@@ -29,6 +29,7 @@ from app.modules.imports.domain.pog import (
     PogActRecord,
     PogFeatureRecord,
     PogValidationError,
+    parse_app_reference,
     pog_record_to_dict,
 )
 from app.shared.geometry import GeometryPayload
@@ -40,6 +41,9 @@ class PogSourceBatch(SourceBatch):
     complete: bool = True
     strict_identifiers: bool = False
     parser_config_id: str = "app3-v2"
+    # Ostrzeżenia czytnika (np. niedostępne CSW, dokument nierozstrzygnięty);
+    # nie blokują publikacji, ale trafiają do wyniku importu i ImportRun.
+    warnings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -147,6 +151,13 @@ def _snapshot_hash(act: PogActRecord, geometry_hashes: list[str]) -> str:
         "object_id": act.object_id.versioned_id if act.object_id else None,
         "relations": _stable_json_value(pog_record_to_dict(act).get("feature_references", [])),
         "documents": _stable_json_value(pog_record_to_dict(act).get("documents", [])),
+        "publication_id": act.publication_id,
+        "version_started_at": (
+            act.version_started_at.isoformat() if act.version_started_at else None
+        ),
+        "valid_from": act.valid_from.isoformat() if act.valid_from else None,
+        "valid_to": act.valid_to.isoformat() if act.valid_to else None,
+        "metadata": _stable_json_value(pog_record_to_dict(act).get("metadata", [])),
         "boundary_hash": boundary_hash,
         "features": features,
     }
@@ -154,6 +165,14 @@ def _snapshot_hash(act: PogActRecord, geometry_hashes: list[str]) -> str:
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _references_act(href: str, act: PogActRecord, act_stable_id: str) -> bool:
+    """Relacja cecha → akt: identyfikator i wersja idIIP, a bez idIIP — sufiks."""
+    reference = parse_app_reference(href)
+    if act.object_id is not None and reference is not None:
+        return reference.matches(act.object_id)
+    return href.rstrip("/").endswith(act_stable_id.rstrip("/"))
 
 
 def run_pog_import(
@@ -177,7 +196,7 @@ def run_pog_import(
             "Źródło POG nie potwierdziło kompletności wszystkich stron; publikacja przerwana."
         )
     stats = MutableImportStats(input=len(batch.acts))
-    warnings: list[str] = []
+    warnings: list[str] = list(batch.warnings)
     prepared: list[tuple[PogActRecord, str]] = []
     critical_errors: list[str] = []
     seen_ids: set[str] = set()
@@ -201,9 +220,18 @@ def run_pog_import(
                 if stable_id in seen_ids:
                     critical_errors.append(f"duplicate_feature_id:{stable_id}")
                 seen_ids.add(stable_id)
-            if feature.act_reference and not feature.act_reference.href.rstrip("/").endswith(act_stable_id.rstrip("/")):
+            if feature.act_reference and not _references_act(
+                feature.act_reference.href, act, act_stable_id
+            ):
                 critical_errors.append(
                     f"invalid_act_reference:{feature.stable_id or feature.feature_type}"
+                )
+
+        for document in act.documents:
+            if document.resolution_status != "resolved":
+                warnings.append(
+                    f"pog_document_{document.resolution_status}:"
+                    f"{document.object_id.versioned_id}"
                 )
 
         # Status niewiążący jest przenoszony bez zmian, ale jawnie oznaczony w

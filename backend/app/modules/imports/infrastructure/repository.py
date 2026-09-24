@@ -26,6 +26,7 @@ from app.models.versioned import (
     PlanningAct,
     PlanningActVersion,
     PlanningFeature,
+    PogActMetadataRecord,
     PogFormalDocument,
     PlanningSymbol,
     SourceArtifact,
@@ -475,6 +476,11 @@ class SqlAlchemyImportRepository:
                     resolution_number=act_record.resolution_number,
                     resolution_date=act_record.resolution_date,
                     name=act_record.name,
+                    publication_id=act_record.publication_id,
+                    version_started_at=act_record.version_started_at,
+                    legal_valid_from=act_record.valid_from,
+                    legal_valid_to=act_record.valid_to,
+                    source_reference=act_record.source_reference,
                     manual_review_required=not binding,
                     source_artifact_id=artifact.id,
                     data_release_id=data_release.id,
@@ -529,6 +535,33 @@ class SqlAlchemyImportRepository:
                         link=document.link,
                         source_reference=document.source_reference,
                         raw_attributes=_jsonable(document.raw_attributes),
+                        publication_id=document.publication_id,
+                        short_name=document.short_name,
+                        identification_number=document.identification_number,
+                        relation=document.relation,
+                        document_date=document.document_date,
+                        effective_date=document.effective_date,
+                        repeal_date=document.repeal_date,
+                        record_sha256=document.record_sha256,
+                        link_verified=document.link_verified,
+                        resolution_status=document.resolution_status,
+                        resolution_note=document.resolution_note,
+                    ))
+                for record in act_record.metadata:
+                    self.session.add(PogActMetadataRecord(
+                        planning_act_version_id=version.id,
+                        record_id=record.record_id,
+                        resource_identifier=record.resource_identifier,
+                        title=record.title,
+                        publication_date=record.publication_date,
+                        revision_date=record.revision_date,
+                        creation_date=record.creation_date,
+                        date_stamp=record.date_stamp,
+                        metadata_url=record.metadata_url,
+                        reference_urls=list(record.references),
+                        record_sha256=record.record_sha256,
+                        response_sha256=record.response_sha256,
+                        fetched_at=record.fetched_at,
                     ))
             # Także idempotentny powrót do istniejącego wydania przełącza je
             # atomowo bez dublowania wersji obiektów.
@@ -755,13 +788,19 @@ def load_pog_release_features(
     *,
     data_release_id: int,
 ) -> list[dict[str, Any]]:
-    """Czyta wszystkie cztery warstwy z jednego, jawnie przypiętego wydania."""
+    """Czyta wszystkie cztery warstwy z jednego, jawnie przypiętego wydania.
+
+    Zwraca obiekty aktów w każdym kanonicznym statusie prawnym (BK-106).
+    Rozstrzygnięcie, czy akt jest wiążący, należy do wspólnego mappera statusu,
+    a nie do filtra SQL — dzięki temu projekt nie znika z wyniku, ale też nie
+    jest prezentowany jako obowiązujący.
+    """
     rows = session.execute(
         text(
             """
-            SELECT pa.act_identifier, pa.teryt, pav.legal_status,
-                   pav.raw_legal_status, pav.object_version_id, pav.name AS act_name,
-                   pav.resolution_number, pav.resolution_date,
+            SELECT pa.act_identifier, pa.teryt, pav.id AS act_version_id,
+                   pav.legal_status, pav.raw_legal_status, pav.object_version_id,
+                   pav.name AS act_name, pav.resolution_number, pav.resolution_date,
                    pf.feature_type, pf.feature_identifier, pf.feature_version,
                    pf.act_reference, pf.source_reference, pf.raw_legal_status AS feature_raw_legal_status,
                    pf.symbol, pf.label, pf.parameters, pf.primary_profiles,
@@ -772,7 +811,6 @@ def load_pog_release_features(
             JOIN planning_features pf ON pf.planning_act_version_id = pav.id
             WHERE pa.kind = 'pog'
               AND pav.data_release_id = :release_id
-              AND pav.legal_status = 'adopted'
               AND pf.geometry && ST_GeomFromText(:parcel_wkt, 2180)
               AND ST_Intersects(pf.geometry, ST_GeomFromText(:parcel_wkt, 2180))
             ORDER BY pa.act_identifier, pf.feature_type, pf.feature_identifier NULLS LAST
@@ -783,18 +821,211 @@ def load_pog_release_features(
     return [dict(row) for row in rows]
 
 
+def find_pog_acts_for_parcel(
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    data_release_id: int,
+    teryt: str | None = None,
+) -> list[dict[str, Any]]:
+    """Zwraca akty POG wydania dotyczące działki wraz z faktami o pokryciu.
+
+    Akt dotyczy działki, gdy jego granica lub obiekt przecina działkę albo —
+    dla aktu bez danych przestrzennych — gdy TERYT aktu jest prefiksem TERYT
+    działki. Wynik zasila tabelę decyzyjną BK-106: ``has_spatial_data``
+    odróżnia akt bez geometrii od aktu z danymi niepokrywającymi działki.
+    """
+    rows = session.execute(
+        text(
+            """
+            WITH parcel AS (SELECT ST_GeomFromText(:parcel_wkt, 2180) AS geom)
+            SELECT pav.id AS act_version_id, pa.act_identifier, pa.teryt,
+                   pav.legal_status, pav.raw_legal_status, pav.object_version_id,
+                   sa.fetched_at AS status_confirmed_at,
+                   EXISTS (
+                     SELECT 1 FROM plan_boundaries pb
+                     WHERE pb.planning_act_version_id = pav.id
+                   ) AS has_boundary,
+                   EXISTS (
+                     SELECT 1 FROM plan_boundaries pb, parcel
+                     WHERE pb.planning_act_version_id = pav.id
+                       AND ST_Intersects(pb.geometry, parcel.geom)
+                   ) AS boundary_intersects,
+                   (SELECT count(*) FROM planning_features pf
+                     WHERE pf.planning_act_version_id = pav.id) AS feature_count,
+                   (SELECT count(*) FROM planning_features pf, parcel
+                     WHERE pf.planning_act_version_id = pav.id
+                       AND pf.geometry && parcel.geom
+                       AND ST_Intersects(pf.geometry, parcel.geom)) AS features_on_parcel
+            FROM planning_act_versions pav
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id
+            JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
+            WHERE pa.kind = 'pog'
+              AND pav.data_release_id = :release_id
+            ORDER BY pa.act_identifier
+            """
+        ),
+        {"release_id": data_release_id, "parcel_wkt": parcel_geometry.wkt},
+    ).mappings()
+    result: list[dict[str, Any]] = []
+    for row in rows:
+        item = dict(row)
+        spatial = bool(item["boundary_intersects"]) or int(item["features_on_parcel"]) > 0
+        by_teryt = bool(
+            teryt and item.get("teryt") and str(teryt).startswith(str(item["teryt"]))
+        )
+        has_spatial_data = bool(item["has_boundary"]) or int(item["feature_count"]) > 0
+        if spatial or (by_teryt and not has_spatial_data):
+            item["has_spatial_data"] = has_spatial_data
+            result.append(item)
+    return result
+
+
+def last_confirmed_pog_status(
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    teryt: str | None = None,
+    source_id: str = "pog_app",
+) -> dict[str, Any] | None:
+    """Ostatnia potwierdzona wartość statusu aktu dla działki (dowolne wydanie).
+
+    Używana wyłącznie przy awarii źródła: wynik ma zachować datę potwierdzenia
+    i dostępność ``stale``. Wartości ``unknown`` nie są „potwierdzeniem”.
+    """
+    row = session.execute(
+        text(
+            """
+            SELECT pa.act_identifier, pav.legal_status, pav.raw_legal_status,
+                   pav.object_version_id, pav.data_release_id,
+                   sa.fetched_at AS status_confirmed_at, sa.content_hash
+            FROM planning_act_versions pav
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id
+            JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
+            JOIN data_releases dr ON dr.id = pav.data_release_id
+            JOIN data_sources ds ON ds.id = dr.data_source_id
+            WHERE pa.kind = 'pog'
+              AND ds.source_id = :source_id
+              AND pav.legal_status IS NOT NULL
+              AND pav.legal_status <> 'unknown'
+              AND pav.raw_legal_status IS NOT NULL
+              AND (
+                EXISTS (
+                  SELECT 1 FROM plan_boundaries pb
+                  WHERE pb.planning_act_version_id = pav.id
+                    AND ST_Intersects(pb.geometry, ST_GeomFromText(:parcel_wkt, 2180))
+                )
+                OR EXISTS (
+                  SELECT 1 FROM planning_features pf
+                  WHERE pf.planning_act_version_id = pav.id
+                    AND pf.geometry && ST_GeomFromText(:parcel_wkt, 2180)
+                    AND ST_Intersects(pf.geometry, ST_GeomFromText(:parcel_wkt, 2180))
+                )
+                OR (CAST(:teryt AS text) IS NOT NULL AND pa.teryt IS NOT NULL
+                    AND CAST(:teryt AS text) LIKE pa.teryt || '%')
+              )
+            ORDER BY sa.fetched_at DESC, pav.id DESC
+            LIMIT 1
+            """
+        ),
+        {"parcel_wkt": parcel_geometry.wkt, "teryt": teryt, "source_id": source_id},
+    ).mappings().one_or_none()
+    return dict(row) if row is not None else None
+
+
+def load_pog_act_provenance(
+    session: Session, act_version_id: int
+) -> dict[str, Any] | None:
+    """Czyta zamrożony łańcuch wersja aktu → metadane CSW → dokumenty.
+
+    Dane pochodzą wyłącznie z wersji aktu zapisanej w wydaniu; odczyt nie
+    odpytuje bieżącego katalogu ani usług RU.
+    """
+    act = session.execute(
+        text(
+            """
+            SELECT pav.id AS act_version_id, pa.act_identifier, pa.teryt,
+                   pav.object_version_id, pav.publication_id, pav.version_started_at,
+                   pav.legal_valid_from, pav.legal_valid_to, pav.source_reference,
+                   pav.name AS title, pav.resolution_number, pav.resolution_date,
+                   pav.data_release_id, sa.content_hash AS artifact_sha256,
+                   sa.fetched_at AS artifact_fetched_at, dr.version_label AS release_label
+            FROM planning_act_versions pav
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id
+            JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
+            JOIN data_releases dr ON dr.id = pav.data_release_id
+            WHERE pav.id = :id
+            """
+        ),
+        {"id": act_version_id},
+    ).mappings().one_or_none()
+    if act is None:
+        return None
+    documents = session.execute(
+        select(PogFormalDocument)
+        .where(PogFormalDocument.planning_act_version_id == act_version_id)
+        .order_by(PogFormalDocument.document_identifier, PogFormalDocument.document_version)
+    ).scalars().all()
+    metadata = session.execute(
+        select(PogActMetadataRecord)
+        .where(PogActMetadataRecord.planning_act_version_id == act_version_id)
+        .order_by(PogActMetadataRecord.record_id)
+    ).scalars().all()
+    return {
+        **dict(act),
+        "documents": [
+            {
+                "document_identifier": doc.document_identifier,
+                "document_version": doc.document_version,
+                "publication_id": doc.publication_id,
+                "title": doc.title,
+                "short_name": doc.short_name,
+                "identification_number": doc.identification_number,
+                "relation": doc.relation,
+                "document_date": doc.document_date,
+                "effective_date": doc.effective_date,
+                "repeal_date": doc.repeal_date,
+                "link": doc.link,
+                "link_verified": doc.link_verified,
+                "record_sha256": doc.record_sha256,
+                "resolution_status": doc.resolution_status,
+                "resolution_note": doc.resolution_note,
+            }
+            for doc in documents
+        ],
+        "metadata": [
+            {
+                "record_id": record.record_id,
+                "resource_identifier": record.resource_identifier,
+                "title": record.title,
+                "publication_date": record.publication_date,
+                "revision_date": record.revision_date,
+                "creation_date": record.creation_date,
+                "date_stamp": record.date_stamp,
+                "metadata_url": record.metadata_url,
+                "references": list(record.reference_urls or []),
+                "record_sha256": record.record_sha256,
+                "response_sha256": record.response_sha256,
+                "fetched_at": record.fetched_at,
+            }
+            for record in metadata
+        ],
+    }
+
+
 def find_pog_intersections(
     session: Session,
     parcel_geometry: GeometryPayload,
     *,
     data_release_id: int | None = None,
+    legal_statuses: tuple[str, ...] = ("binding",),
 ) -> list[dict[str, int | str | float]]:
-    """Zwraca obowiązujące akty POG przecinające działkę wraz z polami warstw.
+    """Zwraca akty POG w podanych statusach przecinające działkę wraz z polami.
 
-    Zwracane są WYŁĄCZNIE akty o statusie ``adopted`` (uchwalone i obowiązujące).
-    Projekty i akty w trakcie sporządzania nie są prezentowane jako wiążące
-    ograniczenie planistyczne (context.md pkt 9). Pole przecięcia liczone jest na
-    obiektach warstw POG (``planning_features``) rozbite na typ warstwy.
+    Domyślnie zwracane są WYŁĄCZNIE akty ``binding`` (obowiązujące, potwierdzone
+    urzędowym kodem statusu). Projekty i akty w trakcie sporządzania nie są
+    prezentowane jako wiążące ograniczenie planistyczne. Pole przecięcia liczone
+    jest na obiektach warstw POG (``planning_features``) rozbite na typ warstwy.
     """
     if data_release_id is None:
         pinned = active_pog_release(session)
@@ -811,7 +1042,7 @@ def find_pog_intersections(
             FROM planning_acts pa
             JOIN planning_act_versions pav ON pav.planning_act_id=pa.id
               AND pav.data_release_id = :release_id
-              AND pav.legal_status = 'adopted'
+              AND pav.legal_status = ANY(:legal_statuses)
             JOIN planning_features pf ON pf.planning_act_version_id=pav.id
             WHERE pa.kind = 'pog'
               AND pf.geometry && ST_GeomFromText(:parcel_wkt, 2180)
@@ -819,7 +1050,11 @@ def find_pog_intersections(
             ORDER BY pa.act_identifier, pf.feature_type
             """
         ),
-        {"parcel_wkt": parcel_geometry.wkt, "release_id": data_release_id},
+        {
+            "parcel_wkt": parcel_geometry.wkt,
+            "release_id": data_release_id,
+            "legal_statuses": list(legal_statuses),
+        },
     ).mappings()
     return [
         {

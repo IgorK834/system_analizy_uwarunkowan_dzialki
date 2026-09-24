@@ -95,8 +95,12 @@ def parse_args(argv: Sequence[str] | None = None) -> CliCommand:
     )
     pog.add_argument(
         "--legal-status",
-        default="not_available",
-        help="Status prawny: project/in_progress/adopted/not_available",
+        default=None,
+        help=(
+            "Urzędowy kod statusu aktu z Rejestru Urbanistycznego/INSPIRE "
+            "(legalForce, adoption, elaboration, obsolete). Brak kodu daje "
+            "status unknown; binding wymaga kodu urzędowego."
+        ),
     )
     pog.add_argument("--name", dest="name_label", help="Nazwa aktu POG")
     pog.add_argument(
