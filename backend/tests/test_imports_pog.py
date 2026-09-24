@@ -6,19 +6,23 @@ import hashlib
 import io
 import zipfile
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock
+from threading import Barrier
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 from shapely import from_wkt
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.data_sources import DataSourceEntry
 from app.db.session import SessionLocal
 from app.models.versioned import (
+    DataRelease,
+    DataSource,
     PlanBoundary,
     PlanningAct,
     PlanningActVersion,
@@ -55,8 +59,11 @@ from app.modules.imports.infrastructure.pog.reader import (
 )
 from app.modules.imports.infrastructure.repository import (
     SqlAlchemyImportRepository,
+    active_pog_release,
     find_pog_intersections,
+    load_pog_release_features,
 )
+from app.services.analysis_orchestrator import _analyze_pog_best_effort
 from app.modules.imports.infrastructure.vector import VectorReadError
 from app.shared.geometry import GeometryPayload
 from app.shared.safe_archive import UnsafeArchiveError
@@ -137,8 +144,9 @@ class StaticPogReader:
 
 
 class FakePogRepository:
-    def __init__(self) -> None:
+    def __init__(self, previous_feature_count: int | None = None) -> None:
         self.published: tuple[tuple[PogActRecord, str], ...] = ()
+        self._previous_feature_count = previous_feature_count
 
     def repair_geometry(self, geometry: GeometryPayload):
         shape = from_wkt(geometry.wkt)
@@ -154,6 +162,9 @@ class FakePogRepository:
     def publish_pog(self, *, release, batch, artifact_hash, acts, stats, warnings):
         self.published = acts
         return PogPublicationResult(len(acts), 0, 0, 1, 2)
+
+    def previous_pog_feature_count(self) -> int | None:
+        return self._previous_feature_count
 
 
 # --- Domena ------------------------------------------------------------------
@@ -186,12 +197,15 @@ def test_is_binding_only_for_adopted() -> None:
     assert act(legal_status="not_available").is_binding is False
 
 
-def test_adopted_act_requires_resolution_metadata() -> None:
-    invalid = PogActRecord("pog-x", None, None, "1261011", None, "adopted", None, ())
-    with pytest.raises(PogValidationError):
-        invalid.validate()
-    # Projekt bez uchwały jest dopuszczalny — nie jest prezentowany jako wiążący.
-    PogActRecord("pog-x", None, None, "1261011", None, "project", None, ()).validate()
+def test_source_status_is_not_inferred_from_resolution_metadata() -> None:
+    adopted = PogActRecord("pog-x", None, None, "1261011", None, "adopted", None, ())
+    adopted.validate()
+    assert adopted.is_binding is True
+    project = PogActRecord(
+        "pog-y", "I/1/2026", date(2026, 1, 10), "1261011", None, "project", None, ()
+    )
+    project.validate()
+    assert project.is_binding is False
 
 
 def test_feature_record_rejects_unknown_type() -> None:
@@ -233,6 +247,41 @@ def test_research_source_is_dry_run_only() -> None:
     assert repository.published == ()
 
 
+def test_incomplete_wfs_pagination_rejects_entire_import() -> None:
+    repository = FakePogRepository()
+
+    class IncompleteReader:
+        def read(self) -> PogSourceBatch:
+            return PogSourceBatch(
+                b"partial",
+                "pog.gml",
+                "application/gml+xml",
+                (act(),),
+                complete=False,
+            )
+
+    with pytest.raises(PogValidationError, match="kompletności wszystkich stron"):
+        run_pog_import(
+            IncompleteReader(),
+            "fixture",
+            repository,
+            release=release(),
+        )
+    assert repository.published == ()
+
+
+def test_large_feature_count_drop_rejects_entire_import() -> None:
+    repository = FakePogRepository(previous_feature_count=10)
+    with pytest.raises(PogValidationError, match="spadła z 10 do 4"):
+        run_pog_import(
+            StaticPogReader(act()),
+            "fixture",
+            repository,
+            release=release(),
+        )
+    assert repository.published == ()
+
+
 def test_pog_command_builds_wfs_reader_from_catalog_and_filters_teryt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -266,6 +315,8 @@ def test_pog_command_builds_wfs_reader_from_catalog_and_filters_teryt(
     )
     assert {resource.url for resource in resources} == {catalog_wfs.url}
     assert {feature_type for feature_type, _resource in reader._resources} == {
+        "planning_act",
+        "formal_document",
         "planning_zone",
         "ouz",
         "downtown_area",
@@ -338,20 +389,20 @@ def test_snapshot_hash_is_order_independent_and_covers_raw_attributes() -> None:
     assert changed_repo.published[0][1] != first_hash
 
 
-def test_empty_feature_is_rejected_without_aborting_act() -> None:
+def test_empty_feature_rejects_entire_import() -> None:
     repository = FakePogRepository()
     features = (
         feature("planning_zone", "POLYGON((0 0,50 0,50 100,0 100,0 0))"),
         feature("ouz", "POLYGON EMPTY"),
     )
-    outcome = run_pog_import(
-        StaticPogReader(act(features=features)),
-        "fixture",
-        repository,
-        release=release(),
-    )
-    assert outcome.stats["rejected"] == 1
-    assert any(warning.startswith("empty_feature:") for warning in outcome.warnings)
+    with pytest.raises(PogValidationError, match="empty_feature"):
+        run_pog_import(
+            StaticPogReader(act(features=features)),
+            "fixture",
+            repository,
+            release=release(),
+        )
+    assert repository.published == ()
 
 
 # --- Adapter APP/GML (pyogrio) -----------------------------------------------
@@ -623,7 +674,9 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
         "POLYGON((565005 244005,565015 244005,565015 244015,"
         "565005 244015,565005 244005))"
     )
-    hits = find_pog_intersections(session, parcel)
+    hits = find_pog_intersections(
+        session, parcel, data_release_id=outcome.data_release_id
+    )
     assert any(row["act_identifier"] == adopted.act_identifier for row in hits)
 
 
@@ -667,5 +720,205 @@ def test_postgis_project_pog_never_binding(session: Session, tmp_path: Path) -> 
         "POLYGON((565005 244005,565015 244005,565015 244015,"
         "565005 244015,565005 244005))"
     )
-    hits = find_pog_intersections(session, parcel)
+    hits = find_pog_intersections(
+        session, parcel, data_release_id=outcome.data_release_id
+    )
     assert all(row["act_identifier"] != project.act_identifier for row in hits)
+
+
+@pytest.mark.integration
+def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
+    session: Session, tmp_path: Path
+) -> None:
+    source_id = f"pog_atomic_{uuid4().hex[:10]}"
+    repository = SqlAlchemyImportRepository(
+        session, _source(source_id), LocalArtifactStore(tmp_path)
+    )
+    identifier = f"pog-atomic-act-{uuid4().hex[:8]}"
+    release_a = run_pog_import(
+        StaticPogReader(act(identifier), content=b"release-a"),
+        source_id,
+        repository,
+        release=release(source_id, label="A"),
+    )
+    session.commit()
+    assert release_a.data_release_id is not None
+
+    bad = act(
+        identifier,
+        features=(feature("planning_zone", "POLYGON EMPTY"),),
+    )
+    with pytest.raises(PogValidationError, match="odrzuciło cały import"):
+        run_pog_import(
+            StaticPogReader(bad, content=b"release-b-bad"),
+            source_id,
+            repository,
+            release=release(source_id, label="B"),
+        )
+    session.rollback()
+    active_after_bad = session.scalar(
+        select(DataRelease.id)
+        .join(DataSource)
+        .where(DataSource.source_id == source_id, DataRelease.is_active.is_(True))
+    )
+    assert active_after_bad == release_a.data_release_id
+
+    repeated = run_pog_import(
+        StaticPogReader(act(identifier), content=b"release-a"),
+        source_id,
+        repository,
+        release=release(source_id, label="A-repeated-later"),
+    )
+    session.commit()
+    assert repeated.data_release_id == release_a.data_release_id
+    assert repeated.stats["unchanged"] == 1
+    version_count = session.scalar(
+        select(func.count(PlanningActVersion.id))
+        .join(PlanningAct)
+        .where(PlanningAct.act_identifier == identifier)
+    )
+    assert version_count == 1
+    assert session.scalar(
+        select(func.count(DataRelease.id)).join(DataSource).where(
+            DataSource.source_id == source_id, DataRelease.is_active.is_(True)
+        )
+    ) == 1
+
+    changed = act(
+        identifier,
+        features=(
+            feature(
+                "planning_zone",
+                "POLYGON((0 0,100 0,100 100,0 100,0 0))",
+                SYMBOL="SU-01",
+            ),
+            feature("ouz", "POLYGON((0 0,30 0,30 30,0 30,0 0))"),
+            feature("downtown_area", "POLYGON((0 0,10 0,10 10,0 10,0 0))"),
+            feature(
+                "social_infrastructure_standard",
+                "POLYGON((0 0,100 0,100 100,0 100,0 0))",
+            ),
+        ),
+    )
+    release_b = run_pog_import(
+        StaticPogReader(changed, content=b"release-b-good"),
+        source_id,
+        repository,
+        release=release(source_id, label="B-good"),
+    )
+    session.commit()
+    assert release_b.data_release_id != release_a.data_release_id
+    parcel = geom("POLYGON((5 5,15 5,15 15,5 15,5 5))")
+    assert len(
+        load_pog_release_features(
+            session, parcel, data_release_id=release_a.data_release_id
+        )
+    ) == 4
+    assert len(
+        load_pog_release_features(
+            session, parcel, data_release_id=release_b.data_release_id
+        )
+    ) == 4
+
+    reactivated_a = run_pog_import(
+        StaticPogReader(act(identifier), content=b"release-a"),
+        source_id,
+        repository,
+        release=release(source_id, label="A-reactivated"),
+    )
+    session.commit()
+    assert reactivated_a.data_release_id == release_a.data_release_id
+    assert session.scalar(
+        select(DataRelease.id)
+        .join(DataSource)
+        .where(DataSource.source_id == source_id, DataRelease.is_active.is_(True))
+    ) == release_a.data_release_id
+    assert session.scalar(
+        select(func.count(PlanningActVersion.id))
+        .join(PlanningAct)
+        .where(PlanningAct.act_identifier == identifier)
+    ) == 2
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_local_postgis_release_analyzes_without_ru_network(
+    session: Session, tmp_path: Path
+) -> None:
+    source_id = f"pog_offline_{uuid4().hex[:10]}"
+    content = b"offline-release"
+    repository = SqlAlchemyImportRepository(
+        session, _source(source_id), LocalArtifactStore(tmp_path)
+    )
+    record = act(f"pog-offline-{uuid4().hex[:8]}")
+    outcome = run_pog_import(
+        StaticPogReader(record, content=content),
+        source_id,
+        repository,
+        release=release(source_id, label="offline"),
+    )
+    session.commit()
+    assert outcome.data_release_id is not None
+    pinned = active_pog_release(session, source_id=source_id)
+    assert pinned is not None
+
+    with (
+        patch(
+            "app.services.analysis_orchestrator.active_pog_release",
+            return_value=pinned,
+        ),
+        patch(
+            "app.services.analysis_orchestrator.discover_pog",
+            new_callable=AsyncMock,
+        ) as discovery,
+    ):
+        pog, _ouz, _warnings, sources = await _analyze_pog_best_effort(
+            from_wkt("POLYGON((5 5,15 5,15 15,5 15,5 5))"),
+            "1261011",
+            session,
+        )
+
+    discovery.assert_not_awaited()
+    assert pog.status == "adopted"
+    assert {zone.symbol for zone in pog.zones} == {"SJ-01"}
+    assert len(pog.social_infrastructure_standard_areas) == 1
+    assert sources[0].data_release_id == outcome.data_release_id
+    assert sources[0].artifact_sha256 == hashlib.sha256(content).hexdigest()
+
+
+@pytest.mark.integration
+def test_concurrent_publications_leave_exactly_one_active_release(tmp_path: Path) -> None:
+    source_id = f"pog_concurrent_{uuid4().hex[:10]}"
+    barrier = Barrier(2)
+
+    def publish(label: str) -> int:
+        with SessionLocal() as thread_session:
+            repository = SqlAlchemyImportRepository(
+                thread_session, _source(source_id), LocalArtifactStore(tmp_path)
+            )
+            barrier.wait(timeout=10)
+            outcome = run_pog_import(
+                StaticPogReader(
+                    act(f"pog-concurrent-{label}-{uuid4().hex[:8]}"),
+                    content=f"release-{label}".encode(),
+                ),
+                source_id,
+                repository,
+                release=release(source_id, label=label),
+            )
+            thread_session.commit()
+            assert outcome.data_release_id is not None
+            return outcome.data_release_id
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        release_ids = set(executor.map(publish, ("A", "B")))
+
+    assert len(release_ids) == 2
+    with SessionLocal() as verification_session:
+        releases = verification_session.execute(
+            select(DataRelease.id, DataRelease.is_active)
+            .join(DataSource)
+            .where(DataSource.source_id == source_id)
+        ).all()
+    assert {row.id for row in releases} == release_ids
+    assert sum(1 for row in releases if row.is_active) == 1
