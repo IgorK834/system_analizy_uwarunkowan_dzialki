@@ -323,6 +323,7 @@ def _context_result() -> ContextResult:
             source_metadata=_source("GDOŚ", "https://gdos.example.test"),
             warnings=[],
         ),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
 
 

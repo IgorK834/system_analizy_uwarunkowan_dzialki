@@ -21,6 +21,15 @@ from app.services.kiut import NetworkFeature
 PARCEL = Polygon.from_bounds(500000, 200000, 500100, 200100)
 
 
+@pytest.fixture(autouse=True)
+def mock_nmt_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Zwykłe CI nie odpytuje zewnętrznego NMT."""
+    monkeypatch.setattr(
+        "app.services.context.fetch_terrain_extremes",
+        AsyncMock(return_value=None),
+    )
+
+
 def _metadata(source_name: str) -> SourceMetadata:
     return SourceMetadata(
         source_name=source_name,
@@ -52,7 +61,7 @@ def _risk_feature(warnings: list[str] | None = None) -> RiskFeature:
 
 
 @pytest.mark.asyncio
-async def test_analyze_context_runs_three_sections_in_parallel_close_to_slowest() -> (
+async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest() -> (
     None
 ):
     async def _slow_kiut(*args: object, **kwargs: object) -> list[object]:
@@ -62,6 +71,9 @@ async def test_analyze_context_runs_three_sections_in_parallel_close_to_slowest(
     async def _slow_other(*args: object, **kwargs: object) -> list[object]:
         await asyncio.sleep(0.05)
         return []
+
+    async def _slow_nmt(*args: object, **kwargs: object) -> None:
+        await asyncio.sleep(0.05)
 
     with (
         patch(
@@ -75,6 +87,10 @@ async def test_analyze_context_runs_three_sections_in_parallel_close_to_slowest(
         patch(
             "app.services.context.fetch_nature_protection_areas",
             new=AsyncMock(side_effect=_slow_other),
+        ),
+        patch(
+            "app.services.context.fetch_terrain_extremes",
+            new=AsyncMock(side_effect=_slow_nmt),
         ),
     ):
         start = time.monotonic()

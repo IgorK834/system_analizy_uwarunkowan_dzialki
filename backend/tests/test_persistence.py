@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from unittest.mock import patch
 
 import pytest
 from shapely.geometry import box
@@ -19,7 +20,11 @@ from app.schemas.analyze import (
     InfrastructureResult,
     MpzpZoneResult,
     ParcelGeometryResponse,
+    PogActResult,
+    PogAreaResult,
+    PogProfileResult,
     PogResult,
+    PogZoneResult,
     RiskResult,
     UtilitiesPreviewResult,
     WarningMessage,
@@ -27,6 +32,11 @@ from app.schemas.analyze import (
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextResult, ContextSectionResult
 from app.services.persistence import build_analyze_response_from_analysis, save_analysis
+from app.services.report import (
+    _build_report_context,
+    _render_report_html,
+    generate_analysis_report_pdf,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -238,6 +248,7 @@ def _context_result() -> ContextResult:
             status="error",
             warnings=["Błąd sekcji GDOŚ."],
         ),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
 
 
@@ -323,7 +334,7 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
                 .select_from(SourceRecord)
                 .where(SourceRecord.analysis_id == analysis_id)
             )
-            == 9
+            == 10
         )
 
         height = db.scalar(
@@ -393,6 +404,80 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert cached_response.utilities_preview.coverage_status == "covered"
         assert cached_response.utilities_preview.county_name == "powiat krakowski"
         assert cached_response.utilities_preview.layer_available is True
+
+
+def test_pog_v2_three_zone_roundtrip_db_api_and_report_html() -> None:
+    source = SourceMetadata(
+        source_id="pog_app",
+        source_version="pog-a",
+        artifact_sha256="a" * 64,
+        data_release_id=1,
+        act_version="20260924T100000",
+        source_name="POG_APP_LOCAL_POSTGIS",
+        source_url=None,
+        fetched_at=_ANALYZED_AT,
+        response_status=None,
+        confidence=1.0,
+        manual_review_required=False,
+    )
+    profile = PogProfileResult(
+        code="KPT-MPZP-MN",
+        label="teren zabudowy mieszkaniowej jednorodzinnej",
+        dictionary_source="https://www.gov.pl/ontology/KPT",
+    )
+    zones = [
+        PogZoneResult(
+            id="sj", symbol="SJ", type="SJ", label="strefa wielofunkcyjna",
+            area_sqm=620, area_pct=62,
+            max_overground_floor_area_ratio=0, max_building_height_m=10,
+            max_building_coverage_pct=40, min_biologically_active_pct=30,
+            primary_profile=[profile], source=source,
+        ),
+        PogZoneResult(
+            id="su", symbol="SU", type="SU", label="strefa usługowa",
+            area_sqm=280, area_pct=28,
+            max_overground_floor_area_ratio=None, max_building_height_m=0,
+            max_building_coverage_pct=None, min_biologically_active_pct=5,
+            source=source,
+        ),
+        PogZoneResult(
+            id="sn", symbol="SN", type="SN", label="strefa zieleni",
+            area_sqm=100, area_pct=10, source=source,
+        ),
+    ]
+    pog = PogResult(
+        schema_version="2.0", legal_status="adopted", coverage_status="complete",
+        act=PogActResult(id="pog-1", version="v1", title="POG testowy"),
+        zones=zones, dominant_zone_id="sj",
+        ouz=[PogAreaResult(id="ouz-1", symbol="OUZ", area_sqm=500, area_pct=50, source=source)],
+        downtown_areas=[PogAreaResult(id="ozs-1", symbol="OZS", area_sqm=100, area_pct=10, source=source)],
+        social_infrastructure_standard_areas=[PogAreaResult(id="osdis-1", symbol="OSD", area_sqm=1000, area_pct=100, source=source)],
+        status="adopted", planning_zone="SJ", zone_type="SJ", in_ouz=True,
+        area_ratio=0.62, in_downtown_area=True, manual_review_required=False,
+        ouz_intersection_area_sqm=500, ouz_intersection_pct=50,
+        touches_ouz_boundary=False, source=source,
+    )
+    response = _rich_response().model_copy(update={"pog": pog})
+    identifier = f"{_PARCEL_PREFIX}POG_V2"
+    with SessionLocal() as db:
+        saved = save_analysis(response, identifier, box(0, 0, 40, 25), db)
+        rebuilt = build_analyze_response_from_analysis(saved, db)
+        assert rebuilt.pog is not None
+        assert [(z.symbol, z.area_sqm, z.area_pct) for z in rebuilt.pog.zones] == [
+            ("SJ", 620.0, 62.0), ("SU", 280.0, 28.0), ("SN", 100.0, 10.0)
+        ]
+        assert rebuilt.pog.zones[0].max_overground_floor_area_ratio == 0
+        assert rebuilt.pog.zones[1].max_overground_floor_area_ratio is None
+        assert rebuilt.pog.social_infrastructure_standard_areas[0].symbol == "OSD"
+        html = _render_report_html(_build_report_context(rebuilt, None, None))
+        assert all(symbol in html for symbol in ("SJ", "SU", "SN", "OSD"))
+        assert "620" in html and "280" in html and "100" in html
+        with patch(
+            "app.services.report._render_map_data_uri",
+            return_value=(None, None, False),
+        ):
+            pdf = generate_analysis_report_pdf(saved.id, db)
+        assert pdf.startswith(b"%PDF")
 
 
 def test_not_available_pog_status_and_review_flag_are_persisted() -> None:

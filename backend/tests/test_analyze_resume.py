@@ -20,6 +20,7 @@ from app.schemas.mpzp import MpzpParameter, MpzpParseResult
 from app.schemas.mpzp import MpzpZoneResult as ParserMpzpZoneResult
 from app.services.mpzp import MpzpDiscoveryResult
 from app.services.mpzp_fetch import DocumentBlob, MpzpDocumentFetchError
+from app.services.pog import PogDiscoveryResult, PogLayerSection
 from app.services.context import ContextResult, ContextSectionResult
 from app.services.uldk import ParcelLookupResult
 
@@ -129,6 +130,34 @@ def mock_kiut_coverage(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_pog_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
+    source = SourceMetadata(
+        source_name="POG_FIXTURE",
+        source_url=None,
+        confidence=0.0,
+        manual_review_required=True,
+    )
+    monkeypatch.setattr(
+        "app.services.analysis_orchestrator.discover_pog",
+        AsyncMock(
+            return_value=PogDiscoveryResult(
+                status="unknown",
+                uchwala_nr=None,
+                uchwala_date=None,
+                links=[],
+                planning_act=PogLayerSection("planning_act", "unknown"),
+                downtown_area=PogLayerSection("downtown_area", "unknown"),
+                ouz=PogLayerSection("ouz", "unknown"),
+                planning_zones=PogLayerSection("planning_zones", "unknown"),
+                is_discovery_only=True,
+                source_metadata=source,
+                warnings=[],
+            )
+        ),
+    )
+
+
 def _document_blob() -> DocumentBlob:
     return DocumentBlob(
         content=b"%PDF-mock",
@@ -149,6 +178,7 @@ def _empty_context() -> ContextResult:
         kiut=ContextSectionResult(section="kiut", status="available"),
         isok=ContextSectionResult(section="isok", status="available"),
         gdos=ContextSectionResult(section="gdos", status="available"),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
 
 
@@ -515,6 +545,84 @@ def test_resume_success_updates_status_and_returns_manual_source() -> None:
         )
         assert manual_source is not None
         assert manual_source.manual_review_required is True
+
+
+def test_resume_preserves_complete_pog_v2_snapshot() -> None:
+    analysis_id = _create_waiting_analysis("122101_1.0001.9019")
+    pog_v2 = {
+        "schema_version": "2.0",
+        "legal_status": "adopted",
+        "coverage_status": "full",
+        "act": {"id": "pog:test", "version": "2026-09-24"},
+        "zones": [
+            {
+                "id": "zone:sj",
+                "symbol": "SJ",
+                "type": "SJ",
+                "area_sqm": 60.0,
+                "area_pct": 60.0,
+                "max_building_height_m": None,
+            },
+            {
+                "id": "zone:su",
+                "symbol": "SU",
+                "type": "SU",
+                "area_sqm": 40.0,
+                "area_pct": 40.0,
+                "max_building_height_m": 0.0,
+            },
+        ],
+        "dominant_zone_id": "zone:sj",
+        "ouz": [],
+        "downtown_areas": [],
+        "social_infrastructure_standard_areas": [],
+        "status": "adopted",
+        "planning_zone": "SJ",
+        "zone_type": "SJ",
+        "in_ouz": False,
+        "area_ratio": 0.6,
+        "in_downtown_area": False,
+        "manual_review_required": False,
+        "touches_ouz_boundary": False,
+    }
+    with SessionLocal() as db:
+        record = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert record is not None
+        record.schema_version = "2.0"
+        record.result_v2 = pog_v2
+        record.legacy_partial = False
+        db.commit()
+
+    parser_result = MpzpParseResult(
+        plan_id="MPZP/2020/1",
+        zones=[ParserMpzpZoneResult(zone_symbol="230_U", parameters=[])],
+        status="partial",
+    )
+    with (
+        patch(
+            "app.services.analysis_resume.fetch_mpzp_document",
+            new=AsyncMock(return_value=_document_blob()),
+        ),
+        patch(
+            "app.services.analysis_resume.parse_mpzp_document",
+            new=AsyncMock(return_value=parser_result),
+        ),
+    ):
+        response = client.post(
+            "/analyze/resume",
+            json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+        )
+
+    assert response.status_code == 200
+    returned = response.json()["pog"]
+    assert returned["schema_version"] == "2.0"
+    assert [zone["id"] for zone in returned["zones"]] == ["zone:sj", "zone:su"]
+    assert returned["zones"][0]["max_building_height_m"] is None
+    assert returned["zones"][1]["max_building_height_m"] == 0.0
+    with SessionLocal() as db:
+        saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert saved is not None
+        assert saved.result_v2["zones"] == pog_v2["zones"]
 
 
 def test_resume_keeps_partial_status_when_parser_result_is_not_complete() -> None:

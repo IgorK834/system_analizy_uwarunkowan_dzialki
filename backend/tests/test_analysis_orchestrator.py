@@ -115,6 +115,31 @@ def _empty_context() -> ContextResult:
         kiut=ContextSectionResult(section="kiut", status="available"),
         isok=ContextSectionResult(section="isok", status="available"),
         gdos=ContextSectionResult(section="gdos", status="available"),
+        nmt=ContextSectionResult(section="nmt", status="available"),
+    )
+
+
+def _unknown_pog_discovery() -> PogDiscoveryResult:
+    return PogDiscoveryResult(
+        status="unknown",
+        uchwala_nr=None,
+        uchwala_date=None,
+        links=[],
+        planning_act=PogLayerSection("planning_act", "unknown"),
+        downtown_area=PogLayerSection("downtown_area", "unknown"),
+        ouz=PogLayerSection("ouz", "unknown"),
+        planning_zones=PogLayerSection("planning_zones", "unknown"),
+        is_discovery_only=True,
+        source_metadata=_source("POG_FIXTURE", None, confidence=0.0, manual=True),
+        warnings=[],
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_pog_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.services.analysis_orchestrator.discover_pog",
+        AsyncMock(return_value=_unknown_pog_discovery()),
     )
 
 
@@ -428,6 +453,7 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
             ],
             source_metadata=gdos_source,
         ),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
     with (
         patch(
@@ -595,6 +621,7 @@ async def test_isok_ratio_is_presented_as_percentage_not_fraction() -> None:
             source_metadata=isok_source,
         ),
         gdos=ContextSectionResult(section="gdos", status="available"),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
     with (
         patch(

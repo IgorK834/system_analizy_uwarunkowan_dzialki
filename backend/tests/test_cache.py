@@ -3,14 +3,17 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.db.session import SessionLocal
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
+from app.models.versioned import DataRelease, DataSource
 from app.services.cache import (
     DEFAULT_CACHE_MAX_AGE_DAYS,
     DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES,
+    RESULT_CONTRACT_VERSION,
+    current_cache_signature,
     get_cached_analysis,
     should_refresh_analysis,
 )
@@ -28,6 +31,11 @@ def _cleanup() -> None:
         if parcel_ids:
             db.execute(delete(Analysis).where(Analysis.parcel_id.in_(parcel_ids)))
             db.execute(delete(Parcel).where(Parcel.id.in_(parcel_ids)))
+        source_ids = select(DataSource.id).where(
+            DataSource.source_id.like(f"{_PREFIX}%")
+        )
+        db.execute(delete(DataRelease).where(DataRelease.data_source_id.in_(source_ids)))
+        db.execute(delete(DataSource).where(DataSource.id.in_(source_ids)))
         db.commit()
 
 
@@ -54,15 +62,46 @@ def _create_analysis(
         )
         db.add(parcel)
         db.flush()
+        signature, release_ids = current_cache_signature(db)
         analysis = Analysis(
             parcel_id=parcel.id,
             analyzed_at=analyzed_at,
             status=status,
             cache_valid_until=_NOW - timedelta(days=365),
+            cache_signature=signature,
+            data_release_ids=release_ids,
+            result_contract_version=RESULT_CONTRACT_VERSION,
         )
         db.add(analysis)
         db.commit()
         return analysis.id
+
+
+def test_activating_new_data_release_invalidates_existing_cache() -> None:
+    identifier = f"{_PREFIX}RELEASE_INVALIDATION"
+    analysis_id = _create_analysis(identifier, analyzed_at=_NOW - timedelta(minutes=1))
+
+    with SessionLocal() as db:
+        assert get_cached_analysis(identifier, db).id == analysis_id
+        source = DataSource(
+            source_id=f"{_PREFIX}SOURCE",
+            owner="test",
+            status="confirmed",
+        )
+        db.add(source)
+        db.flush()
+        db.add(
+            DataRelease(
+                data_source_id=source.id,
+                version_label="v1",
+                published_at=_NOW,
+                is_active=True,
+            )
+        )
+        db.commit()
+
+    with SessionLocal() as db:
+        assert get_cached_analysis(identifier, db) is None
 
 
 def test_analysis_younger_than_default_ttl_is_cache_hit() -> None:
@@ -139,10 +178,14 @@ def test_stale_partial_does_not_hide_fresh_complete_analysis() -> None:
     )
     with SessionLocal() as db:
         parcel = db.query(Parcel).filter_by(parcel_identifier=identifier).one()
+        signature, release_ids = current_cache_signature(db)
         newer = Analysis(
             parcel_id=parcel.id,
             analyzed_at=_NOW - timedelta(hours=1),
             status="partial",
+            cache_signature=signature,
+            data_release_ids=release_ids,
+            result_contract_version=RESULT_CONTRACT_VERSION,
         )
         db.add(newer)
         db.commit()
