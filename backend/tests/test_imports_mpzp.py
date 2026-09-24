@@ -26,7 +26,10 @@ from app.models.versioned import (
     PlanningActVersion,
 )
 from app.modules.imports.api.cli import parse_args
-from app.modules.imports.application.common import ImportRelease, ImportSourceNotRunnable
+from app.modules.imports.application.common import (
+    ImportRelease,
+    ImportSourceNotRunnable,
+)
 from app.modules.imports.application.mpzp_import import (
     MpzpPublicationResult,
     MpzpSourceBatch,
@@ -50,6 +53,7 @@ from app.modules.imports.infrastructure.repository import (
     SqlAlchemyImportRepository,
     find_plan_intersections,
 )
+from app.modules.imports.infrastructure.ogc_client import OgcClient, OgcClientConfig
 from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsResource
 from app.shared.geometry import GeometryPayload
 
@@ -367,8 +371,15 @@ def test_wfs_fetcher_preserves_order_and_builds_stable_artifact() -> None:
         WfsResource("boundaries", url, "x:boundaries", "EPSG:2180", {}),
         WfsResource("zones", url, "x:zones", "EPSG:2180", {}),
     )
-    first = WfsFetcher().fetch(resources)
-    second = WfsFetcher().fetch(resources)
+    client = OgcClient(
+        source_id="fixture_wfs",
+        config=OgcClientConfig(allowed_hosts=frozenset({"example.gov.pl"}), retries=0),
+        resolver=lambda _host: ("93.184.216.34",),
+    )
+    with client:
+        fetcher = WfsFetcher(ogc_client=client)
+        first = fetcher.fetch(resources)
+        second = fetcher.fetch(resources)
     assert first == second
     assert route.call_count == 4
     with zipfile.ZipFile(io.BytesIO(first)) as archive:
@@ -428,7 +439,9 @@ def test_postgis_mpzp_publication_intersects_two_plans(
             ZoneRecord(
                 "1MN",
                 "single_family_housing",
-                geom("POLYGON((565000 244000,565100 244000,565100 244100,565000 244100,565000 244000))"),
+                geom(
+                    "POLYGON((565000 244000,565100 244000,565100 244100,565000 244100,565000 244000))"
+                ),
                 {"official_field": "value"},
             ),
         ),
@@ -440,7 +453,9 @@ def test_postgis_mpzp_publication_intersects_two_plans(
             ZoneRecord(
                 "2U",
                 "services",
-                geom("POLYGON((565100 244000,565200 244000,565200 244100,565100 244100,565100 244000))"),
+                geom(
+                    "POLYGON((565100 244000,565200 244000,565200 244100,565100 244100,565100 244000))"
+                ),
             ),
         ),
     )
@@ -517,8 +532,11 @@ def test_raster_only_publishes_review_flag_without_geometry(
     assert version.manual_review_required is True
     assert version.resolution_number == raster.resolution_number
     assert version.resolution_date == raster.resolution_date
-    assert session.scalar(
-        select(PlanBoundary).where(
-            PlanBoundary.planning_act_version_id == version.id
+    assert (
+        session.scalar(
+            select(PlanBoundary).where(
+                PlanBoundary.planning_act_version_id == version.id
+            )
         )
-    ) is None
+        is None
+    )

@@ -8,6 +8,7 @@ import zipfile
 from collections.abc import Iterator
 from datetime import date, datetime, timezone
 from pathlib import Path
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -24,7 +25,12 @@ from app.models.versioned import (
     PlanningFeature,
 )
 from app.modules.imports.api.cli import parse_args
-from app.modules.imports.application.common import ImportRelease, ImportSourceNotRunnable
+from app.modules.imports.application.common import (
+    ImportOutcome,
+    ImportRelease,
+    ImportSourceNotRunnable,
+)
+from app.modules.imports import composition
 from app.modules.imports.application.parcels_import import RepairedGeometry
 from app.modules.imports.application.pog_import import (
     PogPublicationResult,
@@ -44,6 +50,7 @@ from app.modules.imports.infrastructure.pog.reader import (
     PogActMetadata,
     PogLayerResource,
     PyogrioPogReader,
+    WfsPogReader,
     read_pog_archive,
 )
 from app.modules.imports.infrastructure.repository import (
@@ -85,7 +92,9 @@ def act(
         features=features
         if features is not None
         else (
-            feature("planning_zone", "POLYGON((0 0,50 0,50 100,0 100,0 0))", SYMBOL="SJ-01"),
+            feature(
+                "planning_zone", "POLYGON((0 0,50 0,50 100,0 100,0 0))", SYMBOL="SJ-01"
+            ),
             feature("ouz", "POLYGON((0 0,40 0,40 40,0 40,0 0))"),
             feature("downtown_area", "POLYGON((0 0,20 0,20 20,0 20,0 0))"),
             feature(
@@ -178,9 +187,7 @@ def test_is_binding_only_for_adopted() -> None:
 
 
 def test_adopted_act_requires_resolution_metadata() -> None:
-    invalid = PogActRecord(
-        "pog-x", None, None, "1261011", None, "adopted", None, ()
-    )
+    invalid = PogActRecord("pog-x", None, None, "1261011", None, "adopted", None, ())
     with pytest.raises(PogValidationError):
         invalid.validate()
     # Projekt bez uchwały jest dopuszczalny — nie jest prezentowany jako wiążący.
@@ -224,6 +231,51 @@ def test_research_source_is_dry_run_only() -> None:
     assert outcome.status == "dry_run_only"
     assert outcome.stats["publishable"] == 1
     assert repository.published == ()
+
+
+def test_pog_command_builds_wfs_reader_from_catalog_and_filters_teryt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run(reader, source_id, repository, *, release):
+        captured.update(reader=reader, source_id=source_id, release=release)
+        return ImportOutcome(status="succeeded", stats={})
+
+    monkeypatch.setattr(composition, "run_pog_import", fake_run)
+    monkeypatch.setattr(composition, "_repository", lambda *_args: object())
+    session = MagicMock()
+
+    outcome = composition.run_pog_command(
+        session,
+        source_id="pog_app",
+        dry_run=True,
+        act_identifier="246101-POG",
+        teryt="246101",
+        legal_status="adopted",
+    )
+
+    assert outcome.status == "succeeded"
+    reader = captured["reader"]
+    assert isinstance(reader, WfsPogReader)
+    resources = [resource for _feature_type, resource in reader._resources]
+    catalog_wfs = next(
+        item
+        for item in composition.get_catalog().get("pog_app").resources
+        if item.role == "ru_wfs"
+    )
+    assert {resource.url for resource in resources} == {catalog_wfs.url}
+    assert {feature_type for feature_type, _resource in reader._resources} == {
+        "planning_zone",
+        "ouz",
+        "downtown_area",
+        "social_infrastructure_standard",
+    }
+    assert all("%246101%" in resource.extra_params["FILTER"] for resource in resources)
+    assert all(
+        "/app/3.0" in resource.extra_params["namespaces"] for resource in resources
+    )
+    session.commit.assert_called_once()
 
 
 def test_publish_separates_four_layers_and_reports_status() -> None:
@@ -314,7 +366,9 @@ def _layers(gmina: str, crs: str) -> tuple[PogLayerResource, ...]:
     )
 
 
-def _metadata(identifier: str = "pog-krakow", status: str = "adopted") -> PogActMetadata:
+def _metadata(
+    identifier: str = "pog-krakow", status: str = "adopted"
+) -> PogActMetadata:
     return PogActMetadata(
         act_identifier=identifier,
         teryt="1261011",
@@ -440,7 +494,9 @@ def test_repository_repair_geometry_rejects_disallowed_crs() -> None:
         session=None, source=None, artifact_store=None
     )
     with pytest.raises(ValueError, match="Nieznany CRS"):
-        repository.repair_geometry(GeometryPayload("POLYGON((0 0,1 0,1 1,0 1,0 0))", crs="EPSG:31337"))
+        repository.repair_geometry(
+            GeometryPayload("POLYGON((0 0,1 0,1 1,0 1,0 0))", crs="EPSG:31337")
+        )
 
 
 # --- Integracja PostGIS ------------------------------------------------------
@@ -543,17 +599,24 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
     assert version.legal_status == "adopted"
     assert version.manual_review_required is False
 
-    features = session.execute(
-        select(PlanningFeature.feature_type).where(
-            PlanningFeature.planning_act_version_id == version.id
+    features = (
+        session.execute(
+            select(PlanningFeature.feature_type).where(
+                PlanningFeature.planning_act_version_id == version.id
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert sorted(features) == sorted(POG_FEATURE_TYPES)
-    assert session.scalar(
-        select(PlanBoundary).where(
-            PlanBoundary.planning_act_version_id == version.id
+    assert (
+        session.scalar(
+            select(PlanBoundary).where(
+                PlanBoundary.planning_act_version_id == version.id
+            )
         )
-    ) is not None
+        is not None
+    )
 
     # Adopted POG jest widoczny w przecięciach.
     parcel = geom(
@@ -565,9 +628,7 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
 
 
 @pytest.mark.integration
-def test_postgis_project_pog_never_binding(
-    session: Session, tmp_path: Path
-) -> None:
+def test_postgis_project_pog_never_binding(session: Session, tmp_path: Path) -> None:
     source_id = f"pog_proj_{uuid4().hex[:10]}"
     repository = SqlAlchemyImportRepository(
         session, _source(source_id), LocalArtifactStore(tmp_path)

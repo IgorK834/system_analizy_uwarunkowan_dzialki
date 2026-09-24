@@ -6,7 +6,7 @@ import pytest
 import respx
 from shapely.geometry import Polygon
 
-from app.core.settings import settings
+from app.core.data_sources import SourceNotRunnableError, get_catalog
 from app.services.pog import (
     PogGminaSources,
     PogLayerNames,
@@ -17,7 +17,11 @@ from app.services.pog import (
 
 PARCEL = Polygon([(0, 0), (30, 0), (30, 10), (10, 10), (10, 30), (0, 30), (0, 0)])
 WMS_URL = "https://geo.example.test/pog/wms"
-REGISTRY_URL = "https://rejestr.example.test/api/pog"
+RU_WMS_URL = next(
+    resource.url
+    for resource in get_catalog().get("pog_app").resources
+    if resource.role == "ru_wms_preview"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -165,67 +169,42 @@ async def test_malformed_wms_response_is_unknown() -> None:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_no_sources_does_not_call_a_hardcoded_national_pog_wms(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "rejestr_urbanistyczny_base_url", None)
-
-    result = await discover_pog(PARCEL, PogGminaSources(teryt="1465011"))
-
-    assert result.status == "unknown"
-    assert len(respx.calls) == 0
-    assert result.source_metadata.source_url is None
-    assert any(warning.code == "POG_NO_CONFIRMED_SOURCE" for warning in result.warnings)
-
-
-@pytest.mark.asyncio
-@respx.mock
-async def test_registry_is_optional_experimental_fallback(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "rejestr_urbanistyczny_base_url", REGISTRY_URL)
-    route = respx.get(REGISTRY_URL).mock(
-        return_value=httpx.Response(
-            200,
-            json={
-                "status": "adopted",
-                "uchwala_nr": "V/15/2026",
-                "uchwala_date": "2026-01-20",
-                "links": ["https://bip.example.test/pog.zip"],
-                "layers": {
-                    "planning_act": {"status": "adopted", "feature_count": 1},
-                    "downtown_area": {"status": "not_available"},
-                    "ouz": {"status": "adopted", "feature_count": 1},
-                    "planning_zones": {"status": "adopted", "feature_count": 4},
-                },
-            },
-        )
+async def test_no_gmina_source_uses_confirmed_catalog_wms() -> None:
+    route = respx.get(RU_WMS_URL).mock(
+        return_value=httpx.Response(200, text=_feature_response("ru"))
     )
 
     result = await discover_pog(PARCEL, PogGminaSources(teryt="1465011"))
 
     assert result.status == "adopted"
-    assert result.uchwala_nr == "V/15/2026"
-    assert result.ouz.feature_count == 1
-    assert route.calls.last.request.url.params["teryt"] == "1465011"
-    assert any(
-        warning.code == "POG_REGISTRY_EXPERIMENTAL" for warning in result.warnings
-    )
+    assert route.called
+    assert result.source_metadata.source_url == RU_WMS_URL
+    assert any(warning.code == "POG_RU_CATALOG_SOURCE" for warning in result.warnings)
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_unavailable_registry_returns_unknown(
+async def test_catalog_guard_failure_is_unknown_not_absence(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "rejestr_urbanistyczny_base_url", REGISTRY_URL)
-    respx.get(REGISTRY_URL).mock(side_effect=httpx.TimeoutException("timeout"))
+    monkeypatch.setattr(
+        "app.services.pog.ensure_source_runnable",
+        lambda _source_id: (_ for _ in ()).throw(SourceNotRunnableError("blocked")),
+    )
 
-    result = await discover_pog(PARCEL, None)
+    result = await discover_pog(PARCEL, PogGminaSources(teryt="1465011"))
 
     assert result.status == "unknown"
-    assert any(
-        warning.code == "POG_REGISTRY_UNAVAILABLE" for warning in result.warnings
+    assert result.source_metadata.source_url is None
+    assert any(warning.code == "POG_NO_CONFIRMED_SOURCE" for warning in result.warnings)
+    assert all(
+        section.status == "unknown"
+        for section in (
+            result.planning_act,
+            result.downtown_area,
+            result.ouz,
+            result.planning_zones,
+        )
     )
 
 
