@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.modules.imports import composition
+from app.core.data_sources import MpzpSourceNotUsableError
 from app.modules.imports.application.common import ImportOutcome
 from app.modules.imports.infrastructure.mpzp.reader import (
     PyogrioMpzpReader,
@@ -129,6 +130,15 @@ def test_mpzp_command_selects_local_wfs_and_raster_readers(
             session, source_id="mpzp_pilot_krakow", dry_run=True,
             local_resources=(("nieznana", "x.gml"),),
         )
+
+    with pytest.raises(MpzpSourceNotUsableError, match="sama granica"):
+        composition.run_mpzp_command(
+            session, source_id="mpzp_pilot_krakow", dry_run=True,
+            local_resources=(("boundaries", str(tmp_path / "boundary.gml")),),
+        )
+
+    with pytest.raises(MpzpSourceNotUsableError, match="act_boundary_document"):
+        composition.run_mpzp_command(session, source_id="mpzp_ru", dry_run=True)
 
     with pytest.raises(ValueError, match="jawnych metadanych"):
         composition.run_mpzp_command(session, source_id="kimpzp", dry_run=True)
