@@ -101,6 +101,47 @@ docker run --rm \
   npm run test:coverage
 ```
 
+### Punkt odniesienia BK-001
+
+[Stan projektu na commicie `8418bdd`](docs/current_state.md) rozdziela funkcje
+działające od planowanych i od niezacommitowanych zmian katalogu źródeł.
+[Wyniki i ograniczenia pomiaru](docs/evaluation/results/baseline/README.md)
+zawierają polecenia, logi, kody wyjścia oraz raporty coverage. Izolowany
+pomiar dokładnego commita można odtworzyć poleceniem:
+
+```bash
+./scripts/capture_baseline.sh
+```
+
+Skrypt korzysta z `git archive`, osobnego projektu Compose i przykładowej
+konfiguracji `.env.example`; nie kopiuje lokalnego `.env` ani zmian roboczych.
+
+### Rzeczywisty korpus referencyjny BK-002
+
+[Opis doboru, źródeł i odtwarzania offline](docs/evaluation/corpus.md) dokumentuje
+30 rzeczywistych działek z oczekiwanymi wynikami domenowymi. Korpus jest
+oddzielony od syntetycznych fixtures i można go sprawdzić bez sieci:
+
+```bash
+cd backend
+pytest tests/test_reference_corpus.py -q
+```
+
+### Ground truth i ewaluacja BK-003/BK-004
+
+[Protokół niezależnego ground truth](docs/evaluation/ground_truth_protocol.md)
+opisuje źródła, CRS, kolejność transformacji, tolerancje i drugą sesję dla 20%
+próby. [Harness ewaluacyjny](docs/evaluation/harness.md) generuje komplet
+raportów offline jednym poleceniem:
+
+```bash
+python3 backend/scripts/evaluate_reference_corpus.py \
+  --corpus backend/tests/fixtures/reference_corpus/manifest.json \
+  --output-dir docs/evaluation/results/reference-corpus \
+  --mode offline \
+  --fail-on-regression
+```
+
 ## Wymagania
 
 - Docker

@@ -24,6 +24,7 @@ COPY pyproject.toml .
 COPY alembic.ini .
 COPY alembic/ ./alembic/
 COPY app/ ./app/
+COPY scripts/ ./scripts/
 COPY tests/ ./tests/
 COPY docker-entrypoint.sh /usr/local/bin/dzialki-entrypoint
 RUN chmod +x /usr/local/bin/dzialki-entrypoint

@@ -13,5 +13,4 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["tests"]
-omit = ["tests/__init__.py", "tests/test_docker_integration.py"]
+source = ["app"]
