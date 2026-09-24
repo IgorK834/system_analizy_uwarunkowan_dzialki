@@ -14,6 +14,7 @@ częścią `pytest` ani CI. Dokładny URL, czas UTC i SHA-256 każdego pliku zap
 | `wfs_pog_getfeature_246101.xml` | WFS POG, filtr po `idIIP/.../przestrzenNazw` zawierającym JPT `246101` | Jedna realna cecha `AktPlanowaniaPrzestrzennego` dla planu ogólnego Bielska-Białej. Odpowiedź przycięto do identyfikatorów, tytułu, statusu i metadanych wersji. |
 | `wfs_pog_describe_feature_type_3_0.xsd`, `planowaniePrzestrzenne_3_0.xsd` | WFS DescribeFeatureType i wskazany przez niego oficjalny schemat APP 3.0 | Pełny schemat typów, relacji, jednostek oraz liczności pól. |
 | `wfs_pog_getfeature_{act,document,zone,ouz,ozs,osdis}.xml` | WFS GetFeature, `count=1`, `srsName=EPSG:2180` | Nieprzycięte, realne próbki wszystkich sześciu typów, w tym `idIIP`, `xlink`, geometria i parametry. |
+| `csw_getrecords_iso_226401.xml` | CSW GetRecords 2.0.2, `outputSchema=gmd`, filtr `dc:title like '%(226401)%'` | Pełna odpowiedź ISO 19139 z dwoma rekordami (POG i MPZP Sopotu) — próbka łańcucha provenance BK-107 i test wiązania po `MD_Identifier`, nie po tytule. |
 
 Pełna odpowiedź GetFeature dla aktu Bielska-Białej miała około 300 KB, głównie
 przez geometrię granicy i odwołania `wydzielenie`. Elementy te nie są potrzebne
@@ -46,3 +47,8 @@ Fixtury są artefaktami dowodowymi testów kontraktu. `Fees` i
 i warunków dostępu. Repozytorium zachowuje źródło, czas i SHA-256 każdego
 pliku; nie przedstawia tych próbek jako osobnego produktu danych ani nie
 wywodzi z warunków technicznych szerszej licencji redystrybucyjnej.
+
+Rekordy CSW zawierają `SearchStatus timestamp`, więc SHA całej odpowiedzi
+zmienia się przy każdym pobraniu. Odtwarzalność potwierdza porównanie rekordów
+(identyfikator, `MD_Identifier`, data publikacji i SHA-256 postaci kanonicznej
+C14N), wykonane przy odświeżaniu 24 września 2026 r. z wynikiem zgodnym.

@@ -42,6 +42,7 @@ EXPECTED_FILES = {
     "wfs_pog_getfeature_ouz.xml",
     "wfs_pog_getfeature_ozs.xml",
     "wfs_pog_getfeature_zone.xml",
+    "csw_getrecords_iso_226401.xml",
 }
 MANIFEST_FIELDS = {
     "url",

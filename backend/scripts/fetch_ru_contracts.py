@@ -26,6 +26,9 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from app.modules.imports.infrastructure.pog.csw_metadata import (  # noqa: E402
+    parse_iso_records,
+)
 from app.core.ru_contracts import (  # noqa: E402
     RuContractError,
     assert_csw_contract,
@@ -40,6 +43,9 @@ from app.core.ru_contracts import (  # noqa: E402
 )
 
 BASE_URL = "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe"
+# Próbka łańcucha provenance BK-107: Sopot ma komplet akt–dokument–strefa w
+# zamrożonych GetFeature oraz rekordy POG i MPZP w CSW (test rozróżniania).
+CSW_TERYT = "226401"
 OFFICIAL_SERVICES_URL = "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe"
 APP_POG_NAMESPACE = (
     "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
@@ -78,6 +84,14 @@ def _validate_wfs(payload: bytes) -> None:
 
 def _validate_csw(payload: bytes) -> None:
     assert_csw_contract(parse_csw_capabilities(payload))
+
+
+def _validate_csw_records(payload: bytes) -> None:
+    records = parse_iso_records(payload)
+    if not any(
+        (record.resource_identifier or "").endswith(f"/{CSW_TERYT}-POG/") for record in records
+    ):
+        raise RuContractError("GetRecords CSW nie zawiera rekordu zbioru POG próbki.")
 
 
 def _validate_getfeature(payload: bytes) -> None:
@@ -193,6 +207,28 @@ REQUESTS = (
         "wfs_pog_getfeature_ozs.xml", "ObszarZabudowySrodmiejskiej"
     ),
     _getfeature_spec("wfs_pog_getfeature_zone.xml", "StrefaPlanistyczna"),
+    RequestSpec(
+        filename="csw_getrecords_iso_226401.xml",
+        endpoint=f"{BASE_URL}/csw",
+        params={
+            "service": "CSW",
+            "version": "2.0.2",
+            "request": "GetRecords",
+            "resultType": "results",
+            "elementSetName": "full",
+            "typeNames": "csw:Record",
+            "outputSchema": "http://www.isotc211.org/2005/gmd",
+            "outputFormat": "application/xml",
+            "maxRecords": "10",
+            "startPosition": "1",
+            "constraintLanguage": "CQL_TEXT",
+            "constraint_language_version": "1.1.0",
+            "constraint": f"dc:title like '%({CSW_TERYT})%'",
+        },
+        service="csw",
+        version="2.0.2",
+        validate=_validate_csw_records,
+    ),
 )
 
 
@@ -246,7 +282,7 @@ def _fetch_one(client: httpx.Client, spec: RequestSpec) -> tuple[bytes, dict[str
         capabilities = parse_wms_capabilities(payload)
     elif spec.service == "wfs" and "capabilities" in spec.filename:
         capabilities = parse_wfs_capabilities(payload)
-    elif spec.service == "csw":
+    elif spec.service == "csw" and "capabilities" in spec.filename:
         capabilities = parse_csw_capabilities(payload)
     else:
         # GetFeature dziedziczy warunki dostępu z kontraktu WFS. Są zapisywane

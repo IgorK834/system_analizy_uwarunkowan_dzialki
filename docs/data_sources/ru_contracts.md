@@ -135,8 +135,39 @@ Scenariusz importu z URL pobranym z katalogu (wymaga sieci i bazy operatora):
 ```bash
 cd backend
 python -m app.modules.imports pog --source pog_app --dry-run \
-  --act-id 246101-POG --teryt 246101 --legal-status adopted
+  --act-id 246101-POG --teryt 246101
 ```
+
+Dla obiektów APP 3.0 z RU status prawny pochodzi z pola `status` aktu
+(kod INSPIRE, np. `legalForce`). Parametr `--legal-status` dotyczy wyłącznie
+warstw lokalnych bez tego pola i przyjmuje tylko urzędowy kod statusu
+(`legalForce`, `adoption`, `elaboration`, `obsolete`); inne wartości dają
+`unknown` (ADR-002).
 
 Brak potwierdzenia w dowolnym innym wpisie katalogu nadal blokuje publikację;
 `--dry-run` pozostaje jawnym trybem weryfikacji takiego źródła.
+
+## Provenance aktu i dokumentów (BK-107)
+
+Import `pog --source pog_app` (bez `--resource`) po złożeniu aktów z WFS
+pobiera metadane CSW zasobu `ru_csw` wspólnym klientem OGC i wiąże je z aktem
+wyłącznie po `MD_Identifier` równym URI przestrzeni nazw aktu. Dokumenty
+`DokumentFormalny` są wiązane z wersją aktu po idIIP i wersji
+(`resolved | unresolved | unavailable`), a każdy rekord ma SHA-256 postaci
+kanonicznej C14N. Odpowiedź CSW trafia do artefaktu ZIP importu
+(`90-csw-{TERYT}.xml`). Awaria CSW daje ostrzeżenie `csw_unavailable:{TERYT}`
+w wyniku importu, bez blokowania publikacji. Zasady opisuje
+`docs/adr/ADR-003-pog-act-provenance-chain.md`.
+
+Oficjalny URL GML dokładnej wersji obiektu to `GetFeature` usługi, z której
+obiekt pobrano, z filtrem FES po `przestrzenNazw`, `lokalnyId` i `wersjaId`
+(zweryfikowane 24 września 2026 r. dla aktu Sopotu). Identyfikator URI
+`https://www.gov.pl/zagospodarowanieprzestrzenne/app/...` nie jest
+rozwiązywalną kartą aktu (przekierowuje poza RU), dlatego jako „kartę”
+prezentujemy rekord CSW `GetRecordById` w schemacie ISO 19139.
+
+```bash
+cd backend
+pytest tests/test_pog_ru_mapping.py tests/test_pog_csw_metadata.py \
+  tests/test_pog_provenance_chain.py tests/test_pog_provenance_report.py -q
+```

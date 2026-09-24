@@ -130,5 +130,16 @@
     "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AStrefaPlanistyczna&count=1&srsName=EPSG%3A2180",
     "fetched_at": "2026-09-24T10:27:47.333Z",
     "sha256": "025eb019704eb3488d0023fec9f940b36044c3f4bec4e36c1b53f5cab1dff76b"
+  },
+  "csw_getrecords_iso_226401.xml": {
+    "service": "csw",
+    "version": "2.0.2",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities CSW potwierdza publiczny dostęp; rekordy ISO 19139 pobrano jawnym GetRecords i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw?service=CSW&version=2.0.2&request=GetRecords&resultType=results&elementSetName=full&typeNames=csw%3ARecord&outputSchema=http%3A%2F%2Fwww.isotc211.org%2F2005%2Fgmd&outputFormat=application%2Fxml&maxRecords=10&startPosition=1&constraintLanguage=CQL_TEXT&constraint_language_version=1.1.0&constraint=dc%3Atitle+like+%27%25%28226401%29%25%27",
+    "fetched_at": "2026-09-24T15:52:32Z",
+    "sha256": "f6a2af9dadc549877160dcd91cb8e93240e9832588e9978e8ae90fc5f68df62a"
   }
 }
