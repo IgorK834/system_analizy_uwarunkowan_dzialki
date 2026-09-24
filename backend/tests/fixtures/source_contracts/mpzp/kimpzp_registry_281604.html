@@ -1,0 +1,528 @@
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title>Rejestr MPZP</title>
+		<link rel='stylesheet' href='css/style.css'/>
+		<script src='js/sorttable.js'></script>
+		<script>
+			function view(el) {
+				var id=el.parentElement.parentElement.id;
+				window.location='view.php?id='+id;
+			}
+			function map(el,gmina=false) {
+				var id=el.parentElement.parentElement.id;
+				window.open('view.php?map='+id+'&gmina='+gmina);
+			}
+			function app(el) {
+				var id=el.parentElement.parentElement.id;
+				window.open('view.php?map='+id+'&app=true');
+			}
+		</script>
+	</head>
+	<body>
+	<div class="header">
+		Rejestr miejscowych planów zagospodarowania przestrzennego
+	</div>
+	<center><br/>
+			<div>28313 planów (16449 rastrowych i 11864 wektorowych) w 1014 gminach
+			<div style='float: right; width: 150px; margin-right: 30px;'><a href='https://opendata.geoportal.gov.pl/InneDane/MPZP/Instrukcja_zasilania_MPZP.docx' target='_blank'>Zasady zasilania</a></div></div>
+			<br/>
+			<form name='form1' method='POST' target='_self' action='?filter'>
+					<input name='teryt' placeholder='TERYT' autocomplete='off' list='teryt-list' value='281604'/>
+					<datalist id='teryt-list'>
+						<option value='281604'>
+
+					</datalist>
+					<input name='gmina' placeholder='Nazwa gminy' autocomplete='off' list='gmina-list' value=''/>
+					<datalist id='gmina-list'>
+						<option value='Ruciane-Nida'>
+
+					</datalist>
+					<input name='uchwala' placeholder='Numer uchwały' value=''/>
+					<input name='nazwa' placeholder='Nazwa planu' value=''/>
+					<input type='date' name='data_uchwaly_od' placeholder='Data uchwały od' autocomplete='off' value=''/>
+					<input type='date' name='data_uchwaly_do' placeholder='Data uchwały do' autocomplete='off' value=''/>
+					<select name="zmiana"><option value="">Nowe plany i zmiany</option><option value="f" >Nowy plan</option><option value="t" >Zmiana planu</option></select>
+					<select name="level"><option value="">Typ</option><option value="3" >rastrowy</option><option value="5" >wektorowy</option></select>
+					<input value='Filtruj' type='submit'>
+					<input value='Wyłącz filtrowanie' type='button' onclick="window.location='?filter=off';">
+			</form>
+		</center>
+		<div style='width: 95%; margin: auto;'>
+		<div class='tab'><a href='?strona=0'>&lt;&lt;</a> 1-32 / 32 <a href='?strona=0'>&gt;&gt;</a></div><div class='tab'><a href='?showall=1'>pokaż na 1 stronie</a></div>
+		<table id='table' class='table sortable'>
+			<thead><tr class='row tableHeader blue'><th class='cell'>TERYT</th>
+<th class='cell'>Gmina</th>
+<th class='cell'>Rysunek</th>
+<th class='cell'>Uchwała</th>
+<th class='cell'>Data uchwały</th>
+<th class='cell'>Oznaczenie</th>
+<th class='cell'>Nazwa</th>
+<th class='cell'>Zmiana planu</th>
+<th class='cell'>Typ</th>
+<th class='cell'></th>
+<th class='cell'>Pokaż w Geoportalu</th>
+</tr>
+</thead>
+			<tbody><tr id='27590' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://rucianenida.e-mapa.net/wykazplanow/tiff/281604/032" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/032.pdf" target="_blank">LIII/500/2022</a></td>
+<td class='cell'>2022-05-25</td>
+<td class='cell'>032</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane - Nida-ul. Akacjowa, Harcerska,<br/>
+Dybówek</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='27591' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://rucianenida.e-mapa.net/wykazplanow/tiff/281604/031" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/031.pdf" target="_blank">LII/478/2022</a></td>
+<td class='cell'>2022-04-27</td>
+<td class='cell'>031</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miejscowości Piaski Gmina Ruciane – Nida –<br/>
+Kompleks III</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='27589' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://rucianenida.e-mapa.net/wykazplanow/tiff/281604/030" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/030.pdf" target="_blank">L/441/2022</a></td>
+<td class='cell'>2022-02-28</td>
+<td class='cell'>030</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Karwica – kompleks VI</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='3339' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/029" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/029.pdf" target="_blank">III/7/2018</a></td>
+<td class='cell'>2018-11-29</td>
+<td class='cell'>029</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Piaski - kompleks II.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='1455' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/028" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/028.pdf" target="_blank">III/8/2018</a></td>
+<td class='cell'>2018-11-29</td>
+<td class='cell'>028</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego strefy ochronnej Szeroki Bór</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='2598' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/027" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/027.pdf" target="_blank">LIX/523/2018</a></td>
+<td class='cell'>2018-10-24</td>
+<td class='cell'>027</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane – Nida – Kowalik II</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='2492' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/026" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/026.pdf" target="_blank">LVI/490/2018</a></td>
+<td class='cell'>2018-06-27</td>
+<td class='cell'>026</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Wygryny-Borek</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='2335' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/025" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/025.pdf" target="_blank">LVI/489/2018</a></td>
+<td class='cell'>2018-06-27</td>
+<td class='cell'>025</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida - ul. Boczna, Rybacka,<br/>
+Dybówek</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5961' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/024" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/024.pdf" target="_blank">XXXIX/309/2017</a></td>
+<td class='cell'>2017-03-29</td>
+<td class='cell'>024</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida, ul. Cicha.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='7140' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/022" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/022.pdf" target="_blank">XXXIX/310/2017</a></td>
+<td class='cell'>2017-03-29</td>
+<td class='cell'>022</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego terenów zabudowy handlowo-usługowej wsi Ukta</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5080' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/023" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/023.pdf" target="_blank">XXXVIII/288/2017</a></td>
+<td class='cell'>2017-02-15</td>
+<td class='cell'>023</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Karwica - kompleks V.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='8234' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/021" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/021.pdf" target="_blank">XXXIV/263/2016</a></td>
+<td class='cell'>2016-11-30</td>
+<td class='cell'>021</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida – ul. Gałczyńskiego, ul.<br/>
+Słoneczna.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='8220' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/020" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/020.pdf" target="_blank">LII/380/2014</a></td>
+<td class='cell'>2014-09-24</td>
+<td class='cell'>020</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Szeroki Bór II.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5012' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/019" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/019.pdf" target="_blank">XLIX/347/2014</a></td>
+<td class='cell'>2014-05-29</td>
+<td class='cell'>019</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida - ul. Nadbrzeżna.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5008' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/018" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/018.pdf" target="_blank">XLII/299/2013</a></td>
+<td class='cell'>2013-11-26</td>
+<td class='cell'>018</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Niedźwiedzi Róg II.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5000' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/017" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/017.pdf" target="_blank">XXI/118/2012</a></td>
+<td class='cell'>2012-04-26</td>
+<td class='cell'>017</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida - Guzianka.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='6872' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/016" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/016.pdf" target="_blank">XIV/106/2007</a></td>
+<td class='cell'>2007-09-26</td>
+<td class='cell'>016</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida, ul. Wiejska, ul. Żeglarska.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='10953' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/015" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/015.pdf" target="_blank">XIV/105/2007</a></td>
+<td class='cell'>2007-09-26</td>
+<td class='cell'>015</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego części miasta Ruciane-Nida, Dybówek II.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5017' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/014" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/014.pdf" target="_blank">XL/2/2006</a></td>
+<td class='cell'>2006-02-08</td>
+<td class='cell'>014</td>
+<td class='cell'>w sprawie: uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Gałkowo i Zameczek.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='6888' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/013" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/013.pdf" target="_blank">XL/1/2006</a></td>
+<td class='cell'>2006-02-08</td>
+<td class='cell'>013</td>
+<td class='cell'>w sprawie: uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Onufryjewo.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5952' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/012" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/012.pdf" target="_blank">XXXV/67/2005</a></td>
+<td class='cell'>2005-09-29</td>
+<td class='cell'>012</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego terenów rekreacyjno - mieszkaniowych w mieście<br/>
+Ruciane-Nida (Kowaliki)</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5401' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/011" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/011.pdf" target="_blank">XXXV/66/2005</a></td>
+<td class='cell'>2005-09-29</td>
+<td class='cell'>011</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego terenów zabudowy mieszkalno-usługowej części miasta<br/>
+Ruciane-Nida</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5999' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/010" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/010.pdf" target="_blank">XX/28/2004</a></td>
+<td class='cell'>2004-04-27</td>
+<td class='cell'>010</td>
+<td class='cell'>w sprawie: uchwalenia miejscowego planu zagospodarowania przestrzennego w mieście Ruciane-Nida w rejonie ulicy Polnej.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5086' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/009" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/009.pdf" target="_blank">XVII/4/2004</a></td>
+<td class='cell'>2004-01-30</td>
+<td class='cell'>009</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Krzyże.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='6871' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/008" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/008.pdf" target="_blank">XVII/3/2004</a></td>
+<td class='cell'>2004-01-30</td>
+<td class='cell'>008</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wsi Piaski</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5967' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/007" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/007.pdf" target="_blank">XVII/2/2004</a></td>
+<td class='cell'>2004-01-30</td>
+<td class='cell'>007</td>
+<td class='cell'>w sprawie uchwalenia miejscowego planu zagospodarowania przestrzennego wieś Szeroki Bór</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5985' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/006" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/006.pdf" target="_blank">XII/57/2003</a></td>
+<td class='cell'>2003-07-08</td>
+<td class='cell'>006</td>
+<td class='cell'>w sprawie: miejscowego planu zagospodarowania przestrzennego terenów zabudowy mieszkalno-usługowej części miasta Ruciane-Nida.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5965' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/005" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/005.pdf" target="_blank">XXXIX/93/2001</a></td>
+<td class='cell'>2001-12-28</td>
+<td class='cell'>005</td>
+<td class='cell'>w sprawie miejscowego planu zagospodarowania przestrzennego części wsi Karwica.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='6864' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/004" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/004.pdf" target="_blank">XXXI/29/2001</a></td>
+<td class='cell'>2001-03-27</td>
+<td class='cell'>004</td>
+<td class='cell'>w sprawie miejscowego planu zagospodarowania przestrzennego części wsi Karwica</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='7431' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/003" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/003.pdf" target="_blank">XXVII/88/2000</a></td>
+<td class='cell'>2000-12-12</td>
+<td class='cell'>003</td>
+<td class='cell'>w sprawie miejscowego planu zagospodarowania przestrzennego wsi Niedźwiedzi Róg </td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='3603' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/002" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/002.pdf" target="_blank">XXVII/87/2000</a></td>
+<td class='cell'>2000-12-12</td>
+<td class='cell'>002</td>
+<td class='cell'>w sprawie miejscowego planu zagospodarowania przestrzennego części wsi Karwica</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+<tr id='5816' class='row'><td class='cell'>281604</td>
+<td class='cell'>Ruciane-Nida</td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://vmpzp.igeomap.pl/wykazplanow/tiff/281604/001" target="_blank">GeoTiff</a></td>
+<td class='cell'><img class="vm" src="pdf.png" alt="Pokaż treść uchwały" height="24px"/>&nbsp;<a title="Pobierz plik" href="https://mpzp.igeomap.pl/doc/pisz/rucianenida/001.pdf" target="_blank">XXVII/86/2000</a></td>
+<td class='cell'>2000-12-12</td>
+<td class='cell'>001</td>
+<td class='cell'>w sprawie miejscowego planu zagospodarowania przestrzennego części wsi Karwica.</td>
+<td class='cell'>Nowy plan</td>
+<td class='cell'>rastrowy</td>
+<td class='cell'><input title="Pokaż szczegółowe informacje" type="button" onclick="view(this);" value="Szczegóły"/></td>
+<td class='cell'><div title="Wyświetl plan na tle serwisu geoportal.gov.pl" class="button" onclick="map(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Plan</div> 
+	<div title="Wyświetl zasięg planu na tle serwisu geoportal.gov.pl" class="button" onclick="app(this);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Zasięg</div> 
+	<div title="Wyświetl wszystkie plany z jednostki na tle serwisu geoportal.gov.pl" class="button" onclick="map(this,true);"><img width="16px" class="vm" src="g.png" alt="Geoportal logo" /> Gmina</div></td>
+</tr>
+</tbody>
+		</table>
+		<div class='tab_bottom'><a href='?strona=0'>&lt;&lt;</a> 1-32 / 32 <a href='?strona=0'>&gt;&gt;</a></div>
+		</div>
+			
+	</body>
+</html>

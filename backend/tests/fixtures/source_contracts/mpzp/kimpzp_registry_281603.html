@@ -1,0 +1,63 @@
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title>Rejestr MPZP</title>
+		<link rel='stylesheet' href='css/style.css'/>
+		<script src='js/sorttable.js'></script>
+		<script>
+			function view(el) {
+				var id=el.parentElement.parentElement.id;
+				window.location='view.php?id='+id;
+			}
+			function map(el,gmina=false) {
+				var id=el.parentElement.parentElement.id;
+				window.open('view.php?map='+id+'&gmina='+gmina);
+			}
+			function app(el) {
+				var id=el.parentElement.parentElement.id;
+				window.open('view.php?map='+id+'&app=true');
+			}
+		</script>
+	</head>
+	<body>
+	<div class="header">
+		Rejestr miejscowych planów zagospodarowania przestrzennego
+	</div>
+	<center><br/>
+			<div>28313 planów (16449 rastrowych i 11864 wektorowych) w 1014 gminach
+			<div style='float: right; width: 150px; margin-right: 30px;'><a href='https://opendata.geoportal.gov.pl/InneDane/MPZP/Instrukcja_zasilania_MPZP.docx' target='_blank'>Zasady zasilania</a></div></div>
+			<br/>
+			<form name='form1' method='POST' target='_self' action='?filter'>
+					<input name='teryt' placeholder='TERYT' autocomplete='off' list='teryt-list' value='281603'/>
+					<datalist id='teryt-list'>
+						
+					</datalist>
+					<input name='gmina' placeholder='Nazwa gminy' autocomplete='off' list='gmina-list' value=''/>
+					<datalist id='gmina-list'>
+						
+					</datalist>
+					<input name='uchwala' placeholder='Numer uchwały' value=''/>
+					<input name='nazwa' placeholder='Nazwa planu' value=''/>
+					<input type='date' name='data_uchwaly_od' placeholder='Data uchwały od' autocomplete='off' value=''/>
+					<input type='date' name='data_uchwaly_do' placeholder='Data uchwały do' autocomplete='off' value=''/>
+					<select name="zmiana"><option value="">Nowe plany i zmiany</option><option value="f" >Nowy plan</option><option value="t" >Zmiana planu</option></select>
+					<select name="level"><option value="">Typ</option><option value="3" >rastrowy</option><option value="5" >wektorowy</option></select>
+					<input value='Filtruj' type='submit'>
+					<input value='Wyłącz filtrowanie' type='button' onclick="window.location='?filter=off';">
+			</form>
+		</center>
+		<div style='width: 95%; margin: auto;'>
+		<div class='tab'><a href='?strona=0'>&lt;&lt;</a> 1-0 / 0 <a href='?strona=0'>&gt;&gt;</a></div><div class='tab'><a href='?showall=1'>pokaż na 1 stronie</a></div>
+		<table id='table' class='table sortable'>
+			<thead><tr class='row tableHeader blue'><th class='cell'></th>
+<th class='cell'>Pokaż w Geoportalu</th>
+</tr>
+</thead>
+			<tbody></tbody>
+		</table>
+		<div class='tab_bottom'><a href='?strona=0'>&lt;&lt;</a> 1-0 / 0 <a href='?strona=0'>&gt;&gt;</a></div>
+		</div>
+			
+	</body>
+</html>

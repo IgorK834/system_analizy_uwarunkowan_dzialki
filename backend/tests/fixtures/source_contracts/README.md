@@ -11,6 +11,7 @@ weryfikowane wobec realnej struktury odpowiedzi usługi, a nie wymyślane.
 | `kiut_getcapabilities.xml` | KIUT (WMS), GUGiK | Przycięty GetCapabilities zweryfikowany 2026-09-02: brak opłat i ograniczeń, warstwa pokrycia `gesut`, warstwy sieci oraz ich maksymalna skala 1:1000. |
 | `warsaw_parcels_getcapabilities.xml` / `warsaw_parcels_describe.xml` | WFS BGiK Warszawa | Przycięte kontrakty warstwy `wfs:dzialki`: WFS 2.0, EPSG:2178 i dozwolone pola geometrii działek bez danych właścicieli. |
 | `krakow_mpzp_getcapabilities.xml` / `krakow_mpzp_describe.xml` | WFS MSIP Kraków | Przycięty techniczny kontrakt warstw granic i przeznaczeń MPZP. Nie jest potwierdzeniem prawa do produkcyjnej redystrybucji. |
+| `mpzp/` | RU MPZP, KIMPZP i siedem gmin korpusu | Pełne Capabilities/DescribeFeatureType RU MPZP, odpowiedzi `resultType=hits`, filtrowane strony rejestru KIMPZP oraz walidowana macierz BK-201. |
 | `gdos_getcapabilities.xml` | WFS GDOŚ | Przycięty GetCapabilities: WFS 2.0.0, `Fees: brak`, `AccessConstraints: brak`, warstwy `GDOS:*` używane przez adapter i `DefaultCRS` w formie URN. |
 | `gdos_describe.xml` | WFS GDOŚ | Przycięty DescribeFeatureType dowodzący, że warstwy form ochrony przyrody nie mają atrybutu rodzaju ochrony (tylko `gid`, `nazwa`, `kodinspire`, `kod`, `geom`). |
 | `gdos_getfeature.xml` | WFS GDOŚ | Pełna realna odpowiedź z jedną cechą: `gml:MultiSurface` z `srsName` na kontenerze, brak opcjonalnego `nazwa`. |
@@ -51,6 +52,9 @@ Uwagi:
   publikację do czasu uzyskania pisemnej zgody wymaganej przez warunki MSIP.
 - Źródła `research` i `placeholder` bez potwierdzonego kontraktu technicznego
   celowo nie mają fixtures kontraktowych.
+- Macierz MPZP i regułę odróżniającą strefy od granicy aktu opisuje
+  `docs/data_sources/mpzp_contracts.md`. Zero w odpowiedzi RU/KIMPZP jest
+  obserwacją kanału z podanego dnia, a nie dowodem braku obowiązującego aktu.
 - Usługi ULDK i UUG są usługami REST (nie WMS/WFS), więc nie mają
   odpowiednika GetCapabilities/DescribeFeatureType — ich kontrakt potwierdza
   publiczna dokumentacja GUGiK oraz testy adapterów `test_uldk.py` /

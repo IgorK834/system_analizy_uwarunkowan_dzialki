@@ -1,0 +1,216 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-09-24",
+  "classification_values": [
+    "vector_zones",
+    "act_boundary_document",
+    "raster",
+    "unknown"
+  ],
+  "shared_contracts": [
+    {
+      "source_id": "mpzp_ru",
+      "kind": "GetCapabilities",
+      "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs?service=WFS&version=2.0.0&request=GetCapabilities",
+      "fixture": "ru_mpzp_getcapabilities.xml",
+      "fetched_at": "2026-09-24",
+      "sha256": "a63b916ec58a71c9053ae1f09f629ca5c44907cd5137779d6ac3b37045eb0c89"
+    },
+    {
+      "source_id": "mpzp_ru",
+      "kind": "DescribeFeatureType",
+      "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=app-mpzp%3AAktPlanowaniaPrzestrzennego%2Capp-mpzp%3ADokumentFormalny%2Capp-mpzp%3ARysunekAktuPlanowaniaPrzestrzennego",
+      "fixture": "ru_mpzp_describe.xml",
+      "fetched_at": "2026-09-24",
+      "sha256": "1035a9480a7470c978dac0552880b2c59ec481fd32d5e8941c16827cf240fab5"
+    },
+    {
+      "source_id": "kimpzp",
+      "kind": "GetCapabilities",
+      "url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&request=GetCapabilities",
+      "fixture": "../kimpzp_getcapabilities.xml",
+      "fetched_at": "2026-07-22",
+      "sha256": "08527d42d1c393d23887969dcc5a3b5c3fa5037958375e115f020eee9ff2214b"
+    },
+    {
+      "source_id": "mpzp_pilot_krakow",
+      "kind": "GetCapabilities",
+      "url": "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer?service=WFS&version=2.0.0&request=GetCapabilities",
+      "fixture": "../krakow_mpzp_getcapabilities.xml",
+      "fetched_at": "2026-07-24",
+      "sha256": "55670ca175e7f4725ff13e17bd1052ddf3d08b55cc196636a74ce1dd1d988ce7"
+    },
+    {
+      "source_id": "mpzp_pilot_krakow",
+      "kind": "DescribeFeatureType",
+      "url": "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer?service=WFS&version=2.0.0&request=DescribeFeatureType",
+      "fixture": "../krakow_mpzp_describe.xml",
+      "fetched_at": "2026-07-24",
+      "sha256": "014f58f855271eb75e6d8d2aa671eacd8a8d72c2398175edbe65b2a00a106487"
+    }
+  ],
+  "corpus_manifest": "backend/tests/fixtures/reference_corpus/manifest.json",
+  "municipalities": [
+    {
+      "municipality": "Warszawa",
+      "corpus_teryt": "1465108",
+      "official_teryt": "146501",
+      "case_count": 4,
+      "classification": "act_boundary_document",
+      "act_status": "requires_per_act_document_check",
+      "boundaries": true,
+      "zones": false,
+      "type_names": ["app-mpzp:AktPlanowaniaPrzestrzennego", "app-mpzp:DokumentFormalny", "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"],
+      "crs": ["EPSG:2180"],
+      "formats": ["GML 3.2", "georeferenced drawing", "source document"],
+      "channels": {"ru": "14 act records; boundary/document/drawing only", "jst": "official map and plan documents; no frozen public zone download contract", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "official plan documents available"},
+      "license": "RU public access confirmed; municipality attribution and source document required",
+      "production_source_id": "mpzp_ru",
+      "analysis_eligible": false,
+      "fallback": "Use RU boundary to identify the act, then read the binding resolution and drawing manually; report zone metrics as unknown/manual_review until a zone vector contract is confirmed.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_146501.xml", "sha256": "d2874fa1a8f77ab16a513944cb56638caa3aefa2563ebc5542507c7cf731ed4a"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_146501.html", "sha256": "7424682f94dd1ddd8a0817022d0603c27d09509e0ea6dd85d87b81d300ca8741"},
+        {"url": "https://mapa.um.warszawa.pl/", "fixture": null, "sha256": null}
+      ]
+    },
+    {
+      "municipality": "Kraków",
+      "corpus_teryt": "1261059",
+      "official_teryt": "126101",
+      "case_count": 4,
+      "classification": "vector_zones",
+      "act_status": "requires_per_act_document_check",
+      "boundaries": true,
+      "zones": true,
+      "type_names": ["Obserwatorium_BP_MPZP:Plany_obowiązujące", "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000", "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000", "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"],
+      "crs": ["EPSG:2178", "EPSG:2180 after transformation"],
+      "formats": ["WFS 2.0.0", "GML 3.2"],
+      "channels": {"ru": "7 act records; boundary/document/drawing only", "jst": "technical WFS exposes act boundaries and three zone layers", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "official resolutions and drawings"},
+      "license": "technical public read confirmed; continuous organized redistribution still requires administrator permission",
+      "production_source_id": null,
+      "analysis_eligible": false,
+      "fallback": "Dry-run only on frozen/local fixtures. Keep production result manual_review until written reuse permission is recorded and the dynamic contract is rechecked.",
+      "evidence": [
+        {"url": "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer", "fixture": "../krakow_mpzp_getcapabilities.xml", "sha256": "55670ca175e7f4725ff13e17bd1052ddf3d08b55cc196636a74ce1dd1d988ce7"},
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_126101.xml", "sha256": "75f13d4af8d8811fcd5f4bb2019806d44716c13beeee4a5f253e089cb9987f50"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_126101.html", "sha256": "ef99ee3a0d26b08838a74ffa4df8b9cf11df70fb31265884e6a607f743615328"}
+      ]
+    },
+    {
+      "municipality": "Bielsko-Biała",
+      "corpus_teryt": "2461011",
+      "official_teryt": "246101",
+      "case_count": 7,
+      "classification": "act_boundary_document",
+      "act_status": "requires_per_act_document_check",
+      "boundaries": true,
+      "zones": false,
+      "type_names": ["app-mpzp:AktPlanowaniaPrzestrzennego", "app-mpzp:DokumentFormalny", "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"],
+      "crs": ["EPSG:2180"],
+      "formats": ["GML 3.2", "georeferenced drawing", "source document"],
+      "channels": {"ru": "8 act records; boundary/document/drawing only", "jst": "public i.Mapa viewer; no frozen public zone download contract", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "official plan documents available"},
+      "license": "RU public access confirmed; i.Mapa is informational and does not establish a redistribution contract",
+      "production_source_id": "mpzp_ru",
+      "analysis_eligible": false,
+      "fallback": "Use RU boundary and document metadata, then verify the resolution and drawing manually. Do not extract computational geometry from the viewer.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_246101.xml", "sha256": "9e12a78724a0d5ac7e62cb8e0164b5edbece0fbd8affe4f32100f075e5911028"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_246101.html", "sha256": "537ae0fc64862c208645781432918b7ecd46aaf533df6d01de5b91da9ec8a556"},
+        {"url": "https://imapa.bielsko-biala.pl/", "fixture": null, "sha256": null}
+      ]
+    },
+    {
+      "municipality": "Legnica",
+      "corpus_teryt": "0262011",
+      "official_teryt": "026201",
+      "case_count": 5,
+      "classification": "unknown",
+      "act_status": "not_determined_from_machine_contract",
+      "boundaries": false,
+      "zones": false,
+      "type_names": [],
+      "crs": [],
+      "formats": ["official SIP viewer and BIP documents; contract unconfirmed"],
+      "channels": {"ru": "0 act records", "jst": "official SIP is informational; no frozen WFS zone contract", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "official plan documents available"},
+      "license": "no public zone redistribution contract confirmed",
+      "production_source_id": null,
+      "analysis_eligible": false,
+      "fallback": "Locate the binding resolution and drawing in BIP, perform a documented manual reading, and return unknown for numerical zone geometry.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_026201.xml", "sha256": "c649738e1a2bff6a0ecb90e22f92e92ea27389b7cd8c1f8c5c6828e72220449e"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_026201.html", "sha256": "062b2a1df99da596fc9f51fd349702941a12d80519a460a9e62a66696944d141"},
+        {"url": "https://portal.legnica.eu/sipgis-5-715/", "fixture": null, "sha256": null}
+      ]
+    },
+    {
+      "municipality": "Pisz",
+      "corpus_teryt": "2816034",
+      "official_teryt": "281603",
+      "case_count": 5,
+      "classification": "unknown",
+      "act_status": "not_determined_from_machine_contract",
+      "boundaries": false,
+      "zones": false,
+      "type_names": [],
+      "crs": [],
+      "formats": ["BIP resolutions and attachments; zone contract unconfirmed"],
+      "channels": {"ru": "0 act records", "jst": "no frozen public zone download contract", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "official resolutions and attachments available"},
+      "license": "no public zone redistribution contract confirmed",
+      "production_source_id": null,
+      "analysis_eligible": false,
+      "fallback": "Verify the current act in BIP and read the source drawing manually; preserve unknown for geometry-derived metrics.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_281603.xml", "sha256": "d22a649bee55f2a5bd4c9b7692da42fdd0462711a5c380120083412ab5ce17b0"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_281603.html", "sha256": "6011e9422375b7313d71866c37efb8ebbb5f2646a4f6bd945bb4f3e4f1d96241"},
+        {"url": "https://www.bip.pisz.hi.pl/index.php?wiad=31188", "fixture": null, "sha256": null}
+      ]
+    },
+    {
+      "municipality": "Czarny Bór",
+      "corpus_teryt": "0221042",
+      "official_teryt": "022104",
+      "case_count": 4,
+      "classification": "unknown",
+      "act_status": "not_determined_from_machine_contract",
+      "boundaries": false,
+      "zones": false,
+      "type_names": [],
+      "crs": [],
+      "formats": ["municipal/BIP documents; machine contract unconfirmed"],
+      "channels": {"ru": "0 act records", "jst": "no frozen public zone download contract", "kimpzp": "WMS discovery; no registry rows for TERYT", "bip": "must be checked per act"},
+      "license": "no public zone redistribution contract confirmed",
+      "production_source_id": null,
+      "analysis_eligible": false,
+      "fallback": "Request or locate the binding resolution and drawing, document a manual reading, and keep numerical zone metrics unknown.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_022104.xml", "sha256": "3c648e040504e15c2efd0f42721f4ea270cf2b8602fd47f7c0fadfb3f9316798"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_022104.html", "sha256": "85d3e0eac7499e9c849c20d5b2d80ff806dbe53e21eea6549bf0335532df3867"},
+        {"url": "https://www.czarny-bor.pl/", "fixture": null, "sha256": null}
+      ]
+    },
+    {
+      "municipality": "Ruciane-Nida",
+      "corpus_teryt": "2816045",
+      "official_teryt": "281604",
+      "case_count": 1,
+      "classification": "raster",
+      "act_status": "requires_per_act_document_check",
+      "boundaries": true,
+      "zones": false,
+      "type_names": [],
+      "crs": ["EPSG:2180 in KIMPZP view"],
+      "formats": ["32 GeoTIFF drawings linked by official KIMPZP registry", "WMS 1.1.1"],
+      "channels": {"ru": "0 act records", "jst": "source drawings linked by KIMPZP registry", "kimpzp": "32 raster plans; no vector plans", "bip": "binding resolution must be verified per plan"},
+      "license": "public viewing confirmed; downstream publication of source drawings requires a separate rights check",
+      "production_source_id": "kimpzp",
+      "analysis_eligible": false,
+      "fallback": "Use the raster only for georeferenced manual reading and require the binding resolution; never polygonize colors as authoritative zones.",
+      "evidence": [
+        {"url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs", "fixture": "ru_mpzp_hits_281604.xml", "sha256": "c16456ded5d0488f10d8e13c574eff57ccecaa46af8deb7dec2935b3466c5080"},
+        {"url": "https://integracja.gugik.gov.pl/mpzp/", "fixture": "kimpzp_registry_281604.html", "sha256": "6cf25e2a97c0a4053f55d60db58fa27b3f367953c6ab066004aab2c36734acff"},
+        {"url": "https://bip.ruciane-nida.pl/", "fixture": null, "sha256": null}
+      ]
+    }
+  ]
+}
