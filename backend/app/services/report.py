@@ -185,6 +185,9 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
     if pog is None:
         return None
     return {
+        "schema_version": pog.schema_version,
+        "legal_status": pog.legal_status,
+        "coverage_status": pog.coverage_status,
         "status": pog.status,
         "planning_zone": pog.zone_type or pog.planning_zone,
         "in_ouz": _format_bool(pog.in_ouz),
@@ -205,6 +208,44 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
         "conflict_with_mpzp": pog.conflict_with_mpzp,
         "manual_review_required": pog.manual_review_required,
         "confidence": _confidence_context(pog.source),
+        "zones": [
+            {
+                "id": zone.id,
+                "symbol": zone.symbol,
+                "type": zone.type,
+                "label": zone.label,
+                "area_sqm": _format_number(zone.area_sqm),
+                "area_pct": _format_percent(zone.area_pct),
+                "max_overground_floor_area_ratio": _format_optional_number(zone.max_overground_floor_area_ratio),
+                "max_building_height_m": _format_optional_number(zone.max_building_height_m, "m"),
+                "max_building_coverage_pct": _format_optional_percent(zone.max_building_coverage_pct),
+                "min_biologically_active_pct": _format_optional_percent(zone.min_biologically_active_pct),
+                "primary_profile": ", ".join(
+                    profile.label or profile.code for profile in zone.primary_profile
+                ) or "—",
+                "additional_profiles": ", ".join(
+                    profile.label or profile.code for profile in zone.additional_profiles
+                ) or "—",
+            }
+            for zone in pog.zones
+        ],
+        "ouz": [_pog_area_context(item) for item in pog.ouz],
+        "downtown_areas": [_pog_area_context(item) for item in pog.downtown_areas],
+        "social_areas": [
+            _pog_area_context(item)
+            for item in pog.social_infrastructure_standard_areas
+        ],
+    }
+
+
+def _pog_area_context(area: Any) -> dict[str, Any]:
+    return {
+        "id": area.id,
+        "symbol": area.symbol,
+        "label": area.label,
+        "area_sqm": _format_number(area.area_sqm),
+        "area_pct": _format_percent(area.area_pct),
+        "touches_boundary": _format_bool(area.touches_boundary),
     }
 
 
@@ -615,6 +656,30 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     <tr><th>Zgodność z MPZP</th><td>{{ "Wykryto niezgodność — wymaga weryfikacji" if pog.conflict_with_mpzp else "Zgodność potwierdzona wstępnie" }}</td></tr>
     {% endif %}
   </table>
+  {% if pog.zones %}
+  <h3>Strefy planistyczne przecinające działkę</h3>
+  <table>
+    <thead><tr><th>Strefa</th><th>Powierzchnia</th><th>Udział</th><th>Intensywność</th><th>Wysokość</th><th>Zabudowa</th><th>Biologicznie czynna</th></tr></thead>
+    <tbody>
+    {% for zone in pog.zones %}
+      <tr>
+        <td>{{ zone.symbol or zone.type }}{% if zone.label %}<br><small>{{ zone.label }}</small>{% endif %}</td>
+        <td>{{ zone.area_sqm }} m²</td><td>{{ zone.area_pct }}</td>
+        <td>{{ zone.max_overground_floor_area_ratio if zone.max_overground_floor_area_ratio is not none else "—" }}</td>
+        <td>{{ zone.max_building_height_m if zone.max_building_height_m is not none else "—" }}</td>
+        <td>{{ zone.max_building_coverage_pct if zone.max_building_coverage_pct is not none else "—" }}</td>
+        <td>{{ zone.min_biologically_active_pct if zone.min_biologically_active_pct is not none else "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if pog.social_areas %}
+  <h3>Standardy dostępności infrastruktury społecznej</h3>
+  <table><thead><tr><th>Obszar</th><th>Powierzchnia</th><th>Udział</th></tr></thead><tbody>
+  {% for area in pog.social_areas %}<tr><td>{{ area.symbol or area.label or area.id }}</td><td>{{ area.area_sqm }} m²</td><td>{{ area.area_pct }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% endif %}
   {% if pog.manual_review_required %}<p><span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span></p>{% endif %}
   {% if pog.confidence %}<div class="confidence">Pewność danych: {{ pog.confidence.pct }} ({{ pog.confidence.label }})</div>{% endif %}
   {% else %}
