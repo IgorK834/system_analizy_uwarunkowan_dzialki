@@ -42,5 +42,93 @@
     "fees": "Brak ograniczeń w publicznym dostępie",
     "access_constraints": "Brak warunków dostępu i użytkowania",
     "access_basis": "GetCapabilities ServiceIdentification/Fees i AccessConstraints; warunki technicznego dostępu publicznego, bez domniemania odrębnej licencji redystrybucyjnej"
+  },
+  "wfs_pog_describe_feature_type_3_0.xsd": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType",
+    "fetched_at": "2026-09-24T10:27:34Z",
+    "sha256": "fbd829160c064ed4b0294caa6d4ce5b5e256cb4f419e6cc54ce56623aff1eb97"
+  },
+  "planowaniePrzestrzenne_3_0.xsd": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0/planowaniePrzestrzenne_3_0.xsd",
+    "fetched_at": "2026-09-24T10:27:34Z",
+    "sha256": "b0f6a60d7b571089f80b2778cf31001e9a5ba7674ebf0de16fa9a7048b902679"
+  },
+  "wfs_pog_getfeature_act.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AAktPlanowaniaPrzestrzennego&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:36.174Z",
+    "sha256": "1a58a89a008f36a8b09aeca714d4698d7b2308ef938e386a836442201186e8f8"
+  },
+  "wfs_pog_getfeature_document.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3ADokumentFormalny&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:35.159Z",
+    "sha256": "07b1fdd13d7f33bea902c9defab6f387b8119fc6721342c1b6e2fc8245594a6f"
+  },
+  "wfs_pog_getfeature_osdis.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AObszarStandardowDostepnosciInfrastrukturySpolecznej&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:35.367Z",
+    "sha256": "3883023ecb7f7b856009a91227ad6b73d23ef61d719fa319c1251b4a9198ed8c"
+  },
+  "wfs_pog_getfeature_ouz.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AObszarUzupelnieniaZabudowy&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:37.391Z",
+    "sha256": "7b425e718aaa752487dff0765d110384619854879ffe3def1d3e2b4a5947ead3"
+  },
+  "wfs_pog_getfeature_ozs.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AObszarZabudowySrodmiejskiej&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:36.345Z",
+    "sha256": "e548f212e24a56964fea11a92cf7c5e58d1a1e06c50ea79c208747f4b94c7908"
+  },
+  "wfs_pog_getfeature_zone.xml": {
+    "service": "wfs",
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities potwierdza publiczny dostęp; artefakt pobrano przez jawny DescribeFeatureType/GetFeature i utrwalono z SHA-256, bez domniemania odrębnej licencji redystrybucyjnej",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AStrefaPlanistyczna&count=1&srsName=EPSG%3A2180",
+    "fetched_at": "2026-09-24T10:27:47.333Z",
+    "sha256": "025eb019704eb3488d0023fec9f940b36044c3f4bec4e36c1b53f5cab1dff76b"
   }
 }
