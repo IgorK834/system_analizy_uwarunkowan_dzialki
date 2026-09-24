@@ -1,0 +1,4945 @@
+{
+  "cases": [
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 15893.458555206025,
+            "perimeter": 1386.5554055978566
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 113.7,
+            "minimum": 109.1,
+            "relief": 4.6
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "miss",
+      "case_id": "real-001-146510-8-0502-1-3",
+      "duration_ms": 2.1121669560670853,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 15893.459,
+            "perimeter": 1386.555
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 113.7,
+            "minimum": 109.1,
+            "relief": 4.6
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "146510_8.0502.1/3",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1477.978275534733,
+            "perimeter": 205.07871950689145
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 112.9,
+            "minimum": 112.0,
+            "relief": 0.9
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-002-146510-8-0310-82-2",
+      "duration_ms": 0.05866703577339649,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1477.978,
+            "perimeter": 205.079
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 112.9,
+            "minimum": 112.0,
+            "relief": 0.9
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "146510_8.0310.82/2",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1780.907699654912,
+            "perimeter": 551.129429488728
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "unknown",
+          "values": {
+            "feature_count": null,
+            "features": null,
+            "relation": null
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 113.4,
+            "minimum": 112.1,
+            "relief": 1.3
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-003-146510-8-0504-1",
+      "duration_ms": 0.04533398896455765,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1780.908,
+            "perimeter": 551.129
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "unknown",
+          "values": {
+            "feature_count": null,
+            "features": [],
+            "relation": "unknown"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 113.4,
+            "minimum": 112.1,
+            "relief": 1.3
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "146510_8.0504.1",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6512.871497053536,
+            "perimeter": 494.36556805909726
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 113.8,
+            "minimum": 112.9,
+            "relief": 0.9
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-004-146510-8-0309-1-4",
+      "duration_ms": 0.03754196222871542,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6512.871,
+            "perimeter": 494.366
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 113.8,
+            "minimum": 112.9,
+            "relief": 0.9
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "146510_8.0309.1/4",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 26582.728205538246,
+            "perimeter": 1128.795169590995
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 26582.728,
+                "share": 100.0,
+                "symbol": "KP.1"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 212.0,
+            "minimum": 209.4,
+            "relief": 2.6
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "miss",
+      "case_id": "real-005-126105-9-0001-580-4",
+      "duration_ms": 0.11758401524275541,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 26582.728,
+            "perimeter": 1128.795
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 26582.728,
+                "share": 100.0,
+                "symbol": "KP.1"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 212.0,
+            "minimum": 209.4,
+            "relief": 2.6
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "126105_9.0001.580/4",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 220.80473099936322,
+            "perimeter": 63.187093709302815
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 220.805,
+                "share": 100.0,
+                "symbol": "MW/U.4"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 215.5,
+            "minimum": 214.0,
+            "relief": 1.5
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-006-126105-9-0001-49-2",
+      "duration_ms": 0.032832962460815907,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 220.805,
+            "perimeter": 63.187
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 220.805,
+                "share": 100.0,
+                "symbol": "MW/U.4"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 215.5,
+            "minimum": 214.0,
+            "relief": 1.5
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "126105_9.0001.49/2",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 6887.016,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 28.425836,
+                "type": "flood"
+              },
+              {
+                "area": 7491.189,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 30.919532,
+                "type": "flood"
+              },
+              {
+                "area": 11441.757,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 47.225315,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 24228.016901117888,
+            "perimeter": 1244.7072529785457
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 3,
+            "zones": [
+              {
+                "area": 10.099,
+                "share": 0.041682,
+                "symbol": "KD/L+T"
+              },
+              {
+                "area": 564.208,
+                "share": 2.328743,
+                "symbol": "U.11"
+              },
+              {
+                "area": 23653.551,
+                "share": 97.628921,
+                "symbol": "ZP.4"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 210.8,
+            "minimum": 203.6,
+            "relief": 7.2
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-007-126105-9-0001-540-15",
+      "duration_ms": 0.10766705963760614,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 6887.016,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 28.425836
+              },
+              {
+                "area": 7491.189,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 30.919532
+              },
+              {
+                "area": 11441.757,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 47.225315
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 24228.017,
+            "perimeter": 1244.707
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+            "mode": "vector",
+            "plan_id": "XII/131/11",
+            "zone_count": 3,
+            "zones": [
+              {
+                "area": 10.099,
+                "share": 0.041682,
+                "symbol": "KD/L+T"
+              },
+              {
+                "area": 564.208,
+                "share": 2.328743,
+                "symbol": "U.11"
+              },
+              {
+                "area": 23653.551,
+                "share": 97.628921,
+                "symbol": "ZP.4"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 210.8,
+            "minimum": 203.6,
+            "relief": 7.2
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "126105_9.0001.540/15",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 307.50253471827915,
+            "perimeter": 114.69306084790256
+          }
+        },
+        "mpzp": {
+          "status": "available",
+          "values": {
+            "document_url": "https://www.bip.krakow.pl/?dok_id=137657",
+            "mode": "vector",
+            "plan_id": "LIII/1464/21",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 307.503,
+                "share": 100.0,
+                "symbol": "ZPb.9"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "unknown",
+          "values": {
+            "feature_count": null,
+            "features": null,
+            "relation": null
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 208.7,
+            "minimum": 208.2,
+            "relief": 0.5
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "duration_ms": 0.03699993249028921,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 307.503,
+            "perimeter": 114.693
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": "https://www.bip.krakow.pl/?dok_id=137657",
+            "mode": "document_parse",
+            "plan_id": "LIII/1464/21",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 307.503,
+                "share": 100.0,
+                "symbol": "ZPb.9"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "unknown",
+          "values": {
+            "feature_count": null,
+            "features": [],
+            "relation": "unknown"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 208.7,
+            "minimum": 208.2,
+            "relief": 0.5
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "126105_9.0119.181/10",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1413.9402159899164,
+            "perimeter": 239.1118383339484
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 0.0,
+            "relation": "outside",
+            "share": 0.0
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 1413.76,
+                "local_id": "1POG-24SK",
+                "share": 99.987245,
+                "symbol": "SK"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 319.5,
+            "minimum": 317.6,
+            "relief": 1.9
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "miss",
+      "case_id": "real-009-246101-1-0056-155-3",
+      "duration_ms": 0.037458958104252815,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1413.94,
+            "perimeter": 239.112
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 0.0,
+            "relation": "outside",
+            "share": 0.0
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 1413.76,
+                "local_id": "1POG-24SK",
+                "share": 99.987245,
+                "symbol": "SK"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 319.5,
+            "minimum": 317.6,
+            "relief": 1.9
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0056.155/3",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 163.965,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 3.607901,
+                "type": "flood"
+              },
+              {
+                "area": 155.105,
+                "class": "scenariusz Q 10% (raz na 10 lat)",
+                "severity": "medium",
+                "share": 3.412951,
+                "type": "flood"
+              },
+              {
+                "area": 160.663,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 3.535253,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 4544.597447131527,
+            "perimeter": 279.2709665994443
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 4544.452,
+            "relation": "inside",
+            "share": 99.9968
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 4544.555,
+                "local_id": "1POG-28SW",
+                "share": 99.999056,
+                "symbol": "SW"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 310.8,
+            "minimum": 307.2,
+            "relief": 3.6
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-010-246101-1-0055-68-13",
+      "duration_ms": 0.04058401100337505,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 163.965,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 3.607901
+              },
+              {
+                "area": 155.105,
+                "class": "scenariusz Q 10% (raz na 10 lat)",
+                "severity": "medium",
+                "share": 3.412951
+              },
+              {
+                "area": 160.663,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 3.535253
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 4544.597,
+            "perimeter": 279.271
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 4544.452,
+            "relation": "inside",
+            "share": 99.9968
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 4544.555,
+                "local_id": "1POG-28SW",
+                "share": 99.999056,
+                "symbol": "SW"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 310.8,
+            "minimum": 307.2,
+            "relief": 3.6
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0055.68/13",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 524.1957859687446,
+            "perimeter": 96.84657770490297
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 524.196,
+            "relation": "inside",
+            "share": 100.000041
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 524.196,
+                "local_id": "1POG-44SW",
+                "share": 100.0,
+                "symbol": "SW"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 316.0,
+            "minimum": 315.0,
+            "relief": 1.0
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-011-246101-1-0081-7",
+      "duration_ms": 0.03245798870921135,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 524.196,
+            "perimeter": 96.847
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 524.196,
+            "relation": "inside",
+            "share": 100.000041
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 524.196,
+                "local_id": "1POG-44SW",
+                "share": 100.0,
+                "symbol": "SW"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 316.0,
+            "minimum": 315.0,
+            "relief": 1.0
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0081.7",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 17102.54489425628,
+            "perimeter": 518.016337890545
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 0.0,
+            "relation": "outside",
+            "share": 0.0
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 17102.167,
+                "local_id": "1POG-119SU",
+                "share": 99.997791,
+                "symbol": "SU"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 329.8,
+            "minimum": 320.8,
+            "relief": 9.0
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-012-246101-1-0056-110-1",
+      "duration_ms": 0.03212492447346449,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 17102.545,
+            "perimeter": 518.016
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 0.0,
+            "relation": "outside",
+            "share": 0.0
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 17102.167,
+                "local_id": "1POG-119SU",
+                "share": 99.997791,
+                "symbol": "SU"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "relief",
+            "maximum": 329.8,
+            "minimum": 320.8,
+            "relief": 9.0
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0056.110/1",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 1965.64,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1965.6397194119031,
+            "perimeter": 449.23250520293794
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "7 UC,U,M"
+              },
+              {
+                "area": null,
+                "share": null,
+                "symbol": "22 KD G1/2(Z1/4)"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 121.7,
+            "minimum": 121.0,
+            "relief": 0.7
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "duration_ms": 0.03908306825906038,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 1965.64,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 1965.64,
+            "perimeter": 449.233
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "7 UC,U,M"
+              },
+              {
+                "area": null,
+                "share": null,
+                "symbol": "22 KD G1/2(Z1/4)"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 121.7,
+            "minimum": 121.0,
+            "relief": 0.7
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "026201_1.0009.1319/4",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 4,
+            "features": [
+              {
+                "area": 664.117,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 18.428479,
+                "type": "flood"
+              },
+              {
+                "area": 207.344,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 5.75356,
+                "type": "flood"
+              },
+              {
+                "area": 2186.362,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 60.668988999999996,
+                "type": "flood"
+              },
+              {
+                "area": 3603.756,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 3603.755667960612,
+            "perimeter": 295.64924755821016
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "MU9.9"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 120.8,
+            "minimum": 118.8,
+            "relief": 2.0
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-014-026201-1-0010-410-1",
+      "duration_ms": 0.08120795246213675,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 4,
+            "features": [
+              {
+                "area": 664.117,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 18.428479
+              },
+              {
+                "area": 207.344,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 5.75356
+              },
+              {
+                "area": 2186.362,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 60.668989
+              },
+              {
+                "area": 3603.756,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 3603.756,
+            "perimeter": 295.649
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "MU9.9"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 120.8,
+            "minimum": 118.8,
+            "relief": 2.0
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "026201_1.0010.410/1",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 2,
+            "features": [
+              {
+                "area": 2418.074,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 100.0,
+                "type": "flood"
+              },
+              {
+                "area": 2418.074,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 2418.0738226446465,
+            "perimeter": 323.1869181804784
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "KL 1/2"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 120.9,
+            "minimum": 120.1,
+            "relief": 0.8
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-015-026201-1-0015-530",
+      "duration_ms": 0.07545796688646078,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 2,
+            "features": [
+              {
+                "area": 2418.074,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 100.0
+              },
+              {
+                "area": 2418.074,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 2418.074,
+            "perimeter": 323.187
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "KL 1/2"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 120.9,
+            "minimum": 120.1,
+            "relief": 0.8
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "026201_1.0015.530",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 6.428,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 0.097361,
+                "type": "flood"
+              },
+              {
+                "area": 102.701,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 1.555443,
+                "type": "flood"
+              },
+              {
+                "area": 6602.658,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6602.658317629566,
+            "perimeter": 346.0653523714514
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "13MWU"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 122.4,
+            "minimum": 119.3,
+            "relief": 3.1
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-016-026201-1-0009-579-9",
+      "duration_ms": 0.04670803900808096,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 6.428,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 0.097361
+              },
+              {
+                "area": 102.701,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 1.555443
+              },
+              {
+                "area": 6602.658,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6602.658,
+            "perimeter": 346.065
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "13MWU"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 122.4,
+            "minimum": 119.3,
+            "relief": 3.1
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "026201_1.0009.579/9",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 15828.032452047513,
+            "perimeter": 1684.7494814394952
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 118.3,
+            "minimum": 117.2,
+            "relief": 1.1
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "duration_ms": 0.06591703277081251,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 15828.032,
+            "perimeter": 1684.749
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 118.3,
+            "minimum": 117.2,
+            "relief": 1.1
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281603_4.0001.496/5",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 554.7357436340588,
+            "perimeter": 101.88774984533762
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 117.6,
+            "minimum": 116.3,
+            "relief": 1.3
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-018-281603-4-0001-358",
+      "duration_ms": 0.03391597419977188,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 554.736,
+            "perimeter": 101.888
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 117.6,
+            "minimum": 116.3,
+            "relief": 1.3
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281603_4.0001.358",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 192.21177721489664,
+            "perimeter": 55.57834273697634
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 118.0,
+            "minimum": 117.6,
+            "relief": 0.4
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-019-281603-4-0001-740",
+      "duration_ms": 0.0677499920129776,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 192.212,
+            "perimeter": 55.578
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 118.0,
+            "minimum": 117.6,
+            "relief": 0.4
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281603_4.0001.740",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 37.511,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 0.47265500000000005,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 7936.157891461316,
+            "perimeter": 428.01762539361494
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": "XLVII/602/10",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "B-18UT"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 117.0,
+            "minimum": 115.4,
+            "relief": 1.6
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-020-281603-4-0002-130",
+      "duration_ms": 0.037624966353178024,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 37.511,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 0.472655
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 7936.158,
+            "perimeter": 428.018
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": "XLVII/602/10",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "B-18UT"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 117.0,
+            "minimum": 115.4,
+            "relief": 1.6
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281603_4.0002.130",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 675.7025343971512,
+            "perimeter": 112.14681694650753
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 482.9,
+            "minimum": 481.8,
+            "relief": 1.1
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-021-022104-2-0002-352",
+      "duration_ms": 0.034208991564810276,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 675.703,
+            "perimeter": 112.147
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 482.9,
+            "minimum": 481.8,
+            "relief": 1.1
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "022104_2.0002.352",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 5530.5997915159405,
+            "perimeter": 707.2874174689983
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "relief",
+            "maximum": 507.7,
+            "minimum": 487.3,
+            "relief": 20.4
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "duration_ms": 0.03733299672603607,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 5530.6,
+            "perimeter": 707.287
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "relief",
+            "maximum": 507.7,
+            "minimum": 487.3,
+            "relief": 20.4
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "022104_2.0002.288/20",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 928.0413750687951,
+            "perimeter": 121.95374869297297
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 489.3,
+            "minimum": 487.5,
+            "relief": 1.8
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-023-022104-2-0002-776",
+      "duration_ms": 0.032291049137711525,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 928.041,
+            "perimeter": 121.954
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "flat",
+            "maximum": 489.3,
+            "minimum": 487.5,
+            "relief": 1.8
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "022104_2.0002.776",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 3727.7171572985,
+            "perimeter": 255.1905576762192
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 478.3,
+            "minimum": 475.0,
+            "relief": 3.3
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "duration_ms": 0.03191607538610697,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 3727.717,
+            "perimeter": 255.191
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 478.3,
+            "minimum": 475.0,
+            "relief": 3.3
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "022104_2.0002.230/2",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 208006.653,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 87.607997,
+                "type": "flood"
+              },
+              {
+                "area": 154497.493,
+                "class": "scenariusz Q 10% (raz na 10 lat)",
+                "severity": "medium",
+                "share": 65.071072,
+                "type": "flood"
+              },
+              {
+                "area": 201497.176,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 84.866343,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 237428.8425061988,
+            "perimeter": 2693.2566480863875
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": "XVI/139/15",
+            "zone_count": 3,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "16.U/US"
+              },
+              {
+                "area": null,
+                "share": null,
+                "symbol": "NULL"
+              },
+              {
+                "area": null,
+                "share": null,
+                "symbol": "15.U"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 1.574,
+                "class": "Puszczy i Jezior Piskich",
+                "severity": "low",
+                "share": 0.000663,
+                "type": "obszar_chronionego_krajobrazu"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "unknown",
+          "values": {
+            "class": null,
+            "maximum": null,
+            "minimum": null,
+            "relief": null
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "duration_ms": 0.0689580338075757,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 3,
+            "features": [
+              {
+                "area": 208006.653,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 87.607997
+              },
+              {
+                "area": 154497.493,
+                "class": "scenariusz Q 10% (raz na 10 lat)",
+                "severity": "medium",
+                "share": 65.071072
+              },
+              {
+                "area": 201497.176,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 84.866343
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 237428.843,
+            "perimeter": 2693.257
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "raster_manual",
+            "plan_id": "XVI/139/15",
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "16.U/US"
+              },
+              {
+                "area": null,
+                "share": null,
+                "symbol": "15.U"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 1,
+            "features": [
+              {
+                "area": 1.574,
+                "name": "Puszczy i Jezior Piskich",
+                "severity": "low",
+                "share": 0.000663,
+                "type": "obszar_chronionego_krajobrazu"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "unknown",
+          "values": {
+            "class": "unknown",
+            "maximum": null,
+            "minimum": null,
+            "relief": null
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281603_4.0001.431/66",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 265703.1386340301,
+            "perimeter": 2068.281051272623
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 2,
+            "features": [
+              {
+                "area": 265703.139,
+                "class": "Puszcza Piska",
+                "severity": "high",
+                "share": 100.0,
+                "type": "natura2000"
+              },
+              {
+                "area": 2766.727,
+                "class": "Ostoja Piska",
+                "severity": "low",
+                "share": 1.041285,
+                "type": "natura2000"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "unknown",
+          "values": {
+            "class": null,
+            "maximum": null,
+            "minimum": null,
+            "relief": null
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-026-281604-5-0011-107",
+      "duration_ms": 0.03324996214359999,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 265703.139,
+            "perimeter": 2068.281
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 2,
+            "features": [
+              {
+                "area": 265703.139,
+                "name": "Puszcza Piska",
+                "severity": "high",
+                "share": 100.0,
+                "type": "natura2000"
+              },
+              {
+                "area": 2766.727,
+                "name": "Ostoja Piska",
+                "severity": "low",
+                "share": 1.041285,
+                "type": "natura2000"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "unknown",
+          "values": {
+            "class": "unknown",
+            "maximum": null,
+            "minimum": null,
+            "relief": null
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "281604_5.0011.107",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 2851.285786984274,
+            "perimeter": 351.24713515545903
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "manual_review",
+          "values": {
+            "intersection_area": 0.158,
+            "relation": "boundary",
+            "share": 0.005536
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 2851.247,
+                "local_id": "1POG-98SJ",
+                "share": 99.998649,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 367.7,
+            "minimum": 362.6,
+            "relief": 5.1
+          }
+        }
+      },
+      "ambiguous_metrics": [
+        "ouz.relation"
+      ],
+      "cache_status": "hit",
+      "case_id": "real-027-246101-1-0001-1043",
+      "duration_ms": 0.03600004129111767,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 2851.286,
+            "perimeter": 351.247
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "manual_review",
+          "values": {
+            "intersection_area": 0.158,
+            "relation": "boundary",
+            "share": 0.005536
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": 2851.247,
+                "local_id": "1POG-98SJ",
+                "share": 99.998649,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 367.7,
+            "minimum": 362.6,
+            "relief": 5.1
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0001.1043",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 899.9904810126679,
+            "perimeter": 133.67422211397584
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 723.058,
+            "relation": "partial",
+            "share": 80.34066
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": 176.932,
+                "local_id": "1POG-121SO",
+                "share": 19.65934,
+                "symbol": "SO"
+              },
+              {
+                "area": 723.058,
+                "local_id": "1POG-78SJ",
+                "share": 80.34066,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 327.4,
+            "minimum": 323.7,
+            "relief": 3.7
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-028-246101-1-0004-737-26",
+      "duration_ms": 0.03408303018659353,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 899.99,
+            "perimeter": 133.674
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 723.058,
+            "relation": "partial",
+            "share": 80.34066
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": 176.932,
+                "local_id": "1POG-121SO",
+                "share": 19.65934,
+                "symbol": "SO"
+              },
+              {
+                "area": 723.058,
+                "local_id": "1POG-78SJ",
+                "share": 80.34066,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 327.4,
+            "minimum": 323.7,
+            "relief": 3.7
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0004.737/26",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 4270.834603641692,
+            "perimeter": 329.2504428585706
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": null,
+            "plan_id": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 739.714,
+            "relation": "partial",
+            "share": 17.320133
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": 2138.441,
+                "local_id": "1POG-121SO",
+                "share": 50.070792,
+                "symbol": "SO"
+              },
+              {
+                "area": 2132.394,
+                "local_id": "1POG-78SJ",
+                "share": 49.929208,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 323.7,
+            "minimum": 318.5,
+            "relief": 5.2
+          }
+        }
+      },
+      "ambiguous_metrics": [],
+      "cache_status": "hit",
+      "case_id": "real-029-246101-1-0004-741-132",
+      "duration_ms": 0.03658304922282696,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "boundary_feature_area": null,
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 4270.835,
+            "perimeter": 329.25
+          }
+        },
+        "mpzp": {
+          "status": "unknown",
+          "values": {
+            "document_url": null,
+            "mode": "unknown",
+            "plan_id": null,
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "available",
+          "values": {
+            "intersection_area": 739.714,
+            "relation": "partial",
+            "share": 17.320133
+          }
+        },
+        "pog": {
+          "status": "available",
+          "values": {
+            "legal_status": "legal_force",
+            "zone_count": 2,
+            "zones": [
+              {
+                "area": 2138.441,
+                "local_id": "1POG-121SO",
+                "share": 50.070792,
+                "symbol": "SO"
+              },
+              {
+                "area": 2132.394,
+                "local_id": "1POG-78SJ",
+                "share": 49.929208,
+                "symbol": "SJ"
+              }
+            ]
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 323.7,
+            "minimum": 318.5,
+            "relief": 5.2
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": false,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "246101_1.0004.741/132",
+      "status": "partial"
+    },
+    {
+      "actual_sections": {
+        "flood": {
+          "status": "available",
+          "values": {
+            "feature_count": 4,
+            "features": [
+              {
+                "area": 4728.919,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 78.337731,
+                "type": "flood"
+              },
+              {
+                "area": 3136.242,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 51.953962,
+                "type": "flood"
+              },
+              {
+                "area": 5600.646,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 92.778474,
+                "type": "flood"
+              },
+              {
+                "area": 6036.579,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0,
+                "type": "flood"
+              }
+            ],
+            "relation": "intersection"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6036.579349047306,
+            "perimeter": 881.3141468929354
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "6KD L"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": null,
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": null,
+            "zone_count": null,
+            "zones": null
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 121.0,
+            "minimum": 118.5,
+            "relief": 2.5
+          }
+        }
+      },
+      "ambiguous_metrics": [
+        "flood.boundary_feature_area"
+      ],
+      "cache_status": "hit",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "duration_ms": 0.040125101804733276,
+      "error": null,
+      "expected_sections": {
+        "flood": {
+          "status": "manual_review",
+          "values": {
+            "boundary_feature_area": 0.0,
+            "feature_count": 4,
+            "features": [
+              {
+                "area": 4728.919,
+                "class": "scenariusz Q 0,2% (raz na 500 lat)",
+                "severity": "low",
+                "share": 78.337731
+              },
+              {
+                "area": 3136.242,
+                "class": "scenariusz Q 1% (raz na 100 lat)",
+                "severity": "high",
+                "share": 51.953962
+              },
+              {
+                "area": 5600.646,
+                "class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+                "severity": "high",
+                "share": 92.778474
+              },
+              {
+                "area": 6036.579,
+                "class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+                "severity": "medium",
+                "share": 100.0
+              }
+            ],
+            "relation": "intersection_and_boundary"
+          }
+        },
+        "geometry": {
+          "status": "available",
+          "values": {
+            "area": 6036.579,
+            "perimeter": 881.314
+          }
+        },
+        "mpzp": {
+          "status": "manual_review",
+          "values": {
+            "document_url": null,
+            "mode": "vector_discovery",
+            "plan_id": null,
+            "zone_count": 1,
+            "zones": [
+              {
+                "area": null,
+                "share": null,
+                "symbol": "6KD L"
+              }
+            ]
+          }
+        },
+        "nature": {
+          "status": "available",
+          "values": {
+            "feature_count": 0,
+            "features": [],
+            "relation": "none"
+          }
+        },
+        "ouz": {
+          "status": "unknown",
+          "values": {
+            "intersection_area": null,
+            "relation": "unknown",
+            "share": null
+          }
+        },
+        "pog": {
+          "status": "unknown",
+          "values": {
+            "legal_status": "unknown",
+            "zone_count": null,
+            "zones": []
+          }
+        },
+        "terrain": {
+          "status": "available",
+          "values": {
+            "class": "moderate",
+            "maximum": 121.0,
+            "minimum": 118.5,
+            "relief": 2.5
+          }
+        }
+      },
+      "has_unknown": true,
+      "manual_review_required": true,
+      "parcel_identification_correct": true,
+      "parcel_identifier": "026201_1.0009.578/2",
+      "status": "partial"
+    }
+  ],
+  "metadata": {
+    "commit_sha": "8418bddc73bc76f590e021af122262f0a44bcaa4",
+    "corpus_sha256": "65f16dc25c4fcde8ba6ee9051b3604f909477be7eebdb205fe8dcb8a1786d106",
+    "schema_version": "1.0.0",
+    "seed": 20260923,
+    "source_release_ids": {
+      "gdos": "gdos@2026-09-23",
+      "isok": "isok@2026-09-23",
+      "kimpzp": "kimpzp@2026-09-23",
+      "krakow_mpzp": "krakow_mpzp@2026-09-23",
+      "nmt": "nmt@2026-09-23",
+      "ru_pog": "ru_pog@2026-09-23",
+      "uldk": "uldk@2026-09-23"
+    },
+    "timestamps": {
+      "finished_at": "2026-09-23T18:52:29.035187Z",
+      "started_at": "2026-09-23T18:52:29.023456Z"
+    }
+  },
+  "metrics": {
+    "binary_conditions": {
+      "aggregate": {
+        "f1": {
+          "denominator": null,
+          "numerator": null,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "fn": 0,
+        "fp": 0,
+        "precision": {
+          "denominator": 14,
+          "numerator": 14,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "recall": {
+          "denominator": 14,
+          "numerator": 14,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "tn": 49,
+        "tp": 14
+      },
+      "flood_intersection": {
+        "f1": {
+          "denominator": null,
+          "numerator": null,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "fn": 0,
+        "fp": 0,
+        "precision": {
+          "denominator": 8,
+          "numerator": 8,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "recall": {
+          "denominator": 8,
+          "numerator": 8,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "tn": 21,
+        "tp": 8
+      },
+      "nature_intersection": {
+        "f1": {
+          "denominator": null,
+          "numerator": null,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "fn": 0,
+        "fp": 0,
+        "precision": {
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "recall": {
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "tn": 26,
+        "tp": 2
+      },
+      "ouz_presence": {
+        "f1": {
+          "denominator": null,
+          "numerator": null,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "fn": 0,
+        "fp": 0,
+        "precision": {
+          "denominator": 4,
+          "numerator": 4,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "recall": {
+          "denominator": 4,
+          "numerator": 4,
+          "reason": null,
+          "unit": "ratio",
+          "value": 1.0
+        },
+        "tn": 2,
+        "tp": 4
+      }
+    },
+    "cache_hits": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "case",
+      "value": 27
+    },
+    "cache_misses": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "case",
+      "value": 3
+    },
+    "case_count": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "case",
+      "value": 30
+    },
+    "duration_p50": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "millisecond",
+      "value": 0.03758346429094672
+    },
+    "duration_p95": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "millisecond",
+      "value": 0.11312138522043821
+    },
+    "failed_cases": {
+      "denominator": null,
+      "numerator": null,
+      "reason": null,
+      "unit": "case",
+      "value": 0
+    },
+    "field_completeness": {
+      "denominator": 540,
+      "numerator": 365,
+      "reason": null,
+      "unit": "ratio",
+      "value": 0.6759259259259259
+    },
+    "manual_review_case_share": {
+      "denominator": 30,
+      "numerator": 15,
+      "reason": null,
+      "unit": "ratio",
+      "value": 0.5
+    },
+    "parcel_identification_accuracy": {
+      "denominator": 30,
+      "numerator": 30,
+      "reason": null,
+      "unit": "ratio",
+      "value": 1.0
+    },
+    "partial_case_share": {
+      "denominator": 30,
+      "numerator": 30,
+      "reason": null,
+      "unit": "ratio",
+      "value": 1.0
+    },
+    "unknown_case_share": {
+      "denominator": 30,
+      "numerator": 30,
+      "reason": null,
+      "unit": "ratio",
+      "value": 1.0
+    },
+    "zone_class_accuracy": {
+      "denominator": 10,
+      "numerator": 10,
+      "reason": null,
+      "unit": "ratio",
+      "value": 1.0
+    },
+    "zone_share_mae": {
+      "denominator": 14,
+      "numerator": null,
+      "reason": null,
+      "unit": "percentage_point",
+      "value": 0.0
+    },
+    "zone_share_max_absolute_error": {
+      "denominator": 14,
+      "numerator": null,
+      "reason": null,
+      "unit": "percentage_point",
+      "value": 0.0
+    }
+  },
+  "regressions": []
+}
