@@ -278,7 +278,56 @@ class MpzpZoneResult(BaseModel):
     )
 
 
+class PogActResult(BaseModel):
+    id: str
+    version: str | None = None
+    title: str | None = None
+    resolution_number: str | None = None
+    resolution_date: date | None = None
+
+
+class PogProfileResult(BaseModel):
+    code: str
+    label: str | None = None
+    dictionary_source: str
+
+
+class PogZoneResult(BaseModel):
+    id: str
+    symbol: str | None = None
+    type: str
+    label: str | None = None
+    area_sqm: float = Field(ge=0.0)
+    area_pct: float = Field(ge=0.0, le=100.0)
+    max_overground_floor_area_ratio: float | None = Field(default=None, ge=0.0)
+    max_building_height_m: float | None = Field(default=None, ge=0.0)
+    max_building_coverage_pct: float | None = Field(default=None, ge=0.0, le=100.0)
+    min_biologically_active_pct: float | None = Field(default=None, ge=0.0, le=100.0)
+    primary_profile: list[PogProfileResult] = Field(default_factory=list)
+    additional_profiles: list[PogProfileResult] = Field(default_factory=list)
+    source: SourceMetadata | None = None
+
+
+class PogAreaResult(BaseModel):
+    id: str
+    symbol: str | None = None
+    label: str | None = None
+    area_sqm: float = Field(ge=0.0)
+    area_pct: float = Field(ge=0.0, le=100.0)
+    touches_boundary: bool = False
+    source: SourceMetadata | None = None
+
+
 class PogResult(BaseModel):
+    schema_version: str = Field(default="2.0")
+    legal_status: str = Field(default="not_available")
+    coverage_status: str = Field(default="unknown")
+    act: PogActResult | None = None
+    zones: list[PogZoneResult] = Field(default_factory=list)
+    dominant_zone_id: str | None = None
+    ouz: list[PogAreaResult] = Field(default_factory=list)
+    downtown_areas: list[PogAreaResult] = Field(default_factory=list)
+    social_infrastructure_standard_areas: list[PogAreaResult] = Field(default_factory=list)
     status: str = Field(
         description="Status dostępności Planu Ogólnego Gminy.",
         json_schema_extra={"example": "adopted"},

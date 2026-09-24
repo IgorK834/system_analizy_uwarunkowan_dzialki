@@ -18,6 +18,7 @@ import time
 from datetime import date, datetime, timezone
 from typing import Literal, Sequence
 
+from shapely import from_wkt
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy.orm import Session
 
@@ -74,6 +75,7 @@ from app.services.pog_analyzer import (
     to_pog_result,
 )
 from app.services.pog_fetch import fetch_pog_vector_data
+from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.services.pog_scenarios import build_pog_scenario_result
 from app.services.persistence import (
     build_analyze_response_from_analysis,
@@ -83,6 +85,11 @@ from app.modules.documents.composition import (
     build_ocr_provider,
     persist_parser_audit,
 )
+from app.modules.imports.infrastructure.repository import (
+    active_pog_release,
+    load_pog_release_features,
+)
+from app.shared.geometry import GeometryPayload
 
 
 async def run_analysis(
@@ -186,6 +193,7 @@ async def run_analysis(
     pog, ouz_status, pog_warnings, pog_sources = await _analyze_pog_best_effort(
         parcel_geometry,
         lookup.teryt,
+        db,
     )
     warnings.extend(pog_warnings)
 
@@ -738,6 +746,7 @@ def _map_context(
 async def _analyze_pog_best_effort(
     parcel_geometry: BaseGeometry,
     teryt: str | None,
+    db: Session | None = None,
 ) -> tuple[
     PogResult,
     OuzStatusResult,
@@ -749,6 +758,26 @@ async def _analyze_pog_best_effort(
     Brak skonfigurowanego, potwierdzonego źródła pozostaje wynikiem
     ``unknown``. Nie jest mapowany na brak ograniczeń ani na sukces analizy.
     """
+    # Wydanie jest przypinane raz przed odczytem cech. Kolejne publikacje nie
+    # zmieniają release_id ani SHA historycznego wyniku tej analizy.
+    if db is not None:
+        pinned = active_pog_release(db)
+        if pinned is not None:
+            try:
+                vector_data = _local_pog_vector_data(db, parcel_geometry, pinned)
+                analysis = analyze_pog_adopted(parcel_geometry, vector_data)
+                pog = to_pog_result(analysis)
+                return (
+                    pog,
+                    analysis.ouz_status,
+                    list(analysis.warnings),
+                    [analysis.source_metadata],
+                )
+            except Exception as exc:
+                log_analysis_event(
+                    "section_error", section="pog_local_release", status=type(exc).__name__
+                )
+
     try:
         discovery = await discover_pog(
             parcel_geometry,
@@ -852,6 +881,83 @@ async def _analyze_pog_best_effort(
     if parsed_date is not None and pog.uchwala_date is None:
         pog = pog.model_copy(update={"uchwala_date": parsed_date})
     return pog, ouz_status, warnings, _unique_sources(sources)
+
+
+def _local_pog_vector_data(
+    db: Session,
+    parcel_geometry: BaseGeometry,
+    pinned: dict[str, object],
+) -> PogVectorData:
+    release_id = int(pinned["id"])
+    rows = load_pog_release_features(
+        db,
+        GeometryPayload(parcel_geometry.wkt),
+        data_release_id=release_id,
+    )
+    buckets: dict[str, list[PogVectorFeature]] = {
+        "planning_zone": [],
+        "ouz": [],
+        "downtown_area": [],
+        "social_infrastructure_standard": [],
+    }
+    app_metadata: dict[str, object] = {}
+    for row in rows:
+        feature_type = str(row["feature_type"])
+        if feature_type not in buckets:
+            continue
+        attributes = dict(row.get("raw_attributes") or {})
+        attributes.update({
+            "feature_id": row.get("feature_identifier"),
+            "feature_version": row.get("feature_version"),
+            "symbol": row.get("symbol"),
+            "label": row.get("label"),
+            "primary_profiles": row.get("primary_profiles") or [],
+            "additional_profiles": row.get("additional_profiles") or [],
+        })
+        attributes.update(dict(row.get("parameters") or {}))
+        buckets[feature_type].append(PogVectorFeature(
+            geometry=from_wkt(str(row["geometry_wkt"])),
+            attributes=attributes,
+            source_crs="EPSG:2180",
+            layer_type=feature_type,  # type: ignore[arg-type]
+        ))
+        if not app_metadata:
+            app_metadata = {
+                "act_identifier": row.get("act_identifier"),
+                "act_version": row.get("object_version_id"),
+                "act_name": row.get("act_name"),
+                "legal_status": row.get("legal_status"),
+                "raw_legal_status": row.get("raw_legal_status"),
+                "resolution_number": row.get("resolution_number"),
+                "resolution_date": (
+                    row["resolution_date"].isoformat()
+                    if row.get("resolution_date") else None
+                ),
+            }
+    source = SourceMetadata(
+        source_id="pog_app",
+        source_version=str(pinned["version_label"]),
+        artifact_sha256=str(pinned["content_hash"]),
+        data_release_id=release_id,
+        act_version=(str(app_metadata["act_version"]) if app_metadata.get("act_version") else None),
+        source_name="POG_APP_LOCAL_POSTGIS",
+        source_url=None,
+        fetched_at=pinned.get("fetched_at"),
+        response_status=None,
+        confidence=1.0,
+        manual_review_required=False,
+    )
+    return PogVectorData(
+        planning_zones=buckets["planning_zone"],
+        ouz_areas=buckets["ouz"],
+        downtown_areas=buckets["downtown_area"],
+        app_metadata=app_metadata,
+        status="available" if rows else "partial",
+        wms_fallback_required=not bool(rows),
+        source_metadata=source,
+        social_infrastructure_standard_areas=buckets["social_infrastructure_standard"],
+        warnings=[],
+    )
 
 
 def _pog_from_discovery(

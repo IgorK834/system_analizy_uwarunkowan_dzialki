@@ -15,6 +15,22 @@ from pydantic import BaseModel, Field
 
 
 class SourceMetadata(BaseModel):
+    source_id: str | None = Field(
+        default=None, description="Stabilny identyfikator źródła z katalogu."
+    )
+    source_version: str | None = Field(
+        default=None, description="Etykieta wersji źródła lub wydania."
+    )
+    artifact_sha256: str | None = Field(
+        default=None, min_length=64, max_length=64,
+        description="SHA-256 zamrożonego artefaktu źródłowego."
+    )
+    data_release_id: int | None = Field(
+        default=None, gt=0, description="Identyfikator wydania przypiętego do analizy."
+    )
+    act_version: str | None = Field(
+        default=None, description="Wersja idIIP aktu planowania przestrzennego."
+    )
     source_name: str = Field(
         description="Nazwa zewnętrznego źródła danych.",
         json_schema_extra={"example": "ULDK"},
