@@ -62,6 +62,10 @@ _HTTP_CRS_RE: Final[re.Pattern[str]] = re.compile(
     r"^https?://(?:www\.)?opengis\.net/def/crs/EPSG/[^/]*/(\d+)$", re.IGNORECASE
 )
 _SHORT_CRS_RE: Final[re.Pattern[str]] = re.compile(r"^EPSG:+(\d+)$", re.IGNORECASE)
+_LEGACY_GML_CRS_RE: Final[re.Pattern[str]] = re.compile(
+    r"^https?://(?:www\.)?opengis\.net/gml/srs/epsg\.xml#(\d+)$",
+    re.IGNORECASE,
+)
 
 # Elementy, poniżej których nie zbieramy atrybutów opisowych — inaczej listy
 # współrzędnych i narożniki kopert trafiłyby do właściwości cechy.
@@ -274,7 +278,14 @@ def _requires_axis_swap(srs_name: str | None) -> bool:
         return False
 
     candidate = srs_name.strip()
-    for pattern, swap in ((_URN_CRS_RE, True), (_HTTP_CRS_RE, True), (_SHORT_CRS_RE, False)):
+    for pattern, swap in (
+        (_URN_CRS_RE, True),
+        (_HTTP_CRS_RE, True),
+        (_SHORT_CRS_RE, False),
+        # Oficjalny RU APP 3.0 używa starszej składni GML i praktycznej
+        # kolejności GIS (easting, northing), potwierdzonej próbkami WFS.
+        (_LEGACY_GML_CRS_RE, False),
+    ):
         match = pattern.match(candidate)
         if match is None:
             continue

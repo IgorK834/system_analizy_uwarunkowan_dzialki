@@ -50,6 +50,7 @@ PogVectorLayer = Literal[
     "planning_zone",
     "ouz",
     "downtown_area",
+    "social_infrastructure_standard",
     "app_metadata",
 ]
 
@@ -87,6 +88,7 @@ class PogVectorData:
     status: PogVectorStatus
     wms_fallback_required: bool
     source_metadata: SourceMetadata
+    social_infrastructure_standard_areas: list[PogVectorFeature] = field(default_factory=list)
     warnings: list[WarningMessage] = field(default_factory=list)
 
 
@@ -97,6 +99,7 @@ class _ParsedVectorDocument:
     downtown_areas: list[PogVectorFeature]
     app_metadata: dict[str, object]
     warnings: list[WarningMessage]
+    social_infrastructure_standard_areas: list[PogVectorFeature] = field(default_factory=list)
 
 
 async def fetch_pog_vector_data(pog_links: Sequence[str]) -> PogVectorData:
@@ -182,12 +185,17 @@ async def fetch_pog_vector_data(pog_links: Sequence[str]) -> PogVectorData:
     planning_zones = [feature for doc in documents for feature in doc.planning_zones]
     ouz_areas = [feature for doc in documents for feature in doc.ouz_areas]
     downtown_areas = [feature for doc in documents for feature in doc.downtown_areas]
+    social_areas = [
+        feature
+        for doc in documents
+        for feature in doc.social_infrastructure_standard_areas
+    ]
     app_metadata: dict[str, object] = {}
     for document in documents:
         app_metadata.update(document.app_metadata)
         warnings.extend(document.warnings)
 
-    has_geometry = bool(planning_zones or ouz_areas or downtown_areas)
+    has_geometry = bool(planning_zones or ouz_areas or downtown_areas or social_areas)
     if not has_geometry:
         warnings.append(
             _warning(
@@ -232,6 +240,7 @@ async def fetch_pog_vector_data(pog_links: Sequence[str]) -> PogVectorData:
             confidence=0.75 if has_geometry else 0.15,
             manual_review_required=True,
         ),
+        social_infrastructure_standard_areas=social_areas,
         warnings=warnings,
     )
 
@@ -368,17 +377,12 @@ def _geojson_crs(data: dict[str, object]) -> tuple[str, bool]:
 
 def _parse_gml(content: bytes) -> _ParsedVectorDocument:
     root = ElementTree.fromstring(content)
-    default_crs = _first_srs_name(root) or POG_TARGET_CRS
-    assumed_crs = _first_srs_name(root) is None
-    warnings: list[WarningMessage] = []
-    if assumed_crs:
-        warnings.append(
-            _warning(
-                "POG_GML_CRS_ASSUMED",
-                "GML nie deklaruje CRS; przyjęto wymagany dla APP układ EPSG:2180.",
-                severity="warning",
-            )
+    default_crs = _first_srs_name(root)
+    if default_crs is None:
+        raise PogVectorParseError(
+            "GML POG nie deklaruje srsName; CRS nie może być zgadywany."
         )
+    warnings: list[WarningMessage] = []
 
     buckets = _empty_feature_buckets()
     metadata: dict[str, object] = {}
@@ -526,6 +530,8 @@ def _classify_layer(
         return "ouz"
     if "obszarzabudowysrodmiejskiej" in normalized or "downtown" in normalized:
         return "downtown_area"
+    if "obszarstandardowdostepnosciinfrastrukturyspolecznej" in normalized:
+        return "social_infrastructure_standard"
     if "aktplanowaniaprzestrzennego" in normalized or "appmetadata" in normalized:
         return "app_metadata"
     # Atrybut ustawowego kodu strefy jest mocniejszą wskazówką niż lokalna nazwa
@@ -594,6 +600,7 @@ def _empty_feature_buckets() -> dict[PogVectorLayer, list[PogVectorFeature]]:
         "planning_zone": [],
         "ouz": [],
         "downtown_area": [],
+        "social_infrastructure_standard": [],
         "app_metadata": [],
     }
 
@@ -609,6 +616,7 @@ def _document_from_buckets(
         downtown_areas=buckets["downtown_area"],
         app_metadata=metadata,
         warnings=warnings,
+        social_infrastructure_standard_areas=buckets["social_infrastructure_standard"],
     )
 
 
