@@ -352,7 +352,24 @@ def test_guard_uses_real_catalog_for_uldk() -> None:
 def test_guard_rejects_real_research_source() -> None:
     get_catalog.cache_clear()
     with pytest.raises(SourceNotRunnableError):
-        ensure_source_runnable("gdos")
+        ensure_source_runnable("pog_pilot_krakow")
+    get_catalog.cache_clear()
+
+
+def test_guard_accepts_verified_ru_and_exposes_catalog_endpoints() -> None:
+    get_catalog.cache_clear()
+    source = ensure_source_runnable("pog_app")
+
+    assert source.protocol_version == "2.0.0"
+    assert {resource.role for resource in source.resources} == {
+        "ru_wfs",
+        "ru_wms_preview",
+        "ru_csw",
+    }
+    assert all(
+        resource.url.startswith("https://rejestr-urbanistyczny.gov.pl/")
+        for resource in source.resources
+    )
     get_catalog.cache_clear()
 
 
