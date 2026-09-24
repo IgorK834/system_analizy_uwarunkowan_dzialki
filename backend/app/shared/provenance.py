@@ -20,6 +20,10 @@ class Provenance:
     data_release_id: int | None = None
     source_artifact_id: int | None = None
     content_hash: str | None = None
+    request_url: str | None = None
+    operation: str | None = None
+    complete: bool | None = None
+    error_code: str | None = None
 
     def with_release(self, data_release_id: int) -> "Provenance":
         """Zwraca kopię provenance powiązaną z konkretnym wydaniem danych."""
@@ -29,4 +33,8 @@ class Provenance:
             data_release_id=data_release_id,
             source_artifact_id=self.source_artifact_id,
             content_hash=self.content_hash,
+            request_url=self.request_url,
+            operation=self.operation,
+            complete=self.complete,
+            error_code=self.error_code,
         )
