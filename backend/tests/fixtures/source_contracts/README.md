@@ -62,3 +62,8 @@ Uwagi:
   „szczęśliwej ścieżki” nie wykryłby regresji w rozpoznawaniu awarii.
 - Zawartość jest przycięta i zanonimizowana: bez danych osobowych i bez pełnej
   listy metadanych usługi.
+
+Kontrakty Rejestru Urbanistycznego mają osobną politykę wersjonowania z
+manifestem URL/czas/SHA-256 i znajdują się w katalogu `../ru/`. Instrukcja
+odświeżania oraz opis zmierzonych rozbieżności są w
+`docs/data_sources/ru_contracts.md`; plików RU nie duplikujemy w tym katalogu.

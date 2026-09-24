@@ -1,30 +1,46 @@
 {
   "wms_pog_capabilities_1_3_0.xml": {
-    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms?service=WMS&request=GetCapabilities",
-    "fetched_at": "2026-09-03T12:15:23.983097Z",
-    "sha256": "752d324a87b2d49a44952041c843b6180097fee92d770c27a352f6cfec7cb21e",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms?service=WMS&version=1.3.0&request=GetCapabilities",
+    "fetched_at": "2026-09-23T19:28:16.767641Z",
+    "sha256": "953d0a9899fb54f07e675a3841ea7cb22fd99d4664da54d456dcaab20ad5c957",
     "service": "wms",
-    "version": "1.3.0"
+    "version": "1.3.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities ServiceIdentification/Fees i AccessConstraints; warunki technicznego dostępu publicznego, bez domniemania odrębnej licencji redystrybucyjnej"
   },
   "wfs_pog_capabilities_2_0_0.xml": {
-    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&request=GetCapabilities",
-    "fetched_at": "2026-09-03T12:15:24.064028Z",
-    "sha256": "732b9d26449bfbd46ad44f77cc0cc26fff05d6338cb589ef2df2733b25647af5",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetCapabilities",
+    "fetched_at": "2026-09-23T19:28:16.835562Z",
+    "sha256": "6d3d55fbf07b0f6514b0c84bae5439dc1480f2f63beee5f8ec9dad1393abb13d",
     "service": "wfs",
-    "version": "2.0.0"
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities ServiceIdentification/Fees i AccessConstraints; warunki technicznego dostępu publicznego, bez domniemania odrębnej licencji redystrybucyjnej"
   },
   "csw_capabilities_2_0_2.xml": {
     "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw?service=CSW&version=2.0.2&request=GetCapabilities",
-    "fetched_at": "2026-09-03T12:15:24.381328Z",
-    "sha256": "6f0f6a2bc98cf53c74815450b3197e378f293b1a40c551fb2f909ac2f151ae46",
+    "fetched_at": "2026-09-23T19:28:16.988725Z",
+    "sha256": "c83080efcd20be45f32219f056e08211dc207bd4e35d88e4953e36a9da4d0977",
     "service": "csw",
-    "version": "2.0.2"
+    "version": "2.0.2",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities ServiceIdentification/Fees i AccessConstraints; warunki technicznego dostępu publicznego, bez domniemania odrębnej licencji redystrybucyjnej"
   },
   "wfs_pog_getfeature_246101.xml": {
-    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AAktPlanowaniaPrzestrzennego&count=2&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&namespaces=xmlns%28app-pog%2Chttps%3A%2F%2Fwww.gov.pl%2Fstatic%2Fzagospodarowanieprzestrzenne%2Fschemas%2Fapp%2F2.0%29&FILTER=%3Cfes%3AFilter+xmlns%3Afes%3D%22http%3A%2F%2Fwww.opengis.net%2Ffes%2F2.0%22+xmlns%3Aapp-pog%3D%22https%3A%2F%2Fwww.gov.pl%2Fstatic%2Fzagospodarowanieprzestrzenne%2Fschemas%2Fapp%2F2.0%22%3E%3Cfes%3APropertyIsLike+wildCard%3D%22%25%22+singleChar%3D%22_%22+escapeChar%3D%22%5C%22%3E%3Cfes%3AValueReference%3Eapp-pog%3AidIIP%2Fapp-pog%3AIdentyfikator%2Fapp-pog%3AprzestrzenNazw%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E%25246101%25%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsLike%3E%3C%2Ffes%3AFilter%3E",
-    "fetched_at": "2026-09-03T12:15:24.929498Z",
-    "sha256": "ae1e628a4ba8adc394db5515ba6855eb79a9a77cfec72dc966bd1d896169d1c7",
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=app-pog%3AAktPlanowaniaPrzestrzennego&count=2&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&namespaces=xmlns%28app-pog%2Chttps%3A%2F%2Fwww.gov.pl%2Fstatic%2Fzagospodarowanieprzestrzenne%2Fschemas%2Fapp%2F3.0%29&FILTER=%3Cfes%3AFilter+xmlns%3Afes%3D%22http%3A%2F%2Fwww.opengis.net%2Ffes%2F2.0%22+xmlns%3Aapp-pog%3D%22https%3A%2F%2Fwww.gov.pl%2Fstatic%2Fzagospodarowanieprzestrzenne%2Fschemas%2Fapp%2F3.0%22%3E%3Cfes%3APropertyIsLike+wildCard%3D%22%25%22+singleChar%3D%22_%22+escapeChar%3D%22%5C%22%3E%3Cfes%3AValueReference%3Eapp-pog%3AidIIP%2Fapp-pog%3AIdentyfikator%2Fapp-pog%3AprzestrzenNazw%3C%2Ffes%3AValueReference%3E%3Cfes%3ALiteral%3E%25246101%25%3C%2Ffes%3ALiteral%3E%3C%2Ffes%3APropertyIsLike%3E%3C%2Ffes%3AFilter%3E",
+    "fetched_at": "2026-09-23T19:28:17.433103Z",
+    "sha256": "3171b2f65bc1ff7ea9d8ca3f8c2a0fc96e12e6cf9d44ee0d0d6b41000e020613",
     "service": "wfs",
-    "version": "2.0.0"
+    "version": "2.0.0",
+    "official_services_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe",
+    "fees": "Brak ograniczeń w publicznym dostępie",
+    "access_constraints": "Brak warunków dostępu i użytkowania",
+    "access_basis": "GetCapabilities ServiceIdentification/Fees i AccessConstraints; warunki technicznego dostępu publicznego, bez domniemania odrębnej licencji redystrybucyjnej"
   }
 }

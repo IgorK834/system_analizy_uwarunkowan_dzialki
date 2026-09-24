@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><WMS_Capabilities xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs/1.0" xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0" version="1.3.0" updateSequence="2654" xmlns="http://www.opengis.net/wms" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wms https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/schemas/wms/1.3.0/capabilities_1_3_0.xsd http://inspire.ec.europa.eu/schemas/inspire_vs/1.0 https://inspire.ec.europa.eu/schemas/inspire_vs/1.0/inspire_vs.xsd">
+<?xml version="1.0" encoding="UTF-8"?><WMS_Capabilities xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs/1.0" xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0" version="1.3.0" updateSequence="2658" xmlns="http://www.opengis.net/wms" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wms https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/schemas/wms/1.3.0/capabilities_1_3_0.xsd http://inspire.ec.europa.eu/schemas/inspire_vs/1.0 https://inspire.ec.europa.eu/schemas/inspire_vs/1.0/inspire_vs.xsd">
   <Service>
     <Name>WMS</Name>
     <Title>Usługa przeglądania planów ogólnych gmin – Rejestr Urbanistyczny</Title>
@@ -83,23 +83,9 @@
       <Format>BLANK</Format>
       <Format>JSON</Format>
     </Exception>
-    <inspire_vs:ExtendedCapabilities>
-      <inspire_common:MetadataUrl>
-        <inspire_common:URL>https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw</inspire_common:URL>
-        <inspire_common:MediaType>application/vnd.ogc.csw.GetRecordByIdResponse_xml</inspire_common:MediaType>
-      </inspire_common:MetadataUrl>
-      <inspire_common:SupportedLanguages>
-        <inspire_common:DefaultLanguage>
-          <inspire_common:Language>pol</inspire_common:Language>
-        </inspire_common:DefaultLanguage>
-      </inspire_common:SupportedLanguages>
-      <inspire_common:ResponseLanguage>
-        <inspire_common:Language>pol</inspire_common:Language>
-      </inspire_common:ResponseLanguage>
-    </inspire_vs:ExtendedCapabilities>
     <Layer>
-      <Title>Plany ogólne gmin</Title>
-      <Abstract>Dane przestrzennych dla planów ogólnych gmin udostępnionych w Rejestrze Urbanistycznym. Jeśli masz pytania dotyczące aktu planowania przestrzennego, skontaktuj się z gminą, która odpowiada za jego przygotowanie. Jeśli masz problemy techniczne z usługami sieciowymi w Rejestrze Urbanistycznym, skontaktuj się z: Ministerstwem Cyfryzacji. Jeśli masz pytania w sprawie rozwoju usług sieciowych w Rejestrze Urbanistycznym, dane kontaktowe znajdziesz na stronie https://www.gov.pl/web/zagospodarowanieprzestrzenne/kontakt. Uwaga! Pytania lub zgłoszenia nie będą elementem konsultacji społecznych w procedurze planistycznej.</Abstract>
+      <Title>Usługa przeglądania planów ogólnych gmin – Rejestr Urbanistyczny</Title>
+      <Abstract>Usługa WMS umożliwia przeglądanie danych przestrzennych dla planów ogólnych gmin udostępnionych w Rejestrze Urbanistycznym. Jeśli masz pytania dotyczące aktu planowania przestrzennego, skontaktuj się z gminą, która odpowiada za jego przygotowanie. Jeśli masz problemy techniczne z usługami sieciowymi w Rejestrze Urbanistycznym, skontaktuj się z: Ministerstwem Cyfryzacji. Jeśli masz pytania w sprawie rozwoju usług sieciowych w Rejestrze Urbanistycznym, dane kontaktowe znajdziesz na stronie https://www.gov.pl/web/zagospodarowanieprzestrzenne/kontakt. Uwaga! Pytania lub zgłoszenia nie będą elementem konsultacji społecznych w procedurze planistycznej.</Abstract>
       <!--Limited list of EPSG projections:-->
       <CRS>EPSG:2180</CRS>
       <CRS>EPSG:4326</CRS>
