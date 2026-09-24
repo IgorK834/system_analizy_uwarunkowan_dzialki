@@ -91,7 +91,10 @@ class ProcessDocumentWorker:
                 f"Worker dokumentu zakończył się błędem {type(exc).__name__}."
             ) from exc
         finally:
-            executor.shutdown(wait=False, cancel_futures=True)
+            # Każde wywołanie ma własny executor. Musimy zaczekać na jego
+            # wątek zarządzający i proces, bo pozostawione wątki blokowały
+            # późniejsze portale TestClient i w runtime kumulowały zasoby.
+            executor.shutdown(wait=True, cancel_futures=True)
 
 
 def _terminate_executor_workers(executor: ProcessPoolExecutor) -> None:
