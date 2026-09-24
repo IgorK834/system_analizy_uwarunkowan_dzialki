@@ -12,12 +12,12 @@ Zgodnie z sekcją 15 i 16 `context.md` (patrz "Odniesienie do context.md"
 poniżej), dataset ma pokrywać minimum 10 działek z różnych (fikcyjnych) gmin
 i obejmować wszystkie kluczowe scenariusze E2E wymagane dla tego projektu.
 
-**Ważne:** to zadanie tworzy dane testowe (fixtures) i minimalny walidator ich
-struktury. Nie implementuje logiki parsera MPZP/POG/ryzyk — te serwisy jeszcze
-nie istnieją w `backend/app/services/` (obecnie tylko `geometry.py`,
-`geocoding.py`, `geojson.py`, `uldk.py`, `initiation.py`). `cases.json` opisuje
-**oczekiwane wyniki domenowe jako specyfikację/kontrakt na przyszłość**, a nie
-jako dane do bieżącej asercji względem nieistniejącego kodu.
+**Stan na 2026-09-23:** serwisy MPZP, POG/OUZ, ISOK, GDOŚ i NMT są już
+zaimplementowane i mają własne testy. Ten katalog jest wcześniejszym,
+syntetycznym zestawem scenariuszy; jego walidator sprawdza strukturę, a nie
+porównuje wyniki serwisów z niezależnym ground truth. Większość przypadków
+nie ma nagranych odpowiedzi źródłowych, więc `cases.json` pozostaje
+specyfikacją oczekiwań, a nie ukończonym testem E2E.
 
 ## Struktura `cases.json`
 
@@ -35,8 +35,8 @@ przypadek testowy działki. Wymagane pola każdego przypadku:
 | `input` | object | `{"method": "parcel_id", "parcel_identifier": "..."}` — wszystkie przypadki identyfikują działkę wprost, żeby test był deterministyczny i niezależny od geokodowania. |
 | `expected_result` | object | Częściowy, uproszczony podzbiór pól z `app/schemas/analyze.py` (`MpzpZoneResult`, `PogResult`, `RiskResult`) istotny dla danego scenariusza — patrz niżej. |
 | `expected_warnings` | list[string] | Oczekiwane kody ostrzeżeń zgodne z `WarningMessage.code` (np. `MPZP_MULTI_ZONE_WARNING`). Pusta lista jest dopuszczalna. |
-| `fixture_files` | object | Ścieżki względne do `responses/` z nagranymi odpowiedziami usług zewnętrznych. `null`, gdy serwis jeszcze nie istnieje (patrz "Ograniczenia" poniżej). |
-| `notes` | string \| null | Dodatkowe uwagi, ograniczenia znanych danych, TODO dla przyszłych zadań. |
+| `fixture_files` | object | Ścieżki względne do `responses/` z nagranymi odpowiedziami usług zewnętrznych. `null` oznacza brak nagrania dla tego przypadku, nie brak serwisu. |
+| `notes` | string \| null | Dodatkowe uwagi i datowane ograniczenia danego syntetycznego przypadku. |
 
 ### Pola `expected_result`
 
@@ -88,19 +88,18 @@ konkretnych nieruchomościach.
 
 ## Ograniczenia
 
-- Pole `fixture_files` dla większości przypadków ma wartości `null`, ponieważ
-  odpowiadające serwisy (`app/services/mpzp.py`, `mpzp_fetch.py`,
-  `mpzp_parser.py`, `pog.py`, `isok.py`, `gdos.py`) **nie zostały jeszcze
-  zaimplementowane**. To jest jawne **TODO dla przyszłych zadań** — gdy dany
-  serwis powstanie, należy nagrać odpowiadający plik odpowiedzi w
-  `responses/<case_id>/` i zaktualizować `fixture_files` w `cases.json`.
+- Pole `fixture_files` dla większości przypadków ma wartości `null`, bo
+  syntetyczne scenariusze nie mają kompletu zamrożonych odpowiedzi usług.
+  Adaptery i parsery istnieją. Przyszła praca polega na uzyskaniu
+  reprezentatywnych odpowiedzi i niezależnej ocenie oczekiwanych wyników;
+  do tego czasu nie należy przedstawiać walidatora struktury jako testu E2E.
 - Jedynym w pełni nagranym przykładem w tym zadaniu jest odpowiedź ULDK dla
   przypadku `mpzp_vector_single_zone` (`responses/mpzp_vector_single_zone/uldk.txt`),
   demonstrująca wzorzec formatu do rozbudowy: `status\n{id}|{wkt}|{teryt}\n`.
-- Przypadek `mpzp_scanned_pdf_no_text_layer` docelowo powinien mieć też osobny
-  fixture w `backend/tests/fixtures/mpzp/<gmina>/` (struktura opisana w
-  sekcji 16 `context.md`), gdy powstanie `mpzp_parser.py` i będzie można
-  dołączyć syntetyczny skan PDF.
+- Przypadek `mpzp_scanned_pdf_no_text_layer` nie ma powiązanego nagrania w tym
+  korpusie. Parser i osobne fixtures regresyjne skanów w
+  `backend/tests/fixtures/mpzp/` już istnieją; trzeba dopiero powiązać ten
+  przypadek z konkretnym fixture i oczekiwanym wynikiem.
 
 ## Zasada dodawania nowych przypadków
 

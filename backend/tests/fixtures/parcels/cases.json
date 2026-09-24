@@ -26,7 +26,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "Jedyny przypadek z nagraną, syntetyczną odpowiedzią ULDK w tym zadaniu — wzorzec formatu do rozbudowy w przyszłych zadaniach. mpzp_response jest null, bo app/services/mpzp.py jeszcze nie istnieje (TODO)."
+    "notes": "Jedyny przypadek z nagraną, syntetyczną odpowiedzią ULDK w tym zadaniu — wzorzec formatu do rozbudowy w przyszłych zadaniach. mpzp_response jest null, bo ten syntetyczny przypadek nie ma nagranej odpowiedzi MPZP (stan 2026-09-23)."
   },
   {
     "case_id": "mpzp_raster_manual_symbol",
@@ -55,7 +55,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: brak jeszcze app/services/mpzp.py i app/services/mpzp_fetch.py — fixture_files zostają null do czasu implementacji serwisu WMS/rastrowego."
+    "notes": "Stan 2026-09-23: discovery MPZP i bezpieczne pobieranie dokumentu istnieją; brak nagrania rastrowej ścieżki i ręcznego wznowienia dla tego przypadku."
   },
   {
     "case_id": "mpzp_multi_zone_dominant",
@@ -84,7 +84,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "Druga strefa (mniejszościowa) to symbol 'ZP' — do uzupełnienia w expected.json parsera MPZP, gdy powstanie Task dot. mpzp_parser.py."
+    "notes": "Druga strefa (mniejszościowa) to symbol 'ZP'. Parser MPZP istnieje, ale ten syntetyczny przypadek nie ma powiązanego fixture wielostrefowego ani potwierdzonego expected.json (stan 2026-09-23)."
   },
   {
     "case_id": "ouz_full_inside",
@@ -113,7 +113,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: brak jeszcze app/services/pog.py — pog_response zostaje null do czasu implementacji serwisu POG/OUZ."
+    "notes": "Stan 2026-09-23: serwisy POG/OUZ istnieją; pog_response jest null, bo brak nagranej odpowiedzi dla tego syntetycznego przypadku."
   },
   {
     "case_id": "ouz_completely_outside",
@@ -142,7 +142,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: pog_response null do czasu implementacji app/services/pog.py."
+    "notes": "Stan 2026-09-23: serwis POG istnieje; pog_response jest null z powodu braku nagrania dla tego przypadku."
   },
   {
     "case_id": "ouz_touches_boundary_only",
@@ -171,7 +171,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: pog_response null do czasu implementacji app/services/pog.py z obliczeniem calculate_ouz_status."
+    "notes": "Stan 2026-09-23: calculate_ouz_status istnieje; pog_response jest null z powodu braku nagrania geometrii OUZ dla tego przypadku."
   },
   {
     "case_id": "flood_risk_zone_overlap",
@@ -200,7 +200,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: brak jeszcze app/services/isok.py — nagranie odpowiedzi ISOK zostanie dodane w przyszłym zadaniu."
+    "notes": "Stan 2026-09-23: adapter ISOK istnieje i ma osobne fixtures kontraktowe; ten przypadek nie ma powiązanej nagranej odpowiedzi."
   },
   {
     "case_id": "nature_protection_natura2000",
@@ -229,7 +229,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: brak jeszcze app/services/gdos.py — nagranie odpowiedzi GDOŚ zostanie dodane w przyszłym zadaniu."
+    "notes": "Stan 2026-09-23: adapter GDOŚ istnieje i ma osobne fixtures kontraktowe; ten przypadek nie ma powiązanej nagranej odpowiedzi."
   },
   {
     "case_id": "pog_not_yet_adopted",
@@ -258,7 +258,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: brak jeszcze app/services/pog.py — po implementacji dodać nagraną odpowiedź reprezentującą pustą/brakującą warstwę POG dla tej gminy."
+    "notes": "Stan 2026-09-23: serwis POG istnieje; brak nagranej odpowiedzi potwierdzającej brak danych POG dla tego syntetycznego przypadku."
   },
   {
     "case_id": "mpzp_pog_conflict_zoning",
@@ -287,7 +287,7 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: tabela zgodności funkcji MPZP-POG jeszcze nie istnieje w kodzie — do dodania razem z serwisem POG."
+    "notes": "Stan 2026-09-23: istnieje heurystyczne sprawdzenie zgodności MPZP–POG; ten syntetyczny przypadek nie ma pełnych danych źródłowych do jego niezależnej oceny."
   },
   {
     "case_id": "mpzp_scanned_pdf_no_text_layer",
@@ -316,6 +316,6 @@
       "pog_response": null,
       "additional": []
     },
-    "notes": "TODO: docelowy fixture dla tego przypadku powinien trafić także do backend/tests/fixtures/mpzp/czarny_bor/ (sekcja 16 context.md) razem z document.pdf (skan) i README opisującym gminę, gdy powstanie mpzp_parser.py."
+    "notes": "Stan 2026-09-23: parser MPZP i osobne fixtures skanów już istnieją; temu przypadkowi brakuje powiązanego fixture dokumentu i zweryfikowanego wyniku OCR/parsera."
   }
 ]

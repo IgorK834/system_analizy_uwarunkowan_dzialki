@@ -1,9 +1,10 @@
 """Testy walidujące strukturę i kompletność datasetu referencyjnego działek testowych.
 
 Zgodnie z sekcją 15 i 16 context.md dataset musi pokrywać minimum 10 działek
-z różnych gmin i wszystkie wymagane typy scenariuszy E2E. Te testy sprawdzają
-tylko STRUKTURĘ cases.json — logika parsera MPZP/POG/ryzyk nie istnieje jeszcze
-w repo, więc nie asertujemy tu nic względem nieistniejącego kodu domenowego.
+z różnych gmin i wszystkie wymagane typy scenariuszy. Te testy sprawdzają
+tylko STRUKTURĘ cases.json. Istniejące serwisy MPZP/POG/ISOK/GDOŚ mają osobne
+testy; syntetyczny korpus bez większości odpowiedzi źródłowych nie stanowi
+jeszcze scenariusza E2E ani pomiaru ich poprawności.
 """
 
 from __future__ import annotations
