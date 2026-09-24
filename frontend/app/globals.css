@@ -769,3 +769,18 @@ input:disabled {
   text-align: left;
   vertical-align: top;
 }
+
+/* BK-107: źródła urzędowe POG — identyfikatory i SHA łamią się bez przewijania. */
+.pog-sources h4 {
+  margin: 1rem 0 0.5rem;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.pog-status-note {
+  margin: 0.25rem 0;
+}

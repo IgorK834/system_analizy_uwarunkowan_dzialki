@@ -108,23 +108,52 @@ export type MpzpZoneResult = {
   source: SourceMetadata;
 };
 
+/** Kanoniczny status prawny aktu (BK-106); pochodzi wyłącznie z urzędowego kodu. */
+export type PogLegalStatus =
+  | "binding"
+  | "project"
+  | "in_progress"
+  | "superseded"
+  | "unknown";
+
+/** Pokrycie działki danymi przestrzennymi; brak geometrii ≠ brak aktu. */
+export type PogCoverageStatus =
+  | "available"
+  | "partial"
+  | "act_without_spatial_data"
+  | "no_act_confirmed"
+  | "unknown";
+
+/** Stan operacyjny źródła w chwili analizy; nie zastępuje statusu prawnego. */
+export type PogDataAvailability = "current" | "stale" | "unavailable";
+
+export type PogStatusEvidence = {
+  source_name: string;
+  official: boolean;
+  reference: string | null;
+  source_id: string | null;
+  raw_value: string | null;
+  confirmed_at: string | null;
+};
+
 export type PogResult = {
   schema_version: string;
-  legal_status: string;
-  coverage_status: string;
-  act: {
-    id: string;
-    version: string | null;
-    title: string | null;
-    resolution_number: string | null;
-    resolution_date: string | null;
-  } | null;
+  legal_status: PogLegalStatus;
+  coverage_status: PogCoverageStatus;
+  data_availability: PogDataAvailability;
+  /** Chwila potwierdzenia statusu; dla `stale` — data ostatniego potwierdzenia. */
+  status_confirmed_at: string | null;
+  legal_status_evidence: PogStatusEvidence | null;
+  /** Wymagane dla `no_act_confirmed`: wskazanie urzędowego potwierdzenia. */
+  coverage_evidence: PogStatusEvidence | null;
+  act: PogActResult | null;
   zones: PogZoneResult[];
   dominant_zone_id: string | null;
   ouz: PogAreaResult[];
   downtown_areas: PogAreaResult[];
   social_infrastructure_standard_areas: PogAreaResult[];
-  status: string;
+  /** Przestarzałe lustro `legal_status` zachowane dla klientów POG v1. */
+  status: PogLegalStatus;
   planning_zone: string | null;
   /** Znormalizowany typ dominującej strefy POG. */
   zone_type: string | null;
@@ -151,6 +180,72 @@ export type PogResult = {
   source: SourceMetadata | null;
 };
 
+/** Rekord metadanych CSW RU zamrożony w snapshotcie wyniku (BK-107). */
+export type CatalogMetadataSource = {
+  record_id: string;
+  resource_identifier: string | null;
+  title: string | null;
+  publication_date: string | null;
+  revision_date: string | null;
+  creation_date: string | null;
+  date_stamp: string | null;
+  metadata_url: string | null;
+  metadata_url_verified: boolean;
+  references: string[];
+  record_sha256: string | null;
+  response_sha256: string | null;
+  fetched_at: string | null;
+};
+
+export type FormalDocumentStatus = "current" | "superseded" | "unavailable" | "unresolved";
+
+/** Dokument formalny powiązany z wersją aktu po identyfikatorze i wersji. */
+export type FormalDocumentSource = {
+  document_identifier: string;
+  document_version: string | null;
+  publication_id: string | null;
+  title: string | null;
+  short_name: string | null;
+  identification_number: string | null;
+  relation: string | null;
+  document_date: string | null;
+  effective_date: string | null;
+  repeal_date: string | null;
+  link: string | null;
+  /** Tylko zweryfikowany HTTPS może być klikalny. */
+  link_verified: boolean;
+  record_sha256: string | null;
+  status: FormalDocumentStatus;
+  /** Widoczne ostrzeżenie dla dokumentu nieaktualnego/niedostępnego. */
+  warning: string | null;
+};
+
+/** Akt i dokładna wersja z łańcuchem provenance (BK-107). */
+export type PogActResult = {
+  id: string;
+  version: string | null;
+  title: string | null;
+  resolution_number: string | null;
+  resolution_date: string | null;
+  act_identifier?: string | null;
+  act_version?: string | null;
+  publication_id?: string | null;
+  version_started_at?: string | null;
+  publication_date?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  gml_url?: string | null;
+  gml_url_verified?: boolean;
+  card_url?: string | null;
+  card_url_verified?: boolean;
+  data_release_id?: number | null;
+  release_label?: string | null;
+  artifact_sha256?: string | null;
+  fetched_at?: string | null;
+  metadata?: CatalogMetadataSource | null;
+  formal_documents?: FormalDocumentSource[];
+};
+
 export type PogProfileResult = {
   code: string;
   label: string | null;
@@ -171,6 +266,10 @@ export type PogZoneResult = {
   primary_profile: PogProfileResult[];
   additional_profiles: PogProfileResult[];
   source: SourceMetadata | null;
+  feature_version?: string | null;
+  /** Oficjalny URL GML obiektu strefy — źródło parametrów. */
+  gml_url?: string | null;
+  gml_url_verified?: boolean;
 };
 
 export type PogAreaResult = {
@@ -181,6 +280,9 @@ export type PogAreaResult = {
   area_pct: number;
   touches_boundary: boolean;
   source: SourceMetadata | null;
+  feature_version?: string | null;
+  gml_url?: string | null;
+  gml_url_verified?: boolean;
 };
 
 export type InfrastructureResult = {
