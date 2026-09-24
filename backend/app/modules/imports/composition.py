@@ -11,7 +11,10 @@ from sqlalchemy.orm import Session
 from app.core.data_sources import (
     AccessType,
     DataSourceEntry,
+    MpzpDataClassification,
+    MpzpSourceNotUsableError,
     SourceNotRunnableError,
+    ensure_mpzp_vector_zones_source,
     ensure_source_runnable,
     get_catalog,
 )
@@ -147,6 +150,7 @@ def run_mpzp_command(
     source = get_catalog().get(source_id)
     teryt = next((item for item in source.teryt_scope if item != "*"), "")
     if local_resources:
+        ensure_mpzp_vector_zones_source(source)
         configured = []
         by_role = {resource.role: resource for resource in source.resources}
         for role, path in local_resources:
@@ -160,6 +164,11 @@ def run_mpzp_command(
                     source_crs=contract.source_crs,
                     field_mapping=contract.field_mapping,
                 )
+            )
+        if not any(role == "zones" for role, _path in local_resources):
+            raise MpzpSourceNotUsableError(
+                "Lokalny import MPZP vector_zones wymaga zasobu roli 'zones'; "
+                "sama granica aktu nie jest wydzieleniem planu."
             )
         reader = PyogrioMpzpReader(tuple(configured), teryt=teryt)
     else:
@@ -175,8 +184,19 @@ def run_mpzp_command(
             if item.access_type is AccessType.WFS and item.type_name
         )
         if wfs_resources:
+            ensure_mpzp_vector_zones_source(source)
             reader = WfsMpzpReader(wfs_resources, teryt=teryt)
         else:
+            if source.mpzp_classification is not MpzpDataClassification.RASTER:
+                value = (
+                    source.mpzp_classification.value
+                    if source.mpzp_classification is not None
+                    else "unset"
+                )
+                raise MpzpSourceNotUsableError(
+                    f"Źródło {source.source_id!r} ma klasyfikację MPZP "
+                    f"{value!r}; nie można utworzyć z niego importu rastrowego."
+                )
             effective_teryt = raster_teryt or teryt
             if (
                 act_identifier is None
