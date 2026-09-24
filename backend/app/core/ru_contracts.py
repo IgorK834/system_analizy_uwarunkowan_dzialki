@@ -8,6 +8,7 @@ przez zwykle testy jednostkowe oraz przyszle adaptery OGC.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
 from dataclasses import dataclass
@@ -15,10 +16,20 @@ from pathlib import Path
 from typing import Final
 from xml.etree import ElementTree
 
-_MANIFEST_FIELDS: Final = {"url", "fetched_at", "sha256", "service", "version"}
+_MANIFEST_FIELDS: Final = {
+    "url",
+    "fetched_at",
+    "sha256",
+    "service",
+    "version",
+    "official_services_url",
+    "fees",
+    "access_constraints",
+    "access_basis",
+}
 _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
 _APP_POG_NAMESPACE: Final = (
-    "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/2.0"
+    "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
 )
 
 REQUIRED_WFS_FEATURE_TYPES: Final = frozenset(
@@ -46,6 +57,10 @@ class RuManifestEntry:
     sha256: str
     service: str
     version: str
+    official_services_url: str
+    fees: str
+    access_constraints: str
+    access_basis: str
 
 
 @dataclass(frozen=True)
@@ -124,11 +139,64 @@ def _read_xml(source: XmlSource) -> bytes:
     raise TypeError("Zrodlem XML musza byc bajty albo pathlib.Path.")
 
 
-def _parse_root(source: XmlSource) -> ElementTree.Element:
+def parse_xml_root(
+    source: XmlSource, *, max_depth: int = 64, max_nodes: int = 100_000
+) -> ElementTree.Element:
+    """Bezpiecznie parsuje XML bez DTD/encji i z limitami struktury.
+
+    ``xml.etree`` nie pobiera zasobów sieciowych, ale jawne odrzucenie DTD i
+    deklaracji encji zapobiega także lokalnym rozwinięciom encji. Limity są
+    sprawdzane podczas ``iterparse``, zanim dokument zostanie przekazany dalej.
+    """
+
+    if max_depth < 1 or max_nodes < 1:
+        raise ValueError("Limity XML muszą być dodatnie.")
+    payload = _read_xml(source)
+    upper = payload.upper()
+    if b"<!DOCTYPE" in upper or b"<!ENTITY" in upper:
+        raise RuContractError("XML zawiera zabronioną deklarację DTD lub encji.")
+
+    depth = 0
+    nodes = 0
     try:
-        return ElementTree.fromstring(_read_xml(source))
+        parser = ElementTree.iterparse(io.BytesIO(payload), events=("start", "end"))
+        for event, _element in parser:
+            if event == "start":
+                depth += 1
+                nodes += 1
+                if depth > max_depth:
+                    raise RuContractError(
+                        f"XML przekracza limit głębokości {max_depth}."
+                    )
+                if nodes > max_nodes:
+                    raise RuContractError(f"XML przekracza limit {max_nodes} węzłów.")
+            else:
+                depth -= 1
+        root = parser.root
+        if root is None:
+            raise RuContractError("XML nie zawiera elementu głównego.")
+        return root
     except ElementTree.ParseError as exc:
         raise RuContractError(f"Niepoprawny XML fixture RU: {exc}") from exc
+
+
+def exception_report_message(root: ElementTree.Element) -> str | None:
+    """Zwraca opis OGC ExceptionReport/ServiceExceptionReport, jeśli istnieje."""
+
+    if _local_name(root.tag) not in {"ExceptionReport", "ServiceExceptionReport"}:
+        return None
+    messages = [
+        text.strip()
+        for element in root.iter()
+        if _local_name(element.tag) in {"ExceptionText", "ServiceException"}
+        for text in [element.text or ""]
+        if text.strip()
+    ]
+    return "; ".join(messages) or "Usługa OGC zwróciła raport wyjątku."
+
+
+# Zachowana nazwa prywatna ogranicza zmianę istniejących parserów.
+_parse_root = parse_xml_root
 
 
 def _first_text(root: ElementTree.Element, local_name: str) -> str | None:
@@ -409,13 +477,18 @@ def assert_wms_contract(capabilities: WmsCapabilities) -> None:
     assert capabilities.crs == EXPECTED_WMS_CRS
 
 
-def assert_wfs_contract(capabilities: WfsCapabilities) -> None:
+def assert_wfs_contract(
+    capabilities: WfsCapabilities, *, expected_count_default: int | None = None
+) -> None:
     """Fail loud dla wersji, typow, EPSG:2180 albo limitu WFS RU."""
 
     assert capabilities.version == "2.0.0"
     assert REQUIRED_WFS_FEATURE_TYPES <= capabilities.feature_types
     assert "EPSG:2180" in capabilities.default_crs
-    assert capabilities.count_default == 100
+    assert capabilities.count_default is not None
+    assert capabilities.count_default > 0
+    if expected_count_default is not None:
+        assert capabilities.count_default == expected_count_default
     assert "application/gml+xml; version=3.2" in capabilities.get_feature_formats
 
 

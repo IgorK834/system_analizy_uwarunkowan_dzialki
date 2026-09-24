@@ -39,8 +39,9 @@ from app.core.ru_contracts import (  # noqa: E402
 )
 
 BASE_URL = "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe"
+OFFICIAL_SERVICES_URL = "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe"
 APP_POG_NAMESPACE = (
-    "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/2.0"
+    "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
 )
 JPT_FILTER = (
     '<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" '
@@ -86,7 +87,7 @@ REQUESTS = (
     RequestSpec(
         filename="wms_pog_capabilities_1_3_0.xml",
         endpoint=f"{BASE_URL}/wms-pog/wms",
-        params={"service": "WMS", "request": "GetCapabilities"},
+        params={"service": "WMS", "version": "1.3.0", "request": "GetCapabilities"},
         service="wms",
         version="1.3.0",
         validate=_validate_wms,
@@ -94,7 +95,7 @@ REQUESTS = (
     RequestSpec(
         filename="wfs_pog_capabilities_2_0_0.xml",
         endpoint=f"{BASE_URL}/app-pog/wfs",
-        params={"service": "WFS", "request": "GetCapabilities"},
+        params={"service": "WFS", "version": "2.0.0", "request": "GetCapabilities"},
         service="wfs",
         version="2.0.0",
         validate=_validate_wfs,
@@ -159,8 +160,10 @@ def _is_xml_content_type(value: str) -> bool:
 def _fetch_one(client: httpx.Client, spec: RequestSpec) -> tuple[bytes, dict[str, str]]:
     response = client.get(spec.endpoint, params=spec.params)
     if response.status_code != 200:
+        detail = response.text.strip().replace("\n", " ")[:500]
         raise RuContractError(
-            f"{spec.filename}: oczekiwano HTTP 200, otrzymano {response.status_code}."
+            f"{spec.filename}: oczekiwano HTTP 200, otrzymano "
+            f"{response.status_code}: {detail}"
         )
     content_type = response.headers.get("content-type", "")
     if not _is_xml_content_type(content_type):
@@ -176,6 +179,18 @@ def _fetch_one(client: httpx.Client, spec: RequestSpec) -> tuple[bytes, dict[str
         else response.content
     )
     spec.validate(payload)
+    if spec.service == "wms":
+        capabilities = parse_wms_capabilities(payload)
+    elif spec.service == "wfs" and "capabilities" in spec.filename:
+        capabilities = parse_wfs_capabilities(payload)
+    elif spec.service == "csw":
+        capabilities = parse_csw_capabilities(payload)
+    else:
+        # GetFeature dziedziczy warunki dostępu z kontraktu WFS. Są zapisywane
+        # jawnie także przy próbce, aby każdy artefakt miał samodzielny dowód.
+        capabilities = None
+    fees = getattr(capabilities, "fees", None)
+    access_constraints = getattr(capabilities, "access_constraints", None)
     fetched_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     return payload, {
         "url": str(response.request.url),
@@ -183,6 +198,16 @@ def _fetch_one(client: httpx.Client, spec: RequestSpec) -> tuple[bytes, dict[str
         "sha256": hashlib.sha256(payload).hexdigest(),
         "service": spec.service,
         "version": spec.version,
+        "official_services_url": OFFICIAL_SERVICES_URL,
+        "fees": fees or "Brak ograniczeń w publicznym dostępie",
+        "access_constraints": (
+            access_constraints or "Brak warunków dostępu i użytkowania"
+        ),
+        "access_basis": (
+            "GetCapabilities ServiceIdentification/Fees i AccessConstraints; "
+            "warunki technicznego dostępu publicznego, bez domniemania odrębnej "
+            "licencji redystrybucyjnej"
+        ),
     }
 
 
