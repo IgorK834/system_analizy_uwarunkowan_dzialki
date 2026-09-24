@@ -18,7 +18,8 @@
 # (realne GetCapabilities / DescribeFeatureType / GetFeature usług GDOŚ i ISOK
 # oraz realne zapytanie GetMinMaxByPolygon usługi NMT — fixtures w
 # backend/tests/fixtures/source_contracts/). Warstwy podglądowe WMS POG i KIUT
-# zweryfikowano ponownie 2026-09-02.
+# zweryfikowano ponownie 2026-09-02. Kontrakt RU MPZP i macierz gmin korpusu
+# zweryfikowano 2026-09-24 (docs/data_sources/mpzp_contracts.md).
 
 schema_version: "1.0"
 
@@ -137,12 +138,77 @@ sources:
     expected_update_interval: "not_published"
     sla: "not_published"
     last_manual_verification: 2026-07-22
+    mpzp_classification: raster
     notes: >-
       WMS jest warstwą prezentacyjną i kanałem discovery (GetFeatureInfo), NIE
       źródłem geometrii wektorowej do obliczeń przestrzennych (context.md pkt 6).
       Endpoint i warstwa `plany_granice` potwierdzone w bieżącym GetCapabilities
       usługi (fixture: tests/fixtures/source_contracts/kimpzp_getcapabilities.xml).
       Adapter: app/services/mpzp.py (settings.kimpzp_wms_base_url).
+
+  - source_id: mpzp_ru
+    name: "Miejscowe plany zagospodarowania przestrzennego — Rejestr Urbanistyczny"
+    owner: "Ministerstwo Rozwoju i Technologii / właściwe jednostki samorządu terytorialnego"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: >-
+      https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs?service=WFS&version=2.0.0&request=GetCapabilities
+    file_url: null
+    type_names:
+      - "app-mpzp:AktPlanowaniaPrzestrzennego"
+      - "app-mpzp:DokumentFormalny"
+      - "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Publiczny GetCapabilities deklaruje brak ograniczeń w publicznym dostępie
+      oraz brak warunków dostępu i użytkowania. Dane pochodzą od publikujących
+      je jednostek samorządu; zachować atrybucję i dokument źródłowy.
+    attribution: "Źródło: Rejestr Urbanistyczny MRiT oraz właściwa jednostka samorządu terytorialnego."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-09-24
+    mpzp_classification: act_boundary_document
+    resources:
+      - role: boundaries
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:AktPlanowaniaPrzestrzennego"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+      - role: documents
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:DokumentFormalny"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+      - role: drawings
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+    notes: >-
+      WFS RU udostępnia lokalizację przestrzenną obszaru aktu, dokument formalny
+      i rysunek z georeferencją. Kontrakt nie zawiera warstwy wydzieleń
+      przeznaczenia terenu. Z tego powodu źródło jest produkcyjne dla discovery,
+      granicy i provenance, ale guard MPZP zabrania użycia go jako vector_zones.
+      Capabilities, DescribeFeatureType i zapytania hits dla gmin korpusu
+      zamrożono w tests/fixtures/source_contracts/mpzp/.
 
   - source_id: pog_wms
     name: "Plany Ogólne Gmin (WMS)"
@@ -479,6 +545,7 @@ sources:
     expected_update_interval: "daily"
     sla: "not_published"
     last_manual_verification: 2026-07-24
+    mpzp_classification: vector_zones
     resources:
       - role: boundaries
         access_type: wfs
