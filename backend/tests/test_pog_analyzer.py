@@ -6,10 +6,36 @@ from shapely.geometry import Polygon
 from app.schemas.source import SourceMetadata
 from app.services.pog_analyzer import (
     PogPlanningZoneType,
-    analyze_pog_adopted,
+    analyze_pog_vectors,
+    spatial_feature_count,
     to_pog_result,
+    zones_cover_parcel,
 )
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
+from app.shared.planning_status import (
+    PogStatusObservation,
+    StatusEvidence,
+    resolve_pog_status,
+)
+
+LEGAL_FORCE = "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce"
+
+
+def _decision(result, raw_status: str | None = LEGAL_FORCE):
+    now = datetime.now(timezone.utc)
+    return resolve_pog_status(
+        PogStatusObservation(
+            source_responded=True,
+            checked_at=now,
+            raw_legal_status=raw_status,
+            legal_evidence=StatusEvidence("RU", official=True, raw_value=raw_status),
+            act_found=True,
+            act_has_spatial_data=True,
+            spatial_features_on_parcel=spatial_feature_count(result),
+            zones_cover_parcel=zones_cover_parcel(result),
+            response_complete=True,
+        )
+    )
 
 
 def _source() -> SourceMetadata:
@@ -59,10 +85,10 @@ def test_parcel_in_one_zone_has_ratio_near_one_and_api_mapping() -> None:
     parcel = Polygon.from_bounds(0, 0, 100, 100)
     zone = _feature(parcel, "planning_zone", zone_type="SJ")
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=[zone]))
-    api_result = to_pog_result(result)
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[zone]))
+    api_result = to_pog_result(result, _decision(result))
 
-    assert result.status == "adopted"
+    assert result.status == "analyzed"
     assert len(result.zones) == 1
     assert (
         result.zones[0].zone_type is PogPlanningZoneType.MULTIFUNCTIONAL_SINGLE_FAMILY
@@ -72,7 +98,9 @@ def test_parcel_in_one_zone_has_ratio_near_one_and_api_mapping() -> None:
     assert result.dominant_zone == result.zones[0]
     assert result.source_metadata.source_name == "POG_APP_VECTOR"
     assert api_result.planning_zone == "SJ"
-    assert api_result.status == "adopted"
+    assert api_result.legal_status == "binding"
+    assert api_result.coverage_status == "available"
+    assert api_result.status == "binding"
 
 
 def test_parcel_in_many_zones_returns_surface_ratios_and_dominant_zone() -> None:
@@ -84,7 +112,7 @@ def test_parcel_in_many_zones_returns_surface_ratios_and_dominant_zone() -> None
         Polygon.from_bounds(70, 0, 100, 100), "planning_zone", zone_type="SU"
     )
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=[smaller, larger]))
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[smaller, larger]))
 
     assert [zone.area_ratio for zone in result.zones] == pytest.approx([0.7, 0.3])
     assert result.dominant_zone is not None
@@ -99,7 +127,7 @@ def test_unknown_zone_type_is_preserved_with_warning() -> None:
     parcel = Polygon.from_bounds(0, 0, 10, 10)
     zone = _feature(parcel, "planning_zone", zone_type="LOKALNY_X")
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=[zone]))
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[zone]))
 
     assert result.zones[0].zone_type is PogPlanningZoneType.UNKNOWN
     assert result.zones[0].source_zone_type == "LOKALNY_X"
@@ -110,7 +138,7 @@ def test_ouz_surface_intersection_uses_area_and_percentage() -> None:
     parcel = Polygon.from_bounds(0, 0, 100, 100)
     ouz = _feature(Polygon.from_bounds(0, 0, 40, 100), "ouz")
 
-    result = analyze_pog_adopted(parcel, _vector_data(ouz=[ouz]))
+    result = analyze_pog_vectors(parcel, _vector_data(ouz=[ouz]))
 
     assert result.ouz_intersection_area_sqm == pytest.approx(4_000.0)
     assert result.ouz_intersection_pct == pytest.approx(40.0)
@@ -121,7 +149,7 @@ def test_parcel_only_touching_ouz_sets_boundary_flag_without_area() -> None:
     parcel = Polygon.from_bounds(0, 0, 10, 10)
     ouz = _feature(Polygon.from_bounds(10, 0, 20, 10), "ouz")
 
-    result = analyze_pog_adopted(parcel, _vector_data(ouz=[ouz]))
+    result = analyze_pog_vectors(parcel, _vector_data(ouz=[ouz]))
 
     assert result.ouz_intersection_area_sqm == 0.0
     assert result.ouz_intersection_pct == 0.0
@@ -133,7 +161,7 @@ def test_multiple_overlapping_ouz_features_are_not_double_counted() -> None:
     first = _feature(Polygon.from_bounds(0, 0, 60, 100), "ouz")
     second = _feature(Polygon.from_bounds(40, 0, 100, 100), "ouz")
 
-    result = analyze_pog_adopted(parcel, _vector_data(ouz=[first, second]))
+    result = analyze_pog_vectors(parcel, _vector_data(ouz=[first, second]))
 
     assert result.ouz_intersection_area_sqm == pytest.approx(10_000.0)
     assert result.ouz_intersection_pct == pytest.approx(100.0)
@@ -143,8 +171,8 @@ def test_tiny_ouz_sliver_uses_shared_threshold_in_api_mapping() -> None:
     parcel = Polygon.from_bounds(0, 0, 100, 100)
     ouz = _feature(Polygon.from_bounds(0, 0, 0.005, 100), "ouz")
 
-    result = analyze_pog_adopted(parcel, _vector_data(ouz=[ouz]))
-    api_result = to_pog_result(result)
+    result = analyze_pog_vectors(parcel, _vector_data(ouz=[ouz]))
+    api_result = to_pog_result(result, _decision(result))
 
     assert result.ouz_intersection_area_sqm == pytest.approx(0.5)
     assert result.ouz_status.in_ouz is False
@@ -156,7 +184,7 @@ def test_downtown_area_is_calculated_separately() -> None:
     parcel = Polygon.from_bounds(0, 0, 20, 20)
     downtown = _feature(Polygon.from_bounds(0, 0, 10, 20), "downtown_area")
 
-    result = analyze_pog_adopted(parcel, _vector_data(downtown=[downtown]))
+    result = analyze_pog_vectors(parcel, _vector_data(downtown=[downtown]))
 
     assert result.downtown_intersection_area_sqm == pytest.approx(200.0)
     assert result.downtown_intersection_pct == pytest.approx(50.0)
@@ -172,7 +200,7 @@ def test_pdf_parameters_are_informational_and_lower_confidence() -> None:
         parameter_source="PDF uzasadnienie",
     )
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=[zone]))
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[zone]))
 
     assert result.zones[0].parameters["max_building_height_m"] == 12
     assert result.zones[0].parameters_informational is True
@@ -189,7 +217,7 @@ def test_overlapping_zones_add_warning() -> None:
         _feature(parcel, "planning_zone", zone_type="SU"),
     ]
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=zones))
+    result = analyze_pog_vectors(parcel, _vector_data(zones=zones))
 
     assert sum(zone.area_ratio for zone in result.zones) == pytest.approx(2.0)
     assert any(warning.code == "POG_OVERLAPPING_ZONES" for warning in result.warnings)
@@ -198,7 +226,7 @@ def test_overlapping_zones_add_warning() -> None:
 def test_vector_fallback_returns_unknown_not_exception() -> None:
     parcel = Polygon.from_bounds(0, 0, 10, 10)
 
-    result = analyze_pog_adopted(parcel, _vector_data(fallback=True))
+    result = analyze_pog_vectors(parcel, _vector_data(fallback=True))
 
     assert result.status == "unknown"
     assert result.zones == []
@@ -208,16 +236,42 @@ def test_vector_fallback_returns_unknown_not_exception() -> None:
     )
 
 
-def test_missing_zone_intersection_is_adopted_with_warning() -> None:
+def test_missing_zone_intersection_is_analyzed_with_warning() -> None:
     parcel = Polygon.from_bounds(0, 0, 10, 10)
     remote_zone = _feature(
         Polygon.from_bounds(20, 20, 30, 30), "planning_zone", zone_type="SJ"
     )
 
-    result = analyze_pog_adopted(parcel, _vector_data(zones=[remote_zone]))
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[remote_zone]))
 
-    assert result.status == "adopted"
+    assert result.status == "analyzed"
     assert result.dominant_zone is None
     assert any(
         warning.code == "POG_ZONE_NOT_INTERSECTED" for warning in result.warnings
     )
+
+
+def test_project_zones_are_mapped_without_binding_status() -> None:
+    parcel = Polygon.from_bounds(0, 0, 10, 10)
+    zone = _feature(parcel, "planning_zone", zone_type="SJ")
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[zone]))
+    raw = "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/adoption"
+
+    api_result = to_pog_result(result, _decision(result, raw))
+
+    assert api_result.legal_status == "project"
+    assert api_result.coverage_status == "available"
+    assert api_result.manual_review_required is True
+
+
+def test_zones_covering_part_of_parcel_are_partial_coverage() -> None:
+    parcel = Polygon.from_bounds(0, 0, 10, 10)
+    zone = _feature(Polygon.from_bounds(0, 0, 5, 10), "planning_zone", zone_type="SJ")
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[zone]))
+
+    api_result = to_pog_result(result, _decision(result))
+
+    assert zones_cover_parcel(result) is False
+    assert api_result.legal_status == "binding"
+    assert api_result.coverage_status == "partial"
+    assert api_result.manual_review_required is True

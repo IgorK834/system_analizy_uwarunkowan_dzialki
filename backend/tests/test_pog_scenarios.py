@@ -17,19 +17,40 @@ def _ouz_available():
     return calculate_ouz_status(parcel, [parcel])
 
 
-@pytest.mark.parametrize("status", ["not_available", "in_progress"])
-def test_missing_or_in_progress_pog_is_controlled_transition(status: str) -> None:
+@pytest.mark.parametrize("status", ["project", "in_progress"])
+def test_project_or_in_progress_pog_is_controlled_transition(status: str) -> None:
     result = build_pog_scenario_result(
         None,
-        SimpleNamespace(status=status, planning_zone=None),
+        SimpleNamespace(legal_status=status, planning_zone="SJ"),
         _ouz_available(),
     )
 
     assert result.status == status
     assert result.conflict is False
     assert result.conflict_uncertain is True
+    assert result.compatibility is None
     assert result.manual_review_required is True
     assert "1 stycznia 2026" in result.message
+    # Projekt ani procedura w toku nie są opisywane językiem obowiązywania.
+    assert "obowiązuje" not in result.message.lower()
+    assert (
+        "nie jest aktem wiążącym" in result.message
+        or "nie są wiążące" in result.message
+    )
+
+
+@pytest.mark.parametrize("status", ["unknown", "superseded", "adopted", "not_available"])
+def test_unconfirmed_or_superseded_status_skips_compatibility(status: str) -> None:
+    result = build_pog_scenario_result(
+        SimpleNamespace(primary_use="single_family_housing"),
+        SimpleNamespace(legal_status=status, planning_zone="SJ"),
+        _ouz_available(),
+    )
+
+    assert result.compatibility is None
+    assert result.status in {"unknown", "superseded"}
+    assert "obowiązuje" not in result.message.lower()
+    assert "brak planu" not in result.message.lower().replace("braku planu", "")
 
 
 def test_conflict_comes_only_from_compatibility_function(
@@ -53,7 +74,7 @@ def test_conflict_comes_only_from_compatibility_function(
 
     result = build_pog_scenario_result(
         SimpleNamespace(primary_use="production"),
-        SimpleNamespace(status="adopted", planning_zone="SP"),
+        SimpleNamespace(legal_status="binding", planning_zone="SP"),
         _ouz_available(),
     )
 
@@ -68,7 +89,7 @@ def test_conflict_comes_only_from_compatibility_function(
 def test_compatible_pair_does_not_create_false_conflict() -> None:
     result = build_pog_scenario_result(
         SimpleNamespace(primary_use="single_family_housing"),
-        SimpleNamespace(status="adopted", planning_zone="SJ"),
+        SimpleNamespace(legal_status="binding", planning_zone="SJ"),
         _ouz_available(),
     )
 
@@ -95,7 +116,7 @@ def test_unknown_or_uncertain_is_not_promoted_to_conflict(
 
     result = build_pog_scenario_result(
         SimpleNamespace(primary_use="services"),
-        SimpleNamespace(status="adopted", planning_zone="SJ"),
+        SimpleNamespace(legal_status="binding", planning_zone="SJ"),
         _ouz_available(),
     )
 
@@ -107,7 +128,7 @@ def test_unknown_or_uncertain_is_not_promoted_to_conflict(
 def test_unknown_pog_status_gracefully_requires_review() -> None:
     result = build_pog_scenario_result(
         None,
-        SimpleNamespace(status="unexpected", planning_zone=None),
+        SimpleNamespace(legal_status="unexpected", planning_zone=None),
         _ouz_available(),
     )
 
@@ -119,7 +140,7 @@ def test_unknown_pog_status_gracefully_requires_review() -> None:
 def test_missing_normalized_mpzp_function_does_not_guess_from_text() -> None:
     result = build_pog_scenario_result(
         SimpleNamespace(primary_use="zabudowa produkcyjna i magazyny"),
-        SimpleNamespace(status="adopted", planning_zone="SN"),
+        SimpleNamespace(legal_status="binding", planning_zone="SN"),
         _ouz_available(),
     )
 
@@ -132,11 +153,11 @@ def test_missing_normalized_mpzp_function_does_not_guess_from_text() -> None:
 @pytest.mark.parametrize(
     ("mpzp_result", "pog_result"),
     [
-        (None, SimpleNamespace(status="not_available", planning_zone=None)),
+        (None, SimpleNamespace(legal_status="unknown", planning_zone=None)),
         (None, None),
         (
             SimpleNamespace(primary_use="single_family_housing"),
-            SimpleNamespace(status="adopted", planning_zone="SJ"),
+            SimpleNamespace(legal_status="binding", planning_zone="SJ"),
         ),
     ],
 )
