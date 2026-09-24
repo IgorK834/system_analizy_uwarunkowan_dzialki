@@ -92,20 +92,15 @@ class Settings(BaseSettings):
     report_map_kiut_overlay_enabled: bool = True
     report_map_wms_timeout_seconds: float = 8.0
     report_map_wms_max_response_bytes: int = 8 * 1024 * 1024
-    # Rejestr Urbanistyczny jest opcjonalnym, eksperymentalnym kanałem discovery.
-    # W lipcu 2026 publiczny kontrakt API ani adres usługi nie są potwierdzone,
-    # dlatego brak wartości jest bezpiecznym ustawieniem domyślnym. Adresy WMS/BIP
-    # POG przekazuje się per gmina do discover_pog, a nie przez globalny endpoint.
-    rejestr_urbanistyczny_base_url: str | None = None
+    # Endpointy Rejestru Urbanistycznego są wersjonowanym kontraktem katalogu
+    # docs/data_sources/catalog.yaml. Nie dublujemy ich w zmiennych runtime.
     # Oficjalne słowniki off-line GUGiK zasilają lokalny indeks autocomplete.
     # Synchronizacja jest osobnym zadaniem utrzymaniowym; API nie pobiera paczek
     # w ścieżce żądania użytkownika.
     address_dictionary_soap_url: str = (
         "https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline"
     )
-    address_index_teryt_scopes: str = (
-        "02,04,06,08,10,12,14,16,18,20,22,24,26,28,30,32"
-    )
+    address_index_teryt_scopes: str = "02,04,06,08,10,12,14,16,18,20,22,24,26,28,30,32"
     address_index_connect_timeout_seconds: float = 5.0
     address_index_read_timeout_seconds: float = 60.0
     address_index_max_package_bytes: int = 512 * 1024 * 1024

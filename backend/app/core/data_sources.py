@@ -12,8 +12,8 @@ TERYT itd.). Katalog pełni dwie role:
    orchestratorze (status research/placeholder/contract_required/no_redistribution
    albo ``production_ready=false``).
 
-Uwaga o dostępności pliku w kontenerze: obraz backendu kopiuje wyłącznie
-``app/``, ``tests/`` i ``alembic/`` — katalog ``docs/`` nie trafia do obrazu.
+Uwaga o dostępności pliku w kontenerze: obraz backendu kopiuje kod aplikacji i
+skrypty, ale katalog ``docs/`` jest dostarczany przez montowanie repozytorium.
 Dlatego loader lokalizuje plik względem katalogu repozytorium (zmienna
 ``REPO_ROOT`` albo przeszukanie katalogów nadrzędnych), a katalog NIE jest
 wymagany w ścieżce obsługi zwykłego żądania HTTP. Guard i loader są używane
@@ -73,6 +73,7 @@ class AccessType(str, Enum):
     WMS = "wms"
     WMTS = "wmts"
     WFS = "wfs"
+    CSW = "csw"
     APP_GML = "app_gml"
     FILE = "file"
     SOAP = "soap"
@@ -91,8 +92,16 @@ class SourceResource(BaseModel):
     access_type: AccessType
     url: str = Field(min_length=1)
     type_name: str | None = None
+    type_names: list[str] = Field(default_factory=list)
     layer: str | None = None
+    layers: list[str] = Field(default_factory=list)
+    protocol_version: str | None = None
+    namespace_uri: str | None = None
     source_crs: str
+    supported_crs: list[str] = Field(default_factory=list)
+    inherited_crs: list[str] = Field(default_factory=list)
+    count_default: int | None = Field(default=None, gt=0)
+    output_formats: list[str] = Field(default_factory=list)
     field_mapping: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -102,9 +111,25 @@ class SourceResource(BaseModel):
                 f"Niedozwolony lub nieznany CRS {self.source_crs!r} zasobu "
                 f"{self.role!r}."
             )
-        if self.access_type is AccessType.WFS and not self.type_name:
-            raise ValueError(f"Zasób WFS {self.role!r} musi deklarować type_name.")
+        for crs in (*self.supported_crs, *self.inherited_crs):
+            if crs != "CRS:84" and crs not in ALLOWED_SOURCE_CRS:
+                raise ValueError(
+                    f"Niedozwolony lub nieznany CRS {crs!r} zasobu {self.role!r}."
+                )
+        if self.access_type is AccessType.WFS and not (
+            self.type_name or self.type_names
+        ):
+            raise ValueError(
+                f"Zasób WFS {self.role!r} musi deklarować type_name lub type_names."
+            )
         return self
+
+    @property
+    def declared_type_names(self) -> tuple[str, ...]:
+        values = [*self.type_names]
+        if self.type_name:
+            values.append(self.type_name)
+        return tuple(dict.fromkeys(values))
 
 
 # Statusy, których adapter NIE może uruchomić w produkcyjnym orchestratorze,
