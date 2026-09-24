@@ -469,6 +469,15 @@ def test_pog_v2_three_zone_roundtrip_db_api_and_report_html() -> None:
         assert rebuilt.pog.zones[0].max_overground_floor_area_ratio == 0
         assert rebuilt.pog.zones[1].max_overground_floor_area_ratio is None
         assert rebuilt.pog.social_infrastructure_standard_areas[0].symbol == "OSD"
+        # Snapshot 2.0 z przypiętym wydaniem (SHA + wersja aktu) zachowuje
+        # potwierdzenie źródłowe, więc alias adopted przechodzi w binding.
+        assert rebuilt.pog.legal_status == "binding"
+        assert rebuilt.pog.coverage_status == "available"
+        assert rebuilt.pog.legal_status_evidence is not None
+        assert "data_release:1" in (rebuilt.pog.legal_status_evidence.reference or "")
+        saved_row = db.scalar(select(PogData).where(PogData.analysis_id == saved.id))
+        assert saved_row.legal_status == "binding"
+        assert saved_row.coverage_status == "available"
         html = _render_report_html(_build_report_context(rebuilt, None, None))
         assert all(symbol in html for symbol in ("SJ", "SU", "SN", "OSD"))
         assert "620" in html and "280" in html and "100" in html
@@ -480,7 +489,7 @@ def test_pog_v2_three_zone_roundtrip_db_api_and_report_html() -> None:
         assert pdf.startswith(b"%PDF")
 
 
-def test_not_available_pog_status_and_review_flag_are_persisted() -> None:
+def test_legacy_not_available_pog_status_is_unknown_and_review_flag_persisted() -> None:
     response = _minimal_response().model_copy(
         update={
             "pog": PogResult(
@@ -516,14 +525,18 @@ def test_not_available_pog_status_and_review_flag_are_persisted() -> None:
         saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
         analysis = db.get(Analysis, analysis_id)
 
-        assert saved.status == "not_available"
+        # Wartość sprzed BK-106 oznaczała brak danych, nie brak aktu.
+        assert saved.status == "unknown"
+        assert saved.legal_status == "unknown"
+        assert saved.coverage_status == "unknown"
         assert saved.in_ouz is False
         assert saved.manual_review_required is True
         assert analysis.warnings[0]["code"] == "POG_TRANSITIONAL_STATUS"
 
         cached_response = build_analyze_response_from_analysis(analysis, db)
         assert cached_response.pog is not None
-        assert cached_response.pog.status == "not_available"
+        assert cached_response.pog.status == "unknown"
+        assert cached_response.pog.legal_status == "unknown"
         assert cached_response.pog.manual_review_required is True
         assert cached_response.warnings[0].code == "POG_TRANSITIONAL_STATUS"
 

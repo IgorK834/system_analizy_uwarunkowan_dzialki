@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from concurrent.futures import Future
+from concurrent.futures import Future, ProcessPoolExecutor
 import io
+import multiprocessing
+import resource
+import sys
 import shutil
 
 import fitz
@@ -186,9 +189,16 @@ def _slow() -> str:
 
 
 def test_worker_direct_wrapper_runs_function_on_current_platform() -> None:
-    assert _run_with_resource_limits(
-        _double, (3,), WorkerLimits()
-    ) == 6
+    # Na Linuksie wrapper ustawia RLIMIT_AS/RLIMIT_CPU procesu, w którym działa.
+    # Wywołanie w procesie pytest trwale ograniczałoby cały przebieg testów
+    # (SIGKILL po 90 s CPU, brak pamięci na nowe wątki), dlatego — tak jak
+    # produkcyjny worker — uruchamiamy go w osobnym procesie.
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=1, mp_context=context) as executor:
+        result = executor.submit(
+            _run_with_resource_limits, _double, (3,), WorkerLimits()
+        ).result(timeout=60)
+    assert result == 6
 
 
 def test_timeout_termination_stops_live_executor_processes() -> None:
@@ -254,7 +264,17 @@ async def test_worker_maps_executor_errors_and_timeout(
         "app.modules.documents.infrastructure.worker.ProcessPoolExecutor",
         _InlineExecutor,
     )
+    # Wykonawca inline działa w procesie pytest: limity RLIMIT_AS/RLIMIT_CPU
+    # są rejestrowane zamiast ustawiane, aby nie ograniczać dalszych testów.
+    requested_limits: list[tuple[int, tuple[int, int]]] = []
+    monkeypatch.setattr(
+        resource,
+        "setrlimit",
+        lambda kind, value: requested_limits.append((kind, value)),
+    )
     assert await ProcessDocumentWorker().run(_double, 5) == 10
+    if sys.platform.startswith("linux"):
+        assert (resource.RLIMIT_CPU, (90, 91)) in requested_limits
     with pytest.raises(DocumentWorkerError):
         await ProcessDocumentWorker().run(_raise_value_error)
 

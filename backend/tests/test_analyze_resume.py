@@ -142,14 +142,14 @@ def mock_pog_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
         "app.services.analysis_orchestrator.discover_pog",
         AsyncMock(
             return_value=PogDiscoveryResult(
-                status="unknown",
+                legal_status="unknown",
                 uchwala_nr=None,
                 uchwala_date=None,
                 links=[],
-                planning_act=PogLayerSection("planning_act", "unknown"),
-                downtown_area=PogLayerSection("downtown_area", "unknown"),
-                ouz=PogLayerSection("ouz", "unknown"),
-                planning_zones=PogLayerSection("planning_zones", "unknown"),
+                planning_act=PogLayerSection("planning_act", "unavailable"),
+                downtown_area=PogLayerSection("downtown_area", "unavailable"),
+                ouz=PogLayerSection("ouz", "unavailable"),
+                planning_zones=PogLayerSection("planning_zones", "unavailable"),
                 is_discovery_only=True,
                 source_metadata=source,
                 warnings=[],
@@ -552,7 +552,7 @@ def test_resume_preserves_complete_pog_v2_snapshot() -> None:
     pog_v2 = {
         "schema_version": "2.0",
         "legal_status": "adopted",
-        "coverage_status": "full",
+        "coverage_status": "complete",
         "act": {"id": "pog:test", "version": "2026-09-24"},
         "zones": [
             {
@@ -616,6 +616,10 @@ def test_resume_preserves_complete_pog_v2_snapshot() -> None:
     assert response.status_code == 200
     returned = response.json()["pog"]
     assert returned["schema_version"] == "2.0"
+    # Snapshot 2.0 bez przypiętego wydania nie ma potwierdzenia źródłowego:
+    # alias adopted → unknown, complete → available (BK-106).
+    assert returned["legal_status"] == "unknown"
+    assert returned["coverage_status"] == "available"
     assert [zone["id"] for zone in returned["zones"]] == ["zone:sj", "zone:su"]
     assert returned["zones"][0]["max_building_height_m"] is None
     assert returned["zones"][1]["max_building_height_m"] == 0.0
@@ -623,6 +627,127 @@ def test_resume_preserves_complete_pog_v2_snapshot() -> None:
         saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
         assert saved is not None
         assert saved.result_v2["zones"] == pog_v2["zones"]
+
+
+def test_resume_updates_pog_v2_snapshot_with_scenario_and_conflict() -> None:
+    """BK regression: resume musi aktualizować result_v2, nie tylko płaskie kolumny.
+
+    ``_pog_response`` (persistence.py) czyta wyłącznie ``result_v2``, gdy jest
+    ustawiony, więc zmiany scenariusza zapisane tylko w płaskich kolumnach
+    PogData są niewidoczne w API/cache/PDF. Ten test odtwarza akt POG
+    obowiązujący (``legal_status=binding`` z urzędowym potwierdzeniem) ze
+    strefą zieleni (SN) i wznawia analizę z funkcją MPZP produkcyjną, która
+    jest jawnie sprzeczna z SN w tabeli zgodności — więc oczekujemy
+    ``conflict_with_mpzp=True`` zarówno w odpowiedzi resume, jak i w kolejnym
+    odczycie z ``build_analyze_response_from_analysis``.
+    """
+    from app.services.persistence import build_analyze_response_from_analysis
+
+    analysis_id = _create_waiting_analysis("122101_1.0001.9020")
+    pog_v2 = {
+        "schema_version": "2.0",
+        "legal_status": "binding",
+        "legal_status_evidence": {
+            "source_name": "RU",
+            "official": True,
+            "reference": "https://ru.example.test/act/1",
+        },
+        "coverage_status": "available",
+        "act": {"id": "pog:test-2", "version": "2026-09-24"},
+        "zones": [
+            {
+                "id": "zone:sn",
+                "symbol": "SN",
+                "type": "SN",
+                "area_sqm": 100.0,
+                "area_pct": 100.0,
+                "max_building_height_m": None,
+            }
+        ],
+        "dominant_zone_id": "zone:sn",
+        "ouz": [],
+        "downtown_areas": [],
+        "social_infrastructure_standard_areas": [],
+        "status": "binding",
+        "planning_zone": "SN",
+        "zone_type": "SN",
+        "in_ouz": False,
+        "area_ratio": 1.0,
+        "in_downtown_area": False,
+        "manual_review_required": False,
+        "conflict_with_mpzp": None,
+        "touches_ouz_boundary": False,
+    }
+    with SessionLocal() as db:
+        record = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert record is not None
+        record.legal_status = "binding"
+        record.planning_zone = "SN"
+        record.schema_version = "2.0"
+        record.result_v2 = pog_v2
+        record.legacy_partial = False
+        db.commit()
+
+    parser_result = MpzpParseResult(
+        plan_id="MPZP/2020/1",
+        zones=[
+            ParserMpzpZoneResult(
+                zone_symbol="230_U",
+                parameters=[
+                    MpzpParameter(
+                        name="primary_use",
+                        normalized_value="production",
+                        confidence=0.9,
+                        manual_review_required=False,
+                    )
+                ],
+            )
+        ],
+        status="complete",
+    )
+
+    with (
+        patch(
+            "app.services.analysis_resume.fetch_mpzp_document",
+            new=AsyncMock(return_value=_document_blob()),
+        ),
+        patch(
+            "app.services.analysis_resume.parse_mpzp_document",
+            new=AsyncMock(return_value=parser_result),
+        ),
+    ):
+        response = client.post(
+            "/analyze/resume",
+            json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+        )
+
+    assert response.status_code == 200
+    body_pog = response.json()["pog"]
+    assert body_pog["conflict_with_mpzp"] is True
+    assert body_pog["manual_review_required"] is True
+    assert body_pog["raw_attributes"]["scenario"]["compatibility"]["result"] == "incompatible"
+
+    with SessionLocal() as db:
+        saved = db.scalar(select(PogData).where(PogData.analysis_id == analysis_id))
+        assert saved is not None
+        assert saved.conflict_with_mpzp is True
+        assert saved.manual_review_required is True
+        assert saved.result_v2["conflict_with_mpzp"] is True
+        assert saved.result_v2["manual_review_required"] is True
+        assert saved.result_v2["raw_attributes"]["scenario"]["compatibility"]["result"] == (
+            "incompatible"
+        )
+
+        analysis = db.get(Analysis, analysis_id)
+        assert analysis is not None
+        rebuilt = build_analyze_response_from_analysis(analysis, db)
+        assert rebuilt.pog is not None
+        assert rebuilt.pog.conflict_with_mpzp is True
+        assert rebuilt.pog.manual_review_required is True
+        assert (
+            rebuilt.pog.raw_attributes["scenario"]["compatibility"]["result"]
+            == "incompatible"
+        )
 
 
 def test_resume_keeps_partial_status_when_parser_result_is_not_complete() -> None:

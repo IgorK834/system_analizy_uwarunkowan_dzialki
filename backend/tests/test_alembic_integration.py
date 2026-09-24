@@ -253,7 +253,15 @@ def test_pog_audit_upgrade_downgrade_preserves_existing_columns() -> None:
                 ),
                 {"analysis_id": analysis_id},
             ).one()
-        assert tuple(restored) == ("adopted", "SJ", False, False, False)
+        # Migracja 016 (BK-106): ``adopted`` bez potwierdzenia źródłowego
+        # staje się ``unknown``, a oryginał trafia do ``legacy_status``.
+        assert tuple(restored) == ("unknown", "SJ", False, False, False)
+        with engine.connect() as connection:
+            legacy = connection.execute(
+                text("SELECT legacy_status FROM pog_data WHERE analysis_id = :analysis_id"),
+                {"analysis_id": analysis_id},
+            ).scalar_one()
+        assert legacy == "adopted"
     finally:
         command.upgrade(config, "head")
         with engine.begin() as connection:

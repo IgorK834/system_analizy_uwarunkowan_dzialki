@@ -28,6 +28,7 @@ from app.services.kiut import NetworkFeature
 from app.services.mpzp import MpzpDiscoveryResult
 from app.services.mpzp_fetch import DocumentBlob, MpzpDocumentFetchError
 from app.services.pog import PogDiscoveryResult, PogLayerSection
+from app.shared.planning_status import StatusEvidence
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.services.persistence import build_analyze_response_from_analysis
 from app.services.uldk import ParcelLookupResult
@@ -121,14 +122,14 @@ def _empty_context() -> ContextResult:
 
 def _unknown_pog_discovery() -> PogDiscoveryResult:
     return PogDiscoveryResult(
-        status="unknown",
+        legal_status="unknown",
         uchwala_nr=None,
         uchwala_date=None,
         links=[],
-        planning_act=PogLayerSection("planning_act", "unknown"),
-        downtown_area=PogLayerSection("downtown_area", "unknown"),
-        ouz=PogLayerSection("ouz", "unknown"),
-        planning_zones=PogLayerSection("planning_zones", "unknown"),
+        planning_act=PogLayerSection("planning_act", "unavailable"),
+        downtown_area=PogLayerSection("downtown_area", "unavailable"),
+        ouz=PogLayerSection("ouz", "unavailable"),
+        planning_zones=PogLayerSection("planning_zones", "unavailable"),
         is_discovery_only=True,
         source_metadata=_source("POG_FIXTURE", None, confidence=0.0, manual=True),
         warnings=[],
@@ -206,24 +207,37 @@ def _document() -> DocumentBlob:
     )
 
 
-def _adopted_pog_discovery() -> PogDiscoveryResult:
+LEGAL_FORCE = "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce"
+
+
+def _binding_pog_discovery() -> PogDiscoveryResult:
+    source = _source(
+        "POG_GMINA_WMS",
+        "https://pog.example.test/wms",
+        confidence=0.65,
+        manual=True,
+    )
     return PogDiscoveryResult(
-        status="adopted",
+        legal_status="binding",
         uchwala_nr="X/42/2026",
         uchwala_date="2026-02-10",
         links=["https://bip.example.test/pog.gml"],
-        planning_act=PogLayerSection("planning_act", "adopted", feature_count=1),
-        downtown_area=PogLayerSection("downtown_area", "adopted"),
-        ouz=PogLayerSection("ouz", "adopted", feature_count=1),
-        planning_zones=PogLayerSection(
-            "planning_zones", "adopted", feature_count=1
+        planning_act=PogLayerSection(
+            "planning_act", "found", feature_count=1, raw_legal_status=LEGAL_FORCE
         ),
+        downtown_area=PogLayerSection("downtown_area", "empty"),
+        ouz=PogLayerSection("ouz", "found", feature_count=1),
+        planning_zones=PogLayerSection("planning_zones", "found", feature_count=1),
         is_discovery_only=True,
-        source_metadata=_source(
-            "POG_GMINA_WMS",
-            "https://pog.example.test/wms",
-            confidence=0.65,
-            manual=True,
+        source_metadata=source,
+        source_responded=True,
+        raw_legal_status=LEGAL_FORCE,
+        legal_evidence=StatusEvidence(
+            source_name=source.source_name,
+            official=True,
+            reference=source.source_url,
+            raw_value=LEGAL_FORCE,
+            confirmed_at=source.fetched_at,
         ),
     )
 
@@ -515,7 +529,7 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
 
 
 @pytest.mark.asyncio
-async def test_adopted_pog_ouz_and_compatibility_run_end_to_end() -> None:
+async def test_binding_pog_ouz_and_compatibility_run_end_to_end() -> None:
     identifier = f"{_PREFIX}POG_E2E"
     parse_result = _parse_result().model_copy(
         update={
@@ -557,7 +571,7 @@ async def test_adopted_pog_ouz_and_compatibility_run_end_to_end() -> None:
         ),
         patch(
             "app.services.analysis_orchestrator.discover_pog",
-            new=AsyncMock(return_value=_adopted_pog_discovery()),
+            new=AsyncMock(return_value=_binding_pog_discovery()),
         ),
         patch(
             "app.services.analysis_orchestrator.fetch_pog_vector_data",
@@ -571,7 +585,10 @@ async def test_adopted_pog_ouz_and_compatibility_run_end_to_end() -> None:
         )
 
     assert response.pog is not None
-    assert response.pog.status == "adopted"
+    assert response.pog.legal_status == "binding"
+    assert response.pog.coverage_status == "available"
+    assert response.pog.data_availability == "current"
+    assert response.pog.status == "binding"
     assert response.pog.planning_zone == "SJ"
     assert response.pog.area_ratio == pytest.approx(1.0)
     assert response.pog.in_ouz is True
@@ -588,7 +605,9 @@ async def test_adopted_pog_ouz_and_compatibility_run_end_to_end() -> None:
             select(PogData).where(PogData.analysis_id == response.analysis_id)
         )
         assert saved is not None
-        assert saved.status == "adopted"
+        assert saved.status == "binding"
+        assert saved.legal_status == "binding"
+        assert saved.coverage_status == "available"
         assert saved.in_ouz is True
         assert saved.conflict_with_mpzp is False
         cached_analysis = db.get(Analysis, response.analysis_id)
