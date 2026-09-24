@@ -79,6 +79,15 @@ class AccessType(str, Enum):
     SOAP = "soap"
 
 
+class MpzpDataClassification(str, Enum):
+    """Zakres danych MPZP potwierdzony kontraktem źródłowym."""
+
+    VECTOR_ZONES = "vector_zones"
+    ACT_BOUNDARY_DOCUMENT = "act_boundary_document"
+    RASTER = "raster"
+    UNKNOWN = "unknown"
+
+
 class SourceResource(BaseModel):
     """Pojedynczy, uporządkowany zasób składający się na kontrakt źródła.
 
@@ -171,6 +180,10 @@ class SourceNotRunnableError(CatalogError):
     """Źródła nie wolno uruchomić w produkcyjnym orchestratorze."""
 
 
+class MpzpSourceNotUsableError(SourceNotRunnableError):
+    """Źródło nie dostarcza potwierdzonego rodzaju danych MPZP."""
+
+
 # --- Modele Pydantic ---------------------------------------------------------
 
 
@@ -204,6 +217,7 @@ class DataSourceEntry(BaseModel):
     notes: str | None = None
     field_mapping: dict[str, str] = Field(default_factory=dict)
     resources: list[SourceResource] = Field(default_factory=list)
+    mpzp_classification: MpzpDataClassification | None = None
 
     @model_validator(mode="after")
     def _validate_contract(self) -> DataSourceEntry:
@@ -242,7 +256,44 @@ class DataSourceEntry(BaseModel):
         if self.production_ready:
             self._validate_production_contract()
 
+        self._validate_mpzp_contract()
+
         return self
+
+    def _validate_mpzp_contract(self) -> None:
+        """Nie pozwala nazwać WMS ani samej granicy wektorem stref planu."""
+        if self.mpzp_classification is None:
+            return
+
+        zone_resources = [item for item in self.resources if item.role == "zones"]
+        if self.mpzp_classification is MpzpDataClassification.VECTOR_ZONES:
+            if self.access_type in (AccessType.WMS, AccessType.WMTS):
+                raise ValueError(
+                    f"Źródło MPZP {self.source_id!r}: WMS/WMTS nie może być "
+                    "sklasyfikowany jako vector_zones."
+                )
+            if not zone_resources:
+                raise ValueError(
+                    f"Źródło MPZP {self.source_id!r}: vector_zones wymaga "
+                    "jawnego zasobu o roli 'zones'."
+                )
+            invalid = [
+                item.access_type.value
+                for item in zone_resources
+                if item.access_type
+                not in (AccessType.WFS, AccessType.APP_GML, AccessType.FILE)
+            ]
+            if invalid:
+                raise ValueError(
+                    f"Źródło MPZP {self.source_id!r}: zasoby zones muszą być "
+                    f"wektorowe, otrzymano {invalid}."
+                )
+        elif zone_resources:
+            raise ValueError(
+                f"Źródło MPZP {self.source_id!r}: klasyfikacja "
+                f"{self.mpzp_classification.value!r} nie może deklarować zasobu "
+                "'zones'."
+            )
 
     def _validate_production_contract(self) -> None:
         """Twarde wymagania dla źródła oznaczonego jako produkcyjnie gotowe."""
@@ -283,6 +334,34 @@ class DataSourceEntry(BaseModel):
             and self.contract_confirmed
             and self.status not in _NON_RUNNABLE_STATUSES
         )
+
+
+def ensure_mpzp_vector_zones_source(
+    source: DataSourceEntry,
+) -> tuple[SourceResource, ...]:
+    """Zwraca potwierdzone wydzielenia MPZP albo przerywa przed odczytem.
+
+    Status prawny publikacji jest nadal obsługiwany przez
+    :func:`ensure_source_runnable`. Ten guard dotyczy semantyki danych i działa
+    również w dry-run: publiczny WMS i wektor samej granicy aktu nie stają się
+    przez tryb testowy geometrią wydzieleń planu.
+    """
+    if source.mpzp_classification is not MpzpDataClassification.VECTOR_ZONES:
+        value = (
+            source.mpzp_classification.value
+            if source.mpzp_classification is not None
+            else "unset"
+        )
+        raise MpzpSourceNotUsableError(
+            f"Źródło {source.source_id!r} ma klasyfikację MPZP {value!r}; "
+            "analiza stref wymaga 'vector_zones'."
+        )
+    zones = tuple(item for item in source.resources if item.role == "zones")
+    if not zones:
+        raise MpzpSourceNotUsableError(
+            f"Źródło {source.source_id!r} nie ma potwierdzonego zasobu 'zones'."
+        )
+    return zones
 
 
 class DataSourceCatalog(BaseModel):
