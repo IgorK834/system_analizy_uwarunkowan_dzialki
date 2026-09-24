@@ -1,0 +1,8 @@
+# BK-001: usługi testowe działają w osobnym projekcie Compose bez portów hosta.
+services:
+  db:
+    ports: !reset []
+  backend:
+    ports: !reset []
+  frontend:
+    ports: !reset []
