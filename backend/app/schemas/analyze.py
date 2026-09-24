@@ -5,7 +5,27 @@ from typing import Annotated, Any, Literal, Self, Union
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.source import SourceMetadata, WarningMessage
+from app.schemas.source import (
+    CatalogMetadataSource,
+    FormalDocumentSource,
+    SourceMetadata,
+    WarningMessage,
+)
+from app.shared.provenance import is_verified_https_url
+from app.shared.planning_status import (
+    COVERAGE_STATUS_ALIASES,
+    LEGACY_LEGAL_STATUSES,
+    LEGAL_STATUS_ALIASES,
+    LEGAL_STATUS_VALUES,
+    CoverageStatus,
+    DataAvailability,
+    LegalStatus,
+    canonical_coverage_status,
+    official_status_code,
+    upgrade_legacy_legal_status,
+)
+
+POG_RESULT_SCHEMA_VERSION = "2.2"
 
 
 class MapAnalyzeRequest(BaseModel):
@@ -279,11 +299,52 @@ class MpzpZoneResult(BaseModel):
 
 
 class PogActResult(BaseModel):
+    """Akt i jego dokładna wersja z łańcuchem provenance (BK-107).
+
+    Wszystkie pola są zapisywane w snapshotcie analizy w chwili wykonania —
+    odczyt starej analizy nie pobiera bieżącej wersji z katalogu.
+    """
+
     id: str
     version: str | None = None
     title: str | None = None
     resolution_number: str | None = None
     resolution_date: date | None = None
+    act_identifier: str | None = Field(
+        default=None, description="Stabilny idIIP aktu (przestrzeń nazw/lokalnyId)."
+    )
+    act_version: str | None = Field(default=None, description="wersjaId idIIP aktu.")
+    publication_id: str | None = Field(
+        default=None, description="gml:identifier opublikowanej wersji aktu w RU."
+    )
+    version_started_at: datetime | None = Field(
+        default=None, description="poczatekWersjiObiektu z APP."
+    )
+    publication_date: date | None = Field(
+        default=None, description="Data publikacji zbioru danych aktu z metadanych CSW."
+    )
+    valid_from: date | None = Field(default=None, description="obowiazujeOd z APP.")
+    valid_to: date | None = Field(default=None, description="obowiazujeDo z APP.")
+    gml_url: str | None = Field(
+        default=None, description="Oficjalny URL GML dokładnej wersji aktu (WFS RU)."
+    )
+    gml_url_verified: bool = False
+    card_url: str | None = Field(
+        default=None, description="Oficjalny URL karty metadanych aktu (CSW RU)."
+    )
+    card_url_verified: bool = False
+    data_release_id: int | None = None
+    release_label: str | None = None
+    artifact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    fetched_at: datetime | None = None
+    metadata: CatalogMetadataSource | None = None
+    formal_documents: list[FormalDocumentSource] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def verify_links(self) -> Self:
+        self.gml_url_verified = is_verified_https_url(self.gml_url)
+        self.card_url_verified = is_verified_https_url(self.card_url)
+        return self
 
 
 class PogProfileResult(BaseModel):
@@ -306,6 +367,16 @@ class PogZoneResult(BaseModel):
     primary_profile: list[PogProfileResult] = Field(default_factory=list)
     additional_profiles: list[PogProfileResult] = Field(default_factory=list)
     source: SourceMetadata | None = None
+    feature_version: str | None = Field(default=None, description="wersjaId obiektu strefy.")
+    gml_url: str | None = Field(
+        default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów."
+    )
+    gml_url_verified: bool = False
+
+    @model_validator(mode="after")
+    def verify_link(self) -> Self:
+        self.gml_url_verified = is_verified_https_url(self.gml_url)
+        return self
 
 
 class PogAreaResult(BaseModel):
@@ -316,12 +387,64 @@ class PogAreaResult(BaseModel):
     area_pct: float = Field(ge=0.0, le=100.0)
     touches_boundary: bool = False
     source: SourceMetadata | None = None
+    feature_version: str | None = None
+    gml_url: str | None = None
+    gml_url_verified: bool = False
+
+    @model_validator(mode="after")
+    def verify_link(self) -> Self:
+        self.gml_url_verified = is_verified_https_url(self.gml_url)
+        return self
+
+
+class PogStatusEvidence(BaseModel):
+    """Wskazanie źródła, które potwierdziło status prawny albo pokrycie."""
+
+    source_name: str
+    official: bool = Field(
+        description="Czy źródło jest właściwym źródłem urzędowym (RU/organ gminy)."
+    )
+    reference: str | None = Field(
+        default=None,
+        description="URL, identyfikator wydania albo sygnatura urzędowego potwierdzenia.",
+    )
+    source_id: str | None = None
+    raw_value: str | None = Field(
+        default=None, description="Surowy urzędowy kod statusu, np. INSPIRE legalForce."
+    )
+    confirmed_at: datetime | None = None
 
 
 class PogResult(BaseModel):
-    schema_version: str = Field(default="2.0")
-    legal_status: str = Field(default="not_available")
-    coverage_status: str = Field(default="unknown")
+    """Wynik POG v2 z rozdzielonym statusem prawnym i pokryciem (BK-106).
+
+    ``legal_status`` opisuje akt, ``coverage_status`` — dostępność danych
+    przestrzennych dla działki, a ``data_availability`` — stan operacyjny źródła
+    w chwili analizy. Żadne z tych pól nie zastępuje pozostałych.
+    """
+
+    schema_version: str = Field(default=POG_RESULT_SCHEMA_VERSION)
+    legal_status: LegalStatus = Field(
+        default="unknown",
+        description="Status prawny aktu z urzędowego źródła: binding|project|in_progress|superseded|unknown.",
+    )
+    coverage_status: CoverageStatus = Field(
+        default="unknown",
+        description=(
+            "Pokrycie danymi przestrzennymi: available|partial|act_without_spatial_data|"
+            "no_act_confirmed|unknown. Brak geometrii nie oznacza braku aktu."
+        ),
+    )
+    data_availability: DataAvailability = Field(
+        default="unavailable",
+        description="Stan operacyjny źródła: current|stale|unavailable; nie jest statusem prawnym.",
+    )
+    status_confirmed_at: datetime | None = Field(
+        default=None,
+        description="Chwila potwierdzenia statusu w źródle; dla stale — data ostatniego potwierdzenia.",
+    )
+    legal_status_evidence: PogStatusEvidence | None = None
+    coverage_evidence: PogStatusEvidence | None = None
     act: PogActResult | None = None
     zones: list[PogZoneResult] = Field(default_factory=list)
     dominant_zone_id: str | None = None
@@ -329,8 +452,12 @@ class PogResult(BaseModel):
     downtown_areas: list[PogAreaResult] = Field(default_factory=list)
     social_infrastructure_standard_areas: list[PogAreaResult] = Field(default_factory=list)
     status: str = Field(
-        description="Status dostępności Planu Ogólnego Gminy.",
-        json_schema_extra={"example": "adopted"},
+        default="unknown",
+        description=(
+            "Przestarzałe lustro legal_status zachowane dla klientów POG v1; "
+            "zawsze równe legal_status."
+        ),
+        json_schema_extra={"example": "binding"},
     )
     planning_zone: str | None = Field(
         default=None,
@@ -406,6 +533,110 @@ class PogResult(BaseModel):
             }
         },
     )
+
+
+    @model_validator(mode="before")
+    @classmethod
+    def upgrade_legacy_statuses(cls, data: Any) -> Any:
+        """Wsteczna zgodność: aliasy i wartości sprzed BK-106.
+
+        ``adopted`` staje się ``binding`` tylko z zachowanym potwierdzeniem
+        (urzędowy kod w ``raw_attributes`` albo przypięte wydanie z SHA i wersją
+        aktu); w przeciwnym razie ``unknown``. ``complete`` → ``available``.
+        """
+        if not isinstance(data, dict):
+            return data
+        payload = dict(data)
+        legal = payload.get("legal_status")
+        legacy = legal if legal is not None else payload.get("status")
+        if legal not in LEGAL_STATUS_VALUES and (
+            legacy is None
+            or legacy in LEGACY_LEGAL_STATUSES
+            or legacy in LEGAL_STATUS_ALIASES
+            or legacy in LEGAL_STATUS_VALUES
+        ):
+            evidence = _legacy_status_evidence(payload)
+            payload["legal_status"] = upgrade_legacy_legal_status(
+                legacy, confirmed=evidence is not None
+            )
+            if payload["legal_status"] == "binding" and not payload.get(
+                "legal_status_evidence"
+            ):
+                payload["legal_status_evidence"] = evidence
+            if "data_availability" not in payload:
+                payload["data_availability"] = (
+                    "unavailable" if legacy in {None, "unknown"} else "current"
+                )
+            if "status_confirmed_at" not in payload and evidence is not None:
+                payload["status_confirmed_at"] = evidence.get("confirmed_at")
+        coverage = payload.get("coverage_status")
+        if coverage in COVERAGE_STATUS_ALIASES:
+            payload["coverage_status"] = canonical_coverage_status(coverage)
+        return payload
+
+    @model_validator(mode="after")
+    def validate_status_contract(self) -> Self:
+        # ``status`` jest wyłącznie lustrem kanonicznego statusu prawnego.
+        self.status = self.legal_status
+        if self.legal_status == "binding" and not (
+            self.legal_status_evidence is not None
+            and self.legal_status_evidence.official
+        ):
+            raise ValueError(
+                "legal_status=binding wymaga urzędowego potwierdzenia statusu"
+            )
+        if self.coverage_status == "no_act_confirmed" and not (
+            self.coverage_evidence is not None
+            and self.coverage_evidence.official
+            and self.coverage_evidence.reference
+        ):
+            raise ValueError(
+                "coverage_status=no_act_confirmed wymaga wskazania urzędowego potwierdzenia"
+            )
+        if self.data_availability == "stale" and self.status_confirmed_at is None:
+            raise ValueError("data_availability=stale wymaga daty ostatniego potwierdzenia")
+        return self
+
+
+def _legacy_status_evidence(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Odtwarza potwierdzenie statusu z zachowanego snapshotu sprzed BK-106."""
+    raw_attributes = payload.get("raw_attributes") or {}
+    app_metadata = (
+        raw_attributes.get("app_metadata") if isinstance(raw_attributes, dict) else None
+    ) or {}
+    raw_status = app_metadata.get("raw_legal_status") if isinstance(app_metadata, dict) else None
+    source = payload.get("source") or {}
+    if hasattr(source, "model_dump"):
+        source = source.model_dump()
+    if not isinstance(source, dict):
+        source = {}
+    act = payload.get("act") or {}
+    if hasattr(act, "model_dump"):
+        act = act.model_dump()
+    if not isinstance(act, dict):
+        act = {}
+    if raw_status and official_status_code(str(raw_status)) == "binding":
+        return {
+            "source_name": source.get("source_name") or "POG",
+            "source_id": source.get("source_id"),
+            "official": True,
+            "reference": source.get("source_url"),
+            "raw_value": str(raw_status),
+            "confirmed_at": source.get("fetched_at"),
+        }
+    release_id = source.get("data_release_id")
+    sha = source.get("artifact_sha256")
+    act_version = act.get("version") or source.get("act_version")
+    if release_id and sha and act_version:
+        return {
+            "source_name": source.get("source_name") or "POG",
+            "source_id": source.get("source_id"),
+            "official": True,
+            "reference": f"data_release:{release_id};sha256:{sha};act_version:{act_version}",
+            "raw_value": None,
+            "confirmed_at": source.get("fetched_at"),
+        }
+    return None
 
 
 class InfrastructureResult(BaseModel):
