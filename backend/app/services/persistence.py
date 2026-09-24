@@ -48,6 +48,7 @@ from app.services.geojson import (
     parcel_geometry_to_geojson,
 )
 from app.services.geometry import calculate_geometry_metrics, calculate_technical_setback
+from app.services.cache import RESULT_CONTRACT_VERSION, current_cache_signature
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,11 @@ class SourceRecordData:
     manual_review_required: bool
     warnings: list[str]
     checksum: str | None
+    source_id: str | None = None
+    source_version: str | None = None
+    artifact_sha256: str | None = None
+    data_release_id: int | None = None
+    act_version: str | None = None
 
 
 _NUMERIC_ZONE_PARAMETERS: tuple[str, ...] = (
@@ -199,6 +205,7 @@ def save_analysis(
     """
     try:
         parcel = get_or_create_parcel(db, parcel_identifier, parcel_geometry)
+        cache_signature, data_release_ids = current_cache_signature(db)
         analysis = Analysis(
             parcel_id=parcel.id,
             analyzed_at=result.analyzed_at,
@@ -215,6 +222,9 @@ def save_analysis(
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
+            data_release_ids=data_release_ids,
+            result_contract_version=RESULT_CONTRACT_VERSION,
+            cache_signature=cache_signature,
         )
         db.add(analysis)
         db.flush()
@@ -252,6 +262,9 @@ def save_analysis(
                     source_url=pog_source.source_url if pog_source else None,
                     fetched_at=pog_source.fetched_at if pog_source else None,
                     confidence=pog_source.confidence if pog_source else None,
+                    schema_version=result.pog.schema_version,
+                    result_v2=result.pog.model_dump(mode="json"),
+                    legacy_partial=False,
                 )
             )
 
@@ -309,6 +322,11 @@ def save_analysis(
                     manual_review_required=source_data.manual_review_required,
                     warnings=source_data.warnings or None,
                     checksum=source_data.checksum,
+                    source_id=source_data.source_id,
+                    source_version=source_data.source_version,
+                    artifact_sha256=source_data.artifact_sha256,
+                    data_release_id=source_data.data_release_id,
+                    act_version=source_data.act_version,
                 )
             )
 
@@ -532,7 +550,12 @@ def _source_record_data(
         confidence=source.confidence,
         manual_review_required=source.manual_review_required,
         warnings=source_warnings,
-        checksum=None,
+        checksum=source.artifact_sha256,
+        source_id=source.source_id,
+        source_version=source.source_version,
+        artifact_sha256=source.artifact_sha256,
+        data_release_id=source.data_release_id,
+        act_version=source.act_version,
     )
 
 
@@ -571,6 +594,11 @@ def _deduplicate_source_records(
             ),
             warnings=list(dict.fromkeys([*existing.warnings, *record.warnings])),
             checksum=existing.checksum or record.checksum,
+            source_id=existing.source_id or record.source_id,
+            source_version=existing.source_version or record.source_version,
+            artifact_sha256=existing.artifact_sha256 or record.artifact_sha256,
+            data_release_id=existing.data_release_id or record.data_release_id,
+            act_version=existing.act_version or record.act_version,
         )
     return unique
 
@@ -624,6 +652,8 @@ def _pog_response(
     source_records: list[SourceRecord],
     parcel_area_sqm: float,
 ) -> PogResult:
+    if pog.result_v2 is not None:
+        return PogResult.model_validate(pog.result_v2)
     area = pog.ouz_intersection_area_sqm
     area_pct = (
         area / parcel_area_sqm * 100.0
@@ -642,6 +672,9 @@ def _pog_response(
         else None
     )
     return PogResult(
+        schema_version="1.0",
+        legal_status=(pog.status if pog.status in {"adopted", "project", "in_progress"} else "not_available"),
+        coverage_status="partial",
         status=pog.status,
         planning_zone=pog.planning_zone,
         zone_type=pog.zone_type,
@@ -715,6 +748,11 @@ def _source_metadata_from_record(record: SourceRecord) -> SourceMetadata:
         else None
     )
     return SourceMetadata(
+        source_id=record.source_id,
+        source_version=record.source_version,
+        artifact_sha256=record.artifact_sha256 or record.checksum,
+        data_release_id=record.data_release_id,
+        act_version=record.act_version,
         source_name=record.source_name,
         source_url=record.source_url,
         fetched_at=record.fetched_at,

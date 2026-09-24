@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import hashlib
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Final
 
@@ -11,12 +13,34 @@ from sqlalchemy.orm import Session
 
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
+from app.models.versioned import DataRelease, DataSource
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CACHE_MAX_AGE_DAYS: Final[int] = 30
 DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES: Final[int] = 15
 _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
+RESULT_CONTRACT_VERSION: Final[str] = "pog-v2"
+
+
+def current_cache_signature(db: Session) -> tuple[str, list[int]]:
+    """Hashuje kontrakt odpowiedzi i pełny zestaw aktywnych wydań danych."""
+    rows = db.execute(
+        select(DataSource.source_id, DataRelease.id, DataRelease.version_label)
+        .join(DataRelease, DataRelease.data_source_id == DataSource.id)
+        .where(DataRelease.is_active.is_(True))
+        .order_by(DataSource.source_id, DataRelease.id)
+    ).all()
+    releases = [
+        {"source_id": str(source_id), "release_id": int(release_id), "version": str(version)}
+        for source_id, release_id, version in rows
+    ]
+    encoded = json.dumps(
+        {"contract": RESULT_CONTRACT_VERSION, "releases": releases},
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest(), [item["release_id"] for item in releases]
 
 
 def get_cached_analysis(
@@ -41,12 +65,14 @@ def get_cached_analysis(
     now = datetime.now(timezone.utc)
     complete_cutoff = now - timedelta(days=max_age_days)
     partial_cutoff = now - timedelta(minutes=partial_max_age_minutes)
+    signature, _release_ids = current_cache_signature(db)
     statement = (
         select(Analysis)
         .join(Parcel, Analysis.parcel_id == Parcel.id)
         .where(
             Parcel.parcel_identifier == parcel_identifier,
             Analysis.status.in_(_CACHEABLE_STATUSES),
+            Analysis.cache_signature == signature,
             or_(
                 and_(
                     Analysis.status == "complete",
