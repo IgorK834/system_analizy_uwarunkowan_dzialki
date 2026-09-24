@@ -8,7 +8,9 @@ Fixtury w `backend/tests/fixtures/ru/` zamrażają zweryfikowany 23 września
 - WMS POG 1.3.0 do podglądu i discovery;
 - WFS POG 2.0.0 / GML 3.2 do importu wektorowego;
 - CSW 2.0.2 do discovery metadanych;
-- małą odpowiedź WFS GetFeature dla aktu Bielska-Białej (`246101`).
+- małą odpowiedź WFS GetFeature dla aktu Bielska-Białej (`246101`);
+- wynik `DescribeFeatureType`, importowany schemat APP 3.0 i po jednej pełnej,
+  nieprzyciętej próbce każdego z sześciu typów POG.
 
 Stroną wejściową jest
 `https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe`. Dokładny URL żądania,
@@ -81,8 +83,10 @@ Klient nie polega na wartości domyślnej. Każda strona ma jawne `count=100` i
 `startIndex=0,100,...`. Import CLI dodaje filtr FES po przestrzeni nazw
 identyfikatora JPT, więc nie pobiera całego zasobu krajowego. Próbka
 GetFeature ma `numberMatched=1`, `numberReturned=1` i identyfikator zawierający
-`246101`. Przycięcie usuwa ciężką geometrię z fixture kontraktowego i nie jest
-dowodem kompletności geometrii wszystkich warstw.
+`246101`. Przycięcie dotyczy wyłącznie tej starszej próbki. Sześć fixtur
+`wfs_pog_getfeature_{act,document,osdis,ouz,ozs,zone}.xml` zachowuje pełną
+odpowiedź, w tym geometrię i relacje `xlink`. Razem ze schematami XSD służą
+one do offline'owego testu mapowania wszystkich obiektów domenowych.
 
 ### CSW
 

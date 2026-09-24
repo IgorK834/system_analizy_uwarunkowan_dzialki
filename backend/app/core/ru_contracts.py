@@ -38,6 +38,7 @@ REQUIRED_WFS_FEATURE_TYPES: Final = frozenset(
         "StrefaPlanistyczna",
         "ObszarUzupelnieniaZabudowy",
         "ObszarZabudowySrodmiejskiej",
+        "ObszarStandardowDostepnosciInfrastrukturySpolecznej",
         "DokumentFormalny",
     }
 )

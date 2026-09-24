@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
+from xml.etree import ElementTree
 
 import httpx
 
@@ -83,6 +84,30 @@ def _validate_getfeature(payload: bytes) -> None:
     assert_wfs_getfeature_contract(parse_wfs_getfeature(payload))
 
 
+def _validate_xsd(payload: bytes) -> None:
+    root = ElementTree.fromstring(payload)
+    if root.tag != "{http://www.w3.org/2001/XMLSchema}schema":
+        raise RuContractError("Odpowiedź nie jest schematem XML Schema.")
+
+
+def _getfeature_spec(filename: str, type_name: str) -> RequestSpec:
+    return RequestSpec(
+        filename=filename,
+        endpoint=f"{BASE_URL}/app-pog/wfs",
+        params={
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": f"app-pog:{type_name}",
+            "count": "1",
+            "srsName": "EPSG:2180",
+        },
+        service="wfs",
+        version="2.0.0",
+        validate=_validate_getfeature,
+    )
+
+
 REQUESTS = (
     RequestSpec(
         filename="wms_pog_capabilities_1_3_0.xml",
@@ -130,6 +155,44 @@ REQUESTS = (
         validate=_validate_getfeature,
         transform=trim_wfs_getfeature,
     ),
+    RequestSpec(
+        filename="wfs_pog_describe_feature_type_3_0.xsd",
+        endpoint=f"{BASE_URL}/app-pog/wfs",
+        params={
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "DescribeFeatureType",
+        },
+        service="wfs",
+        version="2.0.0",
+        validate=_validate_xsd,
+    ),
+    RequestSpec(
+        filename="planowaniePrzestrzenne_3_0.xsd",
+        endpoint=(
+            "https://www.gov.pl/static/zagospodarowanieprzestrzenne/"
+            "schemas/app/3.0/planowaniePrzestrzenne_3_0.xsd"
+        ),
+        params={},
+        service="wfs",
+        version="2.0.0",
+        validate=_validate_xsd,
+    ),
+    _getfeature_spec(
+        "wfs_pog_getfeature_act.xml", "AktPlanowaniaPrzestrzennego"
+    ),
+    _getfeature_spec("wfs_pog_getfeature_document.xml", "DokumentFormalny"),
+    _getfeature_spec(
+        "wfs_pog_getfeature_osdis.xml",
+        "ObszarStandardowDostepnosciInfrastrukturySpolecznej",
+    ),
+    _getfeature_spec(
+        "wfs_pog_getfeature_ouz.xml", "ObszarUzupelnieniaZabudowy"
+    ),
+    _getfeature_spec(
+        "wfs_pog_getfeature_ozs.xml", "ObszarZabudowySrodmiejskiej"
+    ),
+    _getfeature_spec("wfs_pog_getfeature_zone.xml", "StrefaPlanistyczna"),
 )
 
 
