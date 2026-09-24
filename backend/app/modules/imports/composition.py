@@ -42,6 +42,7 @@ from app.modules.imports.infrastructure.pog.reader import (
     PogBoundaryResource,
     PogLayerResource,
     PyogrioPogReader,
+    WfsPogReader,
 )
 from app.modules.imports.infrastructure.raster.gdal import GdalRasterProcessor
 from app.modules.imports.infrastructure.raster.repository import (
@@ -71,7 +72,9 @@ def _release(source: DataSourceEntry, *, dry_run: bool) -> ImportRelease:
     )
 
 
-def _repository(session: Session, source: DataSourceEntry) -> SqlAlchemyImportRepository:
+def _repository(
+    session: Session, source: DataSourceEntry
+) -> SqlAlchemyImportRepository:
     return SqlAlchemyImportRepository(
         session,
         source,
@@ -93,9 +96,7 @@ def run_parcels_command(
     source = get_catalog().get(source_id)
     mapping = source.field_mapping
     teryt = next((item for item in source.teryt_scope if item != "*"), None)
-    resource = next(
-        (item for item in source.resources if item.role == "parcels"), None
-    )
+    resource = next((item for item in source.resources if item.role == "parcels"), None)
     if input_path:
         reader = PyogrioParcelReader(
             input_path,
@@ -115,9 +116,7 @@ def run_parcels_command(
             teryt=teryt,
         )
     else:
-        raise ValueError(
-            "Źródło nie ma czytelnego zasobu WFS/pliku; podaj --input."
-        )
+        raise ValueError("Źródło nie ma czytelnego zasobu WFS/pliku; podaj --input.")
     try:
         outcome = run_parcel_import(
             reader,
@@ -241,35 +240,9 @@ def run_pog_command(
         raise ValueError("Import POG wymaga jawnego --act-id.")
     if not effective_teryt:
         raise ValueError("Import POG wymaga TERYT (--teryt lub jednoznaczny katalog).")
-    if not local_resources:
-        raise ValueError(
-            "Import POG wymaga co najmniej jednej warstwy: "
-            "--resource FEATURE_TYPE=PATH."
-        )
-
-    # Kontrakt CRS/pól per warstwa pochodzi z katalogu, jeśli źródło deklaruje
-    # zasoby dla danego typu warstwy; inaczej używamy CRS źródła bez mapowania.
+    if not effective_teryt.isdigit() or len(effective_teryt) not in {6, 7}:
+        raise ValueError("TERYT importu POG musi zawierać 6 albo 7 cyfr.")
     by_role = {resource.role: resource for resource in source.resources}
-    layers: list[PogLayerResource] = []
-    for feature_type, path in local_resources:
-        contract = by_role.get(feature_type)
-        layers.append(
-            PogLayerResource(
-                feature_type=feature_type,
-                path=Path(path),
-                source_crs=contract.source_crs if contract else source.source_crs,
-                field_mapping=contract.field_mapping if contract else {},
-            )
-        )
-    boundary = None
-    if boundary_path:
-        boundary_contract = by_role.get("boundaries") or by_role.get("act")
-        boundary = PogBoundaryResource(
-            path=Path(boundary_path),
-            source_crs=(
-                boundary_contract.source_crs if boundary_contract else source.source_crs
-            ),
-        )
     metadata = PogActMetadata(
         act_identifier=act_identifier,
         teryt=effective_teryt,
@@ -278,7 +251,88 @@ def run_pog_command(
         resolution_date=resolution_date,
         name=name_label or source.name,
     )
-    reader = PyogrioPogReader(tuple(layers), metadata=metadata, boundary=boundary)
+    if local_resources:
+        # Kontrakt CRS/pól per warstwa pochodzi z katalogu; lokalna ścieżka jest
+        # jawnym wejściem operatora, a nie alternatywnym źródłem URL.
+        layers: list[PogLayerResource] = []
+        for feature_type, path in local_resources:
+            contract = by_role.get(feature_type)
+            layers.append(
+                PogLayerResource(
+                    feature_type=feature_type,
+                    path=Path(path),
+                    source_crs=(contract.source_crs if contract else source.source_crs),
+                    field_mapping=contract.field_mapping if contract else {},
+                )
+            )
+        boundary = None
+        if boundary_path:
+            boundary_contract = by_role.get("boundaries") or by_role.get("act")
+            boundary = PogBoundaryResource(
+                path=Path(boundary_path),
+                source_crs=(
+                    boundary_contract.source_crs
+                    if boundary_contract
+                    else source.source_crs
+                ),
+            )
+        reader = PyogrioPogReader(tuple(layers), metadata=metadata, boundary=boundary)
+    else:
+        wfs_contract = next(
+            (
+                item
+                for item in source.resources
+                if item.access_type is AccessType.WFS and item.declared_type_names
+            ),
+            None,
+        )
+        if wfs_contract is None:
+            raise ValueError("Import POG bez --resource wymaga zasobu WFS w katalogu.")
+        if not wfs_contract.namespace_uri:
+            raise ValueError("Zasób WFS POG nie deklaruje namespace_uri APP.")
+        namespace_uri = wfs_contract.namespace_uri
+        filter_xml = (
+            '<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" '
+            f'xmlns:app-pog="{namespace_uri}">'
+            '<fes:PropertyIsLike wildCard="%" singleChar="_" escapeChar="\\">'
+            "<fes:ValueReference>"
+            "app-pog:idIIP/app-pog:Identyfikator/app-pog:przestrzenNazw"
+            "</fes:ValueReference>"
+            f"<fes:Literal>%{effective_teryt}%</fes:Literal>"
+            "</fes:PropertyIsLike>"
+            "</fes:Filter>"
+        )
+        request_params = {
+            "namespaces": f"xmlns(app-pog,{namespace_uri})",
+            "FILTER": filter_xml,
+        }
+        feature_roles = {
+            "StrefaPlanistyczna": "planning_zone",
+            "ObszarUzupelnieniaZabudowy": "ouz",
+            "ObszarZabudowySrodmiejskiej": "downtown_area",
+            "ObszarStandardowDostepnosciInfrastrukturySpolecznej": (
+                "social_infrastructure_standard"
+            ),
+        }
+        remote_resources = tuple(
+            (
+                feature_roles[qualified_name.rsplit(":", 1)[-1]],
+                WfsResource(
+                    role=feature_roles[qualified_name.rsplit(":", 1)[-1]],
+                    url=wfs_contract.url,
+                    type_name=qualified_name,
+                    source_crs=wfs_contract.source_crs,
+                    field_mapping=wfs_contract.field_mapping,
+                    source_id=source.source_id,
+                    extra_params=request_params,
+                ),
+            )
+            for qualified_name in wfs_contract.declared_type_names
+            if qualified_name.rsplit(":", 1)[-1] in feature_roles
+        )
+        if not remote_resources:
+            raise ValueError("Zasób WFS POG nie deklaruje warstw analitycznych.")
+        reader = WfsPogReader(remote_resources, metadata=metadata)
     release = _release(source, dry_run=dry_run)
     try:
         outcome = run_pog_import(
