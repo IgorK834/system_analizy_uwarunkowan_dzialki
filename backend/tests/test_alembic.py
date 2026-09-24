@@ -118,3 +118,20 @@ def test_utilities_preview_migration_extends_analysis_snapshot() -> None:
     assert '"utilities_preview"' in migration
     assert "postgresql.JSONB" in migration
     assert 'op.drop_column("analyses", "utilities_preview")' in migration
+
+
+def test_pog_v2_migration_follows_current_head_and_documents_legacy_rows() -> None:
+    migration = (
+        Path(__file__).resolve().parents[1]
+        / "alembic"
+        / "versions"
+        / "015_pog_v2_versioned_release.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'revision: str = "015_pog_v2_release"' in migration
+    assert 'down_revision: Union[str, None] = "014_utilities_preview"' in migration
+    assert '"pog_formal_documents"' in migration
+    assert '"result_v2"' in migration
+    assert '"cache_signature"' in migration
+    assert "UPDATE pog_data SET schema_version='1.0', legacy_partial=true" in migration
+    assert 'op.drop_table("pog_formal_documents")' in migration

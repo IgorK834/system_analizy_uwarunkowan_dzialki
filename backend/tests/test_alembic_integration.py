@@ -108,6 +108,78 @@ def test_analysis_has_utilities_preview_snapshot_column() -> None:
     assert columns["utilities_preview"]["nullable"] is True
 
 
+def test_pog_v2_migration_marks_legacy_snapshot_partial_without_inventing_zones() -> None:
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
+    command.downgrade(config, "014_utilities_preview")
+    parcel_identifier = "ALEMBIC_POG_V2_LEGACY"
+    parcel_id: int | None = None
+    analysis_id: int | None = None
+    try:
+        with engine.begin() as connection:
+            connection.execute(
+                text("DELETE FROM parcels WHERE parcel_identifier = :identifier"),
+                {"identifier": parcel_identifier},
+            )
+            parcel_id = connection.execute(
+                text(
+                    "INSERT INTO parcels (parcel_identifier, geometry) "
+                    "VALUES (:identifier, ST_Multi(ST_GeomFromText("
+                    "'POLYGON((0 0,10 0,10 10,0 10,0 0))', 2180))) RETURNING id"
+                ),
+                {"identifier": parcel_identifier},
+            ).scalar_one()
+            analysis_id = connection.execute(
+                text(
+                    "INSERT INTO analyses (parcel_id, status) "
+                    "VALUES (:parcel_id, 'partial') RETURNING id"
+                ),
+                {"parcel_id": parcel_id},
+            ).scalar_one()
+            connection.execute(
+                text(
+                    "INSERT INTO pog_data "
+                    "(analysis_id, status, planning_zone, touches_ouz_boundary) "
+                    "VALUES (:analysis_id, 'adopted', 'SJ', false)"
+                ),
+                {"analysis_id": analysis_id},
+            )
+
+        command.upgrade(config, "head")
+        with engine.connect() as connection:
+            row = connection.execute(
+                text(
+                    "SELECT schema_version, legacy_partial, result_v2 "
+                    "FROM pog_data WHERE analysis_id = :analysis_id"
+                ),
+                {"analysis_id": analysis_id},
+            ).one()
+        assert tuple(row) == ("1.0", True, None)
+        assert "pog_formal_documents" in inspect(engine).get_table_names()
+        analysis_columns = {
+            column["name"] for column in inspect(engine).get_columns("analyses")
+        }
+        assert {"data_release_ids", "result_contract_version", "cache_signature"} <= (
+            analysis_columns
+        )
+    finally:
+        command.upgrade(config, "head")
+        if analysis_id is not None and parcel_id is not None:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("DELETE FROM pog_data WHERE analysis_id = :analysis_id"),
+                    {"analysis_id": analysis_id},
+                )
+                connection.execute(
+                    text("DELETE FROM analyses WHERE id = :analysis_id"),
+                    {"analysis_id": analysis_id},
+                )
+                connection.execute(
+                    text("DELETE FROM parcels WHERE id = :parcel_id"),
+                    {"parcel_id": parcel_id},
+                )
+
+
 def test_pog_audit_upgrade_downgrade_preserves_existing_columns() -> None:
     config = Config("alembic.ini")
     command.upgrade(config, "head")

@@ -126,17 +126,19 @@ def test_collect_source_records_maps_context_statuses_and_warnings() -> None:
             status="error",
             warnings=["Błąd GDOŚ."],
         ),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
 
     records = collect_source_records(_response(), context)
     by_name = {record.source_name: record for record in records}
 
-    assert len(records) == 3
+    assert len(records) == 4
     assert by_name["KIUT"].response_status == "200"
     assert by_name["KIUT"].warnings == ["Ostrzeżenie KIUT."]
     assert by_name["isok"].response_status == "unavailable"
     assert by_name["isok"].manual_review_required is True
     assert by_name["gdos"].response_status == "error"
+    assert by_name["nmt"].response_status == "available"
 
 
 def test_collect_source_records_does_not_fabricate_context_without_result() -> None:
@@ -175,6 +177,7 @@ def test_collect_source_records_merges_duplicate_context_warning() -> None:
         ),
         isok=ContextSectionResult(section="isok", status="available"),
         gdos=ContextSectionResult(section="gdos", status="available"),
+        nmt=ContextSectionResult(section="nmt", status="available"),
     )
 
     records = collect_source_records(_response(sources=[source]), context)
