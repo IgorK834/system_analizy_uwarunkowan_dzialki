@@ -426,6 +426,15 @@ describe("ResultPanel", () => {
   it("ConfidenceBadge pokazuje komunikat braku metadanych, gdy źródło POG jest null", () => {
     const result = buildAnalyzeResponse({
       pog: {
+        schema_version: "2.0",
+        legal_status: "not_available",
+        coverage_status: "unknown",
+        act: null,
+        zones: [],
+        dominant_zone_id: null,
+        ouz: [],
+        downtown_areas: [],
+        social_infrastructure_standard_areas: [],
         status: "unknown",
         planning_zone: null,
         zone_type: null,
@@ -448,6 +457,46 @@ describe("ResultPanel", () => {
 
     expect(screen.getByText("Brak metadanych źródła.")).toBeVisible();
     expect(screen.getByText("Wynik POG wymaga ręcznej weryfikacji.")).toBeVisible();
+  });
+
+  it("pokazuje wszystkie trzy strefy POG i rozróżnia null od zera", () => {
+    const source = {
+      source_name: "POG_APP_LOCAL_POSTGIS",
+      source_url: null,
+      fetched_at: "2026-09-24T10:00:00Z",
+      response_status: null,
+      confidence: 1,
+      manual_review_required: false,
+    };
+    const zone = (id: string, symbol: string, area_sqm: number, area_pct: number, height: number | null) => ({
+      id, symbol, type: symbol, label: `Strefa ${symbol}`, area_sqm, area_pct,
+      max_overground_floor_area_ratio: symbol === "SJ" ? 0 : null,
+      max_building_height_m: height,
+      max_building_coverage_pct: null,
+      min_biologically_active_pct: null,
+      primary_profile: [], additional_profiles: [], source,
+    });
+    const result = buildAnalyzeResponse({
+      pog: {
+        schema_version: "2.0", legal_status: "adopted", coverage_status: "complete",
+        act: { id: "pog-1", version: "v1", title: "POG", resolution_number: null, resolution_date: null },
+        zones: [zone("sj", "SJ", 620, 62, 10), zone("su", "SU", 280, 28, 0), zone("sn", "SN", 100, 10, null)],
+        dominant_zone_id: "sj", ouz: [], downtown_areas: [], social_infrastructure_standard_areas: [],
+        status: "adopted", planning_zone: "SJ", zone_type: "SJ", in_ouz: false,
+        area_ratio: 0.62, in_downtown_area: false, uchwala_nr: null, uchwala_date: null,
+        manual_review_required: false, conflict_with_mpzp: null, raw_attributes: null,
+        ouz_intersection_area_sqm: null, ouz_intersection_pct: null,
+        touches_ouz_boundary: false, source,
+      },
+    });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getByRole("table", { name: "Strefy POG przecinające działkę" })).toBeVisible();
+    expect(screen.getByText("620.0 m²")).toBeVisible();
+    expect(screen.getByText("280.0 m²")).toBeVisible();
+    expect(screen.getByText("100.0 m²")).toBeVisible();
+    expect(screen.getByText("0 m")).toBeVisible();
   });
 
   it("odświeża warstwę GeoJSON (usuwa i dodaje ponownie), gdy geometria działki się zmienia", () => {
