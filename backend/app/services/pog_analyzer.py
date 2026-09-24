@@ -1,4 +1,9 @@
-"""Powierzchniowa analiza działki względem uchwalonego POG i OUZ."""
+"""Powierzchniowa analiza działki względem wektorów POG i OUZ.
+
+Analiza geometrii nie ustala statusu prawnego aktu (BK-106). Status i pokrycie
+rozstrzyga :func:`app.shared.planning_status.resolve_pog_status`, a
+:func:`to_pog_result` jedynie składa oba niezależne wyniki w kontrakt API.
+"""
 
 from __future__ import annotations
 
@@ -17,17 +22,22 @@ from app.schemas.analyze import (
     PogAreaResult,
     PogProfileResult,
     PogResult,
+    PogStatusEvidence,
     PogZoneResult,
 )
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
+from app.shared.planning_status import PogStatusDecision, StatusEvidence
 
 # Przecięcia poniżej tolerancji numerycznej nie są interpretowane domenowo jako
 # powierzchniowe wejście w strefę. Wartość chroni przed artefaktami obliczeń,
 # a nie ustanawia minimalnej prawnej powierzchni.
 INTERSECTION_AREA_TOLERANCE_SQM: Final[float] = 1e-6
 ZONE_RATIO_SUM_TOLERANCE: Final[float] = 0.001
+# Strefy planistyczne POG pokrywają cały obszar gminy. Suma udziałów stref
+# poniżej 1 - tolerancji oznacza niepełne dane, a nie „brak strefy”.
+ZONE_COVERAGE_TOLERANCE: Final[float] = 0.001
 
 
 @dataclass(frozen=True)
@@ -46,6 +56,8 @@ class PogZoneIntersection:
     label: str | None = None
     primary_profiles: tuple[dict[str, str | None], ...] = ()
     additional_profiles: tuple[dict[str, str | None], ...] = ()
+    feature_version: str | None = None
+    gml_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -56,13 +68,19 @@ class PogAreaIntersection:
     area_sqm: float
     area_pct: float
     touches_boundary: bool
+    feature_version: str | None = None
+    gml_url: str | None = None
 
 
 @dataclass(frozen=True)
 class PogAnalysisResult:
-    """Wynik uchwalonego POG z listą stref oraz przecięciem OUZ."""
+    """Wynik analizy wektorów POG z listą stref oraz przecięciem OUZ.
 
-    status: Literal["adopted", "unknown"]
+    ``status`` opisuje wyłącznie wykonanie analizy geometrii (``analyzed``)
+    albo jej brak (``unknown``); nie jest statusem prawnym aktu.
+    """
+
+    status: Literal["analyzed", "unknown"]
     zones: list[PogZoneIntersection]
     dominant_zone: PogZoneIntersection | None
     ouz_status: OuzStatusResult
@@ -148,11 +166,11 @@ _ZONE_ALIASES: Final[dict[str, PogPlanningZoneType]] = {
 }
 
 
-def analyze_pog_adopted(
+def analyze_pog_vectors(
     parcel_geometry: BaseGeometry,
     pog_vector_data: PogVectorData,
 ) -> PogAnalysisResult:
-    """Analizuje działkę względem wektorów uchwalonego POG w EPSG:2180.
+    """Analizuje działkę względem wektorów POG w EPSG:2180.
 
     Dla stref, OUZ i śródmieścia używane są pola przecięcia w m² oraz udziały,
     nigdy sam predykat ``intersects()``. Styczność z granicą OUZ jest osobną
@@ -227,6 +245,8 @@ def analyze_pog_adopted(
                 label=_first_string_attribute(feature.attributes, ("label", "nazwa")),
                 primary_profiles=_profiles_from_attributes(feature.attributes, "primary_profiles"),
                 additional_profiles=_profiles_from_attributes(feature.attributes, "additional_profiles"),
+                feature_version=_first_string_attribute(feature.attributes, ("feature_version",)),
+                gml_url=_first_string_attribute(feature.attributes, ("gml_url",)),
             )
         )
 
@@ -278,7 +298,7 @@ def analyze_pog_adopted(
 
     warnings.extend(pog_vector_data.warnings)
     return PogAnalysisResult(
-        status="adopted",
+        status="analyzed",
         zones=zone_intersections,
         dominant_zone=dominant_zone,
         ouz_status=ouz_status,
@@ -296,16 +316,59 @@ def analyze_pog_adopted(
     )
 
 
-def to_pog_result(analysis: PogAnalysisResult) -> PogResult:
-    """Mapuje pełny wynik domenowy na kontrakt POG v2 bez agregacji stref."""
+def zones_cover_parcel(analysis: PogAnalysisResult) -> bool:
+    """Czy strefy planistyczne pokrywają całą działkę (w tolerancji)."""
+    covered = sum(zone.area_ratio for zone in analysis.zones)
+    return covered >= 1 - ZONE_COVERAGE_TOLERANCE
+
+
+def spatial_feature_count(analysis: PogAnalysisResult) -> int:
+    return (
+        len(analysis.zones)
+        + len(analysis.ouz_areas)
+        + len(analysis.downtown_areas)
+        + len(analysis.social_infrastructure_standard_areas)
+    )
+
+
+def evidence_result(evidence: StatusEvidence | None) -> PogStatusEvidence | None:
+    if evidence is None:
+        return None
+    return PogStatusEvidence(
+        source_name=evidence.source_name,
+        official=evidence.official,
+        reference=evidence.reference,
+        source_id=evidence.source_id,
+        raw_value=evidence.raw_value,
+        confirmed_at=evidence.confirmed_at,
+    )
+
+
+def to_pog_result(
+    analysis: PogAnalysisResult,
+    decision: PogStatusDecision,
+) -> PogResult:
+    """Mapuje pełny wynik domenowy na kontrakt POG v2 bez agregacji stref.
+
+    Status prawny, pokrycie i dostępność pochodzą z decyzji BK-106; strefy i
+    parametry z analizy geometrii. Wynik niewiążący albo niepełny zawsze
+    wymaga ręcznej weryfikacji.
+    """
     planning_zone = (
         analysis.dominant_zone.zone_type.value if analysis.dominant_zone else None
     )
+    status_needs_review = not (
+        decision.legal_status == "binding"
+        and decision.coverage_status == "available"
+        and decision.data_availability == "current"
+    )
     return PogResult(
-        schema_version="2.0",
-        status=analysis.status,
-        legal_status=analysis.status if analysis.status == "adopted" else "not_available",
-        coverage_status=("complete" if analysis.zones else "unknown"),
+        legal_status=decision.legal_status,
+        coverage_status=decision.coverage_status,
+        data_availability=decision.data_availability,
+        status_confirmed_at=decision.confirmed_at,
+        legal_status_evidence=evidence_result(decision.legal_evidence),
+        coverage_evidence=evidence_result(decision.coverage_evidence),
         act=_act_result(analysis),
         zones=[_zone_result(zone, analysis.source_metadata) for zone in analysis.zones],
         dominant_zone_id=(analysis.dominant_zone.zone_id if analysis.dominant_zone else None),
@@ -326,6 +389,7 @@ def to_pog_result(analysis: PogAnalysisResult) -> PogResult:
         manual_review_required=(
             analysis.source_metadata.manual_review_required
             or analysis.ouz_status.manual_review_required
+            or status_needs_review
         ),
         ouz_intersection_area_sqm=analysis.ouz_intersection_area_sqm,
         ouz_intersection_pct=analysis.ouz_intersection_pct,
@@ -388,6 +452,8 @@ def _zone_result(zone: PogZoneIntersection, source: SourceMetadata) -> PogZoneRe
         primary_profile=_profile_results(zone.primary_profiles),
         additional_profiles=_profile_results(zone.additional_profiles),
         source=source,
+        feature_version=zone.feature_version,
+        gml_url=zone.gml_url,
     )
 
 
@@ -400,6 +466,8 @@ def _area_result(item: PogAreaIntersection, source: SourceMetadata) -> PogAreaRe
         area_pct=item.area_pct,
         touches_boundary=item.touches_boundary,
         source=source,
+        feature_version=item.feature_version,
+        gml_url=item.gml_url,
     )
 
 
@@ -440,6 +508,8 @@ def _area_intersections(
             area_sqm=area if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
             area_pct=(area / parcel.area * 100.0) if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
             touches_boundary=touches,
+            feature_version=_first_string_attribute(feature.attributes, ("feature_version",)),
+            gml_url=_first_string_attribute(feature.attributes, ("gml_url",)),
         ))
     return result
 

@@ -13,6 +13,11 @@ from app.core.planning_compatibility import (
 )
 from app.schemas.source import WarningMessage
 from app.services.ouz import OuzStatusResult
+from app.shared.planning_status import (
+    NO_GEOMETRY_IS_NOT_NO_PLAN_PL,
+    LegalStatus,
+    canonical_legal_status,
+)
 
 # Data jest punktem odniesienia opisu okresu przejściowego reformy i pozostaje
 # w jednym miejscu, aby aktualizacja po zmianie prawa nie wymagała modyfikacji
@@ -25,7 +30,7 @@ LEGAL_INFORMATION_DISCLAIMER: Final[str] = (
     "administracyjnej, ani porady prawnej."
 )
 
-PogScenarioStatus = Literal["adopted", "not_available", "in_progress", "unknown"]
+PogScenarioStatus = LegalStatus
 
 
 class MpzpScenarioInput(Protocol):
@@ -37,7 +42,7 @@ class MpzpScenarioInput(Protocol):
 class PogScenarioInput(Protocol):
     """Minimalny kontrakt wyniku POG potrzebny do wyboru scenariusza."""
 
-    status: str
+    legal_status: str
     planning_zone: str | None
 
 
@@ -64,21 +69,21 @@ def build_pog_scenario_result(
     """Buduje scenariusz POG/OUZ bez kategorycznej porady prawnej.
 
     Funkcja nie wykonuje geometrii; zakłada wcześniejsze obliczenie przecięć
-    działki, OUZ i stref POG w EPSG:2180. Dla uchwalonego POG potencjalny
-    konflikt jest ustawiany wyłącznie przez
+    działki, OUZ i stref POG w EPSG:2180. Ocena zgodności z MPZP jest
+    wykonywana wyłącznie dla aktu ``binding`` potwierdzonego urzędowo — przez
     ``check_mpzp_pog_compatibility``. Wynik ``unknown`` lub ``uncertain`` nie
     jest dowodem konfliktu i ustawia jedynie ``conflict_uncertain``.
 
-    Status ``not_available`` albo ``in_progress`` jest prawidłowym scenariuszem
-    okresu przejściowego, nie błędem. Każdy komunikat zawiera klauzulę, że wynik
-    jest informacyjny i wymaga sprawdzenia aktualnego stanu prawnego.
+    ``project`` i ``in_progress`` są prawidłowym scenariuszem okresu
+    przejściowego, opisanym bez języka obowiązywania. ``superseded`` i
+    ``unknown`` nie są interpretowane jako brak planu.
     """
-    status = _normalized_pog_status(pog_result.status if pog_result else None)
-    if status in {"not_available", "in_progress"}:
+    status = canonical_legal_status(pog_result.legal_status if pog_result else None)
+    if status in {"project", "in_progress"}:
         transition = (
-            "Gmina nie udostępnia jeszcze uchwalonego POG."
-            if status == "not_available"
-            else "Procedura sporządzania lub uchwalania POG jest w toku."
+            "Dostępny jest projekt POG; projekt nie jest aktem wiążącym."
+            if status == "project"
+            else "Procedura sporządzania POG jest w toku; ustalenia nie są wiążące."
         )
         return PogScenarioResult(
             status=status,
@@ -96,27 +101,33 @@ def build_pog_scenario_result(
             warnings=[
                 _warning(
                     "POG_TRANSITIONAL_STATUS",
-                    "Brak uchwalonego POG lub trwająca procedura wymaga sprawdzenia aktualnych dokumentów gminy.",
+                    "Akt POG jest projektem albo w trakcie sporządzania; sprawdź aktualne dokumenty gminy.",
                 )
             ],
         )
 
-    if status == "unknown" or pog_result is None:
+    if status != "binding" or pog_result is None:
+        detail = (
+            "Akt POG jest nieaktualny; ocena zgodności z MPZP wymaga aktu, który go zastąpił."
+            if status == "superseded"
+            else "Nie udało się potwierdzić statusu prawnego POG w źródle urzędowym. "
+            f"{NO_GEOMETRY_IS_NOT_NO_PLAN_PL}"
+        )
         return PogScenarioResult(
-            status="unknown",
+            status=status,
             conflict=False,
             conflict_uncertain=True,
             compatibility=None,
             ouz_status=ouz_status,
             manual_review_required=True,
             message=_with_disclaimer(
-                "Nie udało się potwierdzić statusu POG ani przeprowadzić oceny zgodności z MPZP."
+                f"{detail} Nie przeprowadzono oceny zgodności z MPZP."
             ),
             legal_disclaimer=LEGAL_INFORMATION_DISCLAIMER,
             warnings=[
                 _warning(
                     "POG_SCENARIO_UNKNOWN",
-                    "Brak potwierdzonych danych POG wymaga ręcznej weryfikacji w źródłach gminy.",
+                    "Brak potwierdzonego statusu POG wymaga ręcznej weryfikacji w Rejestrze Urbanistycznym.",
                     severity="error",
                 )
             ],
@@ -126,14 +137,14 @@ def build_pog_scenario_result(
     pog_zone_type = pog_result.planning_zone
     if mpzp_function is None or not pog_zone_type:
         return PogScenarioResult(
-            status="adopted",
+            status="binding",
             conflict=False,
             conflict_uncertain=True,
             compatibility=None,
             ouz_status=ouz_status,
             manual_review_required=True,
             message=_with_disclaimer(
-                "POG jest uchwalony, lecz brakuje znormalizowanej funkcji MPZP albo dominującej strefy POG do oceny zgodności."
+                "POG obowiązuje, lecz brakuje znormalizowanej funkcji MPZP albo dominującej strefy POG do oceny zgodności."
             ),
             legal_disclaimer=LEGAL_INFORMATION_DISCLAIMER,
             warnings=[
@@ -158,7 +169,7 @@ def build_pog_scenario_result(
         summary = "Tabela zgodności nie pozwala jednoznacznie ocenić relacji funkcji MPZP ze strefą POG."
 
     return PogScenarioResult(
-        status="adopted",
+        status="binding",
         conflict=conflict,
         conflict_uncertain=conflict_uncertain,
         compatibility=compatibility,
@@ -180,16 +191,6 @@ def _mpzp_function(mpzp_result: MpzpScenarioInput | None) -> MpzpFunction | None
         return MpzpFunction(mpzp_result.primary_use)
     except ValueError:
         return None
-
-
-def _normalized_pog_status(value: str | None) -> PogScenarioStatus:
-    if value == "adopted":
-        return "adopted"
-    if value == "not_available":
-        return "not_available"
-    if value == "in_progress":
-        return "in_progress"
-    return "unknown"
 
 
 def _with_disclaimer(message: str) -> str:

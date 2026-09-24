@@ -5,13 +5,17 @@ Rejestru Urbanistycznego jest odczytywany wyłącznie z katalogu źródeł.
 
 WMS służy wyłącznie do rozpoznania dostępności aktu i odnośników. Wynik nie
 jest precyzyjną geometrią stref, OUZ ani obszaru zabudowy śródmiejskiej.
+
+Status prawny (BK-106) pochodzi wyłącznie z urzędowego kodu: jawnego atrybutu
+statusu albo nazwy warstwy RU kodującej krok procesu (np.
+``APP.POG.SJ.PrawnieWiazacyLubRealizowany``). Obecność obiektu bez kodu daje
+``unknown``, a pusta odpowiedź opisuje wyłącznie pokrycie, nie status aktu.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
-import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Final, Literal, Sequence
@@ -29,6 +33,12 @@ from app.services.mpzp_fetch import (
     MpzpDocumentError,
     _fetch_with_redirect_validation,
 )
+from app.shared.planning_status import (
+    LegalStatus,
+    StatusEvidence,
+    normalize_official_legal_status,
+    official_status_code,
+)
 
 POG_DISCOVERY_TIMEOUT_S: Final[float] = 10.0
 _WMS_PIXEL_SIZE_M: Final[float] = 1.0
@@ -36,7 +46,8 @@ _WMS_IMAGE_SIZE_PX: Final[int] = 2
 _WMS_QUERY_PIXEL: Final[int] = 1
 _WMS_FEATURE_COUNT: Final[int] = 10
 
-PogStatus = Literal["adopted", "not_available", "in_progress", "unknown"]
+# Stan odpowiedzi warstwy WMS; to fakt operacyjny/pokrycia, nie status prawny.
+PogLayerAvailability = Literal["found", "empty", "unavailable"]
 PogLogicalLayer = Literal[
     "planning_act",
     "downtown_area",
@@ -93,9 +104,10 @@ class PogLayerSection:
     """Status jednej z czterech wymaganych warstw logicznych POG."""
 
     logical_layer: PogLogicalLayer
-    status: PogStatus
+    status: PogLayerAvailability
     matched_wms_layer: str | None = None
     feature_count: int = 0
+    raw_legal_status: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,9 +116,11 @@ class PogDiscoveryResult:
 
     ``is_discovery_only`` zawsze ma wartość True. Geometrie z WMS nie są
     używane do obliczeń; do analizy powierzchniowej wymagane są wektory APP/GML.
+    ``legal_status`` jest ustalany wyłącznie z urzędowego kodu statusu, a
+    ``source_responded`` odróżnia pustą odpowiedź od awarii źródła.
     """
 
-    status: PogStatus
+    legal_status: LegalStatus
     uchwala_nr: str | None
     uchwala_date: str | None
     links: list[str]
@@ -117,11 +131,31 @@ class PogDiscoveryResult:
     is_discovery_only: bool
     source_metadata: SourceMetadata
     warnings: list[WarningMessage] = field(default_factory=list)
+    source_responded: bool = False
+    raw_legal_status: str | None = None
+    legal_evidence: StatusEvidence | None = None
+
+    @property
+    def status(self) -> LegalStatus:
+        """Zgodność wsteczna: ``status`` jest aliasem ``legal_status``."""
+        return self.legal_status
+
+    @property
+    def act_found(self) -> bool:
+        return self.planning_act.status == "found"
+
+    @property
+    def preview_features_found(self) -> int:
+        return sum(
+            section.feature_count
+            for section in (self.planning_zones, self.ouz, self.downtown_area)
+            if section.status == "found"
+        )
 
 
 @dataclass(frozen=True)
 class _WmsFeatureInfo:
-    status: PogStatus
+    raw_legal_status: str | None
     properties: dict[str, object]
     links: tuple[str, ...]
     feature_count: int
@@ -158,18 +192,6 @@ _KNOWN_LINK_ATTRIBUTES: Final[tuple[str, ...]] = (
     "zip_url",
     "uchwala_url",
 )
-_ADOPTED_STATUS_TOKENS: Final[tuple[str, ...]] = (
-    "adopted",
-    "obowiazujacy",
-    "uchwalony",
-    "uchwala",
-)
-_IN_PROGRESS_STATUS_TOKENS: Final[tuple[str, ...]] = (
-    "in_progress",
-    "w toku",
-    "projekt",
-    "opracowywany",
-)
 _APP_LINK_SUFFIXES: Final[tuple[str, ...]] = (".gml", ".geojson", ".json", ".zip")
 
 
@@ -185,9 +207,10 @@ async def discover_pog(
     w strefie ani OUZ. POG jest aktem wpływającym na nowe planowanie i decyzje
     WZ; jego relacji z MPZP nie rozstrzygamy automatycznie.
 
-    Brak skonfigurowanego źródła uruchamia tylko opcjonalny, niepotwierdzony
-    Rejestr Urbanistyczny. Niedostępność źródeł daje ``unknown`` i wymaga
-    ręcznej weryfikacji, zamiast być interpretowana jako brak POG.
+    Brak skonfigurowanego źródła uruchamia potwierdzony w katalogu Rejestr
+    Urbanistyczny. Niedostępność źródeł daje ``unknown`` z
+    ``source_responded=False`` i wymaga ręcznej weryfikacji, zamiast być
+    interpretowana jako brak POG.
     """
     sources = _normalize_sources(gmina_sources)
     configured_sources = [
@@ -234,6 +257,8 @@ async def _discover_from_gmina_source(
 async def _discover_from_wms(
     parcel_geometry: BaseGeometry,
     source: PogGminaSources,
+    *,
+    source_name: str = "POG_GMINA_WMS",
 ) -> PogDiscoveryResult:
     assert source.wms_url is not None
     fetched_at = datetime.now(timezone.utc)
@@ -274,11 +299,13 @@ async def _discover_from_wms(
 
     sections = {section.logical_layer: section for section, _ in sections_and_info}
     infos = [info for _, info in sections_and_info if info is not None]
-    status = _aggregate_status(section.status for section in sections.values())
+    responded = any(section.status != "unavailable" for section in sections.values())
+    raw_status = _first_raw_status(sections)
+    legal_status = normalize_official_legal_status(raw_status)
     properties = [info.properties for info in infos]
     links = list(dict.fromkeys(link for info in infos for link in info.links))
     warnings: list[WarningMessage] = []
-    if status == "unknown":
+    if not responded:
         warnings.append(
             _warning(
                 "POG_WMS_UNAVAILABLE",
@@ -286,18 +313,38 @@ async def _discover_from_wms(
                 "error",
             )
         )
-    elif status == "not_available":
+    elif not any(section.status == "found" for section in sections.values()):
         warnings.append(
             _warning(
                 "POG_NOT_FOUND_IN_SOURCE",
-                "Gminny WMS odpowiedział, ale nie zwrócił danych POG dla próbkowanych punktów.",
+                "Usługa WMS odpowiedziała, ale nie zwróciła obiektów POG dla "
+                "próbkowanych punktów. Pusta odpowiedź nie oznacza braku planu.",
+                "warning",
+            )
+        )
+    elif raw_status is None or official_status_code(raw_status) is None:
+        warnings.append(
+            _warning(
+                "POG_STATUS_NOT_OFFICIAL",
+                "Obiekty POG nie niosą urzędowego kodu statusu; status prawny pozostaje nieustalony.",
                 "warning",
             )
         )
     warnings.append(_discovery_only_warning())
 
+    evidence = (
+        StatusEvidence(
+            source_name=source_name,
+            official=True,
+            reference=source.wms_url,
+            raw_value=raw_status,
+            confirmed_at=fetched_at,
+        )
+        if official_status_code(raw_status) is not None
+        else None
+    )
     return PogDiscoveryResult(
-        status=status,
+        legal_status=legal_status,
         uchwala_nr=_first_attribute_from_many(properties, _KNOWN_RESOLUTION_ATTRIBUTES),
         uchwala_date=_first_attribute_from_many(
             properties, _KNOWN_RESOLUTION_DATE_ATTRIBUTES
@@ -309,14 +356,28 @@ async def _discover_from_wms(
         planning_zones=sections["planning_zones"],
         is_discovery_only=True,
         source_metadata=SourceMetadata(
-            source_name="POG_GMINA_WMS",
+            source_name=source_name,
             source_url=source.wms_url,
             fetched_at=fetched_at,
-            confidence=0.65 if status == "adopted" else 0.3,
+            confidence=0.65 if legal_status != "unknown" else 0.3,
             manual_review_required=True,
         ),
         warnings=warnings,
+        source_responded=responded,
+        raw_legal_status=raw_status,
+        legal_evidence=evidence,
     )
+
+
+def _first_raw_status(
+    sections: dict[PogLogicalLayer, PogLayerSection],
+) -> str | None:
+    """Kod statusu aktu ma pierwszeństwo przed kodem obiektów stref."""
+    for name in ("planning_act", "planning_zones", "ouz", "downtown_area"):
+        raw = sections[name].raw_legal_status  # type: ignore[index]
+        if raw and official_status_code(raw) is not None:
+            return raw
+    return None
 
 
 async def _discover_logical_layer(
@@ -346,14 +407,21 @@ async def _discover_logical_layer(
             matched_layer = candidate
             break
 
+    status: PogLayerAvailability
+    raw_status: str | None = None
     if best_info is not None:
-        status = best_info.status
+        status = "found"
         feature_count = best_info.feature_count
+        # Jawny atrybut statusu ma pierwszeństwo; nazwa warstwy RU koduje ten
+        # sam urzędowy krok procesu (np. ...PrawnieWiazacyLubRealizowany).
+        raw_status = best_info.raw_legal_status or (
+            matched_layer if official_status_code(matched_layer) else None
+        )
     elif saw_valid_response:
-        status = "not_available"
+        status = "empty"
         feature_count = 0
     else:
-        status = "unknown"
+        status = "unavailable"
         feature_count = 0
     return (
         PogLayerSection(
@@ -361,6 +429,7 @@ async def _discover_logical_layer(
             status=status,
             matched_wms_layer=matched_layer,
             feature_count=feature_count,
+            raw_legal_status=raw_status,
         ),
         best_info,
     )
@@ -423,7 +492,7 @@ def _build_get_feature_info_params(
 def _parse_wms_response(text: str) -> _WmsFeatureInfo:
     stripped = text.strip()
     if not stripped:
-        return _WmsFeatureInfo("not_available", {}, (), 0)
+        return _WmsFeatureInfo(None, {}, (), 0)
     data = json.loads(stripped)
     if not isinstance(data, dict):
         raise TypeError("Odpowiedź GetFeatureInfo nie jest obiektem JSON.")
@@ -431,11 +500,11 @@ def _parse_wms_response(text: str) -> _WmsFeatureInfo:
     if not isinstance(features, list):
         raise TypeError("Pole features nie jest listą.")
     if not features:
-        return _WmsFeatureInfo("not_available", {}, (), 0)
+        return _WmsFeatureInfo(None, {}, (), 0)
 
     properties: dict[str, object] = {}
     links: list[str] = []
-    statuses: list[PogStatus] = []
+    statuses: list[str] = []
     for feature in features:
         if not isinstance(feature, dict):
             continue
@@ -443,11 +512,11 @@ def _parse_wms_response(text: str) -> _WmsFeatureInfo:
         if not isinstance(feature_properties, dict):
             continue
         properties.update(feature_properties)
-        statuses.append(_status_from_properties(feature_properties))
+        if raw := _first_attribute(feature_properties, _KNOWN_STATUS_ATTRIBUTES):
+            statuses.append(raw)
         links.extend(_links_from_properties(feature_properties))
-    status = _aggregate_status(statuses) if statuses else "unknown"
     return _WmsFeatureInfo(
-        status=status,
+        raw_legal_status=_preferred_raw_status(statuses),
         properties=properties,
         links=tuple(dict.fromkeys(links)),
         feature_count=len(features),
@@ -459,7 +528,9 @@ def _merge_wms_infos(infos: list[_WmsFeatureInfo]) -> _WmsFeatureInfo:
     for info in infos:
         properties.update(info.properties)
     return _WmsFeatureInfo(
-        status=_aggregate_status(info.status for info in infos),
+        raw_legal_status=_preferred_raw_status(
+            [info.raw_legal_status for info in infos if info.raw_legal_status]
+        ),
         properties=properties,
         links=tuple(dict.fromkeys(link for info in infos for link in info.links)),
         feature_count=sum(info.feature_count for info in infos),
@@ -485,10 +556,8 @@ async def _discover_from_bip(bip_url: str) -> PogDiscoveryResult:
         )
 
     links: list[str] = []
-    page_text = ""
     if content_type == "text/html":
         soup = BeautifulSoup(content, "html.parser")
-        page_text = " ".join(soup.stripped_strings)
         for anchor in soup.find_all("a", href=True):
             href = str(anchor["href"]).strip()
             path = href.lower().split("?", maxsplit=1)[0]
@@ -500,26 +569,23 @@ async def _discover_from_bip(bip_url: str) -> PogDiscoveryResult:
         # heurystycznego wnioskowania o formalnym statusie aktu.
         links.append(final_url)
 
-    normalized_text = _normalize_text(page_text)
-    if any(token in normalized_text for token in _IN_PROGRESS_STATUS_TOKENS):
-        status: PogStatus = "in_progress"
-    elif links and any(token in normalized_text for token in _ADOPTED_STATUS_TOKENS):
-        status = "adopted"
-    else:
-        status = "unknown"
-
-    sections = _empty_sections("unknown")
-    sections["planning_act"] = PogLayerSection("planning_act", status)
+    sections = _empty_sections("unavailable")
+    sections["planning_act"] = PogLayerSection(
+        "planning_act", "found" if links else "empty"
+    )
     warnings = [
         _warning(
             "POG_BIP_DISCOVERY_LIMITED",
-            "Strona BIP pozwala rozpoznać odnośniki, ale status i geometria POG wymagają weryfikacji danych APP.",
+            "Strona BIP pozwala rozpoznać odnośniki, ale nie jest źródłem statusu "
+            "prawnego ani geometrii POG; wymagana weryfikacja w Rejestrze Urbanistycznym.",
             "warning",
         ),
         _discovery_only_warning(),
     ]
+    # Tekst strony (np. słowo „uchwalony”) nie jest urzędowym kodem statusu —
+    # BIP służy wyłącznie do odnalezienia odnośników.
     return PogDiscoveryResult(
-        status=status,
+        legal_status="unknown",
         uchwala_nr=None,
         uchwala_date=None,
         links=list(dict.fromkeys(links)),
@@ -533,10 +599,11 @@ async def _discover_from_bip(bip_url: str) -> PogDiscoveryResult:
             source_url=final_url,
             fetched_at=fetched_at,
             response_status=200,
-            confidence=0.55 if status == "adopted" else 0.25,
+            confidence=0.25,
             manual_review_required=True,
         ),
         warnings=warnings,
+        source_responded=True,
     )
 
 
@@ -587,7 +654,9 @@ async def _discover_from_catalog(
             ),
         ),
     )
-    result = await _discover_from_wms(parcel_geometry, catalog_source)
+    result = await _discover_from_wms(
+        parcel_geometry, catalog_source, source_name="REJESTR_URBANISTYCZNY_WMS"
+    )
     result.warnings.insert(
         0,
         _warning(
@@ -600,9 +669,24 @@ async def _discover_from_catalog(
     return result
 
 
+_LEGAL_RANK: Final[dict[str, int]] = {
+    "unknown": 0,
+    "superseded": 1,
+    "in_progress": 2,
+    "project": 3,
+    "binding": 4,
+}
+
+
 def _merge_discovery_results(results: list[PogDiscoveryResult]) -> PogDiscoveryResult:
-    rank = {"unknown": 0, "not_available": 1, "in_progress": 2, "adopted": 3}
-    best = max(results, key=lambda result: rank[result.status])
+    best = max(
+        results,
+        key=lambda result: (
+            result.legal_evidence is not None,
+            _LEGAL_RANK[result.legal_status],
+            result.source_responded,
+        ),
+    )
     best.links[:] = list(
         dict.fromkeys(link for result in results for link in result.links)
     )
@@ -610,34 +694,12 @@ def _merge_discovery_results(results: list[PogDiscoveryResult]) -> PogDiscoveryR
     return best
 
 
-def _status_from_properties(properties: dict[str, object]) -> PogStatus:
-    value = _first_attribute(properties, _KNOWN_STATUS_ATTRIBUTES)
-    # Sama obecność obiektu POG w warstwie WMS jest wystarczająca wyłącznie do
-    # discovery. Bez atrybutu statusu przyjmujemy adopted z niską pewnością i
-    # obowiązkową weryfikacją, nigdy jako ostateczne ustalenie prawne.
-    return _status_from_raw(value) if value else "adopted"
-
-
-def _status_from_raw(value: str) -> PogStatus:
-    normalized = _normalize_text(value)
-    if any(token in normalized for token in _IN_PROGRESS_STATUS_TOKENS):
-        return "in_progress"
-    if any(token in normalized for token in _ADOPTED_STATUS_TOKENS):
-        return "adopted"
-    if normalized in {"not_available", "brak", "nie_dostepny", "none"}:
-        return "not_available"
-    return "unknown"
-
-
-def _aggregate_status(statuses) -> PogStatus:
-    values = list(statuses)
-    if "adopted" in values:
-        return "adopted"
-    if "in_progress" in values:
-        return "in_progress"
-    if values and all(value == "not_available" for value in values):
-        return "not_available"
-    return "unknown"
+def _preferred_raw_status(values: Sequence[str | None]) -> str | None:
+    """Wybiera urzędowy kod o najwyższej randze; nierozpoznane kody na końcu."""
+    official = [value for value in values if value and official_status_code(value)]
+    if official:
+        return max(official, key=lambda value: _LEGAL_RANK[official_status_code(value) or "unknown"])
+    return next((value for value in values if value), None)
 
 
 def _links_from_properties(properties: dict[str, object]) -> list[str]:
@@ -681,15 +743,9 @@ def _first_attribute_from_many(
     return None
 
 
-def _normalize_text(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value.lower())
-    without_diacritics = "".join(
-        char for char in decomposed if not unicodedata.combining(char)
-    )
-    return " ".join(without_diacritics.split())
-
-
-def _empty_sections(status: PogStatus) -> dict[PogLogicalLayer, PogLayerSection]:
+def _empty_sections(
+    status: PogLayerAvailability,
+) -> dict[PogLogicalLayer, PogLayerSection]:
     return {
         logical_layer: PogLayerSection(logical_layer, status)
         for logical_layer in _LOGICAL_LAYERS
@@ -703,9 +759,9 @@ def _unknown_result(
     code: str = "POG_SOURCE_UNAVAILABLE",
     message: str = "Nie udało się ustalić statusu POG; wynik wymaga ręcznej weryfikacji.",
 ) -> PogDiscoveryResult:
-    sections = _empty_sections("unknown")
+    sections = _empty_sections("unavailable")
     return PogDiscoveryResult(
-        status="unknown",
+        legal_status="unknown",
         uchwala_nr=None,
         uchwala_date=None,
         links=[],
