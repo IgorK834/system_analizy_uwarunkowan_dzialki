@@ -9,8 +9,12 @@ adapterami (jedno źródło prawdy) i z fixture GetCapabilities KIMPZP.
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
+import re
 from datetime import date
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -21,9 +25,12 @@ from app.core.data_sources import (
     DataSourceCatalog,
     DataSourceEntry,
     DuplicateSourceIdError,
+    MpzpDataClassification,
+    MpzpSourceNotUsableError,
     SourceNotFoundError,
     SourceNotRunnableError,
     SourceStatus,
+    ensure_mpzp_vector_zones_source,
     ensure_source_runnable,
     get_catalog,
     load_catalog,
@@ -461,6 +468,7 @@ def test_catalog_blocks_krakow_mpzp_until_reuse_permission() -> None:
     entry = load_catalog(catalog_path).get("mpzp_pilot_krakow")
     assert entry.status is SourceStatus.CONTRACT_REQUIRED
     assert entry.production_ready is False
+    assert entry.mpzp_classification is MpzpDataClassification.VECTOR_ZONES
     assert [resource.role for resource in entry.resources] == [
         "boundaries",
         "zones",
@@ -469,6 +477,140 @@ def test_catalog_blocks_krakow_mpzp_until_reuse_permission() -> None:
     ]
     with pytest.raises(SourceNotRunnableError):
         ensure_source_runnable(entry.source_id, load_catalog(catalog_path))
+
+
+def test_mpzp_semantic_guard_accepts_only_explicit_vector_zones() -> None:
+    catalog_path = find_repo_root() / "docs" / "data_sources" / "catalog.yaml"
+    catalog = load_catalog(catalog_path)
+
+    krakow = catalog.get("mpzp_pilot_krakow")
+    assert len(ensure_mpzp_vector_zones_source(krakow)) == 3
+
+    for source_id in ("kimpzp", "mpzp_ru"):
+        with pytest.raises(MpzpSourceNotUsableError, match="vector_zones"):
+            ensure_mpzp_vector_zones_source(catalog.get(source_id))
+
+
+def test_mpzp_contract_rejects_wms_or_boundary_only_as_vector_zones() -> None:
+    wms = _valid_research_entry()
+    wms.update(
+        source_id="bad_mpzp_wms",
+        access_type="wms",
+        layers=["zones"],
+        mpzp_classification="vector_zones",
+        resources=[
+            {
+                "role": "zones",
+                "access_type": "wms",
+                "url": "https://example.gov.pl/wms",
+                "layer": "zones",
+                "source_crs": "EPSG:2180",
+            }
+        ],
+    )
+    with pytest.raises(CatalogValidationError, match="WMS/WMTS"):
+        parse_catalog(_catalog_dict(wms))
+
+    boundary = _valid_research_entry()
+    boundary.update(
+        source_id="bad_mpzp_boundary",
+        access_type="wfs",
+        type_names=["app:Akt"],
+        mpzp_classification="vector_zones",
+        resources=[
+            {
+                "role": "boundaries",
+                "access_type": "wfs",
+                "url": "https://example.gov.pl/wfs",
+                "type_name": "app:Akt",
+                "source_crs": "EPSG:2180",
+            }
+        ],
+    )
+    with pytest.raises(CatalogValidationError, match="roli 'zones'"):
+        parse_catalog(_catalog_dict(boundary))
+
+
+def test_mpzp_matrix_covers_corpus_and_frozen_evidence() -> None:
+    root = find_repo_root()
+    fixture_dir = root / "backend" / "tests" / "fixtures" / "source_contracts" / "mpzp"
+    matrix = json.loads((fixture_dir / "municipality_matrix.json").read_text())
+    corpus = json.loads(
+        (root / "backend" / "tests" / "fixtures" / "reference_corpus" / "manifest.json").read_text()
+    )
+
+    corpus_counts: dict[tuple[str, str], int] = {}
+    for case in corpus["cases"]:
+        key = (case["municipality"], case["teryt"])
+        corpus_counts[key] = corpus_counts.get(key, 0) + 1
+
+    rows = matrix["municipalities"]
+    assert {(row["municipality"], row["corpus_teryt"]): row["case_count"] for row in rows} == corpus_counts
+    assert matrix["verified_at"] == "2026-09-24"
+    assert set(matrix["classification_values"]) == {item.value for item in MpzpDataClassification}
+
+    for contract in matrix["shared_contracts"]:
+        artifact = (fixture_dir / contract["fixture"]).resolve()
+        assert artifact.is_file()
+        assert hashlib.sha256(artifact.read_bytes()).hexdigest() == contract["sha256"]
+
+    for row in rows:
+        assert set(row["channels"]) == {"ru", "jst", "kimpzp", "bip"}
+        assert row["classification"] in matrix["classification_values"]
+        assert row["act_status"]
+        assert row["license"]
+        assert row["fallback"]
+        assert any(item["sha256"] for item in row["evidence"])
+        for item in row["evidence"]:
+            if not item["fixture"]:
+                continue
+            artifact = (fixture_dir / item["fixture"]).resolve()
+            assert artifact.is_file()
+            assert hashlib.sha256(artifact.read_bytes()).hexdigest() == item["sha256"]
+
+        ru_fixture = fixture_dir / f"ru_mpzp_hits_{row['official_teryt']}.xml"
+        xml_bytes = ru_fixture.read_bytes()
+        assert b"<!DOCTYPE" not in xml_bytes and b"<!ENTITY" not in xml_bytes
+        ru_hits = int(ElementTree.fromstring(xml_bytes).attrib["numberMatched"])
+        assert row["channels"]["ru"].startswith(f"{ru_hits} act records")
+
+        kimp_fixture = fixture_dir / f"kimpzp_registry_{row['official_teryt']}.html"
+        plan_types = re.findall(
+            r"<td class='cell'>(rastrowy|wektorowy)</td>",
+            kimp_fixture.read_text(encoding="utf-8"),
+        )
+        if row["classification"] == "raster":
+            assert plan_types and set(plan_types) == {"rastrowy"}
+        elif "0 wierszy rejestru" in row["channels"]["kimpzp"]:
+            assert plan_types == []
+
+        source_id = row["production_source_id"]
+        if source_id:
+            assert load_catalog(
+                root / "docs" / "data_sources" / "catalog.yaml"
+            ).get(source_id).mpzp_classification.value == row["classification"]
+
+
+def test_all_configured_mpzp_type_names_exist_in_frozen_contracts() -> None:
+    root = find_repo_root()
+    fixture_dir = root / "backend" / "tests" / "fixtures" / "source_contracts"
+    catalog = load_catalog(root / "docs" / "data_sources" / "catalog.yaml")
+    contracts = {
+        "mpzp_ru": (
+            (fixture_dir / "mpzp" / "ru_mpzp_getcapabilities.xml").read_text(),
+            (fixture_dir / "mpzp" / "ru_mpzp_describe.xml").read_text(),
+        ),
+        "mpzp_pilot_krakow": (
+            (fixture_dir / "krakow_mpzp_getcapabilities.xml").read_text(),
+            (fixture_dir / "krakow_mpzp_describe.xml").read_text(),
+        ),
+    }
+    for source_id, (capabilities, describe) in contracts.items():
+        entry = catalog.get(source_id)
+        for type_name in entry.type_names or []:
+            assert type_name in capabilities
+        assert "schema" in describe
+        assert all(resource.type_name in capabilities for resource in entry.resources)
 
 
 # --- Kontrakt potwierdzony fixture GetCapabilities ---------------------------
