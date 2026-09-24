@@ -42,8 +42,9 @@ przypadek testowy działki. Wymagane pola każdego przypadku:
 
 - `mpzp_zones_count` (int) — oczekiwana liczba stref MPZP (0 dla braku MPZP).
 - `dominant_zone_symbol` (string \| null) — symbol strefy dominującej.
-- `pog_status` (string \| null) — jeden z `adopted` / `not_available` /
-  `in_progress` / `unknown`, albo `null` gdy nie dotyczy scenariusza.
+- `pog_status` (string \| null) — kanoniczny `legal_status` POG (ADR-002):
+  `binding` / `project` / `in_progress` / `superseded` / `unknown`, albo `null`
+  gdy nie dotyczy scenariusza.
 - `touches_ouz_boundary` (bool) — czy działka jedynie styka się z granicą OUZ.
 - `ouz_intersection_expected` (bool) — czy oczekiwane jest realne przecięcie
   powierzchniowe z OUZ.

@@ -100,7 +100,7 @@
     "expected_result": {
       "mpzp_zones_count": 0,
       "dominant_zone_symbol": null,
-      "pog_status": "adopted",
+      "pog_status": "binding",
       "touches_ouz_boundary": false,
       "ouz_intersection_expected": true,
       "risk_types_expected": [],
@@ -129,7 +129,7 @@
     "expected_result": {
       "mpzp_zones_count": 0,
       "dominant_zone_symbol": null,
-      "pog_status": "adopted",
+      "pog_status": "binding",
       "touches_ouz_boundary": false,
       "ouz_intersection_expected": false,
       "risk_types_expected": [],
@@ -158,7 +158,7 @@
     "expected_result": {
       "mpzp_zones_count": 0,
       "dominant_zone_symbol": null,
-      "pog_status": "adopted",
+      "pog_status": "binding",
       "touches_ouz_boundary": true,
       "ouz_intersection_expected": false,
       "risk_types_expected": [],
@@ -237,7 +237,7 @@
     "gmina": "Zapadła Struga (syntetyczna)",
     "parcel_identifier": "146108_8.0008.44/2",
     "scenario_type": "pog_missing",
-    "description": "Gmina jeszcze nie uchwaliła Planu Ogólnego, dlatego wynik POG musi mieć status 'not_available' albo 'in_progress' zgodnie z enum z sekcji 9 context.md, a nie fałszywie sugerować brak ograniczeń planistycznych. To weryfikuje zasadę z sekcji 22: brak danych nie oznacza braku ograniczeń.",
+    "description": "Gmina jeszcze nie uchwaliła Planu Ogólnego, dlatego wynik POG musi mieć status prawny 'unknown', 'project' albo 'in_progress' (ADR-002), a brak danych nie może sugerować braku planu ani braku ograniczeń planistycznych. To weryfikuje zasadę z sekcji 22: brak danych nie oznacza braku ograniczeń.",
     "input": {
       "method": "parcel_id",
       "parcel_identifier": "146108_8.0008.44/2"
@@ -245,13 +245,13 @@
     "expected_result": {
       "mpzp_zones_count": 1,
       "dominant_zone_symbol": "MN",
-      "pog_status": "not_available",
+      "pog_status": "unknown",
       "touches_ouz_boundary": false,
       "ouz_intersection_expected": false,
       "risk_types_expected": [],
       "requires_manual_review": false
     },
-    "expected_warnings": ["POG_NOT_AVAILABLE"],
+    "expected_warnings": ["POG_EMPTY_RESPONSE_NOT_ABSENCE"],
     "fixture_files": {
       "uldk_response": null,
       "mpzp_response": null,
@@ -274,7 +274,7 @@
     "expected_result": {
       "mpzp_zones_count": 1,
       "dominant_zone_symbol": "U",
-      "pog_status": "adopted",
+      "pog_status": "binding",
       "touches_ouz_boundary": false,
       "ouz_intersection_expected": false,
       "risk_types_expected": [],
