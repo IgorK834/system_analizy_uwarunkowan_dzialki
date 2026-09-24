@@ -295,8 +295,20 @@ class PlanningActVersion(Base, _VersionMixin):
     planning_act_id: Mapped[int] = mapped_column(
         ForeignKey("planning_acts.id"), nullable=False, index=True
     )
+    # Dla aktów POG: kanoniczny status BK-106 (app.shared.planning_status).
+    # Akty MPZP zachowują dotychczasowe wartości (adopted/raster_only).
     legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     raw_legal_status: Mapped[str | None] = mapped_column(Text, nullable=True)
+    legacy_legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    # Provenance publikacji APP (BK-107): gml:identifier wersji, początek wersji
+    # obiektu, okres obowiązywania z APP i URL usługi, z której ją pobrano.
+    publication_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    version_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    legal_valid_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    legal_valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     object_version_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
     version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     resolution_number: Mapped[str | None] = mapped_column(
@@ -430,6 +442,9 @@ class PlanningFeature(Base):
     )
 
 
+POG_DOCUMENT_RESOLUTION_VALUES: tuple[str, ...] = ("resolved", "unresolved", "unavailable")
+
+
 class PogFormalDocument(Base):
     __tablename__ = "pog_formal_documents"
 
@@ -444,13 +459,71 @@ class PogFormalDocument(Base):
     link: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    publication_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    short_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    identification_number: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    relation: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    document_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    repeal_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    record_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    link_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=sql_text("false")
+    )
+    resolution_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="resolved"
+    )
+    resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = _created_at()
+
+    __table_args__ = (
+        # Unikalność obejmuje wersję: dwie wersje dokumentu nie są scalane.
+        Index(
+            "uq_pog_documents_version_identifier_version",
+            "planning_act_version_id",
+            "document_identifier",
+            sql_text("coalesce(document_version, '')"),
+            unique=True,
+        ),
+        CheckConstraint(
+            "resolution_status IN ("
+            + ", ".join(repr(value) for value in POG_DOCUMENT_RESOLUTION_VALUES)
+            + ")",
+            name="ck_pog_formal_documents_resolution_status",
+        ),
+    )
+
+
+class PogActMetadataRecord(Base):
+    """Rekord ISO 19139 z CSW RU zamrożony razem z wersją aktu (BK-107)."""
+
+    __tablename__ = "pog_act_metadata_records"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    planning_act_version_id: Mapped[int] = mapped_column(
+        ForeignKey("planning_act_versions.id"), nullable=False, index=True
+    )
+    record_id: Mapped[str] = mapped_column(String(200), nullable=False)
+    resource_identifier: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    revision_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    creation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    date_stamp: Mapped[date | None] = mapped_column(Date, nullable=True)
+    metadata_url: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    reference_urls: Mapped[Any] = mapped_column(JSONB, nullable=True)
+    record_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    response_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    fetched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = _created_at()
 
     __table_args__ = (
         UniqueConstraint(
             "planning_act_version_id",
-            "document_identifier",
-            name="uq_pog_documents_version_identifier",
+            "record_id",
+            name="uq_pog_act_metadata_records_record",
         ),
     )
 
