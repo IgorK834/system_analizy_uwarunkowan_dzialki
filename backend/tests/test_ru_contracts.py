@@ -26,6 +26,7 @@ from app.core.ru_contracts import (
     parse_wms_capabilities,
 )
 from app.core.data_sources import AccessType, ensure_source_runnable, load_catalog
+from scripts.fetch_ru_contracts import REQUESTS
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "ru"
 EXPECTED_FILES = {
@@ -33,6 +34,14 @@ EXPECTED_FILES = {
     "wfs_pog_capabilities_2_0_0.xml",
     "csw_capabilities_2_0_2.xml",
     "wfs_pog_getfeature_246101.xml",
+    "wfs_pog_describe_feature_type_3_0.xsd",
+    "planowaniePrzestrzenne_3_0.xsd",
+    "wfs_pog_getfeature_act.xml",
+    "wfs_pog_getfeature_document.xml",
+    "wfs_pog_getfeature_osdis.xml",
+    "wfs_pog_getfeature_ouz.xml",
+    "wfs_pog_getfeature_ozs.xml",
+    "wfs_pog_getfeature_zone.xml",
 }
 MANIFEST_FIELDS = {
     "url",
@@ -64,9 +73,10 @@ def test_manifest_has_exact_schema_and_matching_sha256() -> None:
     for filename, entry in manifest.items():
         assert set(entry) == MANIFEST_FIELDS
         assert entry["service"] in {"wms", "wfs", "csw"}
-        assert entry["url"].startswith(
-            "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/"
-        )
+        assert entry["url"].startswith((
+            "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/",
+            "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/",
+        ))
         assert datetime.fromisoformat(entry["fetched_at"].replace("Z", "+00:00"))
         assert entry["official_services_url"] == (
             "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe"
@@ -76,6 +86,10 @@ def test_manifest_has_exact_schema_and_matching_sha256() -> None:
         assert "GetCapabilities" in entry["access_basis"]
         payload = (FIXTURE_DIR / filename).read_bytes()
         assert hashlib.sha256(payload).hexdigest() == entry["sha256"]
+
+
+def test_refresh_script_recreates_every_frozen_ru_artifact() -> None:
+    assert {request.filename for request in REQUESTS} == EXPECTED_FILES
 
 
 def test_loader_reads_complete_fixture_set_from_local_directory(tmp_path: Path) -> None:
@@ -116,10 +130,7 @@ def test_wfs_pog_contract() -> None:
 
     assert_wfs_contract(capabilities)
     assert REQUIRED_WFS_FEATURE_TYPES <= capabilities.feature_types
-    assert capabilities.feature_types == {
-        *REQUIRED_WFS_FEATURE_TYPES,
-        "ObszarStandardowDostepnosciInfrastrukturySpolecznej",
-    }
+    assert capabilities.feature_types == REQUIRED_WFS_FEATURE_TYPES
     assert capabilities.default_crs == {"EPSG:2180"}
     assert {"EPSG:2176", "EPSG:2177", "EPSG:2178", "EPSG:2179"} <= (
         capabilities.supported_crs
