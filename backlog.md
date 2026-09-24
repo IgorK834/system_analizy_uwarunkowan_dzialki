@@ -456,7 +456,9 @@ PogResult
 **Cel:** zapobiec błędnemu wnioskowi „brak geometrii = brak POG”.
 
 **Model przykładowy:**
-- `legal_status`: `binding | project | in_progress | outdated | unknown`;
+- `legal_status`: `binding | project | in_progress | superseded | unknown`
+  (`outdated` jest wyłącznie aliasem `superseded` — rozstrzygnięcie w
+  `docs/adr/ADR-002-pog-legal-status-and-coverage.md`);
 - `coverage_status`: `available | partial | act_without_spatial_data | no_act_confirmed | unknown`.
 
 **Reguły:**
