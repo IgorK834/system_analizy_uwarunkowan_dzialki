@@ -1,9 +1,7 @@
-"""Best-effort discovery Planu Ogólnego Gminy ze źródeł per gmina.
+"""Best-effort discovery Planu Ogólnego Gminy ze źródeł per gmina i RU.
 
-Moduł celowo nie zawiera krajowego endpointu WMS POG. W przeciwieństwie do
-KIMP dla MPZP taki kontrakt nie został potwierdzony. Adresy WMS i BIP są
-przekazywane przez wywołującego dla konkretnej gminy, a opcjonalny Rejestr
-Urbanistyczny pozostaje eksperymentalnym fallbackiem.
+Adresy gminne są przekazywane przez wywołującego, a potwierdzony krajowy WMS
+Rejestru Urbanistycznego jest odczytywany wyłącznie z katalogu źródeł.
 
 WMS służy wyłącznie do rozpoznania dostępności aktu i odnośników. Wynik nie
 jest precyzyjną geometrią stref, OUZ ani obszaru zabudowy śródmiejskiej.
@@ -23,12 +21,12 @@ import httpx
 from bs4 import BeautifulSoup
 from shapely.geometry.base import BaseGeometry
 
-from app.core.settings import settings
+from app.core.data_sources import AccessType, CatalogError, ensure_source_runnable
+from app.modules.imports.infrastructure.ogc_client import OgcClient, OgcError
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.mpzp import _build_sample_points
 from app.services.mpzp_fetch import (
     MpzpDocumentError,
-    _ensure_url_is_safe,
     _fetch_with_redirect_validation,
 )
 
@@ -200,7 +198,7 @@ async def discover_pog(
         fallback_teryt = next(
             (source.teryt for source in sources if source.teryt), None
         )
-        return await _discover_from_registry(parcel_geometry, fallback_teryt)
+        return await _discover_from_catalog(parcel_geometry, fallback_teryt)
 
     partial_results = [
         await _discover_from_gmina_source(parcel_geometry, source)
@@ -240,8 +238,18 @@ async def _discover_from_wms(
     assert source.wms_url is not None
     fetched_at = datetime.now(timezone.utc)
     try:
-        await _ensure_url_is_safe(source.wms_url)
-    except MpzpDocumentError:
+        client = OgcClient.for_urls(
+            source_id="pog_app",
+            urls=(source.wms_url,),
+            config_overrides={
+                "connect_timeout_seconds": 3.0,
+                "read_timeout_seconds": POG_DISCOVERY_TIMEOUT_S,
+                "total_timeout_seconds": POG_DISCOVERY_TIMEOUT_S,
+                "max_response_bytes": 2 * 1024 * 1024,
+                "retries": 1,
+            },
+        )
+    except ValueError:
         return _unknown_result(
             source.wms_url,
             "POG_GMINA_WMS",
@@ -250,10 +258,7 @@ async def _discover_from_wms(
         )
 
     sample_points = _build_sample_points(parcel_geometry)
-    async with httpx.AsyncClient(
-        timeout=POG_DISCOVERY_TIMEOUT_S,
-        follow_redirects=False,
-    ) as client:
+    with client:
         sections_and_info = await asyncio.gather(
             *(
                 _discover_logical_layer(
@@ -315,7 +320,7 @@ async def _discover_from_wms(
 
 
 async def _discover_logical_layer(
-    client: httpx.AsyncClient,
+    client: OgcClient,
     wms_url: str,
     logical_layer: PogLogicalLayer,
     candidates: tuple[str, ...],
@@ -362,20 +367,33 @@ async def _discover_logical_layer(
 
 
 async def _query_wms_point(
-    client: httpx.AsyncClient,
+    client: OgcClient,
     wms_url: str,
     layer_name: str,
     x: float,
     y: float,
 ) -> _WmsFeatureInfo | None:
     try:
-        response = await client.get(
+        half_pixel = _WMS_PIXEL_SIZE_M / 2
+        response = await asyncio.to_thread(
+            client.fetch_wms_feature_info,
             wms_url,
-            params=_build_get_feature_info_params(layer_name, x, y),
+            layer=layer_name,
+            bbox=(
+                x - half_pixel,
+                y - half_pixel,
+                x + half_pixel,
+                y + half_pixel,
+            ),
+            crs="EPSG:2180",
+            width=_WMS_IMAGE_SIZE_PX,
+            height=_WMS_IMAGE_SIZE_PX,
+            i=_WMS_QUERY_PIXEL,
+            j=_WMS_QUERY_PIXEL,
+            feature_count=_WMS_FEATURE_COUNT,
         )
-        response.raise_for_status()
-        return _parse_wms_response(response.text)
-    except (httpx.HTTPError, json.JSONDecodeError, TypeError, ValueError):
+        return _parse_wms_response(response.artifact.decode("utf-8"))
+    except (OgcError, UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError):
         return None
 
 
@@ -522,111 +540,64 @@ async def _discover_from_bip(bip_url: str) -> PogDiscoveryResult:
     )
 
 
-async def _discover_from_registry(
+async def _discover_from_catalog(
     parcel_geometry: BaseGeometry,
     teryt: str | None,
 ) -> PogDiscoveryResult:
-    registry_url = settings.rejestr_urbanistyczny_base_url
-    experimental_warning = _warning(
-        "POG_REGISTRY_EXPERIMENTAL",
-        "Rejestr Urbanistyczny jest niepotwierdzonym kanałem discovery; jego kontrakt i dostępność mogą się zmienić.",
-        "warning",
-        source_name="Rejestr Urbanistyczny",
-    )
-    if not registry_url:
-        result = _unknown_result(
-            None,
-            "POG_DISCOVERY",
-            code="POG_NO_CONFIRMED_SOURCE",
-            message=(
-                "Brak skonfigurowanego źródła gminnego i potwierdzonej usługi rejestru. "
-                "Nie oznacza to, że gmina nie ma uchwalonego POG."
-            ),
-        )
-        result.warnings.insert(0, experimental_warning)
-        return result
+    """Uruchamia krajowy WMS wyłącznie po przejściu guardu katalogu."""
 
     try:
-        await _ensure_url_is_safe(registry_url)
-        minx, miny, maxx, maxy = parcel_geometry.bounds
-        params = {"bbox": f"{minx},{miny},{maxx},{maxy}", "crs": "EPSG:2180"}
-        if teryt:
-            params["teryt"] = teryt
-        async with httpx.AsyncClient(
-            timeout=POG_DISCOVERY_TIMEOUT_S,
-            follow_redirects=False,
-        ) as client:
-            response = await client.get(registry_url, params=params)
-            response.raise_for_status()
-        return _parse_registry_response(
-            response.text, registry_url, experimental_warning
+        source = ensure_source_runnable("pog_app")
+        resource = next(
+            item
+            for item in source.resources
+            if item.role == "ru_wms_preview" and item.access_type is AccessType.WMS
         )
-    except (
-        MpzpDocumentError,
-        httpx.HTTPError,
-        json.JSONDecodeError,
-        TypeError,
-        ValueError,
-    ):
-        result = _unknown_result(
-            registry_url,
-            "REJESTR_URBANISTYCZNY_EXPERIMENTAL",
-            code="POG_REGISTRY_UNAVAILABLE",
+    except (CatalogError, StopIteration):
+        return _unknown_result(
+            None,
+            "REJESTR_URBANISTYCZNY",
+            code="POG_NO_CONFIRMED_SOURCE",
             message=(
-                "Nie udało się pobrać danych z eksperymentalnego Rejestru "
-                "Urbanistycznego. Brak odpowiedzi nie potwierdza braku POG."
+                "Katalog nie udostępnia potwierdzonego kanału RU. "
+                "Nie oznacza to braku POG."
             ),
         )
-        result.warnings.insert(0, experimental_warning)
-        return result
 
-
-def _parse_registry_response(
-    text: str,
-    registry_url: str,
-    experimental_warning: WarningMessage,
-) -> PogDiscoveryResult:
-    data = json.loads(text)
-    if not isinstance(data, dict):
-        raise TypeError("Odpowiedź rejestru nie jest obiektem JSON.")
-    raw_status = str(data.get("status", ""))
-    status = _status_from_raw(raw_status)
-    raw_layers = data.get("layers", {}) or {}
-    if not isinstance(raw_layers, dict):
-        raw_layers = {}
-    sections: dict[PogLogicalLayer, PogLayerSection] = {}
-    for logical_layer in _LOGICAL_LAYERS:
-        layer_data = raw_layers.get(logical_layer, {}) or {}
-        layer_status = status
-        feature_count = 0
-        if isinstance(layer_data, dict):
-            layer_status = _status_from_raw(str(layer_data.get("status", raw_status)))
-            feature_count = int(layer_data.get("feature_count", 0) or 0)
-        sections[logical_layer] = PogLayerSection(
-            logical_layer, layer_status, feature_count=feature_count
-        )
-    raw_links = data.get("links", []) or []
-    links = [link for link in raw_links if isinstance(link, str) and link.strip()]
-    return PogDiscoveryResult(
-        status=status,
-        uchwala_nr=_optional_string(data.get("uchwala_nr")),
-        uchwala_date=_optional_string(data.get("uchwala_date")),
-        links=list(dict.fromkeys(links)),
-        planning_act=sections["planning_act"],
-        downtown_area=sections["downtown_area"],
-        ouz=sections["ouz"],
-        planning_zones=sections["planning_zones"],
-        is_discovery_only=True,
-        source_metadata=SourceMetadata(
-            source_name="REJESTR_URBANISTYCZNY_EXPERIMENTAL",
-            source_url=registry_url,
-            fetched_at=datetime.now(timezone.utc),
-            response_status=200,
-            confidence=0.45,
-            manual_review_required=True,
+    layer_names = tuple(resource.layers)
+    catalog_source = PogGminaSources(
+        wms_url=resource.url,
+        teryt=teryt,
+        layer_names=PogLayerNames(
+            planning_act=tuple(layer for layer in layer_names if layer.count(".") == 2),
+            downtown_area=tuple(
+                layer
+                for layer in layer_names
+                if ".ObszarZabudowySrodmiejskiej." in layer
+            ),
+            ouz=tuple(
+                layer
+                for layer in layer_names
+                if ".ObszarUzupelnieniaZabudowy." in layer
+            ),
+            planning_zones=tuple(
+                layer
+                for layer in layer_names
+                if layer.startswith("APP.POG.S") and ".ObszarStandardow" not in layer
+            ),
         ),
-        warnings=[experimental_warning, _discovery_only_warning()],
     )
+    result = await _discover_from_wms(parcel_geometry, catalog_source)
+    result.warnings.insert(
+        0,
+        _warning(
+            "POG_RU_CATALOG_SOURCE",
+            "Discovery użyło potwierdzonego endpointu WMS z katalogu źródeł.",
+            "info",
+            source_name="Rejestr Urbanistyczny",
+        ),
+    )
+    return result
 
 
 def _merge_discovery_results(results: list[PogDiscoveryResult]) -> PogDiscoveryResult:
@@ -716,13 +687,6 @@ def _normalize_text(value: str) -> str:
         char for char in decomposed if not unicodedata.combining(char)
     )
     return " ".join(without_diacritics.split())
-
-
-def _optional_string(value: object) -> str | None:
-    if value is None:
-        return None
-    text = str(value).strip()
-    return text or None
 
 
 def _empty_sections(status: PogStatus) -> dict[PogLogicalLayer, PogLayerSection]:
