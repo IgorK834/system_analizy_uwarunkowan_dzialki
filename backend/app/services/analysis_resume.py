@@ -177,6 +177,15 @@ async def resume_analysis_with_zone(
             }
             pog_record.raw_attributes = raw_attributes
 
+            if pog_record.result_v2 is not None:
+                result_v2 = dict(pog_record.result_v2)
+                result_v2["conflict_with_mpzp"] = pog_record.conflict_with_mpzp
+                result_v2["manual_review_required"] = pog_record.manual_review_required
+                result_v2_raw_attributes = dict(result_v2.get("raw_attributes") or {})
+                result_v2_raw_attributes["scenario"] = raw_attributes["scenario"]
+                result_v2["raw_attributes"] = result_v2_raw_attributes
+                pog_record.result_v2 = result_v2
+
         retained_warnings = [
             warning
             for warning in (analysis.warnings or [])

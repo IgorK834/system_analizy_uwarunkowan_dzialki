@@ -14,13 +14,17 @@ from sqlalchemy.orm import Session
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
 from app.models.versioned import DataRelease, DataSource
+from app.schemas.analyze import POG_RESULT_SCHEMA_VERSION
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CACHE_MAX_AGE_DAYS: Final[int] = 30
 DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES: Final[int] = 15
 _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
-RESULT_CONTRACT_VERSION: Final[str] = "pog-v2"
+# Wersja kontraktu wchodzi do sygnatury cache: snapshot zapisany przed zmianą
+# semantyki statusu (BK-106) albo provenance (BK-107) nie jest serwowany jako
+# trafienie, nawet gdy aktywne wydania danych się nie zmieniły.
+RESULT_CONTRACT_VERSION: Final[str] = f"pog-v{POG_RESULT_SCHEMA_VERSION}"
 
 
 def current_cache_signature(db: Session) -> tuple[str, list[int]]:

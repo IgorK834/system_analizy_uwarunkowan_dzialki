@@ -237,7 +237,11 @@ def save_analysis(
             db.add(
                 PogData(
                     analysis_id=analysis.id,
-                    status=result.pog.status,
+                    status=result.pog.legal_status,
+                    legal_status=result.pog.legal_status,
+                    coverage_status=result.pog.coverage_status,
+                    data_availability=result.pog.data_availability,
+                    status_confirmed_at=result.pog.status_confirmed_at,
                     planning_zone=result.pog.planning_zone,
                     zone_type=(result.pog.zone_type or result.pog.planning_zone),
                     # ``in_ouz`` jest decyzją domenową z jawnych progów OUZ,
@@ -671,11 +675,12 @@ def _pog_response(
         if source_record is not None
         else None
     )
+    # Snapshot v1: status prawny jest odtwarzany wspólnym mapperem aliasów —
+    # ``adopted`` bez zachowanego potwierdzenia źródłowego daje ``unknown``.
     return PogResult(
         schema_version="1.0",
-        legal_status=(pog.status if pog.status in {"adopted", "project", "in_progress"} else "not_available"),
-        coverage_status="partial",
-        status=pog.status,
+        coverage_status=pog.coverage_status,
+        status=pog.legacy_status or pog.status,
         planning_zone=pog.planning_zone,
         zone_type=pog.zone_type,
         in_ouz=pog.in_ouz,

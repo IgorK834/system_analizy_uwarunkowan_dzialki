@@ -33,7 +33,14 @@ from app.models.analysis import Analysis
 from app.schemas.analyze import AnalyzeResponse
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.persistence import build_analyze_response_from_analysis
+from app.services.pog_provenance import RELATION_LABELS_PL
 from app.services.report_map import png_to_data_uri, render_analysis_map_png
+from app.shared.planning_status import (
+    COVERAGE_STATUS_LABELS_PL,
+    DATA_AVAILABILITY_LABELS_PL,
+    LEGAL_STATUS_LABELS_PL,
+    pog_status_notes_pl,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -184,11 +191,42 @@ def _mpzp_context(zone: Any) -> dict[str, Any]:
 def _pog_context(pog: Any) -> dict[str, Any] | None:
     if pog is None:
         return None
+    evidence = pog.legal_status_evidence
+    coverage_evidence = pog.coverage_evidence
     return {
         "schema_version": pog.schema_version,
         "legal_status": pog.legal_status,
+        "legal_status_label": LEGAL_STATUS_LABELS_PL[pog.legal_status],
         "coverage_status": pog.coverage_status,
-        "status": pog.status,
+        "coverage_status_label": COVERAGE_STATUS_LABELS_PL[pog.coverage_status],
+        "data_availability": pog.data_availability,
+        "data_availability_label": DATA_AVAILABILITY_LABELS_PL[pog.data_availability],
+        "status_confirmed_at": (
+            _format_datetime(pog.status_confirmed_at) if pog.status_confirmed_at else None
+        ),
+        "status_evidence": (
+            {
+                "source_name": evidence.source_name,
+                "raw_value": evidence.raw_value,
+                "reference": evidence.reference,
+            }
+            if evidence is not None
+            else None
+        ),
+        "coverage_evidence": (
+            {
+                "source_name": coverage_evidence.source_name,
+                "reference": coverage_evidence.reference,
+            }
+            if coverage_evidence is not None
+            else None
+        ),
+        "status_notes": pog_status_notes_pl(
+            pog.legal_status,
+            pog.coverage_status,
+            pog.data_availability,
+            pog.status_confirmed_at,
+        ),
         "planning_zone": pog.zone_type or pog.planning_zone,
         "in_ouz": _format_bool(pog.in_ouz),
         "in_downtown_area": _format_bool(pog.in_downtown_area),
@@ -226,14 +264,69 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
                 "additional_profiles": ", ".join(
                     profile.label or profile.code for profile in zone.additional_profiles
                 ) or "—",
+                "gml_url": zone.gml_url if zone.gml_url_verified else None,
+                "feature_version": zone.feature_version,
             }
             for zone in pog.zones
         ],
+        "act": _pog_act_context(pog.act),
         "ouz": [_pog_area_context(item) for item in pog.ouz],
         "downtown_areas": [_pog_area_context(item) for item in pog.downtown_areas],
         "social_areas": [
             _pog_area_context(item)
             for item in pog.social_infrastructure_standard_areas
+        ],
+    }
+
+
+def _pog_act_context(act: Any) -> dict[str, Any] | None:
+    """Łańcuch provenance aktu; linki wyłącznie dla zweryfikowanych HTTPS."""
+    if act is None:
+        return None
+    metadata = act.metadata
+    return {
+        "identifier": act.act_identifier or act.id,
+        "version": act.act_version or act.version,
+        "title": act.title,
+        "publication_id": act.publication_id,
+        "version_started_at": (
+            _format_datetime(act.version_started_at) if act.version_started_at else None
+        ),
+        "valid_from": _format_date(act.valid_from),
+        "valid_to": _format_date(act.valid_to),
+        "publication_date": _format_date(act.publication_date),
+        "gml_url": act.gml_url if act.gml_url_verified else None,
+        "card_url": act.card_url if act.card_url_verified else None,
+        "data_release_id": act.data_release_id,
+        "release_label": act.release_label,
+        "artifact_sha256": act.artifact_sha256,
+        "fetched_at": _format_datetime(act.fetched_at) if act.fetched_at else None,
+        "metadata": (
+            {
+                "record_id": metadata.record_id,
+                "title": metadata.title,
+                "record_sha256": metadata.record_sha256,
+                "date_stamp": _format_date(metadata.date_stamp),
+            }
+            if metadata is not None
+            else None
+        ),
+        "documents": [
+            {
+                "title": document.title or document.short_name or document.document_identifier,
+                "identifier": document.document_identifier,
+                "version": document.document_version,
+                "relation": RELATION_LABELS_PL.get(document.relation or "", document.relation),
+                "document_date": _format_date(document.document_date),
+                "effective_date": _format_date(document.effective_date),
+                "repeal_date": _format_date(document.repeal_date),
+                "record_sha256": document.record_sha256,
+                "link": document.link if document.link_verified else None,
+                "raw_link": None if document.link_verified else document.link,
+                "status": document.status,
+                "warning": document.warning,
+            }
+            for document in act.formal_documents
         ],
     }
 
@@ -365,9 +458,18 @@ def _build_limitations(
             "ręcznego odczytania z mapy rastrowej (fallback WMS)."
         )
     if response.pog is None:
-        limitations.append("Brak danych Planu Ogólnego Gminy (POG) dla tej działki.")
-    elif response.pog.manual_review_required:
-        limitations.append("Wynik POG wymaga ręcznej weryfikacji.")
+        limitations.append(
+            "Snapshot nie zawiera wyniku Planu Ogólnego Gminy (POG); brak wyniku "
+            "nie oznacza braku planu."
+        )
+    else:
+        if response.pog.legal_status != "binding":
+            limitations.append(
+                "Status prawny POG: "
+                f"{LEGAL_STATUS_LABELS_PL[response.pog.legal_status]}."
+            )
+        if response.pog.manual_review_required:
+            limitations.append("Wynik POG wymaga ręcznej weryfikacji.")
 
     if response.utilities_preview is None:
         limitations.append(
@@ -548,6 +650,12 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   .tag-dominant { background: #eef3f0; color: #0d5137; }
   .tag-review { background: #fdeceb; color: #8f2525; }
   .confidence { font-size: 8.5pt; color: #475467; margin-top: 1mm; }
+  .status-note { font-size: 9pt; color: #6b3a10; margin: 1mm 0; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 7.5pt; word-break: break-all; }
+  table.provenance td, table.provenance th { font-size: 8.5pt; }
+  table.zones { table-layout: fixed; }
+  table.zones th, table.zones td { width: auto; font-size: 8pt; padding: 1mm; }
+  a { color: #0d5137; }
   .warning-info { border-left: 3px solid #1769aa; }
   .warning-warning { border-left: 3px solid #c96a1f; }
   .warning-error { border-left: 3px solid #c43d3d; }
@@ -644,7 +752,11 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   <h2>Plan Ogólny Gminy (POG) i Obszar Uzupełnienia Zabudowy (OUZ)</h2>
   {% if pog %}
   <table>
-    <tr><th>Status</th><td>{{ pog.status }}</td></tr>
+    <tr><th>Status prawny aktu</th><td>{{ pog.legal_status_label }}</td></tr>
+    <tr><th>Zakres danych przestrzennych</th><td>{{ pog.coverage_status_label }}</td></tr>
+    <tr><th>Aktualność źródła</th><td>{{ pog.data_availability_label }}{% if pog.status_confirmed_at %} (potwierdzono {{ pog.status_confirmed_at }}){% endif %}</td></tr>
+    {% if pog.status_evidence %}<tr><th>Podstawa statusu</th><td>{{ pog.status_evidence.source_name }}{% if pog.status_evidence.raw_value %} — kod {{ pog.status_evidence.raw_value }}{% endif %}{% if pog.status_evidence.reference %}<br><small class="mono">{{ pog.status_evidence.reference }}</small>{% endif %}</td></tr>{% endif %}
+    {% if pog.coverage_evidence %}<tr><th>Potwierdzenie braku aktu</th><td>{{ pog.coverage_evidence.source_name }}{% if pog.coverage_evidence.reference %}<br><small class="mono">{{ pog.coverage_evidence.reference }}</small>{% endif %}</td></tr>{% endif %}
     <tr><th>Strefa planistyczna</th><td>{{ pog.planning_zone if pog.planning_zone else "—" }}</td></tr>
     <tr><th>Obszar Uzupełnienia Zabudowy (OUZ)</th><td>{{ pog.in_ouz }}</td></tr>
     {% if pog.ouz_intersection_pct %}<tr><th>Udział OUZ w działce</th><td>{{ pog.ouz_intersection_pct }} ({{ pog.ouz_intersection_area_sqm }} m²)</td></tr>{% endif %}
@@ -658,8 +770,8 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   </table>
   {% if pog.zones %}
   <h3>Strefy planistyczne przecinające działkę</h3>
-  <table>
-    <thead><tr><th>Strefa</th><th>Powierzchnia</th><th>Udział</th><th>Intensywność</th><th>Wysokość</th><th>Zabudowa</th><th>Biologicznie czynna</th></tr></thead>
+  <table class="zones">
+    <thead><tr><th>Strefa</th><th>Powierzchnia</th><th>Udział</th><th>Intensywność</th><th>Wysokość</th><th>Zabudowa</th><th>Biologicznie czynna</th><th>Źródło</th></tr></thead>
     <tbody>
     {% for zone in pog.zones %}
       <tr>
@@ -669,6 +781,7 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
         <td>{{ zone.max_building_height_m if zone.max_building_height_m is not none else "—" }}</td>
         <td>{{ zone.max_building_coverage_pct if zone.max_building_coverage_pct is not none else "—" }}</td>
         <td>{{ zone.min_biologically_active_pct if zone.min_biologically_active_pct is not none else "—" }}</td>
+        <td>{% if zone.gml_url %}<a href="{{ zone.gml_url }}">GML</a>{% if zone.feature_version %}<br><small class="mono">{{ zone.feature_version }}</small>{% endif %}{% else %}—{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -680,6 +793,37 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   {% for area in pog.social_areas %}<tr><td>{{ area.symbol or area.label or area.id }}</td><td>{{ area.area_sqm }} m²</td><td>{{ area.area_pct }}</td></tr>{% endfor %}
   </tbody></table>
   {% endif %}
+  {% if pog.act %}
+  <h3>Źródła urzędowe aktu</h3>
+  <table class="provenance">
+    <tr><th>Identyfikator aktu</th><td>{{ pog.act.identifier }}{% if pog.act.title %}<br><small>{{ pog.act.title }}</small>{% endif %}</td></tr>
+    <tr><th>Wersja aktu</th><td>{{ pog.act.version if pog.act.version else "—" }}{% if pog.act.version_started_at %} (początek wersji {{ pog.act.version_started_at }}){% endif %}</td></tr>
+    {% if pog.act.publication_id %}<tr><th>Identyfikator publikacji</th><td class="mono">{{ pog.act.publication_id }}</td></tr>{% endif %}
+    {% if pog.act.valid_from %}<tr><th>Obowiązuje od (wg APP)</th><td>{{ pog.act.valid_from }}{% if pog.act.valid_to %} do {{ pog.act.valid_to }}{% endif %}</td></tr>{% endif %}
+    {% if pog.act.publication_date %}<tr><th>Data publikacji zbioru (CSW)</th><td>{{ pog.act.publication_date }}</td></tr>{% endif %}
+    <tr><th>Wydanie danych</th><td>{% if pog.act.data_release_id %}#{{ pog.act.data_release_id }}{% endif %}{% if pog.act.release_label %} ({{ pog.act.release_label }}){% endif %}{% if pog.act.fetched_at %}, pobrano {{ pog.act.fetched_at }}{% endif %}</td></tr>
+    {% if pog.act.artifact_sha256 %}<tr><th>SHA-256 artefaktu</th><td class="mono">{{ pog.act.artifact_sha256 }}</td></tr>{% endif %}
+    <tr><th>GML wersji aktu</th><td>{% if pog.act.gml_url %}<a href="{{ pog.act.gml_url }}">Rejestr Urbanistyczny — WFS APP</a>{% else %}<span class="empty">brak zweryfikowanego odnośnika</span>{% endif %}</td></tr>
+    <tr><th>Karta metadanych (CSW)</th><td>{% if pog.act.card_url %}<a href="{{ pog.act.card_url }}">rekord {{ pog.act.metadata.record_id if pog.act.metadata else "" }}</a>{% else %}<span class="empty">metadane CSW niedostępne</span>{% endif %}{% if pog.act.metadata and pog.act.metadata.record_sha256 %}<br><small class="mono">SHA-256 rekordu: {{ pog.act.metadata.record_sha256 }}</small>{% endif %}</td></tr>
+  </table>
+  {% if pog.act.documents %}
+  <table class="provenance">
+    <thead><tr><th>Dokument formalny</th><th>Relacja i daty</th><th>SHA-256 rekordu</th></tr></thead>
+    <tbody>
+    {% for document in pog.act.documents %}
+      <tr>
+        <td>{% if document.link %}<a href="{{ document.link }}">{{ document.title }}</a>{% else %}{{ document.title }}{% endif %}<br><small class="mono">{{ document.identifier }}{% if document.version %} / {{ document.version }}{% endif %}</small>
+          {% if document.raw_link %}<br><small>{{ document.raw_link }}</small>{% endif %}
+          {% if document.warning %}<br><span class="tag tag-review">{{ document.warning }}</span>{% endif %}</td>
+        <td>{{ document.relation if document.relation else "—" }}{% if document.document_date %}<br>data: {{ document.document_date }}{% endif %}{% if document.effective_date %}<br>w życie: {{ document.effective_date }}{% endif %}{% if document.repeal_date %}<br>uchylony: {{ document.repeal_date }}{% endif %}</td>
+        <td class="mono">{{ document.record_sha256 if document.record_sha256 else "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+  {% for note in pog.status_notes %}<p class="status-note">{{ note }}</p>{% endfor %}
   {% if pog.manual_review_required %}<p><span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span></p>{% endif %}
   {% if pog.confidence %}<div class="confidence">Pewność danych: {{ pog.confidence.pct }} ({{ pog.confidence.label }})</div>{% endif %}
   {% else %}

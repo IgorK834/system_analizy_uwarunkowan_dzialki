@@ -34,6 +34,7 @@ from app.schemas.analyze import (
     MpzpZoneResult,
     ParcelGeometryResponse,
     ParcelIdAnalyzeRequest,
+    PogActResult,
     PogResult,
     RiskResult,
     UtilitiesPreviewResult,
@@ -71,11 +72,15 @@ from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog import PogDiscoveryResult, PogGminaSources, discover_pog
 from app.services.pog_analyzer import (
     PogAnalysisResult,
-    analyze_pog_adopted,
+    analyze_pog_vectors,
+    evidence_result,
+    spatial_feature_count,
     to_pog_result,
+    zones_cover_parcel,
 )
 from app.services.pog_fetch import fetch_pog_vector_data
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
+from app.services.pog_provenance import act_result_from_provenance, feature_gml_url
 from app.services.pog_scenarios import build_pog_scenario_result
 from app.services.persistence import (
     build_analyze_response_from_analysis,
@@ -87,9 +92,21 @@ from app.modules.documents.composition import (
 )
 from app.modules.imports.infrastructure.repository import (
     active_pog_release,
+    find_pog_acts_for_parcel,
+    last_confirmed_pog_status,
+    load_pog_act_provenance,
     load_pog_release_features,
 )
 from app.shared.geometry import GeometryPayload
+from app.shared.planning_status import (
+    ConfirmedPogStatus,
+    PogStatusDecision,
+    PogStatusObservation,
+    StatusEvidence,
+    canonical_legal_status,
+    is_official_status_code,
+    resolve_pog_status,
+)
 
 
 async def run_analysis(
@@ -743,6 +760,62 @@ def _map_context(
     )
 
 
+# Komunikaty dla kodów decyzji BK-106. Żaden nie opisuje braku geometrii ani
+# pustej odpowiedzi jako braku planu.
+_POG_STATUS_REASON_WARNINGS: dict[str, tuple[str, str]] = {
+    "POG_STATUS_STALE": (
+        "warning",
+        "Źródło POG było niedostępne; pokazano ostatni potwierdzony status wraz z datą potwierdzenia.",
+    ),
+    "POG_SOURCE_UNAVAILABLE": (
+        "error",
+        "Źródło POG było niedostępne. Brak wyniku nie oznacza braku planu ani braku ograniczeń.",
+    ),
+    "POG_STATUS_NOT_OFFICIAL": (
+        "warning",
+        "Źródło nie podało urzędowego kodu statusu aktu; status prawny pozostaje nieustalony.",
+    ),
+    "POG_COVERAGE_PARTIAL": (
+        "warning",
+        "Dane przestrzenne POG są niepełne dla działki; brak strefy nie oznacza braku planu.",
+    ),
+    "POG_ACT_WITHOUT_PARCEL_FEATURES": (
+        "warning",
+        "Akt POG ma dane przestrzenne, ale żaden obiekt nie przecina działki; dane wymagają weryfikacji.",
+    ),
+    "POG_ACT_WITHOUT_SPATIAL_DATA": (
+        "warning",
+        "Akt POG istnieje w rejestrze, ale nie ma danych przestrzennych dla działki. Brak geometrii nie oznacza braku planu.",
+    ),
+    "POG_EMPTY_RESPONSE_NOT_ABSENCE": (
+        "warning",
+        "Źródło nie zwróciło obiektów POG. Pusta odpowiedź nie jest urzędowym potwierdzeniem braku planu.",
+    ),
+}
+_LOCAL_ACT_PRIORITY: dict[str, int] = {
+    "binding": 0,
+    "project": 1,
+    "in_progress": 2,
+    "unknown": 3,
+    "superseded": 4,
+}
+
+
+def _status_warnings(decision: PogStatusDecision) -> list[WarningMessage]:
+    warnings: list[WarningMessage] = []
+    for code in decision.reasons:
+        severity, message = _POG_STATUS_REASON_WARNINGS[code]
+        warnings.append(
+            WarningMessage(
+                code=code,
+                message=message,
+                severity=severity,  # type: ignore[arg-type]
+                source_name="pog",
+            )
+        )
+    return warnings
+
+
 async def _analyze_pog_best_effort(
     parcel_geometry: BaseGeometry,
     teryt: str | None,
@@ -753,30 +826,25 @@ async def _analyze_pog_best_effort(
     list[WarningMessage],
     list[SourceMetadata],
 ]:
-    """Uruchamia discovery, bezpieczny fetch APP/GML i analizę POG/OUZ.
+    """Rozstrzyga POG: lokalne wydanie → discovery RU → ostatnia potwierdzona.
 
-    Brak skonfigurowanego, potwierdzonego źródła pozostaje wynikiem
-    ``unknown``. Nie jest mapowany na brak ograniczeń ani na sukces analizy.
+    Status prawny, pokrycie i dostępność są ustalane wspólną tabelą decyzyjną
+    BK-106. Brak potwierdzonego źródła daje ``unknown``/``unavailable``, a
+    awaria źródła przy znanej wcześniejszej wartości — ``stale`` z datą. Żadna
+    ścieżka nie zamienia braku danych na brak ograniczeń ani sukces analizy.
     """
     # Wydanie jest przypinane raz przed odczytem cech. Kolejne publikacje nie
     # zmieniają release_id ani SHA historycznego wyniku tej analizy.
     if db is not None:
-        pinned = active_pog_release(db)
-        if pinned is not None:
-            try:
-                vector_data = _local_pog_vector_data(db, parcel_geometry, pinned)
-                analysis = analyze_pog_adopted(parcel_geometry, vector_data)
-                pog = to_pog_result(analysis)
-                return (
-                    pog,
-                    analysis.ouz_status,
-                    list(analysis.warnings),
-                    [analysis.source_metadata],
-                )
-            except Exception as exc:
-                log_analysis_event(
-                    "section_error", section="pog_local_release", status=type(exc).__name__
-                )
+        try:
+            local = _analyze_pog_local_release(db, parcel_geometry, teryt)
+        except Exception as exc:
+            log_analysis_event(
+                "section_error", section="pog_local_release", status=type(exc).__name__
+            )
+            local = None
+        if local is not None:
+            return local
 
     try:
         discovery = await discover_pog(
@@ -789,31 +857,10 @@ async def _analyze_pog_best_effort(
             section="pog_discovery",
             status=type(exc).__name__,
         )
-        source = SourceMetadata(
-            source_name="POG_DISCOVERY",
-            source_url=None,
-            fetched_at=datetime.now(timezone.utc),
-            confidence=0.0,
-            manual_review_required=True,
-        )
-        ouz_status = calculate_ouz_status(parcel_geometry, None)
-        return (
-            _pog_from_discovery(None, source, "unknown"),
-            ouz_status,
-            [
-                WarningMessage(
-                    code="POG_DISCOVERY_ERROR",
-                    message=(
-                        "Nie udało się uruchomić discovery POG. Brak wyniku "
-                        "nie oznacza braku ograniczeń planistycznych."
-                    ),
-                    severity="error",
-                    source_name="pog",
-                ),
-                *ouz_status.warnings,
-            ],
-            [source],
-        )
+        discovery = None
+
+    if discovery is None or not discovery.source_responded:
+        return _pog_upstream_failure(parcel_geometry, teryt, db, discovery)
 
     warnings = list(discovery.warnings)
     sources = [discovery.source_metadata]
@@ -821,23 +868,51 @@ async def _analyze_pog_best_effort(
     if date_warning is not None:
         warnings.append(date_warning)
 
+    checked_at = discovery.source_metadata.fetched_at or datetime.now(timezone.utc)
     ouz_status = calculate_ouz_status(parcel_geometry, None)
-    pog = _pog_from_discovery(discovery, discovery.source_metadata, discovery.status)
-    if discovery.status == "adopted" and discovery.links:
+    base_observation = PogStatusObservation(
+        source_responded=True,
+        checked_at=checked_at,
+        raw_legal_status=discovery.raw_legal_status,
+        legal_evidence=discovery.legal_evidence,
+        act_found=discovery.act_found,
+        act_has_spatial_data=discovery.preview_features_found > 0,
+        # WMS jest podglądem: obiekty z obrazu nie są wektorami do obliczeń,
+        # więc pokrycie z samego discovery nigdy nie jest „available”.
+        spatial_features_on_parcel=discovery.preview_features_found,
+        zones_cover_parcel=False,
+    )
+    decision = resolve_pog_status(base_observation)
+    pog = _pog_from_decision(decision, discovery, discovery.source_metadata)
+    status_warnings = _status_warnings(decision)
+    if discovery.legal_status == "binding" and discovery.links:
         try:
             vector_data = await fetch_pog_vector_data(discovery.links)
-            analysis = analyze_pog_adopted(parcel_geometry, vector_data)
+            analysis = analyze_pog_vectors(parcel_geometry, vector_data)
+            if analysis.status != "analyzed":
+                raise ValueError("Analiza wektorów POG nie została wykonana.")
             ouz_status = analysis.ouz_status
+            decision = resolve_pog_status(
+                PogStatusObservation(
+                    source_responded=True,
+                    checked_at=checked_at,
+                    raw_legal_status=discovery.raw_legal_status,
+                    legal_evidence=discovery.legal_evidence,
+                    act_found=True,
+                    act_has_spatial_data=True,
+                    spatial_features_on_parcel=spatial_feature_count(analysis),
+                    zones_cover_parcel=zones_cover_parcel(analysis),
+                    response_complete=vector_data.status == "available",
+                )
+            )
+            status_warnings = _status_warnings(decision)
             raw_attributes = _pog_raw_attributes(discovery, vector_data.app_metadata, analysis)
-            pog = to_pog_result(analysis).model_copy(
+            vector_pog = to_pog_result(analysis, decision)
+            pog = vector_pog.model_copy(
                 update={
                     "uchwala_nr": discovery.uchwala_nr,
                     "uchwala_date": parsed_date,
                     "raw_attributes": raw_attributes,
-                    "manual_review_required": (
-                        analysis.source_metadata.manual_review_required
-                        or ouz_status.manual_review_required
-                    ),
                 }
             )
             warnings.extend(analysis.warnings)
@@ -864,12 +939,12 @@ async def _analyze_pog_best_effort(
             )
             warnings.extend(ouz_status.warnings)
     else:
-        if discovery.status == "adopted":
+        if discovery.legal_status == "binding":
             warnings.append(
                 WarningMessage(
                     code="POG_VECTOR_LINK_MISSING",
                     message=(
-                        "Discovery wskazuje uchwalony POG, ale nie zwróciło "
+                        "Discovery potwierdza obowiązujący POG, ale nie zwróciło "
                         "odnośnika do APP/GML potrzebnego do analizy powierzchniowej."
                     ),
                     severity="warning",
@@ -877,63 +952,300 @@ async def _analyze_pog_best_effort(
                 )
             )
         warnings.extend(ouz_status.warnings)
+    warnings.extend(status_warnings)
 
     if parsed_date is not None and pog.uchwala_date is None:
         pog = pog.model_copy(update={"uchwala_date": parsed_date})
     return pog, ouz_status, warnings, _unique_sources(sources)
 
 
-def _local_pog_vector_data(
+def _pog_upstream_failure(
+    parcel_geometry: BaseGeometry,
+    teryt: str | None,
+    db: Session | None,
+    discovery: PogDiscoveryResult | None,
+) -> tuple[PogResult, OuzStatusResult, list[WarningMessage], list[SourceMetadata]]:
+    """Awaria źródła: ostatnia potwierdzona wartość jako ``stale`` albo ``unknown``."""
+    checked_at = datetime.now(timezone.utc)
+    previous = _previous_confirmed_status(db, parcel_geometry, teryt)
+    decision = resolve_pog_status(
+        PogStatusObservation(
+            source_responded=False,
+            checked_at=checked_at,
+            previous=previous,
+        )
+    )
+    source = (
+        discovery.source_metadata
+        if discovery is not None
+        else SourceMetadata(
+            source_name="POG_DISCOVERY",
+            source_url=None,
+            fetched_at=checked_at,
+            confidence=0.0,
+            manual_review_required=True,
+        )
+    )
+    ouz_status = calculate_ouz_status(parcel_geometry, None)
+    warnings: list[WarningMessage] = list(discovery.warnings) if discovery else [
+        WarningMessage(
+            code="POG_DISCOVERY_ERROR",
+            message=(
+                "Nie udało się uruchomić discovery POG. Brak wyniku "
+                "nie oznacza braku ograniczeń planistycznych."
+            ),
+            severity="error",
+            source_name="pog",
+        )
+    ]
+    warnings.extend(ouz_status.warnings)
+    warnings.extend(_status_warnings(decision))
+    return (
+        _pog_from_decision(decision, discovery, source),
+        ouz_status,
+        warnings,
+        [source],
+    )
+
+
+def _previous_confirmed_status(
+    db: Session | None,
+    parcel_geometry: BaseGeometry,
+    teryt: str | None,
+) -> ConfirmedPogStatus | None:
+    if db is None:
+        return None
+    try:
+        row = last_confirmed_pog_status(
+            db, GeometryPayload(parcel_geometry.wkt), teryt=teryt
+        )
+    except Exception as exc:
+        log_analysis_event(
+            "section_error", section="pog_last_confirmed", status=type(exc).__name__
+        )
+        return None
+    if row is None or row.get("status_confirmed_at") is None:
+        return None
+    raw = row.get("raw_legal_status")
+    legal = canonical_legal_status(row.get("legal_status"))
+    if legal == "unknown" or not is_official_status_code(raw):
+        return None
+    evidence = StatusEvidence(
+        source_name="Rejestr Urbanistyczny (ostatnie potwierdzone wydanie)",
+        source_id="pog_app",
+        official=True,
+        reference=(
+            f"data_release:{row.get('data_release_id')};sha256:{row.get('content_hash')}"
+        ),
+        raw_value=str(raw),
+        confirmed_at=row["status_confirmed_at"],
+    )
+    return ConfirmedPogStatus(
+        legal_status=legal,
+        # Pokrycie działki nie zostało ponownie sprawdzone — zachowujemy tylko
+        # potwierdzony status prawny aktu.
+        coverage_status="unknown",
+        confirmed_at=row["status_confirmed_at"],
+        legal_evidence=evidence,
+    )
+
+
+def _analyze_pog_local_release(
     db: Session,
     parcel_geometry: BaseGeometry,
-    pinned: dict[str, object],
-) -> PogVectorData:
+    teryt: str | None,
+) -> tuple[PogResult, OuzStatusResult, list[WarningMessage], list[SourceMetadata]] | None:
+    """Analiza z przypiętego lokalnego wydania; ``None`` gdy wydanie nie obejmuje działki."""
+    pinned = active_pog_release(db)
+    if pinned is None:
+        return None
     release_id = int(pinned["id"])
-    rows = load_pog_release_features(
-        db,
-        GeometryPayload(parcel_geometry.wkt),
-        data_release_id=release_id,
+    parcel_payload = GeometryPayload(parcel_geometry.wkt)
+    acts = find_pog_acts_for_parcel(
+        db, parcel_payload, data_release_id=release_id, teryt=teryt
     )
+    if not acts:
+        return None
+    acts.sort(
+        key=lambda act: (
+            _LOCAL_ACT_PRIORITY.get(canonical_legal_status(act.get("legal_status")), 9),
+            -int(act.get("features_on_parcel") or 0),
+            str(act.get("act_identifier")),
+        )
+    )
+    primary = acts[0]
+    rows = [
+        row
+        for row in load_pog_release_features(
+            db, parcel_payload, data_release_id=release_id
+        )
+        if row.get("act_version_id") == primary["act_version_id"]
+    ]
+    vector_data = _local_pog_vector_data(rows, pinned, primary)
+    provenance = load_pog_act_provenance(db, int(primary["act_version_id"]))
+    act_result = act_result_from_provenance(provenance) if provenance else None
+    raw_status = primary.get("raw_legal_status")
+    confirmed_at = primary.get("status_confirmed_at") or pinned.get("fetched_at")
+    evidence = StatusEvidence(
+        source_name="Rejestr Urbanistyczny (lokalne wydanie)",
+        source_id="pog_app",
+        official=is_official_status_code(raw_status),
+        reference=f"data_release:{release_id};sha256:{pinned['content_hash']}",
+        raw_value=raw_status,
+        confirmed_at=confirmed_at,
+    )
+    warnings: list[WarningMessage] = []
+    if len(acts) > 1:
+        warnings.append(
+            WarningMessage(
+                code="POG_MULTIPLE_ACTS",
+                message=(
+                    "Działki dotyczy więcej niż jeden akt POG w wydaniu (np. "
+                    "obowiązujący i projekt zmiany); wynik przedstawia akt "
+                    f"{primary['act_identifier']}, pozostałe wymagają weryfikacji."
+                ),
+                severity="warning",
+                source_name="pog",
+            )
+        )
+
+    if rows:
+        analysis = analyze_pog_vectors(parcel_geometry, vector_data)
+        analyzed = analysis.status == "analyzed"
+        decision = resolve_pog_status(
+            PogStatusObservation(
+                source_responded=True,
+                checked_at=confirmed_at or datetime.now(timezone.utc),
+                raw_legal_status=raw_status,
+                legal_evidence=evidence,
+                act_found=True,
+                act_has_spatial_data=True,
+                spatial_features_on_parcel=(
+                    spatial_feature_count(analysis) if analyzed else 0
+                ),
+                zones_cover_parcel=analyzed and zones_cover_parcel(analysis),
+                # Import publikuje wyłącznie wydania z potwierdzoną pełną
+                # paginacją (PogSourceBatch.complete) i przejściem QA.
+                response_complete=True,
+            )
+        )
+        pog = to_pog_result(analysis, decision)
+        if act_result is not None:
+            pog = pog.model_copy(update={"act": act_result})
+        warnings.extend(analysis.warnings)
+        warnings.extend(_status_warnings(decision))
+        warnings.extend(_provenance_warnings(act_result))
+        return pog, analysis.ouz_status, warnings, [analysis.source_metadata]
+
+    decision = resolve_pog_status(
+        PogStatusObservation(
+            source_responded=True,
+            checked_at=confirmed_at or datetime.now(timezone.utc),
+            raw_legal_status=raw_status,
+            legal_evidence=evidence,
+            act_found=True,
+            act_has_spatial_data=bool(primary.get("has_spatial_data")),
+            spatial_features_on_parcel=0,
+            response_complete=True,
+        )
+    )
+    ouz_status = calculate_ouz_status(parcel_geometry, None)
+    source = vector_data.source_metadata.model_copy(
+        update={"confidence": 0.5, "manual_review_required": True}
+    )
+    pog = _pog_from_decision(decision, None, source).model_copy(
+        update={"act": act_result}
+    )
+    warnings.extend(ouz_status.warnings)
+    warnings.extend(_status_warnings(decision))
+    warnings.extend(_provenance_warnings(act_result))
+    return pog, ouz_status, warnings, [source]
+
+
+def _provenance_warnings(act: PogActResult | None) -> list[WarningMessage]:
+    """Jawne ostrzeżenia o nieaktualnych/niedostępnych dokumentach i braku CSW."""
+    if act is None:
+        return []
+    warnings: list[WarningMessage] = []
+    if act.metadata is None:
+        warnings.append(
+            WarningMessage(
+                code="POG_CSW_METADATA_MISSING",
+                message=(
+                    "Wydanie nie zawiera metadanych CSW aktu; karta metadanych i "
+                    "data publikacji zbioru są niedostępne."
+                ),
+                severity="warning",
+                source_name="pog",
+            )
+        )
+    for document in act.formal_documents:
+        if document.status != "current" or not (document.link_verified or not document.link):
+            label = document.title or document.document_identifier
+            warnings.append(
+                WarningMessage(
+                    code=f"POG_DOCUMENT_{document.status.upper()}",
+                    message=f"{label}: {document.warning}",
+                    severity="warning",
+                    source_name="pog",
+                )
+            )
+    return warnings
+
+
+def _local_pog_vector_data(
+    rows: list[dict[str, object]],
+    pinned: dict[str, object],
+    act: dict[str, object],
+) -> PogVectorData:
+    release_id = int(pinned["id"])  # type: ignore[arg-type]
     buckets: dict[str, list[PogVectorFeature]] = {
         "planning_zone": [],
         "ouz": [],
         "downtown_area": [],
         "social_infrastructure_standard": [],
     }
-    app_metadata: dict[str, object] = {}
+    app_metadata: dict[str, object] = {
+        "act_identifier": act.get("act_identifier"),
+        "act_version": act.get("object_version_id"),
+        "legal_status": act.get("legal_status"),
+        "raw_legal_status": act.get("raw_legal_status"),
+    }
     for row in rows:
         feature_type = str(row["feature_type"])
         if feature_type not in buckets:
             continue
-        attributes = dict(row.get("raw_attributes") or {})
+        attributes = dict(row.get("raw_attributes") or {})  # type: ignore[call-overload]
         attributes.update({
             "feature_id": row.get("feature_identifier"),
             "feature_version": row.get("feature_version"),
+            "gml_url": feature_gml_url(
+                row.get("source_reference"),  # type: ignore[arg-type]
+                feature_type,
+                row.get("feature_identifier"),  # type: ignore[arg-type]
+                row.get("feature_version"),  # type: ignore[arg-type]
+            ),
             "symbol": row.get("symbol"),
             "label": row.get("label"),
             "primary_profiles": row.get("primary_profiles") or [],
             "additional_profiles": row.get("additional_profiles") or [],
         })
-        attributes.update(dict(row.get("parameters") or {}))
+        attributes.update(dict(row.get("parameters") or {}))  # type: ignore[call-overload]
         buckets[feature_type].append(PogVectorFeature(
             geometry=from_wkt(str(row["geometry_wkt"])),
             attributes=attributes,
             source_crs="EPSG:2180",
             layer_type=feature_type,  # type: ignore[arg-type]
         ))
-        if not app_metadata:
-            app_metadata = {
-                "act_identifier": row.get("act_identifier"),
-                "act_version": row.get("object_version_id"),
-                "act_name": row.get("act_name"),
-                "legal_status": row.get("legal_status"),
-                "raw_legal_status": row.get("raw_legal_status"),
-                "resolution_number": row.get("resolution_number"),
-                "resolution_date": (
-                    row["resolution_date"].isoformat()
-                    if row.get("resolution_date") else None
-                ),
-            }
+        app_metadata.update({
+            "act_name": row.get("act_name"),
+            "resolution_number": row.get("resolution_number"),
+            "resolution_date": (
+                row["resolution_date"].isoformat()  # type: ignore[union-attr]
+                if row.get("resolution_date") else None
+            ),
+        })
+    binding = canonical_legal_status(str(act.get("legal_status"))) == "binding"
     source = SourceMetadata(
         source_id="pog_app",
         source_version=str(pinned["version_label"]),
@@ -942,10 +1254,10 @@ def _local_pog_vector_data(
         act_version=(str(app_metadata["act_version"]) if app_metadata.get("act_version") else None),
         source_name="POG_APP_LOCAL_POSTGIS",
         source_url=None,
-        fetched_at=pinned.get("fetched_at"),
+        fetched_at=pinned.get("fetched_at"),  # type: ignore[arg-type]
         response_status=None,
-        confidence=1.0,
-        manual_review_required=False,
+        confidence=1.0 if binding else 0.6,
+        manual_review_required=not binding,
     )
     return PogVectorData(
         planning_zones=buckets["planning_zone"],
@@ -960,15 +1272,20 @@ def _local_pog_vector_data(
     )
 
 
-def _pog_from_discovery(
+def _pog_from_decision(
+    decision: PogStatusDecision,
     discovery: PogDiscoveryResult | None,
     source: SourceMetadata,
-    status: str,
 ) -> PogResult:
-    """Mapuje status aktu bez tworzenia pozornej geometrii POG/OUZ."""
+    """Mapuje decyzję statusu bez tworzenia pozornej geometrii POG/OUZ."""
     parsed_date, _ = _parse_pog_date(discovery.uchwala_date if discovery else None)
     return PogResult(
-        status=status,
+        legal_status=decision.legal_status,
+        coverage_status=decision.coverage_status,
+        data_availability=decision.data_availability,
+        status_confirmed_at=decision.confirmed_at,
+        legal_status_evidence=evidence_result(decision.legal_evidence),
+        coverage_evidence=evidence_result(decision.coverage_evidence),
         planning_zone=None,
         zone_type=None,
         in_ouz=False,
@@ -1045,7 +1362,9 @@ def _pog_raw_attributes(
     """Zachowuje dane wejściowe POG bez geometrii i bez obiektów ORM."""
     payload: dict[str, object] = {
         "discovery": {
-            "status": discovery.status,
+            "legal_status": discovery.legal_status,
+            "raw_legal_status": discovery.raw_legal_status,
+            "source_responded": discovery.source_responded,
             "uchwala_nr": discovery.uchwala_nr,
             "uchwala_date": discovery.uchwala_date,
             "links": discovery.links,
@@ -1053,6 +1372,7 @@ def _pog_raw_attributes(
             "layers": {
                 name: {
                     "status": section.status,
+                    "raw_legal_status": section.raw_legal_status,
                     "matched_wms_layer": section.matched_wms_layer,
                     "feature_count": section.feature_count,
                 }
@@ -1156,7 +1476,11 @@ def _result_status(
     critical_context_available = all(
         section.status == "available" for section in context.critical_sections()
     )
-    if not mpzp_zones or pog is None or pog.status != "adopted":
+    if not mpzp_zones or pog is None:
+        return "partial"
+    if pog.legal_status != "binding" or pog.coverage_status != "available":
+        return "partial"
+    if pog.data_availability != "current":
         return "partial"
     if not critical_context_available:
         return "partial"
