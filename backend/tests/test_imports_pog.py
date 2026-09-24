@@ -66,10 +66,12 @@ from app.modules.imports.infrastructure.repository import (
 from app.services.analysis_orchestrator import _analyze_pog_best_effort
 from app.modules.imports.infrastructure.vector import VectorReadError
 from app.shared.geometry import GeometryPayload
+from app.shared.planning_status import inspire_status_uri
 from app.shared.safe_archive import UnsafeArchiveError
 
 
 FIXTURES = Path(__file__).parent / "fixtures" / "imports" / "pog"
+LEGAL_FORCE = "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce"
 NOW = datetime(2026, 7, 25, tzinfo=timezone.utc)
 
 
@@ -84,7 +86,7 @@ def feature(feature_type: str, wkt: str, **attrs: object) -> PogFeatureRecord:
 def act(
     identifier: str = "pog-a",
     *,
-    legal_status: str = "adopted",
+    legal_status: str = "binding",
     boundary: str | None = "POLYGON((0 0,100 0,100 100,0 100,0 0))",
     features: tuple[PogFeatureRecord, ...] | None = None,
 ) -> PogActRecord:
@@ -95,6 +97,7 @@ def act(
         teryt="1261011",
         name="POG testowy",
         legal_status=legal_status,
+        raw_legal_status=inspire_status_uri(legal_status),  # type: ignore[arg-type]
         boundary=geom(boundary) if boundary is not None else None,
         features=features
         if features is not None
@@ -182,30 +185,54 @@ def test_normalize_feature_type_maps_known_layers_and_rejects_unknown() -> None:
     assert normalize_feature_type(None, {"typ": "OUZ"}) == "ouz"
 
 
-def test_normalize_legal_status_never_maps_unknown_to_adopted() -> None:
-    assert normalize_legal_status("uchwalony") == "adopted"
+def test_normalize_legal_status_requires_official_code() -> None:
+    assert normalize_legal_status(LEGAL_FORCE) == "binding"
+    assert normalize_legal_status("prawnie wiążący lub realizowany") == "binding"
     assert normalize_legal_status("projekt") == "project"
     assert normalize_legal_status("w trakcie sporządzania") == "in_progress"
-    assert normalize_legal_status(None) == "not_available"
-    assert normalize_legal_status("cokolwiek dziwnego") == "not_available"
+    # Uchwalenie nie jest wejściem w życie; historyczne ``adopted`` nie jest kodem urzędowym.
+    assert normalize_legal_status("uchwalony") == "unknown"
+    assert normalize_legal_status("adopted") == "unknown"
+    assert normalize_legal_status(None) == "unknown"
+    assert normalize_legal_status("cokolwiek dziwnego") == "unknown"
 
 
-def test_is_binding_only_for_adopted() -> None:
-    assert act(legal_status="adopted").is_binding is True
+def test_is_binding_only_for_binding() -> None:
+    assert act(legal_status="binding").is_binding is True
     assert act(legal_status="project").is_binding is False
     assert act(legal_status="in_progress").is_binding is False
-    assert act(legal_status="not_available").is_binding is False
+    assert act(legal_status="superseded").is_binding is False
+    assert act(legal_status="unknown").is_binding is False
+
+
+def test_legacy_and_alias_status_values_are_rejected_by_domain() -> None:
+    for legacy in ("adopted", "not_available", "outdated"):
+        with pytest.raises(PogValidationError, match="Nieznany status"):
+            act(legal_status=legacy).validate()
 
 
 def test_source_status_is_not_inferred_from_resolution_metadata() -> None:
-    adopted = PogActRecord("pog-x", None, None, "1261011", None, "adopted", None, ())
-    adopted.validate()
-    assert adopted.is_binding is True
+    binding = PogActRecord(
+        "pog-x", None, None, "1261011", None, "binding", None, (),
+        raw_legal_status=LEGAL_FORCE,
+    )
+    binding.validate()
+    assert binding.is_binding is True
     project = PogActRecord(
         "pog-y", "I/1/2026", date(2026, 1, 10), "1261011", None, "project", None, ()
     )
     project.validate()
     assert project.is_binding is False
+
+
+def test_binding_without_official_code_is_rejected() -> None:
+    # Nawet uchwała z numerem i datą nie daje statusu binding bez kodu urzędowego.
+    declared = PogActRecord(
+        "pog-z", "I/1/2026", date(2026, 1, 10), "1261011", None, "binding", None, (),
+        raw_legal_status="binding",
+    )
+    with pytest.raises(PogValidationError, match="urzędowego kodu statusu"):
+        declared.validate()
 
 
 def test_feature_record_rejects_unknown_type() -> None:
@@ -301,7 +328,7 @@ def test_pog_command_builds_wfs_reader_from_catalog_and_filters_teryt(
         dry_run=True,
         act_identifier="246101-POG",
         teryt="246101",
-        legal_status="adopted",
+        legal_status="legalForce",
     )
 
     assert outcome.status == "succeeded"
@@ -341,7 +368,7 @@ def test_publish_separates_four_layers_and_reports_status() -> None:
     assert outcome.stats["feature:ouz"] == 1
     assert outcome.stats["feature:downtown_area"] == 1
     assert outcome.stats["feature:social_infrastructure_standard"] == 1
-    assert outcome.stats["legal_status:adopted"] == 1
+    assert outcome.stats["legal_status:binding"] == 1
 
 
 def test_project_status_is_flagged_and_never_binding() -> None:
@@ -418,12 +445,13 @@ def _layers(gmina: str, crs: str) -> tuple[PogLayerResource, ...]:
 
 
 def _metadata(
-    identifier: str = "pog-krakow", status: str = "adopted"
+    identifier: str = "pog-krakow", status: str = "binding"
 ) -> PogActMetadata:
     return PogActMetadata(
         act_identifier=identifier,
         teryt="1261011",
         legal_status=status,
+        raw_legal_status=inspire_status_uri(status),  # type: ignore[arg-type]
         resolution_number="I/1/2026",
         resolution_date=date(2026, 1, 10),
         name="POG",
@@ -522,7 +550,7 @@ def test_cli_parser_supports_pog_subcommand() -> None:
             "--resolution-date",
             "2026-01-10",
             "--legal-status",
-            "adopted",
+            "legalForce",
             "--teryt",
             "1261011",
         ]
@@ -533,7 +561,7 @@ def test_cli_parser_supports_pog_subcommand() -> None:
         ("ouz", "ouz.gml"),
     )
     assert parsed.act_identifier == "pog-krakow"
-    assert parsed.legal_status == "adopted"
+    assert parsed.legal_status == "legalForce"
     assert parsed.resolution_date == date(2026, 1, 10)
 
 
@@ -604,8 +632,9 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
         resolution_number="I/1/2026",
         resolution_date=date(2026, 1, 10),
         teryt="1261011",
-        name="POG uchwalony",
-        legal_status="adopted",
+        name="POG obowiązujący",
+        legal_status="binding",
+        raw_legal_status=LEGAL_FORCE,
         boundary=geom(
             "POLYGON((565000 244000,565100 244000,565100 244100,"
             "565000 244100,565000 244000))"
@@ -647,7 +676,7 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
     ).scalar_one()
     planning_act = session.get(PlanningAct, version.planning_act_id)
     assert planning_act.kind == "pog"
-    assert version.legal_status == "adopted"
+    assert version.legal_status == "binding"
     assert version.manual_review_required is False
 
     features = (
@@ -879,7 +908,12 @@ async def test_local_postgis_release_analyzes_without_ru_network(
         )
 
     discovery.assert_not_awaited()
-    assert pog.status == "adopted"
+    assert pog.legal_status == "binding"
+    assert pog.status == "binding"
+    assert pog.data_availability == "current"
+    assert pog.legal_status_evidence is not None
+    assert pog.legal_status_evidence.raw_value == LEGAL_FORCE
+    assert pog.status_confirmed_at is not None
     assert {zone.symbol for zone in pog.zones} == {"SJ-01"}
     assert len(pog.social_infrastructure_standard_areas) == 1
     assert sources[0].data_release_id == outcome.data_release_id
