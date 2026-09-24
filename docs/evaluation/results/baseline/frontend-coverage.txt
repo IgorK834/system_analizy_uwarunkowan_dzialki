@@ -1,0 +1,79 @@
+
+> dzialki-frontend@0.1.0 test:coverage
+> vitest run --coverage
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/app[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m lib/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m lib/api.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 140[2mms[22m[39m
+ [32m✓[39m hooks/useResumeAnalysis.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 334[2mms[22m[39m
+ [32m✓[39m hooks/useAnalyzeParcel.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 256[2mms[22m[39m
+ [32m✓[39m components/MapView.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 614[2mms[22m[39m
+ [32m✓[39m components/ReportDownloadButton.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 3983[2mms[22m[39m
+     [33m[2m✓[22m[39m wyłącza pobieranie, gdy analiza nie została zapisana [33m 2011[2mms[22m[39m
+     [33m[2m✓[22m[39m pobiera raport bieżącego analysis_id i nadaje mu bezpieczną nazwę [33m 1319[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje bezpieczny błąd i pozwala spróbować ponownie [33m 369[2mms[22m[39m
+ [32m✓[39m components/LayerToggle.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 4218[2mms[22m[39m
+     [33m[2m✓[22m[39m renderuje legendę i etykietę przełącznika [33m 2097[2mms[22m[39m
+     [33m[2m✓[22m[39m wywołuje onChange z przełączoną wartością po kliknięciu [33m 1496[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje jawny status warstwy pod przełącznikiem [33m 406[2mms[22m[39m
+ [32m✓[39m app/page.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 4441[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje przełączniki warstw podglądowych jeszcze przed analizą [33m 3672[2mms[22m[39m
+     [33m[2m✓[22m[39m łączy klik mapy z POST /analyze i pokazuje krótki wynik [33m 763[2mms[22m[39m
+ [32m✓[39m components/ResultPanel.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 8016[2mms[22m[39m
+     [33m[2m✓[22m[39m renderuje sekcje geometrii, MPZP, POG, infrastruktury, ryzyk i źródeł niezależnie od stanu innych sekcji [33m 3366[2mms[22m[39m
+     [33m[2m✓[22m[39m renderuje sekcję ryzyk, źródeł i ostrzeżeń z danymi [33m 482[2mms[22m[39m
+     [33m[2m✓[22m[39m przełącznik warstwy zmienia widoczność przez setLayoutProperty [33m 1801[2mms[22m[39m
+     [33m[2m✓[22m[39m wyłącza przełącznik obszaru zabudowy, gdy geometria jest niedostępna [33m 701[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje wpływ strefy infrastruktury na obszar zabudowy i uwagę reguły [33m 309[2mms[22m[39m
+     [33m[2m✓[22m[39m dodaje warstwy sieci, stref ochronnych i ryzyk oraz obsługuje ich przełączniki [33m 666[2mms[22m[39m
+ [32m✓[39m components/PreviewOverlays.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 7903[2mms[22m[39m
+     [33m[2m✓[22m[39m pobiera rejestr backendu i dodaje MPZP oraz POG bez adresów upstreamu [33m 3447[2mms[22m[39m
+     [33m[2m✓[22m[39m nie dodaje KIUT poniżej zoomu 17 i uruchamia je dopiero po decyzji użytkownika [33m 641[2mms[22m[39m
+     [33m[2m✓[22m[39m migruje preferencje v1, zachowując KIUT domyślnie wyłączone [33m 430[2mms[22m[39m
+     [33m[2m✓[22m[39m układa KIUT nad MPZP i POG, ale pod warstwami wyniku [33m 1740[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje status analizy MPZP, POG i jawne ograniczenie KIUT [33m 425[2mms[22m[39m
+     [33m[2m✓[22m[39m przy błędzie rejestru zachowuje mapę i stałą notę informacyjną [33m 339[2mms[22m[39m
+ [32m✓[39m lib/mapStyle.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m components/MapViewLoader.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m components/SearchPanel.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 10684[2mms[22m[39m
+     [33m[2m✓[22m[39m domyślnie pokazuje instrukcję wyboru punktu z mapy [33m 1904[2mms[22m[39m
+     [33m[2m✓[22m[39m pobiera sugestie po debounce, ale nie analizuje podczas wpisywania [33m 2621[2mms[22m[39m
+     [33m[2m✓[22m[39m pozwala wybrać sugestię strzałką i Enterem [33m 1970[2mms[22m[39m
+     [33m[2m✓[22m[39m nie odpytuje API dla zbyt krótkiego adresu i pokazuje błąd sugestii [33m 1524[2mms[22m[39m
+     [33m[2m✓[22m[39m pokazuje pomocny komunikat, gdy źródło nie zwróci sugestii [33m 715[2mms[22m[39m
+     [33m[2m✓[22m[39m po wyborze miejscowości pozwala dopisać ulicę bez uruchamiania analizy [33m 1072[2mms[22m[39m
+     [33m[2m✓[22m[39m przekazuje środek i bbox bieżącego widoku mapy do rankingu [33m 442[2mms[22m[39m
+     [33m[2m✓[22m[39m waliduje identyfikator i wysyła poprawny kontrakt [33m 357[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m      Tests [22m [1m[32m78 passed[39m[22m[90m (78)[39m
+[2m   Start at [22m 13:35:39
+[2m   Duration [22m 39.26s[2m (transform 25.37s, setup 20.62s, import 33.15s, tests 40.74s, environment 188.78s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   94.47 |    83.96 |   96.89 |   96.81 |                   
+ components        |    92.9 |    83.33 |   96.33 |   95.89 |                   
+  ...ilityNote.tsx |      80 |    71.42 |     100 |      80 | 54                
+  LayerToggle.tsx  |     100 |      100 |     100 |     100 |                   
+  MapView.tsx      |   95.83 |       50 |     100 |     100 | 38                
+  ...iewLoader.tsx |   66.66 |      100 |      50 |      80 | 8                 
+  ...wOverlays.tsx |   95.06 |    86.23 |     100 |   98.55 | 276-277           
+  ...oadButton.tsx |   91.17 |       75 |     100 |     100 | 29-59             
+  ResultPanel.tsx  |   90.56 |       83 |   97.36 |   92.64 | ...45-646,685-686 
+  SearchPanel.tsx  |   94.94 |    82.43 |   94.73 |   95.87 | 153-157           
+ hooks             |   97.01 |       76 |     100 |   98.38 |                   
+  ...lyzeParcel.ts |   97.14 |    76.92 |     100 |     100 | 34,39             
+  ...meAnalysis.ts |   96.87 |       75 |     100 |   96.66 | 30                
+ lib               |   99.21 |    90.41 |     100 |   99.21 |                   
+  api.ts           |   98.59 |    89.85 |     100 |   98.57 | 40                
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  layerStyles.ts   |     100 |      100 |     100 |     100 |                   
+  mapStyle.ts      |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+exit_code=0

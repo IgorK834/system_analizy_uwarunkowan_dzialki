@@ -1,0 +1,8 @@
+2026-09-23 — git status --short at task entry (paths/status only; no file contents)
+HEAD 8418bddc73bc76f590e021af122262f0a44bcaa4 on main
+ M backend/tests/fixtures/source_contracts/README.md
+ M docs/data_sources/catalog.yaml
+?? backend/_imp.py
+?? docs/data_sources/ru_contracts.md
+?? docs/progress/
+Ignored local .env existed and was not read, copied, or removed.

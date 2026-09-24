@@ -1,0 +1,52 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 988B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-slim
+#2 ...
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-slim
+#2 DONE 1.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 103B 0.0s done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 1.89kB 0.0s done
+#5 DONE 0.0s
+
+#6 [dependencies 1/4] FROM docker.io/library/node:22-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9
+#6 resolve docker.io/library/node:22-slim@sha256:48e4b67d85f87bd551df43704e24d252f56cc5f8e9718841aace50f19948f0f9 0.0s done
+#6 DONE 0.0s
+
+#7 [dependencies 2/4] WORKDIR /app
+#7 CACHED
+
+#8 [dependencies 3/4] COPY package.json package-lock.json ./
+#8 CACHED
+
+#9 [dependencies 4/4] RUN npm ci
+#9 CACHED
+
+#10 [test 1/1] COPY . .
+#10 CACHED
+
+#11 exporting to image
+#11 exporting layers done
+#11 exporting manifest sha256:db27bb6319359b608276a111a151b48a605e56f0352bd68c03a25efa8da80559 done
+#11 exporting config sha256:ecee89e1d0954982adc5d54ead2e27bd591c9221c70b9646527cb0a40a93348e done
+#11 exporting attestation manifest sha256:8ef6d84ec07106850838b9aac76d2dcfe9dbe5af717678ef73d73b88014e1a01 0.0s done
+#11 exporting manifest list sha256:0ea0d327880fafe604225760e44f1af7bb874600623446595b0afb518274a3dd
+#11 exporting manifest list sha256:0ea0d327880fafe604225760e44f1af7bb874600623446595b0afb518274a3dd 0.0s done
+#11 naming to docker.io/library/bk001-8418bddc-99736-frontend-test:latest done
+#11 unpacking to docker.io/library/bk001-8418bddc-99736-frontend-test:latest 0.0s done
+#11 DONE 0.2s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/9u3dd0a7ty26kqycpn1t2uq3j
+exit_code=0

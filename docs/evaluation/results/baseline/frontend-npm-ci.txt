@@ -1,0 +1,6 @@
+
+added 174 packages in 11s
+
+34 packages are looking for funding
+  run `npm fund` for details
+exit_code=0

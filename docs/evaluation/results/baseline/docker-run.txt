@@ -1,0 +1,20 @@
+revision=8418bddc73bc76f590e021af122262f0a44bcaa4
+project=bk001-8418bddc-99736
+started_utc=2026-09-23T13:30:45Z
+Obraz źródłowy: git archive 8418bddc73bc76f590e021af122262f0a44bcaa4; lokalny .env nie jest kopiowany.
+docker-info=0
+compose-config=0
+compose-build-backend=0
+compose-build-frontend=0
+db-image=0
+backend-pip-freeze=0
+backend-pytest=1
+compose-images=0
+image-identities=0
+db-postgis-version=0
+frontend-test-image=0
+frontend-node-version=0
+frontend-typecheck=0
+frontend-coverage=0
+frontend-build=0
+finished_utc=2026-09-23T15:32:26Z
