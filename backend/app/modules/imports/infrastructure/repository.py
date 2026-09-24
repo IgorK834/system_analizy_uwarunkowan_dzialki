@@ -11,7 +11,7 @@ from geoalchemy2.elements import WKTElement
 from pyproj import Transformer
 from shapely import from_wkt
 from shapely.ops import transform
-from sqlalchemy import select, text, update
+from sqlalchemy import func, select, text, update
 from sqlalchemy.orm import Session
 
 from app.core.data_sources import DataSourceEntry
@@ -26,6 +26,7 @@ from app.models.versioned import (
     PlanningAct,
     PlanningActVersion,
     PlanningFeature,
+    PogFormalDocument,
     PlanningSymbol,
     SourceArtifact,
 )
@@ -400,11 +401,21 @@ class SqlAlchemyImportRepository:
             else self.session.begin()
         )
         with transaction:
+            # Serializuje publikacje tego samego źródła w obrębie transakcji.
+            self.session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:scope))"),
+                {"scope": f"pog-release:{self.source.source_id}"},
+            )
             source = self._source_row()
             artifact = self._artifact_row(
                 source.id, uri, batch.media_type, artifact_hash, len(batch.content)
             )
-            data_release = self._release_row(source.id, release, artifact_hash)
+            data_release = self._release_row(
+                source.id,
+                release,
+                artifact_hash,
+                parser_config_id=batch.parser_config_id,
+            )
             run = self._run_row(source.id, data_release.id, artifact_hash)
             now = datetime.now(timezone.utc)
             new = changed = unchanged = 0
@@ -431,6 +442,16 @@ class SqlAlchemyImportRepository:
                     .order_by(PlanningActVersion.valid_from.desc())
                     .limit(1)
                 ).scalar_one_or_none()
+                existing_in_release = self.session.execute(
+                    select(PlanningActVersion).where(
+                        PlanningActVersion.planning_act_id == act.id,
+                        PlanningActVersion.data_release_id == data_release.id,
+                        PlanningActVersion.content_hash == snapshot_hash,
+                    )
+                ).scalar_one_or_none()
+                if existing_in_release is not None:
+                    unchanged += 1
+                    continue
                 if latest is not None and latest.content_hash == snapshot_hash:
                     unchanged += 1
                     continue
@@ -446,6 +467,10 @@ class SqlAlchemyImportRepository:
                 version = PlanningActVersion(
                     planning_act_id=act.id,
                     legal_status=act_record.legal_status,
+                    raw_legal_status=act_record.raw_legal_status,
+                    object_version_id=(
+                        act_record.object_id.version_id if act_record.object_id else None
+                    ),
                     version_label=release.version_label,
                     resolution_number=act_record.resolution_number,
                     resolution_date=act_record.resolution_date,
@@ -469,15 +494,45 @@ class SqlAlchemyImportRepository:
                         )
                     )
                 for feature in act_record.features:
+                    parameters = (
+                        feature.parameters.values() if feature.parameters else None
+                    )
                     self.session.add(
                         PlanningFeature(
                             planning_act_version_id=version.id,
                             feature_type=feature.feature_type,
+                            feature_identifier=feature.stable_id,
+                            feature_version=(
+                                feature.object_id.version_id if feature.object_id else None
+                            ),
+                            act_reference=(
+                                feature.act_reference.href if feature.act_reference else None
+                            ),
+                            source_reference=feature.source_reference,
+                            raw_legal_status=feature.raw_legal_status,
+                            symbol=feature.symbol,
+                            label=feature.label,
+                            parameters=_jsonable(parameters),
+                            primary_profiles=_jsonable(feature.primary_profiles),
+                            additional_profiles=_jsonable(feature.additional_profiles),
+                            raw_attributes=_jsonable(feature.raw_attributes),
                             geometry=WKTElement(feature.geometry.wkt, srid=2180),
                         )
                     )
-            if new or changed or data_release.is_active:
-                self._activate_release(source.id, data_release)
+                for document in act_record.documents:
+                    self.session.add(PogFormalDocument(
+                        planning_act_version_id=version.id,
+                        document_identifier=document.object_id.stable_id,
+                        document_version=document.object_id.version_id,
+                        act_reference=(document.act_reference.href if document.act_reference else None),
+                        title=document.title,
+                        link=document.link,
+                        source_reference=document.source_reference,
+                        raw_attributes=_jsonable(document.raw_attributes),
+                    ))
+            # Także idempotentny powrót do istniejącego wydania przełącza je
+            # atomowo bez dublowania wersji obiektów.
+            self._activate_release(source.id, data_release)
             final_stats = stats.as_dict() | {
                 "new": new,
                 "changed": changed,
@@ -545,8 +600,17 @@ class SqlAlchemyImportRepository:
         source_id: int,
         release: ImportRelease,
         artifact_hash: str,
+        parser_config_id: str | None = None,
     ) -> DataRelease:
-        version_label = f"{release.version_label}-{artifact_hash[:12]}"
+        config = parser_config_id or "imports-v1"
+        fingerprint = hashlib.sha256(
+            f"{artifact_hash}:{config}".encode("utf-8")
+        ).hexdigest()[:12]
+        version_label = (
+            f"pog-{fingerprint}"
+            if parser_config_id is not None
+            else f"{release.version_label}-{artifact_hash[:12]}"
+        )
         row = self.session.execute(
             select(DataRelease).where(
                 DataRelease.data_source_id == source_id,
@@ -558,7 +622,7 @@ class SqlAlchemyImportRepository:
                 data_source_id=source_id,
                 version_label=version_label,
                 published_at=release.published_at,
-                importer_version="imports-v1",
+                importer_version=config,
                 is_active=False,
             )
             self.session.add(row)
@@ -594,6 +658,29 @@ class SqlAlchemyImportRepository:
         )
         self.session.flush()
         data_release.is_active = True
+        self.session.flush()
+
+    def previous_pog_feature_count(self) -> int | None:
+        """Liczność cech aktywnego wydania POG dla kontroli regresji importu."""
+        release_id = self.session.execute(
+            select(DataRelease.id)
+            .join(DataSource, DataRelease.data_source_id == DataSource.id)
+            .where(
+                DataSource.source_id == self.source.source_id,
+                DataRelease.is_active.is_(True),
+            )
+        ).scalar_one_or_none()
+        if release_id is None:
+            return None
+        count = self.session.execute(
+            select(func.count(PlanningFeature.id))
+            .join(
+                PlanningActVersion,
+                PlanningFeature.planning_act_version_id == PlanningActVersion.id,
+            )
+            .where(PlanningActVersion.data_release_id == release_id)
+        ).scalar_one()
+        return int(count)
 
 
 def find_plan_intersections(
@@ -634,8 +721,73 @@ def find_plan_intersections(
     ]
 
 
+def active_pog_release(session: Session, source_id: str = "pog_app") -> dict[str, Any] | None:
+    """Przypina aktywne wydanie i jego artefakt na początku analizy."""
+    row = session.execute(
+        select(
+            DataRelease.id,
+            DataRelease.version_label,
+            DataRelease.importer_version,
+            SourceArtifact.content_hash,
+            SourceArtifact.fetched_at,
+        )
+        .join(DataSource, DataRelease.data_source_id == DataSource.id)
+        .join(
+            PlanningActVersion,
+            PlanningActVersion.data_release_id == DataRelease.id,
+        )
+        .join(
+            SourceArtifact,
+            PlanningActVersion.source_artifact_id == SourceArtifact.id,
+        )
+        .where(
+            DataSource.source_id == source_id,
+            DataRelease.is_active.is_(True),
+        )
+        .limit(1)
+    ).mappings().one_or_none()
+    return dict(row) if row is not None else None
+
+
+def load_pog_release_features(
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    data_release_id: int,
+) -> list[dict[str, Any]]:
+    """Czyta wszystkie cztery warstwy z jednego, jawnie przypiętego wydania."""
+    rows = session.execute(
+        text(
+            """
+            SELECT pa.act_identifier, pa.teryt, pav.legal_status,
+                   pav.raw_legal_status, pav.object_version_id, pav.name AS act_name,
+                   pav.resolution_number, pav.resolution_date,
+                   pf.feature_type, pf.feature_identifier, pf.feature_version,
+                   pf.act_reference, pf.source_reference, pf.raw_legal_status AS feature_raw_legal_status,
+                   pf.symbol, pf.label, pf.parameters, pf.primary_profiles,
+                   pf.additional_profiles, pf.raw_attributes,
+                   ST_AsText(pf.geometry) AS geometry_wkt
+            FROM planning_act_versions pav
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id
+            JOIN planning_features pf ON pf.planning_act_version_id = pav.id
+            WHERE pa.kind = 'pog'
+              AND pav.data_release_id = :release_id
+              AND pav.legal_status = 'adopted'
+              AND pf.geometry && ST_GeomFromText(:parcel_wkt, 2180)
+              AND ST_Intersects(pf.geometry, ST_GeomFromText(:parcel_wkt, 2180))
+            ORDER BY pa.act_identifier, pf.feature_type, pf.feature_identifier NULLS LAST
+            """
+        ),
+        {"release_id": data_release_id, "parcel_wkt": parcel_geometry.wkt},
+    ).mappings()
+    return [dict(row) for row in rows]
+
+
 def find_pog_intersections(
-    session: Session, parcel_geometry: GeometryPayload
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    data_release_id: int | None = None,
 ) -> list[dict[str, int | str | float]]:
     """Zwraca obowiązujące akty POG przecinające działkę wraz z polami warstw.
 
@@ -644,6 +796,11 @@ def find_pog_intersections(
     ograniczenie planistyczne (context.md pkt 9). Pole przecięcia liczone jest na
     obiektach warstw POG (``planning_features``) rozbite na typ warstwy.
     """
+    if data_release_id is None:
+        pinned = active_pog_release(session)
+        if pinned is None:
+            return []
+        data_release_id = int(pinned["id"])
     rows = session.execute(
         text(
             """
@@ -653,7 +810,7 @@ def find_pog_intersections(
                    )) AS intersection_area_sqm
             FROM planning_acts pa
             JOIN planning_act_versions pav ON pav.planning_act_id=pa.id
-              AND pav.valid_to IS NULL
+              AND pav.data_release_id = :release_id
               AND pav.legal_status = 'adopted'
             JOIN planning_features pf ON pf.planning_act_version_id=pav.id
             WHERE pa.kind = 'pog'
@@ -662,7 +819,7 @@ def find_pog_intersections(
             ORDER BY pa.act_identifier, pf.feature_type
             """
         ),
-        {"parcel_wkt": parcel_geometry.wkt},
+        {"parcel_wkt": parcel_geometry.wkt, "release_id": data_release_id},
     ).mappings()
     return [
         {

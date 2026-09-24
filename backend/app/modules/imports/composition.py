@@ -307,6 +307,8 @@ def run_pog_command(
             "FILTER": filter_xml,
         }
         feature_roles = {
+            "AktPlanowaniaPrzestrzennego": "planning_act",
+            "DokumentFormalny": "formal_document",
             "StrefaPlanistyczna": "planning_zone",
             "ObszarUzupelnieniaZabudowy": "ouz",
             "ObszarZabudowySrodmiejskiej": "downtown_area",
@@ -331,7 +333,7 @@ def run_pog_command(
             if qualified_name.rsplit(":", 1)[-1] in feature_roles
         )
         if not remote_resources:
-            raise ValueError("Zasób WFS POG nie deklaruje warstw analitycznych.")
+            raise ValueError("Zasób WFS POG nie deklaruje wymaganych typów APP.")
         reader = WfsPogReader(remote_resources, metadata=metadata)
     release = _release(source, dry_run=dry_run)
     try:
