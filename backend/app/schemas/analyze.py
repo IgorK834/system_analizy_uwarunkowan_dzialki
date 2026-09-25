@@ -216,6 +216,36 @@ class ParcelGeometryResponse(BaseModel):
     )
 
 
+MpzpAssignmentMethod = Literal[
+    "vector_intersection", "document_candidate", "manual_user_input", "legacy"
+]
+MPZP_RESULT_SCHEMA_VERSION = "2.0"
+
+
+class MpzpParameterEvidence(BaseModel):
+    """Jedna kandydatura parametru uchwały z pełnym, cytowalnym dowodem (BK-203).
+
+    Sprzeczne kandydatury tego samego parametru w strefie mają wspólne
+    ``conflict_group_id`` i nie są automatycznie rozstrzygane.
+    """
+
+    name: str = Field(description="Znormalizowana nazwa parametru parsera.")
+    normalized_value: float | str | None = None
+    raw_value: str | None = Field(default=None, description="Wartość dosłownie z dokumentu.")
+    unit: str | None = None
+    evidence_text: str | None = Field(default=None, description="Fragment uchwały będący dowodem.")
+    page_number: int | None = None
+    segment_id: str | None = Field(default=None, description="Segment dokumentu (paragraf/tabela).")
+    legal_unit_id: int | None = Field(default=None, description="Jednostka redakcyjna uchwały w bazie.")
+    document_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    document_version_id: int | None = None
+    parser_version: str | None = None
+    extraction_method: str | None = Field(default=None, description="pdf_text, html albo ocr.")
+    confidence: float = Field(ge=0.0, le=1.0)
+    conflict_group_id: str | None = None
+    manual_review_required: bool = False
+
+
 class MpzpZoneResult(BaseModel):
     zone_symbol: str = Field(
         description="Symbol strefy MPZP przecinającej działkę.",
@@ -281,9 +311,42 @@ class MpzpZoneResult(BaseModel):
         json_schema_extra={"example": 66.4},
     )
     is_dominant: bool = Field(
-        description="Czy strefa ma największy udział powierzchniowy w działce.",
+        description=(
+            "Pole pomocnicze: strefa o największym dodatnim udziale. Nie zastępuje "
+            "pełnej listy stref."
+        ),
         json_schema_extra={"example": True},
     )
+    zone_id: str | None = Field(
+        default=None, description="Stabilne ID wydzielenia z wersjonowanego wektora."
+    )
+    act_identifier: str | None = None
+    act_version: str | None = Field(
+        default=None, description="Hash snapshotu wersji aktu użytej w analizie."
+    )
+    act_version_id: int | None = None
+    data_release_id: int | None = None
+    document_url: str | None = None
+    touches_boundary: bool = Field(
+        default=False,
+        description="Wydzielenie tylko styka się z działką (pole ≤ 1e-6 m²).",
+    )
+    assignment_method: MpzpAssignmentMethod = Field(
+        default="document_candidate",
+        description=(
+            "vector_intersection — przecięcie wektora; document_candidate — "
+            "kandydat z discovery/dokumentu bez wektora; manual_user_input — "
+            "symbol podany ręcznie; legacy — snapshot sprzed BK-202."
+        ),
+    )
+    intersection_geojson: dict[str, Any] | None = Field(
+        default=None, description="Geometria przecięcia w WGS84 jako GeoJSON Feature."
+    )
+    parameters: list[MpzpParameterEvidence] = Field(
+        default_factory=list,
+        description="Wszystkie kandydatury parametrów z evidence, także sprzeczne.",
+    )
+    manual_review_required: bool = False
     source: SourceMetadata = Field(
         description="Metadane źródła danych MPZP.",
         json_schema_extra={

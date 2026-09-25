@@ -66,6 +66,18 @@ class MpzpParameter(BaseModel):
     manual_review_required: bool = Field(
         description="Czy wartość wymaga ręcznej weryfikacji.",
     )
+    segment_id: str | None = Field(
+        default=None, description="Segment dokumentu zawierający fragment dowodowy."
+    )
+    extraction_method: str | None = Field(
+        default=None, description="Metoda ekstrakcji tekstu: pdf_text, html albo ocr."
+    )
+    parser_version: str | None = Field(default=None)
+    document_sha256: str | None = Field(default=None)
+    conflict_group_id: str | None = Field(
+        default=None,
+        description="Wspólne ID sprzecznych kandydatur tego samego parametru strefy.",
+    )
 
 
 class MpzpZoneResult(BaseModel):
