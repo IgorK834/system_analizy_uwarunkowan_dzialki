@@ -166,8 +166,50 @@ def _geometry_context(response: AnalyzeResponse) -> dict[str, Any] | None:
     }
 
 
+_MPZP_ASSIGNMENT_LABELS: dict[str, str] = {
+    "vector_intersection": "przecięcie z wektorem wydzieleń",
+    "document_candidate": "kandydat z discovery/dokumentu (bez wektora)",
+    "manual_user_input": "symbol podany ręcznie z mapy rastrowej",
+    "legacy": "snapshot sprzed wersjonowania stref",
+}
+_EXTRACTION_LABELS: dict[str, str] = {"pdf_text": "tekst PDF", "html": "HTML", "ocr": "OCR"}
+
+
+def _mpzp_parameter_context(parameter: Any) -> dict[str, Any]:
+    value = parameter.normalized_value
+    return {
+        "name": parameter.name,
+        "value": _format_number(value) if isinstance(value, (int, float)) else value,
+        "raw_value": parameter.raw_value,
+        "unit": parameter.unit,
+        "page_number": parameter.page_number,
+        "segment_id": parameter.segment_id,
+        "legal_unit_id": parameter.legal_unit_id,
+        "evidence_text": parameter.evidence_text,
+        "document_sha256": parameter.document_sha256,
+        "extraction": _EXTRACTION_LABELS.get(
+            parameter.extraction_method or "", parameter.extraction_method
+        ),
+        "parser_version": parameter.parser_version,
+        "confidence_pct": _format_percent(parameter.confidence * 100.0),
+        "conflict": parameter.conflict_group_id is not None,
+        "manual_review_required": parameter.manual_review_required,
+    }
+
+
 def _mpzp_context(zone: Any) -> dict[str, Any]:
     return {
+        "zone_id": zone.zone_id,
+        "act_identifier": zone.act_identifier,
+        "act_version": zone.act_version,
+        "data_release_id": zone.data_release_id,
+        "touches_boundary": zone.touches_boundary,
+        "assignment_label": _MPZP_ASSIGNMENT_LABELS.get(
+            zone.assignment_method, zone.assignment_method
+        ),
+        "is_vector": zone.assignment_method == "vector_intersection",
+        "manual_review_required": zone.manual_review_required,
+        "parameters": [_mpzp_parameter_context(item) for item in zone.parameters],
         "zone_symbol": zone.zone_symbol,
         "primary_use": zone.primary_use,
         "supplementary_use": zone.supplementary_use,
@@ -487,6 +529,21 @@ def _build_limitations(
             "potwierdzenie braku sieci na działce."
         )
 
+    if any(zone.assignment_method == "document_candidate" for zone in response.mpzp_zones):
+        limitations.append(
+            "Strefę MPZP przypisano bez wektora wydzieleń (punktowe discovery i "
+            "dokument); przypisanie ma obniżoną pewność."
+        )
+    if any(
+        parameter.conflict_group_id
+        for zone in response.mpzp_zones
+        for parameter in zone.parameters
+    ):
+        limitations.append(
+            "Uchwała zawiera sprzeczne wartości parametrów MPZP; żadna nie została "
+            "wybrana automatycznie."
+        )
+
     manual_mpzp_zones = [
         zone
         for zone in response.mpzp_zones
@@ -654,6 +711,8 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 7.5pt; word-break: break-all; }
   table.provenance td, table.provenance th { font-size: 8.5pt; }
   table.zones { table-layout: fixed; }
+  table.evidence { table-layout: fixed; }
+  table.evidence th, table.evidence td { width: auto; font-size: 8pt; padding: 1mm; overflow-wrap: anywhere; }
   table.zones th, table.zones td { width: auto; font-size: 8pt; padding: 1mm; }
   a { color: #0d5137; }
   .warning-info { border-left: 3px solid #1769aa; }
@@ -725,9 +784,14 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     {% for zone in mpzp_zones %}
     <div class="item">
       <div class="item-title">{{ zone.zone_symbol }}
-        {% if zone.is_dominant %}<span class="tag tag-dominant">dominująca</span>{% endif %}
+        {% if zone.is_dominant %}<span class="tag tag-dominant">największy udział</span>{% endif %}
+        {% if zone.touches_boundary %}<span class="tag tag-review">tylko styczność granicy</span>{% endif %}
+        {% if zone.manual_review_required %}<span class="tag tag-review">wymaga weryfikacji</span>{% endif %}
       </div>
       <table>
+        <tr><th>Sposób przypisania</th><td>{{ zone.assignment_label }}</td></tr>
+        {% if zone.zone_id %}<tr><th>ID wydzielenia</th><td class="mono">{{ zone.zone_id }}</td></tr>{% endif %}
+        {% if zone.act_identifier %}<tr><th>Plan (akt) i wersja</th><td>{{ zone.act_identifier }}{% if zone.act_version %}<br><small class="mono">wersja {{ zone.act_version }}</small>{% endif %}{% if zone.data_release_id %}<br><small>wydanie danych #{{ zone.data_release_id }}</small>{% endif %}</td></tr>{% endif %}
         {% if zone.primary_use %}<tr><th>Przeznaczenie podstawowe</th><td>{{ zone.primary_use }}</td></tr>{% endif %}
         {% if zone.supplementary_use %}<tr><th>Przeznaczenie uzupełniające</th><td>{{ zone.supplementary_use }}</td></tr>{% endif %}
         <tr><th>Udział w powierzchni działki</th><td>{{ zone.intersection_pct }} ({{ zone.intersection_area_sqm }} m²)</td></tr>
@@ -738,8 +802,26 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
         {% if zone.min_floor_area_ratio %}<tr><th>Min. wskaźnik intensywności zabudowy</th><td>{{ zone.min_floor_area_ratio }}</td></tr>{% endif %}
         {% if zone.max_building_coverage_pct %}<tr><th>Maks. powierzchnia zabudowy</th><td>{{ zone.max_building_coverage_pct }}</td></tr>{% endif %}
       </table>
+      {% if zone.parameters %}
+      <table class="evidence">
+        <thead><tr><th>Parametr</th><th>Wartość</th><th>Źródło w uchwale</th><th>Pewność</th></tr></thead>
+        <tbody>
+        {% for parameter in zone.parameters %}
+          <tr>
+            <td>{{ parameter.name }}{% if parameter.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% endif %}</td>
+            <td>{{ parameter.value if parameter.value is not none else "—" }}{% if parameter.unit %} {{ parameter.unit }}{% endif %}{% if parameter.raw_value %}<br><small>dosłownie: „{{ parameter.raw_value }}”</small>{% endif %}</td>
+            <td>{% if parameter.page_number %}str. {{ parameter.page_number }}{% endif %}{% if parameter.segment_id %}, segment {{ parameter.segment_id }}{% endif %}{% if parameter.legal_unit_id %}, jednostka #{{ parameter.legal_unit_id }}{% endif %}
+              {% if parameter.evidence_text %}<br><small>„{{ parameter.evidence_text }}”</small>{% endif %}
+              {% if parameter.document_sha256 %}<br><small class="mono">SHA-256 dokumentu: {{ parameter.document_sha256 }}</small>{% endif %}
+              <br><small>{{ parameter.extraction or "metoda nieznana" }}{% if parameter.parser_version %}, {{ parameter.parser_version }}{% endif %}</small></td>
+            <td>{{ parameter.confidence_pct }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
       {% if zone.confidence %}
-      <div class="confidence">Pewność danych: {{ zone.confidence.pct }} ({{ zone.confidence.label }})</div>
+      <div class="confidence">Pewność przypisania: {{ zone.confidence.pct }} ({{ zone.confidence.label }})</div>
       {% endif %}
     </div>
     {% endfor %}
