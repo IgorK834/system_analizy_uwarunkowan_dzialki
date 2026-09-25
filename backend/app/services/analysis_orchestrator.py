@@ -18,7 +18,7 @@ import time
 from datetime import date, datetime, timezone
 from typing import Literal, Sequence
 
-from shapely import from_wkt
+from shapely import from_wkt, make_valid
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy.orm import Session
 
@@ -66,8 +66,17 @@ from app.services.kiut_coverage import (
 )
 from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp
 from app.services.mpzp_fetch import fetch_mpzp_document
+from app.schemas.mpzp import MpzpParseResult
 from app.services.mpzp_parser import parse_mpzp_document
-from app.services.mpzp_zones import map_parser_zone_to_analyze_response
+from app.services.mpzp_zones import (
+    DocumentEvidenceContext,
+    VectorZoneAssessment,
+    apply_parser_zone,
+    assess_vector_zones,
+    cap_fallback_zone,
+    legal_unit_evidence_from_snapshot,
+    map_parser_zone_to_analyze_response,
+)
 from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog import PogDiscoveryResult, PogGminaSources, discover_pog
 from app.services.pog_analyzer import (
@@ -92,6 +101,7 @@ from app.modules.documents.composition import (
 )
 from app.modules.imports.infrastructure.repository import (
     active_pog_release,
+    find_mpzp_zone_intersections,
     find_pog_acts_for_parcel,
     last_confirmed_pog_status,
     load_pog_act_provenance,
@@ -205,6 +215,12 @@ async def run_analysis(
     )
     warnings.extend(context_warnings)
 
+    # Chwila przypięcia wersji aktów MPZP: ten sam ``as_of`` wyznacza zestaw
+    # wydzieleń dla całej analizy, a zapisany snapshot nie zależy od
+    # późniejszego przełączenia wydania.
+    mpzp_as_of = datetime.now(timezone.utc)
+    vector, vector_warnings = _assess_mpzp_vectors_safely(db, parcel_geometry, mpzp_as_of)
+    warnings.extend(vector_warnings)
     discovery, discovery_warnings = await _discover_mpzp_safely(parcel_geometry)
     warnings.extend(discovery_warnings)
     pog, ouz_status, pog_warnings, pog_sources = await _analyze_pog_best_effort(
@@ -223,7 +239,8 @@ async def run_analysis(
     if discovery is not None:
         sources.append(discovery.source_metadata)
 
-    if discovery is not None and discovery.brak_wektorow:
+    has_vector_zones = vector is not None and bool(vector.positive_zones)
+    if not has_vector_zones and discovery is not None and discovery.brak_wektorow:
         pog, scenario_warnings = _apply_pog_scenario(pog, ouz_status, [])
         warnings.extend(scenario_warnings)
         warnings.append(
@@ -266,14 +283,48 @@ async def run_analysis(
         _log_completion(started, parcel_identifier, response)
         return response
 
-    mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
-        await _analyze_mpzp_best_effort(
-            discovery,
-            metrics.area_sqm,
-            parcel_identifier,
-            db,
+    if has_vector_zones:
+        assert vector is not None
+        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
+            await _analyze_mpzp_vector_zones(vector, discovery, parcel_identifier, db)
         )
-    )
+        mpzp_complete = vector.complete_coverage and vector.overlap_pct <= 0.1
+    else:
+        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
+            await _analyze_mpzp_best_effort(
+                discovery,
+                metrics.area_sqm,
+                parcel_identifier,
+                db,
+            )
+        )
+        mpzp_complete = False
+        if mpzp_zones:
+            mpzp_zones = [
+                cap_fallback_zone(zone, assignment_method="document_candidate")
+                for zone in mpzp_zones
+            ]
+            mpzp_sources = [
+                source.model_copy(
+                    update={
+                        "confidence": min(source.confidence, 0.5),
+                        "manual_review_required": True,
+                    }
+                )
+                for source in mpzp_sources
+            ]
+            mpzp_warnings.append(
+                WarningMessage(
+                    code="MPZP_VECTOR_UNAVAILABLE",
+                    message=(
+                        "Brak wiarygodnego wektora wydzieleń MPZP dla działki. "
+                        "Strefę przypisano z punktowego discovery i dokumentu, "
+                        "z obniżoną pewnością — wymaga weryfikacji."
+                    ),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            )
     warnings.extend(mpzp_warnings)
     sources.extend(mpzp_sources)
     pog, scenario_warnings = _apply_pog_scenario(pog, ouz_status, mpzp_zones)
@@ -283,6 +334,7 @@ async def run_analysis(
         mpzp_zones=mpzp_zones,
         pog=pog,
         sources=_unique_sources(sources),
+        mpzp_complete=mpzp_complete,
     )
     response = AnalyzeResponse(
         status=status,
@@ -391,6 +443,242 @@ async def _discover_mpzp_safely(
     return discovery, warnings_from_domain_messages("mpzp", discovery.warnings)
 
 
+def _assess_mpzp_vectors_safely(
+    db: Session,
+    parcel_geometry: BaseGeometry,
+    as_of: datetime,
+) -> tuple[VectorZoneAssessment | None, list[WarningMessage]]:
+    """Przecięcia pełnego obrysu działki z wersjonowanymi wydzieleniami MPZP."""
+    # Zapytanie dostaje geometrię naprawioną (make_valid); ostrzeżenie o
+    # naprawie dokłada ``assess_vector_zones`` na podstawie oryginału.
+    query_geometry = parcel_geometry if parcel_geometry.is_valid else make_valid(parcel_geometry)
+    try:
+        rows = find_mpzp_zone_intersections(
+            db, GeometryPayload(query_geometry.wkt), as_of=as_of
+        )
+    except Exception as exc:
+        db.rollback()
+        log_analysis_event(
+            "section_error", section="mpzp_vector", status=type(exc).__name__
+        )
+        return None, [
+            WarningMessage(
+                code="MPZP_VECTOR_QUERY_FAILED",
+                message=(
+                    "Nie udało się odczytać lokalnych wydzieleń MPZP; użyto "
+                    "ścieżki zastępczej z obniżoną pewnością."
+                ),
+                severity="warning",
+                source_name="mpzp",
+            )
+        ]
+    if not rows:
+        return None, []
+    assessment = assess_vector_zones(parcel_geometry, rows)
+    return assessment, list(assessment.warnings)
+
+
+async def _parse_document_with_audit(
+    document_url: str,
+    zone_symbols: list[str],
+    *,
+    planning_act_identifier: str,
+    act_version: str | None,
+    parcel_identifier: str,
+    db: Session,
+) -> tuple[
+    MpzpParseResult | None,
+    SourceMetadata | None,
+    DocumentEvidenceContext,
+    list[WarningMessage],
+]:
+    """Pobiera i parsuje uchwałę dla dokładnych symboli oraz zapisuje audyt.
+
+    Zapis stron i jednostek redakcyjnych daje cytowalny dowód każdej wartości;
+    odczyt historyczny analizy korzysta z tego audytu i snapshotu, nie z
+    ponownego pobrania dokumentu.
+    """
+    try:
+        document = await fetch_mpzp_document(document_url)
+        parsed = await parse_mpzp_document(document, zone_symbols, build_ocr_provider())
+    except Exception as exc:
+        log_analysis_event(
+            "section_error",
+            section="mpzp_document",
+            status=type(exc).__name__,
+            parcel_identifier=parcel_identifier,
+        )
+        return None, None, DocumentEvidenceContext(act_version=act_version), [
+            WarningMessage(
+                code="MPZP_DOCUMENT_UNAVAILABLE",
+                message=(
+                    "Nie udało się bezpiecznie pobrać dokumentu MPZP. Pozostałe "
+                    "sekcje analizy są dostępne."
+                ),
+                severity="warning",
+                source_name="mpzp",
+            )
+        ]
+
+    warnings = [
+        WarningMessage(
+            code=warning.code,
+            message=warning.message,
+            severity=warning.severity,
+            source_name="mpzp",
+        )
+        for warning in parsed.warnings
+    ]
+    snapshot = None
+    try:
+        snapshot = persist_parser_audit(
+            db,
+            planning_act_identifier=planning_act_identifier,
+            document=document,
+            parse_result=parsed,
+        )
+    except Exception as exc:
+        # Brak zapisu nie może wyglądać jak sukces: wycofujemy niedokończony
+        # lineage i dokładamy jawny warning do częściowego wyniku analizy.
+        db.rollback()
+        log_analysis_event(
+            "section_error",
+            section="mpzp_document_persistence",
+            status=type(exc).__name__,
+            parcel_identifier=parcel_identifier,
+        )
+        warnings.append(
+            WarningMessage(
+                code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
+                message=(
+                    "Tekst dokumentu został przeanalizowany, ale nie udało się "
+                    "zapisać jego cytowalnej struktury. Wynik wymaga ręcznej "
+                    "weryfikacji."
+                ),
+                severity="error",
+                source_name="mpzp",
+            )
+        )
+    evidence = DocumentEvidenceContext(
+        document_version_id=getattr(snapshot, "document_version_id", None),
+        act_version=act_version,
+        legal_units=legal_unit_evidence_from_snapshot(snapshot),
+    )
+    return parsed, document.source_metadata, evidence, warnings
+
+
+async def _analyze_mpzp_vector_zones(
+    vector: VectorZoneAssessment,
+    discovery: MpzpDiscoveryResult | None,
+    parcel_identifier: str,
+    db: Session,
+) -> tuple[list[MpzpZoneResult], list[WarningMessage], list[SourceMetadata], str | None]:
+    """Parametry uchwały dla stref wyznaczonych geometrią (BK-202 → BK-203).
+
+    Symbole stref z wektora są wejściem parsera — osobno dla każdego aktu i
+    wersji. Parametr trafia wyłącznie do strefy o identycznym symbolu w tym
+    samym akcie. Brak dokumentu zostawia parametry ``null`` z ostrzeżeniem.
+    """
+    zones = list(vector.zones)
+    warnings: list[WarningMessage] = []
+    sources: list[SourceMetadata] = [zone.source for zone in vector.positive_zones]
+    statuses: list[str] = []
+    groups: dict[tuple[str, str | None], list[int]] = {}
+    for index, zone in enumerate(zones):
+        if zone.touches_boundary:
+            continue
+        groups.setdefault((zone.act_identifier or "", zone.act_version), []).append(index)
+
+    for (act_identifier, act_version), indexes in groups.items():
+        document_url = zones[indexes[0]].document_url
+        from_discovery = False
+        if not document_url and len(groups) == 1 and discovery and discovery.uchwala_url:
+            document_url = discovery.uchwala_url
+            from_discovery = True
+        if not document_url:
+            warnings.append(
+                WarningMessage(
+                    code="MPZP_ACT_DOCUMENT_MISSING",
+                    message=(
+                        f"Brak dokumentu uchwały dla planu {act_identifier}; "
+                        "parametry stref pozostają nieustalone (null)."
+                    ),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            )
+            continue
+        symbols = sorted({zones[index].zone_symbol for index in indexes})
+        parsed, document_source, evidence, parse_warnings = await _parse_document_with_audit(
+            document_url,
+            symbols,
+            planning_act_identifier=act_identifier,
+            act_version=act_version,
+            parcel_identifier=parcel_identifier,
+            db=db,
+        )
+        warnings.extend(parse_warnings)
+        if parsed is None:
+            continue
+        statuses.append(parsed.status)
+        if document_source is not None:
+            sources.append(
+                document_source.model_copy(update={"manual_review_required": True})
+                if from_discovery
+                else document_source
+            )
+        if from_discovery:
+            warnings.append(
+                WarningMessage(
+                    code="MPZP_DOCUMENT_FROM_DISCOVERY",
+                    message=(
+                        "Dokument uchwały wskazało punktowe discovery, a nie wersja "
+                        "aktu z wektora. Powiązanie wymaga weryfikacji."
+                    ),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            )
+        parser_zones = {zone.zone_symbol: zone for zone in parsed.zones}
+        for index in indexes:
+            parser_zone = parser_zones.get(zones[index].zone_symbol)
+            if parser_zone is None or not parser_zone.parameters:
+                warnings.append(
+                    WarningMessage(
+                        code="MPZP_ZONE_PARAMETERS_NOT_FOUND",
+                        message=(
+                            f"Nie znaleziono parametrów strefy {zones[index].zone_symbol} "
+                            "w dokumencie uchwały."
+                        ),
+                        severity="warning",
+                        source_name="mpzp",
+                    )
+                )
+                continue
+            updated, _skipped, conflicts = apply_parser_zone(zones[index], parser_zone, evidence)
+            if from_discovery:
+                updated = updated.model_copy(update={"manual_review_required": True})
+            zones[index] = updated
+            for field_name in conflicts:
+                warnings.append(
+                    WarningMessage(
+                        code="MPZP_PARAMETER_CONFLICT",
+                        message=(
+                            f"Strefa {updated.zone_symbol}: parametr {field_name} ma "
+                            "sprzeczne wartości w uchwale; żadna nie została wybrana "
+                            "automatycznie."
+                        ),
+                        severity="warning",
+                        source_name="mpzp",
+                    )
+                )
+    parser_status = (
+        "complete" if statuses and all(status == "complete" for status in statuses)
+        else (statuses[0] if statuses else None)
+    )
+    return zones, warnings, sources, parser_status
+
+
 async def _analyze_mpzp_best_effort(
     discovery: MpzpDiscoveryResult | None,
     parcel_area_sqm: float,
@@ -427,95 +715,38 @@ async def _analyze_mpzp_best_effort(
             )
         ], [], None
 
-    try:
-        document = await fetch_mpzp_document(discovery.uchwala_url)
-        parsed = await parse_mpzp_document(
-            document,
-            discovery.candidate_zone_symbols,
-            build_ocr_provider(),
-        )
-    except Exception as exc:
-        # Pobieranie dokumentu jest sekcją best-effort. Poza kontrolowanymi
-        # MpzpDocumentError chronimy też granicę orchestratora przed przyszłym
-        # trybem awarii adaptera, nie ujawniając treści wyjątku ani URL.
-        log_analysis_event(
-            "section_error",
-            section="mpzp_document",
-            status=type(exc).__name__,
-            parcel_identifier=parcel_identifier,
-        )
-        return [], [
-            WarningMessage(
-                code="MPZP_DOCUMENT_UNAVAILABLE",
-                message=(
-                    "Nie udało się bezpiecznie pobrać dokumentu MPZP. Pozostałe "
-                    "sekcje analizy są dostępne."
-                ),
-                severity="warning",
-                source_name="mpzp",
-            )
-        ], [], None
-
-    persistence_warnings: list[WarningMessage] = []
-    try:
-        persist_parser_audit(
-            db,
-            planning_act_identifier=(
-                discovery.plan_id or f"mpzp-document:{discovery.uchwala_url}"
-            ),
-            document=document,
-            parse_result=parsed,
-        )
-    except Exception as exc:
-        # Brak zapisu nie może wyglądać jak sukces: wycofujemy niedokończony
-        # lineage i dokładamy jawny warning do częściowego wyniku analizy.
-        db.rollback()
-        log_analysis_event(
-            "section_error",
-            section="mpzp_document_persistence",
-            status=type(exc).__name__,
-            parcel_identifier=parcel_identifier,
-        )
-        persistence_warnings.append(
-            WarningMessage(
-                code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
-                message=(
-                    "Tekst dokumentu został przeanalizowany, ale nie udało się "
-                    "zapisać jego cytowalnej struktury. Wynik wymaga ręcznej "
-                    "weryfikacji."
-                ),
-                severity="error",
-                source_name="mpzp",
-            )
-        )
+    parsed, document_source, evidence, warnings = await _parse_document_with_audit(
+        discovery.uchwala_url,
+        discovery.candidate_zone_symbols,
+        planning_act_identifier=(
+            discovery.plan_id or f"mpzp-document:{discovery.uchwala_url}"
+        ),
+        act_version=None,
+        parcel_identifier=parcel_identifier,
+        db=db,
+    )
+    if parsed is None or document_source is None:
+        return [], warnings, [], None
 
     # Sam dokument może być wiarygodny, ale przypisanie kandydata strefy nadal
     # pochodzi z punktowego discovery, nie z lokalnego przecięcia wektorowego.
-    zone_source = document.source_metadata.model_copy(
+    zone_source = document_source.model_copy(
         update={
             "confidence": min(
-                document.source_metadata.confidence,
+                document_source.confidence,
                 discovery.source_metadata.confidence,
             ),
             "manual_review_required": True,
         }
     )
     zones: list[MpzpZoneResult] = []
-    warnings = [
-        WarningMessage(
-            code=warning.code,
-            message=warning.message,
-            severity=warning.severity,
-            source_name="mpzp",
-        )
-        for warning in parsed.warnings
-    ] + persistence_warnings
     skipped: list[str] = []
     for parser_zone in parsed.zones:
         mapped, skipped_parameters = map_parser_zone_to_analyze_response(
             parser_zone,
             parcel_area_sqm,
             zone_source,
+            evidence=evidence,
         )
         zones.append(mapped)
         skipped.extend(skipped_parameters)
@@ -1470,6 +1701,7 @@ def _result_status(
     mpzp_zones: list[MpzpZoneResult],
     pog: PogResult | None,
     sources: list[SourceMetadata],
+    mpzp_complete: bool = True,
 ) -> str:
     # NMT jest pominięty świadomie: brak danych o rzeźbie terenu nie oznacza,
     # że analiza ograniczeń prawnych jest niepełna (patrz ContextResult).
@@ -1477,6 +1709,8 @@ def _result_status(
         section.status == "available" for section in context.critical_sections()
     )
     if not mpzp_zones or pog is None:
+        return "partial"
+    if not mpzp_complete or any(zone.manual_review_required for zone in mpzp_zones):
         return "partial"
     if pog.legal_status != "binding" or pog.coverage_status != "available":
         return "partial"

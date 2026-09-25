@@ -20,6 +20,9 @@ from app.services.mpzp_fetch import fetch_mpzp_document
 from app.services.mpzp_parser import parse_mpzp_document
 from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
+    DocumentEvidenceContext,
+    cap_fallback_zone,
+    legal_unit_evidence_from_snapshot,
     map_parser_zone_to_analyze_response,
     validate_zone_symbol_format,
 )
@@ -77,8 +80,9 @@ async def resume_analysis_with_zone(
         build_ocr_provider(),
     )
     persistence_warning: WarningMessage | None = None
+    snapshot = None
     try:
-        persist_parser_audit(
+        snapshot = persist_parser_audit(
             db,
             planning_act_identifier=(
                 analysis.pending_plan_id
@@ -119,6 +123,10 @@ async def resume_analysis_with_zone(
             matching_zone,
             parcel_area_sqm,
             source,
+            evidence=DocumentEvidenceContext(
+                document_version_id=getattr(snapshot, "document_version_id", None),
+                legal_units=legal_unit_evidence_from_snapshot(snapshot),
+            ),
         )
     else:
         mapped_zone = _manual_zone_without_parameters(
@@ -128,6 +136,8 @@ async def resume_analysis_with_zone(
         )
         skipped_parameters = []
 
+    # Ręczny odczyt symbolu z rastra: brak wektora, obniżona pewność (BK-202).
+    mapped_zone = cap_fallback_zone(mapped_zone, assignment_method="manual_user_input")
     new_warnings = _resume_warnings(
         parse_result.warnings,
         skipped_parameters,
