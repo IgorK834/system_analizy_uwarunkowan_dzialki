@@ -347,7 +347,12 @@ def add_mpzp_zone_snapshot(
     analysis_id: int,
     zone: MpzpZoneResult,
 ) -> MpzpZone:
-    """Dodaje strefę MPZP i jej płaskie parametry bez zamykania transakcji."""
+    """Dodaje strefę MPZP z pełnym snapshotem i evidence bez zamykania transakcji.
+
+    ``result_snapshot`` jest źródłem prawdy odczytu historycznego (lista
+    kandydatur z evidence, geometria przecięcia, provenance wersji aktu), więc
+    przełączenie wydania ani ponowne pobranie dokumentu nie zmieniają odczytu.
+    """
     zone_record = MpzpZone(
         analysis_id=analysis_id,
         zone_symbol=zone.zone_symbol,
@@ -358,9 +363,45 @@ def add_mpzp_zone_snapshot(
         source_url=zone.source.source_url,
         fetched_at=zone.source.fetched_at,
         confidence=zone.source.confidence,
+        zone_identifier=zone.zone_id,
+        act_identifier=zone.act_identifier,
+        act_version=zone.act_version,
+        act_version_id=zone.act_version_id,
+        data_release_id=zone.data_release_id,
+        touches_boundary=zone.touches_boundary,
+        assignment_method=zone.assignment_method,
+        result_snapshot=zone.model_dump(mode="json"),
     )
     db.add(zone_record)
     db.flush()
+
+    if zone.parameters:
+        for parameter in zone.parameters:
+            db.add(
+                MpzpParameter(
+                    mpzp_zone_id=zone_record.id,
+                    parameter_name=parameter.name,
+                    normalized_value=(
+                        str(parameter.normalized_value)[:255]
+                        if parameter.normalized_value is not None
+                        else None
+                    ),
+                    unit=parameter.unit,
+                    source_fragment=parameter.evidence_text,
+                    page_number=parameter.page_number,
+                    confidence=parameter.confidence,
+                    manual_review_required=parameter.manual_review_required,
+                    raw_value=parameter.raw_value,
+                    segment_id=parameter.segment_id,
+                    legal_unit_id=parameter.legal_unit_id,
+                    document_sha256=parameter.document_sha256,
+                    document_version_id=parameter.document_version_id,
+                    parser_version=parameter.parser_version,
+                    extraction_method=parameter.extraction_method,
+                    conflict_group_id=parameter.conflict_group_id,
+                )
+            )
+        return zone_record
 
     for parameter_name in _NUMERIC_ZONE_PARAMETERS:
         value = getattr(zone, parameter_name)
@@ -619,6 +660,8 @@ def _mpzp_zone_response(
     zone: MpzpZone,
     source_records: list[SourceRecord],
 ) -> MpzpZoneResult:
+    if zone.result_snapshot is not None:
+        return MpzpZoneResult.model_validate(zone.result_snapshot)
     parameters = {parameter.parameter_name: parameter for parameter in zone.parameters}
     manual_review_required = any(
         parameter.manual_review_required for parameter in zone.parameters
@@ -640,6 +683,7 @@ def _mpzp_zone_response(
         intersection_area_sqm=zone.intersection_area_sqm or 0.0,
         intersection_pct=zone.intersection_pct or 0.0,
         is_dominant=zone.is_dominant,
+        assignment_method="legacy",
         source=_source_for_child(
             source_records,
             zone.source_url,
