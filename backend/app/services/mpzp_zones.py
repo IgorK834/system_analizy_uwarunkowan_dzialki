@@ -116,67 +116,205 @@ def validate_zone_symbol_format(zone_symbol: str) -> str:
     return stripped
 
 
+@dataclass(frozen=True)
+class LegalUnitEvidence:
+    """Liść jednostki redakcyjnej uchwały zapisanej w bazie (DocumentVersion)."""
+
+    legal_unit_id: int
+    text: str
+    page_from: int | None = None
+    page_to: int | None = None
+
+
+@dataclass(frozen=True)
+class DocumentEvidenceContext:
+    """Kontekst dowodowy dokumentu, z którego pochodzą parametry strefy.
+
+    ``act_version`` i ``document_version_id`` wiążą grupę konfliktu z dokładną
+    wersją aktu i dokumentu, więc te same symbole w innej wersji nie tworzą
+    wspólnej grupy.
+    """
+
+    document_version_id: int | None = None
+    act_version: str | None = None
+    legal_units: tuple[LegalUnitEvidence, ...] = ()
+
+
+_NUMERIC_API_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "max_building_height_m",
+        "max_floors",
+        "min_biologically_active_pct",
+        "max_floor_area_ratio",
+        "min_floor_area_ratio",
+        "max_building_coverage_pct",
+    }
+)
+
+
 def map_parser_zone_to_analyze_response(
     parser_zone: mpzp_schemas.MpzpZoneResult,
     parcel_area_sqm: float,
     source: SourceMetadata,
+    *,
+    evidence: DocumentEvidenceContext | None = None,
 ) -> tuple[analyze_schemas.MpzpZoneResult, list[str]]:
-    """Mapuje wynik parsera (generyczna lista parametrów) na płaski kontrakt API.
+    """Mapuje wynik parsera na strefę API bez wektora (fallback i resume).
 
-    ``schemas.mpzp.MpzpZoneResult`` (parser) i ``schemas.analyze.MpzpZoneResult``
-    (odpowiedź API) są ŚWIADOMIE różnymi kontraktami — patrz docstring modułu
-    ``schemas/mpzp.py``. To jest pierwszy realny konsument potrzebujący mostu
-    między nimi, więc most jest minimalny i jawny, nie ogólnym mechanizmem.
-
-    Bez geometrii wektorowej strefy (jesteśmy w gałęzi ręcznego wznowienia bez
-    wektorów) przyjmujemy, że CAŁA działka leży w podanej strefie:
-    ``intersection_area_sqm=parcel_area_sqm``, ``intersection_pct=100.0``,
-    ``is_dominant=True``. To jest udokumentowane założenie — dokładna granica
-    strefy w obrębie działki nie jest znana do czasu importu wektorów.
-
-    Zwraca tuple (wynik API, lista nazw pominiętych parametrów) — parametry
-    parsera bez odpowiednika w płaskim kontrakcie (np. ``prohibition``,
-    ``permission``, ``roof_geometry``, ``large_retail_restriction``) NIE mogą
-    zostać cicho utracone. Wywołujący (router) powinien zamienić tę listę na
-    ``WarningMessage``, żeby użytkownik wiedział, że pełne dane istnieją tylko
-    w wewnętrznym wyniku parsera, na razie niedostępnym przez płaskie API.
+    Bez geometrii wektorowej przyjmujemy udokumentowane założenie, że cała
+    działka leży w strefie (``intersection_pct=100``); przypisanie oznacza
+    ``assignment_method`` i obniżone confidence nadane przez wywołującego.
+    Parametry są przenoszone przez :func:`apply_parser_zone` — z pełnym
+    evidence i bez automatycznego rozstrzygania konfliktów.
     """
-    api_fields: dict[str, float | int | str | None] = {}
-    skipped_parameter_names: list[str] = []
-
-    for parameter in parser_zone.parameters:
-        api_field_name = _PARSER_TO_API_PARAMETER_MAP.get(parameter.name)
-        if api_field_name is None:
-            skipped_parameter_names.append(parameter.name)
-            continue
-        api_fields[api_field_name] = parameter.normalized_value
-
-    result = analyze_schemas.MpzpZoneResult(
+    base = analyze_schemas.MpzpZoneResult(
         zone_symbol=parser_zone.zone_symbol,
-        primary_use=_as_str_or_none(api_fields.get("primary_use")),
-        supplementary_use=_as_str_or_none(api_fields.get("supplementary_use")),
-        max_building_height_m=_as_float_or_none(
-            api_fields.get("max_building_height_m")
-        ),
-        max_floors=_as_int_or_none(api_fields.get("max_floors")),
-        min_biologically_active_pct=_as_float_or_none(
-            api_fields.get("min_biologically_active_pct")
-        ),
-        max_floor_area_ratio=_as_float_or_none(
-            api_fields.get("max_floor_area_ratio")
-        ),
-        min_floor_area_ratio=_as_float_or_none(
-            api_fields.get("min_floor_area_ratio")
-        ),
-        max_building_coverage_pct=_as_float_or_none(
-            api_fields.get("max_building_coverage_pct")
-        ),
         intersection_area_sqm=parcel_area_sqm,
         intersection_pct=100.0,
         is_dominant=True,
         source=source,
     )
-    return result, skipped_parameter_names
+    zone, skipped, _conflicts = apply_parser_zone(base, parser_zone, evidence)
+    return zone, skipped
+
+
+def apply_parser_zone(
+    zone: analyze_schemas.MpzpZoneResult,
+    parser_zone: mpzp_schemas.MpzpZoneResult,
+    evidence: DocumentEvidenceContext | None = None,
+) -> tuple[analyze_schemas.MpzpZoneResult, list[str], list[str]]:
+    """Dołącza parametry uchwały do strefy (BK-203).
+
+    - Wszystkie kandydatury trafiają do ``parameters`` z evidence.
+    - Płaskie pole API dostaje wartość tylko, gdy parser znalazł jedną
+      dystynktywną wartość. Sprzeczne wartości zostawiają pole ``None``
+      (brak rozstrzygnięcia, nie zero) i wymuszają ręczną weryfikację.
+    - Symbol parsera musi być dokładnie symbolem strefy; podobne symbole nie
+      są łączone.
+
+    Zwraca (strefę, pominięte nazwy parametrów, nazwy parametrów w konflikcie).
+    """
+    if parser_zone.zone_symbol != zone.zone_symbol:
+        raise ValueError(
+            f"Symbol parsera {parser_zone.zone_symbol!r} nie jest symbolem strefy "
+            f"{zone.zone_symbol!r}."
+        )
+    evidence = evidence or DocumentEvidenceContext()
+    parameters = [
+        _parameter_evidence(parameter, evidence) for parameter in parser_zone.parameters
+    ]
+    values_by_field: dict[str, list[float | str]] = {}
+    skipped: list[str] = []
+    for parameter in parser_zone.parameters:
+        api_field = _PARSER_TO_API_PARAMETER_MAP.get(parameter.name)
+        if api_field is None:
+            skipped.append(parameter.name)
+            continue
+        if parameter.normalized_value is not None:
+            values_by_field.setdefault(api_field, []).append(parameter.normalized_value)
+
+    updates: dict[str, object] = {}
+    conflicts: list[str] = []
+    for api_field, values in values_by_field.items():
+        distinct = list(dict.fromkeys(values))
+        if api_field in _NUMERIC_API_FIELDS:
+            if len(distinct) == 1:
+                updates[api_field] = (
+                    _as_int_or_none(distinct[0])
+                    if api_field == "max_floors"
+                    else _as_float_or_none(distinct[0])
+                )
+            else:
+                conflicts.append(api_field)
+                updates[api_field] = None
+        elif api_field == "primary_use" and zone.primary_use:
+            # Kategoria z urzędowego wektora ma pierwszeństwo; opis z uchwały
+            # pozostaje w liście parametrów jako dowód.
+            continue
+        else:
+            # Parametry opisowe są listami współistniejących ustaleń uchwały.
+            updates[api_field] = "; ".join(str(value) for value in distinct)
+
+    manual_review = (
+        zone.manual_review_required
+        or bool(conflicts)
+        or any(parameter.manual_review_required for parameter in parameters)
+    )
+    return (
+        zone.model_copy(
+            update={
+                **updates,
+                "parameters": parameters,
+                "manual_review_required": manual_review,
+            }
+        ),
+        skipped,
+        conflicts,
+    )
+
+
+def _parameter_evidence(
+    parameter: mpzp_schemas.MpzpParameter,
+    evidence: DocumentEvidenceContext,
+) -> analyze_schemas.MpzpParameterEvidence:
+    group = parameter.conflict_group_id
+    if group is not None:
+        scope = evidence.act_version or (parameter.document_sha256 or "")[:16]
+        group = f"{scope}:{group}" if scope else group
+    return analyze_schemas.MpzpParameterEvidence(
+        name=parameter.name,
+        normalized_value=parameter.normalized_value,
+        raw_value=parameter.raw_value,
+        unit=parameter.unit,
+        evidence_text=parameter.source_text,
+        page_number=parameter.page_number,
+        segment_id=parameter.segment_id,
+        legal_unit_id=_legal_unit_for(parameter, evidence.legal_units),
+        document_sha256=parameter.document_sha256,
+        document_version_id=evidence.document_version_id,
+        parser_version=parameter.parser_version,
+        extraction_method=parameter.extraction_method,
+        confidence=parameter.confidence,
+        conflict_group_id=group,
+        manual_review_required=parameter.manual_review_required or group is not None,
+    )
+
+
+def _legal_unit_for(
+    parameter: mpzp_schemas.MpzpParameter,
+    units: tuple[LegalUnitEvidence, ...],
+) -> int | None:
+    """Najmniejsza jednostka redakcyjna zawierająca fragment dowodowy."""
+    if not parameter.source_text or not units:
+        return None
+    needle = " ".join(parameter.source_text.split())
+    matches = [unit for unit in units if needle in unit.text]
+    if not matches:
+        return None
+    if parameter.page_number is not None:
+        on_page = [
+            unit for unit in matches
+            if (unit.page_from or 0) <= parameter.page_number <= (unit.page_to or unit.page_from or 10**6)
+        ]
+        matches = on_page or matches
+    return min(matches, key=lambda unit: (len(unit.text), unit.legal_unit_id)).legal_unit_id
+
+
+def legal_unit_evidence_from_snapshot(snapshot) -> tuple[LegalUnitEvidence, ...]:  # noqa: ANN001
+    """Liście jednostek redakcyjnych zapisanego dokumentu jako kontekst dowodowy."""
+    if snapshot is None:
+        return ()
+    parent_ids = {unit.parent_id for unit in snapshot.legal_units if unit.parent_id is not None}
+    return tuple(
+        LegalUnitEvidence(
+            legal_unit_id=unit.id,
+            text=" ".join(unit.source_text.split()),
+            page_from=unit.page_from,
+            page_to=unit.page_to,
+        )
+        for unit in snapshot.legal_units
+        if unit.id is not None and unit.id not in parent_ids and unit.source_text.strip()
+    )
 
 
 def _as_str_or_none(value: float | int | str | None) -> str | None:
@@ -381,4 +519,223 @@ def calculate_single_symbol_fallback(
             "SINGLE_ZONE_FALLBACK: przypisanie całej działki do strefy oparte "
             "na kandydacie bez wektorowej granicy."
         ],
+    )
+
+
+# --- Wersjonowany wektor MPZP (BK-202) --------------------------------------
+
+# Przecięcie o polu nie większym niż ta tolerancja numeryczna jest stycznością
+# granic, nie realnym udziałem strefy w działce.
+MPZP_INTERSECTION_AREA_TOLERANCE_SQM: Final[float] = 1e-6
+# Tolerancja pokrycia/nakładania wyrażona w procentach powierzchni działki.
+MPZP_COVERAGE_TOLERANCE_PCT: Final[float] = 0.1
+# Wydzielenie z przejętego QA, wersjonowanego wektora — parametry i tak mają
+# własne confidence z parsera, więc przypisanie przestrzenne nie jest 1.0.
+VECTOR_ZONE_CONFIDENCE: Final[float] = 0.95
+# Bez wiarygodnego wektora przypisanie strefy pochodzi z punktowego discovery
+# albo odczytu ręcznego: confidence nie może przekroczyć tego sufitu.
+FALLBACK_ZONE_CONFIDENCE_CAP: Final[float] = 0.5
+
+
+@dataclass(frozen=True)
+class VectorZoneAssessment:
+    """Wynik przypisania stref z wektora dla pełnego obrysu działki."""
+
+    zones: list[analyze_schemas.MpzpZoneResult]
+    warnings: list[analyze_schemas.WarningMessage]
+    covered_pct: float
+    overlap_pct: float
+    act_identifiers: tuple[str, ...]
+
+    @property
+    def positive_zones(self) -> list[analyze_schemas.MpzpZoneResult]:
+        return [zone for zone in self.zones if not zone.touches_boundary]
+
+    @property
+    def complete_coverage(self) -> bool:
+        return self.covered_pct >= 100.0 - MPZP_COVERAGE_TOLERANCE_PCT
+
+
+def assess_vector_zones(
+    parcel_geometry: BaseGeometry,
+    rows: list[dict[str, object]],
+) -> VectorZoneAssessment:
+    """Buduje pełną listę stref z wierszy ``find_mpzp_zone_intersections``.
+
+    Udział każdej strefy to pole przecięcia z całym obrysem działki
+    (``ST_Area(ST_Intersection)`` w EPSG:2180), nie przynależność centroidu.
+    Styczności są osobnymi wpisami z ``touches_boundary=True``. Sumy udziałów
+    nie są normalizowane: nakładanie wydzieleń (np. dwóch planów) i niepełne
+    pokrycie działki są jawnie raportowane ostrzeżeniami.
+    """
+    from shapely import from_wkt, make_valid
+    from shapely.ops import unary_union
+
+    from app.services.geojson import analysis_layer_geometry_to_geojson
+
+    parcel = parcel_geometry if parcel_geometry.is_valid else make_valid(parcel_geometry)
+    parcel_area = parcel.area
+    warnings: list[analyze_schemas.WarningMessage] = []
+    positive: list[tuple[dict[str, object], BaseGeometry]] = []
+    touching: list[dict[str, object]] = []
+    for row in rows:
+        area = float(row["intersection_area_sqm"])  # type: ignore[arg-type]
+        wkt = row.get("intersection_wkt")
+        geometry = from_wkt(str(wkt)) if wkt else None
+        if area > MPZP_INTERSECTION_AREA_TOLERANCE_SQM and geometry is not None:
+            positive.append((row, geometry))
+        else:
+            touching.append(row)
+
+    ordered = sorted(
+        positive,
+        key=lambda item: (-float(item[0]["intersection_area_sqm"]), str(item[0]["zone_identifier"])),  # type: ignore[arg-type]
+    )
+    dominant_id = str(ordered[0][0]["zone_identifier"]) if ordered else None
+    zones: list[analyze_schemas.MpzpZoneResult] = []
+    for row, geometry in ordered:
+        area = float(row["intersection_area_sqm"])  # type: ignore[arg-type]
+        pct = min(100.0, area / parcel_area * 100.0) if parcel_area > 0 else 0.0
+        zones.append(
+            _vector_zone_result(
+                row,
+                area_sqm=area,
+                pct=pct,
+                is_dominant=str(row["zone_identifier"]) == dominant_id,
+                touches=False,
+                geojson=analysis_layer_geometry_to_geojson(
+                    geometry,
+                    "mpzp_zone",
+                    {
+                        "zone_id": row["zone_identifier"],
+                        "zone_symbol": row["symbol"],
+                        "act_identifier": row["act_identifier"],
+                    },
+                ),
+            )
+        )
+    for row in sorted(touching, key=lambda item: str(item["zone_identifier"])):
+        zones.append(
+            _vector_zone_result(
+                row, area_sqm=0.0, pct=0.0, is_dominant=False, touches=True, geojson=None
+            )
+        )
+
+    union = unary_union([geometry for _row, geometry in positive]) if positive else None
+    covered_area = parcel.intersection(union).area if union is not None else 0.0
+    covered_pct = covered_area / parcel_area * 100.0 if parcel_area > 0 else 0.0
+    summed_pct = sum(zone.intersection_pct for zone in zones)
+    overlap_pct = max(0.0, summed_pct - covered_pct)
+    act_identifiers = tuple(sorted({str(row["act_identifier"]) for row, _ in positive}))
+
+    if not parcel_geometry.is_valid:
+        warnings.append(_mpzp_warning(
+            "MPZP_PARCEL_GEOMETRY_REPAIRED",
+            "Geometria działki była niepoprawna i została naprawiona przed "
+            "przecięciem z wydzieleniami MPZP.",
+        ))
+    if touching:
+        warnings.append(_mpzp_warning(
+            "MPZP_ZONE_BOUNDARY_TOUCH",
+            "Część wydzieleń MPZP jedynie styka się z granicą działki; nie mają "
+            "udziału powierzchniowego i są oznaczone osobno.",
+            severity="info",
+        ))
+    if overlap_pct > MPZP_COVERAGE_TOLERANCE_PCT:
+        warnings.append(_mpzp_warning(
+            "MPZP_ZONES_OVERLAP",
+            f"Wydzielenia MPZP nakładają się na {overlap_pct:.1f}% powierzchni "
+            "działki; suma udziałów przekracza pokrycie i nie została "
+            "znormalizowana. Wymagana weryfikacja obowiązującego ustalenia.",
+        ))
+    if len(act_identifiers) > 1:
+        warnings.append(_mpzp_warning(
+            "MPZP_MULTIPLE_ACTS",
+            "Działka leży w zasięgu więcej niż jednego planu miejscowego: "
+            + ", ".join(act_identifiers) + ".",
+        ))
+    if positive and covered_pct < 100.0 - MPZP_COVERAGE_TOLERANCE_PCT:
+        warnings.append(_mpzp_warning(
+            "MPZP_PARTIAL_COVERAGE",
+            f"Wektorowe wydzielenia MPZP pokrywają {covered_pct:.1f}% działki. "
+            "Pozostała część nie ma danych wektorowych — brak danych nie oznacza "
+            "braku planu ani braku ograniczeń.",
+        ))
+    return VectorZoneAssessment(
+        zones=zones,
+        warnings=warnings,
+        covered_pct=covered_pct,
+        overlap_pct=overlap_pct,
+        act_identifiers=act_identifiers,
+    )
+
+
+def cap_fallback_zone(
+    zone: analyze_schemas.MpzpZoneResult,
+    *,
+    assignment_method: str,
+) -> analyze_schemas.MpzpZoneResult:
+    """Oznacza przypisanie bez wektora i obniża jego pewność (BK-202)."""
+    source = zone.source.model_copy(
+        update={
+            "confidence": min(zone.source.confidence, FALLBACK_ZONE_CONFIDENCE_CAP),
+            "manual_review_required": True,
+        }
+    )
+    return zone.model_copy(
+        update={
+            "assignment_method": assignment_method,
+            "manual_review_required": True,
+            "source": source,
+        }
+    )
+
+
+def _vector_zone_result(
+    row: dict[str, object],
+    *,
+    area_sqm: float,
+    pct: float,
+    is_dominant: bool,
+    touches: bool,
+    geojson: dict[str, object] | None,
+) -> analyze_schemas.MpzpZoneResult:
+    fetched_at = row.get("fetched_at")
+    source_uri = str(row.get("artifact_uri") or "")
+    source = SourceMetadata(
+        source_id=str(row["source_id"]),
+        source_version=str(row.get("version_label") or "") or None,
+        artifact_sha256=str(row.get("artifact_sha256") or "") or None,
+        data_release_id=int(row["data_release_id"]),  # type: ignore[arg-type]
+        act_version=str(row.get("act_version") or "") or None,
+        source_name=f"MPZP_WEKTOR:{row['source_id']}",
+        source_url=source_uri if source_uri.startswith(("http://", "https://")) else None,
+        fetched_at=fetched_at,  # type: ignore[arg-type]
+        confidence=VECTOR_ZONE_CONFIDENCE,
+        manual_review_required=False,
+    )
+    return analyze_schemas.MpzpZoneResult(
+        zone_symbol=str(row["symbol"] or "UNKNOWN"),
+        primary_use=(str(row["normalized_category"]) if row.get("normalized_category") else None),
+        intersection_area_sqm=area_sqm,
+        intersection_pct=pct,
+        is_dominant=is_dominant,
+        zone_id=str(row["zone_identifier"]),
+        act_identifier=str(row["act_identifier"]),
+        act_version=str(row.get("act_version") or "") or None,
+        act_version_id=int(row["act_version_id"]),  # type: ignore[arg-type]
+        data_release_id=int(row["data_release_id"]),  # type: ignore[arg-type]
+        document_url=(str(row["document_url"]) if row.get("document_url") else None),
+        touches_boundary=touches,
+        assignment_method="vector_intersection",
+        intersection_geojson=geojson,  # type: ignore[arg-type]
+        source=source,
+    )
+
+
+def _mpzp_warning(
+    code: str, message: str, *, severity: str = "warning"
+) -> analyze_schemas.WarningMessage:
+    return analyze_schemas.WarningMessage(
+        code=code, message=message, severity=severity, source_name="mpzp"  # type: ignore[arg-type]
     )
