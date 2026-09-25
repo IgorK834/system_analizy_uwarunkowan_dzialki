@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
+import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import {
@@ -408,19 +409,9 @@ function MpzpSection({ zones }: { zones: MpzpZoneResult[] }) {
         </p>
       )}
       {zones.length > 0 && (
-        <ul className="result-list">
-          {zones.map((zone) => (
-            <li key={zone.zone_symbol} className="result-list-item">
-              <div className="result-list-item-heading">
-                <strong>{zone.zone_symbol}</strong>
-                {zone.is_dominant && <span className="tag-dominant">dominująca</span>}
-              </div>
-              {zone.primary_use && <p>Przeznaczenie: {zone.primary_use}</p>}
-              <p>
-                Udział w powierzchni działki: {zone.intersection_pct.toFixed(1)}%
-              </p>
-              <ConfidenceBadge source={zone.source} />
-            </li>
+        <ul className="result-list" aria-label="Wszystkie strefy MPZP działki">
+          {zones.map((zone, index) => (
+            <MpzpZoneCard key={zone.zone_id ?? `${zone.zone_symbol}-${index}`} zone={zone} />
           ))}
         </ul>
       )}
