@@ -92,6 +92,32 @@ export type ParcelGeometryResponse = {
   buildable_area_geojson: Record<string, unknown> | null;
 };
 
+export type MpzpAssignmentMethod =
+  | "vector_intersection"
+  | "document_candidate"
+  | "manual_user_input"
+  | "legacy";
+
+/** Kandydatura parametru uchwały z cytowalnym dowodem (BK-203). */
+export type MpzpParameterEvidence = {
+  name: string;
+  normalized_value: number | string | null;
+  raw_value: string | null;
+  unit: string | null;
+  evidence_text: string | null;
+  page_number: number | null;
+  segment_id: string | null;
+  legal_unit_id: number | null;
+  document_sha256: string | null;
+  document_version_id: number | null;
+  parser_version: string | null;
+  extraction_method: string | null;
+  confidence: number;
+  /** Wspólne ID sprzecznych kandydatur; brak automatycznego wyboru. */
+  conflict_group_id: string | null;
+  manual_review_required: boolean;
+};
+
 export type MpzpZoneResult = {
   zone_symbol: string;
   primary_use: string | null;
@@ -104,8 +130,22 @@ export type MpzpZoneResult = {
   max_building_coverage_pct: number | null;
   intersection_area_sqm: number;
   intersection_pct: number;
+  /** Pomocniczo: strefa o największym udziale; nie zastępuje pełnej listy. */
   is_dominant: boolean;
   source: SourceMetadata;
+  /** Stabilne ID wydzielenia z wersjonowanego wektora (BK-202). */
+  zone_id?: string | null;
+  act_identifier?: string | null;
+  act_version?: string | null;
+  act_version_id?: number | null;
+  data_release_id?: number | null;
+  document_url?: string | null;
+  /** Wydzielenie tylko styka się z działką (pole ≤ 1e-6 m²). */
+  touches_boundary?: boolean;
+  assignment_method?: MpzpAssignmentMethod;
+  intersection_geojson?: Record<string, unknown> | null;
+  parameters?: MpzpParameterEvidence[];
+  manual_review_required?: boolean;
 };
 
 /** Kanoniczny status prawny aktu (BK-106); pochodzi wyłącznie z urzędowego kodu. */
