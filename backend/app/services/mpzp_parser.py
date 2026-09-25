@@ -13,6 +13,7 @@ i ``mpzp_parser_validate.py``.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from typing import Literal
 
@@ -43,6 +44,9 @@ from app.services.mpzp_parser_segment import (
 from app.services.mpzp_parser_validate import validate_mpzp_result
 
 logger = logging.getLogger(__name__)
+
+# Wersja reguł parsera zapisywana przy każdym parametrze (evidence BK-203).
+MPZP_PARSER_VERSION = "mpzp-parser/2.0"
 
 
 __all__ = [
@@ -192,7 +196,63 @@ async def _run_parse_pipeline(
     # Walidacja systemowa (etap 5 w pełnym znaczeniu) jest ostatnim krokiem
     # pipeline'u: dokłada kary confidence i wykrywa konflikty parametrów już
     # na kompletnym wyniku, nie zamienia strukturalnego validate_result powyżej.
-    return validate_mpzp_result(result)
+    validated = validate_mpzp_result(result)
+    return _attach_evidence_metadata(
+        validated,
+        segments,
+        document_sha256=hashlib.sha256(document.content).hexdigest(),
+        extraction_method=extraction.extraction_method,
+    )
+
+
+def _attach_evidence_metadata(
+    result: MpzpParseResult,
+    segments: list[DocumentSegment],
+    *,
+    document_sha256: str,
+    extraction_method: str,
+) -> MpzpParseResult:
+    """Dopina do parametru segment/stronę dowodu, hash dokumentu i wersję parsera.
+
+    Segment i strona pochodzą z segmentu, który faktycznie zawiera fragment
+    dowodowy — a nie z pierwszego segmentu strefy — więc wskazują miejsce
+    wartości w uchwale także wtedy, gdy strefa ma kilka kandydatów sekcji.
+    """
+    normalized_segments = [
+        (segment, " ".join(segment.text.split())) for segment in segments
+    ]
+
+    def locate(evidence: str | None) -> DocumentSegment | None:
+        if not evidence:
+            return None
+        needle = " ".join(evidence.split())
+        return next(
+            (segment for segment, text in normalized_segments if needle in text),
+            None,
+        )
+
+    zones = []
+    for zone in result.zones:
+        parameters = []
+        for parameter in zone.parameters:
+            segment = locate(parameter.source_text)
+            parameters.append(
+                parameter.model_copy(
+                    update={
+                        "segment_id": segment.segment_id if segment else None,
+                        "page_number": (
+                            segment.page_number
+                            if segment is not None and segment.page_number is not None
+                            else parameter.page_number
+                        ),
+                        "document_sha256": document_sha256,
+                        "extraction_method": extraction_method,
+                        "parser_version": MPZP_PARSER_VERSION,
+                    }
+                )
+            )
+        zones.append(zone.model_copy(update={"parameters": parameters}))
+    return result.model_copy(update={"zones": zones})
 
 
 def _extraction_warning_to_parser_warning(message: str) -> MpzpParserWarning:

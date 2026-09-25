@@ -34,9 +34,11 @@ from app.schemas.mpzp import (
 
 logger = logging.getLogger(__name__)
 
-# Kara globalna, gdy etap extract_text zgłosił ostrzeżenie związane z OCR —
-# cały dokument jest wtedy podejrzany, nie tylko jeden parametr.
+# Kara globalna OCR (ADR-005): tekst odczytany przez OCR — albo etap
+# extract_text zgłosił problem z OCR — zawsze obniża confidence względem
+# równoważnego tekstowego PDF. Stosowana raz na dokument, nie per ostrzeżenie.
 _OCR_WARNING_CONFIDENCE_PENALTY: Final[float] = 0.85
+OCR_CONFIDENCE_PENALTY: Final[float] = _OCR_WARNING_CONFIDENCE_PENALTY
 # Kara dla całej strefy, gdy segmentacja zgłosiła wieloznaczność lokalizacji
 # sekcji tej strefy (ZONE_SECTION_AMBIGUOUS) — nie wiadomo z pewnością, czy
 # parametry pochodzą z właściwego fragmentu uchwały.
@@ -65,7 +67,10 @@ def validate_mpzp_result(result: MpzpParseResult) -> MpzpParseResult:
     przekazanego obiektu, żeby wcześniejsze etapy pipeline'u mogły bezpiecznie
     zachować referencję do swojego wyniku.
     """
-    ocr_warning_present = _has_ocr_warning(result.warnings)
+    ocr_warning_present = _has_ocr_warning(result.warnings) or (
+        result.document_audit is not None
+        and result.document_audit.extraction_method == "ocr"
+    )
     ambiguous_zone_symbols = _ambiguous_zone_symbols(result.warnings)
 
     new_warnings: list[MpzpParserWarning] = list(result.warnings)
@@ -151,6 +156,10 @@ def _validate_zone_parameters(
 
     validated_parameters: list[MpzpParameter] = []
     for parameter in parameters:
+        if parameter.name in conflicting_names:
+            parameter = parameter.model_copy(
+                update={"conflict_group_id": conflict_group_id(zone_symbol, parameter.name)}
+            )
         validated, domain_warning = _validate_single_parameter(
             zone_symbol,
             parameter,
@@ -163,6 +172,15 @@ def _validate_zone_parameters(
             warnings.append(domain_warning)
 
     return validated_parameters, conflict_flags, warnings
+
+
+def conflict_group_id(zone_symbol: str, parameter_name: str) -> str:
+    """Deterministyczne ID grupy sprzecznych kandydatur w obrębie dokumentu.
+
+    Dokument i wersja aktu są dołączane przy mapowaniu do wyniku analizy, więc
+    tu wystarcza para strefa + parametr.
+    """
+    return f"{zone_symbol}:{parameter_name}"
 
 
 def _find_conflicting_parameter_names(
