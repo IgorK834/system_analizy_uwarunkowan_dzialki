@@ -29,6 +29,7 @@ export default defineConfig({
         "components/SearchPanel.tsx",
         "components/ResultPanel.tsx",
         "components/PogOfficialSources.tsx",
+        "components/MpzpZoneCard.tsx",
         "components/LayerToggle.tsx",
         "components/PreviewOverlays.tsx",
         "components/LayerAvailabilityNote.tsx",
