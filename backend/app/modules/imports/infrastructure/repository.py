@@ -320,6 +320,7 @@ class SqlAlchemyImportRepository:
                     resolution_number=act_record.resolution_number,
                     resolution_date=act_record.resolution_date,
                     name=act_record.name,
+                    document_url=act_record.document_url,
                     manual_review_required=raster_only,
                     source_artifact_id=artifact.id,
                     data_release_id=data_release.id,
@@ -355,6 +356,10 @@ class SqlAlchemyImportRepository:
                             planning_act_version_id=version.id,
                             planning_symbol_id=symbol.id,
                             symbol=zone.original_symbol,
+                            zone_identifier=(
+                                zone.zone_identifier
+                                or f"{act_record.act_identifier}:{zone.original_symbol}"
+                            ),
                             raw_attributes=_jsonable(zone.raw_attributes),
                             geometry=WKTElement(zone.geometry.wkt, srid=2180),
                         )
@@ -716,40 +721,120 @@ class SqlAlchemyImportRepository:
         return int(count)
 
 
-def find_plan_intersections(
-    session: Session, parcel_geometry: GeometryPayload
-) -> list[dict[str, int | str | float]]:
-    """Zwraca akty MPZP przecinające działkę i rzeczywiste pola przecięć.
+_MPZP_VERSION_AS_OF_SQL = """
+  AND pav.valid_from <= CAST(:as_of AS timestamptz)
+  AND (pav.valid_to IS NULL OR pav.valid_to > CAST(:as_of AS timestamptz))
+  AND (CAST(:release_id AS integer) IS NULL OR pav.data_release_id = CAST(:release_id AS integer))
+"""
 
-    Filtr ``kind='mpzp'`` gwarantuje, że akty POG (osobno wersjonowane) nie
-    przenikają do analizy MPZP; POG ma własne ``find_pog_intersections``.
+
+def find_plan_intersections(
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    as_of: datetime | None = None,
+    data_release_id: int | None = None,
+) -> list[dict[str, Any]]:
+    """Zwraca akty MPZP, których granica przecina działkę, z polem przecięcia.
+
+    Wersje są wybierane jawnie na chwilę ``as_of`` (domyślnie: teraz) i
+    opcjonalnie zawężane do ``data_release_id``. Filtr ``kind='mpzp'``
+    gwarantuje, że akty POG nie przenikają do analizy MPZP.
     """
     rows = session.execute(
         text(
             """
-            SELECT pa.id, pa.act_identifier,
-                   ST_Area(ST_Intersection(
-                       pb.geometry, ST_GeomFromText(:parcel_wkt, 2180)
-                   )) AS intersection_area_sqm
+            WITH parcel AS (SELECT ST_GeomFromText(:parcel_wkt, 2180) AS g)
+            SELECT pa.id, pa.act_identifier, pav.id AS act_version_id,
+                   pav.content_hash AS act_version, pav.data_release_id,
+                   pav.legal_status, pav.document_url,
+                   ST_Area(ST_Intersection(pb.geometry, parcel.g)) AS intersection_area_sqm
             FROM planning_acts pa
-            JOIN planning_act_versions pav ON pav.planning_act_id=pa.id
-              AND pav.valid_to IS NULL
+            JOIN planning_act_versions pav ON pav.planning_act_id = pa.id
               AND pav.legal_status <> 'raster_only'
-            JOIN plan_boundaries pb ON pb.planning_act_version_id=pav.id
+            JOIN plan_boundaries pb ON pb.planning_act_version_id = pav.id
+            CROSS JOIN parcel
             WHERE pa.kind = 'mpzp'
-              AND pb.geometry && ST_GeomFromText(:parcel_wkt, 2180)
-              AND ST_Intersects(pb.geometry, ST_GeomFromText(:parcel_wkt, 2180))
+              AND pb.geometry && parcel.g
+              AND ST_Intersects(pb.geometry, parcel.g)
+            """
+            + _MPZP_VERSION_AS_OF_SQL
+            + """
             ORDER BY pa.act_identifier
             """
         ),
-        {"parcel_wkt": parcel_geometry.wkt},
+        {
+            "parcel_wkt": parcel_geometry.wkt,
+            "as_of": as_of or datetime.now(timezone.utc),
+            "release_id": data_release_id,
+        },
     ).mappings()
     return [
         {
+            **dict(row),
             "id": int(row["id"]),
             "act_identifier": str(row["act_identifier"]),
             "intersection_area_sqm": float(row["intersection_area_sqm"]),
         }
+        for row in rows
+    ]
+
+
+def find_mpzp_zone_intersections(
+    session: Session,
+    parcel_geometry: GeometryPayload,
+    *,
+    as_of: datetime,
+    data_release_id: int | None = None,
+) -> list[dict[str, Any]]:
+    """Wszystkie wydzielenia MPZP przecinające pełny obrys działki (BK-202).
+
+    Kandydaci są wybierani przez indeks GiST (``&&``), potwierdzani
+    ``ST_Intersects``, a pole liczone jest z ``ST_Intersection`` i ``ST_Area``
+    w EPSG:2180. Zwracane są także wydzielenia jedynie stykające się z działką
+    (pole ~0) — rozdzielenie styczności od realnego przecięcia należy do
+    serwisu. Wersje aktów wybiera jawny ``as_of`` i opcjonalny
+    ``data_release_id``, więc późniejsze przełączenie wydania nie zmienia
+    wyniku dla tego samego ``as_of``.
+    """
+    rows = session.execute(
+        text(
+            """
+            WITH parcel AS (SELECT ST_GeomFromText(:parcel_wkt, 2180) AS g)
+            SELECT lua.zone_identifier, lua.symbol, ps.normalized_category,
+                   pa.act_identifier, pav.id AS act_version_id,
+                   pav.content_hash AS act_version, pav.version_label,
+                   pav.data_release_id, pav.resolution_number, pav.resolution_date,
+                   pav.name AS act_name, pav.document_url, pav.legal_status,
+                   sa.content_hash AS artifact_sha256, sa.fetched_at, sa.uri AS artifact_uri,
+                   ds.source_id,
+                   ST_Area(ST_Intersection(lua.geometry, parcel.g)) AS intersection_area_sqm,
+                   ST_AsText(ST_CollectionExtract(
+                       ST_Intersection(lua.geometry, parcel.g), 3
+                   )) AS intersection_wkt
+            FROM land_use_areas lua
+            JOIN planning_act_versions pav ON pav.id = lua.planning_act_version_id
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id AND pa.kind = 'mpzp'
+            LEFT JOIN planning_symbols ps ON ps.id = lua.planning_symbol_id
+            JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
+            JOIN data_sources ds ON ds.id = sa.data_source_id
+            CROSS JOIN parcel
+            WHERE lua.geometry && parcel.g
+              AND ST_Intersects(lua.geometry, parcel.g)
+            """
+            + _MPZP_VERSION_AS_OF_SQL
+            + """
+            ORDER BY intersection_area_sqm DESC, lua.zone_identifier
+            """
+        ),
+        {
+            "parcel_wkt": parcel_geometry.wkt,
+            "as_of": as_of,
+            "release_id": data_release_id,
+        },
+    ).mappings()
+    return [
+        {**dict(row), "intersection_area_sqm": float(row["intersection_area_sqm"])}
         for row in rows
     ]
 

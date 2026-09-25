@@ -19,10 +19,20 @@ class PlanningActValidationError(ValueError):
 
 @dataclass(frozen=True)
 class ZoneRecord:
+    """Wydzielenie MPZP (teren elementarny) z geometrią w EPSG:2180.
+
+    ``source_identifier`` to identyfikator obiektu nadany przez źródło (np. pole
+    WFS). ``zone_identifier`` jest stabilnym ID publikowanym w wyniku analizy:
+    identyfikator źródła albo — gdy go brak — deterministyczny skrót aktu,
+    symbolu i hasha kanonicznej geometrii (patrz :func:`stable_zone_identifier`).
+    """
+
     original_symbol: str
     normalized_symbol: str | None
     geometry: GeometryPayload
     raw_attributes: Mapping[str, Any] = field(default_factory=dict)
+    source_identifier: str | None = None
+    zone_identifier: str | None = None
 
     def with_geometry(self, geometry: GeometryPayload) -> ZoneRecord:
         return replace(self, geometry=geometry)
@@ -38,6 +48,7 @@ class PlanningActRecord:
     boundary: GeometryPayload | None
     zones: tuple[ZoneRecord, ...] = ()
     legal_status: str = "adopted"
+    document_url: str | None = None
 
     def validate(self) -> None:
         if not self.act_identifier.strip():
@@ -48,6 +59,23 @@ class PlanningActRecord:
             raise PlanningActValidationError("Brak daty uchwały.")
         if not self.teryt.strip():
             raise PlanningActValidationError("Brak kodu TERYT aktu.")
+
+
+def stable_zone_identifier(
+    act_identifier: str,
+    zone: ZoneRecord,
+    geometry_hash: str,
+) -> str:
+    """Stabilne ID wydzielenia niezależne od kolejności obiektów i wydania.
+
+    Identyfikator źródła ma pierwszeństwo, ale jest kwalifikowany aktem, bo
+    źródła numerują obiekty lokalnie. Bez niego ID wynika z aktu, symbolu i
+    SHA-256 kanonicznej geometrii — ten sam obiekt w kolejnym imporcie dostaje
+    to samo ID, a zmiana geometrii daje nowe.
+    """
+    if zone.source_identifier and zone.source_identifier.strip():
+        return f"{act_identifier}:{zone.source_identifier.strip()}"
+    return f"{act_identifier}:{zone.original_symbol}:{geometry_hash[:16]}"
 
 
 @dataclass(frozen=True)

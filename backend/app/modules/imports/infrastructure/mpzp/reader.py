@@ -183,6 +183,9 @@ def _build_acts(
                 ),
                 geometry=feature.geometry,
                 raw_attributes=feature.attributes,
+                source_identifier=_text(
+                    feature.attributes, zone_mapping, "zone_identifier"
+                ),
             )
             for feature, zone_mapping in zones.get(identifier, [])
         )
@@ -201,6 +204,7 @@ def _build_acts(
                 name=_text(metadata_feature.attributes, mapping, "name"),
                 boundary=boundary,
                 zones=zone_records,
+                document_url=_text(metadata_feature.attributes, mapping, "document_url"),
             )
         )
     return tuple(acts)

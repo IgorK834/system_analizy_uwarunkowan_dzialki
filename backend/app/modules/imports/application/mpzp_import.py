@@ -20,6 +20,7 @@ from app.modules.imports.application.parcels_import import RepairedGeometry
 from app.modules.imports.domain.mpzp import (
     PlanningActRecord,
     PlanningActValidationError,
+    stable_zone_identifier,
     validate_topology,
 )
 from app.shared.geometry import GeometryPayload
@@ -72,6 +73,7 @@ def _snapshot_hash(act: PlanningActRecord, geometry_hashes: list[str]) -> str:
         raise ValueError("Liczba hashy geometrii stref jest niespójna z aktem.")
     zones = [
         {
+            "zone_identifier": zone.zone_identifier,
             "original_symbol": zone.original_symbol,
             "normalized_symbol": zone.normalized_symbol,
             "raw_attributes": _stable_json_value(zone.raw_attributes),
@@ -91,6 +93,7 @@ def _snapshot_hash(act: PlanningActRecord, geometry_hashes: list[str]) -> str:
         "teryt": act.teryt,
         "name": act.name,
         "legal_status": act.legal_status,
+        "document_url": act.document_url,
         "boundary_hash": boundary_hash,
         "zones": zones,
     }
@@ -205,6 +208,8 @@ def run_mpzp_import(
 
         repaired_zones = []
         geometry_hashes = [boundary.content_hash]
+        zone_identifiers: set[str] = set()
+        duplicate_identifier = False
         for zone in act.zones:
             repaired = db.repair_geometry(zone.geometry)
             if repaired is None:
@@ -215,8 +220,26 @@ def run_mpzp_import(
                 continue
             if repaired.repaired:
                 stats.repaired += 1
-            repaired_zones.append(zone.with_geometry(repaired.geometry))
+            identifier = stable_zone_identifier(
+                act.act_identifier, zone, repaired.content_hash
+            )
+            if identifier in zone_identifiers:
+                # Dwa wydzielenia o tym samym ID uniemożliwiłyby jednoznaczny
+                # wynik analizy — cały akt jest odrzucany, nie scalany.
+                duplicate_identifier = True
+                warnings.append(f"duplicate_zone_identifier:{identifier}")
+                continue
+            zone_identifiers.add(identifier)
+            repaired_zones.append(
+                replace(
+                    zone.with_geometry(repaired.geometry),
+                    zone_identifier=identifier,
+                )
+            )
             geometry_hashes.append(repaired.content_hash)
+        if duplicate_identifier:
+            stats.rejected += 1
+            continue
 
         prepared_act = replace(
             act,
