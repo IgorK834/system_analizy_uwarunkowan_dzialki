@@ -309,6 +309,8 @@ class PlanningActVersion(Base, _VersionMixin):
     legal_valid_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     legal_valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    # Dokument uchwały wskazany przez źródło wersji aktu MPZP (BK-202/203).
+    document_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     object_version_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
     version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     resolution_number: Mapped[str | None] = mapped_column(
@@ -385,6 +387,8 @@ class LandUseArea(Base):
         ForeignKey("planning_symbols.id"), nullable=True, index=True
     )
     symbol: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    # Stabilne ID wydzielenia publikowane w wyniku analizy (BK-202).
+    zone_identifier: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
     raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
     geometry: Mapped[Any] = mapped_column(
         Geometry("MULTIPOLYGON", srid=2180, spatial_index=False),
@@ -397,6 +401,11 @@ class LandUseArea(Base):
             "NOT ST_IsEmpty(geometry)", name="ck_land_use_areas_geometry_not_empty"
         ),
         Index("ix_land_use_areas_geometry_gist", "geometry", postgresql_using="gist"),
+        UniqueConstraint(
+            "planning_act_version_id",
+            "zone_identifier",
+            name="uq_land_use_areas_version_zone",
+        ),
     )
 
 
