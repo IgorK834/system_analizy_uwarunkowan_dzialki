@@ -540,3 +540,109 @@ def test_raster_only_publishes_review_flag_without_geometry(
         )
         is None
     )
+
+
+# --- QA importu i stabilne ID wydzieleń (BK-202) -----------------------------
+
+
+class _EmptyingRepository(FakeRepository):
+    """Zwraca None dla geometrii oznaczonych jako puste (symulacja repair)."""
+
+    def repair_geometry(self, geometry):
+        if "EMPTY" in geometry.wkt:
+            return None
+        return super().repair_geometry(geometry)
+
+
+def test_import_rejects_invalid_acts_and_duplicate_zone_ids_without_merging() -> None:
+    invalid = PlanningActRecord("bad", "", date(2026, 1, 1), "1261011", None, geom("POLYGON((0 0,1 0,1 1,0 1,0 0))"))
+    no_boundary = PlanningActRecord("no-boundary", "I/1", date(2026, 1, 1), "1261011", None, None)
+    empty_boundary = act("empty-boundary", boundary="POLYGON EMPTY")
+    duplicate = act(
+        "duplicate",
+        zones=(
+            ZoneRecord("1MN", None, geom("POLYGON((0 0,50 0,50 100,0 100,0 0))"), source_identifier="OBJ-1"),
+            ZoneRecord("2U", None, geom("POLYGON((50 0,100 0,100 100,50 100,50 0))"), source_identifier="OBJ-1"),
+        ),
+    )
+    empty_zone = act(
+        "empty-zone",
+        zones=(
+            ZoneRecord("1MN", None, geom("POLYGON((0 0,100 0,100 100,0 100,0 0))"), source_identifier="A"),
+            ZoneRecord("9X", None, geom("POLYGON EMPTY")),
+        ),
+    )
+    repository = _EmptyingRepository()
+
+    outcome = run_mpzp_import(
+        StaticMpzpReader(invalid, no_boundary, empty_boundary, duplicate, empty_zone),
+        "fixture",
+        repository,
+        release=release(),
+    )
+
+    assert outcome.stats["rejected"] == 5
+    warnings = set(outcome.warnings)
+    assert "missing_boundary:no-boundary" in warnings
+    assert "empty_boundary:empty-boundary" in warnings
+    assert "duplicate_zone_identifier:duplicate:OBJ-1" in warnings
+    assert "empty_zone:empty-zone:9X" in warnings
+    (published, _hash), = repository.published
+    assert published.act_identifier == "empty-zone"
+    assert [zone.zone_identifier for zone in published.zones] == ["empty-zone:A"]
+
+
+def test_zone_identifier_is_deterministic_and_part_of_snapshot_hash() -> None:
+    first, second = FakeRepository(), FakeRepository()
+    run_mpzp_import(StaticMpzpReader(act()), "fixture", first, release=release())
+    run_mpzp_import(StaticMpzpReader(act()), "fixture", second, release=release())
+    (a, hash_a), = first.published
+    (b, hash_b), = second.published
+    assert [zone.zone_identifier for zone in a.zones] == [zone.zone_identifier for zone in b.zones]
+    assert all(zone.zone_identifier.startswith("plan-a:") for zone in a.zones)
+    assert hash_a == hash_b
+
+    with_document = FakeRepository()
+    documented = PlanningActRecord(**{**act().__dict__, "document_url": "https://bip.example.gov.pl/u.pdf"})
+    run_mpzp_import(StaticMpzpReader(documented), "fixture", with_document, release=release())
+    (_, hash_doc), = with_document.published
+    assert hash_doc != hash_a  # URL dokumentu jest częścią snapshotu wersji
+
+
+def test_import_guards_release_and_raster_metadata() -> None:
+    with pytest.raises(ValueError, match="source_id"):
+        run_mpzp_import(StaticMpzpReader(act()), "other", FakeRepository(), release=release())
+    with pytest.raises(ImportSourceNotRunnable):
+        run_mpzp_import(StaticMpzpReader(act()), "fixture", FakeRepository(), release=release(allowed=False))
+    with pytest.raises(PlanningActValidationError, match="raster_only"):
+        run_mpzp_import(
+            StaticMpzpReader(vector_available=False, raster_act=None),
+            "fixture",
+            FakeRepository(),
+            release=release(),
+        )
+
+
+def test_snapshot_hash_handles_numpy_like_and_unserializable_attributes() -> None:
+    class NumpyLike:
+        def __init__(self, value):
+            self.value = value
+
+        def item(self):
+            return self.value
+
+    class Broken:
+        def item(self):
+            raise ValueError("bad")
+
+    zones = (
+        ZoneRecord(
+            "1MN",
+            None,
+            geom("POLYGON((0 0,100 0,100 100,0 100,0 0))"),
+            {"n": NumpyLike(3), "when": date(2026, 1, 1), "obj": Broken(), "list": (1, 2)},
+        ),
+    )
+    repository = FakeRepository()
+    run_mpzp_import(StaticMpzpReader(act(zones=zones)), "fixture", repository, release=release())
+    assert len(repository.published) == 1
