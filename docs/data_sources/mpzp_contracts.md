@@ -162,3 +162,24 @@ docker compose run --rm \
 
 Wynik: **1358 passed, 3 deselected**, globalne pokrycie aplikacji
 **89,84%**. Nie zmieniano frontendu, migracji ani kontraktu HTTP API.
+
+## Wektor stref w analizie działki (BK-202/BK-203)
+
+Źródło `vector_zones` po imporcie zasila analizę bezpośrednio z PostGIS:
+`find_mpzp_zone_intersections` wybiera wydzielenia wersji aktów obowiązujących
+w chwili `as_of` analizy (opcjonalnie w jednym `data_release_id`) i liczy
+`ST_Intersection`/`ST_Area` z pełnym obrysem działki w EPSG:2180. Każde
+wydzielenie ma stabilne `zone_identifier`. Zasady wyniku, fallbacku i
+evidence parametrów opisuje
+`docs/adr/ADR-004-mpzp-vector-zones-and-parameter-evidence.md`.
+
+Opcjonalne pola `field_mapping` zasobów MPZP:
+
+| Klucz | Znaczenie |
+|---|---|
+| `zone_identifier` | identyfikator obiektu wydzielenia nadany przez źródło; bez niego ID jest deterministyczne z aktu, symbolu i SHA-256 geometrii |
+| `document_url` | adres uchwały wersji aktu; parser dostaje symbole stref z geometrii tego aktu |
+
+Bez dodatniego przecięcia z wektorem analiza pozostaje przy discovery
+KIMPZP/dokumencie albo odczycie ręcznym, z `assignment_method`
+`document_candidate`/`manual_user_input` i confidence nie wyższym niż 0,5.
