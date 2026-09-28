@@ -58,6 +58,9 @@ class PogZoneIntersection:
     additional_profiles: tuple[dict[str, str | None], ...] = ()
     feature_version: str | None = None
     gml_url: str | None = None
+    # Przecięcie strefy z działką w EPSG:2180 — wejście oceny par MPZP–POG
+    # (BK-205); nie trafia do kontraktu API.
+    intersection_wkt: str | None = None
 
 
 @dataclass(frozen=True)
@@ -209,7 +212,8 @@ def analyze_pog_vectors(
     zone_intersections: list[PogZoneIntersection] = []
     parameters_from_pdf = False
     for feature_index, feature in enumerate(pog_vector_data.planning_zones):
-        intersection_area = parcel.intersection(feature.geometry).area
+        intersection_geometry = parcel.intersection(feature.geometry)
+        intersection_area = intersection_geometry.area
         if intersection_area <= INTERSECTION_AREA_TOLERANCE_SQM:
             continue
         source_zone_type = _first_string_attribute(
@@ -247,6 +251,7 @@ def analyze_pog_vectors(
                 additional_profiles=_profiles_from_attributes(feature.attributes, "additional_profiles"),
                 feature_version=_first_string_attribute(feature.attributes, ("feature_version",)),
                 gml_url=_first_string_attribute(feature.attributes, ("gml_url",)),
+                intersection_wkt=intersection_geometry.wkt,
             )
         )
 
@@ -454,6 +459,7 @@ def _zone_result(zone: PogZoneIntersection, source: SourceMetadata) -> PogZoneRe
         source=source,
         feature_version=zone.feature_version,
         gml_url=zone.gml_url,
+        intersection_wkt=zone.intersection_wkt,
     )
 
 
