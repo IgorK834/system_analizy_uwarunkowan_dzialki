@@ -1133,6 +1133,299 @@ class RiskResult(BaseModel):
     )
 
 
+TERRAIN_RESULT_SCHEMA_VERSION = "1.0"
+# Tolerancja spójności ``height_difference_m == max - min``. Usługa podaje
+# wysokości z dokładnością 0,1 m, a różnica jest zaokrąglana do 1 mm, więc
+# tolerancja pokrywa wyłącznie szum zmiennoprzecinkowy, nie inną wartość.
+HEIGHT_DIFFERENCE_TOLERANCE_M = 0.0015
+# Tolerancja sumy udziałów klas nachylenia (zaokrąglenia do 0,01 pp).
+_SLOPE_CLASS_SHARE_TOLERANCE_PCT = 0.1
+
+TerrainStatus = Literal["available", "no_coverage", "unavailable", "unknown"]
+_TERRAIN_STATUS_DESCRIPTION = (
+    "available — pomiar wykonany; no_coverage — źródło potwierdziło brak danych "
+    "wysokościowych dla obszaru (to NIE jest płaski teren); unavailable — próba "
+    "pomiaru nie powiodła się (timeout, błąd usługi, niepoprawny raster); "
+    "unknown — snapshot nie zawiera informacji o NMT (np. zapis sprzed BK-301)."
+)
+
+
+class TerrainSlopeStatistics(BaseModel):
+    """Statystyki spadku terenu z pikseli, których środek leży w działce."""
+
+    mean_deg: float = Field(ge=0.0, le=90.0, description="Średni spadek w stopniach.")
+    median_deg: float = Field(ge=0.0, le=90.0, description="Mediana spadku w stopniach.")
+    p90_deg: float = Field(
+        ge=0.0,
+        le=90.0,
+        description="90. percentyl spadku w stopniach (interpolacja liniowa, R-7).",
+    )
+    max_deg: float = Field(ge=0.0, le=90.0, description="Maksymalny spadek w stopniach.")
+    mean_pct: float = Field(ge=0.0, description="Średni spadek w procentach.")
+    median_pct: float = Field(ge=0.0, description="Mediana spadku w procentach.")
+    p90_pct: float = Field(ge=0.0, description="90. percentyl spadku w procentach.")
+    max_pct: float = Field(ge=0.0, description="Maksymalny spadek w procentach.")
+
+
+class TerrainSlopeClass(BaseModel):
+    """Udział powierzchni w jednej jawnej, wersjonowanej klasie nachylenia."""
+
+    class_id: str = Field(description="Stabilny identyfikator klasy, np. gentle.")
+    label: str = Field(description="Etykieta klasy po polsku.")
+    min_pct: float = Field(ge=0.0, description="Dolna granica klasy (włącznie), %.")
+    max_pct: float | None = Field(
+        default=None,
+        description="Górna granica klasy (rozłącznie), %; None — klasa otwarta.",
+    )
+    pixel_count: int = Field(ge=0, description="Liczba pikseli klasy w działce.")
+    area_sqm: float = Field(ge=0.0, description="Powierzchnia klasy w m².")
+    share_pct: float = Field(
+        ge=0.0, le=100.0, description="Udział w zmierzonej powierzchni działki, %."
+    )
+
+
+AspectDirection = Literal["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+
+
+class TerrainAspectResult(BaseModel):
+    """Ekspozycja stoku jako statystyka kołowa kierunków spadku.
+
+    ``flat`` — udział terenu nachylonego jest zbyt mały, by kierunek miał sens
+    (wszystkie wartości kierunku są null, a nie 0°). ``dispersed`` — teren jest
+    nachylony, ale kierunki są rozproszone (brak dominującej ekspozycji).
+    """
+
+    status: Literal["defined", "dispersed", "flat"]
+    mean_azimuth_deg: float | None = Field(
+        default=None,
+        ge=0.0,
+        lt=360.0,
+        description="Średni azymut kierunku spadku (0° = północ, zgodnie z zegarem).",
+    )
+    resultant_length: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Długość wypadkowej jednostkowych wektorów (0 — brak kierunku, 1 — jednolity).",
+    )
+    dominant_direction: AspectDirection | None = Field(
+        default=None, description="Sektor 45° średniego azymutu; tylko dla defined."
+    )
+    sector_shares_pct: dict[str, float] = Field(
+        default_factory=dict,
+        description="Udział pikseli nachylonych w 8 sektorach ekspozycji, %.",
+    )
+    non_flat_share_pct: float = Field(
+        ge=0.0, le=100.0, description="Udział pikseli ze spadkiem ≥ progu płaskości, %."
+    )
+    flat_threshold_pct: float = Field(
+        ge=0.0, description="Próg spadku, poniżej którego piksel jest płaski, %."
+    )
+
+    @model_validator(mode="after")
+    def validate_direction_nulls(self) -> Self:
+        if self.status == "flat" and (
+            self.mean_azimuth_deg is not None
+            or self.resultant_length is not None
+            or self.dominant_direction is not None
+        ):
+            raise ValueError("Ekspozycja płaskiego terenu musi mieć null, nie 0°.")
+        if self.status != "flat" and (
+            self.mean_azimuth_deg is None or self.resultant_length is None
+        ):
+            raise ValueError("Ekspozycja terenu nachylonego wymaga azymutu i wypadkowej.")
+        if (self.status == "defined") != (self.dominant_direction is not None):
+            raise ValueError("Kierunek dominujący jest dozwolony wyłącznie dla defined.")
+        return self
+
+
+class TerrainProfileSample(BaseModel):
+    distance_m: float = Field(ge=0.0, description="Odległość od początku linii, m.")
+    x: float = Field(description="Easting EPSG:2180.")
+    y: float = Field(description="Northing EPSG:2180.")
+    height_m: float | None = Field(
+        default=None,
+        description="Wysokość (interpolacja dwuliniowa); null dla NoData, nigdy 0.",
+    )
+    inside_parcel: bool = Field(description="Czy próbka leży w obrysie działki.")
+
+
+class TerrainProfileResult(BaseModel):
+    """Deterministyczny profil wysokościowy wzdłuż zapisanej linii."""
+
+    method: str = Field(description="Reguła wyznaczenia linii profilu.")
+    crs: Literal["EPSG:2180"] = "EPSG:2180"
+    start: tuple[float, float] = Field(description="Początek linii (easting, northing).")
+    end: tuple[float, float] = Field(description="Koniec linii (easting, northing).")
+    length_m: float = Field(ge=0.0)
+    step_m: float = Field(gt=0.0, description="Krok próbkowania, m.")
+    interpolation: Literal["bilinear"] = "bilinear"
+    samples: list[TerrainProfileSample] = Field(default_factory=list)
+    line_geojson: dict[str, Any] | None = Field(
+        default=None, description="Linia profilu w WGS84 jako GeoJSON Feature (prezentacja)."
+    )
+
+
+class TerrainRasterMetadata(BaseModel):
+    """Parametry rastra źródłowego, na którym wykonano obliczenia."""
+
+    coverage_id: str
+    crs: Literal["EPSG:2180"] = "EPSG:2180"
+    resolution_m: float = Field(gt=0.0, description="Rozmiar piksela (kwadratowego), m.")
+    width_px: int = Field(gt=0)
+    height_px: int = Field(gt=0)
+    bbox: tuple[float, float, float, float] = Field(
+        description="Zakres pobranego rastra (minx, miny, maxx, maxy) EPSG:2180."
+    )
+    buffer_m: float = Field(ge=0.0, description="Bufor wokół bbox działki (kernel 3×3).")
+    size_bytes: int = Field(ge=0, description="Rozmiar pobranego GeoTIFF.")
+    nodata_value: float | None = Field(
+        default=None, description="NoData zadeklarowane w GeoTIFF (GDAL_NODATA)."
+    )
+    nodata_policy: str = Field(description="Jawna reguła maskowania NoData.")
+    vertical_datum: str | None = Field(default=None, description="Układ wysokości.")
+    gdal_version: str | None = Field(
+        default=None, description="Wersja GDAL użyta do dekodowania rastra."
+    )
+
+
+class TerrainReliefResult(BaseModel):
+    """Pochodne rastra NMT (BK-302): spadek, klasy, ekspozycja i profil."""
+
+    schema_version: str = TERRAIN_RESULT_SCHEMA_VERSION
+    algorithm_version: str = Field(description="Wersja algorytmu pochodnych.")
+    slope_classes_version: str = Field(description="Wersja tabeli klas nachylenia.")
+    status: TerrainStatus = Field(description=_TERRAIN_STATUS_DESCRIPTION)
+    reason_code: str | None = Field(
+        default=None, description="Kod przyczyny statusu innego niż available."
+    )
+    resolution_m: float | None = Field(
+        default=None, gt=0.0, description="Rozdzielczość danych źródłowych, m."
+    )
+    parcel_pixel_count: int | None = Field(
+        default=None, ge=0, description="Piksele, których środek leży w działce."
+    )
+    valid_pixel_count: int | None = Field(
+        default=None, ge=0, description="Piksele działki z poprawnym oknem 3×3."
+    )
+    nodata_pixel_count: int | None = Field(
+        default=None, ge=0, description="Piksele działki bez danych (maskowane)."
+    )
+    valid_area_share_pct: float | None = Field(
+        default=None, ge=0.0, le=100.0, description="Udział zmierzonych pikseli działki, %."
+    )
+    min_height_m: float | None = None
+    max_height_m: float | None = None
+    mean_height_m: float | None = None
+    slope: TerrainSlopeStatistics | None = None
+    slope_classes: list[TerrainSlopeClass] = Field(default_factory=list)
+    aspect: TerrainAspectResult | None = None
+    profile: TerrainProfileResult | None = None
+    raster: TerrainRasterMetadata | None = None
+    source: SourceMetadata | None = Field(
+        default=None, description="Provenance zapytania WCS — także dla wyniku pustego."
+    )
+    warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_status_consistency(self) -> Self:
+        measured = (
+            self.slope,
+            self.aspect,
+            self.min_height_m,
+            self.max_height_m,
+            self.mean_height_m,
+        )
+        if self.status == "available":
+            if self.slope is None or self.aspect is None or not self.slope_classes:
+                raise ValueError("Wynik available wymaga spadku, klas i ekspozycji.")
+            if self.resolution_m is None or self.raster is None or self.source is None:
+                raise ValueError("Wynik available wymaga rozdzielczości, rastra i źródła.")
+            total = sum(item.share_pct for item in self.slope_classes)
+            if abs(total - 100.0) > _SLOPE_CLASS_SHARE_TOLERANCE_PCT:
+                raise ValueError("Udziały klas nachylenia muszą sumować się do 100%.")
+        else:
+            if any(value is not None for value in measured) or self.slope_classes:
+                raise ValueError(
+                    "Wynik bez pomiaru nie może zawierać statystyk (null, nie 0)."
+                )
+            if self.status in {"no_coverage", "unavailable"} and self.source is None:
+                raise ValueError("Pusty wynik musi zachować provenance źródła.")
+        return self
+
+
+class TerrainResult(BaseModel):
+    """Rzeźba terenu działki jako pierwszoklasowa sekcja wyniku (BK-301)."""
+
+    schema_version: str = TERRAIN_RESULT_SCHEMA_VERSION
+    status: TerrainStatus = Field(description=_TERRAIN_STATUS_DESCRIPTION)
+    reason_code: str | None = Field(
+        default=None,
+        description="Kod przyczyny statusu innego niż available, np. SERVICE_TIMEOUT.",
+    )
+    min_height_m: float | None = Field(
+        default=None,
+        description="Najniższa wysokość terenu w obrysie działki, m n.p.m. (może być ujemna).",
+        json_schema_extra={"example": 112.3},
+    )
+    max_height_m: float | None = Field(
+        default=None,
+        description="Najwyższa wysokość terenu w obrysie działki, m n.p.m.",
+        json_schema_extra={"example": 115.7},
+    )
+    height_difference_m: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Deniwelacja max − min w metrach; 0 oznacza zmierzony płaski teren.",
+        json_schema_extra={"example": 3.4},
+    )
+    grid_size_m: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Rozdzielczość siatki próbkowania raportowana przez usługę, m.",
+        json_schema_extra={"example": 4.0},
+    )
+    sampled_points: int | None = Field(
+        default=None,
+        ge=0,
+        description="Liczba punktów siatki próbkowania raportowana przez usługę.",
+        json_schema_extra={"example": 676},
+    )
+    source: SourceMetadata | None = Field(
+        default=None,
+        description=(
+            "Provenance zapytania NMT. Obecne także dla braku pokrycia i "
+            "niedostępności; null tylko dla statusu unknown."
+        ),
+    )
+    warnings: list[str] = Field(default_factory=list)
+    relief: TerrainReliefResult | None = Field(
+        default=None,
+        description="Spadek, ekspozycja i profil z rastra NMT (BK-302), jeżeli liczone.",
+    )
+
+    @model_validator(mode="after")
+    def validate_measurement(self) -> Self:
+        heights = (self.min_height_m, self.max_height_m, self.height_difference_m)
+        if self.status == "available":
+            if any(value is None for value in heights):
+                raise ValueError("Wynik available wymaga Hmin, Hmax i deniwelacji.")
+            assert self.min_height_m is not None and self.max_height_m is not None
+            assert self.height_difference_m is not None
+            if self.max_height_m < self.min_height_m:
+                raise ValueError("max_height_m nie może być mniejsze od min_height_m.")
+            expected = self.max_height_m - self.min_height_m
+            if abs(self.height_difference_m - expected) > HEIGHT_DIFFERENCE_TOLERANCE_M:
+                raise ValueError("height_difference_m musi równać się max − min.")
+        elif any(value is not None for value in heights):
+            raise ValueError(
+                "Bez pomiaru wysokości muszą być null — brak danych to nie 0 m."
+            )
+        if self.status != "unknown" and self.source is None:
+            raise ValueError("Wynik NMT musi zachować provenance źródła.")
+        return self
+
+
 class AnalyzeResponse(BaseModel):
     analysis_id: int | None = Field(
         default=None,
@@ -1176,6 +1469,15 @@ class AnalyzeResponse(BaseModel):
     risks: list[RiskResult] = Field(
         description="Lista ryzyk środowiskowych i przestrzennych.",
         json_schema_extra={"example": []},
+    )
+    terrain: TerrainResult | None = Field(
+        default=None,
+        description=(
+            "Rzeźba terenu z NMT: Hmin, Hmax, deniwelacja i jakość pomiaru. "
+            "Status odróżnia brak pokrycia, niedostępność i snapshot bez danych "
+            "od zmierzonej zerowej deniwelacji."
+        ),
+        json_schema_extra={"example": None},
     )
     buildable_area_sqm: float | None = Field(
         default=None,
