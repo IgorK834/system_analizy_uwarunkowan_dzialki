@@ -74,6 +74,7 @@ class AccessType(str, Enum):
     WMTS = "wmts"
     WFS = "wfs"
     CSW = "csw"
+    WCS = "wcs"
     APP_GML = "app_gml"
     FILE = "file"
     SOAP = "soap"
@@ -323,6 +324,11 @@ class DataSourceEntry(BaseModel):
         ):
             raise ValueError(
                 f"Źródło WFS/APP {self.source_id!r} musi deklarować type_names."
+            )
+        if self.access_type is AccessType.WCS and not self.layers:
+            raise ValueError(
+                f"Źródło WCS {self.source_id!r} musi deklarować identyfikatory "
+                "pokryć (layers = CoverageId)."
             )
 
     @property

@@ -50,6 +50,14 @@ class Settings(BaseSettings):
     # realnym zapytaniem 2026-07-30 — patrz app/services/nmt.py oraz
     # tests/fixtures/source_contracts/nmt_getminmaxbypolygon.txt.
     nmt_base_url: str = "https://services.gugik.gov.pl/nmt/"
+    # Pochodne rastra NMT (BK-302): spadek, ekspozycja, profil. Endpoint WCS i
+    # identyfikator pokrycia są kontraktem katalogu (source_id ``nmt_wcs``);
+    # tutaj są wyłącznie limity bezpieczeństwa jednego zapytania. 1 mln pikseli
+    # przy natywnym pikselu 1 m to ok. 100 ha okna (działka + bufor kernela).
+    terrain_relief_enabled: bool = True
+    terrain_raster_max_pixels: int = 1_000_000
+    terrain_raster_max_bytes: int = 8 * 1024 * 1024
+    terrain_raster_timeout_seconds: float = 20.0
     # Oficjalny endpoint prezentacyjny WMS Krajowej Integracji MPZP. Discovery
     # używa queryable warstwy ``plany_granice`` i kontraktu GetFeatureInfo
     # opublikowanego w bieżącym GetCapabilities usługi.
