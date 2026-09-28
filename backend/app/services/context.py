@@ -34,9 +34,9 @@ from shapely.geometry.base import BaseGeometry
 from app.schemas.analyze import SourceMetadata
 from app.services.gdos import (
     GdosServiceUnavailableError,
-    fetch_nature_protection_areas,
+    fetch_nature_protection_section,
 )
-from app.services.isok import IsokServiceUnavailableError, fetch_flood_risks
+from app.services.isok import IsokServiceUnavailableError, fetch_flood_risk_section
 from app.services.kiut import bbox_from_geometry, fetch_kiut_networks
 from app.services.nmt import NmtServiceUnavailableError, fetch_terrain_extremes
 
@@ -140,10 +140,11 @@ async def _run_kiut_section(
 async def _run_isok_section(
     parcel_geometry: BaseGeometry,
     client: httpx.AsyncClient,
-) -> list[Any]:
+) -> Any:
+    """Zwraca sekcję ISOK z provenance zapytania także przy braku stref."""
     start = time.monotonic()
     try:
-        return await fetch_flood_risks(parcel_geometry, client=client)
+        return await fetch_flood_risk_section(parcel_geometry, client=client)
     finally:
         logger.info("Sekcja ISOK zakończona po %.3fs.", time.monotonic() - start)
 
@@ -151,10 +152,11 @@ async def _run_isok_section(
 async def _run_gdos_section(
     parcel_geometry: BaseGeometry,
     client: httpx.AsyncClient,
-) -> list[Any]:
+) -> Any:
+    """Zwraca sekcję GDOŚ z provenance zapytania także przy braku przecięć."""
     start = time.monotonic()
     try:
-        return await fetch_nature_protection_areas(parcel_geometry, client=client)
+        return await fetch_nature_protection_section(parcel_geometry, client=client)
     finally:
         logger.info("Sekcja GDOŚ zakończona po %.3fs.", time.monotonic() - start)
 
@@ -179,7 +181,7 @@ async def _run_nmt_section(
 
 def _finalize_section(
     section: SectionName,
-    outcome: list[Any] | BaseException,
+    outcome: Any,
 ) -> ContextSectionResult:
     """Mapuje wynik ``gather`` na dostępny, niedostępny albo błędny wynik.
 
@@ -221,13 +223,21 @@ def _finalize_section(
             ],
         )
 
-    source_metadata = outcome[0].source_metadata if outcome else None
+    # Sekcje ISOK/GDOŚ zwracają obiekt z ``features`` i provenance całego
+    # zapytania — dzięki temu „sprawdzono, brak obiektów” ma znane źródło.
+    features = getattr(outcome, "features", None)
+    if features is not None:
+        data = list(features)
+        source_metadata = outcome.source_metadata
+    else:
+        data = outcome
+        source_metadata = outcome[0].source_metadata if outcome else None
     return ContextSectionResult(
         section=section,
         status="available",
-        data=outcome,
+        data=data,
         source_metadata=source_metadata,
-        warnings=_collect_feature_warnings(outcome),
+        warnings=_collect_feature_warnings(data),
     )
 
 
