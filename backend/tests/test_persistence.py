@@ -367,7 +367,11 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert saved_pog.uchwala_nr == "X/42/2026"
         assert saved_pog.uchwala_date == date(2026, 2, 10)
         assert saved_pog.manual_review_required is True
-        assert saved_pog.conflict_with_mpzp is False
+        # Wejście legacy (boolean) zapisuje się wyłącznie jako evidence (BK-205).
+        assert saved_pog.compatibility_assessment["status"] == "unknown"
+        assert saved_pog.compatibility_assessment["legacy_evidence"][
+            "conflict_with_mpzp"
+        ] is False
         assert saved_pog.raw_attributes == {
             "zone_type": "SJ",
             "source_layer": "StrefaPlanistyczna",
@@ -392,7 +396,10 @@ def test_save_analysis_persists_full_response_in_one_transaction() -> None:
         assert cached_response.pog.area_ratio == pytest.approx(0.75)
         assert cached_response.pog.in_ouz is True
         assert cached_response.pog.in_downtown_area is True
-        assert cached_response.pog.conflict_with_mpzp is False
+        assert cached_response.pog.compatibility_assessment is not None
+        assert cached_response.pog.compatibility_assessment.reason_code == (
+            "LEGACY_BOOLEAN_ONLY"
+        )
         assert cached_response.pog.raw_attributes == saved_pog.raw_attributes
         assert cached_response.infrastructure[0].zone_area_sqm == pytest.approx(320.0)
         assert cached_response.infrastructure[0].rule_source == "konfiguracja testowa"

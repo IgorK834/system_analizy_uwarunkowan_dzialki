@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from hashlib import sha256
 
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import MultiPolygon
@@ -23,6 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.analysis import Analysis
+from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
 from app.models.mpzp_parameter import MpzpParameter
 from app.models.mpzp_zone import MpzpZone
@@ -34,6 +36,8 @@ from app.schemas.analyze import (
     AnalyzeResponse,
     GeometryMetrics,
     InfrastructureResult,
+    ManualZoneContext,
+    ManualZoneSourceDocument,
     MpzpZoneResult,
     ParcelGeometryResponse,
     PogResult,
@@ -49,6 +53,21 @@ from app.services.geojson import (
 )
 from app.services.geometry import calculate_geometry_metrics, calculate_technical_setback
 from app.services.cache import RESULT_CONTRACT_VERSION, current_cache_signature
+from app.services.mpzp_fetch import DocumentBlob
+from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
+from app.modules.documents.composition import register_document_artifact
+
+MANUAL_ZONE_NOTICE = (
+    "Gmina nie udostępnia wektorowych granic stref MPZP. Porównaj podgląd "
+    "rastrowy planu, identyfikator planu i kandydatów symboli, a następnie podaj "
+    "symbol strefy. Symbol podany ręcznie nie ustala udziału strefy w "
+    "powierzchni działki (pozostaje nieustalony), wynik pozostanie częściowy, a "
+    "każdy parametr zależny od tego symbolu będzie wymagał weryfikacji."
+)
+MANUAL_ZONE_NOTICE_NO_DOCUMENT = (
+    " Dokumentu uchwały nie udało się przypiąć przy wstrzymaniu analizy — "
+    "parametry strefy nie zostaną odczytane automatycznie."
+)
 
 
 @dataclass(frozen=True)
@@ -186,6 +205,7 @@ def save_analysis(
     pending_uchwala_url: str | None = None,
     pending_plan_id: str | None = None,
     pending_zone_symbol_candidates: list[str] | None = None,
+    pending_document: DocumentBlob | None = None,
 ) -> Analysis:
     """Atomowo zapisuje wszystkie wypełnione sekcje ``AnalyzeResponse``.
 
@@ -199,6 +219,8 @@ def save_analysis(
     ``waiting_for_user_input``, podczas gdy istniejący endpoint resume wymaga
     w bazie ``waiting_for_zone_symbol``. Pola ``pending_*`` są zapisywane w tej
     samej transakcji, aby gałąź rastrowa nie wykonywała drugiego commita.
+    ``pending_document`` (BK-204) przypina bajty i wersję uchwały w tej samej
+    transakcji — resume parsuje wyłącznie ten artefakt.
 
     Jakikolwiek błąd sekcji wycofuje całą transakcję i jest propagowany do
     wywołującego, który odpowiada za mapowanie go na odpowiedź HTTP.
@@ -228,6 +250,17 @@ def save_analysis(
         )
         db.add(analysis)
         db.flush()
+
+        if pending_document is not None and pending_uchwala_url:
+            add_pending_document(
+                db,
+                analysis.id,
+                pending_document,
+                requested_url=pending_uchwala_url,
+                planning_act_identifier=(
+                    pending_plan_id or f"mpzp-document:{pending_uchwala_url}"
+                ),
+            )
 
         for zone in result.mpzp_zones:
             add_mpzp_zone_snapshot(db, analysis.id, zone)
@@ -259,7 +292,11 @@ def save_analysis(
                             else False
                         )
                     ),
-                    conflict_with_mpzp=result.pog.conflict_with_mpzp,
+                    compatibility_assessment=(
+                        result.pog.compatibility_assessment.model_dump(mode="json")
+                        if result.pog.compatibility_assessment is not None
+                        else None
+                    ),
                     raw_attributes=result.pog.raw_attributes,
                     ouz_intersection_area_sqm=(result.pog.ouz_intersection_area_sqm),
                     touches_ouz_boundary=result.pog.touches_ouz_boundary,
@@ -340,6 +377,93 @@ def save_analysis(
     except Exception:
         db.rollback()
         raise
+
+
+def add_pending_document(
+    db: Session,
+    analysis_id: int,
+    document: DocumentBlob,
+    *,
+    requested_url: str,
+    planning_act_identifier: str,
+) -> AnalysisPendingDocument:
+    """Przypina dokument uchwały do wstrzymanej analizy (tylko ``flush``).
+
+    Rejestruje też artefakt i wersję dokumentu w module dokumentów, aby
+    evidence parametrów po wznowieniu wskazywało dokładnie tę wersję.
+    """
+    content_sha256 = sha256(document.content).hexdigest()
+    document_version_id = register_document_artifact(
+        db,
+        planning_act_identifier=planning_act_identifier,
+        document=document,
+    )
+    record = AnalysisPendingDocument(
+        analysis_id=analysis_id,
+        requested_url=requested_url,
+        final_url=document.source_metadata.source_url,
+        media_type=document.media_type,
+        filename=document.filename,
+        content=document.content,
+        content_sha256=content_sha256,
+        size_bytes=len(document.content),
+        fetched_at=document.source_metadata.fetched_at,
+        response_status=document.source_metadata.response_status,
+        document_version_id=document_version_id,
+    )
+    db.add(record)
+    db.flush()
+    return record
+
+
+def pending_document_blob(record: AnalysisPendingDocument) -> DocumentBlob:
+    """Odtwarza ``DocumentBlob`` z przypiętego artefaktu (bez sieci)."""
+    return DocumentBlob(
+        content=record.content,
+        media_type=record.media_type,
+        filename=record.filename,
+        source_metadata=SourceMetadata(
+            source_name="MPZP_BIP",
+            source_url=record.final_url or record.requested_url,
+            fetched_at=record.fetched_at,
+            response_status=record.response_status,
+            artifact_sha256=record.content_sha256,
+            confidence=0.9 if record.media_type == "application/pdf" else 0.5,
+            manual_review_required=record.media_type != "application/pdf",
+        ),
+    )
+
+
+def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
+    """Materiał pokazywany przed formularzem symbolu (BK-204)."""
+    pinned = analysis.pending_document
+    if pinned is not None:
+        document_status = "pinned"
+        document = ManualZoneSourceDocument(
+            requested_url=pinned.requested_url,
+            media_type=pinned.media_type,
+            filename=pinned.filename,
+            sha256=pinned.content_sha256,
+            size_bytes=pinned.size_bytes,
+            fetched_at=pinned.fetched_at,
+            document_version_id=pinned.document_version_id,
+            preview_path=f"/analyze/{analysis.id}/pending-document",
+        )
+    else:
+        document = None
+        document_status = (
+            "unavailable" if analysis.pending_uchwala_url else "not_provided"
+        )
+    return ManualZoneContext(
+        plan_id=analysis.pending_plan_id,
+        candidate_zone_symbols=list(analysis.pending_zone_symbol_candidates or []),
+        document_status=document_status,
+        document=document,
+        symbol_max_length=ZONE_SYMBOL_MAX_LENGTH,
+        symbol_allowed_pattern=ZONE_SYMBOL_ALLOWED_PATTERN,
+        notice=MANUAL_ZONE_NOTICE
+        + ("" if pinned is not None else MANUAL_ZONE_NOTICE_NO_DOCUMENT),
+    )
 
 
 def add_mpzp_zone_snapshot(
@@ -446,6 +570,7 @@ def build_analyze_response_from_analysis(
             selectinload(Analysis.infrastructure_records),
             selectinload(Analysis.risk_records),
             selectinload(Analysis.source_records),
+            selectinload(Analysis.pending_document),
         )
     ).scalar_one()
 
@@ -501,7 +626,7 @@ def build_analyze_response_from_analysis(
         _mpzp_zone_response(zone, loaded.source_records) for zone in loaded.mpzp_zones
     ]
     pog = (
-        _pog_response(
+        pog_result_from_record(
             loaded.pog_data[0],
             loaded.source_records,
             metrics.area_sqm,
@@ -550,6 +675,7 @@ def build_analyze_response_from_analysis(
     warnings = [
         WarningMessage.model_validate(warning) for warning in (loaded.warnings or [])
     ]
+    waiting = loaded.status == "waiting_for_zone_symbol"
 
     return AnalyzeResponse(
         analysis_id=loaded.id,
@@ -566,7 +692,8 @@ def build_analyze_response_from_analysis(
         ),
         risks=risks,
         buildable_area_sqm=loaded.buildable_area_sqm,
-        manual_zone_required=loaded.status == "waiting_for_zone_symbol",
+        manual_zone_required=waiting,
+        manual_zone_context=build_manual_zone_context(loaded) if waiting else None,
         warnings=warnings,
         sources=sources,
     )
@@ -680,8 +807,8 @@ def _mpzp_zone_response(
         max_building_coverage_pct=_parameter_float(
             parameters.get("max_building_coverage_pct")
         ),
-        intersection_area_sqm=zone.intersection_area_sqm or 0.0,
-        intersection_pct=zone.intersection_pct or 0.0,
+        intersection_area_sqm=zone.intersection_area_sqm,
+        intersection_pct=zone.intersection_pct,
         is_dominant=zone.is_dominant,
         assignment_method="legacy",
         source=_source_for_child(
@@ -695,11 +822,12 @@ def _mpzp_zone_response(
     )
 
 
-def _pog_response(
+def pog_result_from_record(
     pog: PogData,
     source_records: list[SourceRecord],
     parcel_area_sqm: float,
 ) -> PogResult:
+    """Odtwarza ``PogResult`` ze snapshotu (v2) albo z płaskich kolumn (v1)."""
     if pog.result_v2 is not None:
         return PogResult.model_validate(pog.result_v2)
     area = pog.ouz_intersection_area_sqm
@@ -733,7 +861,7 @@ def _pog_response(
         uchwala_nr=pog.uchwala_nr,
         uchwala_date=pog.uchwala_date,
         manual_review_required=pog.manual_review_required,
-        conflict_with_mpzp=pog.conflict_with_mpzp,
+        compatibility_assessment=pog.compatibility_assessment,
         raw_attributes=pog.raw_attributes,
         ouz_intersection_area_sqm=area,
         ouz_intersection_pct=area_pct,
