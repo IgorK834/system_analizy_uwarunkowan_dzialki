@@ -178,8 +178,8 @@ def _patches(identifier: str, parcel_wkt: str, discovery: MpzpDiscoveryResult, d
     return (
         patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier, parcel_wkt))),
         patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
-        patch("app.services.context.fetch_flood_risks", new=AsyncMock(return_value=[])),
-        patch("app.services.context.fetch_nature_protection_areas", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_nature_protection_section", new=AsyncMock(return_value=[])),
         patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=discovery)),
         patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock(return_value=_binding_pog_discovery())),
         patch("app.services.analysis_orchestrator.fetch_pog_vector_data", new=AsyncMock(return_value=_pog_vectors())),
