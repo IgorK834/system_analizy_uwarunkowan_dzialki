@@ -31,10 +31,11 @@ from app.core.report_config import (
     describe_confidence,
 )
 from app.models.analysis import Analysis
-from app.schemas.analyze import AnalyzeResponse
+from app.schemas.analyze import AnalyzeResponse, TerrainReliefResult, TerrainResult
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.persistence import build_analyze_response_from_analysis
 from app.services.pog_provenance import RELATION_LABELS_PL
+from app.services.terrain import terrain_from_snapshot
 from app.services.report_map import png_to_data_uri, render_analysis_map_png
 from app.shared.planning_status import (
     COVERAGE_STATUS_LABELS_PL,
@@ -147,6 +148,7 @@ def _build_report_context(
         ],
         "utilities_preview": _utilities_preview_context(response),
         "risks": [_risk_context(item) for item in response.risks],
+        "terrain": _terrain_context(response.terrain),
         "sources": [_source_context(source) for source in response.sources],
         "warnings": [_warning_context(warning) for warning in response.warnings],
         "manual_zone_required": response.manual_zone_required,
@@ -513,6 +515,197 @@ def _utilities_preview_context(response: AnalyzeResponse) -> dict[str, Any] | No
     }
 
 
+_TERRAIN_STATUS_LABELS: dict[str, str] = {
+    "available": "zmierzono",
+    "no_coverage": "brak pokrycia danymi NMT",
+    "unavailable": "pomiar niedostępny",
+    "unknown": "brak informacji w zapisanym wyniku",
+}
+_TERRAIN_STATUS_NOTES: dict[str, str] = {
+    "no_coverage": (
+        "Źródło potwierdziło brak danych wysokościowych dla obszaru działki. "
+        "Deniwelacja jest nieznana — brak pokrycia nie oznacza płaskiego terenu."
+    ),
+    "unavailable": (
+        "Nie udało się uzyskać danych wysokościowych. Deniwelacja jest nieznana — "
+        "wynik nie oznacza płaskiego terenu."
+    ),
+    "unknown": (
+        "Zapisany wynik pochodzi sprzed wprowadzenia sekcji rzeźby terenu i nie "
+        "zawiera pomiaru NMT. Brak informacji nie oznacza płaskiego terenu."
+    ),
+}
+_ASPECT_LABELS: dict[str, str] = {
+    "N": "północna",
+    "NE": "północno-wschodnia",
+    "E": "wschodnia",
+    "SE": "południowo-wschodnia",
+    "S": "południowa",
+    "SW": "południowo-zachodnia",
+    "W": "zachodnia",
+    "NW": "północno-zachodnia",
+}
+_PROFILE_WIDTH = 600.0
+_PROFILE_HEIGHT = 150.0
+_PROFILE_PADDING = 8.0
+
+
+def _terrain_context(terrain: TerrainResult | None) -> dict[str, Any]:
+    """Sekcja rzeźby terenu — cztery statusy prezentowane rozłącznie."""
+    terrain = terrain or terrain_from_snapshot(None)
+    note = _TERRAIN_STATUS_NOTES.get(terrain.status)
+    if terrain.status == "available" and terrain.height_difference_m == 0:
+        note = (
+            "Zmierzona deniwelacja wynosi 0 m — w siatce próbkowania teren w "
+            "obrysie działki jest płaski."
+        )
+    source = terrain.source
+    return {
+        "status": terrain.status,
+        "status_label": _TERRAIN_STATUS_LABELS[terrain.status],
+        "note": note,
+        "reason_code": terrain.reason_code,
+        "min_height": _format_meters(terrain.min_height_m),
+        "max_height": _format_meters(terrain.max_height_m),
+        "height_difference": _format_meters(terrain.height_difference_m),
+        "grid_size": _format_meters(terrain.grid_size_m),
+        "sampled_points": terrain.sampled_points,
+        "source": _terrain_source_context(source),
+        "warnings": list(terrain.warnings),
+        "relief": _relief_context(terrain.relief),
+    }
+
+
+def _relief_context(relief: TerrainReliefResult | None) -> dict[str, Any] | None:
+    if relief is None:
+        return None
+    slope = relief.slope
+    aspect = relief.aspect
+    raster = relief.raster
+    return {
+        "status": relief.status,
+        "status_label": _TERRAIN_STATUS_LABELS[relief.status],
+        "reason_code": relief.reason_code,
+        "algorithm_version": relief.algorithm_version,
+        "slope_classes_version": relief.slope_classes_version,
+        "resolution": _format_meters(relief.resolution_m),
+        "valid_share": _format_percent(relief.valid_area_share_pct),
+        "valid_pixel_count": relief.valid_pixel_count,
+        "parcel_pixel_count": relief.parcel_pixel_count,
+        "min_height": _format_meters(relief.min_height_m),
+        "max_height": _format_meters(relief.max_height_m),
+        "mean_height": _format_meters(relief.mean_height_m),
+        "slope": (
+            [
+                ("Średni", slope.mean_deg, slope.mean_pct),
+                ("Mediana", slope.median_deg, slope.median_pct),
+                ("P90", slope.p90_deg, slope.p90_pct),
+                ("Maksymalny", slope.max_deg, slope.max_pct),
+            ]
+            if slope is not None
+            else []
+        ),
+        "classes": [
+            {
+                "label": item.label,
+                "area": _format_number(item.area_sqm, decimals=0),
+                "share": _format_percent(item.share_pct),
+            }
+            for item in relief.slope_classes
+        ],
+        "aspect": (
+            {
+                "status": aspect.status,
+                "direction": (
+                    _ASPECT_LABELS.get(aspect.dominant_direction or "", None)
+                ),
+                "azimuth": _format_trimmed(aspect.mean_azimuth_deg, 1),
+                "resultant": _format_trimmed(aspect.resultant_length, 2),
+                "non_flat_share": _format_percent(aspect.non_flat_share_pct),
+                "flat_threshold": _format_trimmed(aspect.flat_threshold_pct, 1),
+            }
+            if aspect is not None
+            else None
+        ),
+        "profile": _profile_context(relief),
+        "raster": (
+            {
+                "coverage_id": raster.coverage_id,
+                "size": f"{raster.width_px} × {raster.height_px} px",
+                "bbox": ", ".join(_format_trimmed(value, 3) or "" for value in raster.bbox),
+                "buffer": _format_meters(raster.buffer_m),
+                "vertical_datum": raster.vertical_datum,
+                "gdal_version": raster.gdal_version,
+                "nodata_policy": raster.nodata_policy,
+            }
+            if raster is not None
+            else None
+        ),
+        "source": _terrain_source_context(relief.source),
+        "warnings": list(relief.warnings),
+    }
+
+
+def _profile_context(relief: TerrainReliefResult) -> dict[str, Any] | None:
+    """Profil jako liczby do inline SVG — bez surowego HTML w kontekście."""
+    profile = relief.profile
+    if profile is None:
+        return None
+    heights = [sample.height_m for sample in profile.samples if sample.height_m is not None]
+    context: dict[str, Any] = {
+        "start": f"{_format_trimmed(profile.start[0], 3)}, {_format_trimmed(profile.start[1], 3)}",
+        "end": f"{_format_trimmed(profile.end[0], 3)}, {_format_trimmed(profile.end[1], 3)}",
+        "length": _format_meters(profile.length_m),
+        "step": _format_meters(profile.step_m),
+        "sample_count": len(profile.samples),
+        "missing_count": len(profile.samples) - len(heights),
+        "width": _PROFILE_WIDTH,
+        "height": _PROFILE_HEIGHT,
+        "segments": [],
+        "min_label": None,
+        "max_label": None,
+    }
+    if not heights or profile.length_m <= 0:
+        return context
+    low, high = min(heights), max(heights)
+    span = high - low or 1.0
+    usable_w = _PROFILE_WIDTH - 2 * _PROFILE_PADDING
+    usable_h = _PROFILE_HEIGHT - 2 * _PROFILE_PADDING
+    segments: list[str] = []
+    current: list[str] = []
+    for sample in profile.samples:
+        if sample.height_m is None:
+            if len(current) > 1:
+                segments.append(" ".join(current))
+            current = []
+            continue
+        x = _PROFILE_PADDING + usable_w * sample.distance_m / profile.length_m
+        y = _PROFILE_PADDING + usable_h * (1 - (sample.height_m - low) / span)
+        current.append(f"{x:.1f},{y:.1f}")
+    if len(current) > 1:
+        segments.append(" ".join(current))
+    context.update(
+        segments=segments,
+        min_label=_format_meters(low),
+        max_label=_format_meters(high),
+    )
+    return context
+
+
+def _terrain_source_context(source: SourceMetadata | None) -> dict[str, Any] | None:
+    if source is None:
+        return None
+    return {
+        "name": source.source_name,
+        "version": source.source_version,
+        "url": source.source_url,
+        "fetched_at": _format_datetime(source.fetched_at) if source.fetched_at else None,
+        "response_status": source.response_status,
+        "sha256": source.artifact_sha256,
+        "confidence": _confidence_context(source),
+    }
+
+
 def _risk_context(item: Any) -> dict[str, Any]:
     return {
         "risk_type": item.risk_type,
@@ -677,6 +870,41 @@ def _build_limitations(
     if any(item.source.manual_review_required for item in response.risks):
         limitations.append("Dane o ryzykach wymagają ręcznej weryfikacji.")
 
+    limitations.extend(_terrain_limitations(response.terrain))
+    return limitations
+
+
+def _terrain_limitations(terrain: TerrainResult | None) -> list[str]:
+    terrain = terrain or terrain_from_snapshot(None)
+    limitations: list[str] = []
+    if terrain.status == "unknown":
+        limitations.append(
+            "Zapisany wynik nie zawiera pomiaru NMT — rzeźba terenu jest nieznana."
+        )
+    elif terrain.status == "no_coverage":
+        limitations.append(
+            "Brak pokrycia danymi NMT — deniwelacja nieznana; nie oznacza to "
+            "płaskiego terenu."
+        )
+    elif terrain.status == "unavailable":
+        limitations.append(
+            "Pomiar NMT był niedostępny — deniwelacja nieznana; nie oznacza to "
+            "płaskiego terenu."
+        )
+    relief = terrain.relief
+    if relief is not None and relief.status != "available":
+        limitations.append(
+            "Spadku, ekspozycji i profilu nie policzono "
+            f"({relief.reason_code or relief.status}); brak statystyk nie oznacza "
+            "płaskiego terenu."
+        )
+    elif relief is not None:
+        limitations.append(
+            "Spadek i ekspozycja pochodzą z rastra NMT metodą Horna "
+            f"({relief.algorithm_version}); klasy nachylenia "
+            f"({relief.slope_classes_version}) są konwencją systemu, nie normą "
+            "prawną, a wynik nie zastępuje mapy do celów projektowych."
+        )
     return limitations
 
 
@@ -738,6 +966,21 @@ def _format_number(value: float | None, decimals: int = 2) -> str | None:
     formatted = f"{value:,.{decimals}f}"
     # pl-PL: separator tysięcy to spacja, separator dziesiętny to przecinek.
     return formatted.replace(",", "\u00a0").replace(".", ",")
+
+
+def _format_trimmed(value: float | None, max_decimals: int = 3) -> str | None:
+    """Liczba bez zbędnych zer (112.3 → 112,3; 0.0 → 0), pl-PL."""
+    if value is None:
+        return None
+    formatted = _format_number(value, decimals=max_decimals) or ""
+    if "," in formatted:
+        formatted = formatted.rstrip("0").rstrip(",")
+    return "0" if formatted in {"-0", ""} else formatted
+
+
+def _format_meters(value: float | None) -> str | None:
+    trimmed = _format_trimmed(value)
+    return f"{trimmed}\u00a0m" if trimmed is not None else None
 
 
 def _format_optional_number(value: float | None, unit: str | None = None) -> str | None:
@@ -1119,6 +1362,89 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     {% endfor %}
   {% else %}
   <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono ryzyk ani form ochrony.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Rzeźba terenu (NMT)</h2>
+  <table>
+    <tr><th>Status pomiaru</th><td>{{ terrain.status_label }}{% if terrain.reason_code %} <small class="mono">({{ terrain.reason_code }})</small>{% endif %}</td></tr>
+    {% if terrain.status == "available" %}
+    <tr><th>Najniższa wysokość (Hmin)</th><td>{{ terrain.min_height }}</td></tr>
+    <tr><th>Najwyższa wysokość (Hmax)</th><td>{{ terrain.max_height }}</td></tr>
+    <tr><th>Deniwelacja (Hmax − Hmin)</th><td><strong>{{ terrain.height_difference }}</strong></td></tr>
+    {% endif %}
+    {% if terrain.grid_size %}<tr><th>Siatka próbkowania usługi</th><td>{{ terrain.grid_size }}</td></tr>{% endif %}
+    {% if terrain.sampled_points is not none %}<tr><th>Liczba punktów siatki</th><td>{{ terrain.sampled_points }}</td></tr>{% endif %}
+    {% if terrain.source %}
+    <tr><th>Źródło</th><td>{{ terrain.source.name }}{% if terrain.source.fetched_at %} — pobrano {{ terrain.source.fetched_at }}{% endif %}{% if terrain.source.response_status %} (HTTP {{ terrain.source.response_status }}){% endif %}{% if terrain.source.sha256 %}<br><small class="mono">SHA-256 odpowiedzi: {{ terrain.source.sha256 }}</small>{% endif %}</td></tr>
+    {% endif %}
+  </table>
+  {% if terrain.note %}<p class="informational">{{ terrain.note }}</p>{% endif %}
+  {% for warning in terrain.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+
+  {% set relief = terrain.relief %}
+  <h3>Spadek, ekspozycja i profil (raster NMT)</h3>
+  {% if not relief %}
+  <p class="empty">Nie liczono pochodnych rastra NMT dla tej analizy.</p>
+  {% else %}
+  <table>
+    <tr><th>Status obliczeń</th><td>{{ relief.status_label }}{% if relief.reason_code %} <small class="mono">({{ relief.reason_code }})</small>{% endif %}</td></tr>
+    {% if relief.resolution %}<tr><th>Rozdzielczość danych źródłowych</th><td>{{ relief.resolution }}</td></tr>{% endif %}
+    {% if relief.status == "available" %}
+    <tr><th>Zmierzona część działki</th><td>{{ relief.valid_share }} ({{ relief.valid_pixel_count }} z {{ relief.parcel_pixel_count }} pikseli)</td></tr>
+    <tr><th>Wysokości z rastra (min / śr. / max)</th><td>{{ relief.min_height }} / {{ relief.mean_height }} / {{ relief.max_height }}</td></tr>
+    {% endif %}
+    <tr><th>Algorytm</th><td class="mono">{{ relief.algorithm_version }}; klasy {{ relief.slope_classes_version }}</td></tr>
+  </table>
+  {% if relief.slope %}
+  <table class="evidence">
+    <thead><tr><th>Spadek</th><th>Stopnie</th><th>Procent</th></tr></thead>
+    <tbody>
+    {% for label, deg, pct in relief.slope %}
+      <tr><td>{{ label }}</td><td>{{ "%.2f"|format(deg)|replace(".", ",") }}°</td><td>{{ "%.2f"|format(pct)|replace(".", ",") }}%</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if relief.classes %}
+  <table class="evidence">
+    <thead><tr><th>Klasa nachylenia</th><th>Powierzchnia</th><th>Udział</th></tr></thead>
+    <tbody>
+    {% for item in relief.classes %}<tr><td>{{ item.label }}</td><td>{{ item.area }} m²</td><td>{{ item.share }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if relief.aspect %}
+  <p>Ekspozycja:
+    {% if relief.aspect.status == "flat" %}nie wyznaczono — teren płaski (nachylone ≥ {{ relief.aspect.flat_threshold }}% jest {{ relief.aspect.non_flat_share }} powierzchni).
+    {% elif relief.aspect.status == "dispersed" %}rozproszona — brak dominującego kierunku (średni azymut {{ relief.aspect.azimuth }}°, wypadkowa {{ relief.aspect.resultant }}).
+    {% else %}<strong>{{ relief.aspect.direction }}</strong> (średni azymut spadku {{ relief.aspect.azimuth }}°, wypadkowa {{ relief.aspect.resultant }}).{% endif %}
+  </p>
+  {% endif %}
+  {% if relief.profile %}
+  <p>Profil wysokościowy: od {{ relief.profile.start }} do {{ relief.profile.end }} (EPSG:2180), długość {{ relief.profile.length }}, krok {{ relief.profile.step }}, {{ relief.profile.sample_count }} próbek{% if relief.profile.missing_count %}, w tym {{ relief.profile.missing_count }} bez danych{% endif %}.</p>
+  {% if relief.profile.segments %}
+  <svg class="profile" viewBox="0 0 {{ relief.profile.width }} {{ relief.profile.height }}" width="170mm" height="42mm" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="{{ relief.profile.width }}" height="{{ relief.profile.height }}" fill="#f9fafb" stroke="#d0d5dd"/>
+    {% for points in relief.profile.segments %}<polyline points="{{ points }}" fill="none" stroke="#155eef" stroke-width="2"/>{% endfor %}
+    <text x="10" y="18" font-size="11" fill="#475467">{{ relief.profile.max_label }}</text>
+    <text x="10" y="{{ relief.profile.height - 10 }}" font-size="11" fill="#475467">{{ relief.profile.min_label }}</text>
+  </svg>
+  {% endif %}
+  {% endif %}
+  {% if relief.raster %}
+  <table class="provenance">
+    <tr><th>Pokrycie WCS</th><td class="mono">{{ relief.raster.coverage_id }}{% if relief.raster.vertical_datum %} — układ wysokości {{ relief.raster.vertical_datum }}{% endif %}</td></tr>
+    <tr><th>Okno rastra</th><td>{{ relief.raster.size }}, bufor {{ relief.raster.buffer }}<br><small class="mono">bbox EPSG:2180: {{ relief.raster.bbox }}</small></td></tr>
+    <tr><th>NoData</th><td><small>{{ relief.raster.nodata_policy }}</small></td></tr>
+    {% if relief.raster.gdal_version %}<tr><th>Środowisko</th><td class="mono">{{ relief.raster.gdal_version }}</td></tr>{% endif %}
+  </table>
+  {% endif %}
+  {% if relief.source %}
+  <p><small>Źródło: {{ relief.source.name }}{% if relief.source.version %} ({{ relief.source.version }}){% endif %}{% if relief.source.fetched_at %}, pobrano {{ relief.source.fetched_at }}{% endif %}{% if relief.source.sha256 %}<br><span class="mono">SHA-256 GeoTIFF: {{ relief.source.sha256 }}</span>{% endif %}</small></p>
+  {% endif %}
+  {% for warning in relief.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
   {% endif %}
 </section>
 
