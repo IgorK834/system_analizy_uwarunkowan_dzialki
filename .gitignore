@@ -11,11 +11,11 @@ backend/.env.*
 !backend/.env.example
 frontend/.env.local
 frontend/.env.*.local
-# Duże, generowane artefakty ewaluacji i zrzuty postępu — nie są potrzebne
-# do budowy/testów (w przeciwieństwie do docs/data_sources/catalog.yaml,
-# docs/adr/ itd., które MUSZĄ być śledzone w repo, bo wczytuje je backend).
-docs/evaluation/results/
-docs/progress/
+docs/evaluation
+docs/adr
+docs/progress
+docs/cureent_state.md
+backlog.md
 
 # Python
 .venv
