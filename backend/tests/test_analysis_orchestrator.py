@@ -594,11 +594,18 @@ async def test_binding_pog_ouz_and_compatibility_run_end_to_end() -> None:
     assert response.pog.in_ouz is True
     assert response.pog.ouz_intersection_area_sqm == pytest.approx(5000.0)
     assert response.pog.ouz_intersection_pct == pytest.approx(50.0)
-    assert response.pog.conflict_with_mpzp is False
+    # BK-205: strefa MPZP z discovery nie ma geometrii, więc para z SJ nie jest
+    # zidentyfikowana przestrzennie — tabela zna wynik, ale ocena go nie
+    # rozstrzyga. Ocena jest daną pierwszoklasową, nie wpisem w raw_attributes.
+    assessment = response.pog.compatibility_assessment
+    assert assessment is not None
+    assert assessment.status == "uncertain"
+    assert assessment.zone_pairs[0].rule_result == "compatible"
+    assert assessment.zone_pairs[0].spatially_identified is False
+    assert assessment.as_of is not None
     assert response.pog.raw_attributes is not None
-    assert response.pog.raw_attributes["scenario"]["compatibility"]["result"] == (
-        "compatible"
-    )
+    assert "scenario" not in response.pog.raw_attributes
+    assert response.mpzp_zones[0].intersection_pct is None
 
     with SessionLocal() as db:
         saved = db.scalar(
@@ -609,7 +616,8 @@ async def test_binding_pog_ouz_and_compatibility_run_end_to_end() -> None:
         assert saved.legal_status == "binding"
         assert saved.coverage_status == "available"
         assert saved.in_ouz is True
-        assert saved.conflict_with_mpzp is False
+        assert saved.compatibility_assessment["status"] == "uncertain"
+        assert saved.result_v2["compatibility_assessment"]["status"] == "uncertain"
         cached_analysis = db.get(Analysis, response.analysis_id)
         assert cached_analysis is not None
         rebuilt = build_analyze_response_from_analysis(cached_analysis, db)

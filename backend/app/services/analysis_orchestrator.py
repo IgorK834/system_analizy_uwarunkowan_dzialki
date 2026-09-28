@@ -65,7 +65,7 @@ from app.services.kiut_coverage import (
     unknown_kiut_coverage_result,
 )
 from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp
-from app.services.mpzp_fetch import fetch_mpzp_document
+from app.services.mpzp_fetch import DocumentBlob, fetch_mpzp_document
 from app.schemas.mpzp import MpzpParseResult
 from app.services.mpzp_parser import parse_mpzp_document
 from app.services.mpzp_zones import (
@@ -93,6 +93,7 @@ from app.services.pog_provenance import act_result_from_provenance, feature_gml_
 from app.services.pog_scenarios import build_pog_scenario_result
 from app.services.persistence import (
     build_analyze_response_from_analysis,
+    build_manual_zone_context,
     save_analysis,
 )
 from app.modules.documents.composition import (
@@ -241,8 +242,14 @@ async def run_analysis(
 
     has_vector_zones = vector is not None and bool(vector.positive_zones)
     if not has_vector_zones and discovery is not None and discovery.brak_wektorow:
-        pog, scenario_warnings = _apply_pog_scenario(pog, ouz_status, [])
+        pog, scenario_warnings = _apply_pog_scenario(
+            pog, ouz_status, [], as_of=mpzp_as_of, parcel_area_sqm=metrics.area_sqm
+        )
         warnings.extend(scenario_warnings)
+        pending_document, pending_warnings = await _pin_pending_document(
+            discovery.uchwala_url, parcel_identifier
+        )
+        warnings.extend(pending_warnings)
         warnings.append(
             WarningMessage(
                 code="MPZP_MANUAL_ZONE_REQUIRED",
@@ -278,8 +285,14 @@ async def run_analysis(
             pending_uchwala_url=discovery.uchwala_url,
             pending_plan_id=discovery.plan_id,
             pending_zone_symbol_candidates=discovery.candidate_zone_symbols,
+            pending_document=pending_document,
         )
-        response = response.model_copy(update={"analysis_id": saved.id})
+        response = response.model_copy(
+            update={
+                "analysis_id": saved.id,
+                "manual_zone_context": build_manual_zone_context(saved),
+            }
+        )
         _log_completion(started, parcel_identifier, response)
         return response
 
@@ -327,7 +340,9 @@ async def run_analysis(
             )
     warnings.extend(mpzp_warnings)
     sources.extend(mpzp_sources)
-    pog, scenario_warnings = _apply_pog_scenario(pog, ouz_status, mpzp_zones)
+    pog, scenario_warnings = _apply_pog_scenario(
+        pog, ouz_status, mpzp_zones, as_of=mpzp_as_of, parcel_area_sqm=metrics.area_sqm
+    )
     warnings.extend(scenario_warnings)
     status = _result_status(
         context=context,
@@ -416,6 +431,42 @@ async def _check_kiut_coverage_safely(
             status=type(exc).__name__,
         )
         return unknown_kiut_coverage_result()
+
+
+async def _pin_pending_document(
+    document_url: str | None,
+    parcel_identifier: str,
+) -> tuple[DocumentBlob | None, list[WarningMessage]]:
+    """Pobiera uchwałę w chwili wstrzymania, aby resume nie sięgało do sieci.
+
+    Przypięty artefakt (bajty + SHA-256 + wersja dokumentu) jest jedynym
+    wejściem parsera przy wznowieniu, więc inna uchwała opublikowana później
+    pod tym samym URL nie zmieni wyniku (BK-204). Błąd pobrania nie blokuje
+    wstrzymania — zostaje jawnie opisany, a parametry pozostaną nieustalone.
+    """
+    if not document_url:
+        return None, []
+    try:
+        return await fetch_mpzp_document(document_url), []
+    except Exception as exc:
+        log_analysis_event(
+            "section_error",
+            section="mpzp_pending_document",
+            status=type(exc).__name__,
+            parcel_identifier=parcel_identifier,
+        )
+        return None, [
+            WarningMessage(
+                code="MPZP_PENDING_DOCUMENT_UNAVAILABLE",
+                message=(
+                    "Nie udało się pobrać i przypiąć dokumentu uchwały przy "
+                    "wstrzymaniu analizy. Po podaniu symbolu parametry strefy "
+                    "pozostaną nieustalone; system nie pobierze dokumentu ponownie."
+                ),
+                severity="warning",
+                source_name="mpzp",
+            )
+        ]
 
 
 async def _discover_mpzp_safely(
@@ -1525,7 +1576,6 @@ def _pog_from_decision(
         uchwala_nr=discovery.uchwala_nr if discovery else None,
         uchwala_date=parsed_date,
         manual_review_required=True,
-        conflict_with_mpzp=None,
         raw_attributes=(
             _pog_raw_attributes(discovery, None, None) if discovery else None
         ),
@@ -1540,45 +1590,30 @@ def _apply_pog_scenario(
     pog: PogResult,
     ouz_status: OuzStatusResult,
     mpzp_zones: list[MpzpZoneResult],
+    *,
+    as_of: datetime,
+    parcel_area_sqm: float,
 ) -> tuple[PogResult, list[WarningMessage]]:
-    """Dołącza wynik jawnej tabeli zgodności i scenariusz okresu przejściowego."""
-    dominant_mpzp = next((zone for zone in mpzp_zones if zone.is_dominant), None)
-    if dominant_mpzp is None and mpzp_zones:
-        dominant_mpzp = max(
-            mpzp_zones,
-            key=lambda zone: zone.intersection_area_sqm,
-        )
-    scenario = build_pog_scenario_result(dominant_mpzp, pog, ouz_status)
-    compatibility = scenario.compatibility
-    conflict = (
-        scenario.conflict
-        if compatibility is not None
-        and compatibility.result in {"compatible", "incompatible"}
-        else None
+    """Dołącza informacyjną ocenę relacji MPZP–POG jako dane pierwszoklasowe.
+
+    Ocena obejmuje wszystkie pary stref (bez wyboru strefy dominującej i bez
+    uśredniania) i trafia do ``compatibility_assessment``, nie do
+    ``raw_attributes``.
+    """
+    scenario = build_pog_scenario_result(
+        mpzp_zones,
+        pog,
+        ouz_status,
+        as_of=as_of,
+        parcel_area_sqm=parcel_area_sqm,
     )
-    raw_attributes = dict(pog.raw_attributes or {})
-    raw_attributes["scenario"] = {
-        "message": scenario.message,
-        "legal_disclaimer": scenario.legal_disclaimer,
-        "conflict_uncertain": scenario.conflict_uncertain,
-        "compatibility": (
-            {
-                "result": compatibility.result,
-                "reasoning": compatibility.reasoning,
-                "confidence": compatibility.confidence,
-            }
-            if compatibility is not None
-            else None
-        ),
-    }
     return (
         pog.model_copy(
             update={
-                "conflict_with_mpzp": conflict,
+                "compatibility_assessment": scenario.assessment,
                 "manual_review_required": (
                     pog.manual_review_required or scenario.manual_review_required
                 ),
-                "raw_attributes": _json_safe(raw_attributes),
             }
         ),
         scenario.warnings,
@@ -1711,6 +1746,10 @@ def _result_status(
     if not mpzp_zones or pog is None:
         return "partial"
     if not mpzp_complete or any(zone.manual_review_required for zone in mpzp_zones):
+        return "partial"
+    # Strefa bez przecięcia wektorowego (discovery albo symbol podany ręcznie)
+    # nigdy nie daje ``complete`` — niezależnie od kompletności parametrów.
+    if any(zone.assignment_method != "vector_intersection" for zone in mpzp_zones):
         return "partial"
     if pog.legal_status != "binding" or pog.coverage_status != "available":
         return "partial"
