@@ -58,7 +58,9 @@ def test_pog_data_has_audit_columns_after_migration() -> None:
     assert columns["area_ratio"]["nullable"] is True
     assert columns["in_downtown_area"]["nullable"] is False
     assert columns["manual_review_required"]["nullable"] is False
-    assert columns["conflict_with_mpzp"]["nullable"] is True
+    # BK-205: boolean zastąpiony informacyjną oceną w JSONB.
+    assert "conflict_with_mpzp" not in columns
+    assert columns["compatibility_assessment"]["nullable"] is True
     assert columns["raw_attributes"]["nullable"] is True
 
 
