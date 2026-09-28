@@ -17,12 +17,18 @@ class Settings(BaseSettings):
     # zabudowy z MPZP — to przybliżenie wynikające z przepisów o minimalnej odległości
     # od granicy, które może zostać nadpisane przez konkretne ustalenia planistyczne.
     default_technical_setback_m: float = 4.0
-    # Adres WFS KIUT/GESUT jest placeholderem opartym o publicznie znaną domenę GUGiK.
-    # Rzeczywisty kontrakt zapytania (typename, wersja WFS, przestrzenie nazw) zostanie
-    # doprecyzowany, gdy będzie dostępna pełna dokumentacja usługi.
-    kiut_wfs_base_url: str = (
-        "https://mapy.geoportal.gov.pl/wss/service/PZGIK/KIUT/WFS/GESUT"
-    )
+    # BK-306: dawny placeholder WFS KIUT/GESUT (odpowiadał HTTP 401) usunięto.
+    # Adres wektorowego źródła sieci jest wyłącznie kontraktem katalogu
+    # (source_id ``kiut_gesut``, zasób ``networks``); bez potwierdzonego
+    # kontraktu guard nie wysyła żadnego żądania.
+    # BK-305: kontekst drogowy z lokalnego wydania BDOT10k (PostGIS). Promienie
+    # rosnącego wyszukiwania kandydatów są jawną konfiguracją; ostatni jest
+    # maksymalnym zasięgiem. Brak kandydata w limicie NIE dowodzi braku drogi.
+    road_context_enabled: bool = True
+    road_context_search_radii_m: tuple[float, ...] = (25.0, 50.0, 100.0, 250.0, 500.0)
+    road_context_candidate_limit: int = 25
+    road_context_statement_timeout_ms: int = 3_000
+    road_context_timeout_seconds: float = 10.0
     # Usługa pobierania INSPIRE Map Zagrożenia i Ryzyka Powodziowego (MZP/MRP)
     # prowadzona przez PGW Wody Polskie. Kontrakt (WFS 2.0.0, typeNames
     # nz-core:HazardArea, wymagane srsName w formie URN) potwierdzono realnym
