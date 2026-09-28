@@ -257,6 +257,10 @@ class NetworkProtectionZone:
     note: str
     geometry: BaseGeometry
     input_index: int | None
+    # BK-306: strefa reguły bez zweryfikowanej podstawy jest wyłącznie
+    # przybliżeniem prezentacyjnym i nie pomniejsza powierzchni netto.
+    simulation_only: bool = True
+    affects_buildable_area: bool = False
 
 
 @dataclass(frozen=True)
@@ -280,10 +284,14 @@ def calculate_network_protection_zones(
     rules: dict[str, NetworkRule] | None = None,
 ) -> NetworkProtectionZonesResult:
     """
-    Liczy strefy ochronne sieci uzbrojenia terenu i odejmuje je od obszaru zabudowy.
+    Liczy techniczne bufory sieci uzbrojenia terenu i ich wpływ na obszar zabudowy.
 
-    Dla każdej sieci przecinającej działkę tworzymy bufor wokół linii, przycinamy
-    go do granic działki i odejmujemy zsumowane strefy od obszaru zabudowy.
+    Dla każdej sieci przecinającej działkę tworzymy bufor wokół linii i
+    przycinamy go do obszaru zabudowy. Od obszaru netto odejmowane są wyłącznie
+    strefy reguł ze zweryfikowaną podstawą (``affects_buildable_area``). Strefy
+    reguł symulacyjnych (BK-306) są zwracane z ``simulation_only=True`` jako
+    przybliżenie prezentacyjne — ich pole opisuje hipotetyczną redukcję, której
+    NIE zastosowano.
     Promień bufora pochodzi wyłącznie z konfiguracji (network_rules.json) przez
     load_network_rules() — nigdy z zahardkodowanej liczby w kodzie. Sieci
     leżące poza działką nie zmniejszają obszaru netto, chyba że reguła ma
@@ -297,7 +305,9 @@ def calculate_network_protection_zones(
         rules = load_network_rules()
 
     warnings: list[str] = []
-    clipped_zone_geometries: list[BaseGeometry] = []
+    # Osobne akumulatory: strefy wpływające na wynik i strefy symulacyjne nie
+    # mogą się wzajemnie „zjadać” przy rozliczaniu nakładania.
+    covered_by_kind: dict[bool, list[BaseGeometry]] = {True: [], False: []}
     zones: list[NetworkProtectionZone] = []
 
     for network in networks:
@@ -339,6 +349,8 @@ def calculate_network_protection_zones(
         # jeszcze nieodjętą część. Dzięki temu suma ``zone_area_sqm`` jest
         # równa faktycznej redukcji netto i pozwala odtworzyć rachunek bez
         # podwójnego liczenia wspólnego fragmentu stref.
+        affects = rule.affects_buildable_area and not rule.simulation_only
+        clipped_zone_geometries = covered_by_kind[affects]
         previously_covered = (
             unary_union(clipped_zone_geometries)
             if clipped_zone_geometries
@@ -360,17 +372,20 @@ def calculate_network_protection_zones(
                 note=rule.note,
                 geometry=effective_zone,
                 input_index=network.input_index,
+                simulation_only=rule.simulation_only,
+                affects_buildable_area=affects,
             )
         )
 
-    if not clipped_zone_geometries:
+    affecting = covered_by_kind[True]
+    if not affecting:
         return NetworkProtectionZonesResult(
             net_buildable_area_sqm=buildable_area.area,
-            zones=[],
+            zones=zones,
             warnings=warnings,
         )
 
-    union_zone = unary_union(clipped_zone_geometries)
+    union_zone = unary_union(affecting)
     net_geometry = buildable_area.difference(union_zone)
     return NetworkProtectionZonesResult(
         net_buildable_area_sqm=net_geometry.area,
