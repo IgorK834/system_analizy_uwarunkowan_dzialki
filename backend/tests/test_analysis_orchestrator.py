@@ -501,7 +501,9 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
     assert response.infrastructure[0].protection_zone_geojson["properties"]["layer"] == "protection_zone"
     assert response.buildable_area_sqm == pytest.approx(8188.0)
     assert response.risks[0].risk_type == "natura_2000"
-    assert "100.00%" in response.risks[0].description
+    # BK-303: udział jest polem strukturalnym; opis to prezentacja z tego pola.
+    assert response.risks[0].intersection_pct == 100.0
+    assert "100,00% działki" in response.risks[0].description
     assert "1.00%" not in response.risks[0].description
     assert response.risks[0].geometry_geojson is not None
     assert response.risks[0].geometry_geojson["properties"]["layer"] == "risk"
@@ -670,7 +672,8 @@ async def test_isok_ratio_is_presented_as_percentage_not_fraction() -> None:
             db,
         )
 
-    assert response.risks[0].description.endswith("udział przecięcia 12.50%.")
+    assert response.risks[0].intersection_pct == 12.5
+    assert response.risks[0].description.endswith("(12,50% działki).")
     assert "0.12%" not in response.risks[0].description
 
 
