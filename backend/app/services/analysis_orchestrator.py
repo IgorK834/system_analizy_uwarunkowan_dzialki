@@ -91,11 +91,19 @@ from app.services.pog_fetch import fetch_pog_vector_data
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.services.pog_provenance import act_result_from_provenance, feature_gml_url
 from app.services.pog_scenarios import build_pog_scenario_result
+from app.services.terrain import (
+    REASON_UNEXPECTED_ERROR,
+    build_terrain_result,
+    terrain_sources,
+    terrain_warnings,
+)
 from app.services.persistence import (
     build_analyze_response_from_analysis,
     build_manual_zone_context,
     save_analysis,
 )
+from app.modules.analysis.application.terrain import ReliefOutcome
+from app.modules.analysis.composition import analyze_terrain_relief
 from app.modules.documents.composition import (
     build_ocr_provider,
     persist_parser_audit,
@@ -109,6 +117,7 @@ from app.modules.imports.infrastructure.repository import (
     load_pog_release_features,
 )
 from app.shared.geometry import GeometryPayload
+from app.shared.provenance import Provenance
 from app.shared.planning_status import (
     ConfirmedPogStatus,
     PogStatusDecision,
@@ -199,9 +208,10 @@ async def run_analysis(
     )
 
     warnings = _geometry_warnings(metrics.repair_warning, setback.warning)
-    context, utilities_preview = await asyncio.gather(
+    context, utilities_preview, relief = await asyncio.gather(
         _analyze_context_safely(parcel_geometry),
         _check_kiut_coverage_safely(parcel_geometry, lookup.teryt),
+        _analyze_terrain_relief_safely(parcel_geometry),
     )
     (
         infrastructure,
@@ -215,6 +225,10 @@ async def run_analysis(
         setback.buildable_geometry,
     )
     warnings.extend(context_warnings)
+    # Rzeźba terenu jest sekcją informacyjną (BK-301/302): nie wpływa na status,
+    # ale jej provenance — także nieudanej próby — trafia do rejestru źródeł.
+    terrain = build_terrain_result(context.nmt, relief)
+    warnings.extend(terrain_warnings(terrain))
 
     # Chwila przypięcia wersji aktów MPZP: ten sam ``as_of`` wyznacza zestaw
     # wydzieleń dla całej analizy, a zapisany snapshot nie zależy od
@@ -270,10 +284,11 @@ async def run_analysis(
             infrastructure=infrastructure,
             utilities_preview=utilities_preview,
             risks=risks,
+            terrain=terrain,
             buildable_area_sqm=buildable_area_sqm,
             manual_zone_required=True,
             warnings=warnings,
-            sources=_unique_sources(sources),
+            sources=_unique_sources([*sources, *terrain_sources(terrain)]),
         )
         saved = save_analysis(
             response,
@@ -360,10 +375,11 @@ async def run_analysis(
         infrastructure=infrastructure,
         utilities_preview=utilities_preview,
         risks=risks,
+        terrain=terrain,
         buildable_area_sqm=buildable_area_sqm,
         manual_zone_required=False,
         warnings=warnings,
-        sources=_unique_sources(sources),
+        sources=_unique_sources([*sources, *terrain_sources(terrain)]),
     )
     saved = save_analysis(
         response,
@@ -408,6 +424,41 @@ async def _analyze_context_safely(parcel_geometry: BaseGeometry) -> ContextResul
             ),
             nmt=ContextSectionResult(
                 section="nmt", status="error", warnings=[message]
+            ),
+        )
+
+
+async def _analyze_terrain_relief_safely(
+    parcel_geometry: BaseGeometry,
+) -> ReliefOutcome | None:
+    """Pochodne rastra NMT (BK-302); ``None``, gdy funkcja jest wyłączona.
+
+    Sekcja jest informacyjna — każdy błąd kończy się jawnym statusem
+    ``unavailable`` z provenance próby i nigdy nie przerywa analizy.
+    """
+    if not settings.terrain_relief_enabled:
+        return None
+    try:
+        return await analyze_terrain_relief(parcel_geometry)
+    except Exception as exc:
+        log_analysis_event(
+            "section_error",
+            section="terrain_relief",
+            status=type(exc).__name__,
+        )
+        return ReliefOutcome(
+            status="unavailable",
+            reason_code=REASON_UNEXPECTED_ERROR,
+            provenance=Provenance(
+                source_id="nmt_wcs",
+                fetched_at=datetime.now(timezone.utc),
+                operation="WCS:GetCoverage",
+                complete=False,
+                error_code=type(exc).__name__,
+            ),
+            warnings=(
+                "Wystąpił nieoczekiwany błąd analizy rastra NMT — spadku i "
+                "ekspozycji nie policzono.",
             ),
         )
 
@@ -849,7 +900,9 @@ def _map_context(
                 severity=severity,
             )
         )
-        if section.source_metadata is not None:
+        # Provenance nieudanej próby (np. timeout NMT) jest zapisywane w sekcji
+        # i rejestrze źródeł, ale nie wchodzi do źródeł oceniających status.
+        if section.status == "available" and section.source_metadata is not None:
             sources.append(section.source_metadata)
 
     rules = load_network_rules()

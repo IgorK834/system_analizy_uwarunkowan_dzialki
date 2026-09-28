@@ -13,7 +13,7 @@ wersjonowanego modelu provenance opisanego w
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
 
@@ -54,6 +54,7 @@ from app.services.geojson import (
 from app.services.geometry import calculate_geometry_metrics, calculate_technical_setback
 from app.services.cache import RESULT_CONTRACT_VERSION, current_cache_signature
 from app.services.mpzp_fetch import DocumentBlob
+from app.services.terrain import terrain_from_snapshot
 from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
 from app.modules.documents.composition import register_document_artifact
 
@@ -163,6 +164,7 @@ def collect_source_records(
     if result.utilities_preview is not None:
         records.append(_source_record_data(result.utilities_preview.source, result))
     records.extend(_source_record_data(item.source, result) for item in result.risks)
+    records.extend(_terrain_source_records(result))
 
     if context_result is not None:
         for section in context_result.sections():
@@ -239,6 +241,13 @@ def save_analysis(
             utilities_preview=(
                 result.utilities_preview.model_dump(mode="json")
                 if result.utilities_preview is not None
+                else None
+            ),
+            # ``None`` tylko, gdy wynik nie zawiera sekcji NMT — odczyt
+            # zinterpretuje to jako ``unknown``, nigdy jako płaski teren.
+            terrain=(
+                result.terrain.model_dump(mode="json")
+                if result.terrain is not None
                 else None
             ),
             pending_uchwala_url=pending_uchwala_url,
@@ -691,6 +700,7 @@ def build_analyze_response_from_analysis(
             else None
         ),
         risks=risks,
+        terrain=terrain_from_snapshot(loaded.terrain),
         buildable_area_sqm=loaded.buildable_area_sqm,
         manual_zone_required=waiting,
         manual_zone_context=build_manual_zone_context(loaded) if waiting else None,
@@ -731,6 +741,29 @@ def _source_record_data(
     )
 
 
+def _terrain_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
+    """Źródła sekcji NMT z jawnym statusem — także brak pokrycia i porażka.
+
+    Bez tego nieudana próba (timeout bez kodu HTTP) zostałaby zapisana jako
+    ``available``, a brak pokrycia byłby nieodróżnialny od pomiaru.
+    """
+    terrain = result.terrain
+    if terrain is None:
+        return []
+    records: list[SourceRecordData] = []
+    sections = [(terrain.status, terrain.source)]
+    if terrain.relief is not None:
+        sections.append((terrain.relief.status, terrain.relief.source))
+    for status, source in sections:
+        if source is None:
+            continue
+        record = _source_record_data(source, result)
+        if status != "available":
+            record = replace(record, response_status=status)
+        records.append(record)
+    return records
+
+
 def _deduplicate_source_records(
     records: list[SourceRecordData],
 ) -> list[SourceRecordData]:
@@ -746,7 +779,7 @@ def _deduplicate_source_records(
 
         existing = unique[existing_index]
         response_status = existing.response_status
-        if record.response_status in {"unavailable", "error", "not_attempted"}:
+        if record.response_status in {"unavailable", "error", "not_attempted", "no_coverage"}:
             response_status = record.response_status
         elif response_status in {None, "available"} and record.response_status:
             response_status = record.response_status
