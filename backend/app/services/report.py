@@ -31,10 +31,17 @@ from app.core.report_config import (
     describe_confidence,
 )
 from app.models.analysis import Analysis
-from app.schemas.analyze import AnalyzeResponse, TerrainReliefResult, TerrainResult
+from app.schemas.analyze import (
+    AnalyzeResponse,
+    RiskResult,
+    RiskSectionResult,
+    TerrainReliefResult,
+    TerrainResult,
+)
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.persistence import build_analyze_response_from_analysis
 from app.services.pog_provenance import RELATION_LABELS_PL
+from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.services.report_map import png_to_data_uri, render_analysis_map_png
 from app.shared.planning_status import (
@@ -147,7 +154,7 @@ def _build_report_context(
             _infrastructure_context(item) for item in response.infrastructure
         ],
         "utilities_preview": _utilities_preview_context(response),
-        "risks": [_risk_context(item) for item in response.risks],
+        "risk_sections": _risk_sections_context(response),
         "terrain": _terrain_context(response.terrain),
         "sources": [_source_context(source) for source in response.sources],
         "warnings": [_warning_context(warning) for warning in response.warnings],
@@ -706,9 +713,117 @@ def _terrain_source_context(source: SourceMetadata | None) -> dict[str, Any] | N
     }
 
 
-def _risk_context(item: Any) -> dict[str, Any]:
+RISK_SECTION_TITLES: dict[str, str] = {
+    "flood": "Zagrożenie powodziowe (ISOK)",
+    "nature": "Formy ochrony przyrody (GDOŚ)",
+}
+RISK_STATUS_LABELS: dict[str, str] = {
+    "available": "sprawdzono",
+    "unavailable": "źródło niedostępne",
+    "error": "błąd sprawdzenia",
+    "unknown": "brak informacji w zapisanym wyniku",
+}
+RISK_RELATION_LABELS: dict[str, str] = {
+    "no_match": "brak obiektów przecinających działkę",
+    "boundary_only": "wyłącznie styk z granicą działki (bez wspólnej powierzchni)",
+    "intersection": "obiekty przecinają działkę",
+    "unknown": "nieustalona",
+}
+RISK_STATUS_NOTES: dict[str, str] = {
+    "unavailable": (
+        "Nie udało się sprawdzić źródła. Brak obiektów w tej sekcji NIE oznacza "
+        "braku ryzyka ani ograniczeń."
+    ),
+    "error": (
+        "Sprawdzenie zakończyło się nieoczekiwanym błędem. Brak obiektów NIE "
+        "oznacza braku ryzyka ani ograniczeń."
+    ),
+    "unknown": (
+        "Zapis sprzed strukturalnych sekcji ryzyka nie zawiera statusu "
+        "sprawdzenia — brak obiektów nie potwierdza braku ryzyka."
+    ),
+}
+_SEVERITY_LABELS_PL: dict[str, str] = {"low": "niski", "medium": "średni", "high": "wysoki"}
+
+
+def _risk_section_name(item: RiskResult) -> str:
+    if item.section is not None:
+        return item.section
+    return "flood" if item.risk_type in {"flood", "flood_zone"} else "nature"
+
+
+def _risk_sections_context(response: AnalyzeResponse) -> list[dict[str, Any]]:
+    """Sekcje ryzyka ze statusem niezależnym od listy obiektów (BK-303)."""
+    sections = {section.section: section for section in response.risk_sections}
+    if not sections:
+        sections = {
+            section.section: section for section in risk_sections_from_snapshot(None)
+        }
+    return [
+        _risk_section_context(
+            sections[name],
+            [item for item in response.risks if _risk_section_name(item) == name],
+        )
+        for name in ("flood", "nature")
+        if name in sections
+    ]
+
+
+def _risk_section_context(
+    section: RiskSectionResult, items: list[RiskResult]
+) -> dict[str, Any]:
+    source = section.source
+    return {
+        "name": section.section,
+        "title": RISK_SECTION_TITLES[section.section],
+        "status": section.status,
+        "status_label": RISK_STATUS_LABELS[section.status],
+        "note": RISK_STATUS_NOTES.get(section.status),
+        "reason_code": section.reason_code,
+        "relation_label": RISK_RELATION_LABELS[section.relation],
+        "feature_count": section.feature_count,
+        "intersecting_count": section.intersecting_feature_count,
+        "boundary_count": section.boundary_feature_count,
+        "union_area": (
+            _format_number(section.union_intersection_area_sqm)
+            if section.union_intersection_area_sqm is not None
+            else None
+        ),
+        "union_pct": _format_optional_percent(section.union_intersection_pct),
+        "source": (
+            {
+                "name": source.source_name,
+                "version": source.source_version,
+                "fetched_at": _format_datetime(source.fetched_at) if source.fetched_at else None,
+                "response_status": source.response_status,
+                "sha256": source.artifact_sha256,
+            }
+            if source is not None
+            else None
+        ),
+        "warnings": list(section.warnings),
+        "features": [_risk_context(item) for item in items],
+    }
+
+
+def _risk_context(item: RiskResult) -> dict[str, Any]:
     return {
         "risk_type": item.risk_type,
+        "feature_id": item.feature_id,
+        "probability_class": item.probability_class,
+        "return_period": (
+            f"{item.return_period_years} lat" if item.return_period_years is not None else None
+        ),
+        "protection_type": item.protection_type,
+        "name": item.name,
+        "severity": _SEVERITY_LABELS_PL.get(item.severity or "", item.severity),
+        "area": (
+            _format_number(item.intersection_area_sqm)
+            if item.intersection_area_sqm is not None
+            else None
+        ),
+        "pct": _format_optional_percent(item.intersection_pct),
+        "touches_boundary": item.touches_boundary,
         "description": item.description,
         "confidence": _confidence_context(item.source),
     }
@@ -870,7 +985,25 @@ def _build_limitations(
     if any(item.source.manual_review_required for item in response.risks):
         limitations.append("Dane o ryzykach wymagają ręcznej weryfikacji.")
 
+    limitations.extend(_risk_section_limitations(response))
     limitations.extend(_terrain_limitations(response.terrain))
+    return limitations
+
+
+def _risk_section_limitations(response: AnalyzeResponse) -> list[str]:
+    limitations: list[str] = []
+    sections = response.risk_sections or risk_sections_from_snapshot(None)
+    for section in sections:
+        title = RISK_SECTION_TITLES[section.section]
+        if section.status in {"unavailable", "error"}:
+            limitations.append(
+                f"{title}: sprawdzenie nie powiodło się ({section.reason_code or section.status}) "
+                "— brak obiektów nie oznacza braku ryzyka."
+            )
+        elif section.status == "unknown":
+            limitations.append(
+                f"{title}: zapisany wynik nie zawiera statusu sprawdzenia."
+            )
     return limitations
 
 
@@ -1352,17 +1485,42 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
 
 <section class="section">
   <h2>Ryzyka i formy ochrony</h2>
-  {% if risks %}
-    {% for item in risks %}
-    <div class="item">
-      <div class="item-title">{{ item.risk_type }}</div>
-      <p>{{ item.description }}</p>
-      {% if item.confidence %}<div class="confidence">Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }})</div>{% endif %}
-    </div>
+  {% for section in risk_sections %}
+  <h3>{{ section.title }}</h3>
+  <table>
+    <tr><th>Status sekcji</th><td>{{ section.status_label }}{% if section.reason_code %} <small class="mono">({{ section.reason_code }})</small>{% endif %}</td></tr>
+    <tr><th>Relacja z działką</th><td>{{ section.relation_label }}</td></tr>
+    {% if section.status == "available" %}
+    <tr><th>Obiekty</th><td>{{ section.feature_count }} (przecięcie: {{ section.intersecting_count }}, styk granicy: {{ section.boundary_count }})</td></tr>
+    <tr><th>Łączne pokrycie działki</th><td>{{ section.union_area }} m² ({{ section.union_pct }}) — suma mnogościowa, bez podwójnego liczenia</td></tr>
+    {% endif %}
+    {% if section.source %}<tr><th>Źródło</th><td>{{ section.source.name }}{% if section.source.version %} ({{ section.source.version }}){% endif %}{% if section.source.fetched_at %} — sprawdzono {{ section.source.fetched_at }}{% endif %}{% if section.source.response_status %} (HTTP {{ section.source.response_status }}){% endif %}{% if section.source.sha256 %}<br><small class="mono">SHA-256: {{ section.source.sha256 }}</small>{% endif %}</td></tr>{% endif %}
+  </table>
+  {% if section.note %}<p class="informational"><strong>{{ section.note }}</strong></p>{% endif %}
+  {% if section.features %}
+  <table class="evidence">
+    {% if section.name == "flood" %}
+    <thead><tr><th>Klasa prawdopodobieństwa</th><th>Okres powtarzalności</th><th>Poziom</th><th>Pole przecięcia</th><th>Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <tbody>
+    {% for item in section.features %}
+      <tr><td>{{ item.probability_class or "nieustalona" }}</td><td>{{ item.return_period or "—" }}</td><td>{{ item.severity or "—" }}</td><td>{% if item.touches_boundary %}styk granicy{% else %}{{ item.area or "—" }}{% if item.area %} m²{% endif %}{% endif %}</td><td>{{ item.pct or "—" }}</td><td><small class="mono">{{ item.feature_id or "—" }}</small></td></tr>
     {% endfor %}
-  {% else %}
-  <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono ryzyk ani form ochrony.</p>
+    </tbody>
+    {% else %}
+    <thead><tr><th>Rodzaj formy ochrony</th><th>Nazwa</th><th>Poziom</th><th>Pole przecięcia</th><th>Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <tbody>
+    {% for item in section.features %}
+      <tr><td>{{ item.protection_type or item.risk_type }}</td><td>{{ item.name or "—" }}</td><td>{{ item.severity or "—" }}</td><td>{% if item.touches_boundary %}styk granicy{% else %}{{ item.area or "—" }}{% if item.area %} m²{% endif %}{% endif %}</td><td>{{ item.pct or "—" }}</td><td><small class="mono">{{ item.feature_id or "—" }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+    {% endif %}
+  </table>
+  {% for item in section.features %}<p><small>{{ item.description }}{% if item.confidence %} Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }}).{% endif %}</small></p>{% endfor %}
+  {% elif section.status == "available" %}
+  <p class="empty">Sprawdzono — brak obiektów przecinających działkę ani stykających się z nią.</p>
   {% endif %}
+  {% for warning in section.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+  {% endfor %}
 </section>
 
 <section class="section">
