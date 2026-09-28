@@ -47,7 +47,21 @@ from app.modules.imports.infrastructure.pog.reader import (
     PyogrioPogReader,
     WfsPogReader,
 )
-from app.modules.imports.infrastructure.raster.gdal import GdalRasterProcessor
+from app.modules.imports.infrastructure.ogc_client import (
+    OgcClient,
+    OgcClientConfig,
+    OgcContractError,
+    OgcError,
+    OgcExceptionReportError,
+    OgcLimitError,
+    OgcResult,
+    OgcTransportError,
+)
+from app.modules.imports.infrastructure.raster.gdal import (
+    DecodedFloatBand,
+    GdalRasterProcessor,
+    RasterProcessingError,
+)
 from app.modules.imports.infrastructure.raster.repository import (
     SqlAlchemyRasterRepository,
 )
@@ -442,3 +456,38 @@ def run_raster_command(
     except Exception:
         session.rollback()
         raise
+
+
+# --- Publiczne fabryki adapterów współdzielonych z innymi modułami (BK-302) ---
+#
+# Moduł ``analysis`` potrzebuje bezpiecznego klienta OGC (BK-102) i dekodera
+# GeoTIFF opartego o GDAL CLI. ADR-001 zabrania importu cudzej warstwy
+# ``infrastructure``, dlatego root kompozycji modułu ``imports`` wystawia wąskie
+# fabryki i typy błędów jako jego publiczne API.
+
+def build_ogc_client(
+    *,
+    source_id: str,
+    urls: list[str],
+    total_timeout_seconds: float,
+    max_response_bytes: int,
+    retries: int = 1,
+) -> OgcClient:
+    """Klient OGC z allowlistą hostów wyprowadzoną z przekazanych adresów."""
+    return OgcClient.for_urls(
+        source_id=source_id,
+        urls=urls,
+        config_overrides={
+            "total_timeout_seconds": total_timeout_seconds,
+            "read_timeout_seconds": min(30.0, total_timeout_seconds),
+            "max_response_bytes": max_response_bytes,
+            "max_total_bytes": max_response_bytes * 2,
+            "retries": retries,
+        },
+    )
+
+
+def build_raster_decoder(command_timeout_s: float) -> GdalRasterProcessor:
+    """Dekoder GeoTIFF oparty o ``gdal-bin`` z twardym limitem czasu procesu."""
+    return GdalRasterProcessor(command_timeout_s=command_timeout_s)
+

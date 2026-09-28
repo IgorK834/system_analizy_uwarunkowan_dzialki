@@ -1,4 +1,4 @@
-"""Ograniczony zasobowo klient odczytu WFS 2.0, WMS 1.3 i CSW 2.0.2."""
+"""Ograniczony zasobowo klient odczytu WFS 2.0, WMS 1.3, CSW 2.0.2 i WCS 2.0.1."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import socket
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable, Iterable, Mapping
+from typing import Callable, Iterable, Mapping, Sequence
 from urllib.parse import urljoin, urlsplit
 from xml.etree import ElementTree
 
@@ -25,6 +25,7 @@ from app.shared.provenance import Provenance
 
 _REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 _XML_MEDIA_TYPES = {"application/xml", "text/xml", "application/gml+xml"}
+_TIFF_MAGIC = (b"II*\x00", b"MM\x00*", b"II+\x00", b"MM\x00+")
 _WMS_AXIS_ORDER = {
     "EPSG:4326": "yx",
     "CRS:84": "xy",
@@ -67,6 +68,26 @@ class OgcContractError(OgcError):
 
 class OgcLimitError(OgcError):
     """Osiągnięto jawny limit bajtów, stron albo cech."""
+
+
+class OgcExceptionReportError(OgcContractError):
+    """Usługa odpowiedziała ``ows:ExceptionReport`` z jawnym kodem wyjątku.
+
+    WCS zgłasza w ten sposób m.in. ``ExtentError`` (żądany obszar nie przecina
+    pokrycia) i ``NoSuchCoverage`` — wywołujący rozróżnia je po ``exception_code``.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        source: Provenance,
+        exception_code: str | None,
+        http_status: int | None,
+    ) -> None:
+        super().__init__(message, source=source)
+        self.exception_code = exception_code
+        self.http_status = http_status
 
 
 @dataclass(frozen=True)
@@ -112,6 +133,7 @@ class _HttpPayload:
     content: bytes
     content_type: str
     url: str
+    status_code: int = 200
 
 
 Resolver = Callable[[str], Iterable[str]]
@@ -621,6 +643,169 @@ class OgcClient:
             payload.content, (), payload.url, operation, started_at, True
         )
 
+    def fetch_wcs_description(
+        self,
+        url: str,
+        *,
+        coverage_id: str,
+        version: str = "2.0.1",
+    ) -> OgcResult:
+        """Pobiera ``DescribeCoverage`` jednego pokrycia jako zweryfikowany XML."""
+
+        operation = "WCS:DescribeCoverage"
+        started_at = datetime.now(timezone.utc)
+        payload = self._request(
+            url,
+            params={
+                "service": "WCS",
+                "version": version,
+                "request": "DescribeCoverage",
+                "coverageId": coverage_id,
+            },
+            operation=operation,
+            started_at=started_at,
+            deadline=self._monotonic() + self._config.total_timeout_seconds,
+            byte_limit=self._config.max_response_bytes,
+            readable_error_statuses=frozenset({400, 404}),
+        )
+        if payload.status_code != 200:
+            raise self._exception_report_error(payload, operation, started_at)
+        self._xml_root(payload, operation, started_at)
+        return self._plain_result(
+            payload.content, (), payload.url, operation, started_at, True
+        )
+
+    def fetch_wcs_coverage(
+        self,
+        url: str,
+        *,
+        coverage_id: str,
+        subsets: Sequence[tuple[str, float, float]],
+        media_type: str = "image/tiff",
+        version: str = "2.0.1",
+    ) -> OgcResult:
+        """Pobiera wycinek pokrycia WCS 2.0.1 (GetCoverage, KVP) jako GeoTIFF.
+
+        Subsety są przekazywane jako powtórzony parametr ``subset=oś(min,max)``
+        w kolejności wywołującego. Odpowiedź ``ExceptionReport`` (także z HTTP
+        400/404) jest mapowana na ``OgcExceptionReportError`` z kodem wyjątku.
+        """
+
+        if not subsets:
+            raise ValueError("GetCoverage wymaga co najmniej jednego subsetu.")
+        operation = "WCS:GetCoverage"
+        started_at = datetime.now(timezone.utc)
+        params: list[tuple[str, str]] = [
+            ("service", "WCS"),
+            ("version", version),
+            ("request", "GetCoverage"),
+            ("coverageId", coverage_id),
+            ("format", media_type),
+        ]
+        for axis, low, high in subsets:
+            if not low < high:
+                raise ValueError(f"Subset osi {axis!r} musi mieć min < max.")
+            params.append(
+                ("subset", f"{axis}({format(low, '.15g')},{format(high, '.15g')})")
+            )
+        payload = self._request(
+            url,
+            params=params,
+            operation=operation,
+            started_at=started_at,
+            deadline=self._monotonic() + self._config.total_timeout_seconds,
+            byte_limit=self._config.max_response_bytes,
+            readable_error_statuses=frozenset({400, 404}),
+        )
+        received_type = self._media_type(payload.content_type)
+        if (
+            payload.status_code != 200
+            or received_type in _XML_MEDIA_TYPES
+            or received_type.endswith("+xml")
+        ):
+            raise self._exception_report_error(payload, operation, started_at)
+        if received_type != media_type.casefold():
+            raise self._contract_error(
+                f"WCS zwrócił nieoczekiwany Content-Type {payload.content_type!r}.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            )
+        if media_type.casefold() == "image/tiff" and not payload.content.startswith(
+            _TIFF_MAGIC
+        ):
+            raise self._contract_error(
+                "Odpowiedź WCS deklaruje image/tiff, ale nie jest plikiem TIFF.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            )
+        return self._plain_result(
+            payload.content, (), payload.url, operation, started_at, True
+        )
+
+    def _exception_report_error(
+        self, payload: _HttpPayload, operation: str, started_at: datetime
+    ) -> OgcError:
+        """Mapuje odpowiedź błędu na jawny wyjątek z kodem ``exceptionCode``."""
+
+        media_type = self._media_type(payload.content_type)
+        is_xml = media_type in _XML_MEDIA_TYPES or media_type.endswith("+xml")
+        if not is_xml or not payload.content.lstrip().startswith(b"<"):
+            if payload.status_code != 200:
+                return self._transport_error(
+                    f"Usługa OGC zwróciła HTTP {payload.status_code}.",
+                    payload.url,
+                    operation,
+                    started_at,
+                )
+            return self._contract_error(
+                "Odpowiedź OGC nie jest oczekiwanym dokumentem.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            )
+        try:
+            root = parse_xml_root(
+                payload.content,
+                max_depth=self._config.max_xml_depth,
+                max_nodes=self._config.max_xml_nodes,
+            )
+        except RuContractError as exc:
+            return self._contract_error(
+                str(exc), payload.url, operation, started_at, content=payload.content
+            )
+        code: str | None = None
+        for element in root.iter():
+            if self._local_name(element.tag) == "Exception":
+                code = element.attrib.get("exceptionCode")
+                break
+        message = exception_report_message(root)
+        if message is None and code is None:
+            return self._contract_error(
+                f"Usługa OGC zwróciła HTTP {payload.status_code} bez ExceptionReport.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            )
+        source = self._error_provenance(payload.url, operation, started_at, "contract")
+        source = Provenance(
+            **{
+                **source.__dict__,
+                "content_hash": hashlib.sha256(payload.content).hexdigest(),
+            }
+        )
+        return OgcExceptionReportError(
+            f"OGC ExceptionReport ({code or 'bez kodu'}): {message or ''}".strip(),
+            source=source,
+            exception_code=code,
+            http_status=payload.status_code,
+        )
+
     @staticmethod
     def wms_bbox(crs: str, bbox: tuple[float, float, float, float]) -> str:
         """Formatuje BBOX według tabeli osi WMS 1.3.0."""
@@ -636,18 +821,19 @@ class OgcClient:
         self,
         url: str,
         *,
-        params: Mapping[str, str],
+        params: Mapping[str, str] | Sequence[tuple[str, str]],
         operation: str,
         started_at: datetime,
         deadline: float,
         byte_limit: int,
+        readable_error_statuses: frozenset[int] = frozenset(),
     ) -> _HttpPayload:
         if byte_limit <= 0:
             raise self._limit_error(
                 "OGC przekroczył łączny limit bajtów.", url, operation, started_at
             )
         current_url = url
-        current_params: Mapping[str, str] | None = params
+        current_params: Mapping[str, str] | Sequence[tuple[str, str]] | None = params
         redirects = 0
         while True:
             self._validate_url(current_url, operation, started_at)
@@ -695,7 +881,9 @@ class OgcClient:
                             current_url = urljoin(str(response.request.url), location)
                             current_params = None
                             break
-                        if response.status_code < 200 or response.status_code >= 300:
+                        if (
+                            response.status_code < 200 or response.status_code >= 300
+                        ) and response.status_code not in readable_error_statuses:
                             raise self._transport_error(
                                 f"Usługa OGC zwróciła HTTP {response.status_code}.",
                                 str(response.request.url),
@@ -736,6 +924,7 @@ class OgcClient:
                             content=b"".join(chunks),
                             content_type=response.headers.get("content-type", ""),
                             url=str(response.request.url),
+                            status_code=response.status_code,
                         )
                 except OgcError:
                     raise
