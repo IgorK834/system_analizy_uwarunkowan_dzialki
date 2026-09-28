@@ -23,6 +23,7 @@ from typing import Any
 from jinja2 import Environment, select_autoescape
 from sqlalchemy.orm import Session
 
+from app.core.planning_compatibility import COMPATIBILITY_STATUS_LABELS_PL
 from app.core.report_config import (
     REPORT_DISCLAIMER,
     REPORT_SYSTEM_NAME,
@@ -134,7 +135,13 @@ def _build_report_context(
         "map_kiut_overlay": map_kiut_overlay,
         "geometry": _geometry_context(response),
         "mpzp_zones": [_mpzp_context(zone) for zone in response.mpzp_zones],
+        "manual_zone_declared": any(
+            zone.assignment_method == "manual_user_input" for zone in response.mpzp_zones
+        ),
         "pog": _pog_context(response.pog),
+        "compatibility": _compatibility_context(
+            response.pog.compatibility_assessment if response.pog else None
+        ),
         "infrastructure": [
             _infrastructure_context(item) for item in response.infrastructure
         ],
@@ -197,8 +204,31 @@ def _mpzp_parameter_context(parameter: Any) -> dict[str, Any]:
     }
 
 
-def _mpzp_context(zone: Any) -> dict[str, Any]:
+def _manual_selection_context(selection: Any) -> dict[str, Any] | None:
+    if selection is None:
+        return None
     return {
+        "entered_symbol": selection.entered_symbol,
+        "plan_id": selection.plan_id,
+        "candidates": ", ".join(selection.candidate_zone_symbols) or "brak kandydatów",
+        "symbol_in_candidates": selection.symbol_in_candidates,
+        "document_pinned": selection.document_pinned,
+        "document_sha256": selection.document_sha256,
+        "document_fetched_at": (
+            _format_datetime(selection.document_fetched_at)
+            if selection.document_fetched_at
+            else None
+        ),
+        "selected_at": _format_datetime(selection.selected_at),
+    }
+
+
+def _mpzp_context(zone: Any) -> dict[str, Any]:
+    share_known = zone.intersection_pct is not None and zone.intersection_area_sqm is not None
+    return {
+        "share_known": share_known,
+        "is_manual": zone.assignment_method == "manual_user_input",
+        "manual_selection": _manual_selection_context(zone.manual_selection),
         "zone_id": zone.zone_id,
         "act_identifier": zone.act_identifier,
         "act_version": zone.act_version,
@@ -285,7 +315,6 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
         ),
         "uchwala_nr": pog.uchwala_nr,
         "uchwala_date": _format_date(pog.uchwala_date),
-        "conflict_with_mpzp": pog.conflict_with_mpzp,
         "manual_review_required": pog.manual_review_required,
         "confidence": _confidence_context(pog.source),
         "zones": [
@@ -318,6 +347,66 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
             _pog_area_context(item)
             for item in pog.social_infrastructure_standard_areas
         ],
+    }
+
+
+def _compatibility_context(assessment: Any) -> dict[str, Any] | None:
+    """Ocena relacji MPZP–POG jako osobna, informacyjna sekcja raportu (BK-205)."""
+    if assessment is None:
+        return None
+    return {
+        "status": assessment.status,
+        "status_label": COMPATIBILITY_STATUS_LABELS_PL[assessment.status],
+        "reason_code": assessment.reason_code,
+        "as_of": _format_date(assessment.as_of),
+        "rule_id": assessment.rule_id,
+        "rule_version": assessment.rule_version,
+        "aggregation": assessment.aggregation,
+        "rationale": assessment.rationale,
+        "manual_review_required": assessment.manual_review_required,
+        "informational_notice": assessment.informational_notice,
+        "sources": [
+            {
+                "kind": source.kind,
+                "label": source.label,
+                "reference": source.reference,
+                "version": source.version,
+                "as_of": _format_date(source.as_of),
+            }
+            for source in assessment.sources
+        ],
+        "pairs": [
+            {
+                "label": f"{pair.mpzp_zone_symbol} × {pair.pog_zone_symbol or pair.pog_zone_type}",
+                "status_label": COMPATIBILITY_STATUS_LABELS_PL[pair.status],
+                "spatial": pair.spatially_identified,
+                "overlap": (
+                    f"{_format_number(pair.overlap_area_sqm)} m²"
+                    + (
+                        f" ({_format_percent(pair.overlap_pct)})"
+                        if pair.overlap_pct is not None
+                        else ""
+                    )
+                    if pair.overlap_area_sqm is not None
+                    else "nieustalone"
+                ),
+                "rule": (
+                    f"{pair.rule_id} v{pair.rule_version}" if pair.rule_id else "brak reguły"
+                ),
+                "as_of": _format_date(pair.as_of),
+                "rationale": pair.rationale,
+            }
+            for pair in assessment.zone_pairs
+        ],
+        "legacy": (
+            {
+                "origin": assessment.legacy_evidence.origin,
+                "conflict": assessment.legacy_evidence.conflict_with_mpzp,
+                "result": assessment.legacy_evidence.result,
+            }
+            if assessment.legacy_evidence is not None
+            else None
+        ),
     }
 
 
@@ -547,17 +636,33 @@ def _build_limitations(
     manual_mpzp_zones = [
         zone
         for zone in response.mpzp_zones
-        if zone.source.source_name.casefold() == "manual_user_input"
+        if zone.assignment_method == "manual_user_input"
+        or zone.source.source_name.casefold() == "manual_user_input"
     ]
     if manual_mpzp_zones:
         limitations.append(
-            "Symbol strefy MPZP podano ręcznie na podstawie rastrowej nakładki "
-            "WMS. Dane mają obniżoną pewność i wymagają weryfikacji w materiale "
-            "źródłowym."
+            "Symbol strefy podano ręcznie na podstawie podglądu rastrowego (WMS), "
+            "bez wektorowej granicy strefy. Każdy parametr zależny od tego symbolu "
+            "wymaga weryfikacji w materiale źródłowym, a wynik nie może być pełny."
+        )
+    if any(
+        zone.intersection_pct is None and not zone.touches_boundary
+        for zone in response.mpzp_zones
+    ):
+        limitations.append(
+            "Udział strefy MPZP w powierzchni działki jest nieustalony (brak "
+            "wektorowej granicy strefy) — raport nie przyjmuje, że strefa obejmuje "
+            "całą działkę."
+        )
+    if response.pog is not None and response.pog.compatibility_assessment is not None:
+        limitations.append(
+            "Ocena relacji MPZP–POG jest analizą informacyjną według jawnej tabeli "
+            "reguł; nie stwierdza prawnej możliwości zabudowy."
         )
 
     if any(
         zone.source.manual_review_required
+        and zone.assignment_method != "manual_user_input"
         and zone.source.source_name.casefold() != "manual_user_input"
         for zone in response.mpzp_zones
     ):
@@ -725,6 +830,12 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     background: #fff7ef; color: #6b3a10; font-size: 9.5pt; break-inside: avoid;
   }
   .page-break { break-before: page; }
+  .manual-banner {
+    margin: 8mm auto 0; padding: 3mm; max-width: 150mm; text-align: left;
+    border: 2px solid #c43d3d; background: #fdeceb; color: #8f2525;
+    font-weight: bold; font-size: 10pt;
+  }
+  .informational { font-size: 9pt; color: #475467; font-style: italic; }
 </style>
 </head>
 <body>
@@ -739,6 +850,9 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     <div><strong>Status:</strong> <span class="status-badge">{{ status }}</span></div>
     <div><strong>Raport wygenerowano:</strong> {{ generated_at if generated_at else "—" }}</div>
   </div>
+  {% if manual_zone_declared %}
+  <div class="manual-banner">UWAGA: symbol strefy podano ręcznie (odczyt użytkownika z podglądu rastrowego), bez wektorowej granicy strefy. Udział strefy w powierzchni działki jest nieustalony, a wszystkie zależne parametry wymagają weryfikacji.</div>
+  {% endif %}
 </section>
 
 <section class="section">
@@ -788,13 +902,18 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
         {% if zone.touches_boundary %}<span class="tag tag-review">tylko styczność granicy</span>{% endif %}
         {% if zone.manual_review_required %}<span class="tag tag-review">wymaga weryfikacji</span>{% endif %}
       </div>
+      {% if zone.is_manual %}<p class="status-note"><strong>Symbol strefy podano ręcznie</strong> — każdy parametr tej strefy wymaga weryfikacji.</p>{% endif %}
       <table>
         <tr><th>Sposób przypisania</th><td>{{ zone.assignment_label }}</td></tr>
+        {% if zone.manual_selection %}
+        <tr><th>Decyzja użytkownika</th><td>wpisany symbol {{ zone.manual_selection.entered_symbol }}{% if not zone.manual_selection.symbol_in_candidates %} <span class="tag tag-review">spoza kandydatów</span>{% endif %}<br><small>plan: {{ zone.manual_selection.plan_id or "nieustalony" }}; kandydaci: {{ zone.manual_selection.candidates }}; wybrano {{ zone.manual_selection.selected_at }}</small></td></tr>
+        <tr><th>Dokument użyty przy wznowieniu</th><td>{% if zone.manual_selection.document_pinned %}kopia przypięta przy wstrzymaniu analizy{% if zone.manual_selection.document_fetched_at %} (pobrano {{ zone.manual_selection.document_fetched_at }}){% endif %}<br><small class="mono">SHA-256: {{ zone.manual_selection.document_sha256 }}</small>{% else %}<span class="empty">dokument nie został przypięty — parametry nieustalone</span>{% endif %}</td></tr>
+        {% endif %}
         {% if zone.zone_id %}<tr><th>ID wydzielenia</th><td class="mono">{{ zone.zone_id }}</td></tr>{% endif %}
         {% if zone.act_identifier %}<tr><th>Plan (akt) i wersja</th><td>{{ zone.act_identifier }}{% if zone.act_version %}<br><small class="mono">wersja {{ zone.act_version }}</small>{% endif %}{% if zone.data_release_id %}<br><small>wydanie danych #{{ zone.data_release_id }}</small>{% endif %}</td></tr>{% endif %}
         {% if zone.primary_use %}<tr><th>Przeznaczenie podstawowe</th><td>{{ zone.primary_use }}</td></tr>{% endif %}
         {% if zone.supplementary_use %}<tr><th>Przeznaczenie uzupełniające</th><td>{{ zone.supplementary_use }}</td></tr>{% endif %}
-        <tr><th>Udział w powierzchni działki</th><td>{{ zone.intersection_pct }} ({{ zone.intersection_area_sqm }} m²)</td></tr>
+        <tr><th>Udział w powierzchni działki</th><td>{% if zone.share_known %}{{ zone.intersection_pct }} ({{ zone.intersection_area_sqm }} m²){% else %}nieustalony — brak wektorowej granicy strefy{% endif %}</td></tr>
         {% if zone.max_building_height_m %}<tr><th>Maks. wysokość zabudowy</th><td>{{ zone.max_building_height_m }}</td></tr>{% endif %}
         {% if zone.max_floors %}<tr><th>Maks. liczba kondygnacji</th><td>{{ zone.max_floors }}</td></tr>{% endif %}
         {% if zone.min_biologically_active_pct %}<tr><th>Min. pow. biologicznie czynna</th><td>{{ zone.min_biologically_active_pct }}</td></tr>{% endif %}
@@ -846,9 +965,6 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     <tr><th>Obszar śródmiejski</th><td>{{ pog.in_downtown_area }}</td></tr>
     {% if pog.uchwala_nr %}<tr><th>Numer uchwały</th><td>{{ pog.uchwala_nr }}</td></tr>{% endif %}
     {% if pog.uchwala_date %}<tr><th>Data uchwały</th><td>{{ pog.uchwala_date }}</td></tr>{% endif %}
-    {% if pog.conflict_with_mpzp is not none %}
-    <tr><th>Zgodność z MPZP</th><td>{{ "Wykryto niezgodność — wymaga weryfikacji" if pog.conflict_with_mpzp else "Zgodność potwierdzona wstępnie" }}</td></tr>
-    {% endif %}
   </table>
   {% if pog.zones %}
   <h3>Strefy planistyczne przecinające działkę</h3>
@@ -910,6 +1026,44 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   {% if pog.confidence %}<div class="confidence">Pewność danych: {{ pog.confidence.pct }} ({{ pog.confidence.label }})</div>{% endif %}
   {% else %}
   <p class="empty">Dane niedostępne — brak danych POG/OUZ dla tej działki.</p>
+  {% endif %}
+</section>
+
+<section class="section">
+  <h2>Relacja MPZP–POG — analiza informacyjna</h2>
+  <p class="informational">Ustalenia MPZP i POG są przedstawione osobno w sekcjach powyżej. Ta sekcja nie jest opinią prawną i nie stwierdza prawnej możliwości zabudowy.</p>
+  {% if compatibility %}
+  <table>
+    <tr><th>Wynik oceny</th><td>{{ compatibility.status_label }} <small class="mono">({{ compatibility.status }}, {{ compatibility.reason_code }})</small>{% if compatibility.manual_review_required %}<br><span class="tag tag-review">wymaga weryfikacji</span>{% endif %}</td></tr>
+    <tr><th>Stan prawny na dzień</th><td>{{ compatibility.as_of if compatibility.as_of else "nieustalony" }}</td></tr>
+    <tr><th>Zestaw reguł</th><td>{% if compatibility.rule_id %}{{ compatibility.rule_id }} v{{ compatibility.rule_version }}{% else %}brak — zapis historyczny{% endif %}</td></tr>
+    <tr><th>Uzasadnienie</th><td>{{ compatibility.rationale }}</td></tr>
+    <tr><th>Reguła agregacji</th><td><small>{{ compatibility.aggregation }}</small></td></tr>
+    {% if compatibility.legacy %}<tr><th>Zapis historyczny (legacy)</th><td>{{ compatibility.legacy.origin }}: {{ "stwierdzono konflikt" if compatibility.legacy.conflict else ("brak konfliktu" if compatibility.legacy.conflict is sameas false else "brak rozstrzygnięcia") }}{% if compatibility.legacy.result %} ({{ compatibility.legacy.result }}){% endif %} — bez danych reguły, nie jest pełną oceną</td></tr>{% endif %}
+  </table>
+  {% if compatibility.pairs %}
+  <table class="evidence">
+    <thead><tr><th>Para stref</th><th>Wynik</th><th>Wspólna część działki</th><th>Reguła i stan prawny</th><th>Uzasadnienie</th></tr></thead>
+    <tbody>
+    {% for pair in compatibility.pairs %}
+      <tr><td>{{ pair.label }}</td><td>{{ pair.status_label }}</td><td>{{ pair.overlap }}{% if not pair.spatial %}<br><small>para niezidentyfikowana przestrzennie</small>{% endif %}</td><td>{{ pair.rule }}{% if pair.as_of %}<br><small>stan na {{ pair.as_of }}</small>{% endif %}</td><td><small>{{ pair.rationale }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if compatibility.sources %}
+  <table class="provenance">
+    <thead><tr><th>Źródło oceny</th><th>Odniesienie i wersja</th></tr></thead>
+    <tbody>
+    {% for source in compatibility.sources %}
+      <tr><td>{{ source.label }}</td><td><small>{{ source.reference or "—" }}</small>{% if source.version %}<br><small class="mono">wersja {{ source.version }}</small>{% endif %}{% if source.as_of %}<br><small>stan na {{ source.as_of }}</small>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <p class="informational">{{ compatibility.informational_notice }}</p>
+  {% else %}
+  <p class="empty">Nie wykonano oceny relacji MPZP–POG dla tej analizy.</p>
   {% endif %}
 </section>
 

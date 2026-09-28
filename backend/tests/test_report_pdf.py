@@ -195,7 +195,6 @@ def _full_response(identifier: str) -> AnalyzeResponse:
             uchwala_nr="X/42/2026",
             uchwala_date=date(2026, 2, 10),
             manual_review_required=False,
-            conflict_with_mpzp=False,
             ouz_intersection_area_sqm=2500.0,
             ouz_intersection_pct=25.0,
             touches_ouz_boundary=False,
@@ -336,6 +335,7 @@ def _save(
     pending_uchwala_url: str | None = None,
     pending_plan_id: str | None = None,
     pending_zone_symbol_candidates: list[str] | None = None,
+    pending_document: DocumentBlob | None = None,
 ) -> int:
     with SessionLocal() as db:
         analysis = save_analysis(
@@ -348,6 +348,7 @@ def _save(
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
+            pending_document=pending_document,
         )
         return analysis.id
 
@@ -490,14 +491,17 @@ def test_report_with_manual_review_shows_limitations() -> None:
     # Ostrzeżenie o ręcznej weryfikacji i fallbacku WMS musi znaleźć się w raporcie.
     assert "weryfikacji" in text
     assert "rastrow" in text  # "mapy rastrowej"
+    # Symbol z discovery bez wektora nie jest opisywany jako ręczny.
+    assert "symbol strefy podano ręcznie" not in text.lower()
 
 
 def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> None:
     """Raport czyta snapshot zapisany przez prawdziwy endpoint resume.
 
-    Mockowane są wyłącznie zewnętrzne pobranie BIP i parser dokumentu. Router,
-    transakcja wznowienia, persistence oraz późniejszy GET /report wykonują się
-    w całości, dzięki czemu test wykrywa utratę danych między UI a raportem.
+    Dokument jest przypinany przy wstrzymaniu (BK-204), więc resume nie pobiera
+    go ponownie; mockowany jest wyłącznie parser. Router, transakcja
+    wznowienia, persistence oraz późniejszy GET /report wykonują się w całości,
+    dzięki czemu test wykrywa utratę danych między UI a raportem.
     """
     identifier = f"{_PARCEL_PREFIX}RESUME"
     waiting_response = _minimal_response(identifier).model_copy(
@@ -515,14 +519,6 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
         }
     )
     document_url = "https://bip.example.test/resume-plan.pdf"
-    analysis_id = _save(
-        waiting_response,
-        identifier,
-        database_status="waiting_for_zone_symbol",
-        pending_uchwala_url=document_url,
-        pending_plan_id="MPZP/REPORT/1",
-        pending_zone_symbol_candidates=["230_U"],
-    )
     document = DocumentBlob(
         content=b"%PDF-mock",
         media_type="application/pdf",
@@ -533,6 +529,15 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
             confidence=0.45,
             manual_review_required=True,
         ),
+    )
+    analysis_id = _save(
+        waiting_response,
+        identifier,
+        database_status="waiting_for_zone_symbol",
+        pending_uchwala_url=document_url,
+        pending_plan_id="MPZP/REPORT/1",
+        pending_zone_symbol_candidates=["230_U"],
+        pending_document=document,
     )
     parser_result = MpzpParseResult(
         plan_id="MPZP/REPORT/1",
@@ -565,18 +570,11 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
         ],
     )
 
-    with (
-        patch(
-            "app.services.analysis_resume.fetch_mpzp_document",
-            new_callable=AsyncMock,
-            return_value=document,
-        ) as fetch_mock,
-        patch(
-            "app.services.analysis_resume.parse_mpzp_document",
-            new_callable=AsyncMock,
-            return_value=parser_result,
-        ) as parse_mock,
-    ):
+    with patch(
+        "app.services.analysis_resume.parse_mpzp_document",
+        new_callable=AsyncMock,
+        return_value=parser_result,
+    ) as parse_mock:
         resume_response = client.post(
             "/analyze/resume",
             json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
@@ -591,8 +589,8 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
         warning["code"] == "MPZP_MANUAL_ZONE_FALLBACK"
         for warning in resumed["warnings"]
     )
-    fetch_mock.assert_awaited_once_with(document_url)
     parse_mock.assert_awaited_once()
+    assert parse_mock.await_args.args[0].content == b"%PDF-mock"
 
     report_response = client.get(f"/report/{analysis_id}")
 
@@ -601,8 +599,10 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
     assert report_response.content.startswith(_PDF_SIGNATURE)
     text = _extract_text(report_response.content)
     assert "230_U" in text
-    assert "manual_user_input" in text
-    assert "rastrowej nakładki WMS" in text
+    assert "symbol strefy podano ręcznie" in text.lower()
+    assert "nieustalony" in text
+    assert "kopia przypięta przy wstrzymaniu analizy" in text
+    assert "Relacja MPZP–POG — analiza informacyjna" in text
     assert "Parser PDF wymaga ręcznej weryfikacji odczytu" in text
 
 
