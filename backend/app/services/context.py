@@ -58,8 +58,10 @@ class ContextSectionResult:
     """Zunifikowany wynik jednej sekcji kontekstu działki.
 
     ``data`` zawiera surowe obiekty domenowe sekcji: ``NetworkFeature``,
-    ``RiskFeature``, ``NatureProtectionFeature`` albo ``TerrainExtremes``. Lista
-    jest typowana jako ``list[Any]`` z powodu heterogeniczności tych modeli.
+    ``RiskFeature``, ``NatureProtectionFeature`` albo jeden pomiar NMT
+    (``TerrainExtremes`` lub ``TerrainNoCoverage``). Lista jest typowana jako
+    ``list[Any]`` z powodu heterogeniczności tych modeli. ``reason_code`` niesie
+    kod przyczyny niedostępności, jeżeli źródło go podało.
     """
 
     section: SectionName
@@ -67,6 +69,7 @@ class ContextSectionResult:
     data: list[Any] = field(default_factory=list)
     source_metadata: SourceMetadata | None = None
     warnings: list[str] = field(default_factory=list)
+    reason_code: str | None = None
 
 
 @dataclass(frozen=True)
@@ -160,17 +163,16 @@ async def _run_nmt_section(
     parcel_geometry: BaseGeometry,
     client: httpx.AsyncClient,
 ) -> list[Any]:
-    """Uruchamia sekcję NMT i normalizuje jej wynik do listy.
+    """Uruchamia sekcję NMT i opakowuje jej jedyny wynik w listę.
 
-    ``fetch_terrain_extremes`` zwraca jeden obiekt albo ``None`` (brak pokrycia
-    danymi wysokościowymi). Pusta lista oznacza tu "sprawdzono, brak danych dla
-    tego obszaru" i jest finalizowana jako sekcja dostępna — brak pokrycia NMT
-    nie jest awarią usługi.
+    ``fetch_terrain_extremes`` zwraca pomiar (``TerrainExtremes``) albo jawny
+    brak pokrycia (``TerrainNoCoverage``) z provenance zapytania. Oba przypadki
+    finalizują sekcję jako dostępną — brak pokrycia NMT nie jest awarią usługi,
+    ale też nie jest pustą listą, którą dałoby się pomylić z płaskim terenem.
     """
     start = time.monotonic()
     try:
-        extremes = await fetch_terrain_extremes(parcel_geometry, client=client)
-        return [] if extremes is None else [extremes]
+        return [await fetch_terrain_extremes(parcel_geometry, client=client)]
     finally:
         logger.info("Sekcja NMT zakończona po %.3fs.", time.monotonic() - start)
 
@@ -183,7 +185,9 @@ def _finalize_section(
 
     Kontrolowane wyjątki ISOK/GDOŚ/NMT oznaczają oczekiwaną niedostępność
     usługi. Inne wyjątki oznaczają nieoczekiwany błąd. Poprawna lista, także
-    pusta, oznacza dostępność sekcji.
+    pusta, oznacza dostępność sekcji. Jeżeli kontrolowany wyjątek niesie
+    provenance nieudanej próby (``source_metadata``) i kod przyczyny, są one
+    zachowane — niepełny wynik nadal dokumentuje zapytanie.
     """
     if isinstance(outcome, _EXPECTED_UNAVAILABLE_ERRORS):
         logger.warning(
@@ -194,6 +198,8 @@ def _finalize_section(
         return ContextSectionResult(
             section=section,
             status="unavailable",
+            source_metadata=getattr(outcome, "source_metadata", None),
+            reason_code=getattr(outcome, "reason_code", None),
             warnings=[
                 f"Usługa {section.upper()} jest tymczasowo niedostępna — "
                 "dane tej sekcji mogą być niepełne."

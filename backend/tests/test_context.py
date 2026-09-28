@@ -17,17 +17,13 @@ from app.services.context import (
 from app.services.gdos import GdosServiceUnavailableError
 from app.services.isok import IsokServiceUnavailableError, RiskFeature
 from app.services.kiut import NetworkFeature
+from app.services.nmt import (
+    NmtServiceUnavailableError,
+    TerrainExtremes,
+    TerrainNoCoverage,
+)
 
 PARCEL = Polygon.from_bounds(500000, 200000, 500100, 200100)
-
-
-@pytest.fixture(autouse=True)
-def mock_nmt_service(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Zwykłe CI nie odpytuje zewnętrznego NMT."""
-    monkeypatch.setattr(
-        "app.services.context.fetch_terrain_extremes",
-        AsyncMock(return_value=None),
-    )
 
 
 def _metadata(source_name: str) -> SourceMetadata:
@@ -35,6 +31,24 @@ def _metadata(source_name: str) -> SourceMetadata:
         source_name=source_name,
         confidence=0.8,
         manual_review_required=False,
+    )
+
+
+def _no_coverage() -> TerrainNoCoverage:
+    return TerrainNoCoverage(
+        grid_size_m=4.0,
+        sampled_points=676,
+        source_metadata=_metadata("NMT"),
+        warnings=["NMT nie ma danych wysokościowych dla obszaru działki."],
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_nmt_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Zwykłe CI nie odpytuje zewnętrznego NMT."""
+    monkeypatch.setattr(
+        "app.services.context.fetch_terrain_extremes",
+        AsyncMock(return_value=_no_coverage()),
     )
 
 
@@ -72,8 +86,9 @@ async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest()
         await asyncio.sleep(0.05)
         return []
 
-    async def _slow_nmt(*args: object, **kwargs: object) -> None:
+    async def _slow_nmt(*args: object, **kwargs: object) -> TerrainNoCoverage:
         await asyncio.sleep(0.05)
+        return _no_coverage()
 
     with (
         patch(
@@ -337,3 +352,80 @@ def test_context_section_result_is_frozen() -> None:
 
     with pytest.raises((FrozenInstanceError, AttributeError)):
         result.status = "error"
+
+
+@pytest.mark.asyncio
+async def test_nmt_no_coverage_is_explicit_measurement_not_empty_list() -> None:
+    """Brak pokrycia NMT nie jest pustą listą, którą można wziąć za płaski teren."""
+    with (
+        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_flood_risks", new=AsyncMock(return_value=[])),
+        patch(
+            "app.services.context.fetch_nature_protection_areas",
+            new=AsyncMock(return_value=[]),
+        ),
+    ):
+        result = await analyze_context(PARCEL)
+
+    assert result.nmt.status == "available"
+    [measurement] = result.nmt.data
+    assert isinstance(measurement, TerrainNoCoverage)
+    assert result.nmt.source_metadata is not None
+    assert result.nmt.warnings == [
+        "NMT nie ma danych wysokościowych dla obszaru działki."
+    ]
+
+
+@pytest.mark.asyncio
+async def test_nmt_measurement_is_single_item_with_source() -> None:
+    extremes = TerrainExtremes(
+        min_height_m=112.3,
+        max_height_m=115.7,
+        height_difference_m=3.4,
+        grid_size_m=4.0,
+        sampled_points=676,
+        source_metadata=_metadata("NMT"),
+    )
+    with (
+        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_flood_risks", new=AsyncMock(return_value=[])),
+        patch(
+            "app.services.context.fetch_nature_protection_areas",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "app.services.context.fetch_terrain_extremes",
+            new=AsyncMock(return_value=extremes),
+        ),
+    ):
+        result = await analyze_context(PARCEL)
+
+    assert result.nmt.data == [extremes]
+    assert result.nmt.source_metadata == extremes.source_metadata
+
+
+def test_finalize_section_keeps_nmt_failure_provenance_and_reason() -> None:
+    attempt = SourceMetadata(
+        source_name="NMT",
+        source_url="https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon",
+        confidence=0.0,
+        manual_review_required=True,
+    )
+    result = _finalize_section(
+        "nmt",
+        NmtServiceUnavailableError(
+            "timeout", reason_code="SERVICE_TIMEOUT", source_metadata=attempt
+        ),
+    )
+
+    assert result.status == "unavailable"
+    assert result.source_metadata == attempt
+    assert result.reason_code == "SERVICE_TIMEOUT"
+    assert result.data == []
+
+
+def test_finalize_section_without_failure_provenance_keeps_none() -> None:
+    result = _finalize_section("isok", IsokServiceUnavailableError("x"))
+
+    assert result.source_metadata is None
+    assert result.reason_code is None
