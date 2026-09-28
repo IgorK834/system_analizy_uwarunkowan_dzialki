@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding="UTF-8" ?>
+<wfs:FeatureCollection
+   xmlns:ms="http://mapserver.gis.umn.edu/mapserver"
+   xmlns:gml="http://www.opengis.net/gml/3.2"
+   xmlns:wfs="http://www.opengis.net/wfs/2.0"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://mapserver.gis.umn.edu/mapserver http://mapy.geoportal.gov.pl/wss/service/PZGIK/BDOT/WFS/PobieranieBDOT10k?SERVICE=WFS&amp;VERSION=2.0.0&amp;REQUEST=DescribeFeatureType&amp;TYPENAME=ms:BDOT10k_powiaty&amp;OUTPUTFORMAT=application%2Fgml%2Bxml%3B%20version%3D3.2 http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"
+   timeStamp="2026-09-28T12:02:04" numberMatched="380" numberReturned="380">
+      <wfs:boundedBy>
+      	<gml:Envelope srsName="urn:ogc:def:crs:EPSG::2180">
+      		<gml:lowerCorner>133223.350055 171677.544156</gml:lowerCorner>
+      		<gml:upperCorner>775019.148006 861895.762864</gml:upperCorner>
+      	</gml:Envelope>
+      </wfs:boundedBy>
+<!-- WARNING: No featureid defined for typename 'BDOT10k_powiaty'. Output will not validate. -->
+    <wfs:member>
+      <ms:BDOT10k_powiaty>
+        <ms:TERYT>1261</ms:TERYT>
+        <ms:NAZWA_POWIATU>powiat Kraków</ms:NAZWA_POWIATU>
+        <ms:Data_aktualizacji>2024-04-22 00:00:00</ms:Data_aktualizacji>
+        <ms:URL_GML>https://opendata.geoportal.gov.pl/bdot10k/schemat2021/12/1261_GML.zip</ms:URL_GML>
+      </ms:BDOT10k_powiaty>
+    </wfs:member>
+</wfs:FeatureCollection>
