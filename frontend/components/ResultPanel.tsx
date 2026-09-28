@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type maplibregl from "maplibre-gl";
 
+import { CompatibilityAssessmentCard } from "@/components/CompatibilityAssessmentCard";
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
@@ -329,6 +330,12 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         Wynik ma charakter informacyjny i nie zastępuje dokumentów planistycznych
         ani decyzji administracyjnej.
       </p>
+      {result.mpzp_zones.some((zone) => zone.assignment_method === "manual_user_input") && (
+        <p className="manual-review" role="note" data-testid="manual-zone-result-note">
+          Symbol strefy podano ręcznie — wynik jest częściowy, udział strefy w
+          powierzchni działki jest nieustalony, a zależne parametry wymagają weryfikacji.
+        </p>
+      )}
 
       <ReportDownloadButton
         key={result.analysis_id ?? "unsaved-analysis"}
@@ -341,6 +348,9 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <GeometrySection result={result} />
       <MpzpSection zones={result.mpzp_zones} />
       <PogSection result={result} />
+      {result.pog && (
+        <CompatibilityAssessmentCard assessment={result.pog.compatibility_assessment} />
+      )}
       <InfrastructureSection items={result.infrastructure} />
       <RisksSection items={result.risks} />
       <SourcesSection sources={result.sources} />
@@ -521,13 +531,6 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
           {pog.social_infrastructure_standard_areas.length > 0 && (
             <p className="result-preview">
               Standardy dostępności infrastruktury społecznej: {pog.social_infrastructure_standard_areas.length}
-            </p>
-          )}
-          {pog.conflict_with_mpzp !== null && (
-            <p className={pog.conflict_with_mpzp ? "field-error" : "result-preview"}>
-              {pog.conflict_with_mpzp
-                ? "Wykryto niezgodność ze strefą MPZP — wymaga weryfikacji."
-                : "Zgodność z dominującą strefą MPZP potwierdzona wstępnie."}
             </p>
           )}
           {pogStatusNotes(pog).map((note) => (
