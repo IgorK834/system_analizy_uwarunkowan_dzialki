@@ -113,11 +113,15 @@ class GmlFeature:
     jedyna wiarygodna informacja o rodzaju obiektu. Dla GeoJSON pozostaje pusta.
 
     ``geometry`` jest zawsze w kolejności ``(easting, northing)`` EPSG:2180.
+    ``feature_id`` to unikalny identyfikator obiektu nadany przez źródło
+    (``gml:id`` albo ``id`` GeoJSON) — pozwala nie liczyć tej samej cechy dwa
+    razy i powiązać wynik z obiektem źródłowym. ``None``, gdy źródło go nie podało.
     """
 
     layer: str
     geometry: BaseGeometry
     properties: dict[str, str] = field(default_factory=dict)
+    feature_id: str | None = None
 
 
 def local_name(tag: str) -> str:
@@ -170,9 +174,18 @@ def _parse_gml(text: str) -> list[GmlFeature]:
                     layer=local_name(feature_elem.tag),
                     geometry=geometry,
                     properties=_extract_properties(feature_elem),
+                    feature_id=_feature_id(feature_elem),
                 )
             )
     return features
+
+
+def _feature_id(feature_elem: ElementTree.Element) -> str | None:
+    """Zwraca ``gml:id`` cechy (niezależnie od prefiksu przestrzeni nazw)."""
+    for key, value in feature_elem.attrib.items():
+        if local_name(key) == "id" and value.strip():
+            return value.strip()
+    return None
 
 
 def _raise_if_exception_report(root: ElementTree.Element) -> None:
@@ -356,7 +369,13 @@ def _parse_geojson(text: str) -> list[GmlFeature]:
             for key, value in (feature.get("properties") or {}).items()
             if value is not None
         }
+        raw_id = feature.get("id")
         features.append(
-            GmlFeature(layer="", geometry=geometry, properties=properties)
+            GmlFeature(
+                layer="",
+                geometry=geometry,
+                properties=properties,
+                feature_id=str(raw_id) if raw_id not in (None, "") else None,
+            )
         )
     return features
