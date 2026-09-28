@@ -96,11 +96,11 @@ async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest()
             new=AsyncMock(side_effect=_slow_kiut),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(side_effect=_slow_other),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(side_effect=_slow_other),
         ),
         patch(
@@ -129,11 +129,11 @@ async def test_analyze_context_isok_failure_does_not_abort_other_sections() -> N
             new=AsyncMock(return_value=[kiut_feature]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(side_effect=IsokServiceUnavailableError("x")),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[gdos_feature]),
         ),
     ):
@@ -154,11 +154,11 @@ async def test_analyze_context_unexpected_exception_maps_to_error_status() -> No
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(side_effect=RuntimeError("boom")),
         ),
     ):
@@ -180,11 +180,11 @@ async def test_analyze_context_partial_result_contains_warnings_and_status_per_s
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(side_effect=IsokServiceUnavailableError("x")),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(side_effect=RuntimeError("boom")),
         ),
     ):
@@ -212,11 +212,11 @@ async def test_analyze_context_success_populates_data_and_source_metadata() -> N
             new=AsyncMock(return_value=[kiut_feature]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(return_value=[isok_feature]),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[gdos_feature]),
         ),
     ):
@@ -239,11 +239,11 @@ async def test_analyze_context_collects_per_feature_warnings_from_both_shapes() 
             new=AsyncMock(return_value=[_network_feature("w1")]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(return_value=[_risk_feature(["w2", "w3"])]),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[]),
         ),
     ):
@@ -261,8 +261,8 @@ async def test_analyze_context_uses_single_shared_httpx_client_instance() -> Non
 
     with (
         patch("app.services.context.fetch_kiut_networks", new=kiut_mock),
-        patch("app.services.context.fetch_flood_risks", new=isok_mock),
-        patch("app.services.context.fetch_nature_protection_areas", new=gdos_mock),
+        patch("app.services.context.fetch_flood_risk_section", new=isok_mock),
+        patch("app.services.context.fetch_nature_protection_section", new=gdos_mock),
     ):
         await analyze_context(PARCEL)
 
@@ -284,11 +284,11 @@ async def test_analyze_context_logs_elapsed_time_and_source_name(caplog) -> None
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[]),
         ),
     ):
@@ -310,11 +310,11 @@ async def test_analyze_context_logs_source_name_when_section_fails(caplog) -> No
             new=AsyncMock(return_value=[]),
         ),
         patch(
-            "app.services.context.fetch_flood_risks",
+            "app.services.context.fetch_flood_risk_section",
             new=AsyncMock(side_effect=IsokServiceUnavailableError("x")),
         ),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(side_effect=GdosServiceUnavailableError("x")),
         ),
     ):
@@ -359,9 +359,9 @@ async def test_nmt_no_coverage_is_explicit_measurement_not_empty_list() -> None:
     """Brak pokrycia NMT nie jest pustą listą, którą można wziąć za płaski teren."""
     with (
         patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
-        patch("app.services.context.fetch_flood_risks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[]),
         ),
     ):
@@ -388,9 +388,9 @@ async def test_nmt_measurement_is_single_item_with_source() -> None:
     )
     with (
         patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
-        patch("app.services.context.fetch_flood_risks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
-            "app.services.context.fetch_nature_protection_areas",
+            "app.services.context.fetch_nature_protection_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
@@ -428,4 +428,5 @@ def test_finalize_section_without_failure_provenance_keeps_none() -> None:
     result = _finalize_section("isok", IsokServiceUnavailableError("x"))
 
     assert result.source_metadata is None
-    assert result.reason_code is None
+    # BK-303: wyjątek bez wskazanej przyczyny ma jawny kod domyślny.
+    assert result.reason_code == "INVALID_RESPONSE"
