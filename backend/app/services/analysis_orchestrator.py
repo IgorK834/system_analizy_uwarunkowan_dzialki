@@ -91,6 +91,11 @@ from app.services.pog_fetch import fetch_pog_vector_data
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.services.pog_provenance import act_result_from_provenance, feature_gml_url
 from app.services.pog_scenarios import build_pog_scenario_result
+from app.services.risks import (
+    build_risk_section,
+    flood_risk_result,
+    nature_risk_result,
+)
 from app.services.terrain import (
     REASON_UNEXPECTED_ERROR,
     build_terrain_result,
@@ -229,6 +234,11 @@ async def run_analysis(
     # ale jej provenance — także nieudanej próby — trafia do rejestru źródeł.
     terrain = build_terrain_result(context.nmt, relief)
     warnings.extend(terrain_warnings(terrain))
+    # Status i provenance sekcji ryzyka niezależnie od listy obiektów (BK-303).
+    risk_sections = [
+        build_risk_section("flood", context.isok, parcel_geometry),
+        build_risk_section("nature", context.gdos, parcel_geometry),
+    ]
 
     # Chwila przypięcia wersji aktów MPZP: ten sam ``as_of`` wyznacza zestaw
     # wydzieleń dla całej analizy, a zapisany snapshot nie zależy od
@@ -284,6 +294,7 @@ async def run_analysis(
             infrastructure=infrastructure,
             utilities_preview=utilities_preview,
             risks=risks,
+            risk_sections=risk_sections,
             terrain=terrain,
             buildable_area_sqm=buildable_area_sqm,
             manual_zone_required=True,
@@ -375,6 +386,7 @@ async def run_analysis(
         infrastructure=infrastructure,
         utilities_preview=utilities_preview,
         risks=risks,
+        risk_sections=risk_sections,
         terrain=terrain,
         buildable_area_sqm=buildable_area_sqm,
         manual_zone_required=False,
@@ -1035,55 +1047,10 @@ def _map_context(
         )
         sources.append(feature.source_metadata)
 
-    risks = [
-        RiskResult(
-            risk_type=feature.risk_type,
-            description=(
-                f"Ryzyko powodziowe: poziom {feature.severity}, "
-                f"udział przecięcia {feature.area_ratio * 100:.2f}%."
-            ),
-            geometry_geojson=analysis_layer_geometry_to_geojson(
-                feature.geometry.intersection(parcel_geometry),
-                "risk",
-                {
-                    "risk_type": feature.risk_type,
-                    "severity": feature.severity,
-                },
-            ),
-            source=feature.source_metadata,
-        )
-        for feature in context.isok.data
-    ]
-    risks.extend(
-        RiskResult(
-            risk_type=(
-                "natura_2000"
-                if feature.protection_type == "natura2000"
-                else feature.protection_type
-            ),
-            description=(
-                "Forma ochrony przyrody "
-                f"{feature.name or feature.protection_type}; "
-                f"poziom {feature.severity}, "
-                f"udział {feature.area_ratio * 100:.2f}%."
-            ),
-            geometry_geojson=analysis_layer_geometry_to_geojson(
-                feature.geometry.intersection(parcel_geometry),
-                "risk",
-                {
-                    "risk_type": (
-                        "natura_2000"
-                        if feature.protection_type == "natura2000"
-                        else feature.protection_type
-                    ),
-                    "severity": feature.severity,
-                    "name": feature.name,
-                },
-            ),
-            source=feature.source_metadata,
-        )
-        for feature in context.gdos.data
-    )
+    # BK-303: obiekty ryzyka niosą wszystkie pola domenowe; opis jest tylko
+    # prezentacją zbudowaną z tych pól.
+    risks = [flood_risk_result(feature) for feature in context.isok.data]
+    risks.extend(nature_risk_result(feature) for feature in context.gdos.data)
     sources.extend(feature.source_metadata for feature in context.isok.data)
     sources.extend(feature.source_metadata for feature in context.gdos.data)
     return (
