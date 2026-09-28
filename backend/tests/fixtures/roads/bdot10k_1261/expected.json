@@ -1,0 +1,50 @@
+{
+  "cases": {
+    "real-005-126105-9-0001-580-4": {
+      "category": "gminna",
+      "distance_m": 0.0,
+      "intersecting_road_count": 12,
+      "relation": "intersects",
+      "road_class": "droga lokalna",
+      "road_id": "28BA1C51-4E6D-8554-E053-CC2BA8C0F941",
+      "touching_road_count": 0
+    },
+    "real-006-126105-9-0001-49-2": {
+      "category": "gminna",
+      "distance_m": 30.21,
+      "intersecting_road_count": 0,
+      "relation": "disjoint",
+      "road_class": "droga dojazdowa",
+      "road_id": "28BA1C51-75F6-8554-E053-CC2BA8C0F941",
+      "touching_road_count": 0
+    },
+    "real-007-126105-9-0001-540-15": {
+      "category": "gminna",
+      "distance_m": 3.73,
+      "intersecting_road_count": 0,
+      "relation": "disjoint",
+      "road_class": "droga dojazdowa",
+      "road_id": "28BA1C51-7AF7-8554-E053-CC2BA8C0F941",
+      "touching_road_count": 0
+    },
+    "real-008-126105-9-0119-181-10": {
+      "category": "powiatowa",
+      "distance_m": 8.65,
+      "intersecting_road_count": 0,
+      "relation": "disjoint",
+      "road_class": "droga lokalna",
+      "road_id": "28BA1C51-5963-8554-E053-CC2BA8C0F941",
+      "touching_road_count": 0
+    }
+  },
+  "method": "gml:posList czytane bez GDAL; odległość/relacja Shapely (GEOS) w EPSG:2180 od poligonu działki ULDK do osi jezdni OT_SKJZ_L; kategoriaIstnienia w {eksploatowany, brak}.",
+  "package": "1261_GML.zip",
+  "package_members": [
+    "PL.PZGiK.283.1261/BDOT10k/PL.PZGiK.283.1261__OT_SKJZ_L.xml",
+    "PL.PZGiK.283.1261/BDOT10k/PL.PZGiK.283.1261__OT_ADJA_A.xml"
+  ],
+  "package_sha256": "73a8547d99a5a607dc3da10f2e84cf50bb78df69e15a595a621bd26f7e7e8825",
+  "radius_m": 250.0,
+  "road_feature_count": 224,
+  "teryt": "1261"
+}
