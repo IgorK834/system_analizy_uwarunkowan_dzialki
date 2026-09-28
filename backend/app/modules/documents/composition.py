@@ -51,6 +51,43 @@ def build_document_parser(session: Session) -> DocumentParserPipeline:
     )
 
 
+def _registration(
+    planning_act_identifier: str, document: DocumentBlob
+) -> DocumentRegistration:
+    """Wspólny klucz rejestracji — wstrzymanie i resume trafiają w tę samą wersję."""
+    published_at = document.source_metadata.fetched_at or datetime.now(timezone.utc)
+    return DocumentRegistration(
+        planning_act_identifier=planning_act_identifier,
+        source_id="kimpzp",
+        source_owner="GUGiK / właściwa gmina",
+        original_uri=document.source_metadata.source_url or "",
+        media_type=document.media_type,
+        content_hash=sha256(document.content).hexdigest(),
+        published_at=published_at,
+        title=document.filename,
+        document_type="uchwala",
+    )
+
+
+def register_document_artifact(
+    session: Session,
+    *,
+    planning_act_identifier: str,
+    document: DocumentBlob,
+) -> int:
+    """Rejestruje artefakt i wersję dokumentu bez parsowania (BK-204).
+
+    Używane przy wstrzymaniu analizy: wersja dokumentu jest przypinana zanim
+    użytkownik poda symbol strefy. Operacja jest idempotentna po SHA-256 i
+    wykonuje tylko ``flush`` — granicę transakcji kontroluje wywołujący.
+    """
+    repository = SqlAlchemyDocumentRepository(session)
+    snapshot = repository.register_document_version(
+        _registration(planning_act_identifier, document)
+    )
+    return snapshot.document_version_id
+
+
 def persist_parser_audit(
     session: Session,
     *,
@@ -63,19 +100,8 @@ def persist_parser_audit(
     if audit is None:
         return None
     repository = SqlAlchemyDocumentRepository(session)
-    published_at = document.source_metadata.fetched_at or datetime.now(timezone.utc)
     base = repository.register_document_version(
-        DocumentRegistration(
-            planning_act_identifier=planning_act_identifier,
-            source_id="kimpzp",
-            source_owner="GUGiK / właściwa gmina",
-            original_uri=document.source_metadata.source_url or "",
-            media_type=document.media_type,
-            content_hash=sha256(document.content).hexdigest(),
-            published_at=published_at,
-            title=document.filename,
-            document_type="uchwala",
-        )
+        _registration(planning_act_identifier, document)
     )
     extraction = ExtractedDocument(
         pages=tuple(page.text for page in audit.pages),
