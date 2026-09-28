@@ -54,6 +54,7 @@ from app.services.geojson import (
 from app.services.geometry import calculate_geometry_metrics, calculate_technical_setback
 from app.services.cache import RESULT_CONTRACT_VERSION, current_cache_signature
 from app.services.mpzp_fetch import DocumentBlob
+from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
 from app.modules.documents.composition import register_document_artifact
@@ -165,6 +166,7 @@ def collect_source_records(
         records.append(_source_record_data(result.utilities_preview.source, result))
     records.extend(_source_record_data(item.source, result) for item in result.risks)
     records.extend(_terrain_source_records(result))
+    records.extend(_risk_section_source_records(result))
 
     if context_result is not None:
         for section in context_result.sections():
@@ -249,6 +251,10 @@ def save_analysis(
                 result.terrain.model_dump(mode="json")
                 if result.terrain is not None
                 else None
+            ),
+            risk_sections=(
+                [section.model_dump(mode="json") for section in result.risk_sections]
+                or None
             ),
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
@@ -352,6 +358,17 @@ def save_analysis(
                     analysis_id=analysis.id,
                     risk_type=risk_item.risk_type,
                     description=risk_item.description,
+                    section=risk_item.section,
+                    feature_id=risk_item.feature_id,
+                    severity=risk_item.severity,
+                    probability_class=risk_item.probability_class,
+                    return_period_years=risk_item.return_period_years,
+                    protection_type=risk_item.protection_type,
+                    name=risk_item.name,
+                    intersection_area_sqm=risk_item.intersection_area_sqm,
+                    intersection_pct=risk_item.intersection_pct,
+                    touches_boundary=risk_item.touches_boundary,
+                    result_snapshot=risk_item.model_dump(mode="json"),
                     geometry_geojson=risk_item.geometry_geojson,
                     source_url=risk_item.source.source_url,
                     fetched_at=risk_item.source.fetched_at,
@@ -666,20 +683,8 @@ def build_analyze_response_from_analysis(
         for item in loaded.infrastructure_records
     ]
     risks = [
-        RiskResult(
-            risk_type=item.risk_type,
-            description=item.description or "Brak opisu ryzyka.",
-            geometry_geojson=item.geometry_geojson,
-            source=_source_for_child(
-                loaded.source_records,
-                item.source_url,
-                item.fetched_at,
-                fallback_name=("ISOK" if item.risk_type == "flood_zone" else "GDOŚ"),
-                confidence=item.confidence,
-                manual_review_required=item.manual_review_required,
-            ),
-        )
-        for item in loaded.risk_records
+        _risk_response(item, loaded.source_records)
+        for item in sorted(loaded.risk_records, key=lambda record: record.id)
     ]
     warnings = [
         WarningMessage.model_validate(warning) for warning in (loaded.warnings or [])
@@ -700,6 +705,7 @@ def build_analyze_response_from_analysis(
             else None
         ),
         risks=risks,
+        risk_sections=risk_sections_from_snapshot(loaded.risk_sections),
         terrain=terrain_from_snapshot(loaded.terrain),
         buildable_area_sqm=loaded.buildable_area_sqm,
         manual_zone_required=waiting,
@@ -739,6 +745,53 @@ def _source_record_data(
         data_release_id=source.data_release_id,
         act_version=source.act_version,
     )
+
+
+def _risk_response(item: Risk, source_records: list[SourceRecord]) -> RiskResult:
+    """Obiekt ryzyka z bazy: snapshot BK-303 albo pola kolumn starego zapisu.
+
+    Stary zapis nie jest „naprawiany” parsowaniem ``description`` — nieznane
+    pola pozostają ``None``.
+    """
+    if item.result_snapshot is not None:
+        return RiskResult.model_validate(item.result_snapshot)
+    is_flood = item.section == "flood" or item.risk_type in {"flood", "flood_zone"}
+    return RiskResult(
+        risk_type=item.risk_type,
+        section=item.section,  # type: ignore[arg-type]
+        feature_id=item.feature_id,
+        severity=item.severity,  # type: ignore[arg-type]
+        probability_class=item.probability_class,
+        return_period_years=item.return_period_years,
+        protection_type=item.protection_type,
+        name=item.name,
+        intersection_area_sqm=item.intersection_area_sqm,
+        intersection_pct=item.intersection_pct,
+        touches_boundary=item.touches_boundary,
+        description=item.description or "Brak opisu ryzyka.",
+        geometry_geojson=item.geometry_geojson,
+        source=_source_for_child(
+            source_records,
+            item.source_url,
+            item.fetched_at,
+            fallback_name="ISOK" if is_flood else "GDOS",
+            confidence=item.confidence,
+            manual_review_required=item.manual_review_required,
+        ),
+    )
+
+
+def _risk_section_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
+    """Provenance sekcji ryzyka ze statusem — także przy ``features=[]``."""
+    records: list[SourceRecordData] = []
+    for section in result.risk_sections:
+        if section.source is None:
+            continue
+        record = _source_record_data(section.source, result)
+        if section.status != "available":
+            record = replace(record, response_status=section.status)
+        records.append(record)
+    return records
 
 
 def _terrain_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
