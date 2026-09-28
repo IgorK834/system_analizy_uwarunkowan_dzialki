@@ -97,7 +97,9 @@ class PogData(Base):
         default=False,
         server_default=false(),
     )
-    conflict_with_mpzp: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    # Informacyjna ocena relacji MPZP–POG (BK-205); zastąpiła boolean
+    # ``conflict_with_mpzp`` — historyczna wartość jest w ``legacy_evidence``.
+    compatibility_assessment: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     raw_attributes: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

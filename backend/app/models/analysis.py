@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.analysis_pending_document import AnalysisPendingDocument
     from app.models.infrastructure import Infrastructure
     from app.models.mpzp_zone import MpzpZone
     from app.models.parcel import Parcel
@@ -44,10 +45,9 @@ class Analysis(Base):
     cache_signature: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
 
     # Pola trybu ręcznego wznowienia (status='waiting_for_zone_symbol'), gdy
-    # discover_mpzp zwraca brak_wektorow=True. Nie przechowujemy bytes
-    # dokumentu — tylko URL do ponownego pobrania przy wznowieniu; magazyn
-    # obiektowy oryginałów jest świadomie poza zakresem tego zadania (patrz
-    # ANALIZA_ARCHITEKTURY_I_PLAN.md, sekcja E, ADR-004/ADR-005).
+    # discover_mpzp zwraca brak_wektorow=True. Bajty i wersja dokumentu są
+    # przypinane w chwili wstrzymania (``AnalysisPendingDocument``, BK-204);
+    # URL służy wyłącznie do prezentacji, resume nie pobiera go ponownie.
     pending_uchwala_url: Mapped[str | None] = mapped_column(
         String(1000), nullable=True
     )
@@ -67,3 +67,8 @@ class Analysis(Base):
     )
     risk_records: Mapped[list[Risk]] = relationship(back_populates="analysis")
     source_records: Mapped[list[SourceRecord]] = relationship(back_populates="analysis")
+    pending_document: Mapped[AnalysisPendingDocument | None] = relationship(
+        back_populates="analysis",
+        uselist=False,
+        passive_deletes=True,
+    )

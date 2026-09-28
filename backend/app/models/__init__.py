@@ -1,4 +1,5 @@
 from app.models.analysis import Analysis
+from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
 from app.models.mpzp_parameter import MpzpParameter
 from app.models.mpzp_zone import MpzpZone
@@ -33,6 +34,7 @@ from app.modules.location.infrastructure.models import AddressSearchEntry
 
 __all__ = [
     "Analysis",
+    "AnalysisPendingDocument",
     "Infrastructure",
     "MpzpParameter",
     "MpzpZone",

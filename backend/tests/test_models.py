@@ -50,11 +50,13 @@ def test_pog_data_has_audit_and_scenario_columns() -> None:
         "uchwala_nr",
         "uchwala_date",
         "manual_review_required",
-        "conflict_with_mpzp",
+        "compatibility_assessment",
         "raw_attributes",
     }
 
     assert expected_columns.issubset(PogData.__table__.c.keys())
+    assert "conflict_with_mpzp" not in PogData.__table__.c.keys()
+    assert isinstance(PogData.__table__.c.compatibility_assessment.type, JSONB)
     assert PogData.__table__.c.in_ouz.nullable is False
     assert PogData.__table__.c.in_downtown_area.nullable is False
     assert PogData.__table__.c.manual_review_required.nullable is False
