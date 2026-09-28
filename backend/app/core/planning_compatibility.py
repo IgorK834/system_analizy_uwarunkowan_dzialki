@@ -3,6 +3,11 @@
 Reguły są zapisane w Pythonie zamiast JSON, ponieważ każdy wpis wymaga
 czytelnego uzasadnienia domenowego i kontroli typów enum. Brak wpisu oznacza
 brak zdefiniowanej reguły, nigdy domyślny konflikt.
+
+Każda reguła ma stabilny identyfikator (``rule_id``) i należy do wersjonowanego
+zestawu (``RULE_SET_ID``/``RULE_SET_VERSION``). Zmiana treści lub wyniku
+dowolnej reguły wymaga podniesienia wersji zestawu, dzięki czemu zapisana ocena
+(BK-205) wskazuje dokładnie tę wersję tabeli, na której się opierała.
 """
 
 from __future__ import annotations
@@ -12,6 +17,11 @@ from enum import StrEnum
 from typing import Final, Literal
 
 from app.schemas.source import WarningMessage
+from app.shared.planning_compatibility_text import (  # noqa: F401 - reeksport
+    COMPATIBILITY_INFORMATIONAL_NOTICE,
+    COMPATIBILITY_STATUS_LABELS_PL,
+    LEGACY_AGGREGATION_NOTE,
+)
 
 CompatibilityValue = Literal["compatible", "incompatible", "uncertain", "unknown"]
 
@@ -19,6 +29,14 @@ EXPLICIT_COMPATIBILITY_CONFIDENCE: Final[float] = 0.9
 EXPLICIT_INCOMPATIBILITY_CONFIDENCE: Final[float] = 0.85
 CONDITIONAL_COMPATIBILITY_CONFIDENCE: Final[float] = 0.55
 UNKNOWN_COMPATIBILITY_CONFIDENCE: Final[float] = 0.0
+
+RULE_SET_ID: Final[str] = "mpzp-pog-function-table"
+RULE_SET_VERSION: Final[str] = "1.0"
+RULE_SET_SOURCE: Final[str] = (
+    "Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, "
+    f"zestaw {RULE_SET_ID} v{RULE_SET_VERSION}): funkcja MPZP × typ strefy "
+    "planistycznej POG. Tabela nie jest wykładnią prawa."
+)
 
 
 class MpzpFunction(StrEnum):
@@ -62,12 +80,27 @@ class CompatibilityRule:
 
 @dataclass(frozen=True)
 class PlanningCompatibilityResult:
-    """Wynik deterministycznego sprawdzenia pary funkcja MPZP–strefa POG."""
+    """Wynik deterministycznego sprawdzenia pary funkcja MPZP–strefa POG.
+
+    ``rule_id``/``rule_version``/``rule_source`` są ustawione wyłącznie wtedy,
+    gdy wynik pochodzi z wpisu tabeli; ``unknown`` (brak reguły albo
+    nierozpoznana wartość) ich nie ma.
+    """
 
     result: CompatibilityValue
     reasoning: str
     confidence: float
     warnings: list[WarningMessage] = field(default_factory=list)
+    rule_id: str | None = None
+    rule_version: str | None = None
+    rule_source: str | None = None
+
+
+def compatibility_rule_id(
+    mpzp_function: MpzpFunction, pog_zone_type: PogPlanningZoneType
+) -> str:
+    """Stabilny identyfikator wpisu tabeli, niezależny od kolejności słownika."""
+    return f"{RULE_SET_ID}:{mpzp_function.value}:{pog_zone_type.value}"
 
 
 # To nie jest automatyczna wykładnia prawa ani heurystyka nazw. Każda para jest
@@ -217,7 +250,15 @@ def check_mpzp_pog_compatibility(
         result=rule.result,
         reasoning=rule.reasoning,
         confidence=rule.confidence,
+        rule_id=compatibility_rule_id(normalized_function, normalized_zone),
+        rule_version=RULE_SET_VERSION,
+        rule_source=RULE_SET_SOURCE,
     )
+
+
+def normalize_mpzp_function(value: str | None) -> MpzpFunction | None:
+    """Dokładna wartość katalogu funkcji MPZP albo ``None`` (bez heurystyk nazw)."""
+    return _as_mpzp_function(value) if value else None
 
 
 def _as_mpzp_function(value: MpzpFunction | str) -> MpzpFunction | None:
