@@ -1,6 +1,11 @@
 import { formatPlDate } from "@/lib/pogStatus";
 import { shortSha } from "@/lib/safeLink";
-import type { MpzpAssignmentMethod, MpzpParameterEvidence, MpzpZoneResult } from "@/lib/types";
+import type {
+  ManualZoneSelection,
+  MpzpAssignmentMethod,
+  MpzpParameterEvidence,
+  MpzpZoneResult,
+} from "@/lib/types";
 
 const ASSIGNMENT_LABELS: Record<MpzpAssignmentMethod, string> = {
   vector_intersection: "przecięcie z wektorem wydzieleń",
@@ -33,6 +38,49 @@ function evidenceLocation(parameter: MpzpParameterEvidence): string {
   return parts.length > 0 ? parts.join(", ") : "miejsce w dokumencie nieustalone";
 }
 
+function shareText(zone: MpzpZoneResult): string {
+  if (zone.touches_boundary) {
+    return "Brak udziału powierzchniowego — wydzielenie styka się z granicą działki.";
+  }
+  if (zone.intersection_pct == null || zone.intersection_area_sqm == null) {
+    return "Udział w powierzchni działki: nieustalony (brak wektorowej granicy strefy).";
+  }
+  return `Udział w powierzchni działki: ${zone.intersection_pct.toFixed(1)}% (${zone.intersection_area_sqm.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} m²)`;
+}
+
+function ManualSelectionDetails({ selection }: { selection: ManualZoneSelection }) {
+  return (
+    <dl className="result-summary manual-selection" aria-label="Decyzja użytkownika">
+      <div>
+        <dt>Wpisany symbol</dt>
+        <dd>
+          {selection.entered_symbol}
+          {!selection.symbol_in_candidates && (
+            <span className="manual-review"> · spoza kandydatów discovery</span>
+          )}
+        </dd>
+      </div>
+      <div>
+        <dt>Plan i kandydaci</dt>
+        <dd>
+          {selection.plan_id ?? "plan nieustalony"} ·{" "}
+          {selection.candidate_zone_symbols.length > 0
+            ? selection.candidate_zone_symbols.join(", ")
+            : "brak kandydatów"}
+        </dd>
+      </div>
+      <div>
+        <dt>Dokument</dt>
+        <dd className="mono" title={selection.document_sha256 ?? undefined}>
+          {selection.document_pinned
+            ? `kopia przypięta przy wstrzymaniu · SHA-256 ${shortSha(selection.document_sha256)}`
+            : "dokument nie został przypięty — parametry nieustalone"}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 /**
  * Strefa MPZP z pochodzeniem przypisania (BK-202) i cytowalnym dowodem
  * każdej wartości parametru (BK-203). Sprzeczne kandydatury są pokazywane
@@ -49,13 +97,16 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
         {zone.is_dominant && <span className="tag-dominant">największy udział</span>}
         {zone.touches_boundary && <span className="manual-review">tylko styczność granicy</span>}
       </div>
+      {method === "manual_user_input" && (
+        <p className="manual-review" role="note" data-testid="manual-zone-banner">
+          Symbol strefy podano ręcznie — bez wektorowej granicy strefy. Każdy
+          parametr tej strefy wymaga weryfikacji, a wynik nie może być pełny.
+        </p>
+      )}
       {zone.primary_use && <p>Przeznaczenie: {zone.primary_use}</p>}
-      <p>
-        {zone.touches_boundary
-          ? "Brak udziału powierzchniowego — wydzielenie styka się z granicą działki."
-          : `Udział w powierzchni działki: ${zone.intersection_pct.toFixed(1)}% (${zone.intersection_area_sqm.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} m²)`}
-      </p>
+      <p>{shareText(zone)}</p>
       <p className="field-hint">Sposób przypisania: {ASSIGNMENT_LABELS[method]}</p>
+      {zone.manual_selection && <ManualSelectionDetails selection={zone.manual_selection} />}
       {zone.zone_id && <p className="field-hint mono">ID wydzielenia: {zone.zone_id}</p>}
       {zone.act_identifier && (
         <p className="field-hint">
@@ -94,6 +145,11 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
                     {parameter.name}
                     {parameter.conflict_group_id && (
                       <span className="manual-review"> · sprzeczna kandydatura</span>
+                    )}
+                    {parameter.manual_review_required && !parameter.conflict_group_id && (
+                      <span className="manual-review" data-testid="parameter-review">
+                        {" "}· wymaga weryfikacji
+                      </span>
                     )}
                   </th>
                   <td>

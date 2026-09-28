@@ -189,3 +189,67 @@ describe("MpzpZoneCard", () => {
     expect(screen.getByText("Sposób przypisania: snapshot sprzed wersjonowania stref")).toBeVisible();
   });
 });
+
+describe("MpzpZoneCard — symbol podany ręcznie (BK-204)", () => {
+  it("nie zmyśla udziału i oznacza każdy parametr do weryfikacji", async () => {
+    const { manualZone } = await import("@/test/manualZoneFixtures");
+    render(
+      <ul>
+        <MpzpZoneCard zone={manualZone()} />
+      </ul>,
+    );
+
+    expect(screen.getByTestId("manual-zone-banner")).toHaveTextContent("Symbol strefy podano ręcznie");
+    expect(screen.getByText(/Udział w powierzchni działki: nieustalony/)).toBeVisible();
+    expect(screen.queryByText(/100\.0%/)).toBeNull();
+    expect(screen.queryByText("największy udział")).toBeNull();
+    expect(screen.getAllByTestId("parameter-review")).toHaveLength(1);
+    expect(screen.getByLabelText("Decyzja użytkownika")).toHaveTextContent("230_U");
+    expect(screen.getByLabelText("Decyzja użytkownika")).toHaveTextContent("MPZP/2020/1 · 230_U, 231_MN");
+    expect(screen.getByLabelText("Decyzja użytkownika")).toHaveTextContent(
+      "kopia przypięta przy wstrzymaniu · SHA-256 bbbbbbbbbbbb…",
+    );
+  });
+
+  it("opisuje symbol spoza kandydatów i brak przypiętego dokumentu", async () => {
+    const { manualZone } = await import("@/test/manualZoneFixtures");
+    const base = manualZone();
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={{
+            ...base,
+            parameters: [],
+            manual_selection: {
+              ...base.manual_selection!,
+              symbol_in_candidates: false,
+              candidate_zone_symbols: [],
+              plan_id: null,
+              document_pinned: false,
+              document_sha256: null,
+            },
+          }}
+        />
+      </ul>,
+    );
+
+    const details = screen.getByLabelText("Decyzja użytkownika");
+    expect(details).toHaveTextContent("spoza kandydatów discovery");
+    expect(details).toHaveTextContent("plan nieustalony · brak kandydatów");
+    expect(details).toHaveTextContent("dokument nie został przypięty — parametry nieustalone");
+  });
+
+  it("wynik z ręcznym symbolem ma notę na poziomie całego panelu", async () => {
+    const { manualZone } = await import("@/test/manualZoneFixtures");
+    render(
+      <ResultPanel
+        result={buildAnalyzeResponse({ status: "partial", mpzp_zones: [manualZone()] })}
+        map={null}
+      />,
+    );
+
+    expect(screen.getByTestId("manual-zone-result-note")).toHaveTextContent(
+      "Symbol strefy podano ręcznie — wynik jest częściowy",
+    );
+  });
+});
