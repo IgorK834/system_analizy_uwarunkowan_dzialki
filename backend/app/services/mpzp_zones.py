@@ -1,18 +1,13 @@
 """Przecięcia działki ze strefami MPZP, wybór strefy dominującej i tryb ręczny.
 
-Ten moduł łączy dwie potrzeby, które w praktyce współdzielą tę samą logikę
-"cała działka = jedna strefa": tryb ręcznego wznowienia analizy (gdy
-użytkownik odczytuje symbol strefy z mapy rastrowej) oraz fallback dla
-brakujących wektorowych granic stref MPZP w ogóle. Zamiast duplikować ten
-fallback w routerze i tutaj, ``calculate_single_symbol_fallback`` jest
-jedynym miejscem, które go implementuje — router (patrz
-``app/routers/analyze.py``) tylko go wywołuje.
+Moduł obsługuje dwie ścieżki przypisania strefy:
 
-Pełny, wersjonowany model provenance i silnik przecięć na realnych danych
-WFS jest poza zakresem tego modułu — zalecany w
-ANALIZA_ARCHITEKTURY_I_PLAN.md (sekcja E, ADR-004/ADR-005). Ten moduł
-realizuje wyłącznie minimalny, potrzebny wycinek: przecięcia na geometriach
-już dostępnych w pamięci procesu i fallback bez wektorów.
+- wersjonowany wektor wydzieleń (BK-202) — udział każdej strefy to pole
+  przecięcia z pełnym obrysem działki w EPSG:2180;
+- przypisanie bez wektora (kandydat z discovery albo symbol podany ręcznie,
+  BK-204) — symbol jest znany, ale udział powierzchniowy pozostaje
+  NIEUSTALONY (``None``). Moduł świadomie nie oferuje fallbacku „cała działka =
+  jedna strefa”, bo byłby to zmyślony udział 100%.
 """
 
 from __future__ import annotations
@@ -48,8 +43,12 @@ _BOUNDARY_TOUCH_AREA_RATIO_THRESHOLD_PERCENT: Final[float] = 0.1
 # '6.8.MW/U', '2.UP'). Zestaw znaków jest permisywny celowo.
 _ZONE_SYMBOL_MIN_LENGTH: Final[int] = 1
 _ZONE_SYMBOL_MAX_LENGTH: Final[int] = 20
+ZONE_SYMBOL_MAX_LENGTH: Final[int] = _ZONE_SYMBOL_MAX_LENGTH
+# Ten sam wzorzec jest publikowany w ``manual_zone_context`` i używany przez UI,
+# aby walidacja formularza i API nie mogły się rozjechać.
+ZONE_SYMBOL_ALLOWED_PATTERN: Final[str] = r"^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż._/-]+$"
 _ZONE_SYMBOL_ALLOWED_CHARS_RE: Final[re.Pattern[str]] = re.compile(
-    r"^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż._/-]+$"
+    ZONE_SYMBOL_ALLOWED_PATTERN
 )
 
 # Ręczny wpis symbolu strefy pochodzi z odczytu mapy rastrowej przez
@@ -161,21 +160,33 @@ def map_parser_zone_to_analyze_response(
 ) -> tuple[analyze_schemas.MpzpZoneResult, list[str]]:
     """Mapuje wynik parsera na strefę API bez wektora (fallback i resume).
 
-    Bez geometrii wektorowej przyjmujemy udokumentowane założenie, że cała
-    działka leży w strefie (``intersection_pct=100``); przypisanie oznacza
-    ``assignment_method`` i obniżone confidence nadane przez wywołującego.
-    Parametry są przenoszone przez :func:`apply_parser_zone` — z pełnym
-    evidence i bez automatycznego rozstrzygania konfliktów.
+    Bez geometrii wektorowej udział strefy w działce jest NIEUSTALONY
+    (``intersection_area_sqm``/``intersection_pct`` = ``None``, BK-204) — nie
+    zakładamy, że cała działka leży w strefie, i nie wskazujemy strefy
+    dominującej. Przypisanie oznacza ``assignment_method`` i obniżone confidence
+    nadane przez wywołującego. Parametry są przenoszone przez
+    :func:`apply_parser_zone` — z pełnym evidence i bez automatycznego
+    rozstrzygania konfliktów. ``parcel_area_sqm`` jest zachowany w sygnaturze
+    dla zgodności wywołań, ale nie służy do zmyślania udziału.
     """
-    base = analyze_schemas.MpzpZoneResult(
-        zone_symbol=parser_zone.zone_symbol,
-        intersection_area_sqm=parcel_area_sqm,
-        intersection_pct=100.0,
-        is_dominant=True,
-        source=source,
-    )
+    del parcel_area_sqm
+    base = unassigned_share_zone(parser_zone.zone_symbol, source)
     zone, skipped, _conflicts = apply_parser_zone(base, parser_zone, evidence)
     return zone, skipped
+
+
+def unassigned_share_zone(
+    zone_symbol: str,
+    source: SourceMetadata,
+) -> analyze_schemas.MpzpZoneResult:
+    """Strefa bez wektorowej granicy: symbol znany, udział powierzchniowy nie."""
+    return analyze_schemas.MpzpZoneResult(
+        zone_symbol=zone_symbol,
+        intersection_area_sqm=None,
+        intersection_pct=None,
+        is_dominant=False,
+        source=source,
+    )
 
 
 def apply_parser_zone(
@@ -485,43 +496,6 @@ def calculate_mpzp_zone_intersections(
     )
 
 
-def calculate_single_symbol_fallback(
-    parcel_geometry: BaseGeometry,
-    zone_symbol: str,
-    source_metadata: SourceMetadata,
-) -> MpzpZoneIntersectionResult:
-    """Fallback "cała działka = jedna strefa" przy braku wektorów MPZP.
-
-    Realizuje wymóg: gdy brak wektorów, użyj kandydata (z KIMPZP discovery
-    albo z ręcznego wpisu, patrz ``app/routers/analyze.py``) jako fallback z
-    niższym confidence, bez duplikowania tej logiki w dwóch miejscach.
-    ``source_metadata.confidence`` i ``.manual_review_required`` MUSZĄ
-    pochodzić od wywołującego — ta funkcja tylko przekazuje je dalej, nie
-    decyduje o nich (np. 0.5 dla ręcznego wpisu z resume, inna wartość dla
-    surowego kandydata KIMPZP bez potwierdzenia użytkownika).
-
-    ``manual_review_required`` w wyniku jest ZAWSZE True — to fallback bez
-    realnej geometrii wektorowej stref, nigdy nie jest to "pewne" przypisanie.
-    """
-    zone = ZoneIntersection(
-        zone_symbol=zone_symbol,
-        intersection_area_sqm=parcel_geometry.area,
-        area_ratio=100.0,
-        is_dominant=True,
-        source_metadata=source_metadata,
-    )
-    return MpzpZoneIntersectionResult(
-        dominant_zone=zone,
-        zones=[zone],
-        multi_zone=False,
-        manual_review_required=True,
-        warnings=[
-            "SINGLE_ZONE_FALLBACK: przypisanie całej działki do strefy oparte "
-            "na kandydacie bez wektorowej granicy."
-        ],
-    )
-
-
 # --- Wersjonowany wektor MPZP (BK-202) --------------------------------------
 
 # Przecięcie o polu nie większym niż ta tolerancja numeryczna jest stycznością
@@ -603,6 +577,7 @@ def assess_vector_zones(
                 pct=pct,
                 is_dominant=str(row["zone_identifier"]) == dominant_id,
                 touches=False,
+                wkt=geometry.wkt,
                 geojson=analysis_layer_geometry_to_geojson(
                     geometry,
                     "mpzp_zone",
@@ -617,14 +592,20 @@ def assess_vector_zones(
     for row in sorted(touching, key=lambda item: str(item["zone_identifier"])):
         zones.append(
             _vector_zone_result(
-                row, area_sqm=0.0, pct=0.0, is_dominant=False, touches=True, geojson=None
+                row,
+                area_sqm=0.0,
+                pct=0.0,
+                is_dominant=False,
+                touches=True,
+                wkt=None,
+                geojson=None,
             )
         )
 
     union = unary_union([geometry for _row, geometry in positive]) if positive else None
     covered_area = parcel.intersection(union).area if union is not None else 0.0
     covered_pct = covered_area / parcel_area * 100.0 if parcel_area > 0 else 0.0
-    summed_pct = sum(zone.intersection_pct for zone in zones)
+    summed_pct = sum(zone.intersection_pct or 0.0 for zone in zones)
     overlap_pct = max(0.0, summed_pct - covered_pct)
     act_identifiers = tuple(sorted({str(row["act_identifier"]) for row, _ in positive}))
 
@@ -674,8 +655,15 @@ def cap_fallback_zone(
     zone: analyze_schemas.MpzpZoneResult,
     *,
     assignment_method: str,
+    manual_selection: analyze_schemas.ManualZoneSelection | None = None,
 ) -> analyze_schemas.MpzpZoneResult:
-    """Oznacza przypisanie bez wektora i obniża jego pewność (BK-202)."""
+    """Oznacza przypisanie bez wektora i obniża jego pewność (BK-202/BK-204).
+
+    Każdy parametr strefy zależy od nieweryfikowanego przypisania symbolu
+    (discovery albo decyzja użytkownika), dlatego wszystkie kandydatury
+    dostają ``manual_review_required=True``. Udział powierzchniowy nie jest
+    ustalany — pozostaje ``None`` i strefa nie jest dominująca.
+    """
     source = zone.source.model_copy(
         update={
             "confidence": min(zone.source.confidence, FALLBACK_ZONE_CONFIDENCE_CAP),
@@ -686,6 +674,16 @@ def cap_fallback_zone(
         update={
             "assignment_method": assignment_method,
             "manual_review_required": True,
+            "intersection_area_sqm": None,
+            "intersection_pct": None,
+            "is_dominant": False,
+            "intersection_geojson": None,
+            "intersection_wkt": None,
+            "parameters": [
+                parameter.model_copy(update={"manual_review_required": True})
+                for parameter in zone.parameters
+            ],
+            "manual_selection": manual_selection,
             "source": source,
         }
     )
@@ -698,6 +696,7 @@ def _vector_zone_result(
     pct: float,
     is_dominant: bool,
     touches: bool,
+    wkt: str | None,
     geojson: dict[str, object] | None,
 ) -> analyze_schemas.MpzpZoneResult:
     fetched_at = row.get("fetched_at")
@@ -729,6 +728,7 @@ def _vector_zone_result(
         touches_boundary=touches,
         assignment_method="vector_intersection",
         intersection_geojson=geojson,  # type: ignore[arg-type]
+        intersection_wkt=wkt,
         source=source,
     )
 

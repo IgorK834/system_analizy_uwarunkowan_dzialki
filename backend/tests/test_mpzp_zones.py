@@ -10,7 +10,6 @@ from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
     ZoneGeometryCandidate,
     calculate_mpzp_zone_intersections,
-    calculate_single_symbol_fallback,
     map_parser_zone_to_analyze_response,
     validate_zone_symbol_format,
 )
@@ -153,7 +152,8 @@ def test_map_parser_zone_flags_unmapped_parameters_not_silently_dropped() -> Non
     assert result.max_building_height_m is None
 
 
-def test_map_parser_zone_assumes_whole_parcel_area_without_vector_geometry() -> None:
+def test_map_parser_zone_leaves_share_unknown_without_vector_geometry() -> None:
+    """BK-204: bez wektora udział jest nieustalony — ani 100%, ani 0."""
     parser_zone = ParserMpzpZoneResult(zone_symbol="230_U", parameters=[])
     source = _source()
 
@@ -161,10 +161,38 @@ def test_map_parser_zone_assumes_whole_parcel_area_without_vector_geometry() -> 
         parser_zone, parcel_area_sqm=1234.5, source=source
     )
 
-    assert result.intersection_area_sqm == 1234.5
-    assert result.intersection_pct == 100.0
-    assert result.is_dominant is True
+    assert result.intersection_area_sqm is None
+    assert result.intersection_pct is None
+    assert result.is_dominant is False
     assert result.source is source
+
+
+def test_cap_fallback_zone_flags_every_parameter_and_clears_share() -> None:
+    from app.schemas.analyze import MpzpParameterEvidence, MpzpZoneResult
+    from app.services.mpzp_zones import cap_fallback_zone
+
+    zone = MpzpZoneResult(
+        zone_symbol="1MN",
+        intersection_area_sqm=100.0,
+        intersection_pct=100.0,
+        is_dominant=True,
+        parameters=[
+            MpzpParameterEvidence(name="max_building_height_m", normalized_value=9.0, confidence=0.9),
+            MpzpParameterEvidence(name="primary_use", normalized_value="MN", confidence=0.8),
+        ],
+        source=_source(confidence=0.9, manual_review=False),
+    )
+
+    capped = cap_fallback_zone(zone, assignment_method="manual_user_input")
+
+    assert capped.assignment_method == "manual_user_input"
+    assert capped.intersection_area_sqm is None
+    assert capped.intersection_pct is None
+    assert capped.is_dominant is False
+    assert capped.manual_review_required is True
+    assert all(parameter.manual_review_required for parameter in capped.parameters)
+    assert capped.source.confidence == 0.5
+    assert capped.source.manual_review_required is True
 
 
 # --- calculate_mpzp_zone_intersections ----------------------------------
@@ -307,30 +335,3 @@ def test_multi_zone_false_when_second_zone_below_threshold() -> None:
     assert result.dominant_zone.zone_symbol == "dominant"
 
 
-# --- calculate_single_symbol_fallback ------------------------------------
-
-
-def test_single_symbol_fallback_assigns_whole_parcel() -> None:
-    parcel = Polygon.from_bounds(0, 0, 10, 10)
-    source = _source(confidence=MANUAL_ZONE_SYMBOL_CONFIDENCE)
-
-    result = calculate_single_symbol_fallback(parcel, "230_U", source)
-
-    assert result.dominant_zone is not None
-    assert result.dominant_zone.zone_symbol == "230_U"
-    assert result.dominant_zone.intersection_area_sqm == pytest.approx(100.0)
-    assert result.dominant_zone.area_ratio == 100.0
-    assert result.dominant_zone.is_dominant is True
-    assert result.multi_zone is False
-    assert result.manual_review_required is True
-    assert any("SINGLE_ZONE_FALLBACK" in warning for warning in result.warnings)
-
-
-def test_single_symbol_fallback_propagates_source_metadata_unchanged() -> None:
-    parcel = Polygon.from_bounds(0, 0, 5, 5)
-    source = _source(confidence=0.3, manual_review=True)
-
-    result = calculate_single_symbol_fallback(parcel, "MN", source)
-
-    assert result.zones[0].source_metadata is source
-    assert result.zones[0].source_metadata.confidence == 0.3
