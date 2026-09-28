@@ -1102,13 +1102,72 @@ class UtilitiesPreviewResult(BaseModel):
         return self
 
 
+RISK_RESULT_SCHEMA_VERSION = "1.0"
+# Tolerancja udziałów w procentach (zaokrąglenia do 1e-4 pp).
+_RISK_PCT_TOLERANCE = 0.01
+
+RiskSectionName = Literal["flood", "nature"]
+RiskSeverity = Literal["low", "medium", "high"]
+RiskSectionStatus = Literal["available", "unavailable", "error", "unknown"]
+RiskRelation = Literal["no_match", "boundary_only", "intersection", "unknown"]
+
+
 class RiskResult(BaseModel):
+    """Pojedynczy obiekt ryzyka (strefa powodziowa lub forma ochrony przyrody).
+
+    Pola strukturalne (BK-303) są jedynym nośnikiem danych — ``description``
+    to wyłącznie tekst prezentacyjny budowany z tych pól. ``None`` oznacza
+    wartość nieznaną (np. snapshot sprzed BK-303), nigdy 0.
+    """
+
     risk_type: str = Field(
         description="Typ ryzyka środowiskowego lub przestrzennego.",
         json_schema_extra={"example": "flood_zone"},
     )
+    section: RiskSectionName | None = Field(
+        default=None,
+        description="Sekcja: flood (ISOK) albo nature (GDOŚ); None dla starego zapisu.",
+    )
+    feature_id: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Unikalny identyfikator obiektu w źródle (gml:id).",
+    )
+    severity: RiskSeverity | None = Field(
+        default=None, description="Poziom istotności low/medium/high."
+    )
+    probability_class: str | None = Field(
+        default=None,
+        description="Klasa prawdopodobieństwa powodzi dosłownie ze źródła.",
+        json_schema_extra={"example": "scenariusz Q 1% (raz na 100 lat)"},
+    )
+    return_period_years: int | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Okres powtarzalności z atrybutu returnPeriod źródła; nigdy nie "
+            "wyliczany z tekstu klasy prawdopodobieństwa."
+        ),
+    )
+    protection_type: str | None = Field(
+        default=None, description="Rodzaj formy ochrony przyrody (warstwa GDOŚ)."
+    )
+    name: str | None = Field(default=None, description="Nazwa formy ochrony.")
+    intersection_area_sqm: float | None = Field(
+        default=None, ge=0.0, description="Pole przecięcia z działką w m² (EPSG:2180)."
+    )
+    intersection_pct: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=100.0 + _RISK_PCT_TOLERANCE,
+        description="Udział przecięcia w powierzchni działki, %.",
+    )
+    touches_boundary: bool | None = Field(
+        default=None,
+        description="True: obiekt wyłącznie styka się z granicą działki (pole ≈ 0).",
+    )
     description: str = Field(
-        description="Czytelny opis ryzyka dla użytkownika.",
+        description="Tekst prezentacyjny zbudowany z pól strukturalnych.",
         json_schema_extra={
             "example": "Część działki znajduje się w obszarze zagrożenia powodziowego."
         },
@@ -1119,6 +1178,7 @@ class RiskResult(BaseModel):
             "Geometria przecięcia ryzyka z działką w WGS84 jako GeoJSON Feature."
         ),
     )
+    warnings: list[str] = Field(default_factory=list)
     source: SourceMetadata = Field(
         description="Metadane źródła danych o ryzyku.",
         json_schema_extra={
@@ -1131,6 +1191,92 @@ class RiskResult(BaseModel):
             }
         },
     )
+
+    @model_validator(mode="after")
+    def validate_boundary_consistency(self) -> Self:
+        if self.touches_boundary is True and (self.intersection_area_sqm or 0.0) > 1e-3:
+            raise ValueError("Styk granicy nie może mieć dodatniego pola przecięcia.")
+        return self
+
+
+class RiskSectionResult(BaseModel):
+    """Status i provenance sekcji ryzyka niezależnie od listy obiektów.
+
+    ``features=[]`` z ``status=available`` to potwierdzony brak obiektów;
+    ``unavailable``/``error`` to awaria źródła (nigdy „brak ryzyka”), a
+    ``unknown`` — zapis sprzed BK-303. Liczniki i pola są ``None``, gdy sekcji
+    nie sprawdzono.
+    """
+
+    schema_version: str = RISK_RESULT_SCHEMA_VERSION
+    section: RiskSectionName
+    status: RiskSectionStatus
+    reason_code: str | None = Field(
+        default=None, description="Kod przyczyny statusu innego niż available."
+    )
+    relation: RiskRelation = Field(
+        description=(
+            "no_match — brak obiektów; boundary_only — wyłącznie styk granicy; "
+            "intersection — wspólna powierzchnia; unknown — nie sprawdzono."
+        )
+    )
+    feature_count: int | None = Field(default=None, ge=0)
+    intersecting_feature_count: int | None = Field(default=None, ge=0)
+    boundary_feature_count: int | None = Field(default=None, ge=0)
+    union_intersection_area_sqm: float | None = Field(
+        default=None,
+        ge=0.0,
+        description=(
+            "Pole sumy mnogościowej przecięć (bez podwójnego liczenia "
+            "nakładających się obiektów), m²."
+        ),
+    )
+    union_intersection_pct: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=100.0 + _RISK_PCT_TOLERANCE,
+        description="Udział sumy mnogościowej przecięć w działce, % (≤ 100).",
+    )
+    feature_ids: list[str] = Field(
+        default_factory=list, description="Unikalne ID obiektów sekcji."
+    )
+    source: SourceMetadata | None = Field(
+        default=None,
+        description="Provenance zapytania — także dla pustego i nieudanego wyniku.",
+    )
+    warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_status(self) -> Self:
+        measured = (
+            self.feature_count,
+            self.intersecting_feature_count,
+            self.boundary_feature_count,
+            self.union_intersection_area_sqm,
+            self.union_intersection_pct,
+        )
+        if self.status == "available":
+            if any(value is None for value in measured):
+                raise ValueError("Sekcja available wymaga liczników i pola sumy.")
+            if self.source is None:
+                raise ValueError("Sekcja available wymaga provenance źródła.")
+            expected = (
+                "no_match"
+                if self.feature_count == 0
+                else "intersection"
+                if (self.intersecting_feature_count or 0) > 0
+                else "boundary_only"
+            )
+            if self.relation != expected:
+                raise ValueError("Relacja sekcji nie odpowiada licznikom obiektów.")
+        else:
+            if self.relation != "unknown" or any(value is not None for value in measured):
+                raise ValueError(
+                    "Sekcja niesprawdzona nie może mieć relacji ani pomiarów (null, nie 0)."
+                )
+            if self.feature_ids:
+                raise ValueError("Sekcja niesprawdzona nie może mieć obiektów.")
+        return self
 
 
 TERRAIN_RESULT_SCHEMA_VERSION = "1.0"
@@ -1469,6 +1615,13 @@ class AnalyzeResponse(BaseModel):
     risks: list[RiskResult] = Field(
         description="Lista ryzyk środowiskowych i przestrzennych.",
         json_schema_extra={"example": []},
+    )
+    risk_sections: list[RiskSectionResult] = Field(
+        default_factory=list,
+        description=(
+            "Status i provenance sekcji flood (ISOK) i nature (GDOŚ) niezależnie "
+            "od listy risks; pusta lista tylko w odpowiedziach sprzed BK-303."
+        ),
     )
     terrain: TerrainResult | None = Field(
         default=None,

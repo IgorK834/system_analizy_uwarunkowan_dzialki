@@ -11,6 +11,7 @@ from app.schemas.analyze import (
     ParcelIdAnalyzeRequest,
     PogResult,
     RiskResult,
+    RiskSectionResult,
     SourceMetadata,
     WarningMessage,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "ParcelIdAnalyzeRequest",
     "PogResult",
     "RiskResult",
+    "RiskSectionResult",
     "SourceMetadata",
     "WarningMessage",
     "ExtractedEvidence",
