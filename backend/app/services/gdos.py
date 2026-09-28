@@ -36,6 +36,7 @@ w tej sekcji zawyżałoby ocenę ograniczeń.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -121,12 +122,31 @@ _PROTECTION_TYPE_KEYWORDS: Final[dict[str, str]] = {
 }
 
 
+GDOS_SOURCE_NAME: Final[str] = "GDOS"
+GDOS_SOURCE_ID: Final[str] = "gdos"
+REASON_TIMEOUT: Final[str] = "SERVICE_TIMEOUT"
+REASON_HTTP_ERROR: Final[str] = "SERVICE_HTTP_ERROR"
+REASON_INVALID_RESPONSE: Final[str] = "INVALID_RESPONSE"
+
+
 class GdosServiceUnavailableError(Exception):
     """Usługa GDOŚ jest niedostępna albo zwróciła nieparsowalną odpowiedź.
 
     Analogicznie do IsokServiceUnavailableError brak danych o formach ochrony
-    przyrody nie może być cicho zamieniony na pustą listę.
+    przyrody nie może być cicho zamieniony na pustą listę. Wyjątek niesie kod
+    przyczyny i provenance nieudanej próby (BK-303).
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = REASON_INVALID_RESPONSE,
+        source_metadata: SourceMetadata | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+        self.source_metadata = source_metadata
 
 
 @dataclass(frozen=True)
@@ -141,6 +161,18 @@ class NatureProtectionFeature:
     severity: str
     source_metadata: SourceMetadata
     warnings: list[str] = field(default_factory=list)
+    # Unikalny identyfikator obiektu ``gml:id`` formy ochrony (BK-303).
+    feature_id: str | None = None
+    # Styk granicy bez wspólnej powierzchni (pole przecięcia < epsilon).
+    touches_boundary: bool = False
+
+
+@dataclass(frozen=True)
+class NatureProtectionSection:
+    """Wynik sprawdzenia wszystkich warstw GDOŚ z provenance całej sekcji."""
+
+    features: list[NatureProtectionFeature]
+    source_metadata: SourceMetadata
 
 
 async def fetch_nature_protection_areas(
@@ -159,6 +191,18 @@ async def fetch_nature_protection_areas(
     zamieniana na częściowy wynik: gdyby jedna kategoria ochrony nie została
     sprawdzona, wynik "brak kolizji" byłby nieprawdziwy.
     """
+    return (await fetch_nature_protection_section(parcel_geometry, client)).features
+
+
+async def fetch_nature_protection_section(
+    parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient | None = None,
+) -> NatureProtectionSection:
+    """Jak ``fetch_nature_protection_areas``, z provenance sekcji (BK-303).
+
+    Cechy o tym samym ``gml:id`` są liczone raz. Nakładające się formy ochrony
+    pozostają osobnymi obiektami — ich udziały nie są sumowane.
+    """
     if client is not None:
         return await _fetch_all_layers(parcel_geometry, client)
 
@@ -169,7 +213,7 @@ async def fetch_nature_protection_areas(
 async def _fetch_all_layers(
     parcel_geometry: BaseGeometry,
     client: httpx.AsyncClient,
-) -> list[NatureProtectionFeature]:
+) -> NatureProtectionSection:
     minx, miny, maxx, maxy = bbox_from_geometry(parcel_geometry)
     # Parametr bbox jest przyjmowany w kolejności (minE,minN,maxE,maxN) — inaczej
     # niż kolejność osi w zwracanej geometrii (patrz app/services/gml.py).
@@ -184,9 +228,16 @@ async def _fetch_all_layers(
     )
 
     results: list[NatureProtectionFeature] = []
-    for type_name, (features, source_url) in zip(GDOS_PROTECTION_LAYERS, per_layer):
+    seen_ids: set[str] = set()
+    layer_digests: list[str] = []
+    for type_name, (features, source_url, digest) in zip(GDOS_PROTECTION_LAYERS, per_layer):
+        layer_digests.append(f"{type_name}:{digest}")
         default_type = GDOS_PROTECTION_LAYERS[type_name]
         for gml_feature in features:
+            if gml_feature.feature_id is not None:
+                if gml_feature.feature_id in seen_ids:
+                    continue
+                seen_ids.add(gml_feature.feature_id)
             feature = _build_nature_protection_feature(
                 parcel_geometry,
                 gml_feature.geometry,
@@ -194,10 +245,42 @@ async def _fetch_all_layers(
                 source_url,
                 fetched_at,
                 protection_type=_resolve_protection_type(gml_feature, default_type),
+                feature_id=gml_feature.feature_id,
             )
             if feature is not None:
                 results.append(feature)
-    return results
+    # Skrót sekcji: SHA-256 z uporządkowanej listy skrótów odpowiedzi warstw.
+    section_digest = hashlib.sha256("\n".join(layer_digests).encode("utf-8")).hexdigest()
+    return NatureProtectionSection(
+        features=results,
+        source_metadata=_section_source(
+            str(httpx.URL(settings.gdos_wfs_base_url, params={"bbox": bbox})),
+            fetched_at,
+            section_digest,
+        ),
+    )
+
+
+def _section_source(
+    source_url: str,
+    fetched_at: datetime,
+    artifact_sha256: str | None,
+    *,
+    failed: bool = False,
+    response_status: int | None = 200,
+) -> SourceMetadata:
+    """Provenance sprawdzenia wszystkich warstw GDOŚ — także bez przecięć."""
+    return SourceMetadata(
+        source_id=GDOS_SOURCE_ID,
+        source_name=GDOS_SOURCE_NAME,
+        source_version=f"WFS 2.0.0; {len(GDOS_PROTECTION_LAYERS)} warstw GDOS:*",
+        source_url=source_url,
+        fetched_at=fetched_at,
+        response_status=response_status,
+        artifact_sha256=artifact_sha256,
+        confidence=0.0 if failed else 0.85,
+        manual_review_required=failed,
+    )
 
 
 def _resolve_protection_type(gml_feature: GmlFeature, default_type: str) -> str | None:
@@ -215,7 +298,7 @@ async def _fetch_layer(
     client: httpx.AsyncClient,
     type_name: str,
     bbox: str,
-) -> tuple[list[GmlFeature], str]:
+) -> tuple[list[GmlFeature], str, str]:
     params = {
         "service": "WFS",
         "version": "2.0.0",
@@ -224,13 +307,17 @@ async def _fetch_layer(
         "bbox": bbox,
     }
     response_text, source_url = await _fetch_gdos_response_text(client, params)
-    return _parse_layer_response(response_text, type_name), source_url
+    digest = hashlib.sha256(response_text.encode("utf-8")).hexdigest()
+    failure = _section_source(source_url, datetime.now(timezone.utc), digest, failed=True)
+    return _parse_layer_response(response_text, type_name, failure), source_url, digest
 
 
 async def _fetch_gdos_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
 ) -> tuple[str, str]:
+    request_url = str(httpx.URL(settings.gdos_wfs_base_url, params=params))
+    attempted_at = datetime.now(timezone.utc)
     try:
         response = await client.get(
             settings.gdos_wfs_base_url,
@@ -240,15 +327,41 @@ async def _fetch_gdos_response_text(
         response.raise_for_status()
     except httpx.TimeoutException as exc:
         raise GdosServiceUnavailableError(
-            "Usługa GDOŚ nie odpowiedziała w wymaganym czasie."
+            "Usługa GDOŚ nie odpowiedziała w wymaganym czasie.",
+            reason_code=REASON_TIMEOUT,
+            source_metadata=_section_source(
+                request_url, attempted_at, None, failed=True, response_status=None
+            ),
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        raise GdosServiceUnavailableError(
+            f"Usługa GDOŚ zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_section_source(
+                request_url,
+                attempted_at,
+                None,
+                failed=True,
+                response_status=exc.response.status_code,
+            ),
         ) from exc
     except httpx.HTTPError as exc:
-        raise GdosServiceUnavailableError(f"Usługa GDOŚ zwróciła błąd: {exc}") from exc
+        raise GdosServiceUnavailableError(
+            f"Usługa GDOŚ zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_section_source(
+                request_url, attempted_at, None, failed=True, response_status=None
+            ),
+        ) from exc
 
     return response.text, str(response.url)
 
 
-def _parse_layer_response(text: str, type_name: str = "") -> list[GmlFeature]:
+def _parse_layer_response(
+    text: str,
+    type_name: str = "",
+    failure_source: SourceMetadata | None = None,
+) -> list[GmlFeature]:
     """Parsuje odpowiedź jednej warstwy WFS.
 
     Pusta lista jest zarezerwowana dla potwierdzonego braku cech w BBOX.
@@ -261,7 +374,9 @@ def _parse_layer_response(text: str, type_name: str = "") -> list[GmlFeature]:
     except GmlResponseError as exc:
         layer_info = f" (warstwa {type_name})" if type_name else ""
         raise GdosServiceUnavailableError(
-            f"Nie udało się sparsować odpowiedzi GDOŚ{layer_info}: {exc}"
+            f"Nie udało się sparsować odpowiedzi GDOŚ{layer_info}: {exc}",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=failure_source,
         ) from exc
 
 
@@ -337,6 +452,7 @@ def _build_nature_protection_feature(
     source_url: str,
     fetched_at: datetime,
     protection_type: str | None = None,
+    feature_id: str | None = None,
 ) -> NatureProtectionFeature | None:
     """Buduje wynik dla jednej formy ochrony albo ``None`` przy braku przecięcia.
 
@@ -359,7 +475,8 @@ def _build_nature_protection_feature(
             warnings.append(type_warning)
     name = _extract_name(properties)
 
-    if intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM:
+    touches_boundary = intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM
+    if touches_boundary:
         # Styk granicą nie jest powierzchniowym ograniczeniem, więc nadpisuje
         # nawet stałą regułę high dla rezerwatów i parków narodowych.
         severity = "low"
@@ -380,8 +497,11 @@ def _build_nature_protection_feature(
         intersection_area_sqm=intersection_area_sqm,
         area_ratio=area_ratio,
         severity=severity,
+        feature_id=feature_id,
+        touches_boundary=touches_boundary,
         source_metadata=SourceMetadata(
-            source_name="GDOS",
+            source_id=GDOS_SOURCE_ID,
+            source_name=GDOS_SOURCE_NAME,
             source_url=source_url,
             fetched_at=fetched_at,
             confidence=0.85 if protection_type != "unknown" else 0.4,
