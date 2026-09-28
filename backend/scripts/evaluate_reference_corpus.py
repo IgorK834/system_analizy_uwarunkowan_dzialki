@@ -249,36 +249,118 @@ def _mpzp_section(discovery_raw: object, derived_raw: object) -> dict[str, objec
     return _unknown_section(("document_url", "mode", "plan_id", "zone_count", "zones"))
 
 
+# Styk granicy: pole przecięcia poniżej epsilonu (spójnie z adapterami ISOK/GDOŚ).
+RISK_AREA_EPSILON_SQM = 1e-6
+_RISK_SECTION_KEYS = ("feature_count", "features", "relation", "union_area")
+
+
 def _risk_section(raw: object, kind: str) -> dict[str, object]:
-    if not isinstance(raw, Mapping) or raw.get("status") != "available":
-        return _unknown_section(("feature_count", "features", "relation"))
+    """Zamrożoną obserwację mapuje na kontrakt strukturalny, potem ocenia.
+
+    Frozen runner i odpowiedź API przechodzą tę samą ścieżkę
+    ``risk_section_from_structured`` — ewaluator nie czyta ``description``.
+    """
+    section, risks = _observation_as_structured(raw, kind)
+    return risk_section_from_structured(section, risks)
+
+
+def _observation_as_structured(
+    raw: object, kind: str
+) -> tuple[dict[str, object] | None, list[dict[str, object]]]:
+    if not isinstance(raw, Mapping):
+        return None, []
+    if raw.get("status") != "available":
+        return {"section": kind, "status": "unavailable"}, []
     raw_features = raw.get("features")
     raw_features = raw_features if isinstance(raw_features, list) else []
-    features = []
+    risks: list[dict[str, object]] = []
     for feature in raw_features:
         if not isinstance(feature, Mapping):
             continue
-        area_ratio = feature.get("area_ratio")
-        features.append(
+        area = feature.get("intersection_area_sqm")
+        ratio = feature.get("area_ratio")
+        risks.append(
             {
-                "area": feature.get("intersection_area_sqm"),
-                "class": feature.get("probability_class") or feature.get("name"),
+                "section": kind,
+                "risk_type": feature.get("type"),
+                "feature_id": feature.get("feature_id"),
+                "probability_class": feature.get("probability_class"),
+                "protection_type": feature.get("type") if kind == "nature" else None,
+                "name": feature.get("name"),
                 "severity": feature.get("severity"),
-                "share": (
-                    float(area_ratio) * 100.0
-                    if isinstance(area_ratio, (int, float))
+                "intersection_area_sqm": area,
+                "intersection_pct": (
+                    float(ratio) * 100.0 if isinstance(ratio, (int, float)) else None
+                ),
+                "touches_boundary": (
+                    float(area) < RISK_AREA_EPSILON_SQM
+                    if isinstance(area, (int, float))
                     else None
                 ),
-                "type": feature.get("type"),
             }
         )
+    return {"section": kind, "status": "available"}, risks
+
+
+def risk_section_from_structured(
+    section: Mapping[str, Any] | None,
+    risks: Sequence[Mapping[str, Any]],
+) -> dict[str, object]:
+    """Sekcja ewaluatora wyłącznie z pól strukturalnych ``RiskSectionResult``/``RiskResult``.
+
+    Status inny niż ``available`` (awaria, błąd, stary zapis) daje sekcję
+    ``unknown`` — nie jest liczony jako „brak ryzyka” w confusion matrix.
+    """
+    if not isinstance(section, Mapping) or section.get("status") != "available":
+        return _unknown_section(_RISK_SECTION_KEYS)
+    features = []
+    for risk in risks:
+        if not isinstance(risk, Mapping):
+            continue
+        area = risk.get("intersection_area_sqm")
+        touches = risk.get("touches_boundary")
+        if touches is None and isinstance(area, (int, float)):
+            touches = float(area) < RISK_AREA_EPSILON_SQM
+        features.append(
+            {
+                "area": area,
+                "class": risk.get("probability_class") or risk.get("name"),
+                "severity": risk.get("severity"),
+                "share": risk.get("intersection_pct"),
+                "type": risk.get("protection_type") or risk.get("risk_type"),
+                "feature_id": risk.get("feature_id"),
+                "touches_boundary": touches,
+            }
+        )
+    intersecting = [item for item in features if item["touches_boundary"] is not True]
+    relation = "none" if not features else "intersection" if intersecting else "boundary"
     return {
         "status": "available",
         "values": {
             "feature_count": len(features),
             "features": features,
-            "relation": "none" if not features else "intersection",
+            "relation": relation,
+            "union_area": section.get("union_intersection_area_sqm"),
         },
+    }
+
+
+def sections_from_analyze_response(payload: Mapping[str, Any]) -> dict[str, dict[str, object]]:
+    """Sekcje flood/nature z odpowiedzi ``/analyze`` (API, snapshot, cache)."""
+    risks = payload.get("risks")
+    risks = risks if isinstance(risks, list) else []
+    raw_sections = payload.get("risk_sections")
+    by_name = {
+        section.get("section"): section
+        for section in (raw_sections if isinstance(raw_sections, list) else [])
+        if isinstance(section, Mapping)
+    }
+    return {
+        name: risk_section_from_structured(
+            by_name.get(name),
+            [risk for risk in risks if isinstance(risk, Mapping) and risk.get("section") == name],
+        )
+        for name in ("flood", "nature")
     }
 
 
@@ -455,8 +537,52 @@ def _share_errors(
     return errors
 
 
+def _risk_errors(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> tuple[list[float], list[float]]:
+    """Błędy pola [m²] i udziału [pp] dopasowanych obiektów ryzyka.
+
+    Obiekty dopasowuje się po klasie (klasa prawdopodobieństwa albo nazwa
+    formy ochrony), a przy remisie — po najmniejszej różnicy pola. Obiekty bez
+    pary nie wchodzą do błędu pola; są widoczne w confusion matrix.
+    """
+    expected_values = expected.get("values")
+    actual_values = actual.get("values")
+    if not isinstance(expected_values, Mapping) or not isinstance(actual_values, Mapping):
+        return [], []
+    expected_features = expected_values.get("features")
+    actual_features = actual_values.get("features")
+    if not isinstance(expected_features, list) or not isinstance(actual_features, list):
+        return [], []
+    remaining = [item for item in actual_features if isinstance(item, Mapping)]
+    area_errors: list[float] = []
+    share_errors: list[float] = []
+    for expected_feature in expected_features:
+        if not isinstance(expected_feature, Mapping):
+            continue
+        expected_area = expected_feature.get("area")
+        candidates = [
+            item for item in remaining if item.get("class") == expected_feature.get("class")
+        ]
+        if not candidates or not isinstance(expected_area, (int, float)):
+            continue
+        best = min(
+            candidates,
+            key=lambda item: abs(float(item.get("area") or 0.0) - float(expected_area)),
+        )
+        remaining.remove(best)
+        actual_area = best.get("area")
+        if isinstance(actual_area, (int, float)):
+            area_errors.append(abs(float(actual_area) - float(expected_area)))
+        expected_share = expected_feature.get("share")
+        actual_share = best.get("share")
+        if isinstance(expected_share, (int, float)) and isinstance(actual_share, (int, float)):
+            share_errors.append(abs(float(actual_share) - float(expected_share)))
+    return area_errors, share_errors
+
+
 def _relation_as_bool(value: object) -> bool | None:
-    if value in {"none", "outside"}:
+    if value in {"none", "outside", "boundary"}:
         return False
     if value in {"intersection", "intersection_and_boundary", "inside", "partial"}:
         return True
@@ -498,6 +624,8 @@ def calculate_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     share_errors: list[float] = []
     completeness_known = 0
     completeness_total = total * len(COMPLETENESS_PATHS)
+    risk_area_errors: list[float] = []
+    risk_share_errors: list[float] = []
     confusion = {
         name: {"tp": 0, "fp": 0, "fn": 0, "tn": 0}
         for name in ("flood_intersection", "nature_intersection", "ouz_presence")
@@ -549,6 +677,10 @@ def calculate_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
                 "tn"
             )
             confusion[metric_name][key] += 1
+            if section_name in {"flood", "nature"} and expected_bool and actual_bool:
+                area_errors, pct_errors = _risk_errors(expected_section, actual_section)
+                risk_area_errors.extend(area_errors)
+                risk_share_errors.extend(pct_errors)
 
         completeness_known += sum(
             _known(_value_at(actual, path)) for path in COMPLETENESS_PATHS
@@ -613,6 +745,24 @@ def calculate_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             "percentage_point",
             denominator=len(share_errors),
             reason=None if share_errors else "no_eligible_zone_shares",
+        ),
+        "risk_area_mae": _metric(
+            sum(risk_area_errors) / len(risk_area_errors) if risk_area_errors else None,
+            "square_metre",
+            denominator=len(risk_area_errors),
+            reason=None if risk_area_errors else "no_matched_risk_features",
+        ),
+        "risk_area_max_absolute_error": _metric(
+            max(risk_area_errors) if risk_area_errors else None,
+            "square_metre",
+            denominator=len(risk_area_errors),
+            reason=None if risk_area_errors else "no_matched_risk_features",
+        ),
+        "risk_share_mae": _metric(
+            sum(risk_share_errors) / len(risk_share_errors) if risk_share_errors else None,
+            "percentage_point",
+            denominator=len(risk_share_errors),
+            reason=None if risk_share_errors else "no_matched_risk_features",
         ),
         "binary_conditions": binary_metrics,
         "unknown_case_share": _ratio(unknown, total),
