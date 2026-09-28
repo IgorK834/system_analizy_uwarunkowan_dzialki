@@ -1,0 +1,865 @@
+# Katalog źródeł danych — jedyne źródło prawdy dla kontraktów urzędowych
+# i licencjonowanych danych wykorzystywanych przez system.
+#
+# ZASADY (patrz ANALIZA_ARCHITEKTURY_I_PLAN.md sekcja D oraz context.md pkt 10):
+#   * Adresy, warstwy, licencje, CRS, SLA i częstotliwości aktualizacji NIE są
+#     wymyślane. Jeżeli kontraktu lub licencji nie udało się potwierdzić w
+#     oficjalnej dokumentacji właściciela danych, źródło ma status `research`
+#     (lub `contract_required` / `no_redistribution` / `placeholder`) oraz
+#     `production_ready: false`.
+#   * Źródło może zostać uruchomione przez produkcyjny orchestrator wyłącznie,
+#     gdy `status: production`, `production_ready: true` oraz
+#     `contract_confirmed: true` (funkcja `ensure_source_runnable`).
+#   * Geometria kanoniczna całego systemu jest w EPSG:2180, dlatego `target_crs`
+#     każdego wpisu musi być równy `EPSG:2180`.
+#
+# Weryfikacja ręczna źródeł produkcyjnych: 2026-07-22 (oficjalna dokumentacja
+# Geoportal.gov.pl / GUGiK — usługi ULDK, UUG oraz WMS KIMPZP) oraz 2026-07-30
+# (realne GetCapabilities / DescribeFeatureType / GetFeature usług GDOŚ i ISOK
+# oraz realne zapytanie GetMinMaxByPolygon usługi NMT — fixtures w
+# backend/tests/fixtures/source_contracts/). Warstwy podglądowe WMS POG i KIUT
+# zweryfikowano ponownie 2026-09-02. Kontrakt RU MPZP i macierz gmin korpusu
+# zweryfikowano 2026-09-24 (docs/data_sources/mpzp_contracts.md).
+
+schema_version: "1.0"
+
+sources:
+  # --- ŹRÓDŁA PRODUKCYJNE (kontrakt potwierdzony) ---------------------------
+
+  - source_id: uldk
+    name: "Usługa Lokalizacji Działek Katastralnych (ULDK)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: rest
+    capabilities_url: "https://uldk.gugik.gov.pl/"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "ULDK/1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane ewidencyjne udostępniane nieodpłatnie przez GUGiK w usłudze ULDK;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Usługa Lokalizacji Działek Katastralnych (ULDK), GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    notes: >-
+      Kontrakt REST GetParcelById/GetParcelByXY potwierdzony w publicznej
+      dokumentacji GUGiK; usługa przyjmuje i zwraca współrzędne w EPSG:2180.
+      Adapter: app/services/uldk.py (ULDK_BASE_URL).
+
+  - source_id: emuia_uug
+    name: "Usługa Uniwersalnego Geokodera (UUG) / EMUiA"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: rest
+    capabilities_url: "https://services.gugik.gov.pl/uug/"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "UUG/1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane adresowe (EMUiA) udostępniane nieodpłatnie przez GUGiK w usłudze UUG;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    notes: >-
+      Kontrakt REST GetAddress potwierdzony; usługa zwraca punkty w EPSG:2180
+      gotowe do przekazania do ULDK GetParcelByXY. Adapter: app/services/geocoding.py.
+
+  - source_id: prg_address_dictionary
+    name: "Słowniki adresowe off-line (PRG Adresy / EMUiA)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: soap
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline?wsdl"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "SOAP 1.1 / slowniki-offline-service 1.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane referencyjne PRG Adresy i EMUiA są udostępniane przez publiczną usługę
+      słowników GUGiK; wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
+    attribution: "Źródło: Słowniki adresowe PRG Adresy / EMUiA, GUGiK."
+    expected_update_interval: "incremental_updates_available"
+    sla: "not_published"
+    last_manual_verification: 2026-07-23
+    notes: >-
+      Oficjalna usługa SOAP udostępnia pełne i przyrostowe paczki ZIP dla
+      miejscowości, ulic i adresów. Pełny rekord adresu zawiera hierarchię
+      administracyjną oraz punkt w EPSG:2180. Lokalny indeks używa wyłącznie
+      rekordów aktualnych; identyfikator verId służy jako checkpoint przyrostu.
+
+  - source_id: kimpzp
+    name: "Krajowa Integracja Miejscowych Planów Zagospodarowania Przestrzennego (WMS)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wms
+    capabilities_url: >-
+      https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego
+    file_url: null
+    type_names: null
+    layers:
+      - plany_granice
+      - raster
+      - wektor-str
+      - wektor-lzb
+      - wektor-lin
+      - wektor-pow
+      - wektor-pkt
+      - granice
+    protocol_version: "1.1.1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa przeglądania WMS udostępniana nieodpłatnie przez GUGiK; wykorzystanie
+      zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Krajowa Integracja MPZP (KIMPZP), GUGiK / Geoportal.gov.pl."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-22
+    mpzp_classification: raster
+    notes: >-
+      WMS jest warstwą prezentacyjną i kanałem discovery (GetFeatureInfo), NIE
+      źródłem geometrii wektorowej do obliczeń przestrzennych (context.md pkt 6).
+      Endpoint i warstwa `plany_granice` potwierdzone w bieżącym GetCapabilities
+      usługi (fixture: tests/fixtures/source_contracts/kimpzp_getcapabilities.xml).
+      Adapter: app/services/mpzp.py (settings.kimpzp_wms_base_url).
+
+  - source_id: mpzp_ru
+    name: "Miejscowe plany zagospodarowania przestrzennego — Rejestr Urbanistyczny"
+    owner: "Ministerstwo Rozwoju i Technologii / właściwe jednostki samorządu terytorialnego"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: >-
+      https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs?service=WFS&version=2.0.0&request=GetCapabilities
+    file_url: null
+    type_names:
+      - "app-mpzp:AktPlanowaniaPrzestrzennego"
+      - "app-mpzp:DokumentFormalny"
+      - "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Publiczny GetCapabilities deklaruje brak ograniczeń w publicznym dostępie
+      oraz brak warunków dostępu i użytkowania. Dane pochodzą od publikujących
+      je jednostek samorządu; zachować atrybucję i dokument źródłowy.
+    attribution: "Źródło: Rejestr Urbanistyczny MRiT oraz właściwa jednostka samorządu terytorialnego."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-09-24
+    mpzp_classification: act_boundary_document
+    resources:
+      - role: boundaries
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:AktPlanowaniaPrzestrzennego"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+      - role: documents
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:DokumentFormalny"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+      - role: drawings
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-mpzp/wfs"
+        type_name: "app-mpzp:RysunekAktuPlanowaniaPrzestrzennego"
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+    notes: >-
+      WFS RU udostępnia lokalizację przestrzenną obszaru aktu, dokument formalny
+      i rysunek z georeferencją. Kontrakt nie zawiera warstwy wydzieleń
+      przeznaczenia terenu. Z tego powodu źródło jest produkcyjne dla discovery,
+      granicy i provenance, ale guard MPZP zabrania użycia go jako vector_zones.
+      Capabilities, DescribeFeatureType i zapytania hits dla gmin korpusu
+      zamrożono w tests/fixtures/source_contracts/mpzp/.
+
+  - source_id: pog_wms
+    name: "Plany Ogólne Gmin (WMS)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK) / właściwe gminy"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wms
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin"
+    file_url: null
+    type_names: null
+    layers:
+      - strefaPlanistyczna
+      - obszarUzupelnieniaZabudowy
+      - obszarZabSrodmiejskiej
+      - aktPlanowaniaprzestrzennego
+    protocol_version: "1.1.1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa przeglądania WMS deklaruje brak opłat i ograniczeń dostępu;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Plany Ogólne Gmin, GUGiK / Geoportal.gov.pl / właściwa gmina."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-09-02
+    notes: >-
+      Wyłącznie źródło prezentacyjne podglądu. Nie jest źródłem geometrii do
+      obliczeń ani potwierdzeniem dostępności wektorowego APP/GML w danej
+      gminie. GetCapabilities potwierdza Fees NONE, AccessConstraints NONE i
+      cztery skonfigurowane warstwy. Proxy: app/services/wms_tiles.py.
+
+  - source_id: kiut_wms
+    name: "Krajowa Integracja Uzbrojenia Terenu (WMS)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK) / właściwe powiaty"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wms
+    capabilities_url: >-
+      https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu
+    file_url: null
+    type_names: null
+    layers:
+      - przewod_wodociagowy
+      - przewod_kanalizacyjny
+      - przewod_elektroenergetyczny
+      - przewod_gazowy
+      - przewod_cieplowniczy
+      - przewod_telekomunikacyjny
+      - przewod_specjalny
+      - przewod_niezidentyfikowany
+      - przewod_urzadzenia
+    protocol_version: "1.1.1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      GetCapabilities deklaruje Brak opłat / none oraz AccessConstraints NONE;
+      wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
+    attribution: "Źródło: Krajowa Integracja Uzbrojenia Terenu (KIUT), GUGiK / właściwy powiat."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-09-02
+    notes: >-
+      Wyłącznie źródło prezentacyjne oraz przyszły wskaźnik pokrycia z warstwy
+      `gesut`; nie jest źródłem geometrii sieci do analiz i nie pozwala
+      wyznaczać odległości do przyłączy. Warstwy sieci są kaskadowane z usług
+      powiatowych i widoczne dopiero przy skali 1:1000. Przycięty kontrakt:
+      tests/fixtures/source_contracts/kiut_getcapabilities.xml. Proxy:
+      app/services/wms_tiles.py.
+
+  - source_id: egib_geometry_warsaw
+    name: "Działki EGiB Warszawy — geometria i atrybuty uwolnione"
+    owner: "Urząd m.st. Warszawy / Biuro Geodezji i Katastru"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: "https://wms2.um.warszawa.pl/geoserver/wfs/wfs"
+    file_url: null
+    type_names: ["wfs:dzialki"]
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2178"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["1465011"]
+    license: >-
+      Publiczna usługa WFS danych bezpłatnych, wskazana przez Urząd m.st.
+      Warszawy jako kanał ponownego wykorzystywania informacji przestrzennej.
+      Importer zapisuje wyłącznie geometrię, identyfikator, numer, obręb,
+      jednostkę i pole; pomija grupę rejestrową i klasoużytki.
+    attribution: "Źródło: Urząd m.st. Warszawy, publiczna usługa WFS BGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-24
+    field_mapping:
+      parcel_identifier: "ID_DZIALKI"
+      number: "NUMER_DZIALKI"
+      precinct: "NAZWA_OBREBU"
+      cadastral_unit: "NAZWA_GMINY"
+      reported_area_sqm: "POLE_EWIDENCYJNE"
+    resources:
+      - role: parcels
+        access_type: wfs
+        url: "https://wms2.um.warszawa.pl/geoserver/wfs/wfs"
+        type_name: "wfs:dzialki"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          parcel_identifier: "ID_DZIALKI"
+          number: "NUMER_DZIALKI"
+          precinct: "NAZWA_OBREBU"
+          cadastral_unit: "NAZWA_GMINY"
+          reported_area_sqm: "POLE_EWIDENCYJNE"
+    notes: >-
+      GetCapabilities i DescribeFeatureType zweryfikowano 2026-07-24.
+      Oficjalna strona BIP Warszawy wskazuje ten endpoint jako WFS danych
+      bezpłatnych i kanał ponownego wykorzystywania. Kontrakt ma CRS EPSG:2178
+      i typ wfs:dzialki. Fixture kontraktu:
+      tests/fixtures/source_contracts/warsaw_parcels_*.xml.
+
+  - source_id: gdos
+    name: "Formy ochrony przyrody (GDOŚ)"
+    owner: "Generalna Dyrekcja Ochrony Środowiska (GDOŚ)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: "https://sdi.gdos.gov.pl/wfs"
+    file_url: null
+    type_names:
+      - "GDOS:ParkiNarodowe"
+      - "GDOS:Rezerwaty"
+      - "GDOS:ObszarySpecjalnejOchrony"
+      - "GDOS:SpecjalneObszaryOchrony"
+      - "GDOS:ParkiKrajobrazowe"
+      - "GDOS:ObszaryChronionegoKrajobrazu"
+      - "GDOS:UzytkiEkologiczne"
+      - "GDOS:ZespolyPrzyrodniczoKrajobrazowe"
+      - "GDOS:StanowiskaDokumentacyjne"
+      - "GDOS:PomnikiPrzyrodyPowierzchniowe"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa pobierania WFS udostępniana publicznie przez GDOŚ. Bieżące
+      GetCapabilities deklaruje wprost Fees "brak" oraz AccessConstraints
+      "brak", czyli brak opłat i brak ograniczeń w dostępie.
+    attribution: "Źródło: Generalna Dyrekcja Ochrony Środowiska (GDOŚ), usługa WFS sdi.gdos.gov.pl."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-30
+    notes: >-
+      Kontrakt potwierdzony realnymi zapytaniami 2026-07-30 (fixtures
+      gdos_getcapabilities.xml, gdos_describe.xml, gdos_getfeature.xml,
+      gdos_exception_report.xml). Trzy ustalenia istotne dla adaptera:
+      (1) parametr typeNames jest obowiązkowy, a jego brak daje ows:ExceptionReport
+      ze statusem HTTP 200; (2) usługa odrzuca kilka warstw w jednym zapytaniu
+      ("Join filter inconsistent with regard to feature types"), więc każda
+      warstwa jest odpytywana osobno; (3) schemat warstw NIE zawiera atrybutu
+      rodzaju ochrony, dlatego typ formy ochrony wynika z odpytanej warstwy.
+      CRS to EPSG:2180, ale srsName jest w formie URN, czyli kolejność osi w
+      zwracanej geometrii to (northing, easting) — odwrotnie niż w geometrii
+      kanonicznej z ULDK; parametr bbox przyjmuje kolejność (minE,minN,maxE,maxN).
+      Warstwy punktowe (GDOS:PomnikiPrzyrodyPunktowe) oraz warstwy, które nie są
+      formami ochrony przyrody (korytarzeEkologiczne, Mezoregiony, ramsar,
+      ElektrownieWiatrowe) i warstwy proponowanych zmian Natura 2000 są świadomie
+      pominięte. Adapter: app/services/gdos.py (GDOS_PROTECTION_LAYERS).
+
+  - source_id: isok
+    name: "Zagrożenie powodziowe (ISOK / MZP INSPIRE)"
+    owner: "Państwowe Gospodarstwo Wodne Wody Polskie"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: "https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS"
+    file_url: null
+    type_names:
+      - "nz-core:HazardArea"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Usługa pobierania INSPIRE udostępniana publicznie przez PGW Wody Polskie.
+      Bieżące GetCapabilities deklaruje Fees "Brak warunków dostępu i
+      użytkowania" oraz AccessConstraints "Brak ograniczeń w publicznym dostępie".
+    attribution: "Źródło: Mapy Zagrożenia Powodziowego (MZP), PGW Wody Polskie / ISOK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-30
+    notes: >-
+      Kontrakt potwierdzony realnymi zapytaniami 2026-07-30 (fixtures
+      isok_getcapabilities.xml, isok_getfeature.xml). Poprzedni adres
+      wms.isok.gov.pl był placeholderem i jego nazwa domenowa nie rozwiązuje się
+      już w DNS. Domyślnym układem warstw jest EPSG:4258, a EPSG:2180 występuje
+      jako OtherCRS, dlatego adapter jawnie żąda srsName — wyłącznie w formie URN
+      (urn:ogc:def:crs:EPSG::2180), bo skrót "EPSG:2180" powoduje HTTP 500.
+      W odpowiedzi kolejność osi to (northing, easting), a bbox przyjmuje
+      (minE,minN,maxE,maxN). Klasa prawdopodobieństwa jest w
+      nz-core:qualitativeLikelihood ("scenariusz Q 1% (raz na 100 lat)");
+      pole liczbowe probabilityOfOccurrence jest w danych źródłowych niespójne
+      (0.002 i 0.02 dla tego samego scenariusza 0,2%), więc NIE jest używane —
+      zapasem jest returnPeriod. Warstwy nz-core:RiskZone (ok. 1,7 mln cech,
+      ryzyko dla elementów narażonych) i nz-core:ExposedElement istnieją w
+      usłudze, ale nie są używane w tej sekcji. Adapter: app/services/isok.py.
+
+  - source_id: nmt
+    name: "Numeryczny Model Terenu (NMT) — usługa wysokościowa GUGiK"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: rest
+    capabilities_url: "https://services.gugik.gov.pl/nmt/"
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: "NMT/1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Publiczna usługa wysokościowa GUGiK dostępna bez autoryzacji; dane NMT są
+      danymi otwartymi, wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
+    attribution: "Źródło: Numeryczny Model Terenu (NMT), GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-07-30
+    notes: >-
+      Kontrakt GetMinMaxByPolygon potwierdzony realnym zapytaniem 2026-07-30
+      (fixtures nmt_getminmaxbypolygon.txt oraz
+      nmt_getminmaxbypolygon_brak_pokrycia.txt). Zapytanie to zwykły GET bez
+      autoryzacji, odpowiedź w formacie tekstowym "Klucz<TAB>wartość" (nie JSON).
+      WKT jest przyjmowany w kolejności (easting, northing), czyli dokładnie w
+      konwencji geometrii kanonicznej z ULDK — bez transformacji. Uwaga:
+      GetHByXY używa odwrotnego nazewnictwa (x = northing), więc konwencje obu
+      operacji tej samej usługi nie są zgodne. Błędy oraz brak pokrycia danymi
+      mają status HTTP 200: błąd wejścia to wiersz "error<TAB>...", a brak danych
+      wysokościowych to sentinel Hmin=2500 / Hmax=0. Sekcja jest informacyjna
+      (rzeźba terenu, deniwelacja), nie prawna, więc jej niedostępność nie
+      obniża statusu analizy. Adapter: app/services/nmt.py.
+
+  - source_id: nmt_wcs
+    name: "Numeryczny Model Terenu GRID1 — usługa WCS (GeoTIFF), GUGiK"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wcs
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF"
+    file_url: null
+    type_names: null
+    layers: ["DTM_PL-KRON86-NH_TIFF"]
+    protocol_version: "WCS 2.0.1"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      GetCapabilities usługi deklaruje ows:Fees=none oraz
+      ows:AccessConstraints=none. Dane NMT są udostępniane przez GUGiK
+      nieodpłatnie (Prawo geodezyjne i kartograficzne w brzmieniu od
+      31.07.2020); wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
+    attribution: "Źródło: Numeryczny Model Terenu (NMT GRID1), GUGiK — usługa WCS."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    last_manual_verification: 2026-09-28
+    resources:
+      - role: elevation
+        access_type: wcs
+        url: "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF"
+        layer: "DTM_PL-KRON86-NH_TIFF"
+        protocol_version: "2.0.1"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180", "EPSG:4326", "EPSG:3857"]
+        output_formats: ["image/tiff"]
+    notes: >-
+      Kontrakt potwierdzony realnymi GetCapabilities, DescribeCoverage i
+      GetCoverage 2026-09-28 (fixtures backend/tests/fixtures/terrain/). Serwer
+      MapServer, WCS 2.0.1 (KVP GET), jedno pokrycie DTM_PL-KRON86-NH_TIFF:
+      RectifiedGrid, piksel 1 m, EPSG:2180, układ wysokości PL-KRON86-NH (usługa
+      ASCII Grid publikuje też DTM_PL-EVRF2007-NH). DescribeCoverage podaje
+      origin (środek piksela) i offsetVectors w kolejności osi EPSG (northing,
+      easting): origin 796521.169410 160828.843266, krok 1 m. GetCoverage
+      przyjmuje subset=x(easting) i subset=y(northing) i zwraca Float32 GeoTIFF
+      dokładnie w granicach żądania — bbox niewyrównany do krawędzi natywnych
+      pikseli jest przepróbkowywany przez serwer, dlatego adapter przyciąga okno
+      do siatki. Obszar poza obwiednią: HTTP 400 ows:ExceptionReport
+      exceptionCode=ExtentError (brak pokrycia). Nieznane pokrycie: HTTP 404
+      NoSuchCoverage. Obszar w obwiedni bez danych (np. za granicą) wraca jako
+      dokładne 0.0 BEZ znacznika GDAL_NODATA — adapter maskuje 0.0 jako NoData;
+      wartości ujemne są realne (np. -0,25 m przy Zatoce Gdańskiej) i nie są
+      odrzucane. Środowisko obrazu backendu: GDAL 3.10.3 (gdalinfo --version),
+      bez rasterio. Adapter:
+      app/modules/analysis/infrastructure/terrain_raster.py.
+
+  # --- ŹRÓDŁA WYMAGAJĄCE UMOWY (dostęp reglamentowany) ----------------------
+
+  - source_id: egib
+    name: "Ewidencja Gruntów i Budynków (EGiB) — pełny zakres atrybutów"
+    owner: "Starostwa powiatowe / GUGiK (PZGiK)"
+    status: no_redistribution
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Pełny zakres EGiB obejmuje dane osobowe właścicieli i podlega
+      reglamentowanemu dostępowi PZGiK. Nawet po uzyskaniu dostępu redystrybucja
+      danych osobowych jest prawnie zabroniona — dlatego status no_redistribution.
+    attribution: "Źródło: Ewidencja Gruntów i Budynków (EGiB), właściwe starostwo powiatowe."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Kontrakt WFS (typeNames, wersja, licencja per powiat) NIE został potwierdzony,
+      a redystrybucja danych osobowych jest zabroniona. Nie uruchamiać w
+      produkcyjnym orchestratorze; ewentualne użycie wymaga jawnie spełnionych
+      warunków prawnych i ograniczenia do danych nieosobowych.
+
+  - source_id: kiut_gesut
+    name: "Krajowa Integracja Uzbrojenia Terenu / GESUT"
+    owner: "Starostwa powiatowe / GUGiK (GESUT)"
+    status: contract_required
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Dane GESUT o sieciach uzbrojenia terenu mają dostęp reglamentowany;
+      udostępnienie i redystrybucja wymagają umowy z organem prowadzącym zasób.
+    attribution: "Źródło: GESUT / KIUT, właściwe starostwo powiatowe."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Adres WFS w app/core/settings.py jest jawnym placeholderem — kontrakt
+      (typeNames, wersja WFS, przestrzenie nazw) niepotwierdzony. Nie uruchamiać
+      w produkcji bez umowy.
+
+  - source_id: mpzp_pilot_krakow
+    name: "MPZP Kraków — pilotażowy wektor WFS"
+    owner: "Gmina Miejska Kraków / Miejski System Informacji Przestrzennej"
+    status: contract_required
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: >-
+      https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer
+    file_url: null
+    type_names:
+      - "Obserwatorium_BP_MPZP:Plany_obowiązujące"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+      - "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2178"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["1261011"]
+    license: >-
+      Publiczny odczyt WFS jest dostępny, ale regulamin MSIP wymaga pisemnej
+      zgody administratora na ciągłe i zorganizowane dalsze udostępnianie
+      fragmentów serwisu w systemie niekomercyjnym. Do czasu uzyskania zgody
+      źródło nie może być publikowane przez produkcyjny importer.
+    attribution: "Źródło: Miejski System Informacji Przestrzennej UMK, MPZP Kraków."
+    expected_update_interval: "daily"
+    sla: "not_published"
+    last_manual_verification: 2026-07-24
+    mpzp_classification: vector_zones
+    resources:
+      - role: boundaries
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Plany_obowiązujące"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwała"
+          resolution_date: "Data_uchwalenia"
+          name: "Nazwa_planu"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_-_skala_do_1_1000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_1000_-_1_2000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+      - role: zones
+        access_type: wfs
+        url: "https://msip.um.krakow.pl/arcgis/services/Obserwatorium/BP_MPZP/MapServer/WFSServer"
+        type_name: "Obserwatorium_BP_MPZP:Przeznaczenia_MPZP_skala_od_1_2000"
+        layer: null
+        source_crs: "EPSG:2178"
+        field_mapping:
+          act_identifier: "id_pg"
+          resolution_number: "Uchwalenie"
+          resolution_date: "Data_uchwalenia"
+          original_symbol: "Oznaczenie"
+          normalized_symbol: "Rodzaj_oznaczenia"
+          name: "Nazwa_MPZP"
+    notes: >-
+      Kontrakt techniczny WFS, typeNames, pola i CRS EPSG:2178 potwierdzono
+      2026-07-24 w oficjalnym BIP i odpowiedziach GetCapabilities /
+      DescribeFeatureType. Brakuje wymaganej zgody na stałe dalsze
+      udostępnianie, więc guard celowo blokuje publikację. Dozwolony jest
+      wyłącznie jawny dry-run na małych fixtures.
+
+  # --- ŹRÓDŁA BADAWCZE (kontrakt / licencja niepotwierdzone) ----------------
+
+  - source_id: pog_app
+    name: "Plan Ogólny Gminy / Akt Planowania Przestrzennego (APP)"
+    owner: "Gminy / Ministerstwo Rozwoju i Technologii (Rejestr Urbanistyczny)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: wfs
+    capabilities_url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs?service=WFS&version=2.0.0&request=GetCapabilities"
+    file_url: null
+    type_names:
+      - AktPlanowaniaPrzestrzennego
+      - DokumentFormalny
+      - ObszarStandardowDostepnosciInfrastrukturySpolecznej
+      - ObszarUzupelnieniaZabudowy
+      - ObszarZabudowySrodmiejskiej
+      - StrefaPlanistyczna
+    layers: null
+    protocol_version: "2.0.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Oficjalne GetCapabilities WMS/WFS/CSW z 2026-09-23 deklarują Fees „Brak
+      ograniczeń w publicznym dostępie” oraz AccessConstraints „Brak warunków
+      dostępu i użytkowania”. Jest to podstawa bezpośredniego odczytu usług;
+      nie stanowi osobnej zgody na redystrybucję surowych zbiorów.
+    attribution: "Źródło: Rejestr Urbanistyczny, Ministerstwo Rozwoju i Technologii."
+    expected_update_interval: "ciągły; kontrakt sprawdzany ręcznie przed aktualizacją fixtur"
+    sla: "brak gwarantowanego SLA"
+    last_manual_verification: 2026-09-23
+    resources:
+      - role: ru_wfs
+        access_type: wfs
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs"
+        type_name: null
+        type_names:
+          - "app-pog:AktPlanowaniaPrzestrzennego"
+          - "app-pog:DokumentFormalny"
+          - "app-pog:ObszarStandardowDostepnosciInfrastrukturySpolecznej"
+          - "app-pog:ObszarUzupelnieniaZabudowy"
+          - "app-pog:ObszarZabudowySrodmiejskiej"
+          - "app-pog:StrefaPlanistyczna"
+        layer: null
+        protocol_version: "2.0.0"
+        namespace_uri: "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+        source_crs: "EPSG:2180"
+        supported_crs:
+          - "EPSG:2176"
+          - "EPSG:2177"
+          - "EPSG:2178"
+          - "EPSG:2179"
+          - "EPSG:2180"
+          - "EPSG:4258"
+          - "EPSG:4326"
+        count_default: 10
+        output_formats:
+          - "application/gml+xml; version=3.2"
+          - "gml3"
+          - "gml32"
+          - "text/xml; subtype=gml/3.2"
+      - role: ru_wms_preview
+        access_type: wms
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        layer: null
+        layers:
+          - "APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WOpracowaniu"
+          - "APP.POG.ObszarStandardowDostepnosciInfrastrukturySpolecznej.WTrakciePrzyjmowania"
+          - "APP.POG.ObszarUzupelnieniaZabudowy.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.ObszarUzupelnieniaZabudowy.WOpracowaniu"
+          - "APP.POG.ObszarUzupelnieniaZabudowy.WTrakciePrzyjmowania"
+          - "APP.POG.ObszarZabudowySrodmiejskiej.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.ObszarZabudowySrodmiejskiej.WOpracowaniu"
+          - "APP.POG.ObszarZabudowySrodmiejskiej.WTrakciePrzyjmowania"
+          - "APP.POG.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SC.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SC.WOpracowaniu"
+          - "APP.POG.SC.WTrakciePrzyjmowania"
+          - "APP.POG.SG.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SG.WOpracowaniu"
+          - "APP.POG.SG.WTrakciePrzyjmowania"
+          - "APP.POG.SH.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SH.WOpracowaniu"
+          - "APP.POG.SH.WTrakciePrzyjmowania"
+          - "APP.POG.SI.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SI.WOpracowaniu"
+          - "APP.POG.SI.WTrakciePrzyjmowania"
+          - "APP.POG.SJ.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SJ.WOpracowaniu"
+          - "APP.POG.SJ.WTrakciePrzyjmowania"
+          - "APP.POG.SK.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SK.WOpracowaniu"
+          - "APP.POG.SK.WTrakciePrzyjmowania"
+          - "APP.POG.SN.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SN.WOpracowaniu"
+          - "APP.POG.SN.WTrakciePrzyjmowania"
+          - "APP.POG.SO.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SO.WOpracowaniu"
+          - "APP.POG.SO.WTrakciePrzyjmowania"
+          - "APP.POG.SP.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SP.WOpracowaniu"
+          - "APP.POG.SP.WTrakciePrzyjmowania"
+          - "APP.POG.SR.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SR.WOpracowaniu"
+          - "APP.POG.SR.WTrakciePrzyjmowania"
+          - "APP.POG.SU.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SU.WOpracowaniu"
+          - "APP.POG.SU.WTrakciePrzyjmowania"
+          - "APP.POG.SW.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SW.WOpracowaniu"
+          - "APP.POG.SW.WTrakciePrzyjmowania"
+          - "APP.POG.SZ.PrawnieWiazacyLubRealizowany"
+          - "APP.POG.SZ.WOpracowaniu"
+          - "APP.POG.SZ.WTrakciePrzyjmowania"
+          - "APP.POG.WOpracowaniu"
+          - "APP.POG.WTrakciePrzyjmowania"
+        protocol_version: "1.3.0"
+        source_crs: "EPSG:2180"
+        supported_crs: ["CRS:84", "EPSG:2180", "EPSG:4326"]
+        inherited_crs: ["EPSG:2180"]
+        output_formats:
+          - "image/geotiff"
+          - "image/geotiff8"
+          - "image/jpeg"
+          - "image/png"
+          - "image/png; mode=8bit"
+          - "image/svg+xml"
+          - "image/tiff"
+          - "image/tiff8"
+      - role: ru_csw
+        access_type: csw
+        url: "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/csw"
+        layer: null
+        protocol_version: "2.0.2"
+        source_crs: "EPSG:2180"
+        output_formats: ["application/json", "application/xml"]
+    notes: >-
+      Endpointy i deklaracje pochodzą wyłącznie ze snapshotu GetCapabilities z
+      2026-09-23. WFS zmienił od 2026-09-03 CountDefault z 100 na 10 i przestrzeń
+      nazw APP z 2.0 na 3.0; klient zawsze wysyła jawne count=100 oraz wersję
+      protokołu. WMS nie deklaruje EPSG:3857 i służy wyłącznie podglądowi oraz
+      discovery. SHA-256 i dokładne chwile pobrania zapisano w manifeście RU.
+
+  - source_id: pog_pilot_krakow
+    name: "Plan Ogólny Gminy Kraków — pilotażowy import APP/GML (POG)"
+    owner: "Gmina Miejska Kraków / Miejski System Informacji Przestrzennej"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: app_gml
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers:
+      - strefaPlanistyczna
+      - obszarUzupelnieniaZabudowy
+      - obszarZabSrodmiejskiej
+      - standardyDostepnosciInfrastrukturySpolecznej
+    protocol_version: null
+    source_crs: "EPSG:2178"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["1261011"]
+    license: >-
+      Kontrakt wektorowy APP/GML Planu Ogólnego dla Krakowa (URL, schemat APP,
+      warunki licencyjne) NIE został zweryfikowany. Wpis służy wyłącznie do
+      pilotażu importu na lokalnych fixture'ach; guard blokuje publikację.
+    attribution: "Źródło: Plan Ogólny Gminy Kraków (do potwierdzenia)."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Kraków ma potwierdzony pilotaż MPZP (mpzp_pilot_krakow), więc jest
+      naturalnym kandydatem na spójny pilotaż POG. Kontrakt APP/GML per gmina nie
+      jest jednak jeszcze potwierdzony (context.md pkt 9, gap_3): brak URL usługi
+      wektorowej, schematu APP i warunków licencyjnych. Do czasu weryfikacji
+      status pozostaje research (produkcyjny orchestrator nie uruchomi źródła).
+      CRS źródłowy przyjęto zgodnie z krakowskim MSIP (EPSG:2178) jako hipotezę
+      do potwierdzenia, nie jako potwierdzony kontrakt.
+
+  # --- WARSTWY PLANOWANE (brak potwierdzonych źródeł) -----------------------
+
+  - source_id: planned_restrictions
+    name: "Planowane warstwy ograniczeń (strefy ochronne, konserwatorskie itp.)"
+    owner: "różni gestorzy danych (planowane)"
+    status: placeholder
+    production_ready: false
+    contract_confirmed: false
+    access_type: wfs
+    capabilities_url: null
+    file_url: null
+    type_names: null
+    layers: null
+    protocol_version: null
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: "Brak — źródła nie zostały jeszcze zidentyfikowane ani zakontraktowane."
+    attribution: "Do ustalenia po wyborze konkretnych gestorów danych."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: null
+    notes: >-
+      Placeholder dla przyszłych warstw ograniczeń. Nie wolno uruchamiać w
+      produkcji — brak potwierdzonych źródeł, kontraktów i licencji.
