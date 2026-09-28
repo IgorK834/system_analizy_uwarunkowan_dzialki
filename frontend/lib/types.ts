@@ -464,12 +464,56 @@ export type UtilitiesPreviewResult = {
   source: SourceMetadata;
 };
 
+export type RiskSectionName = "flood" | "nature";
+export type RiskSeverity = "low" | "medium" | "high";
+
+/**
+ * Obiekt ryzyka (BK-303). Pola strukturalne są jedynym nośnikiem danych;
+ * `description` to tekst prezentacyjny. `null`/brak pola = wartość nieznana
+ * (zapis sprzed BK-303), nigdy 0.
+ */
 export type RiskResult = {
   risk_type: string;
+  section?: RiskSectionName | null;
+  /** Unikalny identyfikator obiektu w źródle (gml:id). */
+  feature_id?: string | null;
+  severity?: RiskSeverity | null;
+  probability_class?: string | null;
+  /** Okres powtarzalności wyłącznie z atrybutu returnPeriod źródła. */
+  return_period_years?: number | null;
+  protection_type?: string | null;
+  name?: string | null;
+  intersection_area_sqm?: number | null;
+  intersection_pct?: number | null;
+  /** True: obiekt wyłącznie styka się z granicą działki. */
+  touches_boundary?: boolean | null;
   description: string;
   /** Przecięcie strefy ryzyka z działką jako GeoJSON Feature w WGS84. */
   geometry_geojson: Record<string, unknown> | null;
+  warnings?: string[];
   source: SourceMetadata;
+};
+
+export type RiskSectionStatus = "available" | "unavailable" | "error" | "unknown";
+export type RiskRelation = "no_match" | "boundary_only" | "intersection" | "unknown";
+
+/** Status i provenance sekcji ryzyka niezależnie od listy obiektów. */
+export type RiskSectionResult = {
+  schema_version: string;
+  section: RiskSectionName;
+  status: RiskSectionStatus;
+  reason_code: string | null;
+  relation: RiskRelation;
+  feature_count: number | null;
+  intersecting_feature_count: number | null;
+  boundary_feature_count: number | null;
+  /** Pole sumy mnogościowej przecięć (bez podwójnego liczenia), m². */
+  union_intersection_area_sqm: number | null;
+  /** Udział sumy mnogościowej przecięć w działce, % (≤ 100). */
+  union_intersection_pct: number | null;
+  feature_ids: string[];
+  source: SourceMetadata | null;
+  warnings: string[];
 };
 
 /**
@@ -609,6 +653,8 @@ export type AnalyzeResponse = {
   infrastructure: InfrastructureResult[];
   utilities_preview: UtilitiesPreviewResult | null;
   risks: RiskResult[];
+  /** Status sekcji flood/nature; brak pola (starsze odpowiedzi) = status unknown. */
+  risk_sections?: RiskSectionResult[];
   /** Sekcja NMT; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
   terrain?: TerrainResult | null;
   buildable_area_sqm: number | null;
