@@ -472,6 +472,133 @@ export type RiskResult = {
   source: SourceMetadata;
 };
 
+/**
+ * Status pomiaru rzeźby terenu (BK-301). Brak pokrycia, niedostępność i
+ * zapis bez danych NIE są płaskim terenem — wysokości są wtedy null, nie 0.
+ */
+export type TerrainStatus = "available" | "no_coverage" | "unavailable" | "unknown";
+
+export type TerrainSlopeStatistics = {
+  mean_deg: number;
+  median_deg: number;
+  /** 90. percentyl (interpolacja liniowa R-7). */
+  p90_deg: number;
+  max_deg: number;
+  mean_pct: number;
+  median_pct: number;
+  p90_pct: number;
+  max_pct: number;
+};
+
+export type TerrainSlopeClass = {
+  class_id: string;
+  label: string;
+  /** Dolna granica klasy (włącznie), %. */
+  min_pct: number;
+  /** Górna granica klasy (rozłącznie), %; null — klasa otwarta. */
+  max_pct: number | null;
+  pixel_count: number;
+  area_sqm: number;
+  share_pct: number;
+};
+
+export type AspectDirection = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW";
+
+export type TerrainAspectResult = {
+  /** flat — teren płaski (kierunek null, nie 0°); dispersed — brak dominanty. */
+  status: "defined" | "dispersed" | "flat";
+  /** Azymut kierunku spadku (0° = północ, zgodnie z zegarem). */
+  mean_azimuth_deg: number | null;
+  resultant_length: number | null;
+  dominant_direction: AspectDirection | null;
+  sector_shares_pct: Record<string, number>;
+  non_flat_share_pct: number;
+  flat_threshold_pct: number;
+};
+
+export type TerrainProfileSample = {
+  distance_m: number;
+  /** Easting EPSG:2180. */
+  x: number;
+  /** Northing EPSG:2180. */
+  y: number;
+  /** Wysokość z interpolacji dwuliniowej; null dla NoData, nigdy 0. */
+  height_m: number | null;
+  inside_parcel: boolean;
+};
+
+export type TerrainProfileResult = {
+  method: string;
+  crs: "EPSG:2180";
+  start: [number, number];
+  end: [number, number];
+  length_m: number;
+  step_m: number;
+  interpolation: "bilinear";
+  samples: TerrainProfileSample[];
+  /** Linia profilu w WGS84 jako GeoJSON Feature (prezentacja). */
+  line_geojson: Record<string, unknown> | null;
+};
+
+export type TerrainRasterMetadata = {
+  coverage_id: string;
+  crs: "EPSG:2180";
+  resolution_m: number;
+  width_px: number;
+  height_px: number;
+  bbox: [number, number, number, number];
+  buffer_m: number;
+  size_bytes: number;
+  nodata_value: number | null;
+  nodata_policy: string;
+  vertical_datum: string | null;
+  gdal_version: string | null;
+};
+
+/** Pochodne rastra NMT (BK-302): spadek, klasy, ekspozycja i profil. */
+export type TerrainReliefResult = {
+  schema_version: string;
+  algorithm_version: string;
+  slope_classes_version: string;
+  status: TerrainStatus;
+  reason_code: string | null;
+  /** Rozdzielczość danych źródłowych, m. */
+  resolution_m: number | null;
+  parcel_pixel_count: number | null;
+  valid_pixel_count: number | null;
+  nodata_pixel_count: number | null;
+  valid_area_share_pct: number | null;
+  min_height_m: number | null;
+  max_height_m: number | null;
+  mean_height_m: number | null;
+  slope: TerrainSlopeStatistics | null;
+  slope_classes: TerrainSlopeClass[];
+  aspect: TerrainAspectResult | null;
+  profile: TerrainProfileResult | null;
+  raster: TerrainRasterMetadata | null;
+  source: SourceMetadata | null;
+  warnings: string[];
+};
+
+/** Rzeźba terenu działki (BK-301): Hmin, Hmax, deniwelacja i jakość pomiaru. */
+export type TerrainResult = {
+  schema_version: string;
+  status: TerrainStatus;
+  reason_code: string | null;
+  /** m n.p.m.; może być ujemna. null, gdy nie zmierzono. */
+  min_height_m: number | null;
+  max_height_m: number | null;
+  /** Hmax − Hmin w metrach; 0 oznacza zmierzony płaski teren. */
+  height_difference_m: number | null;
+  /** Siatka próbkowania usługi NMT, m. */
+  grid_size_m: number | null;
+  sampled_points: number | null;
+  /** Provenance zapytania — także dla braku pokrycia i niedostępności. */
+  source: SourceMetadata | null;
+  warnings: string[];
+  relief: TerrainReliefResult | null;
+};
+
 export type AnalyzeResponse = {
   analysis_id: number | null;
   status: string;
@@ -482,6 +609,8 @@ export type AnalyzeResponse = {
   infrastructure: InfrastructureResult[];
   utilities_preview: UtilitiesPreviewResult | null;
   risks: RiskResult[];
+  /** Sekcja NMT; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
+  terrain?: TerrainResult | null;
   buildable_area_sqm: number | null;
   manual_zone_required: boolean;
   /** Plan, kandydaci i przypięty dokument pokazywane przed podaniem symbolu. */

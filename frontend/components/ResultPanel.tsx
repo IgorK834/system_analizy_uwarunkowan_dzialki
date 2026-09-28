@@ -8,6 +8,7 @@ import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
+import { TerrainCard } from "@/components/TerrainCard";
 import {
   BUILDABLE_AREA_FILL_COLOR,
   BUILDABLE_AREA_FILL_LAYER_ID,
@@ -353,6 +354,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       )}
       <InfrastructureSection items={result.infrastructure} />
       <RisksSection items={result.risks} />
+      <TerrainCard terrain={result.terrain} />
       <SourcesSection sources={result.sources} />
       <WarningsSection warnings={result.warnings} />
     </section>

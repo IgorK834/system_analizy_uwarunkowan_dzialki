@@ -838,3 +838,33 @@ input:disabled {
 .pog-status-note {
   margin: 0.25rem 0;
 }
+
+/* Rzeźba terenu (BK-301/BK-302) */
+.terrain-relief {
+  margin-top: 12px;
+}
+
+.terrain-relief h4 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+}
+
+.terrain-profile {
+  margin: 10px 0;
+}
+
+.terrain-profile-bg {
+  fill: var(--surface-soft);
+  stroke: var(--line);
+}
+
+.terrain-profile-line {
+  fill: none;
+  stroke: #155eef;
+  stroke-width: 2;
+}
+
+/* Nieparzysta liczba pól (np. brak pokrycia, ekspozycja) nie zostawia pustej komórki. */
+.terrain-summary > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
