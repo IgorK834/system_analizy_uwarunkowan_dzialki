@@ -1,0 +1,38 @@
+# Zapytanie 2026-09-28: GET https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?service=WFS&request=GetCapabilities
+# HTTP 200 text/xml — odpowiedź to WMS_Capabilities (brak WFS_Capabilities). Przycięte do nagłówka i sekcji Service.
+<?xml version='1.0' encoding="UTF-8" standalone="no" ?>
+<WMS_Capabilities version="1.3.0"  xmlns="http://www.opengis.net/wms"   xmlns:sld="http://www.opengis.net/sld"   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   xmlns:ms="http://mapserver.gis.umn.edu/mapserver"   xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0"   xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs/1.0"   xsi:schemaLocation="http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd  http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd  http://inspire.ec.europa.eu/schemas/inspire_vs/1.0  http://inspire.ec.europa.eu/schemas/inspire_vs/1.0/inspire_vs.xsd http://mapserver.gis.umn.edu/mapserver https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?service=WMS&amp;version=1.3.0&amp;request=GetSchemaExtension">
+	<Service>
+		<Name>WMS</Name>
+		<Title>Krajowa Integracja Uzbrojenia Terenu</Title>
+		<Abstract>Usługa Krajowa Integracja Uzbrojenia Terenu jest usługą zbiorczą prezentacji danych uzbrojenia terenu pochodzących bezpośrednio z jednostek szczebla powiatowego. Usługa zawiera jedynie dane tych jednostek, które dysponują usługą WMS o odpowiednich parametrach i zdecydowały się włączyć swoją usługę WMS do usługi zbiorczej KrajowaIntegracjaUzbrojeniaTerenu.</Abstract>
+		<KeywordList>
+			<Keyword>WMS</Keyword>
+			<Keyword>GUGiK</Keyword>
+			<Keyword>GESUT</Keyword>
+			<Keyword>sieci</Keyword>
+			<Keyword>uzbrojenie</Keyword>
+			<Keyword vocabulary="ISO">infoMapAccessService</Keyword>
+		</KeywordList>
+		<OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?"/>
+		<ContactInformation>
+			<ContactPersonPrimary>
+				<ContactPerson>Główny Geodeta Kraju</ContactPerson>
+				<ContactOrganization>Główny Urząd Geodezji i Kartografii</ContactOrganization>
+			</ContactPersonPrimary>
+			<ContactAddress>
+				<AddressType>postal</AddressType>
+				<Address>ul. Żurawia 6/12</Address>
+				<City>Warszawa</City>
+				<StateOrProvince>mazowieckie</StateOrProvince>
+				<PostCode>00-926</PostCode>
+				<Country>Polska</Country>
+			</ContactAddress>
+			<ContactVoiceTelephone>+48225322531</ContactVoiceTelephone>
+			<ContactElectronicMailAddress>gugik@gugik.gov.pl</ContactElectronicMailAddress>
+		</ContactInformation>
+		<Fees>Brak opłat / none</Fees>
+		<AccessConstraints>NONE</AccessConstraints>
+		<MaxWidth>4096</MaxWidth>
+		<MaxHeight>4096</MaxHeight>
+	</Service>
