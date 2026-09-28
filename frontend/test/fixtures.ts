@@ -60,7 +60,7 @@ export function buildPogResult(overrides: Partial<PogResult> = {}): PogResult {
     uchwala_nr: null,
     uchwala_date: null,
     manual_review_required: legal !== "binding",
-    conflict_with_mpzp: null,
+    compatibility_assessment: null,
     raw_attributes: null,
     ouz_intersection_area_sqm: null,
     ouz_intersection_pct: null,
