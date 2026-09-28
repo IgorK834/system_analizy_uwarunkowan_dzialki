@@ -2,10 +2,13 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.models.analysis import Analysis
+from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.schemas.analyze import (
     AddressAnalyzeRequest,
     AnalyzeResponse,
@@ -15,8 +18,8 @@ from app.schemas.analyze import (
     ParcelIdAnalyzeRequest,
 )
 from app.services.analysis_resume import (
+    AnalysisResumeDocumentError,
     AnalysisResumeNotFoundError,
-    AnalysisResumeSourceMissingError,
     AnalysisResumeStateError,
     resume_analysis_with_zone,
 )
@@ -27,7 +30,6 @@ from app.services.geometry import (
     InvalidParcelGeometryError,
 )
 from app.services.initiation import AddressNotFoundError
-from app.services.mpzp_fetch import MpzpDocumentFetchError, MpzpDocumentSecurityError
 from app.services.mpzp_zones import (
     InvalidZoneSymbolError,
 )
@@ -86,8 +88,11 @@ async def analyze(
     },
     description=(
         "Wznawia analizę oczekującą na ręczne podanie symbolu strefy MPZP, "
-        "odczytanego przez użytkownika z mapy rastrowej, gdy gmina nie "
-        "udostępnia wektorowych danych MPZP."
+        "odczytanego przez użytkownika z podglądu rastrowego, gdy gmina nie "
+        "udostępnia wektorowych danych MPZP. Parametry są odczytywane wyłącznie "
+        "z dokumentu przypiętego przy wstrzymaniu analizy (bez ponownego "
+        "pobierania). Wynik zawsze ma status partial, a udział strefy w "
+        "powierzchni działki pozostaje nieustalony."
     ),
 )
 async def analyze_resume(
@@ -111,22 +116,72 @@ async def analyze_resume(
         ) from exc
     except InvalidZoneSymbolError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except AnalysisResumeSourceMissingError as exc:
+    except AnalysisResumeDocumentError as exc:
+        # Uszkodzony albo nieczytelny artefakt przypięty przy wstrzymaniu: nic
+        # nie zapisano, analiza nadal czeka na symbol.
         raise HTTPException(
             status_code=503,
             detail=(
-                "Analiza nie ma zapisanego adresu dokumentu MPZP do ponownego "
-                "pobrania."
+                "Nie udało się odczytać dokumentu MPZP przypiętego przy "
+                "wstrzymaniu analizy. Analiza nadal oczekuje na symbol strefy."
             ),
         ) from exc
-    except (MpzpDocumentFetchError, MpzpDocumentSecurityError) as exc:
-        # Dokument mógł zniknąć między discovery a wznowieniem (BIP zmienia
-        # strony, dokumenty bywają przenoszone) — 503, nie 500, bo to
-        # niedostępność zewnętrznego źródła, nie błąd naszej aplikacji.
+
+
+# Serwowana kopia pochodzi z niezaufanego źródła: bez zgadywania typu, bez
+# referera, a HTML wyłącznie jako załącznik z CSP ``sandbox`` (nie renderuje się
+# w origin aplikacji). PDF nie dostaje ``sandbox``, bo blokuje on wbudowane
+# przeglądarki PDF.
+_PENDING_DOCUMENT_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, max-age=300",
+    "Referrer-Policy": "no-referrer",
+}
+_UNTRUSTED_HTML_CSP = "sandbox; default-src 'none'"
+
+
+@router.get(
+    "/{analysis_id}/pending-document",
+    responses={
+        200: {"content": {"application/pdf": {}, "text/html": {}}},
+        404: {"model": ErrorResponse},
+    },
+    description=(
+        "Zwraca kopię dokumentu uchwały przypiętą przy wstrzymaniu analizy "
+        "(BK-204) — dokładnie ten artefakt, z którego resume odczyta parametry. "
+        "PDF jest serwowany inline, HTML wyłącznie jako załącznik."
+    ),
+)
+def get_pending_document(
+    analysis_id: Annotated[int, Path(gt=0)],
+    db: Session = Depends(get_db),
+) -> Response:
+    if db.get(Analysis, analysis_id) is None:
         raise HTTPException(
-            status_code=503,
-            detail=(
-                "Nie udało się ponownie pobrać dokumentu MPZP. Dokument mógł "
-                "zniknąć od czasu wstępnego rozpoznania."
+            status_code=404, detail="Analiza o podanym identyfikatorze nie istnieje."
+        )
+    document = db.scalar(
+        select(AnalysisPendingDocument).where(
+            AnalysisPendingDocument.analysis_id == analysis_id
+        )
+    )
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Analiza nie ma dokumentu przypiętego przy wstrzymaniu.",
+        )
+    is_pdf = document.media_type == "application/pdf"
+    filename = "uchwala.pdf" if is_pdf else "uchwala.html"
+    return Response(
+        content=document.content,
+        media_type=document.media_type if is_pdf else "application/octet-stream",
+        headers={
+            **_PENDING_DOCUMENT_HEADERS,
+            **({} if is_pdf else {"Content-Security-Policy": _UNTRUSTED_HTML_CSP}),
+            "Content-Disposition": (
+                f'{"inline" if is_pdf else "attachment"}; filename="{filename}"'
             ),
-        ) from exc
+            "ETag": f'"{document.content_sha256}"',
+            "X-Document-SHA256": document.content_sha256,
+        },
+    )
