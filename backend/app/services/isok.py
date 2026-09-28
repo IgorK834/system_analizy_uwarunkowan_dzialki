@@ -40,6 +40,7 @@ jednej sekcji zaciemniłoby znaczenie severity.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -105,14 +106,34 @@ _RETURN_PERIOD_ATTRIBUTE: Final[str] = "returnperiod"
 _INTERSECTION_AREA_EPSILON_SQM: Final[float] = 1e-6
 
 
+ISOK_SOURCE_NAME: Final[str] = "ISOK"
+ISOK_SOURCE_ID: Final[str] = "isok"
+REASON_TIMEOUT: Final[str] = "SERVICE_TIMEOUT"
+REASON_HTTP_ERROR: Final[str] = "SERVICE_HTTP_ERROR"
+REASON_INVALID_RESPONSE: Final[str] = "INVALID_RESPONSE"
+
+
 class IsokServiceUnavailableError(Exception):
     """
     Usługa ISOK nie odpowiedziała, zwróciła błąd HTTP, lub zwróciła odpowiedź
     niemożliwą do sparsowania.
 
     W odróżnieniu od KIUT, brak danych o ryzyku powodziowym NIE może być cicho
-    zamieniony na pustą listę — patrz uzasadnienie w docstringu modułu.
+    zamieniony na pustą listę — patrz uzasadnienie w docstringu modułu. Wyjątek
+    niesie kod przyczyny i provenance nieudanej próby (BK-303), aby sekcja z
+    ``features=[]`` nadal wskazywała, kiedy i o co pytano usługę.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = REASON_INVALID_RESPONSE,
+        source_metadata: SourceMetadata | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+        self.source_metadata = source_metadata
 
 
 @dataclass(frozen=True)
@@ -135,6 +156,25 @@ class RiskFeature:
     # Celowo lista, nie pojedynczy str — dla ryzyka powodziowego mogą wystąpić
     # jednocześnie np. boundary_touch i nierozpoznana klasa prawdopodobieństwa.
     warnings: list[str] = field(default_factory=list)
+    # Unikalny identyfikator obiektu ``gml:id`` strefy (BK-303).
+    feature_id: str | None = None
+    # Okres powtarzalności wyłącznie z atrybutu ``returnPeriod`` źródła — nigdy
+    # wyliczany z tekstu klasy prawdopodobieństwa.
+    return_period_years: int | None = None
+    # Styk granicy bez wspólnej powierzchni (pole przecięcia < epsilon).
+    touches_boundary: bool = False
+
+
+@dataclass(frozen=True)
+class FloodRiskSection:
+    """Wynik sprawdzenia ISOK: strefy oraz provenance zapytania.
+
+    Provenance jest obecne także przy pustej liście — „sprawdzono, brak stref”
+    ma wtedy znany czas, adres i skrót odpowiedzi.
+    """
+
+    features: list[RiskFeature]
+    source_metadata: SourceMetadata
 
 
 async def fetch_flood_risks(
@@ -162,6 +202,17 @@ async def fetch_flood_risks(
     do ręcznej weryfikacji wizualnej w konfiguracji — nieużywanym jako aktywne
     źródło danych w tej funkcji. Analiza rastra WMS nie jest zaimplementowana.
     """
+    return (await fetch_flood_risk_section(parcel_geometry, client)).features
+
+
+async def fetch_flood_risk_section(
+    parcel_geometry: BaseGeometry,
+    client: httpx.AsyncClient | None = None,
+) -> FloodRiskSection:
+    """Jak ``fetch_flood_risks``, ale zwraca też provenance całej sekcji (BK-303).
+
+    Strefy o tym samym ``gml:id`` (np. powtórzone w odpowiedzi) są liczone raz.
+    """
     minx, miny, maxx, maxy = bbox_from_geometry(parcel_geometry)
     params = {
         "service": "WFS",
@@ -186,22 +237,63 @@ async def fetch_flood_risks(
             )
 
     fetched_at = datetime.now(timezone.utc)
-    zone_features = _parse_zone_response(response_text)
+    artifact_sha256 = hashlib.sha256(response_text.encode("utf-8")).hexdigest()
+    zone_features = _parse_zone_response(
+        response_text,
+        _section_source(source_url, fetched_at, artifact_sha256, failed=True),
+    )
 
     results: list[RiskFeature] = []
+    seen_ids: set[str] = set()
     for zone in zone_features:
+        if zone.feature_id is not None:
+            if zone.feature_id in seen_ids:
+                continue
+            seen_ids.add(zone.feature_id)
         risk = _build_risk_feature(
-            parcel_geometry, zone.geometry, zone.properties, source_url, fetched_at
+            parcel_geometry,
+            zone.geometry,
+            zone.properties,
+            source_url,
+            fetched_at,
+            feature_id=zone.feature_id,
         )
         if risk is not None:
             results.append(risk)
-    return results
+    return FloodRiskSection(
+        features=results,
+        source_metadata=_section_source(source_url, fetched_at, artifact_sha256),
+    )
+
+
+def _section_source(
+    source_url: str,
+    fetched_at: datetime,
+    artifact_sha256: str | None,
+    *,
+    failed: bool = False,
+    response_status: int | None = 200,
+) -> SourceMetadata:
+    """Provenance sprawdzenia całej warstwy — także gdy strefy nie wystąpiły."""
+    return SourceMetadata(
+        source_id=ISOK_SOURCE_ID,
+        source_name=ISOK_SOURCE_NAME,
+        source_version=f"WFS 2.0.0 {ISOK_TYPE_NAME}",
+        source_url=source_url,
+        fetched_at=fetched_at,
+        response_status=response_status,
+        artifact_sha256=artifact_sha256,
+        confidence=0.0 if failed else 0.85,
+        manual_review_required=failed,
+    )
 
 
 async def _fetch_isok_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
 ) -> tuple[str, str]:
+    request_url = str(httpx.URL(settings.isok_wfs_base_url, params=params))
+    attempted_at = datetime.now(timezone.utc)
     try:
         response = await client.get(
             settings.isok_wfs_base_url,
@@ -211,15 +303,39 @@ async def _fetch_isok_response_text(
         response.raise_for_status()
     except httpx.TimeoutException as exc:
         raise IsokServiceUnavailableError(
-            "Usługa ISOK nie odpowiedziała w wymaganym czasie."
+            "Usługa ISOK nie odpowiedziała w wymaganym czasie.",
+            reason_code=REASON_TIMEOUT,
+            source_metadata=_section_source(
+                request_url, attempted_at, None, failed=True, response_status=None
+            ),
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        raise IsokServiceUnavailableError(
+            f"Usługa ISOK zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_section_source(
+                request_url,
+                attempted_at,
+                None,
+                failed=True,
+                response_status=exc.response.status_code,
+            ),
         ) from exc
     except httpx.HTTPError as exc:
-        raise IsokServiceUnavailableError(f"Usługa ISOK zwróciła błąd: {exc}") from exc
+        raise IsokServiceUnavailableError(
+            f"Usługa ISOK zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_section_source(
+                request_url, attempted_at, None, failed=True, response_status=None
+            ),
+        ) from exc
 
     return response.text, str(response.url)
 
 
-def _parse_zone_response(text: str) -> list[GmlFeature]:
+def _parse_zone_response(
+    text: str, failure_source: SourceMetadata | None = None
+) -> list[GmlFeature]:
     """Parsuje odpowiedź WFS na listę cech powierzchniowych w EPSG:2180.
 
     W odróżnieniu od kiut.py: błąd parsowania, nieoczekiwany układ współrzędnych
@@ -230,8 +346,29 @@ def _parse_zone_response(text: str) -> list[GmlFeature]:
         return parse_feature_collection(text)
     except GmlResponseError as exc:
         raise IsokServiceUnavailableError(
-            f"Nie udało się sparsować odpowiedzi ISOK: {exc}"
+            f"Nie udało się sparsować odpowiedzi ISOK: {exc}",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=failure_source,
         ) from exc
+
+
+def _return_period_years(properties: dict) -> int | None:
+    """Okres powtarzalności wyłącznie z atrybutu ``returnPeriod`` (kontrakt ISOK).
+
+    Wartość jest przyjmowana tylko jako dodatnia liczba całkowita lat; tekst
+    klasy prawdopodobieństwa nie jest źródłem tej liczby.
+    """
+    for prop_key, value in properties.items():
+        if prop_key.lower() != _RETURN_PERIOD_ATTRIBUTE:
+            continue
+        try:
+            period = float(value)
+        except (TypeError, ValueError):
+            return None
+        if period > 0 and period.is_integer():
+            return int(period)
+        return None
+    return None
 
 
 def _severity_from_probability_text(value: str) -> str | None:
@@ -295,6 +432,7 @@ def _build_risk_feature(
     properties: dict,
     source_url: str,
     fetched_at: datetime,
+    feature_id: str | None = None,
 ) -> RiskFeature | None:
     """
     Zwraca None gdy strefa jest rozłączna z działką (rzeczywiste sprawdzenie
@@ -321,7 +459,8 @@ def _build_risk_feature(
     if probability_warning:
         warnings.append(probability_warning)
 
-    if intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM:
+    touches_boundary = intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM
+    if touches_boundary:
         # Styk brzegowy nadpisuje severity z klasyfikacji prawdopodobieństwa —
         # inaczej użytkownik zobaczyłby np. severity='high' dla działki, która
         # w rzeczywistości tylko dotyka granicy strefy zagrożenia.
@@ -341,8 +480,12 @@ def _build_risk_feature(
         intersection_area_sqm=intersection_area_sqm,
         area_ratio=area_ratio,
         probability_class=probability_class,
+        feature_id=feature_id,
+        return_period_years=_return_period_years(properties),
+        touches_boundary=touches_boundary,
         source_metadata=SourceMetadata(
-            source_name="ISOK",
+            source_id=ISOK_SOURCE_ID,
+            source_name=ISOK_SOURCE_NAME,
             source_url=source_url,
             fetched_at=fetched_at,
             confidence=0.85 if probability_class else 0.4,
