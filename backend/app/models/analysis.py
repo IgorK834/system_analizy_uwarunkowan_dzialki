@@ -43,6 +43,9 @@ class Analysis(Base):
     # Snapshot sekcji rzeźby terenu (BK-301/302). NULL oznacza zapis sprzed
     # BK-301 i jest odczytywany jako status ``unknown`` — nie jako 0 m.
     terrain: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Status i provenance sekcji ryzyka flood/nature (BK-303). NULL oznacza
+    # zapis sprzed migracji 023 i jest odczytywany jako status ``unknown``.
+    risk_sections: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     data_release_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
     result_contract_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cache_signature: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
