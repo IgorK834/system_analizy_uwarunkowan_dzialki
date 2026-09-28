@@ -128,9 +128,11 @@ export type MpzpZoneResult = {
   max_floor_area_ratio: number | null;
   min_floor_area_ratio: number | null;
   max_building_coverage_pct: number | null;
-  intersection_area_sqm: number;
-  intersection_pct: number;
-  /** Pomocniczo: strefa o największym udziale; nie zastępuje pełnej listy. */
+  /** Pole przecięcia; null — udział nieustalony (brak wektora, np. symbol ręczny). */
+  intersection_area_sqm: number | null;
+  /** Udział w działce; null — nieustalony, nigdy nie zakładamy 100%. */
+  intersection_pct: number | null;
+  /** Pomocniczo: strefa o największym ustalonym udziale; nie zastępuje pełnej listy. */
   is_dominant: boolean;
   source: SourceMetadata;
   /** Stabilne ID wydzielenia z wersjonowanego wektora (BK-202). */
@@ -146,6 +148,113 @@ export type MpzpZoneResult = {
   intersection_geojson?: Record<string, unknown> | null;
   parameters?: MpzpParameterEvidence[];
   manual_review_required?: boolean;
+  /** Decyzja użytkownika w trybie ręcznym (BK-204). */
+  manual_selection?: ManualZoneSelection | null;
+};
+
+/** Zapis ręcznego wskazania symbolu strefy wraz z przypiętą wersją dokumentu. */
+export type ManualZoneSelection = {
+  entered_symbol: string;
+  plan_id: string | null;
+  candidate_zone_symbols: string[];
+  symbol_in_candidates: boolean;
+  document_url: string | null;
+  document_sha256: string | null;
+  document_version_id: number | null;
+  document_fetched_at: string | null;
+  /** false — dokument nie był przypięty; parametry pozostają nieustalone. */
+  document_pinned: boolean;
+  selected_at: string;
+};
+
+/** Dokument przypięty przy wstrzymaniu analizy — dokładnie ten, który przeczyta resume. */
+export type ManualZoneSourceDocument = {
+  requested_url: string | null;
+  requested_url_verified: boolean;
+  media_type: string;
+  filename: string | null;
+  sha256: string;
+  size_bytes: number;
+  fetched_at: string | null;
+  document_version_id: number | null;
+  /** Względna ścieżka API z przypiętą kopią (nie adres zewnętrzny). */
+  preview_path: string;
+};
+
+/** Materiał pokazywany przed formularzem symbolu strefy (BK-204). */
+export type ManualZoneContext = {
+  plan_id: string | null;
+  candidate_zone_symbols: string[];
+  document_status: "pinned" | "unavailable" | "not_provided";
+  document: ManualZoneSourceDocument | null;
+  raster_preview_source_key: "mpzp";
+  symbol_max_length: number;
+  /** Wzorzec dozwolonych znaków — wspólny dla UI i API. */
+  symbol_allowed_pattern: string;
+  notice: string;
+};
+
+export type CompatibilityStatus =
+  | "compatible"
+  | "incompatible"
+  | "uncertain"
+  | "not_applicable"
+  | "unknown";
+
+export type CompatibilitySource = {
+  kind: "rule_set" | "mpzp" | "pog";
+  label: string;
+  reference: string | null;
+  version: string | null;
+  as_of: string | null;
+};
+
+/** Para strefa MPZP × strefa POG; rozstrzygnięta para zawsze ma regułę i datę. */
+export type CompatibilityZonePair = {
+  mpzp_zone_symbol: string;
+  mpzp_zone_id: string | null;
+  mpzp_assignment_method: MpzpAssignmentMethod;
+  mpzp_function: string | null;
+  pog_zone_id: string;
+  pog_zone_symbol: string | null;
+  pog_zone_type: string;
+  spatially_identified: boolean;
+  overlap_area_sqm: number | null;
+  overlap_pct: number | null;
+  status: CompatibilityStatus;
+  rule_result: "compatible" | "incompatible" | "uncertain" | null;
+  rule_id: string | null;
+  rule_version: string | null;
+  source: string | null;
+  as_of: string | null;
+  rationale: string;
+  manual_review_required: boolean;
+};
+
+export type LegacyCompatibilityEvidence = {
+  origin: string;
+  conflict_with_mpzp: boolean | null;
+  result: string | null;
+  reasoning: string | null;
+  confidence: number | null;
+};
+
+/** Informacyjna ocena relacji MPZP–POG (BK-205) — nie opinia prawna. */
+export type CompatibilityAssessment = {
+  schema_version: string;
+  status: CompatibilityStatus;
+  reason_code: string;
+  /** Data stanu prawnego, do którego odnosi się ocena. */
+  as_of: string | null;
+  rule_id: string | null;
+  rule_version: string | null;
+  aggregation: string;
+  sources: CompatibilitySource[];
+  rationale: string;
+  manual_review_required: boolean;
+  zone_pairs: CompatibilityZonePair[];
+  informational_notice: string;
+  legacy_evidence: LegacyCompatibilityEvidence | null;
 };
 
 /** Kanoniczny status prawny aktu (BK-106); pochodzi wyłącznie z urzędowego kodu. */
@@ -208,10 +317,10 @@ export type PogResult = {
   /** Czy wynik POG wymaga ręcznej weryfikacji. */
   manual_review_required: boolean;
   /**
-   * Jawny wynik tabeli zgodności MPZP-POG; null oznacza brak rozstrzygnięcia
-   * (np. brak strefy dominującej MPZP albo brak wyniku POG).
+   * Informacyjna ocena relacji MPZP–POG z regułami, parami stref i datą stanu
+   * prawnego (BK-205); zastąpiła boolean `conflict_with_mpzp`.
    */
-  conflict_with_mpzp: boolean | null;
+  compatibility_assessment: CompatibilityAssessment | null;
   /** Surowe atrybuty APP/GML lub WMS zachowane dla audytu parsera. */
   raw_attributes: Record<string, unknown> | null;
   ouz_intersection_area_sqm: number | null;
@@ -375,6 +484,8 @@ export type AnalyzeResponse = {
   risks: RiskResult[];
   buildable_area_sqm: number | null;
   manual_zone_required: boolean;
+  /** Plan, kandydaci i przypięty dokument pokazywane przed podaniem symbolu. */
+  manual_zone_context?: ManualZoneContext | null;
   warnings: WarningMessage[];
   sources: SourceMetadata[];
 };
