@@ -40,8 +40,11 @@ class Analysis(Base):
     buildable_area_sqm: Mapped[float | None] = mapped_column(nullable=True)
     warnings: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
     utilities_preview: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Snapshot sekcji rzeźby terenu (BK-301/302). NULL oznacza zapis sprzed
+    # BK-301 i jest odczytywany jako status ``unknown`` — nie jako 0 m.
+    terrain: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     data_release_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
-    result_contract_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    result_contract_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cache_signature: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
 
     # Pola trybu ręcznego wznowienia (status='waiting_for_zone_symbol'), gdy
