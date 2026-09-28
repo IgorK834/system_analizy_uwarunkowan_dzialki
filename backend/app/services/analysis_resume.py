@@ -1,22 +1,36 @@
-"""Atomowe wznowienie analizy oczekującej na symbol strefy MPZP."""
+"""Atomowe wznowienie analizy oczekującej na symbol strefy MPZP (BK-204).
+
+Wznowienie nie sięga do sieci: parser dostaje wyłącznie dokument przypięty w
+chwili wstrzymania analizy (bajty + SHA-256 + wersja dokumentu), więc inna
+uchwała opublikowana później pod tym samym URL nie zmieni wyniku. Ręcznie
+podany symbol nie ustala udziału strefy w powierzchni działki — udział pozostaje
+nieustalony, każdy zależny parametr wymaga weryfikacji, a wynik nigdy nie
+staje się ``complete``.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from hashlib import sha256
 from typing import Literal
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models.analysis import Analysis
+from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.mpzp_parameter import MpzpParameter
 from app.models.mpzp_zone import MpzpZone
 from app.models.pog_data import PogData
 from app.models.source_record import SourceRecord
-from app.schemas.analyze import AnalyzeResponse, MpzpZoneResult, WarningMessage
+from app.schemas.analyze import (
+    AnalyzeResponse,
+    ManualZoneSelection,
+    MpzpZoneResult,
+    WarningMessage,
+)
 from app.schemas.mpzp import MpzpParserWarning
 from app.schemas.source import SourceMetadata
-from app.services.mpzp_fetch import fetch_mpzp_document
 from app.services.mpzp_parser import parse_mpzp_document
 from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
@@ -24,17 +38,34 @@ from app.services.mpzp_zones import (
     cap_fallback_zone,
     legal_unit_evidence_from_snapshot,
     map_parser_zone_to_analyze_response,
+    unassigned_share_zone,
     validate_zone_symbol_format,
 )
 from app.services.ouz import OUZ_LEGAL_DISCLAIMER, OuzStatusResult
 from app.services.persistence import (
     add_mpzp_zone_snapshot,
     build_analyze_response_from_analysis,
+    pending_document_blob,
+    pog_result_from_record,
 )
 from app.services.pog_scenarios import PogScenarioResult, build_pog_scenario_result
 from app.modules.documents.composition import (
     build_ocr_provider,
     persist_parser_audit,
+)
+
+# Ostrzeżenia wyliczane przy wstrzymaniu, które resume zastępuje nowymi
+# (ocena MPZP–POG jest liczona ponownie po podaniu symbolu).
+_RECOMPUTED_WARNING_CODES = frozenset(
+    {
+        "MPZP_MANUAL_ZONE_REQUIRED",
+        "MPZP_POG_INPUT_INCOMPLETE",
+        "MPZP_POG_COMPATIBILITY_UNKNOWN",
+        "MPZP_POG_PAIRS_NOT_SPATIAL",
+        "MPZP_POG_POTENTIAL_DIVERGENCE",
+        "POG_TRANSITIONAL_STATUS",
+        "POG_SCENARIO_UNKNOWN",
+    }
 )
 
 
@@ -46,8 +77,8 @@ class AnalysisResumeStateError(Exception):
     """Analiza nie oczekuje na ręczny symbol strefy."""
 
 
-class AnalysisResumeSourceMissingError(Exception):
-    """Snapshot nie ma URL dokumentu potrzebnego do wznowienia."""
+class AnalysisResumeDocumentError(Exception):
+    """Przypięty dokument jest uszkodzony albo nie daje się sparsować."""
 
 
 async def resume_analysis_with_zone(
@@ -57,10 +88,12 @@ async def resume_analysis_with_zone(
 ) -> AnalyzeResponse:
     """Wznawia snapshot i zwraca jego pełny, ponownie odtworzony kontrakt.
 
-    Pobranie i parsowanie dokumentu odbywa się przed jakąkolwiek modyfikacją
-    snapshotu. Strefa, parametry, ostrzeżenia, źródło oraz status są następnie
-    zapisywane jednym commitem. Ręczny fallback bez granicy wektorowej zawsze
-    pozostaje ``partial``, nawet gdy parser dokumentu zwrócił komplet parametrów.
+    Kolejność gwarantuje brak częściowego zapisu: walidacja (404/409/422) →
+    weryfikacja SHA i parsowanie przypiętego dokumentu (błąd → 503) → blokada
+    wiersza analizy ``FOR UPDATE`` i ponowne sprawdzenie statusu (równoległe
+    wznowienie → 409) → jeden commit strefy, parametrów, oceny POG, ostrzeżeń,
+    źródła i statusu. POG, ryzyka, infrastruktura i źródła kontekstu (w tym
+    NMT) nie są modyfikowane.
     """
     analysis = db.get(Analysis, analysis_id)
     if analysis is None:
@@ -69,142 +102,109 @@ async def resume_analysis_with_zone(
         raise AnalysisResumeStateError
 
     zone_symbol = validate_zone_symbol_format(raw_zone_symbol)
-    if not analysis.pending_uchwala_url:
-        raise AnalysisResumeSourceMissingError
-
+    pinned = db.scalar(
+        select(AnalysisPendingDocument).where(
+            AnalysisPendingDocument.analysis_id == analysis_id
+        )
+    )
+    plan_id = analysis.pending_plan_id
     document_url = analysis.pending_uchwala_url
-    document = await fetch_mpzp_document(document_url)
-    parse_result = await parse_mpzp_document(
-        document,
-        [zone_symbol],
-        build_ocr_provider(),
-    )
-    persistence_warning: WarningMessage | None = None
-    snapshot = None
-    try:
-        snapshot = persist_parser_audit(
-            db,
-            planning_act_identifier=(
-                analysis.pending_plan_id
-                or f"mpzp-document:{analysis.pending_uchwala_url}"
-            ),
-            document=document,
-            parse_result=parse_result,
-        )
-    except Exception:
-        db.rollback()
-        analysis = db.get(Analysis, analysis_id)
-        assert analysis is not None
-        persistence_warning = WarningMessage(
-            code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
-            message=(
-                "Nie udało się zapisać cytowalnej struktury dokumentu MPZP. "
-                "Wznowiony wynik pozostaje częściowy."
-            ),
-            severity="error",
-            source_name="mpzp",
-        )
-    source = SourceMetadata(
-        source_name="manual_user_input",
-        source_url=document_url,
-        fetched_at=document.source_metadata.fetched_at,
-        response_status=document.source_metadata.response_status,
-        confidence=MANUAL_ZONE_SYMBOL_CONFIDENCE,
-        manual_review_required=True,
-    )
+    candidates = list(analysis.pending_zone_symbol_candidates or [])
+    paused_at = analysis.analyzed_at
 
-    matching_zone = next(
-        (zone for zone in parse_result.zones if zone.zone_symbol == zone_symbol),
-        None,
-    )
-    parcel_area_sqm = analysis.parcel.area_sqm or 0.0
-    if matching_zone is not None:
-        mapped_zone, skipped_parameters = map_parser_zone_to_analyze_response(
-            matching_zone,
-            parcel_area_sqm,
-            source,
-            evidence=DocumentEvidenceContext(
-                document_version_id=getattr(snapshot, "document_version_id", None),
-                legal_units=legal_unit_evidence_from_snapshot(snapshot),
-            ),
-        )
-    else:
-        mapped_zone = _manual_zone_without_parameters(
-            zone_symbol,
-            parcel_area_sqm,
-            source,
-        )
-        skipped_parameters = []
+    document = None
+    parse_result = None
+    if pinned is not None:
+        if sha256(pinned.content).hexdigest() != pinned.content_sha256:
+            raise AnalysisResumeDocumentError(
+                "Przypięty dokument nie zgadza się z zapisanym SHA-256."
+            )
+        document = pending_document_blob(pinned)
+        try:
+            parse_result = await parse_mpzp_document(
+                document, [zone_symbol], build_ocr_provider()
+            )
+        except Exception as exc:
+            raise AnalysisResumeDocumentError(
+                "Nie udało się odczytać przypiętego dokumentu MPZP."
+            ) from exc
 
-    # Ręczny odczyt symbolu z rastra: brak wektora, obniżona pewność (BK-202).
-    mapped_zone = cap_fallback_zone(mapped_zone, assignment_method="manual_user_input")
-    new_warnings = _resume_warnings(
-        parse_result.warnings,
-        skipped_parameters,
-        matching_zone is None,
-    )
-    if persistence_warning is not None:
-        new_warnings.append(persistence_warning)
-    pog_record = db.scalar(select(PogData).where(PogData.analysis_id == analysis.id))
-    pog_scenario = _pog_scenario_for_resume(
-        pog_record,
-        mapped_zone,
-        parcel_area_sqm,
-    )
-    if pog_scenario is not None:
-        new_warnings.extend(pog_scenario.warnings)
     try:
+        analysis = _lock_waiting_analysis(db, analysis_id)
+        new_warnings: list[WarningMessage] = []
+        snapshot = None
+        if document is not None and parse_result is not None:
+            snapshot, persistence_warning = _persist_audit_safely(
+                db, plan_id or f"mpzp-document:{document_url}", document, parse_result
+            )
+            if persistence_warning is not None:
+                # Rollback zapisu audytu zwolnił blokadę — pobieramy ją ponownie.
+                analysis = _lock_waiting_analysis(db, analysis_id)
+                new_warnings.append(persistence_warning)
+
+        selection = ManualZoneSelection(
+            entered_symbol=zone_symbol,
+            plan_id=plan_id,
+            candidate_zone_symbols=candidates,
+            symbol_in_candidates=zone_symbol in candidates,
+            document_url=document_url or (pinned.requested_url if pinned else None),
+            document_sha256=pinned.content_sha256 if pinned else None,
+            document_version_id=(
+                getattr(snapshot, "document_version_id", None)
+                or (pinned.document_version_id if pinned else None)
+            ),
+            document_fetched_at=pinned.fetched_at if pinned else None,
+            document_pinned=pinned is not None,
+            selected_at=datetime.now(timezone.utc),
+        )
+        source = SourceMetadata(
+            source_name="manual_user_input",
+            source_url=selection.document_url,
+            fetched_at=selection.document_fetched_at,
+            response_status=pinned.response_status if pinned else None,
+            artifact_sha256=selection.document_sha256,
+            confidence=MANUAL_ZONE_SYMBOL_CONFIDENCE,
+            manual_review_required=True,
+        )
+        mapped_zone, skipped_parameters, symbol_missing = _manual_zone(
+            zone_symbol, parse_result, source, snapshot, selection
+        )
+        new_warnings = [
+            *_resume_warnings(
+                parse_result.warnings if parse_result is not None else [],
+                skipped_parameters,
+                symbol_missing_in_document=symbol_missing,
+                document_pinned=pinned is not None,
+                symbol_in_candidates=selection.symbol_in_candidates,
+            ),
+            *new_warnings,
+        ]
+
+        pog_record = db.scalar(select(PogData).where(PogData.analysis_id == analysis.id))
+        parcel_area_sqm = analysis.parcel.area_sqm or 0.0
+        pog_scenario = _pog_scenario_for_resume(
+            db, analysis, pog_record, mapped_zone, parcel_area_sqm, paused_at
+        )
+        if pog_scenario is not None:
+            new_warnings.extend(pog_scenario.warnings)
+
         zone_ids = select(MpzpZone.id).where(MpzpZone.analysis_id == analysis.id)
         db.execute(delete(MpzpParameter).where(MpzpParameter.mpzp_zone_id.in_(zone_ids)))
         db.execute(delete(MpzpZone).where(MpzpZone.analysis_id == analysis.id))
         add_mpzp_zone_snapshot(db, analysis.id, mapped_zone)
         if pog_record is not None and pog_scenario is not None:
-            compatibility = pog_scenario.compatibility
-            pog_record.conflict_with_mpzp = (
-                pog_scenario.conflict
-                if compatibility is not None
-                and compatibility.result in {"compatible", "incompatible"}
-                else None
-            )
-            pog_record.manual_review_required = (
-                pog_record.manual_review_required
-                or pog_scenario.manual_review_required
-            )
-            raw_attributes = dict(pog_record.raw_attributes or {})
-            raw_attributes["scenario"] = {
-                "message": pog_scenario.message,
-                "legal_disclaimer": pog_scenario.legal_disclaimer,
-                "conflict_uncertain": pog_scenario.conflict_uncertain,
-                "compatibility": (
-                    {
-                        "result": compatibility.result,
-                        "reasoning": compatibility.reasoning,
-                        "confidence": compatibility.confidence,
-                    }
-                    if compatibility is not None
-                    else None
-                ),
-            }
-            pog_record.raw_attributes = raw_attributes
-
-            if pog_record.result_v2 is not None:
-                result_v2 = dict(pog_record.result_v2)
-                result_v2["conflict_with_mpzp"] = pog_record.conflict_with_mpzp
-                result_v2["manual_review_required"] = pog_record.manual_review_required
-                result_v2_raw_attributes = dict(result_v2.get("raw_attributes") or {})
-                result_v2_raw_attributes["scenario"] = raw_attributes["scenario"]
-                result_v2["raw_attributes"] = result_v2_raw_attributes
-                pog_record.result_v2 = result_v2
+            _update_pog_record(pog_record, pog_scenario)
 
         retained_warnings = [
             warning
             for warning in (analysis.warnings or [])
-            if warning.get("code") != "MPZP_MANUAL_ZONE_REQUIRED"
+            if warning.get("code") not in _RECOMPUTED_WARNING_CODES
         ]
         analysis.warnings = [
             *retained_warnings,
             *(warning.model_dump(mode="json") for warning in new_warnings),
         ]
+        # Ręczna identyfikacja strefy nigdy nie daje ``complete`` (BK-204).
         analysis.status = "partial"
         analysis.analyzed_at = datetime.now(timezone.utc)
         analysis.resolved_zone_symbol = zone_symbol
@@ -225,7 +225,8 @@ async def resume_analysis_with_zone(
                 confidence=source.confidence,
                 manual_review_required=True,
                 warnings=[warning.message for warning in new_warnings],
-                checksum=None,
+                checksum=source.artifact_sha256,
+                artifact_sha256=source.artifact_sha256,
             )
         )
         db.commit()
@@ -237,14 +238,92 @@ async def resume_analysis_with_zone(
     return build_analyze_response_from_analysis(analysis, db)
 
 
+def _lock_waiting_analysis(db: Session, analysis_id: int) -> Analysis:
+    """Blokuje wiersz analizy i ponownie sprawdza status po uzyskaniu blokady."""
+    locked = db.execute(
+        select(Analysis)
+        .where(Analysis.id == analysis_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).scalar_one_or_none()
+    if locked is None:
+        raise AnalysisResumeNotFoundError
+    if locked.status != "waiting_for_zone_symbol":
+        raise AnalysisResumeStateError
+    return locked
+
+
+def _persist_audit_safely(db: Session, planning_act_identifier: str, document, parse_result):  # noqa: ANN001
+    try:
+        return (
+            persist_parser_audit(
+                db,
+                planning_act_identifier=planning_act_identifier,
+                document=document,
+                parse_result=parse_result,
+            ),
+            None,
+        )
+    except Exception:
+        db.rollback()
+        return None, WarningMessage(
+            code="MPZP_DOCUMENT_PERSISTENCE_FAILED",
+            message=(
+                "Nie udało się zapisać cytowalnej struktury dokumentu MPZP. "
+                "Wznowiony wynik pozostaje częściowy."
+            ),
+            severity="error",
+            source_name="mpzp",
+        )
+
+
+def _manual_zone(
+    zone_symbol: str,
+    parse_result,  # noqa: ANN001
+    source: SourceMetadata,
+    snapshot,  # noqa: ANN001
+    selection: ManualZoneSelection,
+) -> tuple[MpzpZoneResult, list[str], bool]:
+    """Strefa ręczna: parametry z przypiętego dokumentu, udział nieustalony."""
+    matching_zone = (
+        next((zone for zone in parse_result.zones if zone.zone_symbol == zone_symbol), None)
+        if parse_result is not None
+        else None
+    )
+    skipped: list[str] = []
+    if matching_zone is not None:
+        mapped, skipped = map_parser_zone_to_analyze_response(
+            matching_zone,
+            0.0,
+            source,
+            evidence=DocumentEvidenceContext(
+                document_version_id=selection.document_version_id,
+                legal_units=legal_unit_evidence_from_snapshot(snapshot),
+            ),
+        )
+    else:
+        mapped = unassigned_share_zone(zone_symbol, source)
+    mapped = mapped.model_copy(
+        update={"act_identifier": selection.plan_id, "document_url": selection.document_url}
+    )
+    capped = cap_fallback_zone(
+        mapped, assignment_method="manual_user_input", manual_selection=selection
+    )
+    return capped, skipped, parse_result is not None and matching_zone is None
+
+
 def _pog_scenario_for_resume(
+    db: Session,
+    analysis: Analysis,
     pog_record: PogData | None,
     mpzp_zone: MpzpZoneResult,
     parcel_area_sqm: float,
+    paused_at: datetime,
 ) -> PogScenarioResult | None:
-    """Odtwarza jawny stan OUZ i przelicza scenariusz po podaniu MPZP."""
+    """Przelicza ocenę MPZP–POG na zachowanym snapshotcie POG (bez sieci)."""
     if pog_record is None:
         return None
+    pog = pog_result_from_record(pog_record, list(analysis.source_records), parcel_area_sqm)
     raw_ouz = (pog_record.raw_attributes or {}).get("ouz")
     ouz_status_name: Literal["available", "unknown"] = (
         "available"
@@ -265,27 +344,39 @@ def _pog_scenario_for_resume(
         ),
         legal_disclaimer=OUZ_LEGAL_DISCLAIMER,
     )
-    return build_pog_scenario_result(mpzp_zone, pog_record, ouz_status)
-
-
-def _manual_zone_without_parameters(
-    zone_symbol: str,
-    parcel_area_sqm: float,
-    source: SourceMetadata,
-) -> MpzpZoneResult:
-    return MpzpZoneResult(
-        zone_symbol=zone_symbol,
-        intersection_area_sqm=parcel_area_sqm,
-        intersection_pct=100.0,
-        is_dominant=True,
-        source=source,
+    return build_pog_scenario_result(
+        [mpzp_zone],
+        pog,
+        ouz_status,
+        as_of=paused_at,
+        parcel_area_sqm=parcel_area_sqm,
     )
+
+
+def _update_pog_record(pog_record: PogData, scenario: PogScenarioResult) -> None:
+    """Aktualizuje ocenę w kolumnie i w snapshotcie v2 (źródło prawdy odczytu)."""
+    assessment = scenario.assessment.model_dump(mode="json")
+    pog_record.compatibility_assessment = assessment
+    pog_record.manual_review_required = (
+        pog_record.manual_review_required or scenario.manual_review_required
+    )
+    if pog_record.result_v2 is not None:
+        # Pozostałe pola snapshotu POG zostają nietknięte (zachowanie POG przy
+        # wznowieniu); usuwamy jedynie przestarzały boolean.
+        result_v2 = dict(pog_record.result_v2)
+        result_v2.pop("conflict_with_mpzp", None)
+        result_v2["compatibility_assessment"] = assessment
+        result_v2["manual_review_required"] = pog_record.manual_review_required
+        pog_record.result_v2 = result_v2
 
 
 def _resume_warnings(
     parser_warnings: list[MpzpParserWarning],
     skipped_parameters: list[str],
+    *,
     symbol_missing_in_document: bool,
+    document_pinned: bool,
+    symbol_in_candidates: bool,
 ) -> list[WarningMessage]:
     warnings = [
         WarningMessage(
@@ -300,15 +391,40 @@ def _resume_warnings(
         WarningMessage(
             code="MPZP_MANUAL_ZONE_FALLBACK",
             message=(
-                "Symbol strefy podano ręcznie na podstawie rastrowej nakładki "
-                "WMS, bez wektorowej granicy. Całą działkę przypisano technicznie "
-                "do tej strefy, dlatego wynik pozostaje częściowy i wymaga "
-                "weryfikacji."
+                "Symbol strefy podano ręcznie na podstawie podglądu rastrowego, bez "
+                "wektorowej granicy. Udział strefy w powierzchni działki pozostaje "
+                "nieustalony, każdy parametr zależny od tego symbolu wymaga "
+                "weryfikacji, a wynik pozostaje częściowy."
             ),
             severity="warning",
             source_name="mpzp",
         )
     )
+    if not symbol_in_candidates:
+        warnings.append(
+            WarningMessage(
+                code="MPZP_MANUAL_SYMBOL_NOT_IN_CANDIDATES",
+                message=(
+                    "Podany symbol nie należy do kandydatów wskazanych przez "
+                    "discovery dla tego planu — sprawdź go z rysunkiem planu."
+                ),
+                severity="warning",
+                source_name="mpzp",
+            )
+        )
+    if not document_pinned:
+        warnings.append(
+            WarningMessage(
+                code="MPZP_PINNED_DOCUMENT_MISSING",
+                message=(
+                    "Dokument uchwały nie został przypięty przy wstrzymaniu analizy; "
+                    "parametry strefy pozostają nieustalone (system nie pobiera "
+                    "dokumentu ponownie, aby nie odczytać innej wersji uchwały)."
+                ),
+                severity="warning",
+                source_name="mpzp",
+            )
+        )
     if symbol_missing_in_document:
         warnings.append(
             WarningMessage(
