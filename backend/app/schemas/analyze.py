@@ -11,6 +11,10 @@ from app.schemas.source import (
     SourceMetadata,
     WarningMessage,
 )
+from app.shared.planning_compatibility_text import (
+    COMPATIBILITY_INFORMATIONAL_NOTICE,
+    LEGACY_AGGREGATION_NOTE,
+)
 from app.shared.provenance import is_verified_https_url
 from app.shared.planning_status import (
     COVERAGE_STATUS_ALIASES,
@@ -25,7 +29,7 @@ from app.shared.planning_status import (
     upgrade_legacy_legal_status,
 )
 
-POG_RESULT_SCHEMA_VERSION = "2.2"
+POG_RESULT_SCHEMA_VERSION = "2.3"
 
 
 class MapAnalyzeRequest(BaseModel):
@@ -219,7 +223,44 @@ class ParcelGeometryResponse(BaseModel):
 MpzpAssignmentMethod = Literal[
     "vector_intersection", "document_candidate", "manual_user_input", "legacy"
 ]
-MPZP_RESULT_SCHEMA_VERSION = "2.0"
+MPZP_RESULT_SCHEMA_VERSION = "2.1"
+
+
+class ManualZoneSelection(BaseModel):
+    """Decyzja użytkownika o symbolu strefy bez wektora (BK-204).
+
+    Zapis jest częścią snapshotu strefy, więc raport i ponowny odczyt pokazują,
+    z jakich kandydatów i z której dokładnie wersji dokumentu wybrano symbol.
+    Nie zawiera udziału powierzchniowego — ręczny symbol go nie ustala.
+    """
+
+    entered_symbol: str = Field(description="Symbol po walidacji formatu.")
+    plan_id: str | None = Field(default=None, description="ID planu z discovery.")
+    candidate_zone_symbols: list[str] = Field(
+        default_factory=list,
+        description="Kandydaci symboli pokazani użytkownikowi przed wyborem.",
+    )
+    symbol_in_candidates: bool = Field(
+        description="Czy wpisany symbol był jednym z pokazanych kandydatów."
+    )
+    document_url: str | None = Field(
+        default=None, description="Adres dokumentu zapisany przy wstrzymaniu analizy."
+    )
+    document_sha256: str | None = Field(
+        default=None,
+        min_length=64,
+        max_length=64,
+        description="SHA-256 dokumentu przypiętego przy wstrzymaniu analizy.",
+    )
+    document_version_id: int | None = None
+    document_fetched_at: datetime | None = None
+    document_pinned: bool = Field(
+        description=(
+            "Czy parametry odczytano z dokumentu przypiętego przy wstrzymaniu. "
+            "False — dokument nie był dostępny i parametry pozostają nieustalone."
+        )
+    )
+    selected_at: datetime
 
 
 class MpzpParameterEvidence(BaseModel):
@@ -299,21 +340,30 @@ class MpzpZoneResult(BaseModel):
         description="Maksymalna powierzchnia zabudowy w procentach powierzchni działki.",
         json_schema_extra={"example": 30.0},
     )
-    intersection_area_sqm: float = Field(
+    intersection_area_sqm: float | None = Field(
+        default=None,
         ge=0.0,
-        description="Pole przecięcia działki ze strefą MPZP w metrach kwadratowych.",
+        description=(
+            "Pole przecięcia działki ze strefą MPZP w metrach kwadratowych. "
+            "None — udział nieustalony (brak wektorowej granicy strefy, np. symbol "
+            "podany ręcznie); nie oznacza 0 ani całej działki."
+        ),
         json_schema_extra={"example": 830.0},
     )
-    intersection_pct: float = Field(
+    intersection_pct: float | None = Field(
+        default=None,
         ge=0.0,
         le=100.0,
-        description="Udział powierzchni działki w tej strefie MPZP.",
+        description=(
+            "Udział powierzchni działki w tej strefie MPZP; None — udział nieustalony."
+        ),
         json_schema_extra={"example": 66.4},
     )
     is_dominant: bool = Field(
+        default=False,
         description=(
-            "Pole pomocnicze: strefa o największym dodatnim udziale. Nie zastępuje "
-            "pełnej listy stref."
+            "Pole pomocnicze: strefa o największym dodatnim, USTALONYM udziale. "
+            "Nie zastępuje pełnej listy stref; bez udziału zawsze False."
         ),
         json_schema_extra={"example": True},
     )
@@ -347,6 +397,22 @@ class MpzpZoneResult(BaseModel):
         description="Wszystkie kandydatury parametrów z evidence, także sprzeczne.",
     )
     manual_review_required: bool = False
+    manual_selection: ManualZoneSelection | None = Field(
+        default=None,
+        description=(
+            "Zapis decyzji użytkownika w trybie ręcznym (BK-204): wpisany symbol, "
+            "plan, kandydaci i przypięta wersja dokumentu. Obecny wyłącznie dla "
+            "assignment_method=manual_user_input."
+        ),
+    )
+    intersection_wkt: str | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "Wewnętrzna geometria przecięcia w EPSG:2180 do obliczeń par MPZP–POG; "
+            "nie jest serializowana do API ani snapshotu."
+        ),
+    )
     source: SourceMetadata = Field(
         description="Metadane źródła danych MPZP.",
         json_schema_extra={
@@ -359,6 +425,178 @@ class MpzpZoneResult(BaseModel):
             }
         },
     )
+
+
+class ManualZoneSourceDocument(BaseModel):
+    """Dokument przypięty przy wstrzymaniu analizy — dokładnie ten, który przeczyta resume."""
+
+    requested_url: str | None = None
+    requested_url_verified: bool = Field(
+        default=False,
+        description="Czy adres źródłowy jest zweryfikowanym HTTPS (tylko wtedy klikalny).",
+    )
+    media_type: str
+    filename: str | None = None
+    sha256: str = Field(min_length=64, max_length=64)
+    size_bytes: int = Field(ge=0)
+    fetched_at: datetime | None = None
+    document_version_id: int | None = None
+    preview_path: str = Field(
+        description=(
+            "Względna ścieżka API serwująca przypiętą kopię dokumentu; nie jest "
+            "adresem zewnętrznym."
+        )
+    )
+
+    @model_validator(mode="after")
+    def verify_link(self) -> Self:
+        self.requested_url_verified = is_verified_https_url(self.requested_url)
+        return self
+
+
+class ManualZoneContext(BaseModel):
+    """Materiał, który użytkownik widzi przed podaniem symbolu strefy (BK-204)."""
+
+    plan_id: str | None = None
+    candidate_zone_symbols: list[str] = Field(default_factory=list)
+    document_status: Literal["pinned", "unavailable", "not_provided"] = Field(
+        description=(
+            "pinned — dokument przypięty przy wstrzymaniu; unavailable — nie udało "
+            "się go pobrać; not_provided — discovery nie wskazało dokumentu."
+        )
+    )
+    document: ManualZoneSourceDocument | None = None
+    raster_preview_source_key: Literal["mpzp"] = Field(
+        default="mpzp",
+        description="Klucz podglądu WMS (proxy /api/v1/map/tiles) z obrazem planu.",
+    )
+    symbol_max_length: int = 20
+    symbol_allowed_pattern: str = Field(
+        description="Wyrażenie regularne dozwolonych znaków symbolu (walidacja UI = API)."
+    )
+    notice: str = Field(
+        description="Ograniczenia trybu ręcznego pokazywane przed formularzem."
+    )
+
+
+CompatibilityStatus = Literal[
+    "compatible", "incompatible", "uncertain", "not_applicable", "unknown"
+]
+COMPATIBILITY_ASSESSMENT_SCHEMA_VERSION = "1.0"
+
+
+class CompatibilitySource(BaseModel):
+    """Źródło, na którym opiera się ocena relacji MPZP–POG."""
+
+    kind: Literal["rule_set", "mpzp", "pog"]
+    label: str
+    reference: str | None = None
+    version: str | None = None
+    as_of: date | None = None
+
+
+class CompatibilityZonePair(BaseModel):
+    """Para strefa MPZP × strefa POG z jawną regułą i uzasadnieniem (BK-205).
+
+    Para rozstrzygnięta (``compatible``/``incompatible``) zawsze ma ``rule_id``,
+    ``rule_version``, ``source`` i ``as_of``. Para bez potwierdzonego przestrzennie
+    styku stref nie jest rozstrzygana — pozostaje ``uncertain``/``unknown``.
+    """
+
+    mpzp_zone_symbol: str
+    mpzp_zone_id: str | None = None
+    mpzp_assignment_method: MpzpAssignmentMethod
+    mpzp_function: str | None = Field(
+        default=None, description="Znormalizowana funkcja MPZP; None — nieustalona."
+    )
+    pog_zone_id: str
+    pog_zone_symbol: str | None = None
+    pog_zone_type: str
+    spatially_identified: bool = Field(
+        description=(
+            "True — obie strefy mają geometrię EPSG:2180, a ich przecięcie w "
+            "obrębie działki ma dodatnie pole."
+        )
+    )
+    overlap_area_sqm: float | None = Field(default=None, ge=0.0)
+    overlap_pct: float | None = Field(default=None, ge=0.0, le=100.0)
+    status: CompatibilityStatus
+    rule_result: Literal["compatible", "incompatible", "uncertain"] | None = Field(
+        default=None,
+        description="Wynik samej reguły tabeli, przed uwzględnieniem niepewności przestrzennej.",
+    )
+    rule_id: str | None = None
+    rule_version: str | None = None
+    source: str | None = None
+    as_of: date | None = None
+    rationale: str
+    manual_review_required: bool = True
+
+    @model_validator(mode="after")
+    def resolved_pair_has_rule(self) -> Self:
+        if self.status in {"compatible", "incompatible"}:
+            missing = [
+                name
+                for name in ("rule_id", "rule_version", "source", "as_of")
+                if getattr(self, name) is None
+            ]
+            if missing or not self.spatially_identified:
+                raise ValueError(
+                    "Rozstrzygnięta para MPZP–POG wymaga reguły (rule_id, "
+                    "rule_version, source, as_of) i przestrzennej identyfikacji."
+                )
+        return self
+
+
+class LegacyCompatibilityEvidence(BaseModel):
+    """Historyczne stwierdzenie sprzed BK-205 — dowód, nie pełna ocena."""
+
+    origin: str = Field(description="Skąd pochodzi zapis, np. pog_data.conflict_with_mpzp.")
+    conflict_with_mpzp: bool | None = None
+    result: str | None = None
+    reasoning: str | None = None
+    confidence: float | None = None
+
+
+class CompatibilityAssessment(BaseModel):
+    """Informacyjna ocena relacji MPZP–POG (BK-205), nie opinia prawna.
+
+    Status całości wynika z jawnej reguły agregacji par (najsłabsze ogniwo),
+    nigdy ze średniej parametrów różnych stref. ``not_applicable`` opisuje brak
+    aktu, który mógłby ustanawiać obowiązek (projekt/procedura, akt nieaktualny,
+    potwierdzony brak POG); ``unknown`` — brak danych albo reguły.
+    """
+
+    schema_version: str = Field(default=COMPATIBILITY_ASSESSMENT_SCHEMA_VERSION)
+    status: CompatibilityStatus
+    reason_code: str = Field(description="Stabilny kod ścieżki decyzji.")
+    as_of: date | None = Field(
+        default=None, description="Data stanu prawnego, do którego odnosi się ocena."
+    )
+    rule_id: str | None = Field(default=None, description="ID zestawu reguł.")
+    rule_version: str | None = None
+    aggregation: str = Field(description="Jawny opis reguły agregacji par.")
+    sources: list[CompatibilitySource] = Field(default_factory=list)
+    rationale: str
+    manual_review_required: bool = True
+    zone_pairs: list[CompatibilityZonePair] = Field(default_factory=list)
+    informational_notice: str
+    legacy_evidence: LegacyCompatibilityEvidence | None = None
+
+    @model_validator(mode="after")
+    def validate_contract(self) -> Self:
+        if self.legacy_evidence is not None and self.status != "unknown":
+            raise ValueError(
+                "Zapis legacy bez danych reguły nie może udawać pełnej oceny zgodności."
+            )
+        if self.status in {"compatible", "incompatible"}:
+            if not self.zone_pairs or self.rule_id is None or self.rule_version is None:
+                raise ValueError(
+                    "Rozstrzygnięta ocena wymaga zestawu reguł i co najmniej jednej pary."
+                )
+            if not any(pair.status == self.status for pair in self.zone_pairs):
+                raise ValueError("Status oceny musi wynikać z co najmniej jednej pary.")
+        return self
 
 
 class PogActResult(BaseModel):
@@ -435,6 +673,14 @@ class PogZoneResult(BaseModel):
         default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów."
     )
     gml_url_verified: bool = False
+    intersection_wkt: str | None = Field(
+        default=None,
+        exclude=True,
+        description=(
+            "Wewnętrzne przecięcie strefy z działką w EPSG:2180 do oceny par "
+            "MPZP–POG; nie jest serializowane."
+        ),
+    )
 
     @model_validator(mode="after")
     def verify_link(self) -> Self:
@@ -558,9 +804,14 @@ class PogResult(BaseModel):
         default=False,
         description="Czy wynik POG wymaga ręcznej weryfikacji.",
     )
-    conflict_with_mpzp: bool | None = Field(
+    compatibility_assessment: CompatibilityAssessment | None = Field(
         default=None,
-        description="Jawny wynik tabeli zgodności MPZP-POG; None oznacza brak rozstrzygnięcia.",
+        description=(
+            "Informacyjna ocena relacji MPZP–POG z datą stanu prawnego, regułami, "
+            "źródłami, uzasadnieniem i parami stref (BK-205). Zastępuje "
+            "przestarzałe pole conflict_with_mpzp. Nie przesądza o prawnej "
+            "możliwości zabudowy."
+        ),
     )
     raw_attributes: dict[str, Any] | None = Field(
         default=None,
@@ -635,6 +886,11 @@ class PogResult(BaseModel):
         coverage = payload.get("coverage_status")
         if coverage in COVERAGE_STATUS_ALIASES:
             payload["coverage_status"] = canonical_coverage_status(coverage)
+        legacy_conflict = payload.pop("conflict_with_mpzp", None)
+        if payload.get("compatibility_assessment") is None:
+            payload["compatibility_assessment"] = legacy_compatibility_assessment(
+                legacy_conflict, payload.get("raw_attributes")
+            )
         return payload
 
     @model_validator(mode="after")
@@ -659,6 +915,50 @@ class PogResult(BaseModel):
         if self.data_availability == "stale" and self.status_confirmed_at is None:
             raise ValueError("data_availability=stale wymaga daty ostatniego potwierdzenia")
         return self
+
+
+def legacy_compatibility_assessment(
+    conflict_with_mpzp: bool | None,
+    raw_attributes: Any,
+) -> dict[str, Any] | None:
+    """Zamienia boolean sprzed BK-205 na jawne ``legacy`` evidence.
+
+    Stary zapis nie ma identyfikatora ani wersji reguły, pary stref ani daty
+    stanu prawnego, więc nie może udawać pełnej oceny: status zawsze ``unknown``,
+    a historyczne stwierdzenie zostaje zachowane jako dowód. Brak jakiegokolwiek
+    zapisu zwraca ``None`` (ocena nie była wykonywana).
+    """
+    scenario = raw_attributes.get("scenario") if isinstance(raw_attributes, dict) else None
+    compatibility = scenario.get("compatibility") if isinstance(scenario, dict) else None
+    if not isinstance(compatibility, dict):
+        compatibility = None
+    if conflict_with_mpzp is None and compatibility is None:
+        return None
+    return {
+        "status": "unknown",
+        "reason_code": "LEGACY_BOOLEAN_ONLY",
+        "aggregation": LEGACY_AGGREGATION_NOTE,
+        "rationale": (
+            "Snapshot sprzed BK-205 zawiera wyłącznie uproszczone stwierdzenie bez "
+            "identyfikatora reguły, par stref i daty stanu prawnego; zachowano je "
+            "jako historyczny dowód, a nie pełną ocenę."
+        ),
+        "manual_review_required": True,
+        "zone_pairs": [],
+        "sources": [],
+        "informational_notice": COMPATIBILITY_INFORMATIONAL_NOTICE,
+        "legacy_evidence": {
+            "origin": (
+                "pog_data.conflict_with_mpzp"
+                if compatibility is None
+                else "raw_attributes.scenario.compatibility"
+            ),
+            "conflict_with_mpzp": conflict_with_mpzp,
+            "result": (compatibility or {}).get("result"),
+            "reasoning": (compatibility or {}).get("reasoning"),
+            "confidence": (compatibility or {}).get("confidence"),
+        },
+    }
 
 
 def _legacy_status_evidence(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -892,6 +1192,14 @@ class AnalyzeResponse(BaseModel):
             "i odczytanym symbolem strefy."
         ),
         json_schema_extra={"example": False},
+    )
+    manual_zone_context: ManualZoneContext | None = Field(
+        default=None,
+        description=(
+            "Obecne tylko przy manual_zone_required=True: plan, kandydaci "
+            "symboli, przypięty dokument i klucz podglądu rastrowego, które UI "
+            "pokazuje przed formularzem symbolu."
+        ),
     )
     warnings: list[WarningMessage] = Field(
         description="Ostrzeżenia o niepewności lub brakujących sekcjach analizy.",
