@@ -30,6 +30,7 @@ geometrii nie trzeba upraszczać.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -44,6 +45,17 @@ from app.schemas.analyze import SourceMetadata
 logger = logging.getLogger(__name__)
 
 NMT_TIMEOUT_S: Final[float] = 15.0
+NMT_SOURCE_NAME: Final[str] = "NMT"
+NMT_SOURCE_ID: Final[str] = "nmt"
+_AVAILABLE_CONFIDENCE: Final[float] = 0.9
+_AREA_MISMATCH_CONFIDENCE: Final[float] = 0.5
+
+# Kody przyczyn niedostępności przenoszone do ``TerrainResult.reason_code``.
+REASON_TIMEOUT: Final[str] = "SERVICE_TIMEOUT"
+REASON_HTTP_ERROR: Final[str] = "SERVICE_HTTP_ERROR"
+REASON_REPORTED_ERROR: Final[str] = "SERVICE_REPORTED_ERROR"
+REASON_INVALID_RESPONSE: Final[str] = "INVALID_RESPONSE"
+REASON_NO_COVERAGE: Final[str] = "NO_COVERAGE_SENTINEL"
 
 # Klucze odpowiedzi tekstowej usługi.
 _ERROR_KEY: Final[str] = "error"
@@ -64,8 +76,21 @@ class NmtServiceUnavailableError(Exception):
     """Usługa NMT nie odpowiedziała, zwróciła błąd albo odpowiedź bez wysokości.
 
     Obejmuje też błędy raportowane ze statusem HTTP 200 w polu ``error``, bo dla
-    wywołującego są nieodróżnialne od awarii transportu.
+    wywołującego są nieodróżnialne od awarii transportu. Wyjątek niesie kod
+    przyczyny i provenance nieudanej próby, aby niepełny wynik nadal wskazywał,
+    kiedy i o co pytano usługę.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = REASON_INVALID_RESPONSE,
+        source_metadata: SourceMetadata | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+        self.source_metadata = source_metadata
 
 
 @dataclass(frozen=True)
@@ -81,21 +106,39 @@ class TerrainExtremes:
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class TerrainNoCoverage:
+    """Usługa odpowiedziała poprawnie, ale nie ma danych wysokościowych obszaru.
+
+    To fakt o pokryciu danych, a nie pomiar: wysokości pozostają nieznane i nie
+    wolno ich utożsamiać z płaskim terenem. Metryki próbkowania i provenance są
+    zachowane, bo dokumentują, o co i kiedy pytano usługę.
+    """
+
+    grid_size_m: float | None
+    sampled_points: int | None
+    source_metadata: SourceMetadata
+    warnings: list[str] = field(default_factory=list)
+
+
+TerrainMeasurement = TerrainExtremes | TerrainNoCoverage
+
+
 async def fetch_terrain_extremes(
     parcel_geometry: BaseGeometry,
     client: httpx.AsyncClient | None = None,
-) -> TerrainExtremes | None:
+) -> TerrainMeasurement:
     """Pobiera minimalną i maksymalną wysokość terenu w obrysie działki.
 
     Geometria wejściowa musi być w EPSG:2180 w kolejności ``(easting, northing)``,
     czyli w tej samej konwencji, w której geometrię zwraca ULDK — WKT jest
     przekazywany do usługi bez transformacji.
 
-    Zwraca ``None``, gdy usługa odpowiedziała poprawnie, ale nie ma danych
-    wysokościowych dla tego obszaru. To nie jest awaria, tylko fakt o pokryciu
-    danych, dlatego nie podnosi wyjątku. Timeout, błąd HTTP, błąd zgłoszony przez
-    usługę w polu ``error`` oraz odpowiedź bez wysokości podnoszą
-    ``NmtServiceUnavailableError``.
+    Zwraca ``TerrainNoCoverage``, gdy usługa odpowiedziała poprawnie, ale nie ma
+    danych wysokościowych dla tego obszaru (sentinel ``Hmin=2500``/``Hmax=0``).
+    To nie jest awaria, tylko fakt o pokryciu danych, dlatego nie podnosi
+    wyjątku. Timeout, błąd HTTP, błąd zgłoszony przez usługę w polu ``error``
+    oraz odpowiedź bez wysokości podnoszą ``NmtServiceUnavailableError``.
     """
     params = {
         "request": "GetMinMaxByPolygon",
@@ -120,6 +163,8 @@ async def _fetch_nmt_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
 ) -> tuple[str, str]:
+    request_url = str(httpx.URL(settings.nmt_base_url, params=params))
+    attempted_at = datetime.now(timezone.utc)
     try:
         response = await client.get(
             settings.nmt_base_url,
@@ -129,12 +174,45 @@ async def _fetch_nmt_response_text(
         response.raise_for_status()
     except httpx.TimeoutException as exc:
         raise NmtServiceUnavailableError(
-            "Usługa NMT nie odpowiedziała w wymaganym czasie."
+            "Usługa NMT nie odpowiedziała w wymaganym czasie.",
+            reason_code=REASON_TIMEOUT,
+            source_metadata=_failure_source(request_url, attempted_at, None),
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        raise NmtServiceUnavailableError(
+            f"Usługa NMT zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_failure_source(
+                request_url, attempted_at, exc.response.status_code
+            ),
         ) from exc
     except httpx.HTTPError as exc:
-        raise NmtServiceUnavailableError(f"Usługa NMT zwróciła błąd: {exc}") from exc
+        raise NmtServiceUnavailableError(
+            f"Usługa NMT zwróciła błąd: {exc}",
+            reason_code=REASON_HTTP_ERROR,
+            source_metadata=_failure_source(request_url, attempted_at, None),
+        ) from exc
 
     return response.text, str(response.url)
+
+
+def _failure_source(
+    source_url: str,
+    fetched_at: datetime,
+    response_status: int | None,
+    artifact_sha256: str | None = None,
+) -> SourceMetadata:
+    """Provenance nieudanej próby: zerowa pewność i wymagana weryfikacja."""
+    return SourceMetadata(
+        source_id=NMT_SOURCE_ID,
+        source_name=NMT_SOURCE_NAME,
+        source_url=source_url,
+        fetched_at=fetched_at,
+        response_status=response_status,
+        artifact_sha256=artifact_sha256,
+        confidence=0.0,
+        manual_review_required=True,
+    )
 
 
 def _parse_nmt_response(text: str) -> dict[str, str]:
@@ -161,26 +239,38 @@ def _build_terrain_extremes(
     parcel_geometry: BaseGeometry,
     source_url: str,
     fetched_at: datetime,
-) -> TerrainExtremes | None:
+) -> TerrainMeasurement:
     values = _parse_nmt_response(text)
+    artifact_sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     if not values:
         raise NmtServiceUnavailableError(
-            "Odpowiedź usługi NMT nie zawiera żadnych wartości."
+            "Odpowiedź usługi NMT nie zawiera żadnych wartości.",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=_failure_source(source_url, fetched_at, 200, artifact_sha256),
         )
 
     error_message = values.get(_ERROR_KEY)
     if error_message:
+        # Błąd wejścia przychodzi ze statusem HTTP 200 — nie wolno go
+        # potraktować jak poprawnej odpowiedzi ani „naprawić” do zera.
         raise NmtServiceUnavailableError(
-            f"Usługa NMT zgłosiła błąd: {error_message}"
+            f"Usługa NMT zgłosiła błąd: {error_message}",
+            reason_code=REASON_REPORTED_ERROR,
+            source_metadata=_failure_source(source_url, fetched_at, 200, artifact_sha256),
         )
 
     min_height = _parse_float(values.get(_MIN_KEY))
     max_height = _parse_float(values.get(_MAX_KEY))
     if min_height is None or max_height is None:
         raise NmtServiceUnavailableError(
-            "Odpowiedź usługi NMT nie zawiera wysokości Hmin/Hmax."
+            "Odpowiedź usługi NMT nie zawiera wysokości Hmin/Hmax.",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=_failure_source(source_url, fetched_at, 200, artifact_sha256),
         )
+
+    grid_size = _parse_float(values.get(_GRID_KEY))
+    sampled_points = _parse_int(values.get(_POINTS_KEY))
 
     if min_height > max_height:
         # Sentinel braku pokrycia danymi: usługa zwraca Hmin=2500, Hmax=0 oraz
@@ -191,7 +281,25 @@ def _build_terrain_extremes(
             min_height,
             max_height,
         )
-        return None
+        return TerrainNoCoverage(
+            grid_size_m=grid_size,
+            sampled_points=sampled_points,
+            source_metadata=SourceMetadata(
+                source_id=NMT_SOURCE_ID,
+                source_name=NMT_SOURCE_NAME,
+                source_url=source_url,
+                fetched_at=fetched_at,
+                response_status=200,
+                artifact_sha256=artifact_sha256,
+                confidence=_AVAILABLE_CONFIDENCE,
+                manual_review_required=False,
+            ),
+            warnings=[
+                "NMT nie ma danych wysokościowych dla obszaru działki — "
+                "deniwelacja jest nieznana; brak pokrycia nie oznacza płaskiego "
+                "terenu."
+            ],
+        )
 
     warnings: list[str] = []
     reported_area = _parse_float(values.get(_AREA_KEY))
@@ -207,13 +315,18 @@ def _build_terrain_extremes(
         min_height_m=min_height,
         max_height_m=max_height,
         height_difference_m=round(max_height - min_height, 3),
-        grid_size_m=_parse_float(values.get(_GRID_KEY)),
-        sampled_points=_parse_int(values.get(_POINTS_KEY)),
+        grid_size_m=grid_size,
+        sampled_points=sampled_points,
         source_metadata=SourceMetadata(
-            source_name="NMT",
+            source_id=NMT_SOURCE_ID,
+            source_name=NMT_SOURCE_NAME,
             source_url=source_url,
             fetched_at=fetched_at,
-            confidence=0.9 if not warnings else 0.5,
+            response_status=200,
+            artifact_sha256=artifact_sha256,
+            confidence=(
+                _AVAILABLE_CONFIDENCE if not warnings else _AREA_MISMATCH_CONFIDENCE
+            ),
             manual_review_required=bool(warnings),
         ),
         warnings=warnings,
