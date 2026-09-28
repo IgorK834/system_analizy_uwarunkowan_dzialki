@@ -5,6 +5,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, resumeAnalysis } from "@/lib/api";
 import type { AnalyzeResponse, AnalyzeResumeRequest } from "@/lib/types";
 
+/**
+ * Komunikaty specyficzne dla wznowienia (BK-204). Ogólne mapowanie w `api.ts`
+ * opisuje 404 jako brak działki, co przy resume byłoby mylące.
+ */
+export function resumeErrorMessage(error: ApiError): string {
+  if (error.status === 404) {
+    return "Analiza o tym identyfikatorze nie istnieje — uruchom analizę działki ponownie.";
+  }
+  if (error.status === 409) {
+    return "Analiza nie czeka już na symbol strefy (mogła zostać wznowiona) — uruchom analizę ponownie, aby zobaczyć aktualny wynik.";
+  }
+  if (error.status === 503) {
+    return `${error.message} Nic nie zapisano — analiza nadal czeka na symbol strefy.`;
+  }
+  return error.message;
+}
+
 export function useResumeAnalysis() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +49,7 @@ export function useResumeAnalysis() {
 
         setError(
           caught instanceof ApiError
-            ? caught.message
+            ? resumeErrorMessage(caught)
             : "Wystąpił nieoczekiwany błąd podczas wznawiania analizy.",
         );
         return null;

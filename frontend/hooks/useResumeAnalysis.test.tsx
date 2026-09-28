@@ -112,4 +112,19 @@ describe("useResumeAnalysis", () => {
     expect(signal?.aborted).toBe(true);
     await runPromise;
   });
+
+  it.each([
+    [404, "nie istnieje"],
+    [409, "nie czeka już na symbol strefy"],
+    [503, "Nic nie zapisano — analiza nadal czeka na symbol strefy."],
+  ])("mapuje status %s wznowienia na jednoznaczny komunikat", async (status, text) => {
+    resumeAnalysisMock.mockRejectedValueOnce(new ApiError(status, "Szczegół API."));
+    const { result } = renderHook(() => useResumeAnalysis());
+
+    await act(async () => {
+      await result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+    });
+
+    expect(result.current.error).toContain(text);
+  });
 });
