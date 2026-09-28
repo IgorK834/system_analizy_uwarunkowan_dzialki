@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "zakopane_stok",
+    "parcel_identifier": "121701_1.0013.38",
+    "note": "stok — teren górski",
+    "uldk_point_wgs84": "19.9335,49.3050",
+    "wcs_request_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?service=WCS&version=2.0.1&request=GetCoverage&coverageId=DTM_PL-KRON86-NH_TIFF&format=image%2Ftiff&subset=x%28567792.343266%2C567894.343266%29&subset=y%28160116.66941%2C160206.66941%29",
+    "geotiff_sha256": "1fbc031b84c830b9b61098a81f34ea0c788fbb8a42e66d0c2685c253b67ff4b3",
+    "fetched_at": "2026-09-28T09:59:00.290856+00:00"
+  },
+  {
+    "slug": "krakow_zakrzowek",
+    "parcel_identifier": "126104_9.0009.191/13",
+    "note": "teren falisty",
+    "uldk_point_wgs84": "19.9120,50.0390",
+    "wcs_request_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?service=WCS&version=2.0.1&request=GetCoverage&coverageId=DTM_PL-KRON86-NH_TIFF&format=image%2Ftiff&subset=x%28565002.343266%2C565486.343266%29&subset=y%28241300.66941%2C241784.66941%29",
+    "geotiff_sha256": "e2898f2fb11faec43e73eea17eda27e2104e8d1cdb3d206ad3905ae9dbfb3142",
+    "fetched_at": "2026-09-28T09:59:01.457357+00:00"
+  },
+  {
+    "slug": "warszawa_plasko",
+    "parcel_identifier": "146518_8.0406.23",
+    "note": "teren płaski",
+    "uldk_point_wgs84": "20.9800,52.2300",
+    "wcs_request_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?service=WCS&version=2.0.1&request=GetCoverage&coverageId=DTM_PL-KRON86-NH_TIFF&format=image%2Ftiff&subset=x%28635140.343266%2C635229.343266%29&subset=y%28486701.66941%2C486750.66941%29",
+    "geotiff_sha256": "e2c240bf9c8fbf0eacc04ae7142398e580f306ab0a83a771e17d3894e021c8cb",
+    "fetched_at": "2026-09-28T09:59:02.668412+00:00"
+  }
+]
