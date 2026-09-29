@@ -30,11 +30,13 @@ def test_migration_follows_head_021_and_fits_version_column() -> None:
 @pytest.mark.integration
 def test_old_database_upgrades_without_fake_zero_and_downgrade_roundtrips() -> None:
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
-    command.downgrade(config, "021_compatibility_assessment")
     suffix = uuid4().hex[:8]
     ids: dict[str, int] = {}
     try:
+        # BK-306: upgrade/downgrade też wewnątrz try — nieudany downgrade nie
+        # może zostawić bazy w pośredniej rewizji bez przywrócenia head.
+        command.upgrade(config, "head")
+        command.downgrade(config, "021_compatibility_assessment")
         columns = {column["name"] for column in inspect(engine).get_columns("analyses")}
         assert "terrain" not in columns
         with engine.begin() as conn:

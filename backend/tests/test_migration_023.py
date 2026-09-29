@@ -41,11 +41,13 @@ def test_migration_follows_head_022() -> None:
 @pytest.mark.integration
 def test_old_risks_stay_unknown_after_upgrade_and_downgrade_roundtrips() -> None:
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
-    command.downgrade(config, "022_analysis_terrain")
     suffix = uuid4().hex[:8]
     ids: dict[str, int] = {}
     try:
+        # BK-306: upgrade/downgrade też wewnątrz try — nieudany downgrade nie
+        # może zostawić bazy w pośredniej rewizji bez przywrócenia head.
+        command.upgrade(config, "head")
+        command.downgrade(config, "022_analysis_terrain")
         assert not NEW_COLUMNS & {c["name"] for c in inspect(engine).get_columns("risk_records")}
         with engine.begin() as conn:
             ids["parcel"] = conn.execute(

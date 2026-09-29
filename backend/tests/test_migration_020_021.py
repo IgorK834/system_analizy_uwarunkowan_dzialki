@@ -51,8 +51,6 @@ def test_frozen_migration_texts_match_application_constants() -> None:
 @pytest.mark.integration
 def test_upgrade_moves_legacy_boolean_nulls_fake_share_and_downgrade_roundtrips() -> None:
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
-    command.downgrade(config, "019_mpzp_parameter_evidence")
     suffix = uuid4().hex[:8]
     ids: dict[str, int] = {}
     legacy_result = {
@@ -71,6 +69,10 @@ def test_upgrade_moves_legacy_boolean_nulls_fake_share_and_downgrade_roundtrips(
         },
     }
     try:
+        # BK-306: upgrade/downgrade też wewnątrz try — nieudany downgrade nie
+        # może zostawić bazy w pośredniej rewizji bez przywrócenia head.
+        command.upgrade(config, "head")
+        command.downgrade(config, "019_mpzp_parameter_evidence")
         with engine.begin() as conn:
             ids["parcel"] = conn.execute(
                 text("INSERT INTO parcels (parcel_identifier, geometry, area_sqm) VALUES (:p, ST_Multi(ST_GeomFromText('POLYGON((0 0,10 0,10 10,0 10,0 0))',2180)), 100) RETURNING id"),

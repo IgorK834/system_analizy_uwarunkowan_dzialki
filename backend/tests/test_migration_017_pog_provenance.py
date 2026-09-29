@@ -27,18 +27,18 @@ def test_migration_follows_016() -> None:
 @pytest.mark.integration
 def test_upgrade_adds_provenance_and_keeps_document_versions_apart() -> None:
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
-    columns = {c["name"] for c in inspect(engine).get_columns("planning_act_versions")}
-    assert {"publication_id", "version_started_at", "legal_valid_from", "legal_valid_to",
-            "source_reference"} <= columns
-    doc_columns = {c["name"] for c in inspect(engine).get_columns("pog_formal_documents")}
-    assert {"record_sha256", "link_verified", "resolution_status", "relation",
-            "repeal_date", "publication_id"} <= doc_columns
-    assert "pog_act_metadata_records" in inspect(engine).get_table_names()
-
     suffix = uuid4().hex[:8]
     ids: dict[str, int] = {}
     try:
+        command.upgrade(config, "head")
+        columns = {c["name"] for c in inspect(engine).get_columns("planning_act_versions")}
+        assert {"publication_id", "version_started_at", "legal_valid_from", "legal_valid_to",
+                "source_reference"} <= columns
+        doc_columns = {c["name"] for c in inspect(engine).get_columns("pog_formal_documents")}
+        assert {"record_sha256", "link_verified", "resolution_status", "relation",
+                "repeal_date", "publication_id"} <= doc_columns
+        assert "pog_act_metadata_records" in inspect(engine).get_table_names()
+
         with engine.begin() as conn:
             ids["source"] = conn.execute(
                 text("INSERT INTO data_sources (source_id, owner, status) VALUES (:s, 't', 'production') RETURNING id"),

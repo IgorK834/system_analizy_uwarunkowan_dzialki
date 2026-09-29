@@ -73,11 +73,13 @@ def test_migration_mapper_matches_shared_mapper(legacy: str | None, confirmed: b
 @pytest.mark.integration
 def test_upgrade_maps_aliases_and_downgrade_restores_exact_values() -> None:
     config = Config("alembic.ini")
-    command.upgrade(config, "head")
-    command.downgrade(config, "015_pog_v2_release")
     suffix = uuid4().hex[:8]
     ids: dict[str, object] = {}
     try:
+        # BK-306: upgrade/downgrade też wewnątrz try — nieudany downgrade nie
+        # może zostawić bazy w pośredniej rewizji bez przywrócenia head.
+        command.upgrade(config, "head")
+        command.downgrade(config, "015_pog_v2_release")
         with engine.begin() as conn:
             source_id = conn.execute(
                 text(

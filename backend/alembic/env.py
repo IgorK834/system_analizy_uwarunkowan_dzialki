@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -8,7 +9,14 @@ from app.db.base import Base
 import app.models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# BK-306: testy migracji/wersjonowanego modelu wykonują upgrade/downgrade na
+# żywej bazie i nie mogą robić tego na bazie aplikacji (deweloperskiej ani
+# używanej przez inne testy) — dropnięte kolumny nadal liczą się do limitu
+# 1600 atrybutów tabeli w PostgreSQL. Zmienna środowiskowa pozwala testowemu
+# fixture'owi (tests/conftest.py) przekierować alembic na jednorazową bazę
+# bez modyfikowania settings.database_url używanego przez resztę aplikacji.
+database_url = os.environ.get("ALEMBIC_DATABASE_URL_OVERRIDE") or settings.database_url
+config.set_main_option("sqlalchemy.url", database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
