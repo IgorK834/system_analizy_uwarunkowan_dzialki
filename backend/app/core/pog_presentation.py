@@ -148,7 +148,21 @@ class LegalStatusStyle(_Strict):
     label: str
     fill_opacity: float = Field(ge=0.0, le=1.0)
     line_dasharray: tuple[float, ...] | None
+    # BK-406: dane niewiążące mają oprócz koloru także wzór i stały tekst
+    # plakietki — informacja nie zależy wyłącznie od percepcji barwy.
+    pattern: str | None = None
+    badge: str | None = None
     description: str
+
+    @model_validator(mode="after")
+    def _non_binding_is_marked(self) -> LegalStatusStyle:
+        if self.status in {"project", "in_progress"} and not (self.pattern and self.badge):
+            raise ValueError(
+                f"Status {self.status} wymaga wzoru i plakietki „projekt / dane niewiążące”."
+            )
+        if self.status == "binding" and (self.pattern or self.badge):
+            raise ValueError("Akt obowiązujący nie może mieć wzoru ani plakietki projektu.")
+        return self
 
 
 class PogPresentation(_Strict):

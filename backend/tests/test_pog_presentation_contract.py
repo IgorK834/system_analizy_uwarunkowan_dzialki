@@ -131,6 +131,39 @@ def test_unknown_and_null_styles_are_labelled_and_patterned() -> None:
     assert presentation.null_style.fill not in all_fills
 
 
+def test_project_style_differs_by_colour_pattern_and_text() -> None:
+    """BK-406: projekt ≠ akt wiążący — krycie, wzór, obrys i stały tekst plakietki."""
+    presentation = load_pog_presentation().presentation
+    styles = {item.status: item for item in presentation.legal_statuses}
+    binding, project = styles["binding"], styles["project"]
+    assert binding.pattern is None and binding.badge is None
+    assert project.badge == styles["in_progress"].badge == "projekt / dane niewiążące"
+    assert project.pattern and project.fill_opacity < binding.fill_opacity
+    assert project.line_dasharray and not binding.line_dasharray
+    # Wzór projektu nie może udawać nakładki OUZ/OZS/OSDIS ani „brak wartości”.
+    taken = {presentation.null_style.pattern, presentation.unknown_zone.pattern} | {
+        overlay.pattern for overlay in presentation.overlays
+    }
+    assert project.pattern not in taken
+    for status in styles.values():
+        assert "brak planu" not in (status.description + (status.badge or "")).lower()
+
+    raw = json.loads(_shared_bytes())
+    project_index = next(
+        index for index, item in enumerate(raw["legal_statuses"]) if item["status"] == "project"
+    )
+    raw["legal_statuses"][project_index]["pattern"] = None
+    with pytest.raises(PogPresentationError, match="wymaga wzoru i plakietki"):
+        parse_pog_presentation(json.dumps(raw).encode("utf-8"))
+    raw["legal_statuses"][project_index]["pattern"] = "horizontal-lines"
+    binding_index = next(
+        index for index, item in enumerate(raw["legal_statuses"]) if item["status"] == "binding"
+    )
+    raw["legal_statuses"][binding_index]["badge"] = "projekt / dane niewiążące"
+    with pytest.raises(PogPresentationError, match="nie może mieć wzoru ani plakietki"):
+        parse_pog_presentation(json.dumps(raw).encode("utf-8"))
+
+
 # --- Tematy, progi i jednostki -----------------------------------------------------
 
 
