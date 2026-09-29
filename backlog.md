@@ -796,7 +796,9 @@ PogResult
   - wersję/release,
   - OUZ/OZS/OSDIS obecne w punkcie;
 - dopiero osobny przycisk uruchamia pełną analizę działki;
-- kliknięcie poza pokryciem rozróżnia „brak obiektu” od „warstwa niedostępna”.
+- kliknięcie poza pokryciem rozróżnia „brak obiektu” od „warstwa niedostępna”
+  (szczegóły spoza kafla: `GET /api/v1/map/pog/releases/{release_id}/features/{feature_id}` —
+  rozstrzygnięcie w `docs/adr/ADR-009-pog-inspector-area-summaries-layer-state.md`).
 
 ---
 
@@ -810,7 +812,8 @@ PogResult
 - `area_sqkm`, `share_pct`, `zone_count`, `is_complete`;
 - wizualizacja jako wykres + równoważna tekstowa tabela;
 - suma udziałów kontrolowana tolerancją;
-- niepełny zbiór ma flagę `is_complete=false`.
+- niepełny zbiór ma flagę `is_complete=false`
+  (migracja `024_pog_area_summaries`, `GET /api/v1/map/pog/releases/{release_id}/summary` — ADR-009).
 
 ---
 
@@ -829,6 +832,8 @@ PogResult
   - error,
   - stale;
 - komunikat `no_coverage` nie może używać tekstu „brak planu”, jeśli nie ma takiego potwierdzenia w źródle urzędowym.
+- stan warstwy wyznaczany z metadanych wydania (`coverage_areas`) i zdarzeń źródła,
+  nie z pustego kafla — rozstrzygnięcie w ADR-009.
 
 ---
 

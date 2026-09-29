@@ -83,6 +83,34 @@ w jednym pliku `shared/pog-presentation.json`, czytanym przez frontend
 raport PDF). Oba obrazy kopiują go z kontekstu budowania `shared`
 (`additional_contexts` w `docker-compose.yml`). Decyzje: `docs/adr/ADR-007-pog-vector-tiles-and-shared-presentation.md`.
 
+### Inspektor obiektu, agregaty stref i stan warstwy POG (BK-404–406)
+
+- **Kliknięcie mapy nie uruchamia analizy.** Otwiera inspektor punktu, który
+  natychmiast pokazuje z kafli wszystkie obiekty POG w punkcie (nakładające się
+  strefy, OUZ/OZS/OSDIS — bez duplikatów z sąsiednich kafli): symbol, cztery
+  parametry (`null` ≠ 0), profile, akt/status z plakietką projektu i wydanie.
+  Pełną analizę działki uruchamia dopiero przycisk „Analizuj działkę w tym
+  punkcie”. `Escape` zamyka panel i przywraca focus.
+- `GET /api/v1/map/pog/releases/{release_id}/features/{feature_id}` — szczegóły
+  obiektu spoza kafla (pełna etykieta, nazwy profili, uchwała i urzędowy kod
+  statusu aktu); `feature_id` to atrybut z kafla (z ukośnikami, kodowany jako
+  `%2F`) albo `planning_feature:<id>`; ETag/304, `404`/`409`/`422`.
+- `GET /api/v1/map/pog/releases/{release_id}/summary?act_id=…` albo
+  `?teryt=…&edition=binding|project` — struktura powierzchniowa stref aktu lub
+  gminy (`area_sqkm`, `share_pct`, `zone_count`, `is_complete`, jawny mianownik,
+  luka, nakładanie) policzona w EPSG:2180 **przy imporcie** (migracja `024`),
+  bez obliczeń przestrzennych w HTTP; ETag/304. Brak granicy aktu daje
+  `share_pct = null`, nie 100%. Wydanie opublikowane przed migracją `024`
+  uzupełnia ponowny import jego artefaktu.
+- Metadane wydania mają `coverage_areas[]` (zasięg i kompletność każdego aktu).
+  Panel mapy pokazuje stan warstwy `loading | available | partial | no_coverage
+  | error | stale` (niezależny od statusu prawnego), datę danych, przycisk
+  „Ponów wczytanie warstwy” (zachowuje dotychczasowe dane) i stałą plakietkę
+  „projekt / dane niewiążące”. Projekt ma też własny wzór na mapie
+  (`style_version` `2026.09.29-1` w `shared/pog-presentation.json`).
+
+Decyzje: `docs/adr/ADR-009-pog-inspector-area-summaries-layer-state.md`.
+
 ### Lokalny indeks podpowiedzi adresowych
 
 Autocomplete korzysta z lokalnego PostgreSQL/PostGIS zasilanego oficjalnymi,
