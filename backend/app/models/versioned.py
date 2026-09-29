@@ -537,6 +537,134 @@ class PogActMetadataRecord(Base):
     )
 
 
+# --- Agregaty powierzchniowe stref POG (BK-405) -------------------------------
+
+POG_AREA_SUMMARY_SCOPE_VALUES: tuple[str, ...] = ("act", "municipality")
+POG_AREA_SUMMARY_EDITION_VALUES: tuple[str, ...] = ("binding", "project")
+_POG_AREA_SUMMARY_SCOPE_SQL = ", ".join(
+    f"'{value}'" for value in POG_AREA_SUMMARY_SCOPE_VALUES
+)
+_POG_AREA_SUMMARY_EDITION_SQL = ", ".join(
+    f"'{value}'" for value in POG_AREA_SUMMARY_EDITION_VALUES
+)
+
+
+class PogAreaSummary(Base):
+    """Struktura powierzchniowa stref aktu albo gminy w obrębie wydania (BK-405).
+
+    Liczona w EPSG:2180 podczas publikacji wydania (w tej samej transakcji co
+    jego aktywacja), więc HTTP czyta wyłącznie gotowe liczby. Mianownik to
+    powierzchnia granicy aktu ze źródła; jego brak daje ``NULL`` (udziały też
+    ``NULL``) i ``is_complete = false`` — nigdy 100%.
+    """
+
+    __tablename__ = "pog_area_summaries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data_release_id: Mapped[int] = mapped_column(
+        ForeignKey("data_releases.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    scope: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Zakres ``act``: dokładna wersja aktu w wydaniu. Zakres ``municipality``:
+    # gmina (TERYT) i edycja — nakładające się akty nie są liczone podwójnie.
+    planning_act_version_id: Mapped[int | None] = mapped_column(
+        ForeignKey("planning_act_versions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    act_identifier: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    act_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    teryt: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    edition: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    denominator_area_sqm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    denominator_source: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    zones_area_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    missing_area_sqm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    overlap_area_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    outside_area_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    deduplicated_area_sqm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    share_sum_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    zone_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    act_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_complete: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    incomplete_reasons: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    act_identifiers: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    area_tolerance_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    share_tolerance_pct: Mapped[float] = mapped_column(Float, nullable=False)
+    method_version: Mapped[str] = mapped_column(String(40), nullable=False)
+    computed_at: Mapped[datetime] = _timestamp_column()
+
+    __table_args__ = (
+        CheckConstraint(
+            f"scope IN ({_POG_AREA_SUMMARY_SCOPE_SQL})",
+            name="ck_pog_area_summaries_scope",
+        ),
+        CheckConstraint(
+            f"edition IS NULL OR edition IN ({_POG_AREA_SUMMARY_EDITION_SQL})",
+            name="ck_pog_area_summaries_edition",
+        ),
+        CheckConstraint(
+            "(scope = 'act' AND planning_act_version_id IS NOT NULL AND edition IS NULL)"
+            " OR (scope = 'municipality' AND teryt IS NOT NULL AND edition IS NOT NULL)",
+            name="ck_pog_area_summaries_scope_key",
+        ),
+        CheckConstraint(
+            "denominator_area_sqm IS NULL OR denominator_area_sqm > 0",
+            name="ck_pog_area_summaries_denominator",
+        ),
+        # Brak mianownika nie może dać „pełnego” wyniku ani udziałów.
+        CheckConstraint(
+            "denominator_area_sqm IS NOT NULL OR "
+            "(is_complete = false AND share_sum_pct IS NULL AND missing_area_sqm IS NULL)",
+            name="ck_pog_area_summaries_null_denominator",
+        ),
+        Index(
+            "uq_pog_area_summaries_act",
+            "data_release_id",
+            "planning_act_version_id",
+            unique=True,
+            postgresql_where=sql_text("scope = 'act'"),
+        ),
+        Index(
+            "uq_pog_area_summaries_municipality",
+            "data_release_id",
+            "teryt",
+            "edition",
+            unique=True,
+            postgresql_where=sql_text("scope = 'municipality'"),
+        ),
+    )
+
+
+class PogAreaSummaryZone(Base):
+    """Powierzchnia i udział jednego typu strefy w agregacie (BK-405)."""
+
+    __tablename__ = "pog_area_summary_zones"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    summary_id: Mapped[int] = mapped_column(
+        ForeignKey("pog_area_summaries.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    zone_code: Mapped[str] = mapped_column(String(20), nullable=False)
+    area_sqm: Mapped[float] = mapped_column(Float, nullable=False)
+    area_sqkm: Mapped[float] = mapped_column(Float, nullable=False)
+    share_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    zone_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("summary_id", "zone_code", name="uq_pog_area_summary_zones_code"),
+        CheckConstraint("area_sqm >= 0", name="ck_pog_area_summary_zones_area"),
+        CheckConstraint(
+            "share_pct IS NULL OR share_pct >= 0", name="ck_pog_area_summary_zones_share"
+        ),
+        CheckConstraint("zone_count >= 0", name="ck_pog_area_summary_zones_count"),
+    )
+
+
 # --- Dokumenty źródłowe (wersjonowane) ---------------------------------------
 
 
