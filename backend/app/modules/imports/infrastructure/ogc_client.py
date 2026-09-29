@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import re
 import ipaddress
 import socket
 import time
@@ -100,7 +101,7 @@ class OgcClientConfig:
     total_timeout_seconds: float = 120.0
     max_response_bytes: int = 8 * 1024 * 1024
     max_total_bytes: int = 64 * 1024 * 1024
-    max_pages: int = 100
+    max_pages: int = 500
     max_features: int = 10_000
     max_redirects: int = 3
     max_xml_depth: int = 64
@@ -208,7 +209,12 @@ class OgcClient:
         srs_name: str,
         extra_params: Mapping[str, str] | None = None,
     ) -> OgcResult:
-        """Pobiera wszystkie strony WFS przy jawnym ``count=100``."""
+        """Pobiera wszystkie strony WFS przy jawnym ``count=100``.
+
+        Serwery mogą zwracać strony krótsze niż zamówione (np. RU: zawsze 10),
+        więc ``startIndex`` wynika z liczby już pobranych obiektów, a koniec
+        paginacji z ``numberMatched``, a nie z rozmiaru strony.
+        """
 
         operation = "WFS:GetFeature"
         started_at = datetime.now(timezone.utc)
@@ -241,22 +247,35 @@ class OgcClient:
                 "outputFormat": "application/gml+xml; version=3.2",
                 "srsName": srs_name,
                 "count": "100",
-                "startIndex": str(page_index * 100),
+                "startIndex": str(len(features)),
             }
             if extra_params:
                 params.update(extra_params)
             try:
-                payload = self._request(
-                    url,
-                    params=params,
-                    operation=operation,
-                    started_at=started_at,
-                    deadline=deadline,
-                    byte_limit=min(
-                        self._config.max_response_bytes,
-                        self._config.max_total_bytes - total_bytes,
-                    ),
-                )
+                # RU sporadycznie odpowiada przejściowym HTTP 400 „Invalid
+                # request” na poprawne zapytanie; ta sama strona przy ponowieniu
+                # przechodzi, więc błędy transportu ponawiamy per strona.
+                for attempt in range(self._config.retries + 1):
+                    try:
+                        payload = self._request(
+                            url,
+                            params=params,
+                            operation=operation,
+                            started_at=started_at,
+                            deadline=deadline,
+                            byte_limit=min(
+                                self._config.max_response_bytes,
+                                self._config.max_total_bytes - total_bytes,
+                            ),
+                        )
+                        break
+                    except OgcTransportError as exc:
+                        # Timeouty i 5xx ponawia już ``_request``.
+                        if attempt >= self._config.retries or not re.search(
+                            r"HTTP 4\d\d", str(exc)
+                        ):
+                            raise
+                        self._backoff(attempt, deadline, url, operation, started_at)
                 total_bytes += len(payload.content)
                 root = self._xml_root(payload, operation, started_at)
             except OgcLimitError as exc:
@@ -372,7 +391,7 @@ class OgcClient:
                     features,
                     True,
                 )
-            if returned < 100:
+            if matched is None and returned < 100:
                 return self._wfs_result(
                     payload.url,
                     operation,
