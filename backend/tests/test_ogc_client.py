@@ -70,6 +70,61 @@ def _feature_ids(features: tuple[bytes, ...]) -> set[str]:
 
 
 @respx.mock
+def test_wfs_server_capping_page_size_below_count_is_fully_paginated() -> None:
+    """RU zawsze zwraca 10 obiektów mimo count=100; numberMatched wskazuje resztę."""
+    total = 25
+
+    def response(request: httpx.Request) -> httpx.Response:
+        start = int(request.url.params["startIndex"])
+        ids = list(range(start, min(start + 10, total)))
+        return httpx.Response(
+            200,
+            content=_wfs_page(ids, matched=str(total)),
+            headers={"content-type": "application/gml+xml; version=3.2"},
+        )
+
+    route = respx.get(WFS_URL).mock(side_effect=response)
+    with _client() as client:
+        result = client.fetch_wfs(
+            WFS_URL, type_name="app:Feature", srs_name="EPSG:2180"
+        )
+
+    assert result.complete is True
+    assert len(_feature_ids(result.features)) == total
+    assert [call.request.url.params["startIndex"] for call in route.calls] == [
+        "0",
+        "10",
+        "20",
+    ]
+
+
+@respx.mock
+def test_wfs_page_retries_transient_http_400() -> None:
+    calls = {"n": 0}
+
+    def response(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 2:
+            return httpx.Response(400, content=b"Invalid request")
+        start = int(request.url.params["startIndex"])
+        ids = list(range(start, min(start + 10, 25)))
+        return httpx.Response(
+            200,
+            content=_wfs_page(ids, matched="25"),
+            headers={"content-type": "application/gml+xml; version=3.2"},
+        )
+
+    respx.get(WFS_URL).mock(side_effect=response)
+    with _client(retries=2) as client:
+        result = client.fetch_wfs(
+            WFS_URL, type_name="app:Feature", srs_name="EPSG:2180"
+        )
+
+    assert result.complete is True
+    assert len(_feature_ids(result.features)) == 25
+
+
+@respx.mock
 def test_wfs_201_features_uses_three_pages_and_returns_unique_ids() -> None:
     def response(request: httpx.Request) -> httpx.Response:
         start = int(request.url.params["startIndex"])
