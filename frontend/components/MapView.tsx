@@ -10,20 +10,20 @@ import {
   POLAND_ZOOM,
 } from "@/lib/mapStyle";
 import {
-  POG_INTERACTIVE_LAYERS,
-  POG_LAYER_IDS,
   type PogStatusFilter,
   addPogLayers,
   applyPogStatusFilter,
   applyPogTheme,
-  pogZoneFromFeatures,
+  pogInspectorHits,
+  presentInspectLayers,
   removePogLayers,
 } from "@/lib/pogLayers";
 import { DEFAULT_POG_THEME, type PogThemeId } from "@/lib/pogThemes";
-import type { PogTileRelease, PogZoneTileProperties } from "@/lib/types";
+import type { PogPointQuery, PogTileRelease } from "@/lib/types";
 
 export type MapViewProps = {
-  onMapClick: (lon: number, lat: number) => void;
+  /** Surowe kliknięcie mapy (lon/lat). Nie uruchamia analizy — decyduje rodzic. */
+  onMapClick?: (lon: number, lat: number) => void;
   /**
    * Wywoływane po pełnym załadowaniu stylu mapy z instancją maplibregl.Map.
    * Komponenty nakładające dodatkowe warstwy (ResultPanel, PreviewOverlays)
@@ -40,8 +40,12 @@ export type MapViewProps = {
   pogTheme?: PogThemeId;
   /** Filtr projekt / akt wiążący na już pobranych kaflach. */
   pogStatusFilter?: PogStatusFilter;
-  /** Atrybuty klikniętej strefy z kafla MVT (albo `null` poza strefą). */
-  onPogFeatureClick?: (zone: PogZoneTileProperties | null) => void;
+  /**
+   * BK-404: wszystkie obiekty POG wyrenderowane w klikniętym punkcie (strefy i
+   * OUZ/OZS/OSDIS) po deduplikacji cech z sąsiednich kafli. Wywoływane przy
+   * każdym kliknięciu — także bez warstw POG (`queried = false`).
+   */
+  onPogInspect?: (query: PogPointQuery) => void;
 };
 
 export function MapView({
@@ -50,12 +54,12 @@ export function MapView({
   pogRelease = null,
   pogTheme = DEFAULT_POG_THEME,
   pogStatusFilter = "all",
-  onPogFeatureClick,
+  onPogInspect,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onMapClickRef = useRef(onMapClick);
   const onMapReadyRef = useRef(onMapReady);
-  const onPogFeatureClickRef = useRef(onPogFeatureClick);
+  const onPogInspectRef = useRef(onPogInspect);
   const pogThemeRef = useRef(pogTheme);
   const pogStatusFilterRef = useRef(pogStatusFilter);
   const mapRemovedRef = useRef(false);
@@ -70,8 +74,8 @@ export function MapView({
   }, [onMapReady]);
 
   useEffect(() => {
-    onPogFeatureClickRef.current = onPogFeatureClick;
-  }, [onPogFeatureClick]);
+    onPogInspectRef.current = onPogInspect;
+  }, [onPogInspect]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -90,14 +94,17 @@ export function MapView({
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     const handleClick = (event: MapMouseEvent) => {
-      const pogCallback = onPogFeatureClickRef.current;
-      if (pogCallback && map.getLayer(POG_LAYER_IDS.zonesFill)) {
-        const features = map.queryRenderedFeatures(event.point, {
-          layers: [...POG_INTERACTIVE_LAYERS],
-        });
-        pogCallback(pogZoneFromFeatures(features));
+      const { lng: lon, lat } = event.lngLat;
+      const inspect = onPogInspectRef.current;
+      if (inspect) {
+        // Tylko warstwy obiektów BK-401 obecne na mapie; brak warstw to „nie
+        // sprawdzono”, a nie „brak obiektu”.
+        const layers = presentInspectLayers(map);
+        const features =
+          layers.length > 0 ? map.queryRenderedFeatures(event.point, { layers }) : [];
+        inspect({ lon, lat, hits: pogInspectorHits(features), queried: layers.length > 0 });
       }
-      onMapClickRef.current(event.lngLat.lng, event.lngLat.lat);
+      onMapClickRef.current?.(lon, lat);
     };
     const handleLoad = () => {
       setReadyMap(map);

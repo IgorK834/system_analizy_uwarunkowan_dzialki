@@ -220,16 +220,12 @@ describe("MapView", () => {
     expect(mapState.addLayer).toHaveBeenCalledTimes(POG_LAYER_ORDER.length);
   });
 
-  it("filtr statusu używa setFilter, a kliknięcie strefy zwraca atrybuty z kafla", () => {
+  it("filtr statusu używa setFilter, a kliknięcie zwraca wszystkie obiekty POG w punkcie (BK-404)", () => {
     const onMapClick = vi.fn();
-    const onPogFeatureClick = vi.fn();
+    const onPogInspect = vi.fn();
     const release = buildPogRelease();
     const { rerender, unmount } = render(
-      <MapView
-        onMapClick={onMapClick}
-        pogRelease={release}
-        onPogFeatureClick={onPogFeatureClick}
-      />,
+      <MapView onMapClick={onMapClick} pogRelease={release} onPogInspect={onPogInspect} />,
     );
     act(() => lastHandler("load")());
     mapState.setFilter.mockClear();
@@ -238,7 +234,7 @@ describe("MapView", () => {
         onMapClick={onMapClick}
         pogRelease={release}
         pogStatusFilter="non_binding"
-        onPogFeatureClick={onPogFeatureClick}
+        onPogInspect={onPogInspect}
       />,
     );
     expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
@@ -250,18 +246,40 @@ describe("MapView", () => {
 
     const zone = buildPogZoneProperties();
     mapState.queryRenderedFeatures.mockReturnValueOnce([
-      { layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
+      { id: 7, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
+      { id: 7, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
     ]);
     act(() => lastHandler("click")({ point: { x: 1, y: 2 }, lngLat: { lng: 18.5, lat: 54.4 } }));
     expect(mapState.queryRenderedFeatures).toHaveBeenCalledWith(
       { x: 1, y: 2 },
-      { layers: [POG_LAYER_IDS.zonesFill] },
+      {
+        layers: [
+          POG_LAYER_IDS.zonesFill,
+          POG_LAYER_IDS.ouzPattern,
+          POG_LAYER_IDS.downtownPattern,
+          POG_LAYER_IDS.socialPattern,
+        ],
+      },
     );
-    expect(onPogFeatureClick).toHaveBeenCalledWith(zone);
+    expect(onPogInspect).toHaveBeenCalledWith({
+      lon: 18.5,
+      lat: 54.4,
+      queried: true,
+      hits: [{ key: "zones:42:7", layer: "zones", featurePk: 7, properties: zone }],
+    });
     expect(onMapClick).toHaveBeenCalledWith(18.5, 54.4);
 
-    rerender(<MapView onMapClick={onMapClick} pogRelease={null} onPogFeatureClick={onPogFeatureClick} />);
+    rerender(<MapView onMapClick={onMapClick} pogRelease={null} onPogInspect={onPogInspect} />);
     expect(mapState.removeSource).toHaveBeenCalledWith(POG_SOURCE_ID);
     unmount();
+  });
+
+  it("bez warstw POG kliknięcie nie odpytuje kafli i zgłasza „nie sprawdzono”", () => {
+    const onPogInspect = vi.fn();
+    render(<MapView onPogInspect={onPogInspect} />);
+    act(() => lastHandler("load")());
+    act(() => lastHandler("click")({ point: { x: 3, y: 4 }, lngLat: { lng: 21, lat: 52 } }));
+    expect(mapState.queryRenderedFeatures).not.toHaveBeenCalled();
+    expect(onPogInspect).toHaveBeenCalledWith({ lon: 21, lat: 52, queried: false, hits: [] });
   });
 });
