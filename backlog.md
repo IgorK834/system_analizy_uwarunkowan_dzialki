@@ -385,7 +385,8 @@ Nie przechowywać danych osobowych EGiB ani materiałów bez prawa redystrybucji
 **Zakres:**
 - wykorzystać istniejące `DataSource`, `SourceArtifact`, `DataRelease`, `ImportRun`;
 - pobrany artefakt zachować z SHA-256;
-- importować dane do nieaktywnego wydania;
+- importować dane do nieaktywnego wydania (każde wydanie jest kompletnym snapshotem
+  wszystkich aktów paczki, także niezmienionych — `docs/adr/ADR-008-pog-release-complete-snapshot.md`);
 - walidacja przed publikacją:
   - geometria poprawna i niepusta,
   - SRID,
@@ -556,7 +557,9 @@ PogResult
 **Zależność:** BK-201
 
 **Zakres:**
-- zachować istniejący flow `waiting_for_user_input/resume`;
+- zachować istniejący flow `waiting_for_user_input/resume` (w bazie status
+  `waiting_for_zone_symbol`; bez konkurencyjnego statusu — rozstrzygnięcie w
+  `docs/adr/ADR-005-manual-mpzp-zone-and-mpzp-pog-compatibility.md`);
 - użytkownik musi widzieć obraz źródłowy, plan i kandydatów, zanim poda symbol;
 - wszystkie parametry zależne od ręcznego symbolu otrzymują `manual_review_required=true`;
 - analiza nie może mieć statusu `complete`, jeśli identyfikacja strefy była ręczna;
@@ -572,7 +575,9 @@ PogResult
 **Cel:** nie tworzyć w interfejsie pozornej „opinii prawnej”.
 
 **Zakres:**
-- zastąpić uproszczony boolean `conflict_with_mpzp` bogatszym `compatibility_assessment`;
+- zastąpić uproszczony boolean `conflict_with_mpzp` bogatszym `compatibility_assessment`
+  (historyczny boolean pozostaje wyłącznie jako `legacy_evidence` ze statusem
+  `unknown` — ADR-005);
 - wynik: `compatible | incompatible | uncertain | not_applicable | unknown`;
 - wynik ma zawierać datę stanu prawnego, jawne reguły, źródło i uzasadnienie;
 - nigdy nie agregować parametrów różnych stref do jednej średniej;
@@ -713,7 +718,9 @@ PogResult
 **Cel:** przejść od rastrowego podglądu do interaktywnej warstwy analitycznej.
 
 **Zakres:**
-- endpoint kafli wektorowych oparty o aktywny `data_release`;
+- endpoint kafli wektorowych oparty o aktywny `data_release`
+  (URL przypięty do `release_id`, limity obiektów/bajtów → `413` —
+  rozstrzygnięcie w `docs/adr/ADR-007-pog-vector-tiles-and-shared-presentation.md`);
 - logiczne warstwy:
   - `zones`,
   - `ouz`,
@@ -759,7 +766,8 @@ PogResult
 **Zależność:** BK-402
 
 **Zakres:**
-- `frontend/lib/pogZones.ts` — kompletna lista ustawowych stref, etykiety, kolejność, paleta;
+- `frontend/lib/pogZones.ts` — kompletna lista ustawowych stref, etykiety, kolejność, paleta
+  (adapter wspólnego `shared/pog-presentation.json`, czytanego też przez backend — ADR-007);
 - `frontend/lib/pogThemes.ts` — progi, jednostki, opis skali;
 - te same configi zasilają:
   - mapę,

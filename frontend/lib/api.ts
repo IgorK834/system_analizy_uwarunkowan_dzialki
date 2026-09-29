@@ -5,6 +5,7 @@ import type {
   AnalyzeResponse,
   AnalyzeResumeRequest,
   GeocodeResponse,
+  PogTileRelease,
   PreviewSource,
 } from "@/lib/types";
 
@@ -147,6 +148,25 @@ export async function getPreviewSources(
       signal: options.signal,
     },
   );
+}
+
+/**
+ * Metadane aktywnego lokalnego wydania POG (BK-401) z URL-em kafli przypiętym
+ * do `release_id`. Zwraca `null`, gdy backend nie ma aktywnego wydania (404) —
+ * to brak lokalnych danych, a nie brak planu ogólnego w gminie.
+ */
+export async function getActivePogTileRelease(
+  options: { signal?: AbortSignal } = {},
+): Promise<PogTileRelease | null> {
+  try {
+    return await requestJson<PogTileRelease>(
+      `${getApiBaseUrl()}/api/v1/map/pog/releases/active`,
+      { method: "GET", signal: options.signal },
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 export async function getAnalysisReport(

@@ -29,6 +29,7 @@ from typing import Any
 from PIL import Image, ImageDraw
 
 from app.core.report_config import (
+    POG_OVERLAY_ORDER,
     BUILDABLE_AREA_LAYER_STYLE,
     MAP_BACKGROUND_RGB,
     MAP_BBOX_EXPANSION_RATIO,
@@ -40,6 +41,10 @@ from app.core.report_config import (
     PROTECTION_ZONE_LAYER_STYLE,
     RISK_LAYER_STYLE,
     MapLayerStyle,
+    ReportPogStyle,
+    pog_overlay_layer_style,
+    pog_zone_layer_style,
+    report_pog_style,
 )
 from app.core.settings import settings
 from app.services.report_map_basemap import (
@@ -241,12 +246,82 @@ def _collect_map_layers(response: Any) -> list[_MapLayer]:
             parcel_layer.primitives.append(parcel_primitive)
 
     return [
+        *_pog_layers(getattr(response, "pog", None)),
         risk_layer,
         protection_layer,
         network_layer,
         buildable_layer,
         parcel_layer,
     ]
+
+
+def _pog_layers(pog: Any) -> list[_MapLayer]:
+    """Przecięcia stref i obszarów POG z działką stylem zapisanym w snapshocie.
+
+    Kolory, etykiety i wzory pochodzą z ``shared/pog-presentation.json`` w wersji
+    zapisanej przy analizie (BK-403); OUZ/OZS/OSDIS są rozróżnione wzorem i
+    obrysem, nie wyłącznie barwą.
+    """
+    if pog is None:
+        return []
+    style = report_pog_style(pog)
+    if style is None:
+        return []
+    layers: list[_MapLayer] = []
+    by_code: dict[str, _MapLayer] = {}
+    for zone in getattr(pog, "zones", []) or []:
+        primitive = _extract_primitives(getattr(zone, "geometry_geojson", None))
+        if primitive.is_empty():
+            continue
+        code = getattr(zone, "type", None)
+        layer = by_code.get(code or "unknown")
+        if layer is None:
+            layer = _MapLayer(style=pog_zone_layer_style(code, style))
+            by_code[code or "unknown"] = layer
+            layers.append(layer)
+        layer.primitives.append(primitive)
+    overlay_items = {
+        "ouz": getattr(pog, "ouz", []) or [],
+        "downtown": getattr(pog, "downtown_areas", []) or [],
+        "social_infrastructure_standard": (
+            getattr(pog, "social_infrastructure_standard_areas", []) or []
+        ),
+    }
+    for overlay_id in POG_OVERLAY_ORDER:
+        layer = _MapLayer(style=pog_overlay_layer_style(overlay_id, style))
+        for item in overlay_items[overlay_id]:
+            primitive = _extract_primitives(getattr(item, "geometry_geojson", None))
+            if not primitive.is_empty():
+                layer.primitives.append(primitive)
+        if not layer.is_empty():
+            layers.append(layer)
+    return layers
+
+
+def pog_map_legend(response: Any) -> tuple[list[dict[str, str]], ReportPogStyle | None]:
+    """Legenda warstw POG faktycznie narysowanych na miniaturze raportu."""
+    pog = getattr(response, "pog", None)
+    layers = _pog_layers(pog)
+    entries = [
+        {
+            "label": layer.style.label,
+            "color": "#%02x%02x%02x" % (layer.style.fill_rgb or layer.style.line_rgb),
+            "outline": "#%02x%02x%02x" % layer.style.line_rgb,
+            "pattern": layer.style.pattern or "",
+            "pattern_label": _PATTERN_LABELS.get(layer.style.pattern or "", "wypełnienie jednolite"),
+        }
+        for layer in layers
+    ]
+    return entries, (report_pog_style(pog) if layers else None)
+
+
+_PATTERN_LABELS: dict[str, str] = {
+    "diagonal-lines": "ukośne kreskowanie",
+    "dots": "wypełnienie z kropek",
+    "cross-lines": "kratka pionowo-pozioma",
+    "cross-hatch": "kratka ukośna",
+    "diagonal-hatch": "ukośne kreskowanie (brak wartości)",
+}
 
 
 def _extract_primitives(geojson: dict[str, Any] | None) -> _Primitives:
@@ -464,6 +539,26 @@ def _draw_png(
                         )
         base = Image.alpha_composite(base, overlay)
 
+    # Wzory (BK-403) nad wypełnieniami: kreskowanie/kropki przycięte maską
+    # poligonu, aby OUZ/OZS/OSDIS były czytelne także bez rozróżniania barw.
+    for layer in layers:
+        if not layer.style.pattern:
+            continue
+        mask = Image.new("L", (width, height), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        for primitive in layer.primitives:
+            for exterior, holes in primitive.polygons:
+                if len(exterior) < 3:
+                    continue
+                mask_draw.polygon([projector.to_pixel(*pt) for pt in exterior], fill=255)
+                for hole in holes:
+                    if len(hole) >= 3:
+                        mask_draw.polygon([projector.to_pixel(*pt) for pt in hole], fill=0)
+        pattern = _pattern_image(layer.style.pattern, layer.style.line_rgb, width, height)
+        clipped = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        clipped.paste(pattern, (0, 0), mask)
+        base = Image.alpha_composite(base, clipped)
+
     # Następnie obrysy i linie na wierzchu, w tej samej kolejności warstw.
     outline_draw = ImageDraw.Draw(base)
     for layer in layers:
@@ -472,9 +567,13 @@ def _draw_png(
         line_width = max(1, style.line_width)
         for primitive in layer.primitives:
             for exterior, holes in primitive.polygons:
-                _draw_ring(outline_draw, projector, exterior, line_color, line_width)
+                _draw_ring(
+                    outline_draw, projector, exterior, line_color, line_width, style.line_dash
+                )
                 for hole in holes:
-                    _draw_ring(outline_draw, projector, hole, line_color, line_width)
+                    _draw_ring(
+                        outline_draw, projector, hole, line_color, line_width, style.line_dash
+                    )
             for line in primitive.lines:
                 if len(line) >= 2:
                     outline_draw.line(
@@ -498,10 +597,11 @@ def _draw_png(
 
 def _draw_ring(
     draw: ImageDraw.ImageDraw,
-    projector: _Projector,
+    projector: _Projector | _BasemapProjector,
     ring: list[tuple[float, float]],
     color: tuple[int, int, int, int],
     width: int,
+    dash: tuple[float, ...] | None = None,
 ) -> None:
     if len(ring) < 2:
         return
@@ -509,4 +609,71 @@ def _draw_ring(
     # Domykamy obrys, aby wielokąt był narysowany jako zamknięta pętla.
     if pixels[0] != pixels[-1]:
         pixels.append(pixels[0])
+    if dash:
+        _draw_dashed(draw, pixels, color, width, dash)
+        return
     draw.line(pixels, fill=color, width=width, joint="curve")
+
+
+def _draw_dashed(
+    draw: ImageDraw.ImageDraw,
+    pixels: list[tuple[float, float]],
+    color: tuple[int, int, int, int],
+    width: int,
+    dash: tuple[float, ...],
+) -> None:
+    """Linia przerywana; wzór kresek w jednostkach szerokości linii (jak MapLibre).
+
+    Parzyste pozycje wzoru to kreski, nieparzyste — przerwy; wzór o nieparzystej
+    długości jest podwajany (semantyka SVG ``stroke-dasharray``).
+    """
+    pattern = [max(0.5, value) * width for value in dash]
+    if len(pattern) % 2:
+        pattern = pattern * 2
+    index, remaining = 0, pattern[0]
+    for (x0, y0), (x1, y1) in zip(pixels, pixels[1:]):
+        length = math.hypot(x1 - x0, y1 - y0)
+        position = 0.0
+        while position < length:
+            step = min(remaining, length - position)
+            if index % 2 == 0:
+                start, end = position / length, (position + step) / length
+                draw.line(
+                    [
+                        (x0 + (x1 - x0) * start, y0 + (y1 - y0) * start),
+                        (x0 + (x1 - x0) * end, y0 + (y1 - y0) * end),
+                    ],
+                    fill=color,
+                    width=width,
+                )
+            position += step
+            remaining -= step
+            if remaining <= 1e-9:
+                index = (index + 1) % len(pattern)
+                remaining = pattern[index]
+
+
+def _pattern_image(
+    pattern: str, rgb: tuple[int, int, int], width: int, height: int
+) -> Image.Image:
+    """Kafelkowany wzór wypełnienia w kolorze obrysu warstwy."""
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    color = (*rgb, 200)
+    spacing = 10
+    if pattern in {"diagonal-lines", "diagonal-hatch", "cross-hatch"}:
+        for offset in range(-height, width, spacing):
+            draw.line([(offset, height), (offset + height, 0)], fill=color, width=1)
+    if pattern == "cross-hatch":
+        for offset in range(0, width + height, spacing):
+            draw.line([(offset - height, 0), (offset, height)], fill=color, width=1)
+    if pattern == "cross-lines":
+        for x in range(0, width, spacing):
+            draw.line([(x, 0), (x, height)], fill=color, width=1)
+        for y in range(0, height, spacing):
+            draw.line([(0, y), (width, y)], fill=color, width=1)
+    if pattern == "dots":
+        for x in range(spacing // 2, width, spacing):
+            for y in range(spacing // 2, height, spacing):
+                draw.ellipse([x - 1.5, y - 1.5, x + 1.5, y + 1.5], fill=color)
+    return image

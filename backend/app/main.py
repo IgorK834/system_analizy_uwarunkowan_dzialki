@@ -40,7 +40,15 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Age", "ETag", "X-Tile-Cache"],
+    expose_headers=[
+        "Age",
+        "ETag",
+        "X-Tile-Cache",
+        "X-Pog-Release",
+        "X-Pog-Edition",
+        "X-Pog-Tile-Schema",
+        "X-Pog-Tile-Features",
+    ],
 )
 
 @app.exception_handler(RequestValidationError)

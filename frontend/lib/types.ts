@@ -326,7 +326,71 @@ export type PogResult = {
   ouz_intersection_area_sqm: number | null;
   ouz_intersection_pct: number | null;
   touches_ouz_boundary: boolean;
+  /** Wersja stylu POG użyta przy analizie; brak = snapshot sprzed BK-403. */
+  presentation_style?: PogPresentationStyleSnapshot | null;
   source: SourceMetadata | null;
+};
+
+// --- Wektorowe kafle POG (BK-401) -------------------------------------------
+
+export type PogTileEdition = "all" | "binding" | "project";
+
+export type PogTileLayerName =
+  | "zones"
+  | "ouz"
+  | "downtown"
+  | "social_infrastructure_standard"
+  | "act_boundary";
+
+/** Metadane wydania POG z URL-em kafli MVT przypiętym do `release_id`. */
+export type PogTileRelease = {
+  release_id: number;
+  source_id: string;
+  version_label: string;
+  published_at: string | null;
+  is_active: boolean;
+  artifact_sha256: string | null;
+  /** Względny szablon URL kafli, np. /api/v1/map/pog/releases/7/{z}/{x}/{y}.mvt */
+  tile_url_template: string;
+  tile_schema: string;
+  tile_format: string;
+  layers: PogTileLayerName[];
+  editions: PogTileEdition[];
+  default_edition: PogTileEdition;
+  min_zoom: number;
+  max_zoom: number;
+  extent: number;
+  buffer: number;
+  /** [min_lon, min_lat, max_lon, max_lat] w EPSG:4326. */
+  bounds: [number, number, number, number] | null;
+  acts_by_legal_status: Partial<Record<PogLegalStatus, number>>;
+  style_version: string;
+  style_sha256: string;
+  attribution: string;
+  legal_note: string;
+};
+
+/**
+ * Atrybuty cechy warstwy `zones` kafla MVT. Brak klucza parametru oznacza brak
+ * wartości w danych (null), a nie zero — te same nazwy co `PogZoneResult`.
+ */
+export type PogZoneTileProperties = {
+  feature_id: string;
+  feature_version?: string;
+  symbol?: string;
+  label?: string;
+  legal_status: PogLegalStatus;
+  teryt?: string;
+  act_id: string;
+  data_release_id: number;
+  zone_code: string;
+  max_overground_floor_area_ratio?: number;
+  max_building_height_m?: number;
+  max_building_coverage_pct?: number;
+  min_biologically_active_pct?: number;
+  parameters_informational?: boolean;
+  primary_profiles?: string;
+  additional_profiles?: string;
 };
 
 /** Rekord metadanych CSW RU zamrożony w snapshotcie wyniku (BK-107). */
@@ -419,6 +483,8 @@ export type PogZoneResult = {
   /** Oficjalny URL GML obiektu strefy — źródło parametrów. */
   gml_url?: string | null;
   gml_url_verified?: boolean;
+  /** Przecięcie strefy z działką jako GeoJSON Feature w WGS84 (prezentacja). */
+  geometry_geojson?: Record<string, unknown> | null;
 };
 
 export type PogAreaResult = {
@@ -432,6 +498,17 @@ export type PogAreaResult = {
   feature_version?: string | null;
   gml_url?: string | null;
   gml_url_verified?: boolean;
+  geometry_geojson?: Record<string, unknown> | null;
+};
+
+/** Zamrożona wersja stylu POG z chwili analizy (BK-403). */
+export type PogPresentationStyleSnapshot = {
+  style_version: string;
+  style_sha256: string;
+  zones: Record<string, { label: string; fill: string; outline: string }>;
+  unknown_zone: Record<string, unknown>;
+  null_style: Record<string, unknown>;
+  overlays: Record<string, Record<string, unknown>>;
 };
 
 export type InfrastructureResult = {

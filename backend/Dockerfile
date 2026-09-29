@@ -24,6 +24,9 @@ COPY pyproject.toml .
 COPY alembic.ini .
 COPY alembic/ ./alembic/
 COPY app/ ./app/
+# BK-403: ten sam artefakt prezentacji POG co w obrazie frontendu (kontekst
+# ``shared`` z docker-compose.yml / ``--build-context shared=./shared``).
+COPY --from=shared pog-presentation.json ./shared/pog-presentation.json
 COPY scripts/ ./scripts/
 COPY tests/ ./tests/
 COPY docker-entrypoint.sh /usr/local/bin/dzialki-entrypoint

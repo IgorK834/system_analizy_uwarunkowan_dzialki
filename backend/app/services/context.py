@@ -13,11 +13,12 @@ Sekcje nie są równorzędne pod względem wpływu na wynik analizy:
   Brak danych wysokościowych nie może więc degradować statusu analizy, ale musi
   być widoczny jako ostrzeżenie sekcji.
 
-Znanym i zaakceptowanym ograniczeniem jest zachowanie KIUT: istniejąca funkcja
-``fetch_kiut_networks`` przechwytuje timeouty i błędy HTTP oraz zwraca ``[]``.
-Dlatego sekcja KIUT nie raportuje z tych powodów statusu ``unavailable`` ani
-``error``; pusta lista jest finalizowana jako ``available``. Zachowanie to jest
-celowe i pozostaje odmienne od bezpieczeństwo-krytycznych sekcji ISOK i GDOŚ.
+KIUT (BK-306) korzysta z ``fetch_kiut_network_section``: awaria potwierdzonego
+źródła jest ``unavailable`` z kodem przyczyny, nigdy pustą listą „brak sieci”.
+Gdy katalog nie potwierdza kontraktu wektorowego, guard blokuje zapytanie
+(``VECTOR_SOURCE_NOT_CONFIRMED``); sekcja jest wtedy jawnie niedostępna, ale
+geometria KIUT i tak nie wchodzi do wniosków obliczeniowych, więc ta decyzja
+nie obniża statusu całej analizy.
 """
 
 from __future__ import annotations
@@ -37,7 +38,13 @@ from app.services.gdos import (
     fetch_nature_protection_section,
 )
 from app.services.isok import IsokServiceUnavailableError, fetch_flood_risk_section
-from app.services.kiut import bbox_from_geometry, fetch_kiut_networks
+from app.services.kiut import (
+    REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
+    bbox_from_geometry,
+    fetch_kiut_network_section,
+)
 from app.services.nmt import NmtServiceUnavailableError, fetch_terrain_extremes
 
 logger = logging.getLogger(__name__)
@@ -47,6 +54,8 @@ SectionName = Literal["kiut", "isok", "gdos", "nmt"]
 # Kontrolowane wyjątki niedostępności — mapowane na status ``unavailable``
 # zamiast na nieoczekiwany błąd sekcji.
 _EXPECTED_UNAVAILABLE_ERRORS: tuple[type[Exception], ...] = (
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
     IsokServiceUnavailableError,
     GdosServiceUnavailableError,
     NmtServiceUnavailableError,
@@ -97,6 +106,14 @@ class ContextResult:
         a nie ograniczeniem prawnym, więc jej brak nie może oznaczać, że analiza
         ograniczeń jest niepełna.
         """
+        kiut_blocked_by_guard = (
+            self.kiut.reason_code == REASON_VECTOR_SOURCE_NOT_CONFIRMED
+        )
+        if kiut_blocked_by_guard:
+            # Bez potwierdzonego kontraktu KIUT nie jest odpytywany, a jego
+            # geometria nie wpływa na obliczenia (BK-306) — nie ma czego uznać
+            # za niepełne. Awaria potwierdzonego źródła pozostaje krytyczna.
+            return (self.isok, self.gdos)
         return (self.kiut, self.isok, self.gdos)
 
 
@@ -129,10 +146,10 @@ async def analyze_context(parcel_geometry: BaseGeometry) -> ContextResult:
 async def _run_kiut_section(
     parcel_bounds: tuple[float, float, float, float],
     client: httpx.AsyncClient,
-) -> list[Any]:
+) -> Any:
     start = time.monotonic()
     try:
-        return await fetch_kiut_networks(parcel_bounds, client=client)
+        return await fetch_kiut_network_section(parcel_bounds, client=client)
     finally:
         logger.info("Sekcja KIUT zakończona po %.3fs.", time.monotonic() - start)
 
@@ -197,15 +214,21 @@ def _finalize_section(
             section,
             type(outcome).__name__,
         )
+        warning = (
+            "Wektorowe dane KIUT/GESUT nie są pobierane — brak potwierdzonego "
+            "kontraktu. Sieci nie są analizowane; nie oznacza to braku sieci."
+            if isinstance(outcome, KiutSourceNotRunnableError)
+            else (
+                f"Usługa {section.upper()} jest tymczasowo niedostępna — "
+                "dane tej sekcji mogą być niepełne."
+            )
+        )
         return ContextSectionResult(
             section=section,
             status="unavailable",
             source_metadata=getattr(outcome, "source_metadata", None),
             reason_code=getattr(outcome, "reason_code", None),
-            warnings=[
-                f"Usługa {section.upper()} jest tymczasowo niedostępna — "
-                "dane tej sekcji mogą być niepełne."
-            ],
+            warnings=[warning],
         )
 
     if isinstance(outcome, BaseException):

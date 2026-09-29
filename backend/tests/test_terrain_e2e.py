@@ -177,7 +177,7 @@ def _patches(identifier: str, parcel_wkt: str, discovery: MpzpDiscoveryResult, d
     """Wszystko poza NMT/WCS jest zamrożone; sekcja kontekstu i adapter NMT są realne."""
     return (
         patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier, parcel_wkt))),
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_nature_protection_section", new=AsyncMock(return_value=[])),
         patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=discovery)),

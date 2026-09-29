@@ -1,0 +1,181 @@
+{
+  "schema": "pog-presentation/1",
+  "style_version": "2026.09.28-1",
+  "description": "Jedno źródło prawdy prezentacji POG (BK-403): kody i etykiety stref, kolejność, paleta, progi tematów z jednostkami i domknięciem przedziałów, styl braku wartości oraz wzory OUZ/OZS/OSDIS. Plik czytają frontend (lib/pogZones.ts, lib/pogThemes.ts) i backend (app/core/pog_presentation.py). Paleta jest autorska — nie jest kopią palety serwisu referencyjnego.",
+  "zone_dictionary": {
+    "codelist": "RodzajStrefyPlanistycznejKod",
+    "url": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.xml",
+    "legal_basis": "art. 13c ust. 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym",
+    "verified_at": "2026-09-28",
+    "source_last_modified": "2024-12-18",
+    "sha256": "bf29ac60a23dbf7ce844922f948e1307a04140810d91d716d2d5effeac33cff8",
+    "fixture": "backend/tests/fixtures/pog_presentation/codelist_rodzaj_strefy_planistycznej.xml"
+  },
+  "zones": [
+    { "code": "SW", "codelist_id": "strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna", "label": "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną", "order": 1, "fill": "#b5523b", "outline": "#6e2f20" },
+    { "code": "SJ", "codelist_id": "strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna", "label": "strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną", "order": 2, "fill": "#f0b067", "outline": "#9a6425" },
+    { "code": "SZ", "codelist_id": "strefaWielofunkcyjnaZZabudowaZagrodowa", "label": "strefa wielofunkcyjna z zabudową zagrodową", "order": 3, "fill": "#dcc873", "outline": "#8a7a2e" },
+    { "code": "SU", "codelist_id": "strefaUslugowa", "label": "strefa usługowa", "order": 4, "fill": "#d4445f", "outline": "#851f33" },
+    { "code": "SH", "codelist_id": "strefaHandluWielkopowierzchniowego", "label": "strefa handlu wielkopowierzchniowego", "order": 5, "fill": "#9c3a7a", "outline": "#5b1f47" },
+    { "code": "SP", "codelist_id": "strefaGospodarcza", "label": "strefa gospodarcza", "order": 6, "fill": "#7b6c9c", "outline": "#453a5e" },
+    { "code": "SR", "codelist_id": "strefaProdukcjiRolniczej", "label": "strefa produkcji rolniczej", "order": 7, "fill": "#c2cf8f", "outline": "#6d7a3a" },
+    { "code": "SI", "codelist_id": "strefaInfrastrukturalna", "label": "strefa infrastrukturalna", "order": 8, "fill": "#6f93a8", "outline": "#3a5566" },
+    { "code": "SN", "codelist_id": "strefaZieleniIRekreacji", "label": "strefa zieleni i rekreacji", "order": 9, "fill": "#4e9a61", "outline": "#2a5e37" },
+    { "code": "SC", "codelist_id": "strefaCmentarzy", "label": "strefa cmentarzy", "order": 10, "fill": "#56645a", "outline": "#2c352f" },
+    { "code": "SG", "codelist_id": "strefaGornictwa", "label": "strefa górnictwa", "order": 11, "fill": "#8d6a48", "outline": "#4f3a26" },
+    { "code": "SO", "codelist_id": "strefaOtwarta", "label": "strefa otwarta", "order": 12, "fill": "#d3e6c4", "outline": "#7f9a6d" },
+    { "code": "SK", "codelist_id": "strefaKomunikacyjna", "label": "strefa komunikacyjna", "order": 13, "fill": "#bdbdbd", "outline": "#6b6b6b" }
+  ],
+  "unknown_zone": {
+    "code": "unknown",
+    "label": "strefa nierozpoznana (kod spoza słownika)",
+    "fill": "#ffffff",
+    "outline": "#5c5c5c",
+    "pattern": "cross-hatch",
+    "description": "Białe tło z kratką — kod strefy nie występuje w słowniku RodzajStrefyPlanistycznejKod."
+  },
+  "null_style": {
+    "label": "brak wartości w danych",
+    "fill": "#f2f2f2",
+    "outline": "#7a7a7a",
+    "pattern": "diagonal-hatch",
+    "description": "Jasnoszare tło z ukośnym kreskowaniem — parametr nie został określony (to nie jest wartość 0)."
+  },
+  "themes": [
+    {
+      "id": "zones",
+      "label": "Strefy planistyczne",
+      "kind": "categorical",
+      "property": "zone_code",
+      "unit": null,
+      "unit_label": "kod strefy (SW…SK)",
+      "direction": "categorical",
+      "scale_description": "Kolor wskazuje rodzaj strefy planistycznej; nierozpoznany kod ma osobny wzór kratki."
+    },
+    {
+      "id": "intensity",
+      "label": "Maksymalna nadziemna intensywność zabudowy",
+      "kind": "numeric",
+      "property": "max_overground_floor_area_ratio",
+      "unit": "1",
+      "unit_label": "wartość bezwymiarowa",
+      "direction": "ascending",
+      "scale_description": "Im ciemniejszy kolor, tym wyższa dopuszczalna intensywność zabudowy.",
+      "interval_closure": "left",
+      "classes": [
+        { "min": 0, "max": 0.3, "color": "#fff1d6", "label": "0 – < 0,3" },
+        { "min": 0.3, "max": 0.6, "color": "#fdd09a", "label": "0,3 – < 0,6" },
+        { "min": 0.6, "max": 1.0, "color": "#f9a45c", "label": "0,6 – < 1,0" },
+        { "min": 1.0, "max": 1.5, "color": "#e8702b", "label": "1,0 – < 1,5" },
+        { "min": 1.5, "max": 2.5, "color": "#bf4812", "label": "1,5 – < 2,5" },
+        { "min": 2.5, "max": null, "color": "#7a2a06", "label": "≥ 2,5" }
+      ]
+    },
+    {
+      "id": "building_coverage",
+      "label": "Maksymalny udział powierzchni zabudowy",
+      "kind": "numeric",
+      "property": "max_building_coverage_pct",
+      "unit": "%",
+      "unit_label": "procent powierzchni działki",
+      "direction": "ascending",
+      "scale_description": "Im ciemniejszy kolor, tym większy dopuszczalny udział powierzchni zabudowy.",
+      "interval_closure": "left",
+      "classes": [
+        { "min": 0, "max": 20, "color": "#f3eff8", "label": "0 – < 20%" },
+        { "min": 20, "max": 30, "color": "#d6cde6", "label": "20 – < 30%" },
+        { "min": 30, "max": 40, "color": "#b3a3d1", "label": "30 – < 40%" },
+        { "min": 40, "max": 60, "color": "#8c77b8", "label": "40 – < 60%" },
+        { "min": 60, "max": 80, "color": "#664c9a", "label": "60 – < 80%" },
+        { "min": 80, "max": null, "color": "#3f2769", "label": "≥ 80%" }
+      ]
+    },
+    {
+      "id": "height",
+      "label": "Maksymalna wysokość zabudowy",
+      "kind": "numeric",
+      "property": "max_building_height_m",
+      "unit": "m",
+      "unit_label": "metry",
+      "direction": "ascending",
+      "scale_description": "Im ciemniejszy kolor, tym wyższa dopuszczalna wysokość zabudowy.",
+      "interval_closure": "left",
+      "classes": [
+        { "min": 0, "max": 6, "color": "#eef4fb", "label": "0 – < 6 m" },
+        { "min": 6, "max": 9, "color": "#cadcf0", "label": "6 – < 9 m" },
+        { "min": 9, "max": 12, "color": "#98bde0", "label": "9 – < 12 m" },
+        { "min": 12, "max": 16, "color": "#5f97c9", "label": "12 – < 16 m" },
+        { "min": 16, "max": 25, "color": "#2f6ca8", "label": "16 – < 25 m" },
+        { "min": 25, "max": null, "color": "#133f6e", "label": "≥ 25 m" }
+      ]
+    },
+    {
+      "id": "biologically_active",
+      "label": "Minimalny udział powierzchni biologicznie czynnej",
+      "kind": "numeric",
+      "property": "min_biologically_active_pct",
+      "unit": "%",
+      "unit_label": "procent powierzchni działki",
+      "direction": "ascending",
+      "scale_description": "Im ciemniejszy kolor, tym więcej powierzchni biologicznie czynnej trzeba zachować.",
+      "interval_closure": "left",
+      "classes": [
+        { "min": 0, "max": 10, "color": "#f1f8ec", "label": "0 – < 10%" },
+        { "min": 10, "max": 25, "color": "#d0e9c0", "label": "10 – < 25%" },
+        { "min": 25, "max": 40, "color": "#a2d38c", "label": "25 – < 40%" },
+        { "min": 40, "max": 60, "color": "#6cb65c", "label": "40 – < 60%" },
+        { "min": 60, "max": 80, "color": "#3a8a37", "label": "60 – < 80%" },
+        { "min": 80, "max": null, "color": "#1b5a20", "label": "≥ 80%" }
+      ]
+    }
+  ],
+  "overlays": [
+    {
+      "id": "ouz",
+      "short_label": "OUZ",
+      "label": "obszar uzupełnienia zabudowy",
+      "outline": "#1f4e79",
+      "line_width": 2,
+      "line_dasharray": [4, 2],
+      "pattern": "diagonal-lines",
+      "description": "Granatowy obrys przerywany i ukośne kreskowanie (OUZ)."
+    },
+    {
+      "id": "downtown",
+      "short_label": "OZS",
+      "label": "obszar zabudowy śródmiejskiej",
+      "outline": "#6a1b4d",
+      "line_width": 2,
+      "line_dasharray": [1, 1.5],
+      "pattern": "dots",
+      "description": "Śliwkowy obrys kropkowany i wypełnienie z kropek (OZS)."
+    },
+    {
+      "id": "social_infrastructure_standard",
+      "short_label": "OSDIS",
+      "label": "obszar standardów dostępności infrastruktury społecznej",
+      "outline": "#0b6e4f",
+      "line_width": 2,
+      "line_dasharray": [6, 2, 1, 2],
+      "pattern": "cross-lines",
+      "description": "Zielony obrys kreska-kropka i kratka pionowo-pozioma (OSDIS)."
+    },
+    {
+      "id": "act_boundary",
+      "short_label": "Granica aktu",
+      "label": "granica obszaru objętego planem ogólnym",
+      "outline": "#202020",
+      "line_width": 2.5,
+      "line_dasharray": null,
+      "pattern": null,
+      "description": "Ciągła, ciemna linia granicy aktu."
+    }
+  ],
+  "legal_statuses": [
+    { "status": "binding", "label": "akt obowiązujący", "fill_opacity": 0.6, "line_dasharray": null, "description": "Pełne krycie i ciągły obrys." },
+    { "status": "project", "label": "projekt — dane niewiążące", "fill_opacity": 0.35, "line_dasharray": [2, 2], "description": "Słabsze krycie i obrys przerywany z plakietką „projekt”." },
+    { "status": "in_progress", "label": "w trakcie sporządzania — dane niewiążące", "fill_opacity": 0.35, "line_dasharray": [2, 2], "description": "Słabsze krycie i obrys przerywany." },
+    { "status": "superseded", "label": "akt nieaktualny", "fill_opacity": 0.2, "line_dasharray": [0.5, 2], "description": "Blade krycie i obrys kropkowany." },
+    { "status": "unknown", "label": "status prawny nieustalony", "fill_opacity": 0.35, "line_dasharray": [0.5, 2], "description": "Słabsze krycie i obrys kropkowany." }
+  ]
+}

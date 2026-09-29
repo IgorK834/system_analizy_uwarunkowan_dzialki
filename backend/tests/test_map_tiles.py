@@ -28,6 +28,56 @@ from app.services.wms_tiles import (
     web_mercator_tile_bbox,
 )
 
+# BK-401: import do PostGIS, analiza lokalnego wydania i dekoder MVT.
+import math as _math
+from collections.abc import Iterator as _Iterator
+from dataclasses import replace as _replace
+from datetime import datetime as _datetime, timezone as _timezone
+from uuid import uuid4 as _uuid4
+
+from fastapi.testclient import TestClient as _TestClient
+from pyproj import Transformer as _Transformer
+from shapely import affinity as _affinity, from_wkt as _from_wkt
+from shapely.geometry import box as _box
+from sqlalchemy import text as _sql_text
+from sqlalchemy.orm import Session as _Session
+
+from app.core.data_sources import DataSourceEntry as _DataSourceEntry
+from app.core.pog_presentation import load_pog_presentation as _load_presentation
+from app.core.settings import settings as _app_settings
+from app.db.session import SessionLocal as _SessionLocal, get_db as _get_db
+from app.modules.imports.application.common import ImportRelease as _ImportRelease
+from app.modules.imports.application.pog_import import (
+    PogSourceBatch as _PogSourceBatch,
+    run_pog_import as _run_pog_import,
+)
+from app.modules.imports.domain.pog import (
+    PogActRecord as _PogActRecord,
+    PogFeatureRecord as _PogFeatureRecord,
+    PogNumericValue as _PogNumericValue,
+    PogObjectId as _PogObjectId,
+    PogPlanningParameters as _PogPlanningParameters,
+)
+from app.modules.imports.infrastructure.artifacts import (
+    LocalArtifactStore as _LocalArtifactStore,
+)
+from app.modules.imports.infrastructure.pog.reader import (
+    assemble_ru_pog_acts as _assemble_ru_pog_acts,
+    merge_ru_pog_objects as _merge_ru_pog_objects,
+    parse_ru_app_feature_collection as _parse_ru,
+)
+from app.modules.imports.infrastructure.repository import (
+    SqlAlchemyImportRepository as _SqlAlchemyImportRepository,
+)
+from app.modules.planning.composition import pog_tile_cache as _pog_tile_cache
+from app.modules.planning.domain.pog_features import POG_PARAMETER_NAMES
+from app.services.analysis_orchestrator import (
+    _analyze_pog_local_release as _analyze_local_release,
+)
+from app.shared.geometry import GeometryPayload as _GeometryPayload
+from app.shared.planning_status import inspire_status_uri as _inspire_status_uri
+from tests.mvt_decoder import decode_tile
+
 WMS_URL = "https://wms.example.test/kimpzp"
 KIUT_URL = "https://wms.example.test/kiut"
 PNG = b"\x89PNG\r\n\x1a\nproxy-tile-fixture"
@@ -687,3 +737,632 @@ async def test_disconnected_map_client_cancels_pending_tile_work() -> None:
 
     assert result is None
     assert cancelled.is_set()
+
+
+# --- Wektorowe kafle POG z wersjonowanego wydania (BK-401) --------------------
+#
+# Testy PostGIS/HTTP importują realne rekordy APP planu ogólnego Sopotu
+# (tests/fixtures/ru) do transakcji wycofywanej po teście, a następnie
+# porównują zdekodowany kafel MVT z wynikiem analizy tej samej strefy.
+
+
+RU_FIXTURES = Path(__file__).parent / "fixtures" / "ru"
+RU_TYPES = {
+    "act": "AktPlanowaniaPrzestrzennego",
+    "zone": "StrefaPlanistyczna",
+    "ouz": "ObszarUzupelnieniaZabudowy",
+    "ozs": "ObszarZabudowySrodmiejskiej",
+    "osdis": "ObszarStandardowDostepnosciInfrastrukturySpolecznej",
+}
+POG_SOURCE_ID = "pog_app"
+TILE_ZOOM = 16
+ALLOWED_TILE_PROPERTIES = {
+    "feature_id", "feature_version", "symbol", "label", "legal_status", "teryt",
+    "act_id", "data_release_id", "zone_code", *POG_PARAMETER_NAMES,
+    "parameters_informational", "primary_profiles", "additional_profiles",
+    "act_version",
+}
+_TO_WGS84 = _Transformer.from_crs("EPSG:2180", "EPSG:4326", always_xy=True)
+
+
+def _lonlat_tile(lon: float, lat: float, zoom: int) -> tuple[int, int]:
+    n = 1 << zoom
+    x = int((lon + 180.0) / 360.0 * n)
+    lat_rad = _math.radians(lat)
+    y = int((1.0 - _math.asinh(_math.tan(lat_rad)) / _math.pi) / 2.0 * n)
+    return x, y
+
+
+def _pog_source_entry() -> _DataSourceEntry:
+    return _DataSourceEntry.model_validate(
+        {
+            "source_id": POG_SOURCE_ID,
+            "name": "POG APP (fixture RU)",
+            "owner": "Test",
+            "status": "production",
+            "production_ready": True,
+            "contract_confirmed": True,
+            "access_type": "app_gml",
+            "capabilities_url": None,
+            "file_url": "file:///fixture.gml",
+            "type_names": ["StrefaPlanistyczna"],
+            "layers": None,
+            "protocol_version": "fixture/1",
+            "source_crs": "EPSG:2180",
+            "target_crs": "EPSG:2180",
+            "teryt_scope": ["226401"],
+            "license": "Fixture RU.",
+            "attribution": "Rejestr Urbanistyczny.",
+            "expected_update_interval": "never",
+            "sla": "test",
+            "last_manual_verification": "2026-09-28",
+        }
+    )
+
+
+def _sopot_act() -> _PogActRecord:
+    """Realny akt Sopotu ze strefą 1POG-100SU oraz OUZ/OZS/OSDIS z fixtur RU.
+
+    Obszary OUZ/OZS/OSDIS są przesunięte (bez zmiany kształtu i atrybutów) tak,
+    by ich środek leżał w środku strefy — dzięki temu jeden kafel zawiera
+    wszystkie pięć warstw. OSDIS pochodzi z innej gminy i ma podmienione
+    odwołanie do aktu, tak jak w teście mapowania RU.
+    """
+    parts = []
+    for name, feature_type in RU_TYPES.items():
+        payload = (RU_FIXTURES / f"wfs_pog_getfeature_{name}.xml").read_bytes()
+        if name == "osdis":
+            payload = payload.replace(
+                b"PL.ZIPPZP.10067/240203-POG/1POG", b"PL.ZIPPZP.10011/226401-POG/1POG"
+            )
+        parts.append(_parse_ru(payload, expected_type=feature_type, source_reference="fixture"))
+    act = _assemble_ru_pog_acts(_merge_ru_pog_objects(tuple(parts)))[0]
+    zone = next(f for f in act.features if f.feature_type == "planning_zone")
+    center = _from_wkt(zone.geometry.wkt).centroid
+    features = []
+    for feature in act.features:
+        if feature.feature_type == "planning_zone":
+            features.append(feature)
+            continue
+        shape = _from_wkt(feature.geometry.wkt)
+        moved = _affinity.translate(
+            shape, center.x - shape.centroid.x, center.y - shape.centroid.y
+        )
+        features.append(feature.with_geometry(_GeometryPayload(moved.wkt)))
+    return _replace(act, features=tuple(features))
+
+
+def _project_act(zone_wkt: str, *, height_m: float | None) -> _PogActRecord:
+    """Syntetyczny projekt aktu obok strefy Sopotu: 0% ≠ brak wartości."""
+    shape = _affinity.translate(_from_wkt(zone_wkt), 0, 0)
+    minx, miny, maxx, maxy = shape.bounds
+    square = _box(maxx + 5, miny, maxx + 55, miny + 50)
+    namespace = "PL.ZIPPZP.99999/226401-POG"
+    return _PogActRecord(
+        act_identifier=f"{namespace}/2POG",
+        resolution_number=None,
+        resolution_date=None,
+        teryt="226401",
+        name="Projekt zmiany planu ogólnego (syntetyczny)",
+        legal_status="project",
+        raw_legal_status=_inspire_status_uri("project"),  # type: ignore[arg-type]
+        boundary=_GeometryPayload(square.buffer(1).wkt),
+        object_id=_PogObjectId(namespace, "2POG", "20260901T000000"),
+        features=(
+            _PogFeatureRecord(
+                feature_type="planning_zone",
+                geometry=_GeometryPayload(square.wkt),
+                raw_attributes={"symbol": "SJ", "geometria": "x" * 5000},
+                object_id=_PogObjectId(namespace, "2POG-1SJ", "20260901T000000"),
+                symbol="SJ",
+                label="strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną",
+                parameters=_PogPlanningParameters(
+                    max_overground_floor_area_ratio=_PogNumericValue(0.0, "1"),
+                    max_building_height=(
+                        _PogNumericValue(height_m, "m") if height_m is not None else None
+                    ),
+                    max_building_coverage=_PogNumericValue(0.0, "%"),
+                    min_biologically_active=None,
+                ),
+            ),
+        ),
+    )
+
+
+class _StaticReader:
+    def __init__(self, *acts: _PogActRecord, content: bytes) -> None:
+        self.acts = acts
+        self.content = content
+
+    def read(self) -> _PogSourceBatch:
+        return _PogSourceBatch(self.content, "pog.gml", "application/gml+xml", self.acts)
+
+
+def _publish(session: _Session, tmp_path: Path, *acts: _PogActRecord, label: str) -> int:
+    repository = _SqlAlchemyImportRepository(
+        session, _pog_source_entry(), _LocalArtifactStore(tmp_path)
+    )
+    outcome = _run_pog_import(
+        _StaticReader(*acts, content=f"pog-{label}-{_uuid4().hex}".encode()),
+        POG_SOURCE_ID,
+        repository,
+        release=_ImportRelease(
+            POG_SOURCE_ID,
+            label,
+            _datetime(2026, 9, 28, tzinfo=_timezone.utc),
+            publication_allowed=True,
+            dry_run=False,
+            teryt_scope=("226401",),
+        ),
+    )
+    assert outcome.status == "succeeded", outcome
+    return int(outcome.data_release_id)
+
+
+@pytest.fixture
+def pog_session() -> _Iterator[_Session]:
+    db = _SessionLocal()
+    _pog_tile_cache().clear()
+    try:
+        yield db
+    finally:
+        db.rollback()
+        db.close()
+        _pog_tile_cache().clear()
+
+
+@pytest.fixture
+def pog_client(pog_session: _Session) -> _Iterator[_TestClient]:
+    app.dependency_overrides[_get_db] = lambda: pog_session
+    try:
+        yield _TestClient(app)
+    finally:
+        app.dependency_overrides.pop(_get_db, None)
+
+
+@pytest.fixture
+def sopot_release(pog_session: _Session, tmp_path: Path) -> dict[str, object]:
+    act = _sopot_act()
+    zone = next(f for f in act.features if f.feature_type == "planning_zone")
+    release_id = _publish(
+        pog_session, tmp_path, act, _project_act(zone.geometry.wkt, height_m=None), label="A"
+    )
+    zone_shape = _from_wkt(zone.geometry.wkt)
+    lon, lat = _TO_WGS84.transform(*zone_shape.representative_point().coords[0])
+    x, y = _lonlat_tile(lon, lat, TILE_ZOOM)
+    return {"release_id": release_id, "zone": zone, "zone_shape": zone_shape, "tile": (x, y)}
+
+
+def _tile_url(release_id: int, x: int, y: int, z: int = TILE_ZOOM, edition: str | None = None) -> str:
+    query = f"?edition={edition}" if edition else ""
+    return f"/api/v1/map/pog/releases/{release_id}/{z}/{x}/{y}.mvt{query}"
+
+
+@pytest.mark.integration
+def test_pog_tile_has_five_layers_and_same_parameters_as_analysis(
+    pog_session: _Session, pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    zone_shape = sopot_release["zone_shape"]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    parcel = zone_shape.representative_point().buffer(3, cap_style="square")  # type: ignore[attr-defined]
+
+    analysis = _analyze_local_release(pog_session, parcel, "2264011")
+    assert analysis is not None
+    pog = analysis[0]
+    assert pog.source is not None and pog.source.data_release_id == release_id
+    analysed_zone = pog.zones[0]
+
+    response = pog_client.get(_tile_url(release_id, x, y))
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/vnd.mapbox-vector-tile"
+    layers = decode_tile(response.content)
+    assert set(layers) == {
+        "zones", "ouz", "downtown", "social_infrastructure_standard", "act_boundary"
+    }
+    assert all(layer.extent == 4096 and layer.version == 2 for layer in layers.values())
+
+    tile_zone = next(
+        feature for feature in layers["zones"].features
+        if feature.properties["feature_id"] == analysed_zone.id
+    )
+    props = tile_zone.properties
+    for name in POG_PARAMETER_NAMES:
+        assert props[name] == getattr(analysed_zone, name), name
+    assert (props["zone_code"], props["symbol"], props["label"]) == (
+        analysed_zone.type, analysed_zone.symbol, analysed_zone.label
+    )
+    assert props["feature_version"] == analysed_zone.feature_version
+    assert (props["legal_status"], props["teryt"], props["data_release_id"]) == (
+        "binding", "226401", release_id
+    )
+    assert analysed_zone.primary_profile, "profile muszą przejść import → analiza"
+    assert props["primary_profiles"] == ",".join(
+        profile.code for profile in analysed_zone.primary_profile
+    )
+    assert props["additional_profiles"] == ",".join(
+        profile.code for profile in analysed_zone.additional_profiles
+    )
+    assert tile_zone.geometry_type == "POLYGON" and tile_zone.id is not None
+
+    # Kafel nie publikuje surowego XML ani nadmiarowych pól.
+    for layer in layers.values():
+        for feature in layer.features:
+            assert set(feature.properties) <= ALLOWED_TILE_PROPERTIES
+            assert all(len(str(value)) <= 256 for value in feature.properties.values())
+    boundary = layers["act_boundary"].features[0].properties
+    assert boundary["act_id"] == "PL.ZIPPZP.10011/226401-POG/1POG"
+    assert boundary["legal_status"] == "binding"
+
+
+@pytest.mark.integration
+def test_pog_tile_keeps_null_distinct_from_zero_and_marks_project(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    layers = decode_tile(pog_client.get(_tile_url(release_id, x, y)).content)
+    project = next(
+        feature.properties for feature in layers["zones"].features
+        if feature.properties["legal_status"] == "project"
+    )
+    assert project["max_building_coverage_pct"] == 0.0
+    assert project["max_overground_floor_area_ratio"] == 0.0
+    assert "max_building_height_m" not in project
+    assert "min_biologically_active_pct" not in project
+    assert project["zone_code"] == "SJ"
+
+    binding_only = decode_tile(
+        pog_client.get(_tile_url(release_id, x, y, edition="binding")).content
+    )
+    project_only = decode_tile(
+        pog_client.get(_tile_url(release_id, x, y, edition="project")).content
+    )
+    assert {f.properties["legal_status"] for f in binding_only["zones"].features} == {"binding"}
+    assert {f.properties["legal_status"] for f in project_only["zones"].features} == {"project"}
+    assert {f.properties["legal_status"] for f in project_only["act_boundary"].features} == {
+        "project"
+    }
+
+
+@pytest.mark.integration
+def test_pog_empty_tile_is_200_with_valid_empty_protobuf(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    # Kafel na Atlantyku — poprawny adres, brak danych.
+    response = pog_client.get(_tile_url(release_id, 20000, 20000))
+    assert response.status_code == 200
+    assert response.content == b""
+    assert decode_tile(response.content) == {}
+    assert response.headers["x-pog-tile-features"] == "0"
+    assert response.headers["etag"]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("z", "x", "y", "edition"),
+    [
+        (19, 0, 0, None),
+        (-1, 0, 0, None),
+        (3, 8, 0, None),
+        (3, 0, 8, None),
+        (3, -1, 0, None),
+        (3, 0, 0, "wszystko"),
+    ],
+)
+def test_pog_tile_rejects_invalid_coordinates_with_422(
+    pog_client: _TestClient,
+    sopot_release: dict[str, object],
+    z: int,
+    x: int,
+    y: int,
+    edition: str | None,
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    response = pog_client.get(_tile_url(release_id, x, y, z=z, edition=edition))
+    assert response.status_code == 422
+
+
+@pytest.mark.integration
+def test_pog_tile_rejects_non_integer_path_and_unknown_release(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    assert pog_client.get("/api/v1/map/pog/releases/1/abc/0/0.mvt").status_code == 422
+    missing = pog_client.get(_tile_url(2_000_000_000, 0, 0, z=0))
+    assert missing.status_code == 404
+    assert pog_client.get("/api/v1/map/pog/releases/2000000000").status_code == 404
+
+
+@pytest.mark.integration
+def test_pog_tile_etag_returns_304_and_cache_hit(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    first = pog_client.get(_tile_url(release_id, x, y))
+    assert first.headers["x-tile-cache"] == "MISS"
+    assert first.headers["cache-control"].startswith("public, max-age=")
+    etag = first.headers["etag"]
+
+    second = pog_client.get(_tile_url(release_id, x, y), headers={"If-None-Match": etag})
+    assert second.status_code == 304
+    assert second.content == b""
+    assert second.headers["etag"] == etag
+    assert second.headers["x-tile-cache"] == "HIT"
+    weak = pog_client.get(_tile_url(release_id, x, y), headers={"If-None-Match": f"W/{etag}"})
+    assert weak.status_code == 304
+    other = pog_client.get(_tile_url(release_id, x, y), headers={"If-None-Match": '"other"'})
+    assert other.status_code == 200 and other.content == first.content
+
+
+@pytest.mark.integration
+def test_pog_tile_cache_separates_releases_and_pinned_url_reproduces_release_a(
+    pog_session: _Session,
+    pog_client: _TestClient,
+    sopot_release: dict[str, object],
+    tmp_path: Path,
+) -> None:
+    release_a = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    zone = sopot_release["zone"]
+    tile_a = pog_client.get(_tile_url(release_a, x, y))
+
+    # Wydanie B: ta sama strefa, zmieniony projekt (wysokość 12 m zamiast braku).
+    release_b = _publish(
+        pog_session,
+        tmp_path,
+        _sopot_act(),
+        _project_act(zone.geometry.wkt, height_m=12.0),  # type: ignore[attr-defined]
+        label="B",
+    )
+    assert release_b != release_a
+    tile_b = pog_client.get(_tile_url(release_b, x, y))
+    tile_a_again = pog_client.get(_tile_url(release_a, x, y))
+
+    assert tile_a.headers["etag"] != tile_b.headers["etag"]
+    assert tile_a_again.headers["etag"] == tile_a.headers["etag"]
+    assert tile_a_again.content == tile_a.content
+    heights = {
+        release: next(
+            f.properties.get("max_building_height_m")
+            for f in decode_tile(tile.content)["zones"].features
+            if f.properties["legal_status"] == "project"
+        )
+        for release, tile in ((release_a, tile_a), (release_b, tile_b))
+    }
+    assert heights == {release_a: None, release_b: 12.0}
+    edition_tile = pog_client.get(_tile_url(release_b, x, y, edition="binding"))
+    assert edition_tile.headers["etag"] != tile_b.headers["etag"]
+
+    active = pog_client.get("/api/v1/map/pog/releases/active").json()
+    assert active["release_id"] == release_b and active["is_active"] is True
+    assert active["tile_url_template"] == (
+        f"/api/v1/map/pog/releases/{release_b}/{{z}}/{{x}}/{{y}}.mvt"
+    )
+    pinned = pog_client.get(f"/api/v1/map/pog/releases/{release_a}").json()
+    assert pinned["is_active"] is False
+    assert pinned["tile_url_template"].startswith(f"/api/v1/map/pog/releases/{release_a}/")
+
+
+@pytest.mark.integration
+def test_pog_release_metadata_exposes_style_bounds_and_statuses(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    body = pog_client.get(f"/api/v1/map/pog/releases/{release_id}").json()
+    presentation = _load_presentation()
+    assert body["style_version"] == presentation.style_version
+    assert body["style_sha256"] == presentation.sha256
+    assert body["layers"] == [
+        "zones", "ouz", "downtown", "social_infrastructure_standard", "act_boundary"
+    ]
+    assert body["editions"] == ["all", "binding", "project"]
+    assert body["acts_by_legal_status"] == {"binding": 1, "project": 1}
+    min_lon, min_lat, max_lon, max_lat = body["bounds"]
+    assert 18.4 < min_lon < max_lon < 18.7 and 54.3 < min_lat < max_lat < 54.6
+    assert (body["min_zoom"], body["max_zoom"]) == (
+        _app_settings.pog_tile_min_zoom, _app_settings.pog_tile_max_zoom
+    )
+
+
+@pytest.mark.integration
+def test_pog_tile_limits_return_413(
+    pog_client: _TestClient,
+    sopot_release: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    monkeypatch.setattr(_app_settings, "pog_tile_max_features", 1)
+    too_many = pog_client.get(_tile_url(release_id, x, y))
+    assert too_many.status_code == 413
+    assert too_many.headers["x-pog-tile-limit"] == "features"
+
+    monkeypatch.setattr(_app_settings, "pog_tile_max_features", 100)
+    monkeypatch.setattr(_app_settings, "pog_tile_max_bytes", 10)
+    too_big = pog_client.get(_tile_url(release_id, x, y))
+    assert too_big.status_code == 413
+    assert too_big.headers["x-pog-tile-limit"] == "bytes"
+
+
+@pytest.mark.integration
+def test_pog_tile_matches_analysis_for_raw_alias_attributes(
+    pog_session: _Session, pog_client: _TestClient, tmp_path: Path
+) -> None:
+    """Cecha bez kolumn kanonicznych (np. import z GPKG) — wąski podzbiór SQL
+    surowych atrybutów daje te same wartości co analiza pełnego rekordu."""
+    square = _box(470000, 732000, 470080, 732080)
+    raw = {
+        "OZNACZENIE": "Strefa usługowa",
+        "MAKSYMALNA_WYSOKOŚĆ_ZABUDOWY": "12,5",
+        "maksymalny_udzial_powierzchni_zabudowy": {"value": "40"},
+        "Zrodlo_Parametrow": "uzasadnienie (PDF)",
+        "geometria": "470000 732000 " * 400,
+    }
+    act = _PogActRecord(
+        act_identifier="PL.ZIPPZP.88888/226401-POG/1POG",
+        resolution_number=None,
+        resolution_date=None,
+        teryt="226401",
+        name="Akt z surowymi atrybutami",
+        legal_status="binding",
+        raw_legal_status=_inspire_status_uri("binding"),  # type: ignore[arg-type]
+        boundary=_GeometryPayload(square.buffer(2).wkt),
+        features=(
+            _PogFeatureRecord(
+                feature_type="planning_zone",
+                geometry=_GeometryPayload(square.wkt),
+                raw_attributes=raw,
+            ),
+        ),
+    )
+    release_id = _publish(pog_session, tmp_path, act, label="raw")
+    parcel = _box(470030, 732030, 470040, 732040)
+    pog = _analyze_local_release(pog_session, parcel, "2264011")[0]  # type: ignore[index]
+    zone = pog.zones[0]
+    lon, lat = _TO_WGS84.transform(470035, 732035)
+    x, y = _lonlat_tile(lon, lat, TILE_ZOOM)
+    props = decode_tile(pog_client.get(_tile_url(release_id, x, y)).content)["zones"].features[0].properties
+
+    assert (zone.type, zone.max_building_height_m, zone.max_building_coverage_pct) == (
+        "SU", 12.5, 40.0
+    )
+    for name in POG_PARAMETER_NAMES:
+        assert props.get(name) == getattr(zone, name), name
+    assert props["zone_code"] == zone.type
+    assert props["parameters_informational"] is True
+    assert "geometria" not in props
+
+
+
+@pytest.mark.integration
+def test_new_release_is_complete_snapshot_including_unchanged_act(
+    pog_session: _Session,
+    pog_client: _TestClient,
+    sopot_release: dict[str, object],
+    tmp_path: Path,
+) -> None:
+    """BK-104/ADR-008: akt bez zmian treści trafia do nowego wydania.
+
+    Wydanie B różni się od A tylko projektem; niezmieniony, obowiązujący akt
+    Sopotu musi być w B (baza, analiza i kafel MVT), a A pozostaje odtwarzalne.
+    """
+    release_a = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    zone = sopot_release["zone"]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    release_b = _publish(
+        pog_session,
+        tmp_path,
+        _sopot_act(),
+        _project_act(zone.geometry.wkt, height_m=12.0),  # type: ignore[attr-defined]
+        label="B",
+    )
+    assert release_b != release_a
+
+    def acts(release_id: int) -> list[tuple[str, str, int, bool]]:
+        rows = pog_session.execute(
+            _sql_text(
+                """
+                SELECT pa.act_identifier, pav.legal_status,
+                       (SELECT count(*) FROM planning_features pf
+                         WHERE pf.planning_act_version_id = pav.id) AS features,
+                       EXISTS (SELECT 1 FROM plan_boundaries pb
+                                WHERE pb.planning_act_version_id = pav.id) AS boundary
+                FROM planning_act_versions pav
+                JOIN planning_acts pa ON pa.id = pav.planning_act_id
+                WHERE pav.data_release_id = :release
+                ORDER BY pa.act_identifier
+                """
+            ),
+            {"release": release_id},
+        ).all()
+        return [tuple(row) for row in rows]  # type: ignore[misc]
+
+    sopot = "PL.ZIPPZP.10011/226401-POG/1POG"
+    project = "PL.ZIPPZP.99999/226401-POG/2POG"
+    assert acts(release_b) == acts(release_a) == [
+        (sopot, "binding", 4, True),
+        (project, "project", 1, True),
+    ]
+    hashes = pog_session.execute(
+        _sql_text(
+            """
+            SELECT pav.data_release_id, pav.content_hash, pav.valid_to IS NULL
+            FROM planning_act_versions pav
+            JOIN planning_acts pa ON pa.id = pav.planning_act_id
+            WHERE pa.act_identifier = :act ORDER BY pav.data_release_id
+            """
+        ),
+        {"act": sopot},
+    ).all()
+    assert [(row[0], row[2]) for row in hashes] == [(release_a, False), (release_b, True)]
+    assert hashes[0][1] == hashes[1][1], "przeniesiony akt zachowuje content_hash"
+    run_stats = pog_session.execute(
+        _sql_text(
+            "SELECT stats FROM import_runs WHERE data_release_id = :release "
+            "ORDER BY id DESC LIMIT 1"
+        ),
+        {"release": release_b},
+    ).scalar_one()
+    assert (run_stats["changed"], run_stats["unchanged"], run_stats["carried_forward"]) == (1, 1, 1)
+
+    # Analiza aktywnego wydania B widzi obowiązującą strefę Sopotu.
+    parcel = sopot_release["zone_shape"].representative_point().buffer(3, cap_style="square")  # type: ignore[attr-defined]
+    pog = _analyze_local_release(pog_session, parcel, "2264011")[0]  # type: ignore[index]
+    assert pog.source is not None and pog.source.data_release_id == release_b
+    assert pog.legal_status == "binding"
+    assert [(zone.type, zone.max_building_height_m) for zone in pog.zones] == [("SU", 4.0)]
+
+    # Kafel wydania B zawiera akt Sopotu (strefa, OUZ/OZS/OSDIS i granica).
+    layers = decode_tile(pog_client.get(_tile_url(release_b, x, y)).content)
+    assert set(layers) == {
+        "zones", "ouz", "downtown", "social_infrastructure_standard", "act_boundary"
+    }
+    zone_ids = {feature.properties["feature_id"] for feature in layers["zones"].features}
+    assert "PL.ZIPPZP.10011/226401-POG/1POG-100SU" in zone_ids
+    assert {f.properties["data_release_id"] for f in layers["zones"].features} == {release_b}
+    assert sopot in {f.properties["act_id"] for f in layers["act_boundary"].features}
+    metadata = pog_client.get("/api/v1/map/pog/releases/active").json()
+    assert metadata["release_id"] == release_b
+    assert metadata["acts_by_legal_status"] == {"binding": 1, "project": 1}
+
+
+@pytest.mark.integration
+def test_reimport_of_identical_artifact_adds_no_versions_and_repairs_nothing_twice(
+    pog_session: _Session, tmp_path: Path
+) -> None:
+    """Idempotencja: identyczny artefakt = to samo wydanie i żadnych nowych wersji."""
+    from app.modules.imports.application.common import ImportRelease
+    from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
+    from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
+
+    act = _sopot_act()
+    zone = next(f for f in act.features if f.feature_type == "planning_zone")
+    acts = (act, _project_act(zone.geometry.wkt, height_m=None))
+    repository = SqlAlchemyImportRepository(
+        pog_session, _pog_source_entry(), LocalArtifactStore(tmp_path)
+    )
+    content = f"pog-identical-{_uuid4().hex}".encode()
+
+    def run(label: str):
+        return _run_pog_import(
+            _StaticReader(*acts, content=content),
+            POG_SOURCE_ID,
+            repository,
+            release=ImportRelease(
+                POG_SOURCE_ID, label, _datetime(2026, 9, 28, tzinfo=_timezone.utc),
+                publication_allowed=True, dry_run=False, teryt_scope=("226401",),
+            ),
+        )
+
+    def version_count() -> int:
+        return int(pog_session.execute(_sql_text("SELECT count(*) FROM planning_act_versions")).scalar_one())
+
+    first = run("first")
+    count = version_count()
+    again = run("again")
+    assert again.data_release_id == first.data_release_id
+    assert (again.stats["new"], again.stats["changed"], again.stats["unchanged"]) == (0, 0, 2)
+    assert again.stats["carried_forward"] == 0
+    assert version_count() == count

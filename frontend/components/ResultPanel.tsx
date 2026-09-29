@@ -7,6 +7,7 @@ import { CompatibilityAssessmentCard } from "@/components/CompatibilityAssessmen
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
+import { PogZoneShareChart } from "@/components/PogZoneShareChart";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import { TerrainCard } from "@/components/TerrainCard";
 import {
@@ -500,6 +501,7 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
               <dd>{pog.in_downtown_area ? "Tak" : "Nie"}</dd>
             </div>
           </dl>
+          <PogZoneShareChart zones={pog.zones} />
           {pog.zones.length > 0 && (
             <div className="result-table-scroll">
               <table className="result-table">

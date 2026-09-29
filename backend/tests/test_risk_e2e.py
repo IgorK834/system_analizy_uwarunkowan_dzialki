@@ -79,7 +79,7 @@ def _post(identifier: str, flood, nature) -> dict:
     no_coverage = TerrainNoCoverage(4.0, 676, _source("NMT", "https://nmt.example.test"), [])
     patches = (
         patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier, CONTROL.wkt))),
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_terrain_extremes", new=AsyncMock(return_value=no_coverage)),
         patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=_no_mpzp())),
         patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock(return_value=_binding_pog_discovery())),

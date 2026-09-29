@@ -4,7 +4,7 @@ Ryzyko powodziowe jest twardym ograniczeniem inwestycyjnym, nie kosmetyczną
 informacją poboczną — dlatego ten moduł traktujemy jako bezpieczeństwo-krytyczny,
 w odróżnieniu np. od kiut.py.
 
-W kiut.py fetch_kiut_networks celowo połyka timeout/błąd HTTP i zwraca [] —
+Dawny fetch_kiut_networks połykał timeout/błąd HTTP i zwracał [] (usunięte w BK-306) —
 to bezpieczne, bo brak danych o sieciach uzbrojenia to tylko utrata informacji
 pomocniczej. Dla ryzyka powodziowego jest to NIEBEZPIECZNE: pusta lista
 RiskFeature przy awarii usługi ISOK wygląda identycznie jak "sprawdzono, brak
@@ -194,7 +194,7 @@ async def fetch_flood_risks(
     Pusta lista oznacza "sprawdzono, brak stref w sąsiedztwie działki". Błąd
     usługi, ``ows:ExceptionReport`` (usługi WFS zwracają go ze statusem HTTP
     200) lub nieparsowalna odpowiedź podnoszą IsokServiceUnavailableError —
-    te przypadki NIGDY nie są mylone, w odróżnieniu od fetch_kiut_networks
+    te przypadki NIGDY nie są mylone, w odróżnieniu od dawnego fetch_kiut_networks
     (patrz uzasadnienie w docstringu modułu), bo dla ryzyka powodziowego pusta
     lista przy awarii usługi byłaby fałszywym poczuciem bezpieczeństwa.
 

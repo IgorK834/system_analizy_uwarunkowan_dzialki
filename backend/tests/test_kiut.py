@@ -2,15 +2,30 @@ import httpx
 import pytest
 import respx
 
-from app.core.settings import settings
+from app.services import kiut
 from app.services.geometry import parse_parcel_geometry
 from app.services.kiut import (
+    REASON_HTTP_ERROR,
+    REASON_SERVICE_TIMEOUT,
+    REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
+    KiutWfsContract,
     NetworkFeature,
     _classify_network_type,
+    _MalformedKiutResponse,
     _normalize_network_type_value,
     _parse_kiut_response,
     bbox_from_geometry,
-    fetch_kiut_networks,
+    fetch_kiut_network_section,
+)
+
+# Kontrakt testowy: w repozytorium katalog NIE potwierdza wektora KIUT
+# (``contract_required``), więc testy odpowiedzi podstawiają kontrakt jawnie.
+TEST_CONTRACT = KiutWfsContract(
+    url="https://kiut.example.test/wfs",
+    type_names=("kiut:SiecUzbrojenia",),
+    protocol_version="2.0.0",
 )
 
 SQUARE_WKT = (
@@ -155,16 +170,15 @@ def test_parse_empty_geojson_returns_empty_list() -> None:
     assert result == []
 
 
-def test_parse_empty_string_returns_empty_list() -> None:
-    result = _parse_kiut_response("", "https://example/kiut", None)
+def test_parse_empty_string_is_malformed_not_empty_list() -> None:
+    # BK-306: pusta treść nie jest „sprawdzonym brakiem sieci”.
+    with pytest.raises(_MalformedKiutResponse):
+        _parse_kiut_response("", "https://example/kiut", None)
 
-    assert result == []
 
-
-def test_parse_malformed_gml_returns_empty_list_not_raises() -> None:
-    result = _parse_kiut_response("<not><valid", "https://example/kiut", None)
-
-    assert result == []
+def test_parse_malformed_gml_raises_instead_of_empty_list() -> None:
+    with pytest.raises(_MalformedKiutResponse):
+        _parse_kiut_response("<not><valid", "https://example/kiut", None)
 
 
 # --- bbox_from_geometry -------------------------------------------------------
@@ -197,50 +211,78 @@ def test_classify_network_type_tries_multiple_attribute_names() -> None:
     assert _classify_network_type({"kind": "gazowa"})[0] == "gas"
 
 
-# --- fetch_kiut_networks (respx) ---------------------------------------------
+# --- fetch_kiut_network_section (respx) --------------------------------------
+
+
+@pytest.fixture
+def confirmed_contract(monkeypatch: pytest.MonkeyPatch) -> KiutWfsContract:
+    monkeypatch.setattr(kiut, "resolve_kiut_contract", lambda catalog=None: TEST_CONTRACT)
+    return TEST_CONTRACT
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_fetch_kiut_networks_success_via_respx() -> None:
-    respx.get(settings.kiut_wfs_base_url).mock(
+async def test_default_catalog_blocks_request_before_network() -> None:
+    route = respx.get(url__regex=r".*").mock(return_value=httpx.Response(200))
+
+    with pytest.raises(KiutSourceNotRunnableError) as error:
+        await fetch_kiut_network_section((500000.0, 200000.0, 500100.0, 200100.0))
+
+    assert error.value.reason_code == REASON_VECTOR_SOURCE_NOT_CONFIRMED
+    assert not route.called
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_kiut_network_section_success_via_respx(
+    confirmed_contract: KiutWfsContract,
+) -> None:
+    respx.get(confirmed_contract.url).mock(
         return_value=httpx.Response(200, text=MOCK_GML_MULTIPLE_TYPES)
     )
 
-    result = await fetch_kiut_networks((500000.0, 200000.0, 500100.0, 200100.0))
+    result = await fetch_kiut_network_section((500000.0, 200000.0, 500100.0, 200100.0))
 
-    assert len(result) == 3
-
-
-@pytest.mark.asyncio
-@respx.mock
-async def test_fetch_kiut_networks_timeout_returns_empty_list_not_raises() -> None:
-    respx.get(settings.kiut_wfs_base_url).mock(
-        side_effect=httpx.TimeoutException("timeout")
-    )
-
-    result = await fetch_kiut_networks((0.0, 0.0, 1.0, 1.0))
-
-    assert result == []
+    assert len(result.features) == 3
+    assert result.relation == "features_found"
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_fetch_kiut_networks_http_500_returns_empty_list_not_raises() -> None:
-    respx.get(settings.kiut_wfs_base_url).mock(return_value=httpx.Response(500))
+async def test_fetch_kiut_network_section_timeout_is_unavailable_not_empty(
+    confirmed_contract: KiutWfsContract,
+) -> None:
+    respx.get(confirmed_contract.url).mock(side_effect=httpx.TimeoutException("timeout"))
 
-    result = await fetch_kiut_networks((0.0, 0.0, 1.0, 1.0))
+    with pytest.raises(KiutServiceUnavailableError) as error:
+        await fetch_kiut_network_section((0.0, 0.0, 1.0, 1.0))
 
-    assert result == []
+    assert error.value.reason_code == REASON_SERVICE_TIMEOUT
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_fetch_kiut_networks_sends_bbox_with_epsg2180() -> None:
-    route = respx.get(settings.kiut_wfs_base_url).mock(
+async def test_fetch_kiut_network_section_http_500_is_unavailable_not_empty(
+    confirmed_contract: KiutWfsContract,
+) -> None:
+    respx.get(confirmed_contract.url).mock(return_value=httpx.Response(500))
+
+    with pytest.raises(KiutServiceUnavailableError) as error:
+        await fetch_kiut_network_section((0.0, 0.0, 1.0, 1.0))
+
+    assert error.value.reason_code == REASON_HTTP_ERROR
+    assert error.value.source_metadata.response_status == 500
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_fetch_kiut_network_section_sends_bbox_with_epsg2180(
+    confirmed_contract: KiutWfsContract,
+) -> None:
+    route = respx.get(confirmed_contract.url).mock(
         return_value=httpx.Response(200, text=MOCK_GML_MULTIPLE_TYPES)
     )
 
-    await fetch_kiut_networks((500000.0, 200000.0, 500100.0, 200100.0))
+    await fetch_kiut_network_section((500000.0, 200000.0, 500100.0, 200100.0))
 
     assert "EPSG:2180" in route.calls.last.request.url.params["bbox"]

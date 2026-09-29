@@ -92,7 +92,7 @@ async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest()
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(side_effect=_slow_kiut),
         ),
         patch(
@@ -125,7 +125,7 @@ async def test_analyze_context_isok_failure_does_not_abort_other_sections() -> N
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[kiut_feature]),
         ),
         patch(
@@ -150,7 +150,7 @@ async def test_analyze_context_isok_failure_does_not_abort_other_sections() -> N
 async def test_analyze_context_unexpected_exception_maps_to_error_status() -> None:
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
@@ -176,7 +176,7 @@ async def test_analyze_context_partial_result_contains_warnings_and_status_per_s
 ):
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
@@ -208,7 +208,7 @@ async def test_analyze_context_success_populates_data_and_source_metadata() -> N
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[kiut_feature]),
         ),
         patch(
@@ -235,7 +235,7 @@ async def test_analyze_context_success_populates_data_and_source_metadata() -> N
 async def test_analyze_context_collects_per_feature_warnings_from_both_shapes() -> None:
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[_network_feature("w1")]),
         ),
         patch(
@@ -260,7 +260,7 @@ async def test_analyze_context_uses_single_shared_httpx_client_instance() -> Non
     gdos_mock = AsyncMock(return_value=[])
 
     with (
-        patch("app.services.context.fetch_kiut_networks", new=kiut_mock),
+        patch("app.services.context.fetch_kiut_network_section", new=kiut_mock),
         patch("app.services.context.fetch_flood_risk_section", new=isok_mock),
         patch("app.services.context.fetch_nature_protection_section", new=gdos_mock),
     ):
@@ -280,7 +280,7 @@ async def test_analyze_context_logs_elapsed_time_and_source_name(caplog) -> None
     with (
         patch.object(context_logger, "disabled", False),
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
@@ -306,7 +306,7 @@ async def test_analyze_context_logs_source_name_when_section_fails(caplog) -> No
     with (
         patch.object(context_logger, "disabled", False),
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(return_value=[]),
         ),
         patch(
@@ -358,7 +358,7 @@ def test_context_section_result_is_frozen() -> None:
 async def test_nmt_no_coverage_is_explicit_measurement_not_empty_list() -> None:
     """Brak pokrycia NMT nie jest pustą listą, którą można wziąć za płaski teren."""
     with (
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
             "app.services.context.fetch_nature_protection_section",
@@ -387,7 +387,7 @@ async def test_nmt_measurement_is_single_item_with_source() -> None:
         source_metadata=_metadata("NMT"),
     )
     with (
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
             "app.services.context.fetch_nature_protection_section",
