@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 from shapely.geometry import box
 from sqlalchemy import delete, select
 
+from app.core.access_control import make_analysis_token
 from app.core.report_config import REPORT_DISCLAIMER
 from app.core.settings import settings
 from app.db.session import SessionLocal
@@ -592,7 +593,7 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
     parse_mock.assert_awaited_once()
     assert parse_mock.await_args.args[0].content == b"%PDF-mock"
 
-    report_response = client.get(f"/report/{analysis_id}")
+    report_response = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
 
     assert report_response.status_code == 200
     assert report_response.headers["content-type"] == "application/pdf"
@@ -696,7 +697,7 @@ def test_endpoint_returns_pdf_content_type_and_disposition() -> None:
     identifier = f"{_PARCEL_PREFIX}ENDPOINT"
     analysis_id = _save(_full_response(identifier), identifier)
 
-    response = client.get(f"/report/{analysis_id}")
+    response = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
@@ -707,7 +708,7 @@ def test_endpoint_returns_pdf_content_type_and_disposition() -> None:
 
 
 def test_endpoint_returns_404_for_missing_analysis() -> None:
-    response = client.get("/report/999999999")
+    response = client.get(f"/report/999999999?access_token={make_analysis_token(999999999)}")
 
     assert response.status_code == 404
     body = response.json()

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import delete, select
 
+from app.core.access_control import make_analysis_token
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -235,7 +236,9 @@ def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
     assert context["document"]["sha256"] == sha256(b"%PDF-mock").hexdigest()
     assert context["document"]["preview_path"] == (
         f"/analyze/{body['analysis_id']}/pending-document"
+        f"?access_token={make_analysis_token(body['analysis_id'])}"
     )
+    assert body["access_token"] == make_analysis_token(body["analysis_id"])
     assert context["document"]["requested_url_verified"] is True
     assert context["raster_preview_source_key"] == "mpzp"
     assert context["symbol_max_length"] == 20
@@ -1065,7 +1068,7 @@ async def test_resume_rolls_back_all_snapshot_changes_when_persistence_fails() -
 def test_pending_document_serves_exact_pinned_copy_with_safe_headers() -> None:
     analysis_id = _create_waiting_analysis("122101_1.0001.9029")
 
-    response = client.get(f"/analyze/{analysis_id}/pending-document")
+    response = client.get(f"/analyze/{analysis_id}/pending-document?access_token={make_analysis_token(analysis_id)}")
 
     assert response.status_code == 200
     assert response.content == PINNED_CONTENT
@@ -1087,7 +1090,7 @@ def test_pending_html_document_is_attachment_in_sandbox() -> None:
         pinned.media_type = "text/html"
         db.commit()
 
-    response = client.get(f"/analyze/{analysis_id}/pending-document")
+    response = client.get(f"/analyze/{analysis_id}/pending-document?access_token={make_analysis_token(analysis_id)}")
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/octet-stream"
@@ -1098,6 +1101,6 @@ def test_pending_html_document_is_attachment_in_sandbox() -> None:
 def test_pending_document_returns_404_for_unknown_or_unpinned_analysis() -> None:
     unpinned = _create_waiting_analysis("122101_1.0001.9031", pinned_content=None)
 
-    assert client.get("/analyze/999999999/pending-document").status_code == 404
-    assert client.get(f"/analyze/{unpinned}/pending-document").status_code == 404
+    assert client.get(f"/analyze/999999999/pending-document?access_token={make_analysis_token(999999999)}").status_code == 404
+    assert client.get(f"/analyze/{unpinned}/pending-document?access_token={make_analysis_token(unpinned)}").status_code == 404
     assert client.get("/analyze/0/pending-document").status_code == 422

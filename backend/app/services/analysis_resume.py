@@ -10,9 +10,11 @@ staje się ``complete``.
 
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
-from typing import Literal
+from typing import Any, Literal
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -95,6 +97,40 @@ async def resume_analysis_with_zone(
     źródła i statusu. POG, ryzyka, infrastruktura i źródła kontekstu (w tym
     NMT) nie są modyfikowane.
     """
+    # Zapytania do bazy są synchroniczne, więc biegną w wątku roboczym — inaczej
+    # blokowałyby pętlę zdarzeń dla wszystkich pozostałych żądań. Sesja jest
+    # używana sekwencyjnie (nigdy równolegle), więc jest bezpieczna.
+    inputs = await asyncio.to_thread(_prepare_resume, db, analysis_id, raw_zone_symbol)
+
+    parse_result = None
+    if inputs.document is not None:
+        try:
+            parse_result = await parse_mpzp_document(
+                inputs.document, [inputs.zone_symbol], build_ocr_provider()
+            )
+        except Exception as exc:
+            raise AnalysisResumeDocumentError(
+                "Nie udało się odczytać przypiętego dokumentu MPZP."
+            ) from exc
+
+    return await asyncio.to_thread(_apply_resume, db, analysis_id, inputs, parse_result)
+
+
+@dataclass(frozen=True)
+class _ResumeInputs:
+    """Dane odczytane przed parsowaniem przypiętego dokumentu."""
+
+    zone_symbol: str
+    pinned: AnalysisPendingDocument | None
+    plan_id: str | None
+    document_url: str | None
+    candidates: list[str]
+    paused_at: datetime
+    document: Any
+
+
+def _prepare_resume(db: Session, analysis_id: int, raw_zone_symbol: str) -> _ResumeInputs:
+    """Walidacja 404/409/422 i weryfikacja SHA przypiętego dokumentu (sync)."""
     analysis = db.get(Analysis, analysis_id)
     if analysis is None:
         raise AnalysisResumeNotFoundError
@@ -113,21 +149,38 @@ async def resume_analysis_with_zone(
     paused_at = analysis.analyzed_at
 
     document = None
-    parse_result = None
     if pinned is not None:
         if sha256(pinned.content).hexdigest() != pinned.content_sha256:
             raise AnalysisResumeDocumentError(
                 "Przypięty dokument nie zgadza się z zapisanym SHA-256."
             )
         document = pending_document_blob(pinned)
-        try:
-            parse_result = await parse_mpzp_document(
-                document, [zone_symbol], build_ocr_provider()
-            )
-        except Exception as exc:
-            raise AnalysisResumeDocumentError(
-                "Nie udało się odczytać przypiętego dokumentu MPZP."
-            ) from exc
+
+    return _ResumeInputs(
+        zone_symbol=zone_symbol,
+        pinned=pinned,
+        plan_id=plan_id,
+        document_url=document_url,
+        candidates=candidates,
+        paused_at=paused_at,
+        document=document,
+    )
+
+
+def _apply_resume(
+    db: Session,
+    analysis_id: int,
+    inputs: _ResumeInputs,
+    parse_result: Any,
+) -> AnalyzeResponse:
+    """Jeden transakcyjny zapis wznowienia i odtworzenie odpowiedzi (sync)."""
+    zone_symbol = inputs.zone_symbol
+    pinned = inputs.pinned
+    plan_id = inputs.plan_id
+    document_url = inputs.document_url
+    candidates = inputs.candidates
+    paused_at = inputs.paused_at
+    document = inputs.document
 
     try:
         analysis = _lock_waiting_analysis(db, analysis_id)

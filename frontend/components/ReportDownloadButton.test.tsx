@@ -52,6 +52,7 @@ describe("ReportDownloadButton", () => {
     render(
       <ReportDownloadButton
         analysisId={77}
+        accessToken="token-77"
         parcelIdentifier="122101_1.0001.77"
       />,
     );
@@ -62,7 +63,10 @@ describe("ReportDownloadButton", () => {
     await waitFor(() => expect(getAnalysisReportMock).toHaveBeenCalledOnce());
     expect(getAnalysisReportMock).toHaveBeenCalledWith(
       77,
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      expect.objectContaining({
+        accessToken: "token-77",
+        signal: expect.any(AbortSignal),
+      }),
     );
     expect(createObjectUrlMock).toHaveBeenCalledWith(pdf);
     expect(downloadedFilename).toBe("raport_analizy_77.pdf");

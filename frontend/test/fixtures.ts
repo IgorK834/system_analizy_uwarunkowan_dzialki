@@ -5,6 +5,7 @@ export function buildAnalyzeResponse(
 ): AnalyzeResponse {
   return {
     analysis_id: 42,
+    access_token: "token-42",
     status: "complete",
     analyzed_at: "2026-07-16T10:00:00Z",
     parcel: null,

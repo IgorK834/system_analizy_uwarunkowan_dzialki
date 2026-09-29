@@ -37,6 +37,7 @@ from shapely import from_wkt
 from shapely.geometry import box
 from sqlalchemy import delete, select
 
+from app.core.access_control import make_analysis_token
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -281,7 +282,7 @@ def test_bk204_waiting_preview_resume_partial_and_pdf() -> None:
         assert len(db.scalars(select(MpzpZone).where(MpzpZone.analysis_id == analysis_id)).all()) == 1
 
     # 7. Raport PDF z zapisanego snapshotu.
-    report = client.get(f"/report/{analysis_id}")
+    report = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
     assert report.status_code == 200
     text = _pdf_text(report.content)
     assert "symbol strefy podano ręcznie" in text.lower()
@@ -370,7 +371,7 @@ async def test_bk205_spatial_pairs_api_db_ui_pdf(tmp_path: Path) -> None:
         assert phrase not in lowered
     _write_evidence("bk-205/result.json", rebuilt.model_dump(mode="json"))
 
-    report = client.get(f"/report/{response.analysis_id}")
+    report = client.get(f"/report/{response.analysis_id}?access_token={make_analysis_token(response.analysis_id)}")
     assert report.status_code == 200
     pdf_text = _pdf_text(report.content)
     assert "Relacja MPZP–POG — analiza informacyjna" in pdf_text

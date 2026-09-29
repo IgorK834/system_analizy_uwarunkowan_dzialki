@@ -7,6 +7,8 @@ from typing import Annotated, Literal, cast
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.schemas.analyze import UtilitiesPreviewResult
 from app.services.kiut_coverage import check_kiut_coverage_wgs84
 from app.services.wms_tiles import (
@@ -19,6 +21,8 @@ from app.services.wms_tiles import (
 
 router = APIRouter(prefix="/api/v1/map", tags=["map-tiles"])
 PreviewSourceKey = Literal["mpzp", "pog", "kiut"]
+
+_coverage_limit = rate_limit(settings.rate_limit_coverage_per_minute)
 
 
 class PreviewSourceResponse(BaseModel):
@@ -96,6 +100,7 @@ async def get_preview_sources(
 @router.get(
     "/coverage/kiut",
     response_model=UtilitiesPreviewResult,
+    dependencies=[Depends(_coverage_limit)],
     description=(
         "Sprawdza przez publiczną warstwę WMS gesut, czy powiat publikuje "
         "podgląd uzbrojenia. Wynik nie jest analizą obecności ani odległości sieci."

@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import delete, select
 
+from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
@@ -114,7 +115,7 @@ def test_analysis_younger_than_default_ttl_is_cache_hit() -> None:
     with SessionLocal() as db:
         cached = get_cached_analysis(identifier, db)
 
-    assert DEFAULT_CACHE_MAX_AGE_DAYS == 30
+    assert DEFAULT_CACHE_MAX_AGE_DAYS == settings.analysis_cache_max_age_days
     assert cached is not None
     assert cached.id == analysis_id
     assert should_refresh_analysis(False, cached) is False

@@ -645,6 +645,8 @@ export type TerrainResult = {
 
 export type AnalyzeResponse = {
   analysis_id: number | null;
+  /** Token dostępu do raportu PDF i dokumentu analizy; null dla wyniku niezapisanego. */
+  access_token: string | null;
   status: string;
   analyzed_at: string;
   parcel: ParcelGeometryResponse | null;

@@ -6,6 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from app.core.access_control import require_analysis_token
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.db.session import get_db
 from app.schemas.analyze import ErrorResponse
 from app.services.report import (
@@ -16,6 +19,9 @@ from app.services.report import (
 
 router = APIRouter(prefix="/report", tags=["report"])
 
+# Generowanie PDF (WeasyPrint) jest kosztowne CPU-wo.
+_report_limit = rate_limit(settings.rate_limit_report_per_minute)
+
 
 @router.get(
     "/{analysis_id}",
@@ -24,15 +30,18 @@ router = APIRouter(prefix="/report", tags=["report"])
             "content": {"application/pdf": {}},
             "description": "Raport PDF zapisanej analizy.",
         },
+        403: {"model": ErrorResponse},
         404: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
+    dependencies=[Depends(_report_limit), Depends(require_analysis_token)],
     response_class=StreamingResponse,
     description=(
         "Generuje raport PDF dla zapisanej analizy. Raport jest budowany "
         "wyłącznie z zapisanego snapshotu — nie uruchamia ponownie analizy "
         "ani nie odpytuje usług zewnętrznych. Zwraca 404, gdy analiza o podanym "
-        "identyfikatorze nie istnieje."
+        "identyfikatorze nie istnieje. Wymaga tokenu ``access_token`` z odpowiedzi analizy."
     ),
 )
 def get_analysis_report(

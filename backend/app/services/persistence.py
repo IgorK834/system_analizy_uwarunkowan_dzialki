@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
+from typing import Any, Literal, cast
 
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import MultiPolygon
@@ -23,6 +24,7 @@ from shapely.geometry.base import BaseGeometry
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.access_control import make_analysis_token
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
@@ -463,6 +465,7 @@ def pending_document_blob(record: AnalysisPendingDocument) -> DocumentBlob:
 def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
     """Materiał pokazywany przed formularzem symbolu (BK-204)."""
     pinned = analysis.pending_document
+    document_status: Literal["pinned", "unavailable", "not_provided"]
     if pinned is not None:
         document_status = "pinned"
         document = ManualZoneSourceDocument(
@@ -473,7 +476,10 @@ def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
             size_bytes=pinned.size_bytes,
             fetched_at=pinned.fetched_at,
             document_version_id=pinned.document_version_id,
-            preview_path=f"/analyze/{analysis.id}/pending-document",
+            preview_path=(
+                f"/analyze/{analysis.id}/pending-document"
+                f"?access_token={make_analysis_token(analysis.id)}"
+            ),
         )
     else:
         document = None
@@ -937,7 +943,8 @@ def pog_result_from_record(
     # ``adopted`` bez zachowanego potwierdzenia źródłowego daje ``unknown``.
     return PogResult(
         schema_version="1.0",
-        coverage_status=pog.coverage_status,
+        # Kolumna DB to ``str``; Pydantic waliduje wartość względem Literal.
+        coverage_status=cast(Any, pog.coverage_status),
         status=pog.legacy_status or pog.status,
         planning_zone=pog.planning_zone,
         zone_type=pog.zone_type,
@@ -947,7 +954,8 @@ def pog_result_from_record(
         uchwala_nr=pog.uchwala_nr,
         uchwala_date=pog.uchwala_date,
         manual_review_required=pog.manual_review_required,
-        compatibility_assessment=pog.compatibility_assessment,
+        # JSONB dict jest walidowany przez Pydantic do CompatibilityAssessment.
+        compatibility_assessment=cast(Any, pog.compatibility_assessment),
         raw_attributes=pog.raw_attributes,
         ouz_intersection_area_sqm=area,
         ouz_intersection_pct=area_pct,

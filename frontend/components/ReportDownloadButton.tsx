@@ -6,11 +6,13 @@ import { getAnalysisReport } from "@/lib/api";
 
 type ReportDownloadButtonProps = {
   analysisId: number | null;
+  accessToken?: string | null;
   parcelIdentifier: string | null;
 };
 
 export function ReportDownloadButton({
   analysisId,
+  accessToken = null,
   parcelIdentifier,
 }: ReportDownloadButtonProps) {
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,7 @@ export function ReportDownloadButton({
 
     try {
       const pdf = await getAnalysisReport(analysisId, {
+        accessToken,
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;

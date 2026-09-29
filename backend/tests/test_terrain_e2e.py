@@ -30,6 +30,7 @@ from fastapi.testclient import TestClient
 from shapely.geometry import box
 from sqlalchemy import delete, select, text
 
+from app.core.access_control import make_analysis_token
 from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.main import app
@@ -46,6 +47,7 @@ from app.modules.analysis import composition
 from app.schemas.analyze import UtilitiesPreviewResult
 from app.schemas.source import SourceMetadata
 from app.services.initiation import ParcelLookupResult
+from app.services.kiut import KiutNetworkSection
 from app.services.mpzp import MpzpDiscoveryResult
 from app.services.persistence import build_analyze_response_from_analysis
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
@@ -107,6 +109,14 @@ def _source(name: str, url: str | None = None, **kwargs) -> SourceMetadata:
         confidence=kwargs.pop("confidence", 0.9),
         manual_review_required=kwargs.pop("manual", False),
         **kwargs,
+    )
+
+
+def _kiut_section() -> KiutNetworkSection:
+    """Sprawdzony brak sieci: sekcja KIUT z provenance zamiast pustej listy."""
+    return KiutNetworkSection(
+        features=[],
+        source_metadata=_source("KIUT", "https://kiut.example.test/wfs"),
     )
 
 
@@ -177,7 +187,7 @@ def _patches(identifier: str, parcel_wkt: str, discovery: MpzpDiscoveryResult, d
     """Wszystko poza NMT/WCS jest zamrożone; sekcja kontekstu i adapter NMT są realne."""
     return (
         patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier, parcel_wkt))),
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=_kiut_section())),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch("app.services.context.fetch_nature_protection_section", new=AsyncMock(return_value=[])),
         patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=discovery)),
@@ -295,7 +305,7 @@ def test_control_measurement_survives_api_db_cache_and_pdf(relief_enabled: FakeW
     assert len(relief_enabled.coverage_calls) == 1
 
     # PDF z zapisanego snapshotu.
-    report = client.get(f"/report/{analysis_id}")
+    report = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
     assert report.status_code == 200
     pdf_text = _pdf_text(report.content)
     for expected in (

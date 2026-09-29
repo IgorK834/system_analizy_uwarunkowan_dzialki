@@ -341,6 +341,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <ReportDownloadButton
         key={result.analysis_id ?? "unsaved-analysis"}
         analysisId={result.analysis_id}
+        accessToken={result.access_token}
         parcelIdentifier={result.parcel?.parcel_identifier ?? null}
       />
 

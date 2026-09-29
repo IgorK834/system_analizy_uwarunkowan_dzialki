@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -123,6 +123,28 @@ class Settings(BaseSettings):
     address_index_uug_fallback_enabled: bool = True
     # Oryginały importów są deduplikowane po SHA-256 i przechowywane lokalnie.
     # S3/MinIO pozostaje poza zakresem, dopóki projekt nie ma object storage.
+    # Podpis cache obejmuje kontrakt odpowiedzi i aktywne wydania danych, ale nie
+    # dane z usług na żywo (ISOK, GDOŚ, NMT). Dlatego wynik ``complete`` ma
+    # ograniczony TTL, a nie wieczny: po tym czasie analiza pobiera je ponownie.
+    analysis_cache_max_age_days: int = Field(default=7, ge=1)
+    # Sekret HMAC tokenów dostępu do raportów/dokumentów analiz. Ustaw stałą,
+    # losową wartość (np. ``openssl rand -hex 32``); pusta = losowy klucz procesu.
+    access_token_secret: str = ""
+    # Klucze operatorów endpointów administracyjnych: ``operator:klucz,...``.
+    # Puste = endpointy administracyjne wyłączone.
+    admin_api_keys: str = ""
+    # Limity zapytań na klienta w oknie 60 s dla kosztownych endpointów (każda
+    # analiza odpytuje zewnętrzne usługi GIS, raport uruchamia WeasyPrint).
+    # Limiter jest in-process: przy N workerach efektywny limit to N × wartość.
+    rate_limit_enabled: bool = True
+    rate_limit_analyze_per_minute: int = Field(default=20, ge=1)
+    rate_limit_refresh_per_minute: int = Field(default=5, ge=1)
+    rate_limit_report_per_minute: int = Field(default=30, ge=1)
+    rate_limit_coverage_per_minute: int = Field(default=60, ge=1)
+    # Za reverse proxy ``request.client`` to adres proxy. Włącz tylko, gdy przed
+    # aplikacją stoi zaufany proxy dopisujący ``X-Forwarded-For`` — używany jest
+    # ostatni wpis (dodany przez ten proxy), bo wcześniejsze poda sam klient.
+    rate_limit_trust_forwarded_for: bool = False
     import_artifact_storage_dir: str = "/tmp/dzialki-import-artifacts"
     import_area_tolerance_ratio: float = 0.02
     import_overlap_tolerance_sqm: float = 0.01

@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Annotated, Any, Literal, Self, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, computed_field, model_validator
+
+from app.core.access_control import make_analysis_token
 
 from app.schemas.source import (
     CatalogMetadataSource,
@@ -1664,6 +1666,19 @@ class AnalyzeResponse(BaseModel):
         description="Wszystkie zewnętrzne źródła danych użyte w analizie.",
         json_schema_extra={"example": []},
     )
+
+    @computed_field(  # type: ignore[prop-decorator]
+        description=(
+            "Token dostępu do raportu PDF i dokumentu tej analizy (parametr "
+            "``access_token``). Wyliczany z ``analysis_id``; None dla wyniku "
+            "niezapisanego."
+        ),
+    )
+    @property
+    def access_token(self) -> str | None:
+        if self.analysis_id is None:
+            return None
+        return make_analysis_token(self.analysis_id)
 
 
 class ErrorResponse(BaseModel):

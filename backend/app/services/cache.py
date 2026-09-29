@@ -11,6 +11,7 @@ from typing import Final
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.settings import settings
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
 from app.models.versioned import DataRelease, DataSource
@@ -23,7 +24,9 @@ from app.schemas.analyze import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CACHE_MAX_AGE_DAYS: Final[int] = 30
+# TTL wyniku ``complete``. Podpis cache nie widzi zmian w usługach na żywo
+# (ISOK, GDOŚ, NMT), więc TTL ogranicza wiek zamrożonych danych o ryzyku.
+DEFAULT_CACHE_MAX_AGE_DAYS: Final[int] = settings.analysis_cache_max_age_days
 DEFAULT_PARTIAL_CACHE_MAX_AGE_MINUTES: Final[int] = 15
 _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # Wersja kontraktu wchodzi do sygnatury cache: snapshot zapisany przed zmianą
@@ -56,7 +59,7 @@ def current_cache_signature(db: Session) -> tuple[str, list[int]]:
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest(), [item["release_id"] for item in releases]
+    return hashlib.sha256(encoded).hexdigest(), [int(row[1]) for row in rows]
 
 
 def get_cached_analysis(
@@ -71,7 +74,7 @@ def get_cached_analysis(
     ``Parcel.created_at`` i historyczne ``cache_valid_until`` nie wpływają na
     decyzję. Wynik ``complete`` ma dłuższy TTL, natomiast ``partial`` jest
     cache'owany tylko krótko: jego braki często wynikają z przejściowej awarii
-    źródła i nie mogą blokować ponownej próby przez 30 dni. Analiza nieudana
+    źródła i nie mogą blokować ponownej próby przez cały TTL wyniku ``complete``. Analiza nieudana
     albo oczekująca na symbol nie może wyglądać jak gotowy, aktualny wynik.
 
     Informacja ``cache_hit``/``cache_miss`` trafia do logu. Kontrakt

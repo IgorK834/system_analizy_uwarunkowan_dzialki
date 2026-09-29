@@ -124,7 +124,10 @@ describe("klient API", () => {
     fetchMock.mockResolvedValue(pdfResponse());
     const controller = new AbortController();
 
-    const report = await getAnalysisReport(42, { signal: controller.signal });
+    const report = await getAnalysisReport(42, {
+      accessToken: "tok/en+1",
+      signal: controller.signal,
+    });
 
     expect(report.type).toBe("application/pdf");
     expect(report.size).toBeGreaterThan(4);
@@ -132,13 +135,32 @@ describe("klient API", () => {
       "%PDF",
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/report/42",
+      "https://api.example.test/report/42?access_token=tok%2Fen%2B1",
       expect.objectContaining({
         method: "GET",
         headers: { Accept: "application/pdf" },
         signal: controller.signal,
       }),
     );
+  });
+
+  it("pobiera raport bez tokenu, gdy analiza go nie zwróciła", async () => {
+    fetchMock.mockResolvedValue(pdfResponse());
+
+    await getAnalysisReport(42);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/report/42",
+      expect.anything(),
+    );
+  });
+
+  it("mapuje 403 i 429 raportu na czytelne komunikaty", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "x" }, 403));
+    await expect(getAnalysisReport(42)).rejects.toThrow("Brak dostępu");
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "x" }, 429));
+    await expect(getAnalysisReport(42)).rejects.toThrow("Zbyt wiele żądań");
   });
 
   it("odrzuca udaną odpowiedź raportu, która nie jest PDF", async () => {

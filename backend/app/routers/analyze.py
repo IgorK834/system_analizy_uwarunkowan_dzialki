@@ -6,6 +6,9 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Respon
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.access_control import require_analysis_token
+from app.core.rate_limit import rate_limit, rate_limit_refresh
+from app.core.settings import settings
 from app.db.session import get_db
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
@@ -41,11 +44,18 @@ from app.services.uldk import (
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
 
+# Każda analiza odpytuje zewnętrzne usługi GIS; ``force_refresh`` omija cache, więc
+# ma osobny, ostrzejszy limit. Zapis pobrany z cache też liczy się do limitu ogólnego.
+_analyze_limit = rate_limit(settings.rate_limit_analyze_per_minute)
+_refresh_limit = rate_limit_refresh(settings.rate_limit_refresh_per_minute)
+_document_limit = rate_limit(settings.rate_limit_report_per_minute)
+
 
 @router.post(
     "",
     response_model=AnalyzeResponse,
-    responses={501: {"model": ErrorResponse}},
+    responses={501: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
+    dependencies=[Depends(_analyze_limit), Depends(_refresh_limit)],
     description=(
         "Uruchamia analizę uwarunkowań przestrzennych działki. Obsługuje trzy "
         "metody wejścia: kliknięcie w mapę, adres lub identyfikator działki ULDK. "
@@ -84,8 +94,10 @@ async def analyze(
         404: {"model": ErrorResponse},
         409: {"model": ErrorResponse},
         422: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
         503: {"model": ErrorResponse},
     },
+    dependencies=[Depends(_analyze_limit)],
     description=(
         "Wznawia analizę oczekującą na ręczne podanie symbolu strefy MPZP, "
         "odczytanego przez użytkownika z podglądu rastrowego, gdy gmina nie "
@@ -144,8 +156,11 @@ _UNTRUSTED_HTML_CSP = "sandbox; default-src 'none'"
     "/{analysis_id}/pending-document",
     responses={
         200: {"content": {"application/pdf": {}, "text/html": {}}},
+        403: {"model": ErrorResponse},
         404: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
     },
+    dependencies=[Depends(_document_limit), Depends(require_analysis_token)],
     description=(
         "Zwraca kopię dokumentu uchwały przypiętą przy wstrzymaniu analizy "
         "(BK-204) — dokładnie ten artefakt, z którego resume odczyta parametry. "

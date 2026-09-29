@@ -151,12 +151,15 @@ export async function getPreviewSources(
 
 export async function getAnalysisReport(
   analysisId: number,
-  options: { signal?: AbortSignal } = {},
+  options: { accessToken?: string | null; signal?: AbortSignal } = {},
 ): Promise<Blob> {
   let response: Response;
+  const query = options.accessToken
+    ? `?access_token=${encodeURIComponent(options.accessToken)}`
+    : "";
 
   try {
-    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}`, {
+    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}${query}`, {
       method: "GET",
       headers: { Accept: "application/pdf" },
       signal: options.signal,
@@ -182,7 +185,11 @@ export async function getAnalysisReport(
     const message =
       response.status === 404
         ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
-        : `Nie udało się wygenerować raportu PDF.${detail ? ` ${detail}` : ""}`;
+        : response.status === 403
+          ? "Brak dostępu do raportu tej analizy. Uruchom analizę ponownie."
+          : response.status === 429
+            ? "Zbyt wiele żądań raportu. Spróbuj ponownie za chwilę."
+            : `Nie udało się wygenerować raportu PDF.${detail ? ` ${detail}` : ""}`;
     throw new ApiError(response.status, message);
   }
 

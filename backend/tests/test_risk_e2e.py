@@ -25,6 +25,7 @@ import respx
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
+from app.core.access_control import make_analysis_token
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -39,6 +40,7 @@ from tests.test_terrain_e2e import (
     _binding_pog_discovery,
     _cleanup,
     _kiut,
+    _kiut_section,
     _lookup,
     _no_mpzp,
     _pog_vectors,
@@ -79,7 +81,7 @@ def _post(identifier: str, flood, nature) -> dict:
     no_coverage = TerrainNoCoverage(4.0, 676, _source("NMT", "https://nmt.example.test"), [])
     patches = (
         patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier, CONTROL.wkt))),
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=_kiut_section())),
         patch("app.services.context.fetch_terrain_extremes", new=AsyncMock(return_value=no_coverage)),
         patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=_no_mpzp())),
         patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock(return_value=_binding_pog_discovery())),
@@ -172,7 +174,7 @@ def test_structured_risks_survive_api_db_cache_pdf_and_feed_evaluator() -> None:
     assert cached["body"]["risk_sections"] == body["risk_sections"]
 
     # PDF z pól strukturalnych.
-    report = client.get(f"/report/{analysis_id}")
+    report = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
     assert report.status_code == 200
     text = _pdf_text(report.content)
     for expected in (
@@ -261,7 +263,7 @@ def test_unavailable_sources_are_visible_with_provenance_not_as_no_risk() -> Non
     for name in ("flood_intersection", "nature_intersection"):
         assert sum(metrics["binary_conditions"][name][key] for key in ("tp", "fp", "fn", "tn")) == 0
 
-    report = client.get(f"/report/{body['analysis_id']}")
+    report = client.get(f"/report/{body['analysis_id']}?access_token={make_analysis_token(body['analysis_id'])}")
     text = _pdf_text(report.content)
     assert "źródło niedostępne" in text
     assert "NIE oznacza braku ryzyka" in text
