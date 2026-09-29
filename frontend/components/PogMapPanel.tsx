@@ -1,129 +1,67 @@
 "use client";
 
+import { PogLayerStatus } from "@/components/PogLayerStatus";
 import { PogLegend } from "@/components/PogLegend";
 import { PogThemeSelector } from "@/components/PogThemeSelector";
-import type { PogReleaseState } from "@/hooks/usePogTileRelease";
 import type { PogStatusFilter } from "@/lib/pogLayers";
-import { legalStatusShort } from "@/lib/pogStatus";
-import {
-  POG_PARAMETER_BY_THEME,
-  type PogThemeId,
-  formatThemeValue,
-  themeById,
-} from "@/lib/pogThemes";
-import { zoneLabel } from "@/lib/pogZones";
-import type { PogZoneTileProperties } from "@/lib/types";
+import type { PogLayerStatus as PogLayerStatusValue } from "@/lib/pogLayerState";
+import type { PogThemeId } from "@/lib/pogThemes";
 
-const STATUS_FILTER_LABELS: Record<PogStatusFilter, string> = {
+export const STATUS_FILTER_LABELS: Record<PogStatusFilter, string> = {
   all: "Wszystkie akty",
   binding: "Tylko akty obowiązujące",
   non_binding: "Tylko projekty (niewiążące)",
 };
 
 export type PogMapPanelProps = {
-  releaseState: PogReleaseState;
+  layerStatus: PogLayerStatusValue;
   theme: PogThemeId;
   onThemeChange: (theme: PogThemeId) => void;
   statusFilter: PogStatusFilter;
   onStatusFilterChange: (filter: PogStatusFilter) => void;
-  selectedZone?: PogZoneTileProperties | null;
+  onRetry?: () => void;
+  retrying?: boolean;
 };
 
-function releaseMessage(state: PogReleaseState): string {
-  switch (state.status) {
-    case "loading":
-      return "Ładowanie lokalnego wydania planu ogólnego…";
-    case "no_release":
-      return (
-        "Brak lokalnego wydania POG w bazie — warstwa jest niedostępna. " +
-        "Nie oznacza to braku planu ogólnego w gminie."
-      );
-    case "error":
-      return "Warstwa POG jest chwilowo niedostępna; mapa podstawowa nadal działa.";
-    default:
-      return (
-        `Wydanie ${state.release.version_label} (#${state.release.release_id}), ` +
-        `styl ${state.release.style_version}. ${state.release.legal_note}`
-      );
-  }
-}
-
-function SelectedZone({ zone }: { zone: PogZoneTileProperties }) {
-  return (
-    <section className="pog-selected-zone" aria-label="Wybrana strefa z mapy POG">
-      <h3>Strefa pod kursorem (z kafla mapy)</h3>
-      <dl>
-        <dt>Strefa</dt>
-        <dd>
-          {zone.symbol ? `${zone.symbol}: ` : ""}
-          {zoneLabel(zone.zone_code)}
-        </dd>
-        {(Object.entries(POG_PARAMETER_BY_THEME) as Array<[Exclude<PogThemeId, "zones">, keyof PogZoneTileProperties]>).map(
-          ([themeId, property]) => {
-            const theme = themeById(themeId);
-            return (
-              <div key={property} className="pog-selected-zone-row">
-                <dt>{theme.label}</dt>
-                <dd data-testid={`pog-selected-${property}`}>
-                  {formatThemeValue(theme, zone[property] as number | undefined)}
-                </dd>
-              </div>
-            );
-          },
-        )}
-        <dt>Status aktu</dt>
-        <dd>{legalStatusShort(zone.legal_status)}</dd>
-        <dt>Wydanie danych</dt>
-        <dd>#{zone.data_release_id}</dd>
-      </dl>
-      {zone.parameters_informational && (
-        <p className="layer-toggle-status">Parametry mają charakter informacyjny (PDF/uzasadnienie).</p>
-      )}
-    </section>
-  );
-}
-
-/** Panel warstwy wektorowej POG: tryby, filtr statusu, legenda (BK-401–403). */
+/**
+ * Panel warstwy wektorowej POG: stan warstwy i plakietki statusu (BK-406) są
+ * zawsze widoczne w nagłówku; tryby (BK-402), jawna edycja danych (projekt /
+ * akt wiążący, obsługa klawiaturą) i legenda (BK-403) są w rozwijanej części.
+ */
 export function PogMapPanel({
-  releaseState,
+  layerStatus,
   theme,
   onThemeChange,
   statusFilter,
   onStatusFilterChange,
-  selectedZone = null,
+  onRetry,
+  retrying = false,
 }: PogMapPanelProps) {
-  const available = releaseState.status === "available";
-  const statuses = available ? releaseState.release.acts_by_legal_status : {};
-  const hasNonBinding = Boolean((statuses.project ?? 0) + (statuses.in_progress ?? 0));
+  const hasRelease = Boolean(layerStatus.release);
   return (
-    <details className="pog-map-panel" open aria-label="Plan ogólny gminy — mapa analityczna">
-      <summary>Plan ogólny — mapa analityczna (lokalne wydanie)</summary>
-      <p className="layer-toggle-status" role="status">
-        {releaseMessage(releaseState)}
-      </p>
-      {hasNonBinding && (
-        <p className="pog-non-binding-badge">
-          Wydanie zawiera projekty — dane niewiążące są oznaczone obrysem przerywanym.
-        </p>
-      )}
-      <PogThemeSelector value={theme} onChange={onThemeChange} disabled={!available} />
-      <fieldset className="pog-status-filter" disabled={!available}>
-        <legend>Status prawny</legend>
-        {(Object.keys(STATUS_FILTER_LABELS) as PogStatusFilter[]).map((filter) => (
-          <label key={filter}>
-            <input
-              type="radio"
-              name="pog-status-filter"
-              value={filter}
-              checked={statusFilter === filter}
-              onChange={() => onStatusFilterChange(filter)}
-            />
-            {STATUS_FILTER_LABELS[filter]}
-          </label>
-        ))}
-      </fieldset>
-      {available && <PogLegend theme={theme} />}
-      {selectedZone && <SelectedZone zone={selectedZone} />}
-    </details>
+    <section className="pog-map-panel" aria-label="Plan ogólny gminy — mapa analityczna">
+      <h2 className="pog-map-panel-title">Plan ogólny — mapa analityczna (lokalne wydanie)</h2>
+      <PogLayerStatus status={layerStatus} onRetry={onRetry} retrying={retrying} />
+      <details className="pog-map-panel-controls" open>
+        <summary>Tryb mapy, edycja danych i legenda</summary>
+        <PogThemeSelector value={theme} onChange={onThemeChange} disabled={!hasRelease} />
+        <fieldset className="pog-status-filter" disabled={!hasRelease}>
+          <legend>Edycja danych (status prawny aktu)</legend>
+          {(Object.keys(STATUS_FILTER_LABELS) as PogStatusFilter[]).map((filter) => (
+            <label key={filter}>
+              <input
+                type="radio"
+                name="pog-status-filter"
+                value={filter}
+                checked={statusFilter === filter}
+                onChange={() => onStatusFilterChange(filter)}
+              />
+              {STATUS_FILTER_LABELS[filter]}
+            </label>
+          ))}
+        </fieldset>
+        {hasRelease && <PogLegend theme={theme} />}
+      </details>
+    </section>
   );
 }
