@@ -321,6 +321,7 @@ _PATTERN_LABELS: dict[str, str] = {
     "cross-lines": "kratka pionowo-pozioma",
     "cross-hatch": "kratka ukośna",
     "diagonal-hatch": "ukośne kreskowanie (brak wartości)",
+    "horizontal-lines": "poziome kreskowanie (projekt — dane niewiążące)",
 }
 
 

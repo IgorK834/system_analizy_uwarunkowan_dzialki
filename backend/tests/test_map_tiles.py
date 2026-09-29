@@ -1366,3 +1366,117 @@ def test_reimport_of_identical_artifact_adds_no_versions_and_repairs_nothing_twi
     assert (again.stats["new"], again.stats["changed"], again.stats["unchanged"]) == (0, 0, 2)
     assert again.stats["carried_forward"] == 0
     assert version_count() == count
+
+
+# --- Inspektor obiektu POG (BK-404) i metadane pokrycia (BK-406) ----------------
+
+
+def _feature_url(release_id: int, feature_id: str) -> str:
+    return f"/api/v1/map/pog/releases/{release_id}/features/{feature_id}"
+
+
+@pytest.mark.integration
+def test_pog_feature_details_match_tile_and_analysis(
+    pog_session: _Session, pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    """Szczegóły, których kafel nie mieści, mają te same wartości co kafel i analiza."""
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    zone_shape = sopot_release["zone_shape"]
+    parcel = zone_shape.representative_point().buffer(3, cap_style="square")  # type: ignore[attr-defined]
+    analysed = _analyze_local_release(pog_session, parcel, "2264011")[0].zones[0]  # type: ignore[index]
+    layers = decode_tile(pog_client.get(_tile_url(release_id, x, y)).content)
+    tile_zone = next(
+        f for f in layers["zones"].features if f.properties["feature_id"] == analysed.id
+    )
+
+    # Identyfikator APP zawiera ukośniki — ścieżka przyjmuje go w całości.
+    response = pog_client.get(_feature_url(release_id, analysed.id))
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["schema"] == "pog-inspector/1" and body["tile_schema"] == "pog-mvt/1"
+    assert (body["feature_id"], body["layer"], body["zone_code"]) == (analysed.id, "zones", "SU")
+    assert body["feature_pk"] == tile_zone.id
+    for name in POG_PARAMETER_NAMES:
+        assert body["parameters"][name] == tile_zone.properties[name] == getattr(analysed, name)
+    assert body["label"] == analysed.label and body["symbol"] == analysed.symbol
+    assert [p["code"] for p in body["primary_profiles"]] == [
+        p.code for p in analysed.primary_profile
+    ]
+    assert all(p["label"] for p in body["primary_profiles"]), "nazwy profili spoza kafla"
+    act = body["act"]
+    assert act["act_id"] == "PL.ZIPPZP.10011/226401-POG/1POG"
+    assert act["legal_status"] == "binding"
+    assert act["legal_status_code"].endswith("legalForce")
+    assert act["teryt"] == "226401" and act["manual_review_required"] is False
+    assert body["release"]["release_id"] == release_id and body["release"]["is_active"] is True
+
+    etag = response.headers["etag"]
+    assert pog_client.get(
+        _feature_url(release_id, analysed.id), headers={"If-None-Match": etag}
+    ).status_code == 304
+    by_pk = pog_client.get(_feature_url(release_id, f"planning_feature:{tile_zone.id}"))
+    assert by_pk.status_code == 200 and by_pk.json()["feature_id"] == analysed.id
+
+
+@pytest.mark.integration
+def test_pog_feature_details_keep_null_and_describe_overlays(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    x, y = sopot_release["tile"]  # type: ignore[misc]
+    layers = decode_tile(pog_client.get(_tile_url(release_id, x, y)).content)
+    project = next(
+        f.properties for f in layers["zones"].features
+        if f.properties["legal_status"] == "project"
+    )
+    body = pog_client.get(_feature_url(release_id, project["feature_id"])).json()
+    assert body["parameters"]["max_building_height_m"] is None
+    assert body["parameters"]["min_biologically_active_pct"] is None
+    assert body["parameters"]["max_building_coverage_pct"] == 0.0
+    assert body["act"]["legal_status"] == "project"
+    assert body["act"]["manual_review_required"] is True
+
+    for layer_name in ("ouz", "downtown", "social_infrastructure_standard"):
+        overlay = layers[layer_name].features[0].properties
+        details = pog_client.get(_feature_url(release_id, overlay["feature_id"])).json()
+        assert details["layer"] == layer_name
+        assert details["zone_code"] is None and details["parameters"] == {}
+        assert details["primary_profiles"] == []
+        assert details["act"]["act_id"] == overlay["act_id"]
+
+
+@pytest.mark.integration
+def test_pog_feature_details_errors(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    missing = pog_client.get(_feature_url(release_id, "PL.ZIPPZP.0/nie-istnieje"))
+    assert missing.status_code == 404
+    assert "nie należy do wydania" in missing.json()["detail"]
+    assert pog_client.get(_feature_url(987654321, "x")).status_code == 404
+    for invalid in ("planning_feature:abc", "planning_feature:0", "x" * 501):
+        assert pog_client.get(_feature_url(release_id, invalid)).status_code == 422
+
+
+@pytest.mark.integration
+def test_pog_release_metadata_describes_coverage_per_act(
+    pog_client: _TestClient, sopot_release: dict[str, object]
+) -> None:
+    """BK-406: pokrycie z metadanych obszaru każdego aktu, nie z pustego kafla."""
+    release_id = int(sopot_release["release_id"])  # type: ignore[call-overload]
+    body = pog_client.get(f"/api/v1/map/pog/releases/{release_id}").json()
+    areas = {area["act_id"]: area for area in body["coverage_areas"]}
+    assert set(areas) == {
+        "PL.ZIPPZP.10011/226401-POG/1POG", "PL.ZIPPZP.99999/226401-POG/2POG"
+    }
+    sopot = areas["PL.ZIPPZP.10011/226401-POG/1POG"]
+    assert sopot["legal_status"] == "binding" and sopot["teryt"] == "226401"
+    assert sopot["is_complete"] is not None
+    project = areas["PL.ZIPPZP.99999/226401-POG/2POG"]
+    assert project["legal_status"] == "project" and project["has_boundary"] is True
+    for area in areas.values():
+        min_lon, min_lat, max_lon, max_lat = area["bounds"]
+        release_bounds = body["bounds"]
+        assert release_bounds[0] - 1e-6 <= min_lon < max_lon <= release_bounds[2] + 1e-3
+        assert release_bounds[1] - 1e-6 <= min_lat < max_lat <= release_bounds[3] + 1e-3
