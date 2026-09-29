@@ -10,14 +10,20 @@ import {
   applyPogTheme,
   layerFilter,
   overlayImageId,
+  pogInspectorHits,
   pogTileUrl,
-  pogZoneFromFeatures,
+  presentInspectLayers,
   removePogLayers,
 } from "@/lib/pogLayers";
 import { buildPatternImage, patternCovers, PATTERN_ALPHA, PATTERN_SIZE } from "@/lib/pogPatterns";
-import { themeById, themeFillColorExpression } from "@/lib/pogThemes";
+import { legalStatusPatternImage, themeById, themeFillColorExpression } from "@/lib/pogThemes";
 import { POG_NULL_STYLE } from "@/lib/pogZones";
-import { buildPogRelease, createPogMapMock } from "@/test/pogFixtures";
+import {
+  buildPogOverlayProperties,
+  buildPogRelease,
+  buildPogZoneProperties,
+  createPogMapMock,
+} from "@/test/pogFixtures";
 
 describe("pogLayers", () => {
   beforeEach(() => {
@@ -51,10 +57,17 @@ describe("pogLayers", () => {
       "source-layer": "ouz",
       paint: { "fill-pattern": overlayImageId("ouz") },
     });
+    // BK-406: projekt ma własny wzór (poza kryciem i obrysem przerywanym).
+    expect(layers.get(POG_LAYER_IDS.zonesStatusPattern)).toMatchObject({
+      "source-layer": "zones",
+      paint: { "fill-pattern": legalStatusPatternImage() },
+      filter: ["in", ["get", "legal_status"], ["literal", ["project", "in_progress"]]],
+    });
+    expect(legalStatusPatternImage()).toBe("pog-pattern-horizontal-lines");
 
     addPogLayers(map as unknown as maplibregl.Map, release, "height", "binding");
     expect(map.addSource).toHaveBeenCalledOnce();
-    expect(map.addImage).toHaveBeenCalledTimes(5);
+    expect(map.addImage).toHaveBeenCalledTimes(6);
   });
 
   it("bez zasięgu wydania nie ustawia bounds", () => {
@@ -111,27 +124,54 @@ describe("pogLayers", () => {
     expect(map.setFilter).toHaveBeenCalledTimes(POG_LAYER_ORDER.length);
   });
 
-  it("usuwa warstwy i źródło oraz czyta atrybuty klikniętej strefy", () => {
+  it("usuwa warstwy i źródło", () => {
     const { map, layers, sources } = createPogMapMock();
     addPogLayers(map as unknown as maplibregl.Map, buildPogRelease(), "zones", "all");
+    expect(presentInspectLayers(map as unknown as maplibregl.Map)).toEqual([
+      POG_LAYER_IDS.zonesFill,
+      POG_LAYER_IDS.ouzPattern,
+      POG_LAYER_IDS.downtownPattern,
+      POG_LAYER_IDS.socialPattern,
+    ]);
     removePogLayers(map as unknown as maplibregl.Map);
     expect(layers.size).toBe(0);
     expect(sources.size).toBe(0);
+    expect(presentInspectLayers(map as unknown as maplibregl.Map)).toEqual([]);
     removePogLayers(map as unknown as maplibregl.Map);
+  });
 
-    expect(pogZoneFromFeatures([])).toBeNull();
-    expect(
-      pogZoneFromFeatures([
-        { layer: { id: "other" }, properties: { zone_code: "SW" } },
-        { layer: { id: POG_LAYER_IDS.zonesFill }, properties: { zone_code: "SU" } },
-      ]),
-    ).toEqual({ zone_code: "SU" });
+  it("BK-404: trafienia inspektora bez duplikatów z sąsiednich kafli, strefy przed nakładkami", () => {
+    const su = buildPogZoneProperties();
+    const sj = buildPogZoneProperties({ feature_id: "PL/2POG-1SJ", zone_code: "SJ", legal_status: "project" });
+    const ouz = buildPogOverlayProperties();
+    const hits = pogInspectorHits([
+      { id: 201, layer: { id: POG_LAYER_IDS.ouzPattern }, properties: ouz },
+      { id: 101, layer: { id: POG_LAYER_IDS.zonesFill }, properties: su },
+      // Ta sama cecha z sąsiedniego kafla (ten sam identyfikator MVT).
+      { id: 101, layer: { id: POG_LAYER_IDS.zonesFill }, properties: su },
+      { id: 102, layer: { id: POG_LAYER_IDS.zonesFill }, properties: sj },
+      // Warstwy spoza inspektora i cechy bez atrybutów są pomijane.
+      { id: 101, layer: { id: POG_LAYER_IDS.zonesOutlineBinding }, properties: su },
+      { id: 999, layer: { id: "osm-tiles" }, properties: { name: "x" } },
+      { id: 5, layer: { id: POG_LAYER_IDS.downtownPattern }, properties: null },
+      // Bez identyfikatora MVT deduplikacja używa feature_id.
+      { layer: { id: POG_LAYER_IDS.socialPattern }, properties: { ...ouz, feature_id: "OSDIS-1" } },
+      { layer: { id: POG_LAYER_IDS.socialPattern }, properties: { ...ouz, feature_id: "OSDIS-1" } },
+    ]);
+    expect(hits.map((hit) => [hit.layer, hit.featurePk, hit.properties.feature_id])).toEqual([
+      ["zones", 101, su.feature_id],
+      ["zones", 102, sj.feature_id],
+      ["ouz", 201, ouz.feature_id],
+      ["social_infrastructure_standard", null, "OSDIS-1"],
+    ]);
+    expect(new Set(hits.map((hit) => hit.properties.data_release_id))).toEqual(new Set([42]));
+    expect(pogInspectorHits([])).toEqual([]);
   });
 });
 
 describe("pogPatterns", () => {
   it("generuje odrębne wzory w kolorze obrysu", () => {
-    const patterns = ["diagonal-hatch", "cross-hatch", "cross-lines", "dots"] as const;
+    const patterns = ["diagonal-hatch", "cross-hatch", "cross-lines", "dots", "horizontal-lines"] as const;
     const signatures = patterns.map((pattern) =>
       Array.from({ length: PATTERN_SIZE * PATTERN_SIZE }, (_, index) =>
         patternCovers(pattern, index % PATTERN_SIZE, Math.floor(index / PATTERN_SIZE)) ? 1 : 0,

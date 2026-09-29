@@ -12,6 +12,8 @@ import { getApiResourceUrl } from "@/lib/config";
 import { buildPatternImage } from "@/lib/pogPatterns";
 import {
   type PogThemeId,
+  legalStatusPatternFilter,
+  legalStatusPatternImage,
   patternImageId,
   themeById,
   themeFillColorExpression,
@@ -23,16 +25,23 @@ import {
   POG_UNKNOWN_ZONE,
   type PogOverlayId,
   legalStatusOpacityExpression,
+  legalStatusPattern,
   legalStatusStyle,
   overlayStyle,
 } from "@/lib/pogZones";
-import type { PogTileLayerName, PogTileRelease, PogZoneTileProperties } from "@/lib/types";
+import type {
+  PogFeatureLayer,
+  PogInspectorHit,
+  PogTileLayerName,
+  PogTileRelease,
+} from "@/lib/types";
 
 export const POG_SOURCE_ID = "pog-mvt-source";
 
 export const POG_LAYER_IDS = {
   zonesFill: "pog-zones-fill",
   zonesPattern: "pog-zones-pattern",
+  zonesStatusPattern: "pog-zones-status-pattern",
   zonesOutlineBinding: "pog-zones-outline-binding",
   zonesOutlineNonBinding: "pog-zones-outline-nonbinding",
   ouzPattern: "pog-ouz-pattern",
@@ -75,13 +84,31 @@ const OVERLAY_LAYERS: ReadonlyArray<{
 export const POG_LAYER_ORDER: readonly string[] = [
   POG_LAYER_IDS.zonesFill,
   POG_LAYER_IDS.zonesPattern,
+  POG_LAYER_IDS.zonesStatusPattern,
   POG_LAYER_IDS.zonesOutlineBinding,
   POG_LAYER_IDS.zonesOutlineNonBinding,
   ...OVERLAY_LAYERS.flatMap((item) => [item.pattern, item.line]),
   POG_LAYER_IDS.actBoundary,
 ];
 
-export const POG_INTERACTIVE_LAYERS: readonly string[] = [POG_LAYER_IDS.zonesFill];
+/**
+ * Warstwy odpytywane przez inspektor (BK-404) → warstwa logiczna obiektu.
+ * Wyłącznie warstwy wypełnień BK-401: strefy i OUZ/OZS/OSDIS (linie obrysu i
+ * wzory statusu pokazują te same cechy, więc nie są odpytywane).
+ */
+export const POG_INSPECT_LAYERS: Readonly<Record<string, PogFeatureLayer>> = {
+  [POG_LAYER_IDS.zonesFill]: "zones",
+  [POG_LAYER_IDS.ouzPattern]: "ouz",
+  [POG_LAYER_IDS.downtownPattern]: "downtown",
+  [POG_LAYER_IDS.socialPattern]: "social_infrastructure_standard",
+};
+
+const INSPECT_ORDER: readonly PogFeatureLayer[] = [
+  "zones",
+  "ouz",
+  "downtown",
+  "social_infrastructure_standard",
+];
 
 /** Pełny URL kafli z metadanych wydania — jedyne miejsce budowania źródła. */
 export function pogTileUrl(release: PogTileRelease): string {
@@ -99,6 +126,7 @@ function statusFilterExpression(filter: PogStatusFilter): unknown[] | null {
 const BASE_FILTERS: Readonly<Record<string, unknown[]>> = {
   [POG_LAYER_IDS.zonesOutlineBinding]: ["==", ["get", "legal_status"], "binding"],
   [POG_LAYER_IDS.zonesOutlineNonBinding]: ["!=", ["get", "legal_status"], "binding"],
+  [POG_LAYER_IDS.zonesStatusPattern]: legalStatusPatternFilter(),
 };
 
 /** Filtr warstwy: stały filtr warstwy (np. obrys projektu) ∧ filtr statusu. */
@@ -114,6 +142,7 @@ function ensureImages(map: maplibregl.Map): void {
   const images: Array<[string, ReturnType<typeof buildPatternImage>]> = [
     [patternImageId(POG_NULL_STYLE.pattern), buildPatternImage(POG_NULL_STYLE.pattern, POG_NULL_STYLE.outline)],
     [patternImageId(POG_UNKNOWN_ZONE.pattern), buildPatternImage(POG_UNKNOWN_ZONE.pattern, POG_UNKNOWN_ZONE.outline)],
+    [legalStatusPatternImage(), buildPatternImage(legalStatusPattern().pattern, legalStatusPattern().outline)],
     ...OVERLAY_LAYERS.map(({ overlay }): [string, ReturnType<typeof buildPatternImage>] => {
       const style = overlayStyle(overlay);
       return [overlayImageId(overlay), buildPatternImage(style.pattern ?? "diagonal-lines", style.outline)];
@@ -173,6 +202,15 @@ export function addPogLayers(
         "fill-pattern": themePatternImage(theme),
         "fill-opacity": themePatternOpacityExpression(theme) as never,
       },
+    },
+    {
+      // BK-406: projekt ma oprócz słabszego krycia i obrysu przerywanego także
+      // własny wzór — rozróżnienie nie zależy wyłącznie od percepcji barwy.
+      id: POG_LAYER_IDS.zonesStatusPattern,
+      type: "fill",
+      source: POG_SOURCE_ID,
+      "source-layer": "zones",
+      paint: { "fill-pattern": legalStatusPatternImage() },
     },
     {
       id: POG_LAYER_IDS.zonesOutlineBinding,
@@ -258,10 +296,36 @@ export function removePogLayers(map: maplibregl.Map): void {
   if (map.getSource(POG_SOURCE_ID)) map.removeSource(POG_SOURCE_ID);
 }
 
-/** Atrybuty klikniętej strefy z kafla (te same pola co wynik analizy). */
-export function pogZoneFromFeatures(
-  features: ReadonlyArray<{ layer?: { id?: string }; properties?: Record<string, unknown> | null }>,
-): PogZoneTileProperties | null {
-  const feature = features.find((item) => item.layer?.id === POG_LAYER_IDS.zonesFill);
-  return (feature?.properties as PogZoneTileProperties | undefined) ?? null;
+type RenderedFeature = {
+  id?: string | number;
+  layer?: { id?: string };
+  properties?: Record<string, unknown> | null;
+};
+
+/**
+ * Trafienia inspektora z `queryRenderedFeatures` (BK-404): tylko warstwy POG,
+ * bez duplikatów tej samej cechy z sąsiednich kafli (ten sam identyfikator MVT
+ * = klucz wiersza wydania, a zapasowo `feature_id`), strefy przed nakładkami.
+ */
+export function pogInspectorHits(features: ReadonlyArray<RenderedFeature>): PogInspectorHit[] {
+  const hits = new Map<string, PogInspectorHit>();
+  for (const feature of features) {
+    const layer = feature.layer?.id ? POG_INSPECT_LAYERS[feature.layer.id] : undefined;
+    const properties = feature.properties;
+    if (!layer || !properties) continue;
+    const featurePk =
+      typeof feature.id === "number" && Number.isFinite(feature.id) ? feature.id : null;
+    const identity = featurePk ?? String(properties.feature_id ?? "");
+    const key = `${layer}:${properties.data_release_id ?? ""}:${identity}`;
+    if (hits.has(key)) continue;
+    hits.set(key, { key, layer, featurePk, properties } as PogInspectorHit);
+  }
+  return [...hits.values()].sort(
+    (a, b) => INSPECT_ORDER.indexOf(a.layer) - INSPECT_ORDER.indexOf(b.layer),
+  );
+}
+
+/** Identyfikatory warstw odpytywanych przez inspektor, które są na mapie. */
+export function presentInspectLayers(map: Pick<maplibregl.Map, "getLayer">): string[] {
+  return Object.keys(POG_INSPECT_LAYERS).filter((layerId) => Boolean(map.getLayer(layerId)));
 }

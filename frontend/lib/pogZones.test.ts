@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import rawPresentation from "../../shared/pog-presentation.json";
 import {
   POG_LEGAL_STATUS_STYLES,
+  POG_NON_BINDING_BADGE,
+  POG_NULL_STYLE,
   POG_OVERLAYS,
+  POG_PATTERNED_LEGAL_STATUSES,
   POG_PRESENTATION,
   POG_STYLE_VERSION,
   POG_UNKNOWN_ZONE,
@@ -13,8 +16,10 @@ import {
   type PogPresentationConfig,
   isKnownZoneCode,
   legalStatusOpacityExpression,
+  legalStatusPattern,
   legalStatusStyle,
   overlayStyle,
+  releaseStatusBadges,
   validatePresentation,
   zoneFillColorExpression,
   zoneLabel,
@@ -83,6 +88,28 @@ describe("pogZones — kompletna lista stref z artefaktu", () => {
     expect(POG_LEGAL_STATUS_STYLES).toHaveLength(5);
   });
 
+  it("BK-406: projekt = kolor + wzór + tekst; plakietki statusów obecnych w wydaniu", () => {
+    const project = legalStatusStyle("project");
+    expect(project.pattern).toBe("horizontal-lines");
+    expect(project.badge).toBe("projekt / dane niewiążące");
+    expect(POG_NON_BINDING_BADGE).toBe("projekt / dane niewiążące");
+    expect(legalStatusStyle("binding")).toMatchObject({ pattern: null, badge: null });
+    expect(POG_PATTERNED_LEGAL_STATUSES).toEqual(["project", "in_progress"]);
+    expect(legalStatusPattern()).toEqual({ pattern: "horizontal-lines", outline: "#3d3d3d" });
+    // Wzór projektu nie udaje nakładki ani „brak wartości”.
+    const taken = [POG_NULL_STYLE.pattern, POG_UNKNOWN_ZONE.pattern, ...POG_OVERLAYS.map((item) => item.pattern)];
+    expect(taken).not.toContain(project.pattern);
+
+    expect(releaseStatusBadges({ binding: 3 })).toEqual([]);
+    expect(releaseStatusBadges({ binding: 1, project: 1, in_progress: 2, unknown: 1, superseded: 0 })).toEqual([
+      { status: "project", badge: "projekt / dane niewiążące" },
+      { status: "unknown", badge: "status nieustalony" },
+    ]);
+    for (const style of POG_LEGAL_STATUS_STYLES) {
+      expect(`${style.badge ?? ""} ${style.description}`).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+    }
+  });
+
   it("walidacja odrzuca rozjechany artefakt", () => {
     expect(validatePresentation(clone())).toEqual(POG_PRESENTATION);
 
@@ -117,5 +144,13 @@ describe("pogZones — kompletna lista stref z artefaktu", () => {
     const schema = clone();
     schema.schema = "inny/2";
     expect(() => validatePresentation(schema)).toThrow(/schemat/);
+
+    const unmarked = clone();
+    unmarked.legal_statuses.find((item) => item.status === "project")!.pattern = null;
+    expect(() => validatePresentation(unmarked)).toThrow(/bez wzoru i plakietki/);
+
+    const bindingBadge = clone();
+    bindingBadge.legal_statuses.find((item) => item.status === "binding")!.badge = "projekt";
+    expect(() => validatePresentation(bindingBadge)).toThrow(/obowiązujący ze wzorem/);
   });
 });

@@ -21,6 +21,8 @@ import {
   type PogPresentationConfig,
   type PogThemeClassConfig,
   type PogThemeConfig,
+  POG_PATTERNED_LEGAL_STATUSES,
+  legalStatusPattern,
   zoneFillColorExpression,
 } from "@/lib/pogZones";
 // Progi, jednostki i opisy skali czytamy z tego samego artefaktu co strefy;
@@ -149,6 +151,20 @@ export const POG_PATTERN_IMAGE_PREFIX = "pog-pattern-";
 
 export function patternImageId(pattern: PogPatternId): string {
   return `${POG_PATTERN_IMAGE_PREFIX}${pattern}`;
+}
+
+/**
+ * BK-406: obraz wzoru danych niewiążących (projekt / akt w trakcie). Jest
+ * niezależny od trybu tematycznego — kolor mówi o wartości parametru, a wzór i
+ * plakietka o statusie prawnym, więc oba przekazy nie konkurują ze sobą.
+ */
+export function legalStatusPatternImage(): string {
+  return patternImageId(legalStatusPattern().pattern);
+}
+
+/** Filtr cech rysowanych wzorem danych niewiążących. */
+export function legalStatusPatternFilter(): unknown[] {
+  return ["in", ["get", "legal_status"], ["literal", [...POG_PATTERNED_LEGAL_STATUSES]]];
 }
 
 /** Obraz wzoru warstwy „brak wartości / kod nierozpoznany” dla trybu. */

@@ -16,7 +16,8 @@ export type PogPatternId =
   | "cross-hatch"
   | "diagonal-lines"
   | "dots"
-  | "cross-lines";
+  | "cross-lines"
+  | "horizontal-lines";
 
 export type PogZoneStyle = {
   code: string;
@@ -58,6 +59,10 @@ export type PogLegalStatusStyle = {
   label: string;
   fill_opacity: number;
   line_dasharray: number[] | null;
+  /** BK-406: wzór danych niewiążących — informacja nie zależy tylko od barwy. */
+  pattern: PogPatternId | null;
+  /** Stały tekst plakietki (np. „projekt / dane niewiążące”). */
+  badge: string | null;
   description: string;
 };
 
@@ -139,6 +144,15 @@ export function validatePresentation(config: PogPresentationConfig): PogPresenta
       errors.push(`temat ${theme.id} ma zamkniętą ostatnią klasę`);
     }
   }
+  for (const status of config.legal_statuses) {
+    const nonBinding = status.status === "project" || status.status === "in_progress";
+    if (nonBinding && !(status.pattern && status.badge)) {
+      errors.push(`status ${status.status} bez wzoru i plakietki`);
+    }
+    if (status.status === "binding" && (status.pattern || status.badge)) {
+      errors.push("akt obowiązujący ze wzorem lub plakietką projektu");
+    }
+  }
   if (errors.length > 0) {
     throw new Error(`Niepoprawny artefakt prezentacji POG: ${errors.join("; ")}.`);
   }
@@ -213,4 +227,37 @@ export function legalStatusOpacityExpression(): unknown[] {
     ),
     unknown.fill_opacity,
   ];
+}
+
+/** Statusy prawne rysowane dodatkowym wzorem (projekt, akt w trakcie). */
+export const POG_PATTERNED_LEGAL_STATUSES: readonly PogLegalStatus[] = POG_LEGAL_STATUS_STYLES.filter(
+  (item) => item.pattern !== null,
+).map((item) => item.status);
+
+/** Wzór danych niewiążących (jeden dla wszystkich statusów z wzorem). */
+export function legalStatusPattern(): { pattern: PogPatternId; outline: string } {
+  const style = POG_LEGAL_STATUS_STYLES.find((item) => item.pattern !== null);
+  if (!style?.pattern) throw new Error("Artefakt POG nie definiuje wzoru danych niewiążących.");
+  return { pattern: style.pattern, outline: "#3d3d3d" };
+}
+
+/** Stała plakietka projektu: „projekt / dane niewiążące” z artefaktu. */
+export const POG_NON_BINDING_BADGE: string = legalStatusStyle("project").badge ?? "";
+
+/**
+ * Plakietki statusów obecnych w wydaniu (projekt, nieustalony, nieaktualny).
+ * Akt obowiązujący nie ma plakietki — ma osobny, czytelny opis w legendzie.
+ */
+export function releaseStatusBadges(
+  actsByLegalStatus: Partial<Record<PogLegalStatus, number>>,
+): Array<{ status: PogLegalStatus; badge: string }> {
+  const seen = new Set<string>();
+  const badges: Array<{ status: PogLegalStatus; badge: string }> = [];
+  for (const style of POG_LEGAL_STATUS_STYLES) {
+    if (!style.badge || !(actsByLegalStatus[style.status] ?? 0)) continue;
+    if (seen.has(style.badge)) continue;
+    seen.add(style.badge);
+    badges.push({ status: style.status, badge: style.badge });
+  }
+  return badges;
 }

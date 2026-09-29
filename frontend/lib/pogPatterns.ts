@@ -1,7 +1,8 @@
 /**
  * Wzory wypełnień POG jako obrazy RGBA dla `map.addImage` (BK-403).
  *
- * OUZ, OZS, OSDIS, „brak wartości” i „strefa nierozpoznana” różnią się wzorem,
+ * OUZ, OZS, OSDIS, „brak wartości”, „strefa nierozpoznana” i dane niewiążące
+ * (projekt — BK-406) różnią się wzorem,
  * a nie wyłącznie barwą. Obrazy są generowane deterministycznie z pikseli (bez
  * canvas), więc działają w przeglądarce i w testach jsdom tak samo.
  */
@@ -38,6 +39,8 @@ export function patternCovers(pattern: PogPatternId, x: number, y: number): bool
       return (x + y) % (size / 2) === 0 || (x - y + size) % (size / 2) === 0;
     case "cross-lines":
       return x % (size / 2) === 0 || y % (size / 2) === 0;
+    case "horizontal-lines":
+      return y % (size / 3) === 0;
     case "dots": {
       const center = size / 4;
       const dx = (x % (size / 2)) - center;
