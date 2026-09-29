@@ -25,12 +25,17 @@ from sqlalchemy.orm import Session
 
 from app.modules.planning.application.pog_tiles import PogTileCache, PogTileRepository
 from app.modules.planning.domain.pog_features import RAW_ATTRIBUTE_KEYS
-from app.shared.planning_status import LEGAL_STATUS_ALIASES, LEGAL_STATUS_VALUES
+from app.shared.planning_status import (
+    LEGAL_STATUS_ALIASES,
+    LEGAL_STATUS_VALUES,
+    canonical_legal_status,
+)
 from app.modules.planning.domain.pog_tiles import (
     FEATURE_TYPE_LAYERS,
     MVT_BUFFER,
     MVT_EXTENT,
     POG_TILE_LAYERS,
+    PogCoverageArea,
     PogReleaseInfo,
     PogTile,
     PogTileCandidate,
@@ -226,6 +231,43 @@ _RELEASE_BOUNDS_SQL: Final[str] = """
     FROM extent WHERE g IS NOT NULL
 """
 
+# Zasięg danych każdego aktu (granica + obiekty) w 4326 oraz kompletność z
+# gotowego agregatu BK-405. Koperta jest segmentyzowana przed transformacją,
+# żeby łuk odwzorowania nie ścinał narożników zasięgu.
+_RELEASE_COVERAGE_SQL: Final[str] = """
+    WITH versions AS (
+        SELECT pav.id, pa.act_identifier, pa.teryt, pav.legal_status
+        FROM planning_act_versions pav
+        JOIN planning_acts pa ON pa.id = pav.planning_act_id
+        WHERE pav.data_release_id = :release_id AND pa.kind = 'pog'
+    ), geoms AS (
+        SELECT pf.planning_act_version_id AS version_id, pf.geometry AS geom
+        FROM planning_features pf JOIN versions v ON v.id = pf.planning_act_version_id
+        UNION ALL
+        SELECT pb.planning_act_version_id, pb.geometry
+        FROM plan_boundaries pb JOIN versions v ON v.id = pb.planning_act_version_id
+    ), extents AS (
+        SELECT version_id,
+               ST_Transform(
+                   ST_Segmentize(ST_SetSRID(ST_Extent(geom)::geometry, 2180), 500), 4326
+               ) AS g
+        FROM geoms GROUP BY version_id
+    )
+    SELECT v.act_identifier, v.teryt, v.legal_status,
+           ST_XMin(e.g) AS min_lon, ST_YMin(e.g) AS min_lat,
+           ST_XMax(e.g) AS max_lon, ST_YMax(e.g) AS max_lat,
+           EXISTS (
+               SELECT 1 FROM plan_boundaries pb WHERE pb.planning_act_version_id = v.id
+           ) AS has_boundary,
+           s.is_complete, s.incomplete_reasons
+    FROM versions v
+    LEFT JOIN extents e ON e.version_id = v.id
+    LEFT JOIN pog_area_summaries s
+           ON s.planning_act_version_id = v.id AND s.scope = 'act'
+          AND s.data_release_id = :release_id
+    ORDER BY v.act_identifier, v.id
+"""
+
 _ACTIVE_RELEASE_SQL: Final[str] = """
     SELECT dr.id
     FROM data_releases dr
@@ -285,6 +327,31 @@ class SqlAlchemyPogTileRepository(PogTileRepository):
             if bounds_row is not None
             else None
         )
+        coverage = tuple(
+            PogCoverageArea(
+                act_id=str(item["act_identifier"]),
+                teryt=item["teryt"],
+                legal_status=canonical_legal_status(item["legal_status"]),
+                bounds=(
+                    (
+                        float(item["min_lon"]),
+                        float(item["min_lat"]),
+                        float(item["max_lon"]),
+                        float(item["max_lat"]),
+                    )
+                    if item["min_lon"] is not None
+                    else None
+                ),
+                has_boundary=bool(item["has_boundary"]),
+                is_complete=(
+                    bool(item["is_complete"]) if item["is_complete"] is not None else None
+                ),
+                incomplete_reasons=tuple(str(r) for r in (item["incomplete_reasons"] or [])),
+            )
+            for item in self._session.execute(
+                text(_RELEASE_COVERAGE_SQL), {"release_id": release_id}
+            ).mappings()
+        )
         return PogReleaseInfo(
             release_id=int(row["id"]),
             source_id=str(row["source_id"]),
@@ -294,6 +361,7 @@ class SqlAlchemyPogTileRepository(PogTileRepository):
             artifact_sha256=row["artifact_sha256"],
             bounds=bounds,
             acts_by_legal_status=statuses,
+            coverage_areas=coverage,
         )
 
     def active_release_id(self, source_id: str) -> int | None:

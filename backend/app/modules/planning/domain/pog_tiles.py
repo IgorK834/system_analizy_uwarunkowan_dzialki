@@ -215,6 +215,26 @@ class PogTile:
 
 
 @dataclass(frozen=True)
+class PogCoverageArea:
+    """Zasięg danych jednego aktu wydania (BK-406).
+
+    Pokrycie mapy jest oceniane z tych metadanych obszaru, a nie z pustego
+    kafla: widok poza wszystkimi zasięgami to ``no_coverage`` (brak danych w
+    wydaniu — nie brak planu), a akt bez granicy albo z niepełnym agregatem
+    stref (BK-405) daje stan ``partial``.
+    """
+
+    act_id: str
+    teryt: str | None
+    legal_status: str
+    bounds: tuple[float, float, float, float] | None
+    has_boundary: bool
+    # ``None`` — agregat nie został policzony (wydanie sprzed BK-405).
+    is_complete: bool | None
+    incomplete_reasons: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class PogReleaseInfo:
     """Metadane wydania POG, do którego przypięte są kafle."""
 
@@ -226,3 +246,4 @@ class PogReleaseInfo:
     artifact_sha256: str | None
     bounds: tuple[float, float, float, float] | None
     acts_by_legal_status: Mapping[str, int]
+    coverage_areas: tuple[PogCoverageArea, ...] = ()
