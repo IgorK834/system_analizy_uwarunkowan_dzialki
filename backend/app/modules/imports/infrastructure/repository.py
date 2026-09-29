@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 from datetime import date, datetime, timezone
@@ -424,7 +425,7 @@ class SqlAlchemyImportRepository:
             )
             run = self._run_row(source.id, data_release.id, artifact_hash)
             now = datetime.now(timezone.utc)
-            new = changed = unchanged = 0
+            new = changed = unchanged = carried_forward = 0
             for act_record, snapshot_hash in acts:
                 act = self.session.execute(
                     select(PlanningAct).where(
@@ -456,16 +457,24 @@ class SqlAlchemyImportRepository:
                     )
                 ).scalar_one_or_none()
                 if existing_in_release is not None:
+                    # Ponowny import identycznego artefaktu (to samo wydanie):
+                    # wersja już należy do tego wydania — nic nie dopisujemy.
                     unchanged += 1
                     continue
                 if latest is not None and latest.content_hash == snapshot_hash:
+                    # Treść aktu bez zmian, ale wydanie jest inne: wydanie musi
+                    # być kompletnym, odtwarzalnym snapshotem wszystkich aktów
+                    # paczki (ADR-008), więc akt dostaje w nim własną wersję o
+                    # tym samym content_hash. Poprzednia wersja zostaje w swoim
+                    # wydaniu (audyt, rollback), ale przestaje być aktywna.
                     unchanged += 1
-                    continue
-                if latest is not None:
-                    latest.valid_to = now
+                    carried_forward += 1
+                elif latest is not None:
                     changed += 1
                 else:
                     new += 1
+                if latest is not None:
+                    latest.valid_to = now
                 # Akt niewiążący (projekt/w trakcie) wymaga ręcznej weryfikacji i
                 # nigdy nie jest źródłem obowiązujących ustaleń — status prawny
                 # jest przenoszony bez zmian.
@@ -575,6 +584,7 @@ class SqlAlchemyImportRepository:
                 "new": new,
                 "changed": changed,
                 "unchanged": unchanged,
+                "carried_forward": carried_forward,
             }
             run.status = "succeeded"
             run.stats = final_stats
@@ -586,7 +596,7 @@ class SqlAlchemyImportRepository:
             run.finished_at = now
             self.session.flush()
             return PogPublicationResult(
-                new, changed, unchanged, run.id, data_release.id
+                new, changed, unchanged, run.id, data_release.id, carried_forward
             )
 
     def _source_row(self) -> DataSource:
@@ -1153,6 +1163,10 @@ def find_pog_intersections(
 
 
 def _jsonable(value: Any) -> Any:
+    # Profile funkcjonalne i inne rekordy domenowe są dataclassami — zapisujemy
+    # je jako obiekty JSON (kod, etykieta, źródło słownika), a nie jako ``repr``.
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return _jsonable(dataclasses.asdict(value))
     if isinstance(value, dict):
         return {str(key): _jsonable(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):

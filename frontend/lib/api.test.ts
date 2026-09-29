@@ -4,12 +4,14 @@ import {
   analyzeParcel,
   ApiError,
   getAddressSuggestions,
+  getActivePogTileRelease,
   getAnalysisReport,
   getPreviewSources,
   resumeAnalysis,
   searchAddresses,
 } from "@/lib/api";
 import { buildAnalyzeResponse } from "@/test/fixtures";
+import { buildPogRelease } from "@/test/pogFixtures";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -118,6 +120,22 @@ describe("klient API", () => {
       "https://api.example.test/api/v1/map/preview-sources",
       expect.objectContaining({ method: "GET", signal: controller.signal }),
     );
+  });
+
+  it("pobiera metadane aktywnego wydania POG, a 404 zamienia na brak wydania", async () => {
+    const release = buildPogRelease();
+    fetchMock.mockResolvedValueOnce(jsonResponse(release));
+    await expect(getActivePogTileRelease()).resolves.toEqual(release);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/v1/map/pog/releases/active",
+      expect.objectContaining({ method: "GET" }),
+    );
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Brak aktywnego wydania." }, 404));
+    await expect(getActivePogTileRelease()).resolves.toBeNull();
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "awaria" }, 500));
+    await expect(getActivePogTileRelease()).rejects.toMatchObject({ status: 500 });
   });
 
   it("pobiera i weryfikuje raport PDF zapisanej analizy", async () => {

@@ -7,26 +7,40 @@ rozstrzyga :func:`app.shared.planning_status.resolve_pog_status`, a
 
 from __future__ import annotations
 
-import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Final, Literal, cast
+from typing import Final, Literal, cast, overload
 
-from shapely import make_valid
+from shapely import from_wkt, make_valid
 from shapely.geometry import MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from app.core.planning_compatibility import PogPlanningZoneType
+from app.core.pog_presentation import PogPresentationError, style_snapshot
+from app.modules.planning.domain.pog_features import (
+    FEATURE_ID_KEYS,
+    LABEL_KEYS,
+    SYMBOL_KEYS,
+    ZONE_ATTRIBUTE_KEYS,
+    extract_planning_parameters as _extract_planning_parameters,
+    first_string_attribute as _first_string_attribute,
+    float_parameter as _float_parameter,
+    normalize_zone_code,
+    parameters_are_informational as _parameters_are_from_pdf,
+    profiles_from_attributes as _profiles_from_attributes,
+)
 from app.schemas.analyze import (
     PogActResult,
     PogAreaResult,
+    PogPresentationStyle,
     PogProfileResult,
     PogResult,
     PogStatusEvidence,
     PogZoneResult,
 )
 from app.schemas.source import SourceMetadata, WarningMessage
+from app.services.geojson import analysis_layer_geometry_to_geojson
 from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.shared.planning_status import PogStatusDecision, StatusEvidence
@@ -74,6 +88,7 @@ class PogAreaIntersection:
     touches_boundary: bool
     feature_version: str | None = None
     gml_url: str | None = None
+    intersection_wkt: str | None = None
 
 
 @dataclass(frozen=True)
@@ -99,75 +114,6 @@ class PogAnalysisResult:
     downtown_areas: list[PogAreaIntersection] = field(default_factory=list)
     social_infrastructure_standard_areas: list[PogAreaIntersection] = field(default_factory=list)
     act_metadata: dict[str, object] = field(default_factory=dict)
-
-
-_ZONE_ATTRIBUTE_KEYS: Final[tuple[str, ...]] = (
-    "zone_type",
-    "typ_strefy",
-    "kod_strefy",
-    "symbol",
-    "oznaczenie",
-)
-_PARAMETER_SOURCE_KEYS: Final[tuple[str, ...]] = (
-    "parameter_source",
-    "parameters_source",
-    "zrodlo_parametrow",
-    "źródło_parametrów",
-)
-_PLANNING_PARAMETER_KEYS: Final[dict[str, tuple[str, ...]]] = {
-    "max_overground_floor_area_ratio": (
-        "max_overground_floor_area_ratio",
-        "maksymalna_nadziemna_intensywnosc_zabudowy",
-        "maksymalna_nadziemna_intensywność_zabudowy",
-    ),
-    "max_building_height_m": (
-        "max_building_height_m",
-        "maksymalna_wysokosc_zabudowy",
-        "maksymalna_wysokość_zabudowy",
-    ),
-    "max_building_coverage_pct": (
-        "max_building_coverage_pct",
-        "maksymalny_udzial_powierzchni_zabudowy",
-        "maksymalny_udział_powierzchni_zabudowy",
-    ),
-    "min_biologically_active_pct": (
-        "min_biologically_active_pct",
-        "minimalny_udzial_powierzchni_biologicznie_czynnej",
-        "minimalny_udział_powierzchni_biologicznie_czynnej",
-    ),
-}
-
-# Pełne polskie nazwy są akceptowane wyłącznie jako jawne aliasy ustawowych
-# kodów. Nieznany opis nie jest dopasowywany heurystycznie do "najbliższej"
-# strefy, lecz pozostaje UNKNOWN z ostrzeżeniem.
-_ZONE_ALIASES: Final[dict[str, PogPlanningZoneType]] = {
-    "sw": PogPlanningZoneType.MULTIFUNCTIONAL_MULTI_FAMILY,
-    "strefawielofunkcyjnazzabudowamieszkaniowawielorodzinna": PogPlanningZoneType.MULTIFUNCTIONAL_MULTI_FAMILY,
-    "sj": PogPlanningZoneType.MULTIFUNCTIONAL_SINGLE_FAMILY,
-    "strefawielofunkcyjnazzabudowamieszkaniowajednorodzinna": PogPlanningZoneType.MULTIFUNCTIONAL_SINGLE_FAMILY,
-    "sz": PogPlanningZoneType.MULTIFUNCTIONAL_FARMSTEAD,
-    "strefawielofunkcyjnazzabudowazagrodowa": PogPlanningZoneType.MULTIFUNCTIONAL_FARMSTEAD,
-    "su": PogPlanningZoneType.SERVICES,
-    "strefauslugowa": PogPlanningZoneType.SERVICES,
-    "sh": PogPlanningZoneType.LARGE_FORMAT_RETAIL,
-    "strefahandluwielkopowierzchniowego": PogPlanningZoneType.LARGE_FORMAT_RETAIL,
-    "sp": PogPlanningZoneType.ECONOMIC,
-    "strefagospodarcza": PogPlanningZoneType.ECONOMIC,
-    "sr": PogPlanningZoneType.AGRICULTURAL_PRODUCTION,
-    "strefaprodukcjirolniczej": PogPlanningZoneType.AGRICULTURAL_PRODUCTION,
-    "si": PogPlanningZoneType.INFRASTRUCTURE,
-    "strefainfrastrukturalna": PogPlanningZoneType.INFRASTRUCTURE,
-    "sn": PogPlanningZoneType.GREENERY_AND_RECREATION,
-    "strefazieleniirekreacji": PogPlanningZoneType.GREENERY_AND_RECREATION,
-    "sc": PogPlanningZoneType.CEMETERY,
-    "strefacmentarzy": PogPlanningZoneType.CEMETERY,
-    "sg": PogPlanningZoneType.MINING,
-    "strefagornictwa": PogPlanningZoneType.MINING,
-    "so": PogPlanningZoneType.OPEN,
-    "strefaotwarta": PogPlanningZoneType.OPEN,
-    "sk": PogPlanningZoneType.TRANSPORT,
-    "strefakomunikacyjna": PogPlanningZoneType.TRANSPORT,
-}
 
 
 def analyze_pog_vectors(
@@ -218,7 +164,7 @@ def analyze_pog_vectors(
         if intersection_area <= INTERSECTION_AREA_TOLERANCE_SQM:
             continue
         source_zone_type = _first_string_attribute(
-            feature.attributes, _ZONE_ATTRIBUTE_KEYS
+            feature.attributes, ZONE_ATTRIBUTE_KEYS
         )
         zone_type = _normalize_zone_type(source_zone_type)
         if zone_type is PogPlanningZoneType.UNKNOWN:
@@ -242,12 +188,12 @@ def analyze_pog_vectors(
                 parameters=parameters,
                 parameters_informational=informational,
                 manual_review_required=informational,
-                zone_id=_first_string_attribute(
-                    feature.attributes,
-                    ("feature_id", "id_iip", "idIIP", "identifier", "oznaczenie"),
-                ) or f"zone-{feature_index + 1}",
-                symbol=_first_string_attribute(feature.attributes, ("symbol", "oznaczenie")),
-                label=_first_string_attribute(feature.attributes, ("label", "nazwa")),
+                zone_id=(
+                    _first_string_attribute(feature.attributes, FEATURE_ID_KEYS)
+                    or f"zone-{feature_index + 1}"
+                ),
+                symbol=_first_string_attribute(feature.attributes, SYMBOL_KEYS),
+                label=_first_string_attribute(feature.attributes, LABEL_KEYS),
                 primary_profiles=_profiles_from_attributes(feature.attributes, "primary_profiles"),
                 additional_profiles=_profiles_from_attributes(feature.attributes, "additional_profiles"),
                 feature_version=_first_string_attribute(feature.attributes, ("feature_version",)),
@@ -419,18 +365,6 @@ def _act_result(analysis: PogAnalysisResult) -> PogActResult | None:
     )
 
 
-def _float_parameter(parameters: dict[str, object], name: str) -> float | None:
-    value = parameters.get(name)
-    if value is None:
-        return None
-    if isinstance(value, dict):
-        value = value.get("value")
-    try:
-        return float(str(value).replace(",", "."))
-    except (TypeError, ValueError):
-        return None
-
-
 def _profile_results(items: tuple[dict[str, str | None], ...]) -> list[PogProfileResult]:
     return [
         PogProfileResult(
@@ -460,6 +394,9 @@ def _zone_result(zone: PogZoneIntersection, source: SourceMetadata) -> PogZoneRe
         source=source,
         feature_version=zone.feature_version,
         gml_url=zone.gml_url,
+        geometry_geojson=_presentation_geojson(
+            zone.intersection_wkt, "pog_zone", {"id": zone.zone_id, "zone_code": zone.zone_type.value}
+        ),
         intersection_wkt=zone.intersection_wkt,
     )
 
@@ -475,7 +412,19 @@ def _area_result(item: PogAreaIntersection, source: SourceMetadata) -> PogAreaRe
         source=source,
         feature_version=item.feature_version,
         gml_url=item.gml_url,
+        geometry_geojson=_presentation_geojson(
+            item.intersection_wkt, "pog_area", {"id": item.area_id}
+        ),
     )
+
+
+def _presentation_geojson(
+    wkt: str | None, layer: str, properties: dict[str, object]
+) -> dict[str, object] | None:
+    """GeoJSON 4326 przecięcia do prezentacji; obliczenia pozostają w 2180."""
+    if not wkt:
+        return None
+    return analysis_layer_geometry_to_geojson(from_wkt(wkt), layer, properties)
 
 
 def _analyze_area_layer(
@@ -501,83 +450,32 @@ def _area_intersections(
 ) -> list[PogAreaIntersection]:
     result: list[PogAreaIntersection] = []
     for index, feature in enumerate(features):
-        area = parcel.intersection(feature.geometry).area
+        intersection = parcel.intersection(feature.geometry)
+        area = intersection.area
         touches = area <= INTERSECTION_AREA_TOLERANCE_SQM and parcel.touches(feature.geometry)
         if area <= INTERSECTION_AREA_TOLERANCE_SQM and not touches:
             continue
         result.append(PogAreaIntersection(
-            area_id=_first_string_attribute(
-                feature.attributes,
-                ("feature_id", "id_iip", "idIIP", "identifier", "oznaczenie"),
-            ) or f"{prefix}-{index + 1}",
-            symbol=_first_string_attribute(feature.attributes, ("symbol", "oznaczenie")),
-            label=_first_string_attribute(feature.attributes, ("label", "nazwa")),
+            area_id=(
+                _first_string_attribute(feature.attributes, FEATURE_ID_KEYS)
+                or f"{prefix}-{index + 1}"
+            ),
+            symbol=_first_string_attribute(feature.attributes, SYMBOL_KEYS),
+            label=_first_string_attribute(feature.attributes, LABEL_KEYS),
             area_sqm=area if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
             area_pct=(area / parcel.area * 100.0) if area > INTERSECTION_AREA_TOLERANCE_SQM else 0.0,
             touches_boundary=touches,
             feature_version=_first_string_attribute(feature.attributes, ("feature_version",)),
             gml_url=_first_string_attribute(feature.attributes, ("gml_url",)),
+            intersection_wkt=(
+                intersection.wkt if area > INTERSECTION_AREA_TOLERANCE_SQM else None
+            ),
         ))
     return result
 
 
-def _profiles_from_attributes(
-    attributes: dict[str, object], key: str
-) -> tuple[dict[str, str | None], ...]:
-    raw = attributes.get(key)
-    if not isinstance(raw, (list, tuple)):
-        return ()
-    result: list[dict[str, str | None]] = []
-    for item in raw:
-        if not isinstance(item, dict):
-            continue
-        result.append({
-            "code": str(item.get("code") or ""),
-            "label": str(item["label"]) if item.get("label") is not None else None,
-            "dictionary_source": str(item.get("dictionary_source") or ""),
-        })
-    return tuple(result)
-
-
 def _normalize_zone_type(raw_value: str | None) -> PogPlanningZoneType:
-    if not raw_value:
-        return PogPlanningZoneType.UNKNOWN
-    return _ZONE_ALIASES.get(_normalize_name(raw_value), PogPlanningZoneType.UNKNOWN)
-
-
-def _extract_planning_parameters(attributes: dict[str, object]) -> dict[str, object]:
-    normalized_attributes = {key.lower(): value for key, value in attributes.items()}
-    parameters: dict[str, object] = {}
-    for canonical_name, candidates in _PLANNING_PARAMETER_KEYS.items():
-        for candidate in candidates:
-            if candidate.lower() in normalized_attributes:
-                parameters[canonical_name] = normalized_attributes[candidate.lower()]
-                break
-    nested = attributes.get("parameters")
-    if isinstance(nested, dict):
-        parameters.update(nested)
-    return parameters
-
-
-def _parameters_are_from_pdf(attributes: dict[str, object]) -> bool:
-    source = _first_string_attribute(attributes, _PARAMETER_SOURCE_KEYS)
-    if not source:
-        return False
-    normalized = _normalize_name(source)
-    return "pdf" in normalized or "uzasadnienie" in normalized
-
-
-def _first_string_attribute(
-    attributes: dict[str, object],
-    candidates: tuple[str, ...],
-) -> str | None:
-    for candidate in candidates:
-        for key, value in attributes.items():
-            if key.lower() == candidate.lower() and value is not None:
-                text = str(value).strip()
-                if text:
-                    return text
-    return None
+    return PogPlanningZoneType(normalize_zone_code(raw_value))
 
 
 def _validated_polygonal_geometry(geometry: BaseGeometry) -> BaseGeometry | None:
@@ -621,15 +519,6 @@ def _unknown_analysis(
     )
 
 
-def _normalize_name(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value.lower())
-    return "".join(
-        char
-        for char in decomposed
-        if not unicodedata.combining(char) and char.isalnum()
-    )
-
-
 def _warning(
     code: str,
     message: str,
@@ -641,4 +530,29 @@ def _warning(
         message=message,
         severity=severity,
         source_name="pog",
+    )
+
+
+@overload
+def with_presentation_style(pog: PogResult) -> PogResult: ...
+
+
+@overload
+def with_presentation_style(pog: None) -> None: ...
+
+
+def with_presentation_style(pog: PogResult | None) -> PogResult | None:
+    """Dołącza do wyniku wersję i zamrożony podzbiór stylu POG (BK-403).
+
+    Styl zapisany w snapshocie pozwala odtworzyć raport starej analizy tą samą
+    paletą; brak artefaktu nie blokuje analizy (raport użyje bieżącego stylu).
+    """
+    if pog is None or pog.presentation_style is not None:
+        return pog
+    try:
+        snapshot = style_snapshot()
+    except PogPresentationError:
+        return pog
+    return pog.model_copy(
+        update={"presentation_style": PogPresentationStyle.model_validate(snapshot)}
     )

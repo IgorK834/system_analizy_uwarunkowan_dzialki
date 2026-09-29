@@ -31,7 +31,7 @@ from app.shared.planning_status import (
     upgrade_legacy_legal_status,
 )
 
-POG_RESULT_SCHEMA_VERSION = "2.3"
+POG_RESULT_SCHEMA_VERSION = "2.4"
 
 
 class MapAnalyzeRequest(BaseModel):
@@ -675,6 +675,13 @@ class PogZoneResult(BaseModel):
         default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów."
     )
     gml_url_verified: bool = False
+    geometry_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Przecięcie strefy z działką jako GeoJSON EPSG:4326 — wyłącznie do "
+            "prezentacji (mapa raportu, wykres udziałów); pola liczone są w 2180."
+        ),
+    )
     intersection_wkt: str | None = Field(
         default=None,
         exclude=True,
@@ -701,11 +708,31 @@ class PogAreaResult(BaseModel):
     feature_version: str | None = None
     gml_url: str | None = None
     gml_url_verified: bool = False
+    geometry_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description="Przecięcie obszaru z działką jako GeoJSON EPSG:4326 (prezentacja).",
+    )
 
     @model_validator(mode="after")
     def verify_link(self) -> Self:
         self.gml_url_verified = is_verified_https_url(self.gml_url)
         return self
+
+
+class PogPresentationStyle(BaseModel):
+    """Zamrożona wersja stylu POG użyta przy analizie (BK-403).
+
+    Snapshot przechowuje wersję i SHA-256 artefaktu ``shared/pog-presentation.json``
+    oraz style potrzebne raportowi, aby stary raport rysował się zapisanym
+    stylem, a nie bieżącą paletą.
+    """
+
+    style_version: str
+    style_sha256: str
+    zones: dict[str, dict[str, str]]
+    unknown_zone: dict[str, Any]
+    null_style: dict[str, Any]
+    overlays: dict[str, dict[str, Any]]
 
 
 class PogStatusEvidence(BaseModel):
@@ -835,6 +862,13 @@ class PogResult(BaseModel):
     touches_ouz_boundary: bool = Field(
         description="Czy działka jedynie dotyka granicy OUZ.",
         json_schema_extra={"example": False},
+    )
+    presentation_style: PogPresentationStyle | None = Field(
+        default=None,
+        description=(
+            "Wersja i zamrożony podzbiór stylu POG z chwili analizy; brak oznacza "
+            "snapshot sprzed BK-403 (raport użyje bieżącego stylu z adnotacją)."
+        ),
     )
     source: SourceMetadata | None = Field(
         default=None,

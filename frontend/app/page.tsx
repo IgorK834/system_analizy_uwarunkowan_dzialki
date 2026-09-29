@@ -5,16 +5,23 @@ import type maplibregl from "maplibre-gl";
 
 import { ManualZonePanel } from "@/components/ManualZonePanel";
 import { MapViewLoader } from "@/components/MapViewLoader";
+import { PogMapPanel } from "@/components/PogMapPanel";
 import { PreviewOverlays } from "@/components/PreviewOverlays";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { useAnalyzeParcel } from "@/hooks/useAnalyzeParcel";
+import { usePogMapPreferences, usePogTileRelease } from "@/hooks/usePogTileRelease";
 import { useResumeAnalysis } from "@/hooks/useResumeAnalysis";
+import type { PogZoneTileProperties } from "@/lib/types";
 
 export default function HomePage() {
   const { loading, error, result, run, reset, setResult } = useAnalyzeParcel();
   const resumeAnalysis = useResumeAnalysis();
   const [map, setMap] = useState<maplibregl.Map | null>(null);
+  // Wydanie POG jest pobierane raz na sesję mapy i przypina URL kafli (BK-401).
+  const pogRelease = usePogTileRelease();
+  const pogPreferences = usePogMapPreferences();
+  const [pogZone, setPogZone] = useState<PogZoneTileProperties | null>(null);
 
   const handleMapClick = useCallback(
     (lon: number, lat: number) => {
@@ -51,9 +58,26 @@ export default function HomePage() {
       </header>
 
       <div className="workspace">
-        <MapViewLoader onMapClick={handleMapClick} onMapReady={handleMapReady} />
+        <MapViewLoader
+          onMapClick={handleMapClick}
+          onMapReady={handleMapReady}
+          pogRelease={pogRelease.release}
+          pogTheme={pogPreferences.theme}
+          pogStatusFilter={pogPreferences.statusFilter}
+          onPogFeatureClick={setPogZone}
+        />
         <SearchPanel loading={loading} onAnalyze={run} map={map} />
-        <PreviewOverlays result={result} map={map} />
+        <div className="map-controls">
+          <PogMapPanel
+            releaseState={pogRelease}
+            theme={pogPreferences.theme}
+            onThemeChange={pogPreferences.setTheme}
+            statusFilter={pogPreferences.statusFilter}
+            onStatusFilterChange={pogPreferences.setStatusFilter}
+            selectedZone={pogZone}
+          />
+          <PreviewOverlays result={result} map={map} />
+        </div>
 
         {loading && (
           <div className="analysis-card analysis-loading" role="status">
@@ -98,7 +122,8 @@ export default function HomePage() {
       </div>
       <footer className="preview-legal-footer">
         Warstwy MPZP, POG i uzbrojenia są podglądem oficjalnych usług
-        publicznych. Brak obiektów na mapie nie potwierdza braku planu ani sieci.
+        publicznych, a wektorowa mapa POG pokazuje zapisane lokalne wydanie
+        danych. Brak obiektów na mapie nie potwierdza braku planu ani sieci.
       </footer>
     </main>
   );

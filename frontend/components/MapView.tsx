@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl, { type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -9,6 +9,18 @@ import {
   POLAND_CENTER,
   POLAND_ZOOM,
 } from "@/lib/mapStyle";
+import {
+  POG_INTERACTIVE_LAYERS,
+  POG_LAYER_IDS,
+  type PogStatusFilter,
+  addPogLayers,
+  applyPogStatusFilter,
+  applyPogTheme,
+  pogZoneFromFeatures,
+  removePogLayers,
+} from "@/lib/pogLayers";
+import { DEFAULT_POG_THEME, type PogThemeId } from "@/lib/pogThemes";
+import type { PogTileRelease, PogZoneTileProperties } from "@/lib/types";
 
 export type MapViewProps = {
   onMapClick: (lon: number, lat: number) => void;
@@ -19,12 +31,35 @@ export type MapViewProps = {
    * współdzielony stan w page.tsx, a nie przez bezpośrednią manipulację DOM.
    */
   onMapReady?: (map: maplibregl.Map) => void;
+  /**
+   * Wydanie POG przypięte na starcie sesji (BK-401). Źródło wektorowe jest
+   * tworzone raz dla tego wydania; zmiana trybu nie zmienia jego URL-a.
+   */
+  pogRelease?: PogTileRelease | null;
+  /** Tryb tematyczny POG (BK-402) — przełączany wyłącznie przez `setPaintProperty`. */
+  pogTheme?: PogThemeId;
+  /** Filtr projekt / akt wiążący na już pobranych kaflach. */
+  pogStatusFilter?: PogStatusFilter;
+  /** Atrybuty klikniętej strefy z kafla MVT (albo `null` poza strefą). */
+  onPogFeatureClick?: (zone: PogZoneTileProperties | null) => void;
 };
 
-export function MapView({ onMapClick, onMapReady }: MapViewProps) {
+export function MapView({
+  onMapClick,
+  onMapReady,
+  pogRelease = null,
+  pogTheme = DEFAULT_POG_THEME,
+  pogStatusFilter = "all",
+  onPogFeatureClick,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onMapClickRef = useRef(onMapClick);
   const onMapReadyRef = useRef(onMapReady);
+  const onPogFeatureClickRef = useRef(onPogFeatureClick);
+  const pogThemeRef = useRef(pogTheme);
+  const pogStatusFilterRef = useRef(pogStatusFilter);
+  const mapRemovedRef = useRef(false);
+  const [readyMap, setReadyMap] = useState<maplibregl.Map | null>(null);
 
   useEffect(() => {
     onMapClickRef.current = onMapClick;
@@ -35,8 +70,13 @@ export function MapView({ onMapClick, onMapReady }: MapViewProps) {
   }, [onMapReady]);
 
   useEffect(() => {
+    onPogFeatureClickRef.current = onPogFeatureClick;
+  }, [onPogFeatureClick]);
+
+  useEffect(() => {
     if (!containerRef.current) return;
 
+    mapRemovedRef.current = false;
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: OSM_RASTER_STYLE,
@@ -50,9 +90,17 @@ export function MapView({ onMapClick, onMapReady }: MapViewProps) {
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     const handleClick = (event: MapMouseEvent) => {
+      const pogCallback = onPogFeatureClickRef.current;
+      if (pogCallback && map.getLayer(POG_LAYER_IDS.zonesFill)) {
+        const features = map.queryRenderedFeatures(event.point, {
+          layers: [...POG_INTERACTIVE_LAYERS],
+        });
+        pogCallback(pogZoneFromFeatures(features));
+      }
       onMapClickRef.current(event.lngLat.lng, event.lngLat.lat);
     };
     const handleLoad = () => {
+      setReadyMap(map);
       onMapReadyRef.current?.(map);
     };
 
@@ -62,9 +110,33 @@ export function MapView({ onMapClick, onMapReady }: MapViewProps) {
     return () => {
       map.off("click", handleClick);
       map.off("load", handleLoad);
+      mapRemovedRef.current = true;
+      setReadyMap(null);
       map.remove();
     };
   }, []);
+
+  // Źródło kafli POG powstaje raz na (mapę, wydanie). Po remoncie mapy warstwy
+  // są odtwarzane z bieżącym trybem i filtrem — wybór użytkownika nie ginie.
+  useEffect(() => {
+    if (!readyMap || !pogRelease) return;
+    addPogLayers(readyMap, pogRelease, pogThemeRef.current, pogStatusFilterRef.current);
+    return () => {
+      if (!mapRemovedRef.current) removePogLayers(readyMap);
+    };
+  }, [readyMap, pogRelease]);
+
+  const hasPogLayers = Boolean(readyMap && pogRelease);
+
+  useEffect(() => {
+    pogThemeRef.current = pogTheme;
+    if (readyMap && hasPogLayers) applyPogTheme(readyMap, pogTheme);
+  }, [readyMap, hasPogLayers, pogTheme]);
+
+  useEffect(() => {
+    pogStatusFilterRef.current = pogStatusFilter;
+    if (readyMap && hasPogLayers) applyPogStatusFilter(readyMap, pogStatusFilter);
+  }, [readyMap, hasPogLayers, pogStatusFilter]);
 
   return (
     <div

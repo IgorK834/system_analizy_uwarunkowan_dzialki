@@ -25,6 +25,7 @@ vi.mock("@/lib/api", async () => {
     ...actual,
     analyzeParcel: vi.fn(),
     getPreviewSources: vi.fn(),
+    getActivePogTileRelease: vi.fn().mockResolvedValue(null),
     resumeAnalysis: vi.fn(),
   };
 });

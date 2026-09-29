@@ -55,6 +55,34 @@ zawsze dają `unknown`, nigdy `not_covered`. Ten sam wynik jest zapisywany jako
 `utilities_preview` w snapshotcie analizy i trafia do panelu oraz raportu PDF;
 nie zawiera odległości ani liczby sieci.
 
+### Wektorowa mapa POG z lokalnego wydania (BK-401–403)
+
+Mapa analityczna planu ogólnego nie korzysta z WMS: backend wystawia kafle
+Mapbox Vector Tile z aktywnego, wersjonowanego wydania POG w PostGIS.
+
+- `GET /api/v1/map/pog/releases/active` — metadane aktywnego wydania
+  (`release_id`, SHA-256 artefaktu, zasięg, liczba aktów wg statusu, wersja i
+  SHA stylu) oraz `tile_url_template` **przypięty do `release_id`**; 404, gdy
+  lokalnego wydania nie ma (to nie jest „brak planu”).
+- `GET /api/v1/map/pog/releases/{release_id}` — metadane konkretnego, także
+  historycznego wydania (odtworzenie stanu mapy).
+- `GET /api/v1/map/pog/releases/{release_id}/{z}/{x}/{y}.mvt?edition=all|binding|project`
+  — warstwy `zones`, `ouz`, `downtown`, `social_infrastructure_standard`,
+  `act_boundary`; pusty kafel to `200` z pustym protobufem, błędne z/x/y lub
+  edycja `422`, nieznane wydanie `404`, przekroczony limit obiektów/bajtów
+  `413`; `ETag` + `If-None-Match` → `304`, nagłówki `X-Tile-Cache`,
+  `X-Pog-Release`, `X-Pog-Edition`, `X-Pog-Tile-Schema`, `X-Pog-Tile-Features`.
+
+Parametry stref w kaflu liczy ta sama funkcja domenowa co analiza działki, więc
+kliknięta cecha ma te same wartości co wynik analizy tej samej geometrii. Limity
+i cache ustawiają zmienne `POG_TILE_*` (`backend/app/core/settings.py`).
+
+Kolory, progi, jednostki, etykiety 13 ustawowych stref i wzory OUZ/OZS/OSDIS są
+w jednym pliku `shared/pog-presentation.json`, czytanym przez frontend
+(`lib/pogZones.ts`, `lib/pogThemes.ts`) i backend (`app/core/pog_presentation.py`,
+raport PDF). Oba obrazy kopiują go z kontekstu budowania `shared`
+(`additional_contexts` w `docker-compose.yml`). Decyzje: `docs/adr/ADR-007-pog-vector-tiles-and-shared-presentation.md`.
+
 ### Lokalny indeks podpowiedzi adresowych
 
 Autocomplete korzysta z lokalnego PostgreSQL/PostGIS zasilanego oficjalnymi,
@@ -94,7 +122,7 @@ Frontend używa Vitest i React Testing Library. Testy z wymaganym pokryciem moż
 uruchomić bez lokalnego Node.js, w obrazie testowym:
 
 ```bash
-docker build --target test -t dzialki-frontend-test ./frontend
+docker build --build-context shared=./shared --target test -t dzialki-frontend-test ./frontend
 docker run --rm \
   -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
   dzialki-frontend-test \
@@ -275,6 +303,7 @@ wykonasz którąkolwiek na bazie z danymi, na których komuś zależy**:
 ```text
 backend/    — API FastAPI, serwisy domenowe, modele, testy
 frontend/   — aplikacja Next.js z mapą i panelem wyników
+shared/     — artefakty wspólne dla obu obrazów (styl i legenda POG)
 docs/       — dokumentacja techniczna
 scripts/    — skrypty pomocnicze (migracje, import danych itp.)
 ```

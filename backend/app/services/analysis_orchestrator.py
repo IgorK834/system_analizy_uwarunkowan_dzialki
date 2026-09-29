@@ -81,6 +81,7 @@ from app.services.ouz import OuzStatusResult, calculate_ouz_status
 from app.services.pog import PogDiscoveryResult, PogGminaSources, discover_pog
 from app.services.pog_analyzer import (
     PogAnalysisResult,
+    with_presentation_style,
     analyze_pog_vectors,
     evidence_result,
     spatial_feature_count,
@@ -89,6 +90,7 @@ from app.services.pog_analyzer import (
 )
 from app.services.pog_fetch import fetch_pog_vector_data
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
+from app.modules.planning.domain.pog_features import release_feature_attributes
 from app.services.pog_provenance import act_result_from_provenance, feature_gml_url
 from app.services.pog_scenarios import build_pog_scenario_result
 from app.services.risks import (
@@ -275,6 +277,7 @@ async def run_analysis(
         pog, scenario_warnings = _apply_pog_scenario(
             pog, ouz_status, [], as_of=mpzp_as_of, parcel_area_sqm=metrics.area_sqm
         )
+        pog = with_presentation_style(pog)
         warnings.extend(scenario_warnings)
         pending_document, pending_warnings = await _pin_pending_document(
             discovery.uchwala_url, parcel_identifier
@@ -378,6 +381,7 @@ async def run_analysis(
     pog, scenario_warnings = _apply_pog_scenario(
         pog, ouz_status, mpzp_zones, as_of=mpzp_as_of, parcel_area_sqm=metrics.area_sqm
     )
+    pog = with_presentation_style(pog)
     warnings.extend(scenario_warnings)
     status = _result_status(
         context=context,
@@ -1541,22 +1545,24 @@ def _local_pog_vector_data(
         feature_type = str(row["feature_type"])
         if feature_type not in buckets:
             continue
-        attributes = dict(row.get("raw_attributes") or {})  # type: ignore[call-overload]
-        attributes.update({
-            "feature_id": row.get("feature_identifier"),
-            "feature_version": row.get("feature_version"),
-            "gml_url": feature_gml_url(
+        # Te same reguły składania atrybutów stosuje adapter kafli MVT (BK-401),
+        # dlatego mapa i analiza pokazują identyczne parametry strefy.
+        attributes = release_feature_attributes(
+            row.get("raw_attributes"),  # type: ignore[arg-type]
+            feature_identifier=row.get("feature_identifier"),  # type: ignore[arg-type]
+            feature_version=row.get("feature_version"),  # type: ignore[arg-type]
+            symbol=row.get("symbol"),  # type: ignore[arg-type]
+            label=row.get("label"),  # type: ignore[arg-type]
+            primary_profiles=row.get("primary_profiles"),
+            additional_profiles=row.get("additional_profiles"),
+            parameters=row.get("parameters"),  # type: ignore[arg-type]
+            gml_url=feature_gml_url(
                 row.get("source_reference"),  # type: ignore[arg-type]
                 feature_type,
                 row.get("feature_identifier"),  # type: ignore[arg-type]
                 row.get("feature_version"),  # type: ignore[arg-type]
             ),
-            "symbol": row.get("symbol"),
-            "label": row.get("label"),
-            "primary_profiles": row.get("primary_profiles") or [],
-            "additional_profiles": row.get("additional_profiles") or [],
-        })
-        attributes.update(dict(row.get("parameters") or {}))  # type: ignore[call-overload]
+        )
         buckets[feature_type].append(PogVectorFeature(
             geometry=from_wkt(str(row["geometry_wkt"])),
             attributes=attributes,

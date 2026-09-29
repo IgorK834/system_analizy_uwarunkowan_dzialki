@@ -1,0 +1,11 @@
+{
+  "codelist_rodzaj_strefy_planistycznej.xml": {
+    "url": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.xml",
+    "fetched_at": "2026-09-28T16:15:23Z",
+    "last_modified": "2024-12-18T15:02:09Z",
+    "sha256": "bf29ac60a23dbf7ce844922f948e1307a04140810d91d716d2d5effeac33cff8",
+    "referenced_by": "planowaniePrzestrzenne_3_0.xsd: StrefaPlanistyczna/nazwa targetCodeList RodzajStrefyPlanistycznejKod",
+    "legal_basis": "art. 13c ust. 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym",
+    "access_basis": "Publiczny słownik kodów APP (SKOS/RDF) wskazywany przez xlink:href atrybutu nazwa obiektów StrefaPlanistyczna; plik zapisano bez modyfikacji."
+  }
+}

@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:dcat="http://www.w3.org/ns/dcat#" xmlns:adms="http://www.w3.org/ns/adms#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:dct="http://purl.org/dc/terms/" xmlns:app="http://www.gov.pl/zagospodarowanieprzestrzenne/ontology/app">
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">RodzajStrefyPlanistycznejKod</dct:identifier>
+		<rdf:type rdf:resource="http://www.w3.org/ns/dcat#Dataset"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
+		<dct:title xml:lang="pl">Rodzaj strefy planistycznej</dct:title>
+		<dct:description xml:lang="pl">Klasyfikacja stref planistycznych stosowanych w planie ogólnym gminy, zdefiniowanych w art. 13c ust. 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">Rodzaj strefy planistycznej</skos:prefLabel>
+		<dct:title xml:lang="pl">Rodzaj strefy planistycznej</dct:title>
+		<skos:definition xml:lang="pl">Klasyfikacja stref planistycznych stosowanych w planie ogólnym gminy, zdefiniowanych w art. 13c ust. 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta"/>
+		<dct:hasPart rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna"/>
+		<skos:hasTopConcept rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna"/>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod">
+		<dcat:distribution rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.pl.html"/>
+		<dcat:distribution rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.pl.html">
+		<rdf:type rdf:resource="http://www.w3.org/ns/dcat#Distribution"/>
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/RodzajStrefyPlanistycznejKod.pl.xml">
+		<rdf:type rdf:resource="http://www.w3.org/ns/dcat#Distribution"/>
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa wielofunkcyjna z zabudową mieszkaniową  wielorodzinną</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa wielofunkcyjna z zabudową mieszkaniową  wielorodzinną</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SW</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 1 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-MW"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-MN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-H"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaWielorodzinna.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SJ</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 2 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-MN"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ML"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna/strefaWielofunkcyjnaZZabudowaMieszkaniowaJednorodzinna.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaWielofunkcyjnaZZabudowaZagrodowa</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa wielofunkcyjna z zabudową zagrodową</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 3 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa wielofunkcyjna z zabudową zagrodową</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SZ</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 3 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RZM"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RA"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RZW"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEB"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa/strefaWielofunkcyjnaZZabudowaZagrodowa.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa/strefaWielofunkcyjnaZZabudowaZagrodowa.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa/strefaWielofunkcyjnaZZabudowaZagrodowa.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaWielofunkcyjnaZZabudowaZagrodowa/strefaWielofunkcyjnaZZabudowaZagrodowa.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaUslugowa</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa usługowa</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 4 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa usługowa</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SU</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 4 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PS"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEF"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa/strefaUslugowa.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa/strefaUslugowa.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa/strefaUslugowa.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaUslugowa/strefaUslugowa.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaHandluWielkopowierzchniowego</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa handlu wielkopowierzchniowego</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 5 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa handlu wielkopowierzchniowego</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SH</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 5 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-H"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PS"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEF"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego/strefaHandluWielkopowierzchniowego.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego/strefaHandluWielkopowierzchniowego.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego/strefaHandluWielkopowierzchniowego.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaHandluWielkopowierzchniowego/strefaHandluWielkopowierzchniowego.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaGospodarcza</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa gospodarcza</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 6 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa gospodarcza</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SP</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 6 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-P"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza/strefaGospodarcza.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza/strefaGospodarcza.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza/strefaGospodarcza.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGospodarcza/strefaGospodarcza.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+		<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaProdukcjiRolniczej</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa produkcji rolniczej</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 7 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa produkcji rolniczej</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SR</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 7 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RZW"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RA"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEB"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEF"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEW"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEO"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej/strefaProdukcjiRolniczej.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej/strefaProdukcjiRolniczej.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej/strefaProdukcjiRolniczej.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaProdukcjiRolniczej/strefaProdukcjiRolniczej.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaInfrastrukturalna</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa infrastrukturalna</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 8 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa infrastrukturalna</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SI</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 8 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-U"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-P"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna/strefaInfrastrukturalna.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna/strefaInfrastrukturalna.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna/strefaInfrastrukturalna.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaInfrastrukturalna/strefaInfrastrukturalna.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaZieleniIRekreacji</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa zieleni i rekreacji</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 9 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa zieleni i rekreacji</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SN</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 9 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZB"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W" />
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-US"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UK"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UHD"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UG"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UT"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UE"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UZ"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji/strefaZieleniIRekreacji.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji/strefaZieleniIRekreacji.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji/strefaZieleniIRekreacji.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaZieleniIRekreacji/strefaZieleniIRekreacji.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+		<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaCmentarzy</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa cmentarzy</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 10 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa cmentarzy</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SC</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 10 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-C"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UR"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UHD"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy/strefaCmentarzy.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy/strefaCmentarzy.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy/strefaCmentarzy.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaCmentarzy/strefaCmentarzy.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaGornictwa</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa górnictwa</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 11 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa górnictwa</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SG</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 11 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-G"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-P"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UH"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UL"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UG"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UA"/>		
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa/strefaGornictwa.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa/strefaGornictwa.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa/strefaGornictwa.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaGornictwa/strefaGornictwa.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaOtwarta</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa otwarta</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 12 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa otwarta</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SO</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 12 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-RN"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-K"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEW"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEF"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEG"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEO"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-PEB"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta/strefaOtwarta.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta/strefaOtwarta.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta/strefaOtwarta.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaOtwarta/strefaOtwarta.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna">
+		<dct:identifier rdf:datatype="http://www.w3.org/2000/01/rdf-schema#Literal">strefaKomunikacyjna</dct:identifier>
+		<rdf:type rdf:resource="http://purl.org/net/provenance/ns#DataItem"/>
+		<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+		<skos:inScheme rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<skos:topConceptOf rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod"/>
+		<dct:title xml:lang="pl">strefa komunikacyjna</dct:title>
+		<dct:description xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 13 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</dct:description>
+		<skos:prefLabel xml:lang="pl">strefa komunikacyjna</skos:prefLabel>
+		<skos:altLabel xml:lang="pl">SK</skos:altLabel>
+		<skos:definition xml:lang="pl">Strefa planistyczna o której mowa w art. 13c ust. 2 pkt 13 ustawy z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym.</skos:definition>
+		<adms:status rdf:resource="http://inspire.ec.europa.eu/registry/status/valid"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna">
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KDA"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KDS"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KDR"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KDG"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KK"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KKL"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KW"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KL"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KO"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZD"/>
+		<app:baseProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-I"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-KDZ"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UHD"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UG"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-UT"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZP"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-L"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-ZN"/>
+		<app:additionalProfile rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT#KPT-MPZP-W"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna">
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna/strefaKomunikacyjna.pl.html"/>
+		<dct:hasFormat rdf:resource="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna/strefaKomunikacyjna.pl.xml"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna/strefaKomunikacyjna.pl.html">
+		<rdfs:label xml:lang="pl">HTML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/HTML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="https://www.gov.pl/static/zagospodarowanieprzestrzenne/codelist/RodzajStrefyPlanistycznejKod/strefaKomunikacyjna/strefaKomunikacyjna.pl.xml">
+		<rdfs:label xml:lang="pl">XML</rdfs:label>
+		<dct:format rdf:resource="http://publications.europa.eu/resource/authority/file-type/XML"/>
+		<dct:language rdf:resource="http://publications.europa.eu/resource/authority/language/POL"/>
+	</rdf:Description>
+
+</rdf:RDF>

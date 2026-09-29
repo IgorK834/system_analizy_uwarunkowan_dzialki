@@ -10,6 +10,13 @@ rozjeżdżały się między sobą ani z frontendem.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
+
+from app.core.pog_presentation import (
+    PogPresentationError,
+    load_pog_presentation,
+    style_snapshot,
+)
 
 # Klauzula informacyjna umieszczana na końcu każdego raportu. Treść jest
 # wymagana dosłownie przez kontrakt zadania i nie może różnić się między
@@ -89,6 +96,9 @@ class MapLayerStyle:
     line_width: int
     fill_rgb: tuple[int, int, int] | None = None
     fill_alpha: int = 0
+    # Wzór wypełnienia (BK-403): informacja nie może zależeć tylko od barwy.
+    pattern: str | None = None
+    line_dash: tuple[float, ...] | None = None
 
 
 def _hex_to_rgb(value: str) -> tuple[int, int, int]:
@@ -143,3 +153,76 @@ RISK_LAYER_STYLE = MapLayerStyle(
     fill_rgb=_hex_to_rgb("#7b3fb3"),
     fill_alpha=int(0.20 * 255),
 )
+
+
+# --- Plan ogólny gminy (BK-403) ------------------------------------------------
+# Paleta, etykiety i wzory POG NIE są definiowane tutaj: pochodzą ze wspólnego
+# artefaktu ``shared/pog-presentation.json`` (ten sam plik zasila mapę i legendę
+# frontendu). Raport używa stylu zapisanego w snapshocie analizy, a dla analiz
+# sprzed BK-403 — bieżącej wersji z jawną adnotacją.
+POG_ZONE_FILL_ALPHA: int = int(0.55 * 255)
+POG_OVERLAY_ORDER: tuple[str, ...] = ("ouz", "downtown", "social_infrastructure_standard")
+
+
+@dataclass(frozen=True)
+class ReportPogStyle:
+    style: dict[str, Any]
+    from_snapshot: bool
+
+    @property
+    def version(self) -> str:
+        return str(self.style.get("style_version", ""))
+
+    @property
+    def sha256(self) -> str:
+        return str(self.style.get("style_sha256", ""))
+
+
+def report_pog_style(pog: Any) -> ReportPogStyle | None:
+    """Styl POG dla raportu: zapisany w snapshocie albo bieżący (adnotacja)."""
+    frozen = getattr(pog, "presentation_style", None) if pog is not None else None
+    if frozen is not None:
+        data = frozen.model_dump() if hasattr(frozen, "model_dump") else dict(frozen)
+        return ReportPogStyle(style=data, from_snapshot=True)
+    try:
+        return ReportPogStyle(style=style_snapshot(load_pog_presentation()), from_snapshot=False)
+    except PogPresentationError:
+        return None
+
+
+def pog_zone_layer_style(code: str | None, style: ReportPogStyle) -> MapLayerStyle:
+    zones: dict[str, Any] = style.style.get("zones", {})
+    entry = zones.get(code or "") if code else None
+    if entry is None:
+        unknown = style.style["unknown_zone"]
+        return MapLayerStyle(
+            layer=f"pog_zone:{code or 'unknown'}",
+            label=str(unknown["label"]),
+            line_rgb=_hex_to_rgb(unknown["outline"]),
+            line_width=2,
+            fill_rgb=_hex_to_rgb(unknown["fill"]),
+            fill_alpha=POG_ZONE_FILL_ALPHA,
+            pattern=str(unknown["pattern"]),
+        )
+    return MapLayerStyle(
+        layer=f"pog_zone:{code}",
+        label=f"{code} — {entry['label']}",
+        line_rgb=_hex_to_rgb(entry["outline"]),
+        line_width=2,
+        fill_rgb=_hex_to_rgb(entry["fill"]),
+        fill_alpha=POG_ZONE_FILL_ALPHA,
+    )
+
+
+def pog_overlay_layer_style(overlay_id: str, style: ReportPogStyle) -> MapLayerStyle:
+    overlay = style.style["overlays"][overlay_id]
+    dash = overlay.get("line_dasharray")
+    return MapLayerStyle(
+        layer=f"pog_overlay:{overlay_id}",
+        label=f"{overlay['short_label']} — {overlay['label']}",
+        line_rgb=_hex_to_rgb(overlay["outline"]),
+        line_width=max(2, int(round(float(overlay["line_width"])))),
+        fill_rgb=None,
+        pattern=overlay.get("pattern"),
+        line_dash=tuple(float(item) for item in dash) if dash else None,
+    )

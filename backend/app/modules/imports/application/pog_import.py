@@ -52,6 +52,9 @@ class PogPublicationResult:
     unchanged: int
     import_run_id: int
     data_release_id: int
+    # Akty o niezmienionej treści przeniesione do nowego wydania (ADR-008);
+    # zawiera się w ``unchanged``.
+    carried_forward: int = 0
 
 
 class PogSourceReader(Protocol):
@@ -322,6 +325,7 @@ def run_pog_import(
         result.changed,
         result.unchanged,
     )
+    stats.extra["carried_forward"] = result.carried_forward
     return ImportOutcome(
         status="succeeded",
         stats=stats.as_dict(),

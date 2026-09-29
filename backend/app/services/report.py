@@ -43,7 +43,12 @@ from app.services.persistence import build_analyze_response_from_analysis
 from app.services.pog_provenance import RELATION_LABELS_PL
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
-from app.services.report_map import png_to_data_uri, render_analysis_map_png
+from app.core.report_config import pog_zone_layer_style, report_pog_style
+from app.services.report_map import (
+    png_to_data_uri,
+    pog_map_legend,
+    render_analysis_map_png,
+)
 from app.shared.planning_status import (
     COVERAGE_STATUS_LABELS_PL,
     DATA_AVAILABILITY_LABELS_PL,
@@ -141,6 +146,7 @@ def _build_report_context(
         "map_data_uri": map_data_uri,
         "map_warning": map_warning,
         "map_kiut_overlay": map_kiut_overlay,
+        "pog_map": _pog_map_legend_context(response) if map_data_uri else None,
         "geometry": _geometry_context(response),
         "mpzp_zones": [_mpzp_context(zone) for zone in response.mpzp_zones],
         "manual_zone_declared": any(
@@ -269,6 +275,27 @@ def _mpzp_context(zone: Any) -> dict[str, Any]:
     }
 
 
+def _pog_map_legend_context(response: Any) -> dict[str, Any] | None:
+    """Legenda POG miniatury: kolor + wzór + etykieta i wersja stylu (BK-403)."""
+    entries, style = pog_map_legend(response)
+    if not entries or style is None:
+        return None
+    return {
+        "entries": entries,
+        "style_version": style.version,
+        "style_sha256_short": style.sha256[:12],
+        "from_snapshot": style.from_snapshot,
+    }
+
+
+def _zone_swatch(zone: Any, pog: Any) -> str | None:
+    style = report_pog_style(pog)
+    if style is None:
+        return None
+    rgb = pog_zone_layer_style(getattr(zone, "type", None), style).fill_rgb
+    return "#%02x%02x%02x" % rgb if rgb else None
+
+
 def _pog_context(pog: Any) -> dict[str, Any] | None:
     if pog is None:
         return None
@@ -346,6 +373,7 @@ def _pog_context(pog: Any) -> dict[str, Any] | None:
                 ) or "—",
                 "gml_url": zone.gml_url if zone.gml_url_verified else None,
                 "feature_version": zone.feature_version,
+                "swatch": _zone_swatch(zone, pog),
             }
             for zone in pog.zones
         ],
@@ -1183,6 +1211,9 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
   .map-figure { text-align: center; margin: 3mm 0; }
   .map-figure img { max-width: 100%; border: 1px solid #d0d5dd; }
   .map-caption { font-size: 8.5pt; color: #475467; margin: 1.5mm 0 0; text-align: left; }
+  .pog-legend { margin-top: 2mm; font-size: 8pt; text-align: left; }
+  .pog-legend caption { text-align: left; font-size: 8pt; color: #475467; }
+  .swatch { display: inline-block; width: 4mm; height: 3mm; border: 1px solid #475467; vertical-align: middle; }
   .item { border: 1px solid #e4e7ec; border-radius: 2mm; padding: 2mm 3mm;
           margin: 2mm 0; break-inside: avoid; }
   .item .item-title { font-weight: bold; font-size: 11pt; }
@@ -1247,6 +1278,14 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
       Nakładka WMS nie jest geometrią sieci ze snapshotu analizy i nie pozwala
       stwierdzić, czy dana sieć leży na działce.
     </p>
+    {% if pog_map %}
+    <table class="pog-legend">
+      <caption>Legenda POG na miniaturze (przecięcia z działką) — styl {{ pog_map.style_version }} <span class="mono">({{ pog_map.style_sha256_short }})</span>{% if not pog_map.from_snapshot %}; analiza sprzed zapisu wersji stylu — użyto bieżącej wersji{% endif %}</caption>
+      {% for entry in pog_map.entries %}
+      <tr><td><span class="swatch" style="background: {{ entry.color }}; border-color: {{ entry.outline }};"></span></td><td>{{ entry.label }}</td><td>{{ entry.pattern_label }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
   </div>
   {% else %}
   <p class="empty">{{ map_warning if map_warning else "Miniatura mapy jest niedostępna." }}</p>
@@ -1352,7 +1391,7 @@ _REPORT_TEMPLATE = """<!DOCTYPE html>
     <tbody>
     {% for zone in pog.zones %}
       <tr>
-        <td>{{ zone.symbol or zone.type }}{% if zone.label %}<br><small>{{ zone.label }}</small>{% endif %}</td>
+        <td>{% if zone.swatch %}<span class="swatch" style="background: {{ zone.swatch }};"></span> {% endif %}{{ zone.symbol or zone.type }}{% if zone.label %}<br><small>{{ zone.label }}</small>{% endif %}</td>
         <td>{{ zone.area_sqm }} m²</td><td>{{ zone.area_pct }}</td>
         <td>{{ zone.max_overground_floor_area_ratio if zone.max_overground_floor_area_ratio is not none else "—" }}</td>
         <td>{{ zone.max_building_height_m if zone.max_building_height_m is not none else "—" }}</td>

@@ -1,15 +1,45 @@
 import { act, render } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MapView } from "@/components/MapView";
+import { POG_LAYER_IDS, POG_LAYER_ORDER, POG_SOURCE_ID } from "@/lib/pogLayers";
+import { POG_THEME_IDS, themeById, themeFillColorExpression } from "@/lib/pogThemes";
+import { buildPogRelease, buildPogZoneProperties } from "@/test/pogFixtures";
 
-const mapState = vi.hoisted(() => ({
-  constructor: vi.fn(),
-  addControl: vi.fn(),
-  on: vi.fn(),
-  off: vi.fn(),
-  remove: vi.fn(),
-}));
+const mapState = vi.hoisted(() => {
+  const sources = new Map<string, Record<string, unknown>>();
+  const layers = new Map<string, Record<string, unknown>>();
+  const images = new Set<string>();
+  const sourceApi = { setTiles: vi.fn(), setData: vi.fn(), setUrl: vi.fn() };
+  return {
+    sources,
+    layers,
+    images,
+    sourceApi,
+    constructor: vi.fn(),
+    addControl: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    remove: vi.fn(),
+    getSource: vi.fn((id: string) => (sources.has(id) ? sourceApi : undefined)),
+    addSource: vi.fn((id: string, source: Record<string, unknown>) => {
+      sources.set(id, source);
+    }),
+    removeSource: vi.fn((id: string) => sources.delete(id)),
+    getLayer: vi.fn((id: string) => layers.get(id)),
+    addLayer: vi.fn((layer: Record<string, unknown>) => {
+      layers.set(String(layer.id), layer);
+    }),
+    removeLayer: vi.fn((id: string) => layers.delete(id)),
+    hasImage: vi.fn((id: string) => images.has(id)),
+    addImage: vi.fn((id: string) => {
+      images.add(id);
+    }),
+    setPaintProperty: vi.fn(),
+    setFilter: vi.fn(),
+    queryRenderedFeatures: vi.fn(() => [] as unknown[]),
+  };
+});
 
 vi.mock("maplibre-gl", () => {
   class MapMock {
@@ -21,6 +51,17 @@ vi.mock("maplibre-gl", () => {
     on = mapState.on;
     off = mapState.off;
     remove = mapState.remove;
+    getSource = mapState.getSource;
+    addSource = mapState.addSource;
+    removeSource = mapState.removeSource;
+    getLayer = mapState.getLayer;
+    addLayer = mapState.addLayer;
+    removeLayer = mapState.removeLayer;
+    hasImage = mapState.hasImage;
+    addImage = mapState.addImage;
+    setPaintProperty = mapState.setPaintProperty;
+    setFilter = mapState.setFilter;
+    queryRenderedFeatures = mapState.queryRenderedFeatures;
   }
 
   class NavigationControlMock {}
@@ -33,9 +74,27 @@ vi.mock("maplibre-gl", () => {
   };
 });
 
+function lastHandler(eventName: string) {
+  return mapState.on.mock.calls.filter(([name]) => name === eventName).at(-1)?.[1] as (
+    event?: unknown,
+  ) => void;
+}
+
 describe("MapView", () => {
   beforeEach(() => {
-    for (const mock of Object.values(mapState)) mock.mockClear();
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://api.example.test");
+    for (const mock of Object.values(mapState)) {
+      if (typeof mock === "function" && "mockClear" in mock) mock.mockClear();
+    }
+    mapState.sources.clear();
+    mapState.layers.clear();
+    mapState.images.clear();
+    Object.values(mapState.sourceApi).forEach((mock) => mock.mockClear());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it("tworzy mapę, przekazuje kliknięcie i usuwa instancję", () => {
@@ -51,9 +110,7 @@ describe("MapView", () => {
     );
     expect(mapState.addControl).toHaveBeenCalledWith(expect.anything(), "top-right");
 
-    const clickHandler = mapState.on.mock.calls.find(
-      ([eventName]) => eventName === "click",
-    )?.[1] as (event: { lngLat: { lng: number; lat: number } }) => void;
+    const clickHandler = lastHandler("click");
     act(() => clickHandler({ lngLat: { lng: 21.0122, lat: 52.2297 } }));
     expect(onMapClick).toHaveBeenCalledWith(21.0122, 52.2297);
 
@@ -66,9 +123,7 @@ describe("MapView", () => {
     const firstCallback = vi.fn();
     const secondCallback = vi.fn();
     const { rerender } = render(<MapView onMapClick={firstCallback} />);
-    const clickHandler = mapState.on.mock.calls[0][1] as (event: {
-      lngLat: { lng: number; lat: number };
-    }) => void;
+    const clickHandler = lastHandler("click");
 
     rerender(<MapView onMapClick={secondCallback} />);
     act(() => clickHandler({ lngLat: { lng: 18, lat: 51 } }));
@@ -85,17 +140,128 @@ describe("MapView", () => {
       <MapView onMapClick={onMapClick} onMapReady={onMapReady} />,
     );
 
-    const loadHandler = mapState.on.mock.calls.find(
-      ([eventName]) => eventName === "load",
-    )?.[1] as () => void;
+    const loadHandler = lastHandler("load");
     act(() => loadHandler());
 
     expect(onMapReady).toHaveBeenCalledOnce();
     expect(onMapReady).toHaveBeenCalledWith(
       expect.objectContaining({ on: expect.anything() }),
     );
+    expect(mapState.addSource).not.toHaveBeenCalled();
 
     unmount();
     expect(mapState.off).toHaveBeenCalledWith("load", loadHandler);
+  });
+
+  it("BK-402: pięć trybów zmienia tylko paint — 0 requestów, ten sam URL źródła, bez addSource/setData", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const release = buildPogRelease();
+    const { rerender } = render(
+      <MapView onMapClick={vi.fn()} pogRelease={release} pogTheme="zones" />,
+    );
+    act(() => lastHandler("load")());
+
+    expect(mapState.addSource).toHaveBeenCalledOnce();
+    const sourceBefore = JSON.stringify(mapState.sources.get(POG_SOURCE_ID));
+    expect(mapState.sources.get(POG_SOURCE_ID)?.tiles).toEqual([
+      "http://api.example.test/api/v1/map/pog/releases/42/{z}/{x}/{y}.mvt",
+    ]);
+    const layerCount = mapState.addLayer.mock.calls.length;
+    mapState.setPaintProperty.mockClear();
+
+    for (const theme of [...POG_THEME_IDS.slice(1), POG_THEME_IDS[0]]) {
+      rerender(<MapView onMapClick={vi.fn()} pogRelease={release} pogTheme={theme} />);
+      expect(mapState.setPaintProperty).toHaveBeenLastCalledWith(
+        POG_LAYER_IDS.zonesPattern,
+        "fill-opacity",
+        expect.any(Array),
+      );
+      expect(mapState.setPaintProperty).toHaveBeenCalledWith(
+        POG_LAYER_IDS.zonesFill,
+        "fill-color",
+        themeFillColorExpression(themeById(theme)),
+      );
+    }
+
+    expect(mapState.setPaintProperty).toHaveBeenCalledTimes(POG_THEME_IDS.length * 3);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(mapState.addSource).toHaveBeenCalledOnce();
+    expect(mapState.removeSource).not.toHaveBeenCalled();
+    expect(mapState.addLayer).toHaveBeenCalledTimes(layerCount);
+    expect(JSON.stringify(mapState.sources.get(POG_SOURCE_ID))).toBe(sourceBefore);
+    expect(mapState.sourceApi.setTiles).not.toHaveBeenCalled();
+    expect(mapState.sourceApi.setData).not.toHaveBeenCalled();
+    expect(mapState.sourceApi.setUrl).not.toHaveBeenCalled();
+    expect(mapState.constructor).toHaveBeenCalledOnce();
+  });
+
+  it("zachowuje wybrany tryb i filtr po remoncie mapy", () => {
+    const release = buildPogRelease();
+    const first = render(
+      <MapView onMapClick={vi.fn()} pogRelease={release} pogTheme="height" pogStatusFilter="binding" />,
+    );
+    act(() => lastHandler("load")());
+    first.unmount();
+    expect(mapState.remove).toHaveBeenCalledOnce();
+    mapState.sources.clear();
+    mapState.layers.clear();
+    mapState.addLayer.mockClear();
+
+    render(
+      <MapView onMapClick={vi.fn()} pogRelease={release} pogTheme="height" pogStatusFilter="binding" />,
+    );
+    act(() => lastHandler("load")());
+
+    const zonesFill = mapState.layers.get(POG_LAYER_IDS.zonesFill);
+    expect(zonesFill).toMatchObject({
+      paint: { "fill-color": themeFillColorExpression(themeById("height")) },
+      filter: ["==", ["get", "legal_status"], "binding"],
+    });
+    expect(mapState.addLayer).toHaveBeenCalledTimes(POG_LAYER_ORDER.length);
+  });
+
+  it("filtr statusu używa setFilter, a kliknięcie strefy zwraca atrybuty z kafla", () => {
+    const onMapClick = vi.fn();
+    const onPogFeatureClick = vi.fn();
+    const release = buildPogRelease();
+    const { rerender, unmount } = render(
+      <MapView
+        onMapClick={onMapClick}
+        pogRelease={release}
+        onPogFeatureClick={onPogFeatureClick}
+      />,
+    );
+    act(() => lastHandler("load")());
+    mapState.setFilter.mockClear();
+    rerender(
+      <MapView
+        onMapClick={onMapClick}
+        pogRelease={release}
+        pogStatusFilter="non_binding"
+        onPogFeatureClick={onPogFeatureClick}
+      />,
+    );
+    expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
+      "in",
+      ["get", "legal_status"],
+      ["literal", ["project", "in_progress"]],
+    ]);
+    expect(mapState.addSource).toHaveBeenCalledOnce();
+
+    const zone = buildPogZoneProperties();
+    mapState.queryRenderedFeatures.mockReturnValueOnce([
+      { layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
+    ]);
+    act(() => lastHandler("click")({ point: { x: 1, y: 2 }, lngLat: { lng: 18.5, lat: 54.4 } }));
+    expect(mapState.queryRenderedFeatures).toHaveBeenCalledWith(
+      { x: 1, y: 2 },
+      { layers: [POG_LAYER_IDS.zonesFill] },
+    );
+    expect(onPogFeatureClick).toHaveBeenCalledWith(zone);
+    expect(onMapClick).toHaveBeenCalledWith(18.5, 54.4);
+
+    rerender(<MapView onMapClick={onMapClick} pogRelease={null} onPogFeatureClick={onPogFeatureClick} />);
+    expect(mapState.removeSource).toHaveBeenCalledWith(POG_SOURCE_ID);
+    unmount();
   });
 });

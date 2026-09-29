@@ -94,6 +94,20 @@ class Settings(BaseSettings):
     map_tile_upstream_max_concurrency: int = 8
     map_tile_min_zoom: int = 11
     map_tile_max_zoom: int = 18
+    # Wektorowe kafle POG (BK-401) z lokalnego, wersjonowanego wydania PostGIS.
+    # URL kafla jest przypięty do ``release_id``, więc przeglądarka może je
+    # trzymać długo; limity chronią bazę przed kaflem całego kraju.
+    pog_tile_source_id: str = "pog_app"
+    pog_tile_min_zoom: int = 0
+    pog_tile_max_zoom: int = 18
+    pog_tile_max_features: int = 20_000
+    pog_tile_max_bytes: int = 4 * 1024 * 1024
+    pog_tile_cache_max_bytes: int = 64 * 1024 * 1024
+    pog_tile_browser_ttl_seconds: int = 3_600
+    pog_tile_statement_timeout_ms: int = 5_000
+    # Wspólny artefakt prezentacji POG (BK-403): paleta, progi, etykiety. Pusta
+    # wartość = wykrycie ``/app/shared`` w obrazie albo ``<repo>/shared`` lokalnie.
+    pog_presentation_path: str = ""
     # Podkład miniatury raportu: OSM WMS (działa bez autoryzacji). ORTO/TOPO
     # Geoportalu zwracają 401 — nie używać jako domyślne. Nakładka KIMPZP
     # (``report_map_kimpzp_overlay_enabled``) odwzorowuje widok MPZP z UI.

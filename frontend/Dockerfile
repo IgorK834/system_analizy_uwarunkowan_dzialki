@@ -1,19 +1,23 @@
 FROM node:22-slim AS dependencies
-WORKDIR /app
+WORKDIR /workspace/frontend
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:22-slim AS build
-WORKDIR /app
+# BK-403: wspólny artefakt prezentacji POG spoza kontekstu frontendu
+# (docker-compose.yml: additional_contexts.shared; CI: --build-context shared=./shared).
+# Katalog roboczy /workspace/frontend odwzorowuje układ repozytorium, więc import
+# ../shared/pog-presentation.json działa tak samo lokalnie i w obrazie.
+FROM dependencies AS source
+COPY --from=shared pog-presentation.json /workspace/shared/pog-presentation.json
+COPY . .
+
+FROM source AS build
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY . .
 RUN npm run build
 
-FROM dependencies AS test
-COPY . .
+FROM source AS test
 CMD ["npm", "test"]
 
 FROM node:22-slim AS runtime
@@ -27,9 +31,11 @@ ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 RUN groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs nextjs
 
-COPY --from=build --chown=nextjs:nodejs /app/public ./public
-COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Korzeń śledzenia plików Next.js to katalog repozytorium (turbopack.root), więc
+# samodzielny serwer leży w .next/standalone/frontend.
+COPY --from=build --chown=nextjs:nodejs /workspace/frontend/public ./public
+COPY --from=build --chown=nextjs:nodejs /workspace/frontend/.next/standalone/frontend ./
+COPY --from=build --chown=nextjs:nodejs /workspace/frontend/.next/static ./.next/static
 
 USER nextjs
 EXPOSE 3000

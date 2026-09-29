@@ -623,6 +623,144 @@ input:disabled {
   margin: 0;
 }
 
+/* BK-401–403: kontrolki mapy w jednej kolumnie (POG wektorowy + podglądy WMS). */
+.map-controls {
+  position: absolute;
+  z-index: 6;
+  left: 20px;
+  bottom: 20px;
+  width: min(400px, calc(100% - 40px));
+  max-height: min(58vh, 640px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-controls .planning-overlay-control {
+  position: static;
+  width: 100%;
+  max-height: none;
+}
+
+.pog-map-panel {
+  padding: 13px;
+  border: 1px solid rgba(33, 53, 43, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(22, 41, 31, 0.13);
+  font-size: 0.82rem;
+}
+
+.pog-map-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pog-map-panel fieldset {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(33, 53, 43, 0.18);
+  border-radius: 8px;
+}
+
+.pog-theme-options {
+  display: grid;
+  gap: 4px;
+}
+
+.pog-theme-option,
+.pog-status-filter label {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.pog-theme-unit,
+.pog-legend-caption,
+.pog-legend-meta,
+.pog-theme-scale {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.pog-non-binding-badge {
+  margin: 8px 0 0;
+  padding: 4px 8px;
+  border: 1px dashed #7a4b00;
+  border-radius: 6px;
+  color: #5c3a00;
+  background: #fff4dc;
+  font-weight: 650;
+}
+
+.pog-legend h3,
+.pog-legend h4,
+.pog-selected-zone h3 {
+  margin: 10px 0 4px;
+  font-size: 0.82rem;
+}
+
+.pog-legend-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+
+.pog-legend-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pog-swatch {
+  flex: 0 0 auto;
+}
+
+.pog-selected-zone dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin: 0;
+}
+
+.pog-selected-zone-row {
+  display: contents;
+}
+
+.pog-selected-zone dt {
+  color: var(--muted);
+}
+
+.pog-selected-zone dd {
+  margin: 0;
+}
+
+.pog-share-chart {
+  display: flex;
+  width: 100%;
+  height: 18px;
+  margin: 6px 0;
+  border: 1px solid rgba(33, 53, 43, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pog-share-segment {
+  height: 100%;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .planning-overlay-status {
   margin: 9px 0 0;
   color: var(--muted);
@@ -781,6 +919,13 @@ input:disabled {
     bottom: 10px;
     width: calc(100% - 20px);
     padding: 11px;
+    max-height: 45vh;
+  }
+
+  .map-controls {
+    left: 10px;
+    bottom: 10px;
+    width: calc(100% - 20px);
     max-height: 45vh;
   }
 
