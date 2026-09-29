@@ -170,7 +170,46 @@ SELECT PostGIS_Version();
 SELECT srid FROM spatial_ref_sys WHERE srid = 2180;
 ```
 
-Port `5432` jest wystawiony na hosta wyłącznie w celach developerskich (klient DB, debug). Kod aplikacji nie powinien używać `localhost:5432` wewnątrz kontenera backendu.
+Port `5432` jest wystawiony wyłącznie na interfejsie loopback hosta (`127.0.0.1`)
+w celach developerskich (klient DB, debug) — baza ma domyślne dane dostępowe i
+nie jest widoczna w sieci. Kod aplikacji nie powinien używać `localhost:5432`
+wewnątrz kontenera backendu.
+
+### Uprawnienia kontenera backendu i cache analiz
+
+Backend działa jako użytkownik `app`, nie `root`. Nowe wolumeny `map_tile_cache`
+i `import_artifacts` dziedziczą właściciela z obrazu. Wolumeny utworzone przez
+wcześniejszy obraz są własnością `root` i wymagają jednorazowej naprawy:
+
+```bash
+docker compose run --rm --user root --entrypoint chown backend \
+  -R app:app /var/cache/dzialki /var/lib/dzialki
+```
+
+### Dostęp, limity i status analizy
+
+- **Raport PDF i dokument uchwały** (`GET /report/{id}`,
+  `GET /analyze/{id}/pending-document`) wymagają parametru `access_token`. Token
+  (pole `access_token` odpowiedzi analizy) to HMAC identyfikatora analizy — samo
+  zgadywanie kolejnych ID nie wystarcza. Ustaw stały `ACCESS_TOKEN_SECRET`
+  (`openssl rand -hex 32`); bez niego tokeny ważą do restartu backendu.
+- **Akceptacja/odrzucenie rastrów** (`POST /api/v1/raster-assets/{id}/accept|reject`)
+  wymaga nagłówka `X-Admin-Key`. Klucze konfiguruje `ADMIN_API_KEYS`
+  (`operator:klucz,...`); operator w audycie pochodzi z klucza. Bez kluczy
+  endpointy są wyłączone.
+- **Limity zapytań** (429 + `Retry-After`): `POST /analyze` (20/min), z
+  `force_refresh=true` (5/min), raport i dokument (30/min), pokrycie KIUT
+  (60/min) — na klienta, w oknie 60 s. Limiter działa w procesie, więc przy N
+  workerach efektywny limit rośnie N razy. Za zaufanym reverse proxy ustaw
+  `RATE_LIMIT_TRUST_FORWARDED_FOR=true` (używany jest ostatni wpis
+  `X-Forwarded-For`).
+- **Status `complete`**: niedostępność ISOK/GDOŚ lub awaria KIUT obniża status do
+  `partial`. Znana luka „brak potwierdzonego kontraktu KIUT/GESUT” jest tylko
+  ostrzeżeniem i nie blokuje `complete`.
+
+Wynik analizy `complete` jest serwowany z cache przez `ANALYSIS_CACHE_MAX_AGE_DAYS`
+dni (domyślnie 7). Podpis cache obejmuje wersje danych z katalogu, ale nie dane
+z usług na żywo (ISOK, GDOŚ, NMT), więc dłuższy TTL oznacza starsze dane o ryzyku.
 
 ### Reset bazy danych
 
@@ -178,6 +217,58 @@ Port `5432` jest wystawiony na hosta wyłącznie w celach developerskich (klient
 docker compose down -v
 docker compose up -d db
 ```
+
+**Uwaga:** to usuwa wolumen `postgres_data`, czyli **wszystkie** dane w `dzialki`
+(zapisane analizy). Nie rób tego bez potwierdzenia, jeśli baza deweloperska
+zawiera dane, na których komuś zależy.
+
+#### Baza utknęła w pośredniej rewizji / limit 1600 kolumn (BK-306)
+
+Testy migracji/alembic (`backend/tests/test_alembic_integration.py`,
+`test_migration_*.py`, `test_versioned_model.py`) wykonują `alembic
+downgrade`/`upgrade`, żeby sprawdzić rollback. Od tej pory (BK-306) robią to
+na jednorazowej bazie utworzonej z szablonu `template_postgis`
+(`tests/conftest.py::_isolated_migration_database`), a nie na bazie
+wskazanej przez `DATABASE_URL` — więc uruchamianie ich lokalnie nie powinno
+już dotykać bazy aplikacji.
+
+Jeśli mimo to trafisz na objawy sprzed tej zmiany — `alembic_version`
+wskazuje starą rewizję (np. `014_utilities_preview` zamiast najnowszej) i/albo
+zapytanie zwraca błąd w rodzaju `tables can have at most 1600 columns`
+(PostgreSQL liczy do tego limitu też kolumny już usunięte — `attnum` nie jest
+odzyskiwany po `ALTER TABLE ... DROP COLUMN`), to oznacza, że jakiś proces
+(stara wersja testów, ręczny `alembic downgrade` na współdzielonej bazie)
+zostawił bazę w złym stanie. Sprawdź stan:
+
+```bash
+docker compose exec db psql -U app -d dzialki -c "SELECT * FROM alembic_version;"
+docker compose exec db psql -U app -d dzialki -c \
+  "SELECT count(*) FILTER (WHERE attisdropped) AS dropped, max(attnum) AS max_attnum \
+   FROM pg_attribute WHERE attrelid = 'pog_data'::regclass;"
+```
+
+Możliwe naprawy, od najmniej do najbardziej inwazyjnej — **zapytaj, zanim
+wykonasz którąkolwiek na bazie z danymi, na których komuś zależy**:
+
+1. **Dokończ migrację do head** (nie usuwa danych, jeśli limit kolumn nie
+   został jeszcze przekroczony):
+   ```bash
+   docker compose exec backend alembic upgrade head
+   ```
+2. **Limit kolumn już przekroczony** (`upgrade head` sam rzuca
+   `TooManyColumns`) — kolumn z usuniętymi (`attisdropped`) atrybutami nie da
+   się „odzyskać” bez przepisania tabeli. Jedyne wyjście to migracja danych do
+   nowej tabeli/bazy (`CREATE TABLE ... AS SELECT` z jawną listą żywych
+   kolumn, albo `pg_dump --data-only` + `pg_restore` do świeżo zainicjowanej
+   bazy na aktualnym `head`) — zrób to tylko po konsultacji z kimś, kto zna
+   wagę danych w tej bazie.
+3. **Baza jest tylko środowiskiem testowym bez ważnych danych** — najprościej
+   zacząć od zera:
+   ```bash
+   docker compose down -v
+   docker compose up -d db
+   docker compose exec backend alembic upgrade head
+   ```
 
 ## Struktura katalogów
 

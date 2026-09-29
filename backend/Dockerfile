@@ -29,5 +29,16 @@ COPY tests/ ./tests/
 COPY docker-entrypoint.sh /usr/local/bin/dzialki-entrypoint
 RUN chmod +x /usr/local/bin/dzialki-entrypoint
 
+# Proces API nie działa jako root. Katalogi pod named volumes są tworzone tu z
+# właścicielem ``app``: nowy wolumen dziedziczy właściciela z obrazu. Istniejące
+# wolumeny utworzone przez wcześniejszy obraz (root) wymagają jednorazowego
+# ``chown`` — patrz README. /app musi być zapisywalny (cache pytest, .coverage).
+RUN groupadd --system app \
+    && useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app \
+    && mkdir -p /var/cache/dzialki/map-tiles /var/lib/dzialki/import-artifacts \
+    && chown -R app:app /app /var/cache/dzialki /var/lib/dzialki
+
+USER app
+
 ENTRYPOINT ["dzialki-entrypoint"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

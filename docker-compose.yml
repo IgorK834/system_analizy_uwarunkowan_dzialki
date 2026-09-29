@@ -8,7 +8,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      # Tylko loopback: baza ma domyślne dane dostępowe (app/app) i nie może być
+      # widoczna w sieci hosta. Backend łączy się po hoście ``db`` w sieci Docker.
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d dzialki"]
       interval: 5s
@@ -23,6 +25,14 @@ services:
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
       KIMPZP_WMS_BASE_URL: ${KIMPZP_WMS_BASE_URL:-https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego}
       KIMPZP_WMS_LAYERS: ${KIMPZP_WMS_LAYERS:-plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,wektor-pow,wektor-pkt,granice}
+      ANALYSIS_CACHE_MAX_AGE_DAYS: ${ANALYSIS_CACHE_MAX_AGE_DAYS:-7}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-}
+      ADMIN_API_KEYS: ${ADMIN_API_KEYS:-}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_ANALYZE_PER_MINUTE: ${RATE_LIMIT_ANALYZE_PER_MINUTE:-20}
+      RATE_LIMIT_REFRESH_PER_MINUTE: ${RATE_LIMIT_REFRESH_PER_MINUTE:-5}
+      RATE_LIMIT_REPORT_PER_MINUTE: ${RATE_LIMIT_REPORT_PER_MINUTE:-30}
+      RATE_LIMIT_TRUST_FORWARDED_FOR: ${RATE_LIMIT_TRUST_FORWARDED_FOR:-false}
       MAP_TILE_CACHE_DIR: /var/cache/dzialki/map-tiles
       MAP_TILE_CACHE_TTL_SECONDS: ${MAP_TILE_CACHE_TTL_SECONDS:-86400}
       MAP_TILE_STALE_TTL_SECONDS: ${MAP_TILE_STALE_TTL_SECONDS:-604800}
