@@ -1,46 +1,82 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getActivePogTileRelease } from "@/lib/api";
 import type { PogStatusFilter } from "@/lib/pogLayers";
 import { POG_STATUS_FILTERS } from "@/lib/pogLayers";
 import { DEFAULT_POG_THEME, isPogThemeId, type PogThemeId } from "@/lib/pogThemes";
-import type { PogTileRelease } from "@/lib/types";
+import type { PogReleaseState, PogTileRelease } from "@/lib/types";
 
-export type PogReleaseState =
-  | { status: "loading"; release: null }
-  | { status: "available"; release: PogTileRelease }
-  | { status: "no_release"; release: null }
-  | { status: "error"; release: null };
+export type { PogReleaseState } from "@/lib/types";
+
+export type PogReleaseController = PogReleaseState & {
+  /** Jawne ponowienie pobrania metadanych (przycisk „Ponów”), nie odświeżanie w tle. */
+  retry: () => void;
+  retrying: boolean;
+};
 
 /**
- * Pobiera metadane aktywnego wydania POG dokładnie raz na sesję mapy (BK-401).
+ * Pobiera metadane aktywnego wydania POG raz na sesję mapy (BK-401).
  *
  * URL kafli jest przypięty do `release_id` z tej odpowiedzi; aktywowanie nowego
  * wydania w tle nie podmienia źródła w trakcie sesji — inaczej część kafli
- * pochodziłaby z innego stanu danych niż reszta mapy.
+ * pochodziłaby z innego stanu danych niż reszta mapy. Nowe wydanie pojawia się
+ * wyłącznie po jawnym ponowieniu (BK-406).
+ *
+ * Ponowienie nie usuwa ostatnich danych bez informacji: jeśli się nie uda, a
+ * wcześniej wczytano wydanie, stan przechodzi w `stale` z tym samym wydaniem i
+ * datą ostatniego potwierdzenia; ponowne potwierdzenie tego samego wydania
+ * zachowuje ten sam obiekt (źródło mapy nie jest odtwarzane).
  */
-export function usePogTileRelease(): PogReleaseState {
+export function usePogTileRelease(): PogReleaseController {
   const [state, setState] = useState<PogReleaseState>({ status: "loading", release: null });
+  const [attempt, setAttempt] = useState(0);
+  const [retrying, setRetrying] = useState(false);
+  const lastGood = useRef<{ release: PogTileRelease; checkedAt: string } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     void getActivePogTileRelease({ signal: controller.signal })
-      .then((release) => {
+      .then((fetched) => {
         if (controller.signal.aborted) return;
-        setState(
-          release ? { status: "available", release } : { status: "no_release", release: null },
-        );
+        setRetrying(false);
+        if (!fetched) {
+          lastGood.current = null;
+          setState({ status: "no_release", release: null });
+          return;
+        }
+        const previous = lastGood.current?.release;
+        const release =
+          previous && previous.release_id === fetched.release_id ? previous : fetched;
+        const checkedAt = new Date().toISOString();
+        lastGood.current = { release, checkedAt };
+        setState({ status: "available", release, checkedAt });
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        setState({ status: "error", release: null });
+        setRetrying(false);
+        const previous = lastGood.current;
+        setState(
+          previous
+            ? {
+                status: "stale",
+                release: previous.release,
+                checkedAt: previous.checkedAt,
+                reason: "refresh_failed",
+              }
+            : { status: "error", release: null },
+        );
       });
     return () => controller.abort();
+  }, [attempt]);
+
+  const retry = useCallback(() => {
+    setRetrying(true);
+    setAttempt((value) => value + 1);
   }, []);
 
-  return state;
+  return useMemo(() => ({ ...state, retry, retrying }), [state, retry, retrying]);
 }
 
 export const POG_MAP_PREFERENCES_KEY = "dzialki:pog-map:v1";

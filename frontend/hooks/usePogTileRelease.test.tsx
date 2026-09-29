@@ -21,9 +21,47 @@ describe("usePogTileRelease", () => {
     getReleaseMock.mockResolvedValue(release);
     const { result, rerender } = renderHook(() => usePogTileRelease());
     expect(result.current.status).toBe("loading");
-    await waitFor(() => expect(result.current).toEqual({ status: "available", release }));
+    await waitFor(() => expect(result.current).toMatchObject({ status: "available", release }));
+    expect(result.current.status === "available" && result.current.checkedAt).toBeTruthy();
     rerender();
     expect(getReleaseMock).toHaveBeenCalledOnce();
+  });
+
+  it("BK-406: ponowienie bez zmiany wydania zachowuje obiekt; nieudane daje stale z datą", async () => {
+    const release = buildPogRelease();
+    getReleaseMock.mockResolvedValueOnce(release);
+    const { result } = renderHook(() => usePogTileRelease());
+    await waitFor(() => expect(result.current.status).toBe("available"));
+    const firstCheck = result.current.status === "available" ? result.current.checkedAt : null;
+
+    // To samo wydanie (nowy obiekt JSON) — źródło mapy nie może się przeładować.
+    getReleaseMock.mockResolvedValueOnce(buildPogRelease());
+    act(() => result.current.retry());
+    expect(result.current.retrying).toBe(true);
+    // Podczas ponowienia dotychczasowe dane pozostają.
+    expect(result.current.release).toBe(release);
+    await waitFor(() => expect(result.current.retrying).toBe(false));
+    expect(result.current.release).toBe(release);
+
+    getReleaseMock.mockRejectedValueOnce(new Error("503"));
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.status).toBe("stale"));
+    expect(result.current).toMatchObject({ status: "stale", release, reason: "refresh_failed" });
+    expect(result.current.status === "stale" && result.current.checkedAt >= (firstCheck ?? "")).toBe(true);
+
+    // Jawne ponowienie może przełączyć na nowsze wydanie.
+    const newer = buildPogRelease({ release_id: 43, version_label: "pog-new" });
+    getReleaseMock.mockResolvedValueOnce(newer);
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.release).toBe(newer));
+    expect(result.current.status).toBe("available");
+
+    getReleaseMock.mockResolvedValueOnce(null);
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.status).toBe("no_release"));
+    getReleaseMock.mockRejectedValueOnce(new Error("503"));
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.status).toBe("error"));
   });
 
   it("odróżnia brak lokalnego wydania od błędu warstwy", async () => {
