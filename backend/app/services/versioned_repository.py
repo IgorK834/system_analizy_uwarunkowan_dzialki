@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import TypeVar
 
 from sqlalchemy import ColumnElement, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import QueryableAttribute, Session
 
 from app.models.versioned import (
     DocumentVersion,
@@ -35,7 +35,7 @@ def _as_of_predicate(model: type[VersionT], as_of: datetime) -> ColumnElement[bo
 def version_as_of(
     session: Session,
     model: type[VersionT],
-    owner_column: ColumnElement[int],
+    owner_column: ColumnElement[int] | QueryableAttribute[int],
     owner_id: int,
     as_of: datetime,
 ) -> VersionT | None:

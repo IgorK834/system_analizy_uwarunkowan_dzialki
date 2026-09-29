@@ -493,13 +493,15 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
     assert response.infrastructure[0].network_type == "water"
     assert response.infrastructure[0].buffer_m == 1.5
     assert response.infrastructure[0].zone_area_sqm == pytest.approx(276.0)
-    assert response.infrastructure[0].affects_buildable_area is True
+    # Reguła produkcyjna nie ma zweryfikowanej podstawy (BK-306): strefa jest
+    # wyłącznie symulacją i nie pomniejsza obszaru zabudowy.
+    assert response.infrastructure[0].affects_buildable_area is False
     assert response.infrastructure[0].rule_source is not None
     assert response.infrastructure[0].network_geometry_geojson is not None
     assert response.infrastructure[0].network_geometry_geojson["properties"]["layer"] == "network"
     assert response.infrastructure[0].protection_zone_geojson is not None
     assert response.infrastructure[0].protection_zone_geojson["properties"]["layer"] == "protection_zone"
-    assert response.buildable_area_sqm == pytest.approx(8188.0)
+    assert response.buildable_area_sqm == pytest.approx(8464.0)
     assert response.risks[0].risk_type == "natura_2000"
     # BK-303: udział jest polem strukturalnym; opis to prezentacja z tego pola.
     assert response.risks[0].intersection_pct == 100.0
@@ -517,13 +519,13 @@ async def test_unavailable_isok_keeps_kiut_and_gdos_results() -> None:
         )
         assert saved_infrastructure is not None
         assert saved_infrastructure.zone_area_sqm == pytest.approx(276.0)
-        assert saved_infrastructure.affects_buildable_area is True
+        assert saved_infrastructure.affects_buildable_area is False
         assert saved_infrastructure.network_geometry_geojson is not None
         assert saved_infrastructure.protection_zone_geojson is not None
         cached = db.get(Analysis, response.analysis_id)
         assert cached is not None
         rebuilt = build_analyze_response_from_analysis(cached, db)
-        assert rebuilt.buildable_area_sqm == pytest.approx(8188.0)
+        assert rebuilt.buildable_area_sqm == pytest.approx(8464.0)
         assert rebuilt.infrastructure[0].rule_source is not None
         assert rebuilt.infrastructure[0].network_geometry_geojson is not None
         assert rebuilt.infrastructure[0].protection_zone_geojson is not None

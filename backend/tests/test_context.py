@@ -10,13 +10,21 @@ from shapely.geometry import Polygon
 
 from app.schemas.analyze import SourceMetadata
 from app.services.context import (
+    ContextResult,
     ContextSectionResult,
     _finalize_section,
     analyze_context,
 )
 from app.services.gdos import GdosServiceUnavailableError
 from app.services.isok import IsokServiceUnavailableError, RiskFeature
-from app.services.kiut import NetworkFeature
+from app.services.kiut import (
+    REASON_SERVICE_TIMEOUT,
+    REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+    KiutNetworkSection,
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
+    NetworkFeature,
+)
 from app.services.nmt import (
     NmtServiceUnavailableError,
     TerrainExtremes,
@@ -61,6 +69,16 @@ def _network_feature(warning: str | None = None) -> NetworkFeature:
     )
 
 
+def _kiut_section(features: list[NetworkFeature] | None = None) -> KiutNetworkSection:
+    """Sekcja KIUT w nowym kontrakcie: provenance także przy braku sieci."""
+    items = features or []
+    return KiutNetworkSection(
+        features=items,
+        source_metadata=_metadata("KIUT"),
+        warnings=[f.warning for f in items if f.warning],
+    )
+
+
 def _risk_feature(warnings: list[str] | None = None) -> RiskFeature:
     return RiskFeature(
         risk_type="flood",
@@ -78,9 +96,9 @@ def _risk_feature(warnings: list[str] | None = None) -> RiskFeature:
 async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest() -> (
     None
 ):
-    async def _slow_kiut(*args: object, **kwargs: object) -> list[object]:
+    async def _slow_kiut(*args: object, **kwargs: object) -> KiutNetworkSection:
         await asyncio.sleep(0.2)
-        return []
+        return _kiut_section()
 
     async def _slow_other(*args: object, **kwargs: object) -> list[object]:
         await asyncio.sleep(0.05)
@@ -92,7 +110,7 @@ async def test_analyze_context_runs_four_sections_in_parallel_close_to_slowest()
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
+            "app.services.context.fetch_kiut_network_section",
             new=AsyncMock(side_effect=_slow_kiut),
         ),
         patch(
@@ -125,8 +143,8 @@ async def test_analyze_context_isok_failure_does_not_abort_other_sections() -> N
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[kiut_feature]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section([kiut_feature])),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -150,8 +168,8 @@ async def test_analyze_context_isok_failure_does_not_abort_other_sections() -> N
 async def test_analyze_context_unexpected_exception_maps_to_error_status() -> None:
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section()),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -176,8 +194,8 @@ async def test_analyze_context_partial_result_contains_warnings_and_status_per_s
 ):
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section()),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -208,8 +226,8 @@ async def test_analyze_context_success_populates_data_and_source_metadata() -> N
 
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[kiut_feature]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section([kiut_feature])),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -235,8 +253,8 @@ async def test_analyze_context_success_populates_data_and_source_metadata() -> N
 async def test_analyze_context_collects_per_feature_warnings_from_both_shapes() -> None:
     with (
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[_network_feature("w1")]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section([_network_feature("w1")])),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -255,12 +273,12 @@ async def test_analyze_context_collects_per_feature_warnings_from_both_shapes() 
 
 @pytest.mark.asyncio
 async def test_analyze_context_uses_single_shared_httpx_client_instance() -> None:
-    kiut_mock = AsyncMock(return_value=[])
+    kiut_mock = AsyncMock(return_value=_kiut_section())
     isok_mock = AsyncMock(return_value=[])
     gdos_mock = AsyncMock(return_value=[])
 
     with (
-        patch("app.services.context.fetch_kiut_networks", new=kiut_mock),
+        patch("app.services.context.fetch_kiut_network_section", new=kiut_mock),
         patch("app.services.context.fetch_flood_risk_section", new=isok_mock),
         patch("app.services.context.fetch_nature_protection_section", new=gdos_mock),
     ):
@@ -280,8 +298,8 @@ async def test_analyze_context_logs_elapsed_time_and_source_name(caplog) -> None
     with (
         patch.object(context_logger, "disabled", False),
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section()),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -306,8 +324,8 @@ async def test_analyze_context_logs_source_name_when_section_fails(caplog) -> No
     with (
         patch.object(context_logger, "disabled", False),
         patch(
-            "app.services.context.fetch_kiut_networks",
-            new=AsyncMock(return_value=[]),
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(return_value=_kiut_section()),
         ),
         patch(
             "app.services.context.fetch_flood_risk_section",
@@ -337,14 +355,78 @@ def test_finalize_section_maps_generic_exception_to_error_directly() -> None:
     assert result.status == "error"
 
 
-def test_finalize_section_empty_list_is_available_with_none_source_metadata() -> None:
-    assert _finalize_section("kiut", []) == ContextSectionResult(
+def test_finalize_section_empty_kiut_section_is_available_with_provenance() -> None:
+    section = _kiut_section()
+
+    result = _finalize_section("kiut", section)
+
+    assert result == ContextSectionResult(
         section="kiut",
         status="available",
         data=[],
-        source_metadata=None,
+        source_metadata=section.source_metadata,
         warnings=[],
     )
+
+
+def test_finalize_section_maps_kiut_service_unavailable_with_provenance() -> None:
+    error = KiutServiceUnavailableError(
+        "timeout",
+        reason_code=REASON_SERVICE_TIMEOUT,
+        source_metadata=_metadata("KIUT"),
+    )
+
+    result = _finalize_section("kiut", error)
+
+    assert result.status == "unavailable"
+    assert result.data == []
+    assert result.reason_code == REASON_SERVICE_TIMEOUT
+    assert result.source_metadata is error.source_metadata
+    assert "niedostępna" in result.warnings[0]
+
+
+def test_finalize_section_maps_kiut_source_not_runnable_to_unavailable() -> None:
+    error = KiutSourceNotRunnableError(
+        "guard",
+        reason_code=REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+        source_metadata=_metadata("KIUT"),
+    )
+
+    result = _finalize_section("kiut", error)
+
+    assert result.status == "unavailable"
+    assert result.reason_code == REASON_VECTOR_SOURCE_NOT_CONFIRMED
+    assert result.source_metadata is error.source_metadata
+    assert "nie oznacza braku sieci" in result.warnings[0]
+
+
+@pytest.mark.asyncio
+async def test_analyze_context_kiut_failure_is_unavailable_not_empty_available() -> None:
+    error = KiutServiceUnavailableError(
+        "HTTP 500",
+        reason_code="HTTP_ERROR",
+        source_metadata=_metadata("KIUT"),
+    )
+    with (
+        patch(
+            "app.services.context.fetch_kiut_network_section",
+            new=AsyncMock(side_effect=error),
+        ),
+        patch(
+            "app.services.context.fetch_flood_risk_section",
+            new=AsyncMock(return_value=[]),
+        ),
+        patch(
+            "app.services.context.fetch_nature_protection_section",
+            new=AsyncMock(return_value=[]),
+        ),
+    ):
+        result = await analyze_context(PARCEL)
+
+    assert result.kiut.status == "unavailable"
+    assert result.kiut.reason_code == "HTTP_ERROR"
+    assert result.isok.status == "available"
+    assert result.kiut in result.critical_sections()
 
 
 def test_context_section_result_is_frozen() -> None:
@@ -358,7 +440,7 @@ def test_context_section_result_is_frozen() -> None:
 async def test_nmt_no_coverage_is_explicit_measurement_not_empty_list() -> None:
     """Brak pokrycia NMT nie jest pustą listą, którą można wziąć za płaski teren."""
     with (
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=_kiut_section())),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
             "app.services.context.fetch_nature_protection_section",
@@ -387,7 +469,7 @@ async def test_nmt_measurement_is_single_item_with_source() -> None:
         source_metadata=_metadata("NMT"),
     )
     with (
-        patch("app.services.context.fetch_kiut_networks", new=AsyncMock(return_value=[])),
+        patch("app.services.context.fetch_kiut_network_section", new=AsyncMock(return_value=_kiut_section())),
         patch("app.services.context.fetch_flood_risk_section", new=AsyncMock(return_value=[])),
         patch(
             "app.services.context.fetch_nature_protection_section",
@@ -430,3 +512,70 @@ def test_finalize_section_without_failure_provenance_keeps_none() -> None:
     assert result.source_metadata is None
     # BK-303: wyjątek bez wskazanej przyczyny ma jawny kod domyślny.
     assert result.reason_code == "INVALID_RESPONSE"
+
+
+def _unavailable_kiut(reason_code: str) -> ContextSectionResult:
+    return _finalize_section(
+        "kiut",
+        KiutServiceUnavailableError(
+            "x", reason_code=reason_code, source_metadata=_metadata("KIUT")
+        ),
+    )
+
+
+def _context_with_kiut(kiut: ContextSectionResult) -> ContextResult:
+    available = ContextSectionResult(section="isok", status="available")
+    return ContextResult(
+        kiut=kiut,
+        isok=available,
+        gdos=ContextSectionResult(section="gdos", status="available"),
+        nmt=ContextSectionResult(section="nmt", status="available"),
+    )
+
+
+def test_known_kiut_source_gap_does_not_block_critical_status() -> None:
+    blocked = _finalize_section(
+        "kiut",
+        KiutSourceNotRunnableError(
+            "guard",
+            reason_code=REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+            source_metadata=_metadata("KIUT"),
+        ),
+    )
+    context = _context_with_kiut(blocked)
+
+    assert blocked.status == "unavailable"
+    assert blocked.is_known_source_gap is True
+    assert blocked not in context.critical_sections()
+    assert all(s.status == "available" for s in context.critical_sections())
+
+
+def test_real_kiut_outage_still_blocks_critical_status() -> None:
+    outage = _unavailable_kiut(REASON_SERVICE_TIMEOUT)
+    context = _context_with_kiut(outage)
+
+    assert outage.is_known_source_gap is False
+    assert outage in context.critical_sections()
+    assert not all(s.status == "available" for s in context.critical_sections())
+
+
+def test_known_source_gap_warning_is_not_error_severity() -> None:
+    from app.services.analysis_orchestrator import _map_context
+
+    def severities(kiut: ContextSectionResult) -> set[str]:
+        _infra, _risks, warnings, _sources, _area = _map_context(
+            _context_with_kiut(kiut), PARCEL, PARCEL
+        )
+        return {w.severity for w in warnings if w.source_name == "kiut"}
+
+    blocked = _finalize_section(
+        "kiut",
+        KiutSourceNotRunnableError(
+            "guard",
+            reason_code=REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+            source_metadata=_metadata("KIUT"),
+        ),
+    )
+
+    assert severities(blocked) == {"warning"}
+    assert severities(_unavailable_kiut(REASON_SERVICE_TIMEOUT)) == {"error"}

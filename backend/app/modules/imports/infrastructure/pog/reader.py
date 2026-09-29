@@ -52,6 +52,7 @@ from app.modules.imports.infrastructure.pog.csw_metadata import (
 from app.modules.imports.infrastructure.vector import VectorFeature, read_vector_features
 from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsResource
 from app.shared.geometry import GeometryPayload
+from app.shared.provenance import CatalogRecordProvenance
 from app.shared.safe_archive import extract_zip
 from app.services.gml import GmlResponseError, parse_feature_collection
 
@@ -275,7 +276,7 @@ class WfsPogReader:
         assert self._csw_url is not None
         warnings: list[str] = []
         responses: list[tuple[str, bytes]] = []
-        records = []
+        records: list[CatalogRecordProvenance] = []
         managed = self._csw_client is None
         client = self._csw_client or OgcClient.for_urls(
             source_id="pog_app",

@@ -14,3 +14,8 @@ markers = [
 
 [tool.coverage.run]
 source = ["app"]
+
+[tool.mypy]
+python_version = "3.13"
+# shapely, pyproj i inne biblioteki GIS nie publikują stubów typów.
+ignore_missing_imports = true

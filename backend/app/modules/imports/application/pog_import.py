@@ -25,7 +25,6 @@ from app.modules.imports.application.common import (
 )
 from app.modules.imports.application.parcels_import import RepairedGeometry
 from app.modules.imports.domain.pog import (
-    POG_FEATURE_TYPES,
     PogActRecord,
     PogFeatureRecord,
     PogValidationError,

@@ -13,11 +13,21 @@ Sekcje nie są równorzędne pod względem wpływu na wynik analizy:
   Brak danych wysokościowych nie może więc degradować statusu analizy, ale musi
   być widoczny jako ostrzeżenie sekcji.
 
-Znanym i zaakceptowanym ograniczeniem jest zachowanie KIUT: istniejąca funkcja
-``fetch_kiut_networks`` przechwytuje timeouty i błędy HTTP oraz zwraca ``[]``.
-Dlatego sekcja KIUT nie raportuje z tych powodów statusu ``unavailable`` ani
-``error``; pusta lista jest finalizowana jako ``available``. Zachowanie to jest
-celowe i pozostaje odmienne od bezpieczeństwo-krytycznych sekcji ISOK i GDOŚ.
+KIUT stosuje ten sam kontrakt co ISOK i GDOŚ: ``fetch_kiut_network_section``
+zwraca sekcję z provenance zapytania (także przy braku sieci) albo podnosi
+``KiutServiceUnavailableError`` (timeout, błąd HTTP/transportu, odpowiedź
+niepoprawna lub niekompletna) i ``KiutSourceNotRunnableError`` (guard katalogu
+zablokował źródło przed wysłaniem żądania). Oba wyjątki są finalizowane jako
+``unavailable`` z ``reason_code`` i provenance próby — nigdy jako ``available``
+z pustą listą, bo pusta lista oznacza wyłącznie sprawdzony brak sieci.
+
+Awaria KIUT (timeout, błąd HTTP, odpowiedź niepoprawna) obniża status analizy,
+bo sieć mogła istnieć. Zablokowanie źródła przez guard katalogu
+(``VECTOR_SOURCE_NOT_CONFIRMED``) jest natomiast znaną, stałą luką: geometria
+KIUT nie bierze wtedy udziału w obliczeniach, a podgląd i pokrycie zapewnia
+osobny wskaźnik WMS. Ta luka jest widoczna jako ostrzeżenie i ``unavailable``
+sekcji, ale nie blokuje statusu ``complete`` — inaczej żadna analiza nie mogłaby
+go osiągnąć, dopóki kontrakt KIUT/GESUT nie zostanie potwierdzony.
 """
 
 from __future__ import annotations
@@ -37,7 +47,13 @@ from app.services.gdos import (
     fetch_nature_protection_section,
 )
 from app.services.isok import IsokServiceUnavailableError, fetch_flood_risk_section
-from app.services.kiut import bbox_from_geometry, fetch_kiut_networks
+from app.services.kiut import (
+    REASON_VECTOR_SOURCE_NOT_CONFIRMED,
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
+    bbox_from_geometry,
+    fetch_kiut_network_section,
+)
 from app.services.nmt import NmtServiceUnavailableError, fetch_terrain_extremes
 
 logger = logging.getLogger(__name__)
@@ -47,6 +63,8 @@ SectionName = Literal["kiut", "isok", "gdos", "nmt"]
 # Kontrolowane wyjątki niedostępności — mapowane na status ``unavailable``
 # zamiast na nieoczekiwany błąd sekcji.
 _EXPECTED_UNAVAILABLE_ERRORS: tuple[type[Exception], ...] = (
+    KiutServiceUnavailableError,
+    KiutSourceNotRunnableError,
     IsokServiceUnavailableError,
     GdosServiceUnavailableError,
     NmtServiceUnavailableError,
@@ -70,6 +88,15 @@ class ContextSectionResult:
     source_metadata: SourceMetadata | None = None
     warnings: list[str] = field(default_factory=list)
     reason_code: str | None = None
+
+    @property
+    def is_known_source_gap(self) -> bool:
+        """Źródło zablokowane przez katalog — stała, jawna luka, nie awaria."""
+        return (
+            self.section == "kiut"
+            and self.status == "unavailable"
+            and self.reason_code == REASON_VECTOR_SOURCE_NOT_CONFIRMED
+        )
 
 
 @dataclass(frozen=True)
@@ -95,8 +122,11 @@ class ContextResult:
 
         NMT jest celowo pominięty: rzeźba terenu jest informacją projektową,
         a nie ograniczeniem prawnym, więc jej brak nie może oznaczać, że analiza
-        ograniczeń jest niepełna.
+        ograniczeń jest niepełna. KIUT zablokowany przez guard katalogu
+        (``is_known_source_gap``) także jest pominięty — patrz docstring modułu.
         """
+        if self.kiut.is_known_source_gap:
+            return (self.isok, self.gdos)
         return (self.kiut, self.isok, self.gdos)
 
 
@@ -129,10 +159,11 @@ async def analyze_context(parcel_geometry: BaseGeometry) -> ContextResult:
 async def _run_kiut_section(
     parcel_bounds: tuple[float, float, float, float],
     client: httpx.AsyncClient,
-) -> list[Any]:
+) -> Any:
+    """Zwraca sekcję KIUT z provenance zapytania także przy braku sieci."""
     start = time.monotonic()
     try:
-        return await fetch_kiut_networks(parcel_bounds, client=client)
+        return await fetch_kiut_network_section(parcel_bounds, client=client)
     finally:
         logger.info("Sekcja KIUT zakończona po %.3fs.", time.monotonic() - start)
 
@@ -185,8 +216,8 @@ def _finalize_section(
 ) -> ContextSectionResult:
     """Mapuje wynik ``gather`` na dostępny, niedostępny albo błędny wynik.
 
-    Kontrolowane wyjątki ISOK/GDOŚ/NMT oznaczają oczekiwaną niedostępność
-    usługi. Inne wyjątki oznaczają nieoczekiwany błąd. Poprawna lista, także
+    Kontrolowane wyjątki KIUT/ISOK/GDOŚ/NMT oznaczają oczekiwaną niedostępność
+    usługi albo zablokowanie źródła. Inne wyjątki oznaczają nieoczekiwany błąd. Poprawna lista, także
     pusta, oznacza dostępność sekcji. Jeżeli kontrolowany wyjątek niesie
     provenance nieudanej próby (``source_metadata``) i kod przyczyny, są one
     zachowane — niepełny wynik nadal dokumentuje zapytanie.
@@ -202,10 +233,7 @@ def _finalize_section(
             status="unavailable",
             source_metadata=getattr(outcome, "source_metadata", None),
             reason_code=getattr(outcome, "reason_code", None),
-            warnings=[
-                f"Usługa {section.upper()} jest tymczasowo niedostępna — "
-                "dane tej sekcji mogą być niepełne."
-            ],
+            warnings=[_unavailable_warning(section, outcome)],
         )
 
     if isinstance(outcome, BaseException):
@@ -223,7 +251,7 @@ def _finalize_section(
             ],
         )
 
-    # Sekcje ISOK/GDOŚ zwracają obiekt z ``features`` i provenance całego
+    # Sekcje KIUT/ISOK/GDOŚ zwracają obiekt z ``features`` i provenance całego
     # zapytania — dzięki temu „sprawdzono, brak obiektów” ma znane źródło.
     features = getattr(outcome, "features", None)
     if features is not None:
@@ -238,6 +266,19 @@ def _finalize_section(
         data=data,
         source_metadata=source_metadata,
         warnings=_collect_feature_warnings(data),
+    )
+
+
+def _unavailable_warning(section: SectionName, outcome: BaseException) -> str:
+    if isinstance(outcome, KiutSourceNotRunnableError):
+        return (
+            "Wektorowe dane sieci uzbrojenia KIUT/GESUT nie są dostępne "
+            "(brak potwierdzonego kontraktu źródła) — brak danych nie oznacza "
+            "braku sieci."
+        )
+    return (
+        f"Usługa {section.upper()} jest tymczasowo niedostępna — "
+        "dane tej sekcji mogą być niepełne."
     )
 
 

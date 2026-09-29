@@ -15,7 +15,6 @@ import sys
 import time
 from pathlib import Path
 
-import httpx
 from PIL import Image
 
 # Dodaj backend do PYTHONPATH, jeśli uruchamiane bezpośrednio ze ścieżki
@@ -23,7 +22,7 @@ backend_dir = Path(__file__).resolve().parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-from app.services.wms_tiles import wms_tile_registry
+from app.services.wms_tiles import wms_tile_registry  # noqa: E402
 
 
 def lon_lat_to_tile(lon: float, lat: float, zoom: int) -> tuple[int, int]:

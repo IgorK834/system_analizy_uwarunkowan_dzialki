@@ -26,6 +26,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 input_path=command.input_path,
             )
         elif command.name == "raster":
+            # Parser CLI wymaga obu ścieżek dla polecenia ``raster``.
+            if command.input_path is None or command.control_points_path is None:
+                raise SystemExit("raster wymaga --input i --control-points")
             outcome = run_raster_command(
                 session,
                 source_id=command.source_id,
@@ -34,7 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 control_points_path=command.control_points_path,
                 page=command.page,
                 act_version_id=command.act_version_id,
-                transform_method=command.transform_method,
+                transform_method=command.transform_method or "gcp_affine",
                 nodata=command.nodata,
             )
             print(

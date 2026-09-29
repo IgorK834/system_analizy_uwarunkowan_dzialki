@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Final, Literal
+from datetime import date
+from typing import Final, Literal, cast
 
 from shapely import make_valid
 from shapely.geometry import MultiPolygon
@@ -414,7 +415,7 @@ def _act_result(analysis: PogAnalysisResult) -> PogActResult | None:
         version=(str(metadata.get("act_version")) if metadata.get("act_version") else source.act_version),
         title=(str(metadata.get("act_name")) if metadata.get("act_name") else source.source_name),
         resolution_number=(str(metadata.get("resolution_number")) if metadata.get("resolution_number") else None),
-        resolution_date=metadata.get("resolution_date"),
+        resolution_date=cast("date | None", metadata.get("resolution_date")),
     )
 
 

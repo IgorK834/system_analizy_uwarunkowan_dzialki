@@ -21,10 +21,11 @@ import json
 import math
 import sys
 import zipfile
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import PurePosixPath
+from typing import IO
 from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree
 
@@ -32,7 +33,7 @@ import httpx
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.data_sources import ensure_source_runnable
+from app.core.data_sources import DataSourceEntry, ensure_source_runnable
 from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.models.versioned import DataRelease, DataSource, ImportRun, SourceArtifact
@@ -176,7 +177,7 @@ def parse_update_manifest(xml: bytes) -> UpdateManifest:
     return UpdateManifest(version_id=version_id, packages=tuple(packages))
 
 
-def parse_address_xml(stream: io.BufferedIOBase) -> Iterator[AddressRecord]:
+def parse_address_xml(stream: IO[bytes]) -> Iterator[AddressRecord]:
     """Strumieniowo odczytuje pełne/przyrostowe rekordy ``sln:adres``."""
     try:
         iterator = ElementTree.iterparse(stream, events=("end",))
@@ -522,7 +523,7 @@ class AddressIndexImporter:
             raise
         return result
 
-    def _ensure_data_source(self, catalog_entry: object) -> int:
+    def _ensure_data_source(self, catalog_entry: DataSourceEntry) -> int:
         with self._session_factory.begin() as db:
             source = db.query(DataSource).filter_by(source_id=SOURCE_ID).one_or_none()
             if source is None:
@@ -873,8 +874,8 @@ class AddressIndexImporter:
     @staticmethod
     def _quality_check(db: Session, release_id: int) -> dict[str, int]:
         counts = {
-            row.result_type: int(row.count)
-            for row in db.execute(
+            result_type: int(total)
+            for result_type, total in db.execute(
                 text(
                     "SELECT result_type, count(*) AS count "
                     "FROM address_search_entries WHERE data_release_id=:release_id "

@@ -29,7 +29,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]  # brak types-PyYAML
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 

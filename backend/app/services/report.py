@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from jinja2 import Environment, select_autoescape
 from sqlalchemy.orm import Session
@@ -752,6 +752,9 @@ def _risk_section_name(item: RiskResult) -> str:
     return "flood" if item.risk_type in {"flood", "flood_zone"} else "nature"
 
 
+_RISK_SECTION_NAMES: tuple[Literal["flood", "nature"], ...] = ("flood", "nature")
+
+
 def _risk_sections_context(response: AnalyzeResponse) -> list[dict[str, Any]]:
     """Sekcje ryzyka ze statusem niezależnym od listy obiektów (BK-303)."""
     sections = {section.section: section for section in response.risk_sections}
@@ -764,7 +767,7 @@ def _risk_sections_context(response: AnalyzeResponse) -> list[dict[str, Any]]:
             sections[name],
             [item for item in response.risks if _risk_section_name(item) == name],
         )
-        for name in ("flood", "nature")
+        for name in _RISK_SECTION_NAMES
         if name in sections
     ]
 

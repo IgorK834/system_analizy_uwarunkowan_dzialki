@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Final, Literal, Sequence
+from typing import Any, Final, Literal, Sequence
 
 from shapely import from_wkt
 from shapely.geometry.base import BaseGeometry
@@ -333,7 +333,7 @@ def _pair(
     parcel_area_sqm: float | None,
     as_of: date,
 ) -> CompatibilityZonePair:
-    base = {
+    base: dict[str, Any] = {
         "mpzp_zone_symbol": mpzp_zone.zone_symbol,
         "mpzp_zone_id": mpzp_zone.zone_id,
         "mpzp_assignment_method": mpzp_zone.assignment_method,
@@ -369,7 +369,7 @@ def _pair(
             rationale=f"{label}: {rule.reasoning}",
             manual_review_required=True,
         )
-    rule_fields = {
+    rule_fields: dict[str, Any] = {
         "rule_result": rule.result,
         "rule_id": rule.rule_id,
         "rule_version": rule.rule_version,

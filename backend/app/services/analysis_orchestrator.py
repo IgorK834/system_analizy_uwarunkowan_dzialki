@@ -152,10 +152,14 @@ async def run_analysis(
 
     lookup = await resolve_parcel(request)
     parcel_identifier = lookup.parcel_identifier
-    cached = get_cached_analysis(parcel_identifier, db)
+    # Sesja SQLAlchemy jest synchroniczna, więc każde jej użycie biegnie w wątku
+    # roboczym (sekwencyjnie, nigdy równolegle) i nie blokuje pętli zdarzeń.
+    cached = await asyncio.to_thread(get_cached_analysis, parcel_identifier, db)
     if not should_refresh_analysis(force_refresh, cached):
         assert cached is not None
-        response = build_analyze_response_from_analysis(cached, db)
+        response = await asyncio.to_thread(
+            build_analyze_response_from_analysis, cached, db
+        )
         elapsed_ms = _elapsed_ms(started)
         log_analysis_event(
             "cache_hit",
@@ -244,7 +248,9 @@ async def run_analysis(
     # wydzieleń dla całej analizy, a zapisany snapshot nie zależy od
     # późniejszego przełączenia wydania.
     mpzp_as_of = datetime.now(timezone.utc)
-    vector, vector_warnings = _assess_mpzp_vectors_safely(db, parcel_geometry, mpzp_as_of)
+    vector, vector_warnings = await asyncio.to_thread(
+        _assess_mpzp_vectors_safely, db, parcel_geometry, mpzp_as_of
+    )
     warnings.extend(vector_warnings)
     discovery, discovery_warnings = await _discover_mpzp_safely(parcel_geometry)
     warnings.extend(discovery_warnings)
@@ -301,7 +307,8 @@ async def run_analysis(
             warnings=warnings,
             sources=_unique_sources([*sources, *terrain_sources(terrain)]),
         )
-        saved = save_analysis(
+        saved = await asyncio.to_thread(
+            save_analysis,
             response,
             parcel_identifier,
             parcel_geometry,
@@ -313,10 +320,12 @@ async def run_analysis(
             pending_zone_symbol_candidates=discovery.candidate_zone_symbols,
             pending_document=pending_document,
         )
+        # ``pending_document`` jest ładowany leniwie — zapytanie także w wątku.
+        manual_zone_context = await asyncio.to_thread(build_manual_zone_context, saved)
         response = response.model_copy(
             update={
                 "analysis_id": saved.id,
-                "manual_zone_context": build_manual_zone_context(saved),
+                "manual_zone_context": manual_zone_context,
             }
         )
         _log_completion(started, parcel_identifier, response)
@@ -393,7 +402,8 @@ async def run_analysis(
         warnings=warnings,
         sources=_unique_sources([*sources, *terrain_sources(terrain)]),
     )
-    saved = save_analysis(
+    saved = await asyncio.to_thread(
+        save_analysis,
         response,
         parcel_identifier,
         parcel_geometry,
@@ -645,7 +655,8 @@ async def _parse_document_with_audit(
     ]
     snapshot = None
     try:
-        snapshot = persist_parser_audit(
+        snapshot = await asyncio.to_thread(
+            persist_parser_audit,
             db,
             planning_act_identifier=planning_act_identifier,
             document=document,
@@ -654,7 +665,7 @@ async def _parse_document_with_audit(
     except Exception as exc:
         # Brak zapisu nie może wyglądać jak sukces: wycofujemy niedokończony
         # lineage i dokładamy jawny warning do częściowego wyniku analizy.
-        db.rollback()
+        await asyncio.to_thread(db.rollback)
         log_analysis_event(
             "section_error",
             section="mpzp_document_persistence",
@@ -902,8 +913,13 @@ def _map_context(
     warnings: list[WarningMessage] = []
     sources: list[SourceMetadata] = []
     for section in context.sections():
+        # Znana luka źródła (KIUT bez potwierdzonego kontraktu) to informacja,
+        # nie awaria — nie może wyglądać jak błąd przy każdej analizie.
         severity: Literal["warning", "error"] = (
-            "error" if section.status in {"unavailable", "error"} else "warning"
+            "error"
+            if section.status in {"unavailable", "error"}
+            and not section.is_known_source_gap
+            else "warning"
         )
         warnings.extend(
             warnings_from_domain_messages(
@@ -1017,8 +1033,12 @@ def _map_context(
                 rule_note=(
                     matching_zone.note if matching_zone is not None else rule.note
                 ),
+                # Strefa reguły symulacyjnej (bez zweryfikowanej podstawy) jest tylko
+                # przybliżeniem — nie pomniejsza obszaru zabudowy (BK-306).
                 affects_buildable_area=(
-                    matching_zone is not None and matching_zone.zone_area_sqm > 0.0
+                    matching_zone is not None
+                    and matching_zone.affects_buildable_area
+                    and matching_zone.zone_area_sqm > 0.0
                 ),
                 network_geometry_geojson=analysis_layer_geometry_to_geojson(
                     feature.geometry,
@@ -1139,7 +1159,9 @@ async def _analyze_pog_best_effort(
     # zmieniają release_id ani SHA historycznego wyniku tej analizy.
     if db is not None:
         try:
-            local = _analyze_pog_local_release(db, parcel_geometry, teryt)
+            local = await asyncio.to_thread(
+                _analyze_pog_local_release, db, parcel_geometry, teryt
+            )
         except Exception as exc:
             log_analysis_event(
                 "section_error", section="pog_local_release", status=type(exc).__name__
@@ -1162,7 +1184,9 @@ async def _analyze_pog_best_effort(
         discovery = None
 
     if discovery is None or not discovery.source_responded:
-        return _pog_upstream_failure(parcel_geometry, teryt, db, discovery)
+        return await asyncio.to_thread(
+            _pog_upstream_failure, parcel_geometry, teryt, db, discovery
+        )
 
     warnings = list(discovery.warnings)
     sources = [discovery.source_metadata]
@@ -1500,7 +1524,7 @@ def _local_pog_vector_data(
     pinned: dict[str, object],
     act: dict[str, object],
 ) -> PogVectorData:
-    release_id = int(pinned["id"])  # type: ignore[arg-type]
+    release_id = int(pinned["id"])  # type: ignore[call-overload]
     buckets: dict[str, list[PogVectorFeature]] = {
         "planning_zone": [],
         "ouz": [],
@@ -1543,7 +1567,7 @@ def _local_pog_vector_data(
             "act_name": row.get("act_name"),
             "resolution_number": row.get("resolution_number"),
             "resolution_date": (
-                row["resolution_date"].isoformat()  # type: ignore[union-attr]
+                row["resolution_date"].isoformat()  # type: ignore[attr-defined]
                 if row.get("resolution_date") else None
             ),
         })

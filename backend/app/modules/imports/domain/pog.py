@@ -10,7 +10,7 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import asdict, dataclass, field, replace
 from datetime import date, datetime
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 from app.shared.geometry import GeometryPayload
 from app.shared.provenance import CatalogRecordProvenance, is_verified_https_url
@@ -496,7 +496,8 @@ def pog_record_from_dict(payload: Mapping[str, Any]) -> PogActRecord:
         return date.fromisoformat(value) if value else None
 
     documents = tuple(PogFormalDocumentRecord(
-        object_id=oid(item["object_id"]), title=item.get("title"), link=item.get("link"),
+        # ``object_id`` jest wymagany w snapshotcie dokumentów formalnych.
+        object_id=cast(PogObjectId, oid(item["object_id"])), title=item.get("title"), link=item.get("link"),
         act_reference=ref(item.get("act_reference")), source_reference=item.get("source_reference"),
         raw_attributes=item.get("raw_attributes", {}),
         publication_id=item.get("publication_id"), short_name=item.get("short_name"),

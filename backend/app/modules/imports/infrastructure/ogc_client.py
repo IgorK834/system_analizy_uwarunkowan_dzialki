@@ -9,7 +9,7 @@ import socket
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence, cast
 from urllib.parse import urljoin, urlsplit
 from xml.etree import ElementTree
 
@@ -184,7 +184,7 @@ class OgcClient:
         if config is None:
             config = OgcClientConfig(
                 allowed_hosts=hosts,
-                **dict(config_overrides or {}),
+                **cast("dict[str, Any]", dict(config_overrides or {})),
             )
         elif config_overrides:
             raise ValueError("Nie łącz config z config_overrides.")
@@ -842,7 +842,7 @@ class OgcClient:
                 self._check_deadline(deadline, current_url, operation, started_at)
                 try:
                     with self._client.stream(
-                        "GET", current_url, params=current_params
+                        "GET", current_url, params=cast(Any, current_params)
                     ) as response:
                         if response.status_code >= 500:
                             last_error = RuntimeError(f"HTTP {response.status_code}")

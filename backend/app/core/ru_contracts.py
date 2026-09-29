@@ -173,7 +173,8 @@ def parse_xml_root(
                     raise RuContractError(f"XML przekracza limit {max_nodes} węzłów.")
             else:
                 depth -= 1
-        root = parser.root
+        # ``iterparse`` w CPython udostępnia ``root``, ale stuby typeshed go nie znają.
+        root: ElementTree.Element | None = getattr(parser, "root", None)
         if root is None:
             raise RuContractError("XML nie zawiera elementu głównego.")
         return root

@@ -705,7 +705,7 @@ def _vector_zone_result(
         source_id=str(row["source_id"]),
         source_version=str(row.get("version_label") or "") or None,
         artifact_sha256=str(row.get("artifact_sha256") or "") or None,
-        data_release_id=int(row["data_release_id"]),  # type: ignore[arg-type]
+        data_release_id=int(row["data_release_id"]),  # type: ignore[call-overload]
         act_version=str(row.get("act_version") or "") or None,
         source_name=f"MPZP_WEKTOR:{row['source_id']}",
         source_url=source_uri if source_uri.startswith(("http://", "https://")) else None,
@@ -722,8 +722,8 @@ def _vector_zone_result(
         zone_id=str(row["zone_identifier"]),
         act_identifier=str(row["act_identifier"]),
         act_version=str(row.get("act_version") or "") or None,
-        act_version_id=int(row["act_version_id"]),  # type: ignore[arg-type]
-        data_release_id=int(row["data_release_id"]),  # type: ignore[arg-type]
+        act_version_id=int(row["act_version_id"]),  # type: ignore[call-overload]
+        data_release_id=int(row["data_release_id"]),  # type: ignore[call-overload]
         document_url=(str(row["document_url"]) if row.get("document_url") else None),
         touches_boundary=touches,
         assignment_method="vector_intersection",

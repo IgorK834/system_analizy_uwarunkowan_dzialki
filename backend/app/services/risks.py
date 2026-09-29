@@ -12,7 +12,7 @@ krajobrazowy i Natura 2000) nie dają pokrycia większego niż 100%.
 
 from __future__ import annotations
 
-from typing import Any, Final, Iterable, Sequence
+from typing import Any, Final, Iterable, Literal, Sequence
 
 from shapely import union_all
 from shapely.geometry.base import BaseGeometry
@@ -162,7 +162,7 @@ def build_risk_section(
         if parcel_area > 0
         else 0.0
     )
-    relation = (
+    relation: Literal["no_match", "intersection", "boundary_only"] = (
         "no_match" if not features else "intersection" if intersecting else "boundary_only"
     )
     return RiskSectionResult(

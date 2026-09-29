@@ -20,9 +20,18 @@ from app.core.data_sources import (
 )
 from app.core.settings import settings
 from app.modules.imports.application.common import ImportRelease
-from app.modules.imports.application.mpzp_import import run_mpzp_import
-from app.modules.imports.application.parcels_import import run_parcel_import
-from app.modules.imports.application.pog_import import run_pog_import
+from app.modules.imports.application.mpzp_import import (
+    MpzpSourceReader,
+    run_mpzp_import,
+)
+from app.modules.imports.application.parcels_import import (
+    ParcelSourceReader,
+    run_parcel_import,
+)
+from app.modules.imports.application.pog_import import (
+    PogSourceReader,
+    run_pog_import,
+)
 from app.modules.imports.domain.mpzp import PlanningActRecord
 from app.modules.imports.domain.pog import normalize_legal_status
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
@@ -49,7 +58,6 @@ from app.modules.imports.infrastructure.pog.reader import (
 )
 from app.modules.imports.infrastructure.ogc_client import (
     OgcClient,
-    OgcClientConfig,
     OgcContractError,
     OgcError,
     OgcExceptionReportError,
@@ -67,6 +75,20 @@ from app.modules.imports.infrastructure.raster.repository import (
 )
 from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
 from app.modules.imports.infrastructure.wfs import WfsResource
+
+# Kompozycja jest fasadą dla innych modułów (analysis/terrain, testy): te nazwy
+# są celowym re-eksportem, nie nieużywanymi importami.
+__all__ = [
+    "DecodedFloatBand",
+    "OgcClient",
+    "OgcContractError",
+    "OgcError",
+    "OgcExceptionReportError",
+    "OgcLimitError",
+    "OgcResult",
+    "OgcTransportError",
+    "RasterProcessingError",
+]
 
 
 def _publication_allowed(source_id: str) -> bool:
@@ -114,6 +136,7 @@ def run_parcels_command(
     mapping = source.field_mapping
     teryt = next((item for item in source.teryt_scope if item != "*"), None)
     resource = next((item for item in source.resources if item.role == "parcels"), None)
+    reader: ParcelSourceReader
     if input_path:
         reader = PyogrioParcelReader(
             input_path,
@@ -163,6 +186,7 @@ def run_mpzp_command(
 ):
     source = get_catalog().get(source_id)
     teryt = next((item for item in source.teryt_scope if item != "*"), "")
+    reader: MpzpSourceReader
     if local_resources:
         ensure_mpzp_vector_zones_source(source)
         configured = []
@@ -286,6 +310,7 @@ def run_pog_command(
         resolution_date=resolution_date,
         name=name_label or source.name,
     )
+    reader: PogSourceReader
     if local_resources:
         # Kontrakt CRS/pól per warstwa pochodzi z katalogu; lokalna ścieżka jest
         # jawnym wejściem operatora, a nie alternatywnym źródłem URL.

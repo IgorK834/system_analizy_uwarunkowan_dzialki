@@ -86,7 +86,7 @@ def run_terrain_relief(
             for item in entry.resources
             if item.role == _ELEVATION_ROLE and item.access_type is AccessType.WCS
         )
-        coverage_id = resource.layer or (entry.layers or [None])[0]
+        coverage_id = resource.layer or (entry.layers or [""])[0]
         if not coverage_id:
             raise CatalogError("Katalog nie deklaruje identyfikatora pokrycia WCS.")
     except (CatalogError, StopIteration) as exc:

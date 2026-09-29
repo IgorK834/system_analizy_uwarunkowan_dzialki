@@ -498,7 +498,7 @@ def _draw_png(
 
 def _draw_ring(
     draw: ImageDraw.ImageDraw,
-    projector: _Projector,
+    projector: _Projector | _BasemapProjector,
     ring: list[tuple[float, float]],
     color: tuple[int, int, int, int],
     width: int,

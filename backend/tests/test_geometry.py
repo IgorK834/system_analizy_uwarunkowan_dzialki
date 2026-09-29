@@ -1,4 +1,5 @@
 import math
+from datetime import date
 
 import pytest
 from shapely import wkt as shapely_wkt
@@ -439,7 +440,8 @@ def test_calculate_technical_setback_warning_mentions_technical_and_mpzp() -> No
 # --- calculate_network_protection_zones -------------------------------------
 
 # Osobny zestaw reguł testowych z okrągłymi wartościami, niezależny od
-# produkcyjnego network_rules.json, dla deterministycznych obliczeń.
+# produkcyjnego network_rules.json, dla deterministycznych obliczeń. Reguły mają
+# zweryfikowaną podstawę (BK-306), bo tylko takie pomniejszają obszar netto.
 CUSTOM_TEST_RULES = {
     "water": NetworkRule(
         network_type="water",
@@ -448,6 +450,11 @@ CUSTOM_TEST_RULES = {
         confidence=0.9,
         note="test",
         apply_even_outside_parcel=False,
+        legal_basis="test: reguła deterministyczna",
+        basis_verified_at=date(2026, 1, 1),
+        verification_status="verified",
+        simulation_only=False,
+        affects_buildable_area=True,
     ),
     "gas": NetworkRule(
         network_type="gas",
@@ -456,6 +463,11 @@ CUSTOM_TEST_RULES = {
         confidence=0.9,
         note="test",
         apply_even_outside_parcel=True,
+        legal_basis="test: reguła deterministyczna",
+        basis_verified_at=date(2026, 1, 1),
+        verification_status="verified",
+        simulation_only=False,
+        affects_buildable_area=True,
     ),
 }
 
@@ -480,6 +492,36 @@ def test_calculate_network_protection_zones_line_through_center_reduces_area_pre
     assert len(result.zones) == 1
     assert result.zones[0].zone_area_sqm == pytest.approx(400.0, abs=1.0)
     assert result.zones[0].geometry.area == pytest.approx(400.0, abs=1.0)
+
+
+def test_calculate_network_protection_zones_simulation_rule_does_not_reduce_area() -> None:
+    parcel = parse_parcel_geometry(SQUARE_100X100_WKT)
+    network = NetworkGeometryInput(
+        network_type="water",
+        geometry=LineString([(500000, 200050), (500100, 200050)]),
+    )
+    simulation_rules = {
+        "water": NetworkRule(
+            network_type="water",
+            default_buffer_m=2.0,
+            source="test",
+            confidence=0.9,
+            note="test",
+            apply_even_outside_parcel=False,
+        )
+    }
+
+    result = calculate_network_protection_zones(
+        parcel=parcel,
+        buildable_area=parcel,
+        networks=[network],
+        rules=simulation_rules,
+    )
+
+    # Reguła bez zweryfikowanej podstawy jest tylko przybliżeniem prezentacyjnym.
+    assert result.net_buildable_area_sqm == pytest.approx(10000.0, abs=0.01)
+    assert result.zones[0].simulation_only is True
+    assert result.zones[0].affects_buildable_area is False
 
 
 def test_calculate_network_protection_zones_network_outside_parcel_does_not_reduce_area() -> None:

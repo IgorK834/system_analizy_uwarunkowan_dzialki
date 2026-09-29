@@ -4,14 +4,14 @@ Ryzyko powodziowe jest twardym ograniczeniem inwestycyjnym, nie kosmetyczną
 informacją poboczną — dlatego ten moduł traktujemy jako bezpieczeństwo-krytyczny,
 w odróżnieniu np. od kiut.py.
 
-W kiut.py fetch_kiut_networks celowo połyka timeout/błąd HTTP i zwraca [] —
-to bezpieczne, bo brak danych o sieciach uzbrojenia to tylko utrata informacji
-pomocniczej. Dla ryzyka powodziowego jest to NIEBEZPIECZNE: pusta lista
-RiskFeature przy awarii usługi ISOK wygląda identycznie jak "sprawdzono, brak
-zagrożenia", co jest fałszywym poczuciem bezpieczeństwa dla użytkownika
-podejmującego decyzję inwestycyjną. Dlatego fetch_flood_risks musi odróżnić
-"sprawdzono, brak stref w BBOX" (zwróć []) od "nie udało się sprawdzić"
-(podnieś IsokServiceUnavailableError). Orchestrator kontekstu łapie ten wyjątek
+Wcześniejszy adapter KIUT połykał timeout/błąd HTTP i zwracał [] — dla
+ryzyka powodziowego byłoby to NIEBEZPIECZNE: pusta lista RiskFeature przy awarii
+usługi ISOK wygląda identycznie jak "sprawdzono, brak zagrożenia", co jest
+fałszywym poczuciem bezpieczeństwa dla użytkownika podejmującego decyzję
+inwestycyjną. (KIUT używa dziś tego samego kontraktu co ISOK:
+fetch_kiut_network_section podnosi wyjątki zamiast zwracać [].) Dlatego
+fetch_flood_risks musi odróżnić "sprawdzono, brak stref w BBOX" (zwróć []) od
+"nie udało się sprawdzić" (podnieś IsokServiceUnavailableError). Orchestrator kontekstu łapie ten wyjątek
 i ustawia status sekcji na 'unavailable' zamiast HTTP 500.
 
 Kontrakt usługi potwierdzono realnymi zapytaniami 2026-07-30 (fixtures
@@ -194,9 +194,9 @@ async def fetch_flood_risks(
     Pusta lista oznacza "sprawdzono, brak stref w sąsiedztwie działki". Błąd
     usługi, ``ows:ExceptionReport`` (usługi WFS zwracają go ze statusem HTTP
     200) lub nieparsowalna odpowiedź podnoszą IsokServiceUnavailableError —
-    te przypadki NIGDY nie są mylone, w odróżnieniu od fetch_kiut_networks
-    (patrz uzasadnienie w docstringu modułu), bo dla ryzyka powodziowego pusta
-    lista przy awarii usługi byłaby fałszywym poczuciem bezpieczeństwa.
+    te przypadki NIGDY nie są mylone, zgodnie z uzasadnieniem
+    w docstringu modułu: pusta lista przy awarii usługi byłaby fałszywym
+    poczuciem bezpieczeństwa.
 
     WMS (settings.isok_wms_fallback_url) jest wyłącznie linkiem referencyjnym
     do ręcznej weryfikacji wizualnej w konfiguracji — nieużywanym jako aktywne
