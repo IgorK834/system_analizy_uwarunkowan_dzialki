@@ -55,6 +55,12 @@ class PogPublicationResult:
     # Akty o niezmienionej treści przeniesione do nowego wydania (ADR-008);
     # zawiera się w ``unchanged``.
     carried_forward: int = 0
+    # BK-405: liczba agregatów powierzchniowych (akt + gmina/edycja) zapisanych
+    # w wydaniu i ostrzeżenia dla agregatów niepełnych (luka, nakładanie,
+    # brak granicy aktu). Niepełny agregat nie blokuje publikacji — jest
+    # utrwalony z ``is_complete=false`` i jawną przyczyną.
+    area_summaries: int = 0
+    aggregate_warnings: tuple[str, ...] = ()
 
 
 class PogSourceReader(Protocol):
@@ -326,6 +332,9 @@ def run_pog_import(
         result.unchanged,
     )
     stats.extra["carried_forward"] = result.carried_forward
+    stats.extra["area_summaries"] = result.area_summaries
+    stats.extra["area_summaries_incomplete"] = len(result.aggregate_warnings)
+    warnings.extend(result.aggregate_warnings)
     return ImportOutcome(
         status="succeeded",
         stats=stats.as_dict(),

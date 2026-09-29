@@ -50,6 +50,10 @@ from app.modules.imports.application.pog_import import (
 from app.modules.imports.domain.mpzp import PlanningActRecord
 from app.modules.imports.domain.pog import PogActRecord
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
+from app.modules.imports.infrastructure.pog_aggregates import (
+    aggregate_warnings,
+    compute_pog_area_summaries,
+)
 from app.shared.crs import CANONICAL_CRS, is_allowed_crs
 from app.shared.geometry import GeometryPayload
 
@@ -577,6 +581,15 @@ class SqlAlchemyImportRepository:
                         response_sha256=record.response_sha256,
                         fetched_at=record.fetched_at,
                     ))
+            self.session.flush()
+            # BK-405: agregaty powierzchniowe stref liczone w 2180 na pełnym
+            # snapshocie wydania, PRZED aktywacją i w tej samej transakcji —
+            # błąd obliczeń wycofuje całą publikację, a aktywne wydanie i jego
+            # agregaty przełączają się atomowo.
+            aggregates = compute_pog_area_summaries(
+                self.session, data_release.id, computed_at=now
+            )
+            incomplete = aggregate_warnings(aggregates)
             # Także idempotentny powrót do istniejącego wydania przełącza je
             # atomowo bez dublowania wersji obiektów.
             self._activate_release(source.id, data_release)
@@ -585,18 +598,27 @@ class SqlAlchemyImportRepository:
                 "changed": changed,
                 "unchanged": unchanged,
                 "carried_forward": carried_forward,
+                "area_summaries": len(aggregates),
+                "area_summaries_incomplete": len(incomplete),
             }
             run.status = "succeeded"
             run.stats = final_stats
             run.checkpoint = {
                 "artifact_hash": artifact_hash,
                 "processed": len(acts),
-                "warnings": list(warnings),
+                "warnings": [*warnings, *incomplete],
             }
             run.finished_at = now
             self.session.flush()
             return PogPublicationResult(
-                new, changed, unchanged, run.id, data_release.id, carried_forward
+                new,
+                changed,
+                unchanged,
+                run.id,
+                data_release.id,
+                carried_forward,
+                area_summaries=len(aggregates),
+                aggregate_warnings=incomplete,
             )
 
     def _source_row(self) -> DataSource:
