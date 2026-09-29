@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type maplibregl from "maplibre-gl";
@@ -55,7 +55,7 @@ const PREVIEW_SOURCES: PreviewSource[] = [
 function createMapMock() {
   const sources = new Set<string>();
   const layers = new Map<string, { layout?: Record<string, unknown> }>();
-  const handlers = new Map<string, () => void>();
+  const handlers = new Map<string, (event?: unknown) => void>();
   let zoom = 6;
 
   const map = {
@@ -74,10 +74,10 @@ function createMapMock() {
     removeLayer: vi.fn((id: string) => layers.delete(id)),
     setLayoutProperty: vi.fn(),
     getZoom: vi.fn(() => zoom),
-    on: vi.fn((eventName: string, handler: () => void) => {
+    on: vi.fn((eventName: string, handler: (event?: unknown) => void) => {
       handlers.set(eventName, handler);
     }),
-    off: vi.fn((eventName: string, handler: () => void) => {
+    off: vi.fn((eventName: string, handler: (event?: unknown) => void) => {
       if (handlers.get(eventName) === handler) handlers.delete(eventName);
     }),
     triggerZoom: (nextZoom: number) => {
@@ -86,6 +86,9 @@ function createMapMock() {
     },
     seedLayer: (id: string) => {
       layers.set(id, {});
+    },
+    triggerTileError: (sourceId: string) => {
+      handlers.get("error")?.({ sourceId, error: { status: 503 } });
     },
   };
 
@@ -453,5 +456,38 @@ describe("PreviewOverlays", () => {
     ).toHaveAttribute("href", "https://info.example.test/kiut");
     expect(screen.getByRole("link", { name: "Plany ogólne gmin" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Miejscowe plany/ })).toBeInTheDocument();
+  });
+
+  it("BK-406: każda warstwa WMS ma jawny stan — ładowanie, dostępna, niepełna po błędzie kafla", async () => {
+    render(<PreviewOverlays result={null} map={map} />);
+    const stateOf = (name: RegExp) =>
+      within(screen.getByRole("switch", { name }).closest("li") as HTMLElement).getByText(
+        (_, element) => element?.hasAttribute("data-layer-state") ?? false,
+      );
+    expect(stateOf(/MPZP/)).toHaveTextContent("ładowanie");
+    await waitFor(() => expect(stateOf(/MPZP/)).toHaveTextContent("dostępna"));
+    expect(stateOf(/Plan Ogólny Gminy/)).toHaveAttribute("data-layer-state", "available");
+
+    act(() => map.triggerTileError("mpzp-wms-source"));
+    act(() => map.triggerTileError("inne-zrodlo"));
+    expect(stateOf(/MPZP/)).toHaveTextContent("dane niepełne");
+    expect(stateOf(/Plan Ogólny Gminy/)).toHaveTextContent("dostępna");
+
+    // Legenda stanów w nocie o źródłach — 6 stanów, bez „brak planu”.
+    const legend = screen.getByText("Co oznacza stan warstwy?").closest("details") as HTMLElement;
+    expect(within(legend).getAllByRole("definition")).toHaveLength(6);
+    expect(legend.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+  });
+
+  it("BK-406: awaria rejestru daje stan „awaria warstwy” dla podglądów", async () => {
+    getPreviewSourcesMock.mockRejectedValueOnce(new Error("503"));
+    render(<PreviewOverlays result={null} map={map} />);
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole("switch", { name: /MPZP/ }).closest("li") as HTMLElement).getByText(
+          "awaria warstwy",
+        ),
+      ).toBeInTheDocument(),
+    );
   });
 });

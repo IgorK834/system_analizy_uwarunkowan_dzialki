@@ -76,4 +76,39 @@ describe("LayerToggle", () => {
 
     expect(screen.getByText(/Analiza parametrów: dostępna/)).toBeVisible();
   });
+
+  it("BK-406: pokazuje stan warstwy tekstem, osobno od statusu i przełącznika", () => {
+    const states = ["loading", "available", "partial", "no_coverage", "error", "stale"] as const;
+    render(
+      <LayerToggle
+        items={states.map((state) => ({
+          id: state,
+          label: `Warstwa ${state}`,
+          color: "#176c4b",
+          checked: true,
+          state,
+          status: "Status aktu: projekt (niewiążący).",
+        }))}
+        onChange={vi.fn()}
+      />,
+    );
+    const chips = screen.getAllByText((_, element) => element?.hasAttribute("data-layer-state") ?? false);
+    expect(chips.map((chip) => chip.textContent)).toEqual([
+      "ładowanie",
+      "dostępna",
+      "dane niepełne",
+      "brak pokrycia danymi",
+      "awaria warstwy",
+      "dane nieaktualne",
+    ]);
+    // Stan nie wchodzi do nazwy przełącznika, a status prawny pozostaje osobnym tekstem.
+    expect(screen.getByRole("switch", { name: "Warstwa partial" })).toBeInTheDocument();
+    expect(screen.getAllByText("Status aktu: projekt (niewiążący).")).toHaveLength(6);
+    for (const chip of chips) expect(chip.textContent).not.toMatch(/brak planu/i);
+  });
+
+  it("bez stanu nie renderuje znacznika stanu", () => {
+    render(<LayerToggle items={baseItems} onChange={vi.fn()} />);
+    expect(screen.queryByText(/Stan warstwy/)).not.toBeInTheDocument();
+  });
 });

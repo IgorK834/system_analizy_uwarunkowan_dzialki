@@ -1,3 +1,4 @@
+import { LAYER_STATES, LAYER_STATE_DESCRIPTIONS, LAYER_STATE_LABELS } from "@/lib/layerState";
 import type { PreviewSource } from "@/lib/types";
 
 export type LayerAvailabilityNoteProps = {
@@ -32,6 +33,21 @@ export function LayerAvailabilityNote({
       ) : (
         <p>Metadane i atrybucje źródeł są chwilowo niedostępne.</p>
       )}
+      <details className="layer-state-legend">
+        <summary>Co oznacza stan warstwy?</summary>
+        <dl>
+          {LAYER_STATES.map((state) => (
+            <div key={state} className="layer-state-legend-row">
+              <dt>
+                <span className={`layer-state-chip layer-state-chip-${state}`}>
+                  {LAYER_STATE_LABELS[state]}
+                </span>
+              </dt>
+              <dd>{LAYER_STATE_DESCRIPTIONS[state]}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
     </>
   );
 

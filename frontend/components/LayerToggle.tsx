@@ -1,5 +1,8 @@
 "use client";
 
+import { LAYER_STATE_LABELS } from "@/lib/layerState";
+import type { LayerState } from "@/lib/types";
+
 /**
  * Generyczny przełącznik warstw mapowych z legendą kolorów.
  *
@@ -17,6 +20,11 @@ export type LayerToggleItem = {
   disabled?: boolean;
   disabledReason?: string;
   status?: string;
+  /**
+   * Stan warstwy (BK-406) — osobno od statusu prawnego i od włączenia
+   * przełącznika; pokazywany tekstem, nie tylko kolorem.
+   */
+  state?: LayerState;
 };
 
 export type LayerToggleProps = {
@@ -59,6 +67,17 @@ export function LayerToggle({
             </button>
             {item.disabled && item.disabledReason && (
               <p className="layer-toggle-disabled-reason">{item.disabledReason}</p>
+            )}
+            {item.state && (
+              <p className="layer-toggle-state">
+                Stan warstwy:{" "}
+                <span
+                  className={`layer-state-chip layer-state-chip-${item.state}`}
+                  data-layer-state={item.state}
+                >
+                  {LAYER_STATE_LABELS[item.state]}
+                </span>
+              </p>
             )}
             {item.status && (
               <p className="layer-toggle-status">{item.status}</p>

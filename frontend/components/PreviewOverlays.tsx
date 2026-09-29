@@ -28,6 +28,7 @@ import {
 import { coverageStatusLabel, legalStatusShort } from "@/lib/pogStatus";
 import type {
   AnalyzeResponse,
+  LayerState,
   PreviewSource,
   PreviewSourceKey,
 } from "@/lib/types";
@@ -239,6 +240,9 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
     "loading" | "ready" | "error"
   >("loading");
   const [currentZoom, setCurrentZoom] = useState<number | null>(null);
+  // BK-406: błędy kafli WMS ze zdarzeń MapLibre — warstwa z błędami jest
+  // „niepełna”, a nie pusta z powodu braku planu lub sieci.
+  const [tileErrors, setTileErrors] = useState<Partial<Record<PreviewSourceKey, number>>>({});
 
   const sourcesByKey = useMemo(
     () =>
@@ -294,6 +298,21 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
     map.on("zoomend", updateZoom);
     return () => {
       map.off("zoomend", updateZoom);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (!map) return;
+    const onError = (event: { sourceId?: string }) => {
+      const sourceKey = (Object.keys(SOURCE_LAYER_IDS) as PreviewSourceKey[]).find(
+        (key) => SOURCE_LAYER_IDS[key].sourceId === event.sourceId,
+      );
+      if (!sourceKey) return;
+      setTileErrors((current) => ({ ...current, [sourceKey]: (current[sourceKey] ?? 0) + 1 }));
+    };
+    map.on("error", onError);
+    return () => {
+      map.off("error", onError);
     };
   }, [map]);
 
@@ -364,6 +383,12 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
     return undefined;
   };
 
+  const layerState = (sourceKey: PreviewSourceKey): LayerState => {
+    if (sourcesState === "loading") return "loading";
+    if (sourcesState === "error" || !sourcesByKey[sourceKey]) return "error";
+    return tileErrors[sourceKey] ? "partial" : "available";
+  };
+
   const items: LayerToggleItem[] = [
     {
       id: "kiut_wms",
@@ -372,6 +397,7 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
       checked: preferences.kiut,
       disabled: !sourcesByKey.kiut,
       disabledReason: unavailableReason("kiut"),
+      state: layerState("kiut"),
       status: kiutStatus(
         result,
         kiutAutoEnabled,
@@ -387,6 +413,7 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
       checked: preferences.mpzp,
       disabled: !sourcesByKey.mpzp,
       disabledReason: unavailableReason("mpzp"),
+      state: layerState("mpzp"),
       status:
         `Podgląd krajowy (KIMPZP). ${mpzpStatus(result)}` +
         zoomNote(sourcesByKey.mpzp, currentZoom, preferences.mpzp),
@@ -398,6 +425,7 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
       checked: preferences.pog,
       disabled: !sourcesByKey.pog,
       disabledReason: unavailableReason("pog"),
+      state: layerState("pog"),
       status:
         `Podgląd krajowy (PlanyOgolneGmin). ${pogStatus(result)}` +
         zoomNote(sourcesByKey.pog, currentZoom, preferences.pog),
