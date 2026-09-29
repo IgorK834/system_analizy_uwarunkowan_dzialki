@@ -6,12 +6,18 @@ import {
   getAddressSuggestions,
   getActivePogTileRelease,
   getAnalysisReport,
+  getPogAreaSummary,
+  getPogFeatureDetails,
   getPreviewSources,
   resumeAnalysis,
   searchAddresses,
 } from "@/lib/api";
 import { buildAnalyzeResponse } from "@/test/fixtures";
-import { buildPogRelease } from "@/test/pogFixtures";
+import {
+  buildPogAreaSummary,
+  buildPogFeatureDetails,
+  buildPogRelease,
+} from "@/test/pogFixtures";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -136,6 +142,42 @@ describe("klient API", () => {
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "awaria" }, 500));
     await expect(getActivePogTileRelease()).rejects.toMatchObject({ status: 500 });
+  });
+
+  it("BK-404: pobiera szczegóły obiektu z wydania, kodując identyfikator APP jako jeden segment", async () => {
+    const details = buildPogFeatureDetails();
+    fetchMock.mockResolvedValueOnce(jsonResponse(details));
+    await expect(getPogFeatureDetails(42, "PL.ZIPPZP.10011/226401-POG/1POG-100SU")).resolves.toEqual(
+      details,
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/v1/map/pog/releases/42/features/PL.ZIPPZP.10011%2F226401-POG%2F1POG-100SU",
+      expect.objectContaining({ method: "GET" }),
+    );
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Obiekt nie należy do wydania." }, 404));
+    await expect(getPogFeatureDetails(42, "x")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("BK-405: agregat aktu albo gminy; 404 to brak agregatu, nie błąd", async () => {
+    const summary = buildPogAreaSummary();
+    fetchMock.mockResolvedValueOnce(jsonResponse(summary));
+    await expect(getPogAreaSummary(42, { actId: "PL.ZIPPZP.10011/226401-POG/1POG" })).resolves.toEqual(
+      summary,
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/api/v1/map/pog/releases/42/summary?act_id=PL.ZIPPZP.10011%2F226401-POG%2F1POG",
+      expect.objectContaining({ method: "GET" }),
+    );
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "brak" }, 404));
+    await expect(getPogAreaSummary(42, { teryt: "226401", edition: "project" })).resolves.toBeNull();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/api/v1/map/pog/releases/42/summary?teryt=226401&edition=project",
+      expect.anything(),
+    );
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "awaria" }, 500));
+    await expect(getPogAreaSummary(42, { actId: "A" })).rejects.toMatchObject({ status: 500 });
   });
 
   it("pobiera i weryfikuje raport PDF zapisanej analizy", async () => {

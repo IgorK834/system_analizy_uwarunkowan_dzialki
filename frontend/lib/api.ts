@@ -5,6 +5,9 @@ import type {
   AnalyzeResponse,
   AnalyzeResumeRequest,
   GeocodeResponse,
+  PogAreaSummary,
+  PogAreaSummaryScope,
+  PogFeatureDetails,
   PogTileRelease,
   PreviewSource,
 } from "@/lib/types";
@@ -161,6 +164,48 @@ export async function getActivePogTileRelease(
   try {
     return await requestJson<PogTileRelease>(
       `${getApiBaseUrl()}/api/v1/map/pog/releases/active`,
+      { method: "GET", signal: options.signal },
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+/**
+ * Szczegóły obiektu POG, których kafel MVT nie mieści (BK-404) — przypięte do
+ * wydania, z którego pochodzi kliknięta cecha. Identyfikator APP zawiera
+ * ukośniki, więc jest kodowany jako jeden segment ścieżki.
+ */
+export async function getPogFeatureDetails(
+  releaseId: number,
+  featureId: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<PogFeatureDetails> {
+  return requestJson<PogFeatureDetails>(
+    `${getApiBaseUrl()}/api/v1/map/pog/releases/${releaseId}/features/${encodeURIComponent(featureId)}`,
+    { method: "GET", signal: options.signal },
+  );
+}
+
+/**
+ * Gotowy agregat powierzchniowy stref aktu albo gminy (BK-405) policzony przy
+ * imporcie wydania. Zwraca `null`, gdy agregatu nie ma (404) — np. wydanie
+ * sprzed BK-405 — co nie oznacza braku stref ani planu.
+ */
+export async function getPogAreaSummary(
+  releaseId: number,
+  scope: PogAreaSummaryScope,
+  options: { signal?: AbortSignal } = {},
+): Promise<PogAreaSummary | null> {
+  const parameters = new URLSearchParams(
+    "actId" in scope
+      ? { act_id: scope.actId }
+      : { teryt: scope.teryt, edition: scope.edition },
+  );
+  try {
+    return await requestJson<PogAreaSummary>(
+      `${getApiBaseUrl()}/api/v1/map/pog/releases/${releaseId}/summary?${parameters.toString()}`,
       { method: "GET", signal: options.signal },
     );
   } catch (error) {

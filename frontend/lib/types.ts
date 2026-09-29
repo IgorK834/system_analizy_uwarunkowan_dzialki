@@ -364,6 +364,11 @@ export type PogTileRelease = {
   /** [min_lon, min_lat, max_lon, max_lat] w EPSG:4326. */
   bounds: [number, number, number, number] | null;
   acts_by_legal_status: Partial<Record<PogLegalStatus, number>>;
+  /**
+   * Zasięg danych każdego aktu (BK-406). Pokrycie widoku jest oceniane z tych
+   * metadanych, a nie z pustego kafla; brak pola = wydanie sprzed BK-406.
+   */
+  coverage_areas?: PogCoverageArea[];
   style_version: string;
   style_sha256: string;
   attribution: string;
@@ -392,6 +397,181 @@ export type PogZoneTileProperties = {
   primary_profiles?: string;
   additional_profiles?: string;
 };
+
+/** Zasięg danych aktu w wydaniu POG (EPSG:4326) i kompletność agregatu stref. */
+export type PogCoverageArea = {
+  act_id: string;
+  teryt: string | null;
+  legal_status: PogLegalStatus;
+  bounds: [number, number, number, number] | null;
+  has_boundary: boolean;
+  /** `null` — agregat nie został policzony (wydanie sprzed BK-405). */
+  is_complete: boolean | null;
+  incomplete_reasons: string[];
+};
+
+/** Atrybuty cechy OUZ/OZS/OSDIS z kafla MVT. */
+export type PogOverlayTileProperties = {
+  feature_id: string;
+  feature_version?: string;
+  symbol?: string;
+  label?: string;
+  legal_status: PogLegalStatus;
+  teryt?: string;
+  act_id: string;
+  data_release_id: number;
+};
+
+/** Warstwy obiektów POG, które inspektor odczytuje z wyrenderowanych kafli. */
+export type PogFeatureLayer =
+  | "zones"
+  | "ouz"
+  | "downtown"
+  | "social_infrastructure_standard";
+
+/** Jedno trafienie inspektora — po deduplikacji cech z sąsiednich kafli. */
+export type PogInspectorHit =
+  | { key: string; layer: "zones"; featurePk: number | null; properties: PogZoneTileProperties }
+  | {
+      key: string;
+      layer: Exclude<PogFeatureLayer, "zones">;
+      featurePk: number | null;
+      properties: PogOverlayTileProperties;
+    };
+
+/**
+ * Wynik kliknięcia mapy dla inspektora (BK-404). `queried = false`, gdy warstwy
+ * POG nie były wyrenderowane — wtedy brak trafień nie jest „brakiem obiektu”.
+ */
+export type PogPointQuery = {
+  lon: number;
+  lat: number;
+  hits: PogInspectorHit[];
+  queried: boolean;
+};
+
+/**
+ * Stan warstwy mapy (BK-406), niezależny od statusu prawnego aktu. Wyznaczany z
+ * metadanych wydania i zdarzeń źródła, nigdy z liczby pikseli lub cech.
+ */
+export type LayerState =
+  | "loading"
+  | "available"
+  | "partial"
+  | "no_coverage"
+  | "error"
+  | "stale";
+
+/** Stan pobrania metadanych przypiętego wydania POG. */
+export type PogReleaseState =
+  | { status: "loading"; release: null }
+  | { status: "available"; release: PogTileRelease; checkedAt: string }
+  | {
+      status: "stale";
+      release: PogTileRelease;
+      /** Chwila ostatniego udanego sprawdzenia wydania. */
+      checkedAt: string;
+      reason: "refresh_failed" | "release_not_active";
+    }
+  | { status: "no_release"; release: null }
+  | { status: "error"; release: null };
+
+export type PogProfileDetails = {
+  code: string;
+  label: string | null;
+  dictionary_source: string;
+};
+
+/** Szczegóły obiektu POG spoza kafla MVT (GET …/features/{feature_id}). */
+export type PogFeatureDetails = {
+  schema: string;
+  tile_schema: string;
+  release: {
+    release_id: number;
+    version_label: string;
+    published_at: string | null;
+    is_active: boolean;
+    artifact_sha256: string | null;
+  };
+  feature_pk: number;
+  feature_id: string;
+  feature_version: string | null;
+  layer: PogFeatureLayer;
+  feature_type: string;
+  symbol: string | null;
+  label: string | null;
+  zone_code: string | null;
+  source_zone_type: string | null;
+  /** Brak wartości to `null`, nigdy 0. Obiekty OUZ/OZS/OSDIS mają `{}`. */
+  parameters: Record<string, number | null>;
+  parameters_informational: boolean;
+  primary_profiles: PogProfileDetails[];
+  additional_profiles: PogProfileDetails[];
+  act: {
+    act_id: string;
+    act_version: string | null;
+    name: string | null;
+    teryt: string | null;
+    legal_status: PogLegalStatus;
+    legal_status_code: string | null;
+    resolution_number: string | null;
+    resolution_date: string | null;
+    legal_valid_from: string | null;
+    legal_valid_to: string | null;
+    publication_id: string | null;
+    manual_review_required: boolean;
+  };
+  source_reference: string | null;
+};
+
+export type PogAreaSummaryZone = {
+  zone_code: string;
+  area_sqm: number;
+  area_sqkm: number;
+  /** `null`, gdy brak mianownika (granicy aktu) — nigdy domyślne 100%. */
+  share_pct: number | null;
+  zone_count: number;
+};
+
+/** Agregat powierzchniowy stref aktu albo gminy (BK-405). */
+export type PogAreaSummary = {
+  schema: string;
+  release_id: number;
+  release_label: string;
+  release_is_active: boolean;
+  artifact_sha256: string | null;
+  scope: "act" | "municipality";
+  act_id: string | null;
+  act_version: string | null;
+  teryt: string | null;
+  edition: "binding" | "project" | null;
+  legal_status: PogLegalStatus | null;
+  act_ids: string[];
+  act_count: number;
+  denominator_area_sqm: number | null;
+  denominator_area_sqkm: number | null;
+  denominator_source: string | null;
+  zones_area_sqm: number;
+  zones_area_sqkm: number;
+  missing_area_sqm: number | null;
+  missing_area_sqkm: number | null;
+  overlap_area_sqm: number;
+  outside_area_sqm: number;
+  deduplicated_area_sqm: number | null;
+  share_sum_pct: number | null;
+  share_tolerance_pct: number;
+  area_tolerance_sqm: number;
+  zone_count: number;
+  is_complete: boolean;
+  incomplete_reasons: string[];
+  zones: PogAreaSummaryZone[];
+  method_version: string;
+  computed_at: string;
+};
+
+export type PogAreaSummaryScope =
+  | { actId: string }
+  | { teryt: string; edition: "binding" | "project" };
 
 /** Rekord metadanych CSW RU zamrożony w snapshotcie wyniku (BK-107). */
 export type CatalogMetadataSource = {
