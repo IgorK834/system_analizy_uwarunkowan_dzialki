@@ -3,17 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import HomePage from "@/app/page";
+import type { MapViewProps } from "@/components/MapView";
 import { analyzeParcel, getPreviewSources, resumeAnalysis } from "@/lib/api";
 import type { PreviewSource } from "@/lib/types";
 import { buildAnalyzeResponse } from "@/test/fixtures";
 
 vi.mock("@/components/MapViewLoader", () => ({
-  MapViewLoader: ({
-    onMapClick,
-  }: {
-    onMapClick: (lon: number, lat: number) => void;
-  }) => (
-    <button type="button" onClick={() => onMapClick(21.01, 52.23)}>
+  MapViewLoader: ({ onPogInspect }: MapViewProps) => (
+    <button
+      type="button"
+      onClick={() => onPogInspect?.({ lon: 21.01, lat: 52.23, queried: false, hits: [] })}
+    >
       Testowy punkt mapy
     </button>
   ),
@@ -123,14 +123,23 @@ describe("strona główna", () => {
     );
     render(<HomePage />);
 
+    // BK-404: klik mapy otwiera inspektor — bez POST /analyze.
     await user.click(screen.getByRole("button", { name: "Testowy punkt mapy" }));
+    const inspector = await screen.findByTestId("pog-inspector");
+    expect(within(inspector).getByTestId("pog-inspector-empty")).toHaveAttribute(
+      "data-kind",
+      "unavailable",
+    );
+    expect(analyzeParcelMock).not.toHaveBeenCalled();
 
+    await user.click(within(inspector).getByRole("button", { name: "Analizuj działkę w tym punkcie" }));
     await waitFor(() =>
       expect(analyzeParcelMock).toHaveBeenCalledWith(
         { method: "map", lon: 21.01, lat: 52.23 },
         expect.objectContaining({ signal: expect.any(AbortSignal) }),
       ),
     );
+    expect(analyzeParcelMock).toHaveBeenCalledOnce();
     expect(await screen.findByText("partial")).toBeVisible();
     expect(screen.getByText("77")).toBeVisible();
     expect(
@@ -153,6 +162,7 @@ describe("strona główna", () => {
     render(<HomePage />);
 
     await user.click(screen.getByRole("button", { name: "Testowy punkt mapy" }));
+    await user.click(await screen.findByRole("button", { name: "Analizuj działkę w tym punkcie" }));
     const form = await screen.findByRole("form", { name: "Ręczne podanie symbolu strefy MPZP" });
     expect(await within(form).findAllByTestId("mpzp-raster-tile")).toHaveLength(9);
     expect(within(form).getByTestId("manual-zone-plan-id")).toHaveTextContent("MPZP/2020/1");
@@ -171,5 +181,15 @@ describe("strona główna", () => {
     expect(screen.getByTestId("manual-zone-result-note")).toBeVisible();
     expect(screen.getByText(/Udział w powierzchni działki: nieustalony/)).toBeVisible();
     expect(screen.queryByRole("form", { name: "Ręczne podanie symbolu strefy MPZP" })).toBeNull();
+  });
+
+  it("inspektor zamyka się Escape bez uruchamiania analizy", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+    await user.click(screen.getByRole("button", { name: "Testowy punkt mapy" }));
+    expect(await screen.findByTestId("pog-inspector")).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByTestId("pog-inspector")).not.toBeInTheDocument();
+    expect(analyzeParcelMock).not.toHaveBeenCalled();
   });
 });

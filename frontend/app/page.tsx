@@ -1,29 +1,51 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type maplibregl from "maplibre-gl";
 
 import { ManualZonePanel } from "@/components/ManualZonePanel";
 import { MapViewLoader } from "@/components/MapViewLoader";
-import { PogMapPanel } from "@/components/PogMapPanel";
+import { PogFeatureInspector } from "@/components/PogFeatureInspector";
+import { PogMapPanel, STATUS_FILTER_LABELS } from "@/components/PogMapPanel";
 import { PreviewOverlays } from "@/components/PreviewOverlays";
 import { ResultPanel } from "@/components/ResultPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { useAnalyzeParcel } from "@/hooks/useAnalyzeParcel";
+import { usePogTileActivity } from "@/hooks/usePogTileActivity";
 import { usePogMapPreferences, usePogTileRelease } from "@/hooks/usePogTileRelease";
 import { useResumeAnalysis } from "@/hooks/useResumeAnalysis";
-import type { PogZoneTileProperties } from "@/lib/types";
+import { derivePogLayerStatus } from "@/lib/pogLayerState";
+import type { PogPointQuery } from "@/lib/types";
 
 export default function HomePage() {
   const { loading, error, result, run, reset, setResult } = useAnalyzeParcel();
   const resumeAnalysis = useResumeAnalysis();
   const [map, setMap] = useState<maplibregl.Map | null>(null);
-  // Wydanie POG jest pobierane raz na sesję mapy i przypina URL kafli (BK-401).
+  // Wydanie POG jest pobierane raz na sesję mapy i przypina URL kafli (BK-401);
+  // nowsze wydanie pojawia się tylko po jawnym ponowieniu (BK-406).
   const pogRelease = usePogTileRelease();
   const pogPreferences = usePogMapPreferences();
-  const [pogZone, setPogZone] = useState<PogZoneTileProperties | null>(null);
+  const pogTiles = usePogTileActivity(map, pogRelease.release?.release_id ?? null);
+  const pogLayerStatus = useMemo(
+    () =>
+      derivePogLayerStatus({
+        release: pogRelease,
+        tiles: pogTiles.tiles,
+        viewport: pogTiles.viewport,
+      }),
+    [pogRelease, pogTiles.tiles, pogTiles.viewport],
+  );
+  // BK-404: kliknięcie mapy otwiera inspektor obiektu — nie uruchamia analizy.
+  const [inspection, setInspection] = useState<PogPointQuery | null>(null);
 
-  const handleMapClick = useCallback(
+  const { retry: retryRelease } = pogRelease;
+  const { retry: retryTiles } = pogTiles;
+  const handlePogRetry = useCallback(() => {
+    retryRelease();
+    retryTiles();
+  }, [retryRelease, retryTiles]);
+
+  const handleAnalyzePoint = useCallback(
     (lon: number, lat: number) => {
       void run({ method: "map", lon, lat });
     },
@@ -59,22 +81,22 @@ export default function HomePage() {
 
       <div className="workspace">
         <MapViewLoader
-          onMapClick={handleMapClick}
           onMapReady={handleMapReady}
+          onPogInspect={setInspection}
           pogRelease={pogRelease.release}
           pogTheme={pogPreferences.theme}
           pogStatusFilter={pogPreferences.statusFilter}
-          onPogFeatureClick={setPogZone}
         />
         <SearchPanel loading={loading} onAnalyze={run} map={map} />
         <div className="map-controls">
           <PogMapPanel
-            releaseState={pogRelease}
+            layerStatus={pogLayerStatus}
             theme={pogPreferences.theme}
             onThemeChange={pogPreferences.setTheme}
             statusFilter={pogPreferences.statusFilter}
             onStatusFilterChange={pogPreferences.setStatusFilter}
-            selectedZone={pogZone}
+            onRetry={handlePogRetry}
+            retrying={pogRelease.retrying}
           />
           <PreviewOverlays result={result} map={map} />
         </div>
@@ -96,11 +118,23 @@ export default function HomePage() {
           </div>
         )}
 
-        {result && (
+        {(inspection || result) && (
           <div className="result-stack">
-            <ResultPanel result={result} map={map} />
+            {inspection && (
+              <PogFeatureInspector
+                query={inspection}
+                layerStatus={pogLayerStatus}
+                statusFilter={pogPreferences.statusFilter}
+                statusFilterLabel={STATUS_FILTER_LABELS[pogPreferences.statusFilter]}
+                analyzing={loading}
+                onAnalyze={handleAnalyzePoint}
+                onClose={() => setInspection(null)}
+              />
+            )}
 
-            {result.manual_zone_required && (
+            {result && <ResultPanel result={result} map={map} />}
+
+            {result?.manual_zone_required && (
               <ManualZonePanel
                 key={result.analysis_id ?? "manual-zone"}
                 result={result}
@@ -110,13 +144,15 @@ export default function HomePage() {
               />
             )}
 
-            <button
-              type="button"
-              className="secondary-button result-clear-button"
-              onClick={reset}
-            >
-              Wyczyść wynik
-            </button>
+            {result && (
+              <button
+                type="button"
+                className="secondary-button result-clear-button"
+                onClick={reset}
+              >
+                Wyczyść wynik
+              </button>
+            )}
           </div>
         )}
       </div>

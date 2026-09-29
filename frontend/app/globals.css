@@ -400,7 +400,9 @@ input:disabled {
 
 .result-stack {
   position: absolute;
-  z-index: 5;
+  /* BK-404: inspektor i wynik są wywołane przez użytkownika — przy wąskim oknie
+     leżą nad kontrolkami mapy (z-index 6), a nie pod nimi. */
+  z-index: 7;
   top: 20px;
   right: 20px;
   bottom: 20px;
@@ -695,8 +697,7 @@ input:disabled {
 }
 
 .pog-legend h3,
-.pog-legend h4,
-.pog-selected-zone h3 {
+.pog-legend h4 {
   margin: 10px 0 4px;
   font-size: 0.82rem;
 }
@@ -719,25 +720,6 @@ input:disabled {
   flex: 0 0 auto;
 }
 
-.pog-selected-zone dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2px 8px;
-  margin: 0;
-}
-
-.pog-selected-zone-row {
-  display: contents;
-}
-
-.pog-selected-zone dt {
-  color: var(--muted);
-}
-
-.pog-selected-zone dd {
-  margin: 0;
-}
-
 .pog-share-chart {
   display: flex;
   width: 100%;
@@ -750,6 +732,290 @@ input:disabled {
 
 .pog-share-segment {
   height: 100%;
+}
+
+/* BK-406: stan warstwy (6 stanów) — tekst + kolor + obramowanie, nie sam kolor. */
+.layer-state-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.layer-state-chip-loading {
+  color: #3d4a43;
+  border-style: dotted;
+  background: #eef2ef;
+}
+
+.layer-state-chip-available {
+  color: var(--accent-dark);
+  background: #e3f3ea;
+}
+
+.layer-state-chip-partial {
+  color: #6b4600;
+  border-style: dashed;
+  background: #fff4dc;
+}
+
+.layer-state-chip-no_coverage {
+  color: #354a5c;
+  border-style: dashed;
+  background: #e8eef4;
+}
+
+.layer-state-chip-error {
+  color: var(--danger);
+  background: #fbe6e4;
+}
+
+.layer-state-chip-stale {
+  color: #5b3a70;
+  border-style: double;
+  border-width: 3px;
+  background: #f1e9f6;
+}
+
+.layer-toggle-state {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.layer-state-legend {
+  margin-top: 8px;
+}
+
+.layer-state-legend dl {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+}
+
+.layer-state-legend-row {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 6px;
+  align-items: start;
+}
+
+.layer-state-legend dd {
+  margin: 0;
+}
+
+.pog-map-panel-title {
+  margin: 0 0 6px;
+  font-size: 0.86rem;
+}
+
+.pog-layer-status p {
+  margin: 4px 0 0;
+}
+
+.pog-layer-status-title {
+  font-weight: 650;
+}
+
+.pog-layer-status-detail,
+.pog-layer-status-release {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.pog-layer-status .pog-non-binding-badge {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pog-layer-retry {
+  margin-top: 8px;
+}
+
+.pog-map-panel-controls {
+  margin-top: 8px;
+}
+
+/* BK-404: inspektor obiektu POG. */
+.pog-inspector {
+  font-size: 0.84rem;
+}
+
+.pog-inspector-header {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.pog-inspector-header h2 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.pog-inspector-header h2:focus-visible,
+.pog-inspector button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pog-inspector-source,
+.pog-inspector-label {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.pog-inspector-hit {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.pog-inspector-hit h3,
+.pog-inspector-overlays h3 {
+  margin: 0 0 4px;
+  font-size: 0.86rem;
+}
+
+.pog-inspector-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.pog-inline-badge {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin: 0;
+  font-size: 0.74rem;
+}
+
+.pog-inspector-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 3px 10px;
+  margin: 6px 0;
+}
+
+.pog-inspector-row {
+  display: contents;
+}
+
+.pog-inspector-list dt {
+  color: var(--muted);
+}
+
+.pog-inspector-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pog-inspector-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+}
+
+.pog-inspector-overlays {
+  margin-top: 10px;
+}
+
+.pog-inspector-overlay {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.pog-inspector-empty {
+  margin: 10px 0;
+  padding: 8px 10px;
+  border: 1px dashed #7a8a80;
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.pog-inspector-actions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* BK-405: struktura stref — wykres SVG i równoważna tabela. */
+.pog-area-summary {
+  margin-top: 8px;
+}
+
+.pog-area-summary-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.pog-area-summary-note,
+.pog-area-summary-meta,
+.pog-area-summary-denominator {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.pog-area-summary-partial {
+  margin: 6px 0;
+  padding: 5px 8px;
+  border: 1px dashed #7a4b00;
+  border-radius: 6px;
+  color: #5c3a00;
+  background: #fff4dc;
+}
+
+.pog-area-chart {
+  display: block;
+  max-width: 340px;
+  margin: 6px 0;
+}
+
+.pog-area-chart-label,
+.pog-area-chart-value {
+  font-size: 11px;
+  fill: var(--ink);
+}
+
+.pog-area-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+}
+
+.pog-area-table caption {
+  margin-bottom: 4px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.pog-area-table th,
+.pog-area-table td {
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pog-area-table td {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .visually-hidden {

@@ -1,9 +1,11 @@
 /**
- * Scenariusz końcowy BK-401–403 na prawdziwej stronie: page.tsx + MapView +
- * PogMapPanel + adaptery stylu. Atrapą są wyłącznie MapLibre (brak WebGL w
- * jsdom) i klient HTTP. Test sprawdza przypięcie URL-a kafli do wydania, pięć
- * trybów bez żadnego żądania sieciowego, filtr projekt/wiążący, zachowanie
- * trybu po remoncie mapy i atrybuty klikniętej strefy z kafla.
+ * Scenariusz końcowy BK-401–406 na prawdziwej stronie: page.tsx + MapView +
+ * PogMapPanel + PogFeatureInspector + PogAreaSummary + adaptery stylu i stanu
+ * warstwy. Atrapą są wyłącznie MapLibre (brak WebGL w jsdom) i klient HTTP.
+ * Test sprawdza przypięcie URL-a kafli do wydania, pięć trybów bez żądań,
+ * filtr projekt/wiążący, zachowanie trybu po remoncie mapy, inspektor obiektów
+ * bez uruchamiania analizy (BK-404) oraz stany warstwy z awarią kafla i
+ * danymi nieaktualnymi (BK-406).
  */
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -11,10 +13,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import HomePage from "@/app/page";
 import { MapView, type MapViewProps } from "@/components/MapView";
-import { analyzeParcel, getActivePogTileRelease, getPreviewSources } from "@/lib/api";
+import {
+  analyzeParcel,
+  getActivePogTileRelease,
+  getPogAreaSummary,
+  getPogFeatureDetails,
+  getPreviewSources,
+} from "@/lib/api";
 import { POG_LAYER_IDS, POG_SOURCE_ID } from "@/lib/pogLayers";
 import { POG_THEMES, themeById, themeFillColorExpression } from "@/lib/pogThemes";
-import { buildPogRelease, buildPogZoneProperties } from "@/test/pogFixtures";
+import {
+  buildPogAreaSummary,
+  buildPogFeatureDetails,
+  buildPogOverlayProperties,
+  buildPogRelease,
+  buildPogZoneProperties,
+} from "@/test/pogFixtures";
 
 const mapState = vi.hoisted(() => {
   const sources = new Map<string, Record<string, unknown>>();
@@ -33,6 +47,7 @@ const mapState = vi.hoisted(() => {
     setPaintProperty: vi.fn(),
     setFilter: vi.fn(),
     queryRenderedFeatures: vi.fn(() => [] as unknown[]),
+    refreshTiles: vi.fn(),
   };
 });
 
@@ -63,6 +78,13 @@ vi.mock("maplibre-gl", () => {
     setFilter = mapState.setFilter;
     queryRenderedFeatures = mapState.queryRenderedFeatures;
     getZoom = () => 14;
+    getBounds = () => ({
+      getWest: () => 18.52,
+      getSouth: () => 54.42,
+      getEast: () => 18.58,
+      getNorth: () => 54.46,
+    });
+    refreshTiles = mapState.refreshTiles;
     setLayoutProperty = vi.fn();
     fitBounds = vi.fn();
     flyTo = vi.fn();
@@ -81,6 +103,8 @@ vi.mock("@/lib/api", async () => {
     analyzeParcel: vi.fn(),
     getPreviewSources: vi.fn(),
     getActivePogTileRelease: vi.fn(),
+    getPogFeatureDetails: vi.fn(),
+    getPogAreaSummary: vi.fn(),
     resumeAnalysis: vi.fn(),
   };
 });
@@ -101,6 +125,10 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     mapState.addSource.mockClear();
     mapState.setPaintProperty.mockClear();
     mapState.setFilter.mockClear();
+    mapState.refreshTiles.mockClear();
+    mapState.queryRenderedFeatures.mockReset().mockReturnValue([]);
+    vi.mocked(getPogFeatureDetails).mockReset().mockResolvedValue(buildPogFeatureDetails());
+    vi.mocked(getPogAreaSummary).mockReset().mockResolvedValue(buildPogAreaSummary());
     vi.mocked(getActivePogTileRelease).mockReset().mockResolvedValue(buildPogRelease());
     vi.mocked(getPreviewSources).mockReset().mockResolvedValue([]);
     vi.mocked(analyzeParcel).mockReset().mockReturnValue(new Promise(() => undefined));
@@ -140,11 +168,12 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     fetchSpy.mockRestore();
   });
 
-  it("filtr projekt/wiążący i atrybuty klikniętej strefy z kafla", async () => {
+  it("BK-404: klik obiektu otwiera inspektor bez POST /analyze; przycisk wysyła dokładnie jedno żądanie", async () => {
     const user = userEvent.setup();
     render(<HomePage />);
     fire("load");
-    await screen.findByText(/Wydanie zawiera projekty/);
+    await screen.findByText(/Wydanie pog-0123456789ab \(#42\)/);
+    fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true, tile: {} });
 
     await user.click(screen.getByRole("radio", { name: "Tylko akty obowiązujące" }));
     expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
@@ -153,14 +182,103 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
       "binding",
     ]);
     expect(mapState.addSource).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("radio", { name: "Wszystkie akty" }));
 
+    const zone = buildPogZoneProperties();
+    const project = buildPogZoneProperties({
+      feature_id: "PL.ZIPPZP.99999/226401-POG/2POG-1SJ",
+      symbol: "SJ",
+      zone_code: "SJ",
+      legal_status: "project",
+      max_building_height_m: undefined,
+    });
+    const ouz = buildPogOverlayProperties();
     mapState.queryRenderedFeatures.mockReturnValueOnce([
-      { layer: { id: POG_LAYER_IDS.zonesFill }, properties: buildPogZoneProperties() },
+      { id: 1, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
+      { id: 1, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
+      { id: 2, layer: { id: POG_LAYER_IDS.zonesFill }, properties: project },
+      { id: 3, layer: { id: POG_LAYER_IDS.ouzPattern }, properties: ouz },
+      { id: 3, layer: { id: POG_LAYER_IDS.ouzPattern }, properties: ouz },
     ]);
     fire("click", { point: { x: 5, y: 5 }, lngLat: { lng: 18.538, lat: 54.456 } });
-    const selected = await screen.findByLabelText("Wybrana strefa z mapy POG");
-    expect(within(selected).getByTestId("pog-selected-max_building_height_m")).toHaveTextContent("4 m");
-    expect(within(selected).getByTestId("pog-selected-max_building_coverage_pct")).toHaveTextContent("90%");
+
+    const inspector = await screen.findByTestId("pog-inspector");
+    const zones = within(inspector).getAllByTestId("pog-inspector-zone");
+    expect(zones).toHaveLength(2);
+    expect(within(zones[0]).getByTestId("pog-inspector-max_building_height_m")).toHaveTextContent("4 m");
+    expect(within(zones[0]).getByTestId("pog-inspector-max_building_coverage_pct")).toHaveTextContent("90%");
+    expect(within(zones[1]).getByTestId("pog-inspector-max_building_height_m")).toHaveTextContent(
+      "brak wartości w danych",
+    );
+    expect(within(zones[1]).getByTestId("pog-inspector-badge")).toHaveTextContent("projekt / dane niewiążące");
+    expect(within(inspector).getAllByTestId("pog-inspector-overlay")).toHaveLength(1);
+    expect(within(inspector).getByText(/Dane z kafli mapy — wydanie #42/)).toBeInTheDocument();
+    expect(await within(zones[0]).findByText(/Plan ogólny Miasta Sopotu/)).toBeInTheDocument();
+    expect(getPogFeatureDetails).toHaveBeenCalledWith(42, zone.feature_id, expect.anything());
+    expect(analyzeParcel).not.toHaveBeenCalled();
+
+    // BK-405 z inspektora: gotowy agregat aktu — wykres i tabela z tymi samymi liczbami.
+    await user.click(within(zones[0]).getByRole("button", { name: "Struktura stref aktu i gminy" }));
+    const table = await within(zones[0]).findByTestId("pog-area-table");
+    const shares = within(table).getAllByTestId("pog-area-cell-share").map((cell) => cell.textContent);
+    const bars = within(zones[0]).getAllByTestId("pog-area-bar-value").map((bar) => bar.textContent);
+    expect(shares).toEqual(["60,0%", "40,0%"]);
+    expect(bars).toEqual(shares);
+    expect(analyzeParcel).not.toHaveBeenCalled();
+
+    await user.click(within(inspector).getByRole("button", { name: "Analizuj działkę w tym punkcie" }));
+    expect(analyzeParcel).toHaveBeenCalledOnce();
+    expect(analyzeParcel).toHaveBeenCalledWith(
+      { method: "map", lon: 18.538, lat: 54.456 },
+      expect.anything(),
+    );
+  });
+
+  it("BK-406: edycja klawiaturą, awaria kafla i nieudane ponowienie — plakietka i data stale widoczne", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+    fire("load");
+    await screen.findByText(/Wydanie pog-0123456789ab \(#42\)/);
+    const state = () => screen.getByTestId("pog-layer-state");
+    const badge = () => screen.getByTestId("pog-status-badge");
+    expect(state()).toHaveTextContent("ładowanie");
+    expect(badge()).toHaveTextContent("projekt / dane niewiążące");
+
+    fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true, tile: {} });
+    expect(state()).toHaveTextContent("dostępna");
+
+    // Jawna zmiana edycji klawiaturą — ten sam źródłowy URL, tylko setFilter.
+    const edition = screen.getByRole("group", { name: "Edycja danych (status prawny aktu)" });
+    within(edition).getByRole("radio", { name: "Wszystkie akty" }).focus();
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    expect(within(edition).getByRole("radio", { name: "Tylko projekty (niewiążące)" })).toBeChecked();
+    expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
+      "in",
+      ["get", "legal_status"],
+      ["literal", ["project", "in_progress"]],
+    ]);
+
+    // Awaria kafla (np. 503 z serwera kafli): stan partial, plakietka zostaje.
+    fire("error", { sourceId: POG_SOURCE_ID, error: { status: 503 } });
+    expect(state()).toHaveTextContent("dane niepełne");
+    expect(screen.getByText(/Część kafli POG nie została wczytana \(1\)/)).toBeInTheDocument();
+    expect(badge()).toBeVisible();
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+
+    // Ponowienie: metadane wydania niedostępne → stale z datą i tym samym wydaniem.
+    vi.mocked(getActivePogTileRelease).mockRejectedValueOnce(new Error("503"));
+    await user.click(screen.getByRole("button", { name: "Ponów wczytanie warstwy" }));
+    expect(mapState.refreshTiles).toHaveBeenCalledWith(POG_SOURCE_ID);
+    await waitFor(() => expect(state()).toHaveTextContent("dane nieaktualne"));
+    expect(screen.getByTestId("pog-release-line")).toHaveTextContent(
+      /Wydanie pog-0123456789ab \(#42\) z dnia 28\.09\.2026.*ostatnio potwierdzone \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/,
+    );
+    expect(badge()).toHaveTextContent("projekt / dane niewiążące");
+    // Ostatnie dane nie zostały usunięte z mapy.
+    expect(mapState.sources.has(POG_SOURCE_ID)).toBe(true);
+    expect(mapState.addSource).toHaveBeenCalledOnce();
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+    expect(analyzeParcel).not.toHaveBeenCalled();
   });
 
   it("po remoncie mapy tryb i filtr są odtwarzane, a mapa działa bez wydania RU", async () => {
