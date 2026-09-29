@@ -88,8 +88,17 @@ describe("PogLegend", () => {
     expect(within(overlays[0]).getByText("OUZ")).toBeInTheDocument();
     expect(within(overlays[1]).getByText(/Śliwkowy obrys kropkowany/)).toBeInTheDocument();
     expect(within(overlays[2]).getByText("OSDIS")).toBeInTheDocument();
-    expect(screen.getAllByTestId("pog-status-legend-item")).toHaveLength(5);
+    const statuses = screen.getAllByTestId("pog-status-legend-item");
+    expect(statuses).toHaveLength(5);
     expect(screen.getByText(/projekt — dane niewiążące/)).toBeInTheDocument();
+    // BK-406: projekt ma wzór i tekst plakietki, akt wiążący — osobny opis bez wzoru.
+    const project = statuses.find((item) => item.dataset.key === "project") as HTMLElement;
+    const binding = statuses.find((item) => item.dataset.key === "binding") as HTMLElement;
+    expect(project.dataset.pattern).toBe("horizontal-lines");
+    expect(within(project).getByText("[projekt / dane niewiążące]")).toBeInTheDocument();
+    expect(project.querySelector("pattern path")).not.toBeNull();
+    expect(binding.dataset.pattern).toBe("");
+    expect(binding).toHaveTextContent(/^akt obowiązujący/);
     expect(screen.getByText(/słownik RodzajStrefyPlanistycznejKod/)).toBeInTheDocument();
   });
 
@@ -100,12 +109,13 @@ describe("PogLegend", () => {
         <PogSwatch color="#ffffff" pattern="cross-lines" />
         <PogSwatch color="#ffffff" pattern="cross-hatch" />
         <PogSwatch color="#ffffff" pattern="diagonal-lines" />
+        <PogSwatch color="#ffffff" pattern="horizontal-lines" />
         <PogSwatch color="#ffffff" pattern={"inny" as never} />
         <PogSwatch color="#ffffff" />
       </>,
     );
     expect(container.querySelector("pattern#pog-swatch-dots-123456 circle")).not.toBeNull();
     expect(container.querySelector("rect[stroke-dasharray='1.2 2.4']")).not.toBeNull();
-    expect(container.querySelectorAll("pattern")).toHaveLength(5);
+    expect(container.querySelectorAll("pattern")).toHaveLength(6);
   });
 });

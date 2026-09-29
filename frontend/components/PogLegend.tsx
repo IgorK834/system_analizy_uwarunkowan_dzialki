@@ -25,6 +25,8 @@ function patternMarkup(pattern: PogPatternId, color: string) {
       return <path d="M0 6 L6 0 M0 0 L6 6" stroke={color} strokeWidth="1" />;
     case "cross-lines":
       return <path d="M3 0 L3 6 M0 3 L6 3" stroke={color} strokeWidth="1" />;
+    case "horizontal-lines":
+      return <path d="M0 1 L6 1 M0 4 L6 4" stroke={color} strokeWidth="1" />;
     case "dots":
       return <circle cx="3" cy="3" r="1.2" fill={color} />;
     default:
@@ -127,14 +129,23 @@ export function PogLegend({ theme }: PogLegendProps) {
       <h4>Status prawny aktu</h4>
       <ul className="pog-legend-list">
         {POG_LEGAL_STATUS_STYLES.map((status) => (
-          <li key={status.status} className="pog-legend-item" data-testid="pog-status-legend-item">
+          <li
+            key={status.status}
+            className="pog-legend-item"
+            data-testid="pog-status-legend-item"
+            data-key={status.status}
+            data-pattern={status.pattern ?? ""}
+          >
             <PogSwatch
               color="#9aa5b1"
               outline="#3d3d3d"
+              pattern={status.pattern}
               dash={status.line_dasharray}
             />
             <span>
-              {status.label} <small>({status.description})</small>
+              {status.label}
+              {status.badge && <strong className="pog-status-badge-text"> [{status.badge}]</strong>}{" "}
+              <small>({status.description})</small>
             </span>
           </li>
         ))}
