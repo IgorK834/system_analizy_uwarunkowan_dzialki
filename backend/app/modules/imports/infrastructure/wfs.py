@@ -63,7 +63,8 @@ class WfsFetcher:
             config_overrides={
                 "connect_timeout_seconds": min(self._timeout, 5.0),
                 "read_timeout_seconds": self._timeout,
-                "total_timeout_seconds": max(self._timeout, 1.0) * 2,
+                "total_timeout_seconds": max(self._timeout, 1.0) * 10,
+                "retries": 4,
             },
         )
         context = client if managed else nullcontext(client)
