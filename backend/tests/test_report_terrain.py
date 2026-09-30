@@ -145,11 +145,11 @@ def test_aspect_wording_in_html(aspect: TerrainAspectResult, expected: str) -> N
         warnings=[], sources=[], terrain=terrain,
     )
 
-    html = _render_report_html(_build_report_context(response, None, None))
+    html = _render_report_html(_build_report_context(response))
 
     assert expected in html
     assert "<polyline" in html
-    assert any("metodą Horna" in item for item in _build_limitations(response, None))
+    assert any("metodą Horna" in item for item in _build_limitations(response))
 
 
 def test_missing_relief_and_failed_relief_are_explicit() -> None:
@@ -165,8 +165,8 @@ def test_missing_relief_and_failed_relief_are_explicit() -> None:
         status="partial", analyzed_at=NOW, mpzp_zones=[], infrastructure=[], risks=[],
         warnings=[], sources=[], terrain=failed,
     )
-    limitations = _build_limitations(response, None)
-    html = _render_report_html(_build_report_context(response, None, None))
+    limitations = _build_limitations(response)
+    html = _render_report_html(_build_report_context(response))
 
     assert any("RASTER_TOO_LARGE" in item for item in limitations)
     assert any("Brak pokrycia danymi NMT" in item for item in limitations)
@@ -174,7 +174,7 @@ def test_missing_relief_and_failed_relief_are_explicit() -> None:
     legacy = AnalyzeResponse(
         status="partial", analyzed_at=NOW, mpzp_zones=[], infrastructure=[], risks=[], warnings=[], sources=[],
     )
-    assert "Nie liczono pochodnych rastra NMT" in _render_report_html(_build_report_context(legacy, None, None))
+    assert "Nie liczono pochodnych rastra NMT" in _render_report_html(_build_report_context(legacy))
 
 
 @pytest.mark.asyncio

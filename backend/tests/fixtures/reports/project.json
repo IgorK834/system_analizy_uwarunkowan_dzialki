@@ -1,0 +1,1117 @@
+{
+ "parcel_wkt_2180": "POLYGON ((566060 244000, 566060 244040, 566000 244040, 566000 244000, 566060 244000))",
+ "response": {
+  "analysis_id": null,
+  "analyzed_at": "2026-09-20T09:30:00+00:00",
+  "buildable_area_sqm": 1664.0,
+  "infrastructure": [],
+  "manual_zone_context": null,
+  "manual_zone_required": false,
+  "mpzp_zones": [
+   {
+    "act_identifier": "PL.ZIPOZ.1261.MPZP-2019-17",
+    "act_version": "20190517T000000",
+    "act_version_id": 17,
+    "assignment_method": "vector_intersection",
+    "data_release_id": 7,
+    "document_url": "https://bip.example.test/uchwala-XVII-2019.pdf",
+    "intersection_area_sqm": 1500.0,
+    "intersection_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.923187458706046,
+         50.05958959917306
+        ],
+        [
+         19.92319177461135,
+         50.05981448645952
+        ],
+        [
+         19.922353386782593,
+         50.059821151763174
+        ],
+        [
+         19.922349074795385,
+         50.059596264423895
+        ],
+        [
+         19.923187458706046,
+         50.05958959917306
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "mpzp_zone",
+      "zone_symbol": "MN.1"
+     },
+     "type": "Feature"
+    },
+    "intersection_pct": 62.5,
+    "is_dominant": true,
+    "manual_review_required": true,
+    "max_building_coverage_pct": 30.0,
+    "max_building_height_m": 9.0,
+    "max_floor_area_ratio": 0.8,
+    "max_floors": null,
+    "min_biologically_active_pct": 40.0,
+    "min_floor_area_ratio": 0.0,
+    "parameters": [
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna wysokość zabudowy mieszkaniowej: 9 m, dla budynków gospodarczych 5 m.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": false,
+      "name": "max_building_height_m",
+      "normalized_value": 9.0,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "9.0 m",
+      "segment_id": "§8 ust. 2 pkt 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": "storeys-1",
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna liczba kondygnacji nadziemnych: 2.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": true,
+      "name": "max_storeys",
+      "normalized_value": 2,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "2",
+      "segment_id": "§8 ust. 2 pkt 2",
+      "unit": null
+     },
+     {
+      "confidence": 0.61,
+      "conflict_group_id": "storeys-1",
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Dopuszcza się trzy kondygnacje nadziemne, w tym poddasze użytkowe.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 310,
+      "manual_review_required": true,
+      "name": "max_storeys",
+      "normalized_value": 3,
+      "page_number": 31,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "3",
+      "segment_id": "§21 ust. 1",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Minimalny udział powierzchni biologicznie czynnej: 40% powierzchni działki.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": false,
+      "name": "min_biologically_active_percent",
+      "normalized_value": 40.0,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "40.0 percent",
+      "segment_id": "§8 ust. 2 pkt 4",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalny wskaźnik intensywności zabudowy: 0,8.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "max_intensity",
+      "normalized_value": 0.8,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.8",
+      "segment_id": "§8 ust. 2 pkt 5",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Minimalny wskaźnik intensywności zabudowy: 0.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "min_intensity",
+      "normalized_value": 0.0,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0",
+      "segment_id": "§8 ust. 2 pkt 6",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna powierzchnia zabudowy: 30% powierzchni działki budowlanej.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "max_building_coverage_percent",
+      "normalized_value": 30.0,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "30.0 percent",
+      "segment_id": "§8 ust. 2 pkt 3",
+      "unit": "percent"
+     }
+    ],
+    "primary_use": "zabudowa mieszkaniowa jednorodzinna",
+    "source": {
+     "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+     "confidence": 0.9,
+     "data_release_id": 7,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "mpzp_ru",
+     "source_name": "MPZP wektor gminy",
+     "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+    },
+    "supplementary_use": null,
+    "touches_boundary": false,
+    "zone_id": "PL.ZIPOZ.1261.MPZP-2019-17/wydzielenie/MN.1",
+    "zone_symbol": "MN.1"
+   },
+   {
+    "act_identifier": "PL.ZIPOZ.1261.MPZP-2019-17",
+    "act_version": "20190517T000000",
+    "act_version_id": 17,
+    "assignment_method": "vector_intersection",
+    "data_release_id": 7,
+    "document_url": "https://bip.example.test/uchwala-XVII-2019.pdf",
+    "intersection_area_sqm": 900.0,
+    "intersection_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.92319177461135,
+         50.05981448645952
+        ],
+        [
+         19.923194364180706,
+         50.05994941882706
+        ],
+        [
+         19.922355974001068,
+         50.05995608416239
+        ],
+        [
+         19.922353386782593,
+         50.059821151763174
+        ],
+        [
+         19.92319177461135,
+         50.05981448645952
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "mpzp_zone",
+      "zone_symbol": "U.2"
+     },
+     "type": "Feature"
+    },
+    "intersection_pct": 37.5,
+    "is_dominant": false,
+    "manual_review_required": false,
+    "max_building_coverage_pct": 0.0,
+    "max_building_height_m": 12.0,
+    "max_floor_area_ratio": null,
+    "max_floors": null,
+    "min_biologically_active_pct": null,
+    "min_floor_area_ratio": null,
+    "parameters": [
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna wysokość zabudowy usługowej: 12 m.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 150,
+      "manual_review_required": false,
+      "name": "max_building_height_m",
+      "normalized_value": 12.0,
+      "page_number": 15,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "12.0 m",
+      "segment_id": "§9 ust. 2 pkt 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2",
+      "document_version_id": 41,
+      "evidence_text": "Zakaz lokalizacji nowych budynków — powierzchnia zabudowy 0%.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 150,
+      "manual_review_required": false,
+      "name": "max_building_coverage_percent",
+      "normalized_value": 0.0,
+      "page_number": 15,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 percent",
+      "segment_id": "§9 ust. 2 pkt 3",
+      "unit": "percent"
+     }
+    ],
+    "primary_use": "zabudowa usługowa",
+    "source": {
+     "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+     "confidence": 0.9,
+     "data_release_id": 7,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "mpzp_ru",
+     "source_name": "MPZP wektor gminy",
+     "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+    },
+    "supplementary_use": "zieleń urządzona",
+    "touches_boundary": false,
+    "zone_id": "PL.ZIPOZ.1261.MPZP-2019-17/wydzielenie/U.2",
+    "zone_symbol": "U.2"
+   }
+  ],
+  "parcel": {
+   "buildable_area_geojson": {
+    "geometry": {
+     "coordinates": [
+      [
+       [
+        19.923132256954496,
+        50.05962602567849
+       ],
+       [
+        19.922405657021944,
+        50.05963180223653
+       ],
+       [
+        19.92241117672084,
+        50.059919658022814
+       ],
+       [
+        19.923137780999877,
+        50.0599138814062
+       ],
+       [
+        19.923132256954496,
+        50.05962602567849
+       ]
+      ]
+     ],
+     "type": "Polygon"
+    },
+    "properties": {
+     "layer": "buildable_area"
+    },
+    "type": "Feature"
+   },
+   "geometry_geojson": {
+    "geometry": {
+     "coordinates": [
+      [
+       [
+        19.923187458706046,
+        50.05958959917306
+       ],
+       [
+        19.923194364180706,
+        50.05994941882706
+       ],
+       [
+        19.922355974001068,
+        50.05995608416239
+       ],
+       [
+        19.922349074795385,
+        50.059596264423895
+       ],
+       [
+        19.923187458706046,
+        50.05958959917306
+       ]
+      ]
+     ],
+     "type": "Polygon"
+    },
+    "properties": {
+     "layer": "parcel"
+    },
+    "type": "Feature"
+   },
+   "metrics": {
+    "area_ha": 0.24,
+    "area_sqm": 2400.0,
+    "geometry_repaired": false,
+    "is_valid": true,
+    "perimeter_m": 200.0
+   },
+   "parcel_identifier": "126101_1.0001.2417/5",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "uldk",
+    "source_name": "ULDK",
+    "source_url": "https://uldk.example.test/usluga"
+   }
+  },
+  "pog": {
+   "act": {
+    "act_identifier": "PL.ZIPOG.1261.POG",
+    "act_version": "20260315T120000",
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "card_url": null,
+    "card_url_verified": false,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "formal_documents": [],
+    "gml_url": "https://integracja.gugik.gov.pl/cgi-bin/PlanOgolnyGminy?id=1261",
+    "gml_url_verified": true,
+    "id": "PL.ZIPOG.1261.POG",
+    "metadata": null,
+    "publication_date": "2026-03-20",
+    "publication_id": "PL.ZIPOG.1261.POG_20260315T120000",
+    "release_label": "RU POG 2026-09-19",
+    "resolution_date": "2026-03-11",
+    "resolution_number": "CXII/3021/2026",
+    "title": "Plan ogólny gminy Kraków — zażółć gęślą jaźń",
+    "valid_from": "2026-04-01",
+    "valid_to": null,
+    "version": "20260315T120000",
+    "version_started_at": "2026-03-15T12:00:00+00:00"
+   },
+   "area_ratio": null,
+   "compatibility_assessment": null,
+   "coverage_evidence": null,
+   "coverage_status": "available",
+   "data_availability": "current",
+   "dominant_zone_id": "PL.ZIPOG.1261.POG/strefa/1SW",
+   "downtown_areas": [
+    {
+     "area_pct": 8.3333,
+     "area_sqm": 200.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923192637798955,
+          50.05985946391573
+         ],
+         [
+          19.923194364180706,
+          50.05994941882706
+         ],
+         [
+          19.922914900822384,
+          50.059951641278246
+         ],
+         [
+          19.922913174963046,
+          50.05986168635987
+         ],
+         [
+          19.923192637798955,
+          50.05985946391573
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/ozs/1",
+     "label": "obszar zabudowy śródmiejskiej",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OZS-1",
+     "touches_boundary": false
+    }
+   ],
+   "in_downtown_area": true,
+   "in_ouz": true,
+   "legal_status": "project",
+   "legal_status_evidence": {
+    "confirmed_at": "2026-09-20T09:29:00+00:00",
+    "official": true,
+    "raw_value": "wybranyPrzedmiotUstaleń",
+    "reference": "data_release:12; RU CSW rekord PL.ZIPOG.1261.POG",
+    "source_id": "pog_app",
+    "source_name": "Rejestr Urbanistyczny — CSW"
+   },
+   "manual_review_required": true,
+   "ouz": [
+    {
+     "area_pct": 50.0,
+     "area_sqm": 1200.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922768266789962,
+          50.05959293255529
+         ],
+         [
+          19.922775169130137,
+          50.059952752251554
+         ],
+         [
+          19.922355974001068,
+          50.05995608416239
+         ],
+         [
+          19.922349074795385,
+          50.059596264423895
+         ],
+         [
+          19.922768266789962,
+          50.05959293255529
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/ouz/1",
+     "label": "obszar uzupełnienia zabudowy",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OUZ-1",
+     "touches_boundary": false
+    }
+   ],
+   "ouz_intersection_area_sqm": 1200.0,
+   "ouz_intersection_pct": 50.0,
+   "planning_zone": "SW",
+   "presentation_style": null,
+   "raw_attributes": {
+    "przestrzenNazw": "PL.ZIPOG.1261.POG"
+   },
+   "schema_version": "2.4",
+   "social_infrastructure_standard_areas": [
+    {
+     "area_pct": 100.0,
+     "area_sqm": 2400.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923737744267644,
+          50.05913537777927
+         ],
+         [
+          19.92376365553552,
+          50.0604847012596
+         ],
+         [
+          19.92166765651193,
+          50.06050136365334
+         ],
+         [
+          19.92164180401583,
+          50.05915203938102
+         ],
+         [
+          19.923737744267644,
+          50.05913537777927
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/osdis/1",
+     "label": "standard dostępności — szkoła podstawowa",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OSDIS-1",
+     "touches_boundary": false
+    }
+   ],
+   "source": {
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "confidence": 0.9,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "pog_app",
+    "source_name": "RU WFS APP",
+    "source_url": "https://ru-wfs-app.example.test/usluga"
+   },
+   "status": "project",
+   "status_confirmed_at": "2026-09-20T09:29:00+00:00",
+   "touches_ouz_boundary": false,
+   "uchwala_date": "2026-03-11",
+   "uchwala_nr": "CXII/3021/2026",
+   "zone_type": "SW",
+   "zones": [
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 33.3333,
+     "area_sqm": 800.0,
+     "feature_version": "20260311T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922628536133825,
+          50.059594043346344
+         ],
+         [
+          19.922635437429168,
+          50.059953863056684
+         ],
+         [
+          19.922355974001068,
+          50.05995608416239
+         ],
+         [
+          19.922349074795385,
+          50.059596264423895
+         ],
+         [
+          19.922628536133825,
+          50.059594043346344
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SW"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/1SW",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/1SW",
+     "label": null,
+     "max_building_coverage_pct": 40.0,
+     "max_building_height_m": 16.0,
+     "max_overground_floor_area_ratio": 1.2,
+     "min_biologically_active_pct": 30.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "1SW",
+     "type": "SW"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 33.3333,
+     "area_sqm": 800.0,
+     "feature_version": "20260312T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92290799743738,
+          50.059591821596065
+         ],
+         [
+          19.922914900822384,
+          50.059951641278246
+         ],
+         [
+          19.922635437429168,
+          50.059953863056684
+         ],
+         [
+          19.922628536133825,
+          50.059594043346344
+         ],
+         [
+          19.92290799743738,
+          50.059591821596065
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SJ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/2SJ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/2SJ",
+     "label": null,
+     "max_building_coverage_pct": 35.0,
+     "max_building_height_m": 12.0,
+     "max_overground_floor_area_ratio": 0.6,
+     "min_biologically_active_pct": 50.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "2SJ",
+     "type": "SJ"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 33.3333,
+     "area_sqm": 800.0,
+     "feature_version": "20260313T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923187458706046,
+          50.05958959917306
+         ],
+         [
+          19.923194364180706,
+          50.05994941882706
+         ],
+         [
+          19.922914900822384,
+          50.059951641278246
+         ],
+         [
+          19.92290799743738,
+          50.059591821596065
+         ],
+         [
+          19.923187458706046,
+          50.05958959917306
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SU"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/3SU",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/3SU",
+     "label": null,
+     "max_building_coverage_pct": 60.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 1.0,
+     "min_biologically_active_pct": 0.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "3SU",
+     "type": "SU"
+    }
+   ]
+  },
+  "risk_sections": [
+   {
+    "boundary_feature_count": 0,
+    "feature_count": 1,
+    "feature_ids": [
+     "ISOK.OZP.Q1.4123"
+    ],
+    "intersecting_feature_count": 1,
+    "reason_code": null,
+    "relation": "intersection",
+    "schema_version": "1.0",
+    "section": "flood",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "isok",
+     "source_name": "ISOK WFS",
+     "source_url": "https://isok-wfs.example.test/usluga"
+    },
+    "status": "available",
+    "union_intersection_area_sqm": 300.0,
+    "union_intersection_pct": 12.5,
+    "warnings": []
+   },
+   {
+    "boundary_feature_count": 0,
+    "feature_count": 1,
+    "feature_ids": [
+     "GDOS.OChK.12"
+    ],
+    "intersecting_feature_count": 1,
+    "reason_code": null,
+    "relation": "intersection",
+    "schema_version": "1.0",
+    "section": "nature",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "gdos",
+     "source_name": "GDOŚ WFS",
+     "source_url": "https://gdoś-wfs.example.test/usluga"
+    },
+    "status": "available",
+    "union_intersection_area_sqm": 2400.0,
+    "union_intersection_pct": 100.0,
+    "warnings": []
+   }
+  ],
+  "risks": [
+   {
+    "description": "Część działki leży w obszarze szczególnego zagrożenia powodzią (Q1%).",
+    "feature_id": "ISOK.OZP.Q1.4123",
+    "geometry_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.922626810831787,
+         50.05950408841516
+        ],
+        [
+         19.922631124103226,
+         50.05972897574044
+        ],
+        [
+         19.922211930907064,
+         50.05973230712033
+        ],
+        [
+         19.922207619594666,
+         50.05950741976865
+        ],
+        [
+         19.922626810831787,
+         50.05950408841516
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "risk",
+      "risk_type": "flood_zone"
+     },
+     "type": "Feature"
+    },
+    "intersection_area_sqm": 300.0,
+    "intersection_pct": 12.5,
+    "probability_class": "obszar szczególnego zagrożenia powodzią Q1%",
+    "return_period_years": 100,
+    "risk_type": "flood_zone",
+    "section": "flood",
+    "severity": "medium",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "isok",
+     "source_name": "ISOK WFS",
+     "source_url": "https://isok-wfs.example.test/usluga"
+    },
+    "touches_boundary": false,
+    "warnings": []
+   },
+   {
+    "description": "Działka leży w obszarze chronionego krajobrazu.",
+    "feature_id": "GDOS.OChK.12",
+    "geometry_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.925126386965363,
+         50.05867447463293
+        ],
+        [
+         19.925178288519128,
+         50.06137312042718
+        ],
+        [
+         19.920986212760013,
+         50.061406458885166
+        ],
+        [
+         19.9209345462962,
+         50.05870780992169
+        ],
+        [
+         19.925126386965363,
+         50.05867447463293
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "risk",
+      "risk_type": "nature_protection"
+     },
+     "type": "Feature"
+    },
+    "intersection_area_sqm": 2400.0,
+    "intersection_pct": 100.0,
+    "name": "Bielańsko-Tyniecki Obszar Chronionego Krajobrazu",
+    "protection_type": "obszar chronionego krajobrazu",
+    "risk_type": "nature_protection",
+    "section": "nature",
+    "severity": "low",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "gdos",
+     "source_name": "GDOŚ WFS",
+     "source_url": "https://gdoś-wfs.example.test/usluga"
+    },
+    "touches_boundary": false,
+    "warnings": []
+   }
+  ],
+  "sources": [
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "uldk",
+    "source_name": "ULDK",
+    "source_url": "https://uldk.example.test/usluga"
+   },
+   {
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "confidence": 0.9,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "pog_app",
+    "source_name": "RU WFS APP",
+    "source_url": "https://ru-wfs-app.example.test/usluga",
+    "source_version": "2026-09-19"
+   },
+   {
+    "confidence": 0.9,
+    "data_release_id": 7,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "mpzp_ru",
+    "source_name": "MPZP wektor gminy",
+    "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "isok",
+    "source_name": "ISOK WFS",
+    "source_url": "https://isok-wfs.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "gdos",
+    "source_name": "GDOŚ WFS",
+    "source_url": "https://gdoś-wfs.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "nmt",
+    "source_name": "NMT GUGiK",
+    "source_url": "https://nmt-gugik.example.test/usluga"
+   }
+  ],
+  "status": "partial",
+  "terrain": {
+   "grid_size_m": 5.0,
+   "height_difference_m": 1.6,
+   "max_height_m": 213.0,
+   "min_height_m": 211.4,
+   "reason_code": null,
+   "relief": null,
+   "sampled_points": 96,
+   "schema_version": "1.1",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "nmt",
+    "source_name": "NMT GUGiK",
+    "source_url": "https://nmt-gugik.example.test/usluga"
+   },
+   "status": "available",
+   "warnings": []
+  },
+  "utilities_preview": {
+   "county_name": "powiat m. Kraków",
+   "coverage_status": "covered",
+   "layer_available": true,
+   "note": "Powiat publikuje dane GESUT; podgląd nie służy do obliczania odległości.",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "kiut_wms",
+    "source_name": "KIUT (GUGiK)",
+    "source_url": "https://kiut-(gugik).example.test/usluga"
+   }
+  },
+  "warnings": [
+   {
+    "code": "MPZP_PARAMETER_CONFLICT",
+    "message": "Uchwała zawiera sprzeczne wartości liczby kondygnacji.",
+    "severity": "warning",
+    "source_name": "mpzp"
+   }
+  ]
+ }
+}

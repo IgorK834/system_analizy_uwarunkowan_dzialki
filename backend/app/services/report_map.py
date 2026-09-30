@@ -1,186 +1,91 @@
-"""Deterministyczny generator miniatury mapy PNG dla raportu PDF.
+"""Lokalny renderer map raportu z zamrożonego snapshotu (BK-503, ADR-010).
 
-Ścieżka MVP rysuje geometrie na jednolitym tle (``MAP_BACKGROUND_RGB``) bez
-pobierania kafelków — raport nie zależy wtedy od sieci. Ścieżka rozszerzona
-opcjonalnie nakłada podkład z synchronicznego WMS GetMap (``report_map_basemap``):
-OSM, KIMPZP oraz KIUT gdy snapshot ma ``utilities_preview.coverage_status=covered``.
-Przy aktywnym podkładzie wektory używają tej samej afinicznej projekcji co raster
-(liniowe mapowanie BBOX→piksele, bez letterboxu rozjeżdżającego obrys).
+Renderer dostaje wyłącznie ``analyses.report_map_snapshot`` (albo specyfikację
+odtworzoną ze snapshotu analizy dla zapisów sprzed BK-503) i nie wykonuje
+żadnych wywołań sieciowych: moduł nie importuje klienta HTTP, a podkład jest
+co najwyżej zapisanym artefaktem z SHA-256 (``report_map_basemap``).
 
-TODO (ADR-009): PDF offline ze snapshotu; podkład WMS to świadomy wyjątek UX.
-Awaria WMS nigdy nie blokuje raportu — fallback MVP + ostrzeżenie po polsku.
-
-Wejściowe geometrie są w WGS84 (EPSG:4326), tak jak w odpowiedzi ``/analyze``.
-W ścieżce MVP do rzutowania stosujemy skalowanie równopostaciowe z korektą
-``cos(lat)`` na osi długości geograficznej. To wizualizacja, nie warstwa
-obliczeniowa — pól powierzchni tu nie liczymy (zgodnie z regułą GIS: pola liczy
-się w EPSG:2180 po stronie analizy).
+Geometrie są w ``EPSG:2180``; piksel ma tę samą długość w terenie na obu osiach
+(``frame.meters_per_pixel``), dlatego podziałka jest metrycznie poprawna.
+Kolejność warstw, style, tryb tematyczny i font pochodzą ze snapshotu, a nie z
+bieżącej konfiguracji. Pola powierzchni nie są tu liczone — to wizualizacja.
 """
 
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 import logging
 import math
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw
+import PIL
+from PIL import Image, ImageDraw, ImageFont
 
-from app.core.report_config import (
-    POG_OVERLAY_ORDER,
-    BUILDABLE_AREA_LAYER_STYLE,
-    MAP_BACKGROUND_RGB,
-    MAP_BBOX_EXPANSION_RATIO,
-    MAP_IMAGE_HEIGHT,
-    MAP_IMAGE_PADDING_PX,
-    MAP_IMAGE_WIDTH,
-    NETWORK_LAYER_STYLE,
-    PARCEL_LAYER_STYLE,
-    PROTECTION_ZONE_LAYER_STYLE,
-    RISK_LAYER_STYLE,
-    MapLayerStyle,
-    ReportPogStyle,
-    pog_overlay_layer_style,
-    pog_zone_layer_style,
-    report_pog_style,
-)
+from app.core.report_config import REPORT_MAP_FONT_DIRS, hex_to_rgb
 from app.core.settings import settings
-from app.services.report_map_basemap import (
-    BasemapLayout,
-    compute_basemap_layout,
-    fetch_report_basemap_png,
+from app.modules.reporting.domain.map_snapshot import (
+    MapSnapshotError,
+    semantic_hash,
+    to_pixel,
+    validate_snapshot,
+    verify_semantic_hash,
 )
-from app.services.wms_tiles import WmsPreviewSource, wms_tile_registry
+from app.services.report_map_basemap import load_basemap_image
 
 logger = logging.getLogger(__name__)
 
-BASEMAP_FAILURE_WARNING: str = (
-    "Nie udało się pobrać podkładu mapowego. "
-    "Miniatura pokazuje tylko geometrię działki."
-)
-
-# Minimalny rozmiar rzutowanego BBOX w stopniach, gdy geometria jest punktem
-# albo bardzo małym obiektem. Bez tego skala byłaby nieskończona.
-_MIN_SPAN_DEGREES = 1e-5
+Ring = list[tuple[float, float]]
 
 
-@dataclass
-class MapRenderResult:
-    """Wynik renderowania miniatury mapy dla raportu PDF."""
-
+@dataclass(frozen=True)
+class RenderedMap:
+    id: str
+    section: str
+    title: str
+    mode: str
+    mode_label: str
+    status: str
+    empty_reason: str | None
     png_bytes: bytes | None
-    basemap_used: bool = False
-    kiut_overlay_used: bool = False
-    warning: str | None = None
+    legend: list[dict[str, Any]]
+    notes: list[str]
+    data_dates: list[str]
+    data_release_ids: list[int]
+    feature_count: int
+
+    @property
+    def png_sha256(self) -> str | None:
+        return hashlib.sha256(self.png_bytes).hexdigest() if self.png_bytes else None
+
+    @property
+    def data_uri(self) -> str | None:
+        return png_to_data_uri(self.png_bytes) if self.png_bytes else None
 
 
 @dataclass
-class _Primitives:
-    """Prymitywy geometryczne wyodrębnione z jednego GeoJSON.
+class ReportMaps:
+    maps: list[RenderedMap]
+    semantic_sha256: str
+    stored_semantic_sha256: str | None
+    integrity_ok: bool
+    from_snapshot: bool
+    config_version: str
+    pog_theme: str
+    pog_style_version: str | None
+    pog_style_from_analysis: bool
+    frame: dict[str, Any]
+    environment: dict[str, Any]
+    basemap: dict[str, Any]
+    warnings: list[str] = field(default_factory=list)
 
-    Poligony przechowujemy jako pary (obrys zewnętrzny, lista otworów), aby
-    miniatura poprawnie renderowała działki z otworami — nie zakładamy, że
-    działka jest pełnym wielokątem bez dziur.
-    """
-
-    polygons: list[tuple[list[tuple[float, float]], list[list[tuple[float, float]]]]] = (
-        field(default_factory=list)
-    )
-    lines: list[list[tuple[float, float]]] = field(default_factory=list)
-    points: list[tuple[float, float]] = field(default_factory=list)
-
-    def is_empty(self) -> bool:
-        return not (self.polygons or self.lines or self.points)
-
-
-@dataclass
-class _MapLayer:
-    """Warstwa miniatury: styl domenowy plus jej prymitywy geometryczne."""
-
-    style: MapLayerStyle
-    primitives: list[_Primitives] = field(default_factory=list)
-
-    def is_empty(self) -> bool:
-        return all(primitive.is_empty() for primitive in self.primitives)
-
-
-def render_analysis_map_png(
-    response: Any,
-    *,
-    width: int = MAP_IMAGE_WIDTH,
-    height: int = MAP_IMAGE_HEIGHT,
-) -> MapRenderResult:
-    """Renderuje miniaturę mapy działki i warstw analizy jako PNG.
-
-    ``response`` to ``AnalyzeResponse`` (przyjmowany strukturalnie, aby moduł
-    był testowalny bez bazy danych). Zwraca ``MapRenderResult`` z bajtami PNG
-    albo ``png_bytes=None``, gdy w wyniku nie ma geometrii do narysowania.
-    Opcjonalny podkład WMS nie blokuje raportu — przy awarii jest fallback MVP
-    i ``warning`` po polsku.
-    """
-    layers = _collect_map_layers(response)
-    drawable = [layer for layer in layers if not layer.is_empty()]
-    if not drawable:
-        return MapRenderResult(png_bytes=None)
-
-    # Kadr raportu opisuje wybraną działkę, nie zasięg wszystkich danych
-    # kontekstowych. Zewnętrzne warstwy (np. długa sieć albo rozległy obszar
-    # ochronny) mogą wychodzić daleko poza działkę; nie mogą przez to zmniejszać
-    # jej do kilku pikseli. Gdy obrys działki jest dostępny, wyznaczamy BBOX
-    # wyłącznie z niego, a pozostałe warstwy Pillow naturalnie przycina do kadru.
-    # Dla analiz bez działki zachowujemy bezpieczny fallback do wszystkich warstw.
-    parcel_layer = next(
-        (layer for layer in drawable if layer.style.layer == PARCEL_LAYER_STYLE.layer),
-        None,
-    )
-    bounds = _compute_bounds([parcel_layer] if parcel_layer is not None else drawable)
-    if bounds is None:
-        return MapRenderResult(png_bytes=None)
-
-    warning: str | None = None
-    basemap_image: Image.Image | None = None
-    basemap_used = False
-    kiut_overlay_used = False
-    basemap_enabled = settings.report_map_basemap_enabled
-    basemap_layout: BasemapLayout | None = None
-    kiut_source = _kiut_overlay_source(response)
-
-    if basemap_enabled:
-        basemap_layout = compute_basemap_layout(bounds, width, height)
-
-    basemap_bytes = (
-        fetch_report_basemap_png(
-            basemap_layout,
-            kiut_source=kiut_source,
-        )
-        if basemap_layout is not None
-        else None
-    )
-    if basemap_bytes is not None and basemap_layout is not None:
-        basemap_image = Image.open(io.BytesIO(basemap_bytes))
-        basemap_used = True
-        kiut_overlay_used = kiut_source is not None
-        projector: _Projector | _BasemapProjector = _BasemapProjector(basemap_layout)
-    else:
-        if basemap_enabled:
-            warning = BASEMAP_FAILURE_WARNING
-        projector = _Projector(bounds, width, height, MAP_IMAGE_PADDING_PX)
-
-    png_bytes = _draw_png(
-        drawable,
-        projector,
-        width,
-        height,
-        basemap_image=basemap_image,
-    )
-    return MapRenderResult(
-        png_bytes=png_bytes,
-        basemap_used=basemap_used,
-        kiut_overlay_used=kiut_overlay_used,
-        warning=warning,
-    )
+    def by_id(self, map_id: str) -> RenderedMap | None:
+        return next((item for item in self.maps if item.id == map_id), None)
 
 
 def png_to_data_uri(png_bytes: bytes) -> str:
@@ -189,427 +94,288 @@ def png_to_data_uri(png_bytes: bytes) -> str:
     return f"data:image/png;base64,{encoded}"
 
 
-def _kiut_overlay_source(response: Any) -> WmsPreviewSource | None:
-    """Zwraca źródło KIUT tylko gdy snapshot potwierdza publikację GESUT.
-
-    Nakładka jest rastrem WMS z chwili generowania PDF — nie geometrią ze
-    snapshotu. Pobieramy ją wyłącznie dla ``covered``, żeby nie obciążać
-    kaskady KIUT tam, gdzie powiat i tak nic nie publikuje.
-    """
-    if not settings.report_map_kiut_overlay_enabled:
-        return None
-    preview = getattr(response, "utilities_preview", None)
-    if preview is None or getattr(preview, "coverage_status", None) != "covered":
-        return None
-    try:
-        return wms_tile_registry.get("kiut").source
-    except KeyError:
-        logger.warning("report_kiut_overlay_skipped reason=unknown_source")
-        return None
-
-
-def _collect_map_layers(response: Any) -> list[_MapLayer]:
-    """Buduje warstwy miniatury w kolejności rysowania (od spodu do wierzchu).
-
-    Kolejność odwzorowuje ResultPanel frontendu: najpierw powierzchniowe
-    ryzyka i strefy ochronne, potem sieci, obszar zabudowy, a na wierzchu
-    najważniejszy obrys działki.
-    """
-    parcel = getattr(response, "parcel", None)
-    infrastructure = getattr(response, "infrastructure", []) or []
-    risks = getattr(response, "risks", []) or []
-
-    risk_layer = _MapLayer(style=RISK_LAYER_STYLE)
-    for risk in risks:
-        primitive = _extract_primitives(getattr(risk, "geometry_geojson", None))
-        if not primitive.is_empty():
-            risk_layer.primitives.append(primitive)
-
-    protection_layer = _MapLayer(style=PROTECTION_ZONE_LAYER_STYLE)
-    network_layer = _MapLayer(style=NETWORK_LAYER_STYLE)
-    for item in infrastructure:
-        protection = _extract_primitives(getattr(item, "protection_zone_geojson", None))
-        if not protection.is_empty():
-            protection_layer.primitives.append(protection)
-        network = _extract_primitives(getattr(item, "network_geometry_geojson", None))
-        if not network.is_empty():
-            network_layer.primitives.append(network)
-
-    buildable_layer = _MapLayer(style=BUILDABLE_AREA_LAYER_STYLE)
-    parcel_layer = _MapLayer(style=PARCEL_LAYER_STYLE)
-    if parcel is not None:
-        buildable = _extract_primitives(getattr(parcel, "buildable_area_geojson", None))
-        if not buildable.is_empty():
-            buildable_layer.primitives.append(buildable)
-        parcel_primitive = _extract_primitives(getattr(parcel, "geometry_geojson", None))
-        if not parcel_primitive.is_empty():
-            parcel_layer.primitives.append(parcel_primitive)
-
-    return [
-        *_pog_layers(getattr(response, "pog", None)),
-        risk_layer,
-        protection_layer,
-        network_layer,
-        buildable_layer,
-        parcel_layer,
-    ]
-
-
-def _pog_layers(pog: Any) -> list[_MapLayer]:
-    """Przecięcia stref i obszarów POG z działką stylem zapisanym w snapshocie.
-
-    Kolory, etykiety i wzory pochodzą z ``shared/pog-presentation.json`` w wersji
-    zapisanej przy analizie (BK-403); OUZ/OZS/OSDIS są rozróżnione wzorem i
-    obrysem, nie wyłącznie barwą.
-    """
-    if pog is None:
-        return []
-    style = report_pog_style(pog)
-    if style is None:
-        return []
-    layers: list[_MapLayer] = []
-    by_code: dict[str, _MapLayer] = {}
-    for zone in getattr(pog, "zones", []) or []:
-        primitive = _extract_primitives(getattr(zone, "geometry_geojson", None))
-        if primitive.is_empty():
-            continue
-        code = getattr(zone, "type", None)
-        layer = by_code.get(code or "unknown")
-        if layer is None:
-            layer = _MapLayer(style=pog_zone_layer_style(code, style))
-            by_code[code or "unknown"] = layer
-            layers.append(layer)
-        layer.primitives.append(primitive)
-    overlay_items = {
-        "ouz": getattr(pog, "ouz", []) or [],
-        "downtown": getattr(pog, "downtown_areas", []) or [],
-        "social_infrastructure_standard": (
-            getattr(pog, "social_infrastructure_standard_areas", []) or []
-        ),
-    }
-    for overlay_id in POG_OVERLAY_ORDER:
-        layer = _MapLayer(style=pog_overlay_layer_style(overlay_id, style))
-        for item in overlay_items[overlay_id]:
-            primitive = _extract_primitives(getattr(item, "geometry_geojson", None))
-            if not primitive.is_empty():
-                layer.primitives.append(primitive)
-        if not layer.is_empty():
-            layers.append(layer)
-    return layers
-
-
-def pog_map_legend(response: Any) -> tuple[list[dict[str, str]], ReportPogStyle | None]:
-    """Legenda warstw POG faktycznie narysowanych na miniaturze raportu."""
-    pog = getattr(response, "pog", None)
-    layers = _pog_layers(pog)
-    entries = [
-        {
-            "label": layer.style.label,
-            "color": "#%02x%02x%02x" % (layer.style.fill_rgb or layer.style.line_rgb),
-            "outline": "#%02x%02x%02x" % layer.style.line_rgb,
-            "pattern": layer.style.pattern or "",
-            "pattern_label": _PATTERN_LABELS.get(layer.style.pattern or "", "wypełnienie jednolite"),
-        }
-        for layer in layers
-    ]
-    return entries, (report_pog_style(pog) if layers else None)
-
-
-_PATTERN_LABELS: dict[str, str] = {
-    "diagonal-lines": "ukośne kreskowanie",
-    "dots": "wypełnienie z kropek",
-    "cross-lines": "kratka pionowo-pozioma",
-    "cross-hatch": "kratka ukośna",
-    "diagonal-hatch": "ukośne kreskowanie (brak wartości)",
-    "horizontal-lines": "poziome kreskowanie (projekt — dane niewiążące)",
-}
-
-
-def _extract_primitives(geojson: dict[str, Any] | None) -> _Primitives:
-    """Wyodrębnia poligony, linie i punkty z dowolnej struktury GeoJSON.
-
-    Obsługiwane są Feature, FeatureCollection, GeometryCollection oraz typy
-    Polygon, MultiPolygon, LineString, MultiLineString, Point i MultiPoint.
-    Nieznane albo uszkodzone struktury są pomijane bez wyjątku, aby błąd jednej
-    warstwy nie wywracał całej miniatury.
-    """
-    primitives = _Primitives()
-    if not isinstance(geojson, dict):
-        return primitives
-    _accumulate_geojson(geojson, primitives)
-    return primitives
-
-
-def _accumulate_geojson(node: Any, primitives: _Primitives) -> None:
-    if not isinstance(node, dict):
-        return
-    node_type = node.get("type")
-
-    if node_type == "FeatureCollection":
-        for feature in node.get("features", []) or []:
-            _accumulate_geojson(feature, primitives)
-        return
-    if node_type == "Feature":
-        _accumulate_geojson(node.get("geometry"), primitives)
-        return
-    if node_type == "GeometryCollection":
-        for geometry in node.get("geometries", []) or []:
-            _accumulate_geojson(geometry, primitives)
-        return
-
-    coordinates = node.get("coordinates")
-    if coordinates is None:
-        return
-
-    try:
-        _accumulate_geometry(node_type, coordinates, primitives)
-    except (TypeError, ValueError, IndexError):
-        # Uszkodzona geometria pojedynczej warstwy nie może zablokować raportu.
-        logger.warning("Pominięto uszkodzoną geometrię typu %s w miniaturze mapy", node_type)
-
-
-def _accumulate_geometry(
-    geometry_type: str | None,
-    coordinates: Any,
-    primitives: _Primitives,
-) -> None:
-    if geometry_type == "Point":
-        primitives.points.append(_as_point(coordinates))
-    elif geometry_type == "MultiPoint":
-        primitives.points.extend(_as_point(point) for point in coordinates)
-    elif geometry_type == "LineString":
-        primitives.lines.append(_as_line(coordinates))
-    elif geometry_type == "MultiLineString":
-        primitives.lines.extend(_as_line(line) for line in coordinates)
-    elif geometry_type == "Polygon":
-        primitives.polygons.append(_as_polygon(coordinates))
-    elif geometry_type == "MultiPolygon":
-        primitives.polygons.extend(_as_polygon(polygon) for polygon in coordinates)
-
-
-def _as_point(coordinate: Any) -> tuple[float, float]:
-    return (float(coordinate[0]), float(coordinate[1]))
-
-
-def _as_line(coordinates: Any) -> list[tuple[float, float]]:
-    return [_as_point(coordinate) for coordinate in coordinates]
-
-
-def _as_polygon(
-    rings: Any,
-) -> tuple[list[tuple[float, float]], list[list[tuple[float, float]]]]:
-    exterior = _as_line(rings[0]) if rings else []
-    holes = [_as_line(ring) for ring in rings[1:]] if len(rings) > 1 else []
-    return exterior, holes
-
-
-@dataclass(frozen=True)
-class _Bounds:
-    min_lon: float
-    min_lat: float
-    max_lon: float
-    max_lat: float
-
-
-def _compute_bounds(layers: list[_MapLayer]) -> _Bounds | None:
-    """Wyznacza BBOX przekazanych geometrii i dodaje 10% marginesu na stronę."""
-    min_lon = math.inf
-    min_lat = math.inf
-    max_lon = -math.inf
-    max_lat = -math.inf
-
-    for layer in layers:
-        for primitive in layer.primitives:
-            for exterior, holes in primitive.polygons:
-                for ring in (exterior, *holes):
-                    for lon, lat in ring:
-                        min_lon, max_lon = min(min_lon, lon), max(max_lon, lon)
-                        min_lat, max_lat = min(min_lat, lat), max(max_lat, lat)
-            for line in primitive.lines:
-                for lon, lat in line:
-                    min_lon, max_lon = min(min_lon, lon), max(max_lon, lon)
-                    min_lat, max_lat = min(min_lat, lat), max(max_lat, lat)
-            for lon, lat in primitive.points:
-                min_lon, max_lon = min(min_lon, lon), max(max_lon, lon)
-                min_lat, max_lat = min(min_lat, lat), max(max_lat, lat)
-
-    if not math.isfinite(min_lon) or not math.isfinite(min_lat):
-        return None
-
-    span_lon = max(max_lon - min_lon, _MIN_SPAN_DEGREES)
-    span_lat = max(max_lat - min_lat, _MIN_SPAN_DEGREES)
-    # Rozszerzamy BBOX o 10% z każdej strony, aby geometria nie dotykała krawędzi.
-    margin_lon = span_lon * MAP_BBOX_EXPANSION_RATIO
-    margin_lat = span_lat * MAP_BBOX_EXPANSION_RATIO
-    center_lon = (min_lon + max_lon) / 2.0
-    center_lat = (min_lat + max_lat) / 2.0
-
-    return _Bounds(
-        min_lon=center_lon - span_lon / 2.0 - margin_lon,
-        min_lat=center_lat - span_lat / 2.0 - margin_lat,
-        max_lon=center_lon + span_lon / 2.0 + margin_lon,
-        max_lat=center_lat + span_lat / 2.0 + margin_lat,
+def render_report_maps(
+    snapshot: Mapping[str, Any],
+    *,
+    from_snapshot: bool = True,
+    basemap_dir: str | None = None,
+) -> ReportMaps:
+    """Renderuje wszystkie mapy snapshotu; nie wykonuje IO sieciowego."""
+    validate_snapshot(snapshot)
+    config = snapshot["render_config"]
+    frame = snapshot["frame"]
+    warnings: list[str] = []
+    stored = snapshot.get("semantic_sha256")
+    integrity_ok = verify_semantic_hash(snapshot)
+    if from_snapshot and not integrity_ok:
+        warnings.append(
+            "Hash semantyczny zapisanej mapy nie zgadza się z jej treścią — "
+            "snapshot mapy mógł zostać zmodyfikowany po zapisie analizy."
+        )
+    basemap_ref = config.get("basemap") or {"mode": "neutral"}
+    basemap_image, basemap_note = load_basemap_image(
+        basemap_ref,
+        frame,
+        basemap_dir if basemap_dir is not None else settings.report_map_basemap_artifact_dir,
+    )
+    if basemap_note:
+        warnings.append(basemap_note)
+    fonts = _load_fonts(str(config["font"]["file"]), str(config["font"]["bold_file"]),
+                        int(config["font"]["size_px"]))
+    maps: list[RenderedMap] = []
+    for spec in snapshot["maps"]:
+        png = None
+        if spec.get("status") == "rendered":
+            png = _render_png(spec, config, frame, fonts, basemap_image)
+        maps.append(
+            RenderedMap(
+                id=spec["id"],
+                section=spec["section"],
+                title=spec["title"],
+                mode=spec["mode"],
+                mode_label=spec["mode_label"],
+                status=spec["status"],
+                empty_reason=spec.get("empty_reason"),
+                png_bytes=png,
+                legend=list(spec.get("legend") or []),
+                notes=list(spec.get("notes") or []),
+                data_dates=list(spec.get("data_dates") or []),
+                data_release_ids=list(spec.get("data_release_ids") or []),
+                feature_count=sum(len(layer["features"]) for layer in spec["layers"]),
+            )
+        )
+    pog_config = config.get("pog") or {}
+    return ReportMaps(
+        maps=maps,
+        semantic_sha256=semantic_hash(snapshot),
+        stored_semantic_sha256=stored if isinstance(stored, str) else None,
+        integrity_ok=integrity_ok,
+        from_snapshot=from_snapshot,
+        config_version=str(config["config_version"]),
+        pog_theme=str(config.get("pog_theme")),
+        pog_style_version=pog_config.get("style_version"),
+        pog_style_from_analysis=bool(pog_config.get("style_from_analysis")),
+        frame=dict(frame),
+        environment={
+            "pillow": PIL.__version__,
+            "font_family": config["font"]["family"],
+            "font_file": fonts.path or "wbudowany font Pillow (brak pliku DejaVu)",
+            "font_sha256": fonts.sha256,
+        },
+        basemap={
+            **basemap_ref,
+            "used": basemap_image is not None,
+        },
+        warnings=warnings,
     )
 
 
-class _BasemapProjector:
-    """Rzutuje WGS84 na piksele zgodnie z kadrem podkładu WMS (Web Mercator).
-
-    BBOX i wymiary muszą pochodzić z tego samego ``BasemapLayout`` co raster GetMap.
-    """
-
-    def __init__(self, layout: BasemapLayout) -> None:
-        from pyproj import Transformer
-
-        self._layout = layout
-        self._transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
-        self._min_x, self._min_y, self._max_x, self._max_y = layout.bbox_3857
-        self._span_x = max(self._max_x - self._min_x, 1e-6)
-        self._span_y = max(self._max_y - self._min_y, 1e-6)
-
-    def to_pixel(self, lon: float, lat: float) -> tuple[float, float]:
-        x_m, y_m = self._transformer.transform(lon, lat)
-        x = self._layout.offset_x + (x_m - self._min_x) / self._span_x * self._layout.map_width
-        y = self._layout.offset_y + (self._max_y - y_m) / self._span_y * self._layout.map_height
-        return (x, y)
+# --- Fonty ------------------------------------------------------------------------
 
 
-class _Projector:
-    """Rzutuje współrzędne WGS84 na piksele z zachowaniem proporcji i wycentrowaniem."""
-
-    def __init__(self, bounds: _Bounds, width: int, height: int, padding: int) -> None:
-        self._bounds = bounds
-        self._padding = padding
-        mean_lat_rad = math.radians((bounds.min_lat + bounds.max_lat) / 2.0)
-        # Korekta cos(lat): stopień długości jest krótszy niż stopień szerokości
-        # w polskich szerokościach, więc bez tego działka byłaby rozciągnięta.
-        self._kx = max(math.cos(mean_lat_rad), 1e-6)
-
-        proj_w = (bounds.max_lon - bounds.min_lon) * self._kx
-        proj_h = bounds.max_lat - bounds.min_lat
-        available_w = width - 2 * padding
-        available_h = height - 2 * padding
-        # Wspólna skala dla obu osi zachowuje proporcje (letterbox).
-        self._scale = min(available_w / proj_w, available_h / proj_h)
-
-        draw_w = proj_w * self._scale
-        draw_h = proj_h * self._scale
-        self._offset_x = (width - draw_w) / 2.0
-        self._offset_y = (height - draw_h) / 2.0
-
-    def to_pixel(self, lon: float, lat: float) -> tuple[float, float]:
-        x = self._offset_x + (lon - self._bounds.min_lon) * self._kx * self._scale
-        # Oś pikseli rośnie w dół, a szerokość geograficzna rośnie w górę.
-        y = self._offset_y + (self._bounds.max_lat - lat) * self._scale
-        return (x, y)
+@dataclass(frozen=True)
+class _Fonts:
+    regular: Any
+    bold: Any
+    path: str | None
+    sha256: str | None
 
 
-def _draw_png(
-    layers: list[_MapLayer],
-    projector: _Projector | _BasemapProjector,
-    width: int,
-    height: int,
-    *,
-    basemap_image: Image.Image | None = None,
+@lru_cache(maxsize=8)
+def _load_fonts(file_name: str, bold_name: str, size: int) -> _Fonts:
+    regular_path = _find_font(file_name)
+    bold_path = _find_font(bold_name) or regular_path
+    if regular_path is None:
+        default = ImageFont.load_default(size=size)
+        return _Fonts(default, default, None, None)
+    return _Fonts(
+        ImageFont.truetype(regular_path, size),
+        ImageFont.truetype(bold_path or regular_path, size),
+        regular_path,
+        hashlib.sha256(Path(regular_path).read_bytes()).hexdigest(),
+    )
+
+
+def _find_font(file_name: str) -> str | None:
+    for directory in REPORT_MAP_FONT_DIRS:
+        candidate = Path(directory) / file_name
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
+# --- Rysowanie -------------------------------------------------------------------
+
+
+def _render_png(
+    spec: Mapping[str, Any],
+    config: Mapping[str, Any],
+    frame: Mapping[str, Any],
+    fonts: _Fonts,
+    basemap_image: Image.Image | None,
 ) -> bytes:
+    width, height = int(frame["width_px"]), int(frame["height_px"])
     if basemap_image is not None:
-        base = basemap_image.convert("RGBA")
+        base = basemap_image.copy()
     else:
-        base = Image.new("RGBA", (width, height), (*MAP_BACKGROUND_RGB, 255))
+        base = Image.new("RGBA", (width, height), (*hex_to_rgb(config["background"]), 255))
 
-    # Najpierw wypełnienia (od spodu do wierzchu), każde na osobnej nakładce,
-    # aby otwory jednej warstwy nie kasowały wypełnień warstw pod spodem.
+    layers = spec["layers"]
     for layer in layers:
-        style = layer.style
-        if style.fill_rgb is None:
+        style = layer["style"]
+        if not style.get("fill"):
             continue
         overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
-        fill = (*style.fill_rgb, style.fill_alpha)
-        for primitive in layer.primitives:
-            for exterior, holes in primitive.polygons:
-                if len(exterior) < 3:
-                    continue
-                draw.polygon([projector.to_pixel(*pt) for pt in exterior], fill=fill)
-                for hole in holes:
-                    if len(hole) >= 3:
-                        # Otwór kasujemy do pełnej przezroczystości na tej nakładce.
-                        draw.polygon(
-                            [projector.to_pixel(*pt) for pt in hole],
-                            fill=(0, 0, 0, 0),
-                        )
+        fill = (*hex_to_rgb(style["fill"]), int(style.get("fill_alpha") or 0))
+        for exterior, holes in _polygons(layer, frame):
+            draw.polygon(exterior, fill=fill)
+            for hole in holes:
+                draw.polygon(hole, fill=(0, 0, 0, 0))
         base = Image.alpha_composite(base, overlay)
 
-    # Wzory (BK-403) nad wypełnieniami: kreskowanie/kropki przycięte maską
-    # poligonu, aby OUZ/OZS/OSDIS były czytelne także bez rozróżniania barw.
     for layer in layers:
-        if not layer.style.pattern:
+        pattern = layer["style"].get("pattern")
+        if not pattern:
             continue
         mask = Image.new("L", (width, height), 0)
         mask_draw = ImageDraw.Draw(mask)
-        for primitive in layer.primitives:
-            for exterior, holes in primitive.polygons:
-                if len(exterior) < 3:
-                    continue
-                mask_draw.polygon([projector.to_pixel(*pt) for pt in exterior], fill=255)
-                for hole in holes:
-                    if len(hole) >= 3:
-                        mask_draw.polygon([projector.to_pixel(*pt) for pt in hole], fill=0)
-        pattern = _pattern_image(layer.style.pattern, layer.style.line_rgb, width, height)
+        for exterior, holes in _polygons(layer, frame):
+            mask_draw.polygon(exterior, fill=255)
+            for hole in holes:
+                mask_draw.polygon(hole, fill=0)
+        # Wzór nakładki bez wypełnienia (OUZ/OZS/OSDIS) jest rzadszy i bledszy,
+        # aby nie zasłaniał kolorów stref pod spodem.
+        overlay_only = not layer["style"].get("fill")
+        texture = _pattern_image(
+            pattern,
+            hex_to_rgb(layer["style"]["outline"]),
+            width,
+            height,
+            alpha=140 if overlay_only else 200,
+            spacing=14 if overlay_only else 10,
+        )
         clipped = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        clipped.paste(pattern, (0, 0), mask)
+        clipped.paste(texture, (0, 0), mask)
         base = Image.alpha_composite(base, clipped)
 
-    # Następnie obrysy i linie na wierzchu, w tej samej kolejności warstw.
-    outline_draw = ImageDraw.Draw(base)
+    draw = ImageDraw.Draw(base)
     for layer in layers:
-        style = layer.style
-        line_color = (*style.line_rgb, 255)
-        line_width = max(1, style.line_width)
-        for primitive in layer.primitives:
-            for exterior, holes in primitive.polygons:
-                _draw_ring(
-                    outline_draw, projector, exterior, line_color, line_width, style.line_dash
-                )
-                for hole in holes:
-                    _draw_ring(
-                        outline_draw, projector, hole, line_color, line_width, style.line_dash
-                    )
-            for line in primitive.lines:
-                if len(line) >= 2:
-                    outline_draw.line(
-                        [projector.to_pixel(*pt) for pt in line],
-                        fill=line_color,
-                        width=line_width,
-                        joint="curve",
-                    )
-            for point in primitive.points:
-                px, py = projector.to_pixel(*point)
-                radius = max(3, line_width + 1)
-                outline_draw.ellipse(
-                    [px - radius, py - radius, px + radius, py + radius],
-                    fill=line_color,
+        style = layer["style"]
+        color = (*hex_to_rgb(style["outline"]), 255)
+        line_width = max(1, int(style.get("line_width") or 1))
+        dash = tuple(float(item) for item in style.get("line_dash") or ()) or None
+        for feature in layer["features"]:
+            for kind, coords in _parts(feature["geometry"], frame):
+                if kind == "ring":
+                    _draw_ring(draw, coords, color, line_width, dash)
+                elif kind == "line" and len(coords) >= 2:
+                    if dash:
+                        _draw_dashed(draw, coords, color, line_width, dash)
+                    else:
+                        draw.line(coords, fill=color, width=line_width, joint="curve")
+                elif kind == "point":
+                    x, y = coords[0]
+                    radius = max(3, line_width + 1)
+                    draw.ellipse([x - radius, y - radius, x + radius, y + radius], fill=color)
+
+    for layer in layers:
+        for feature in layer["features"]:
+            point = feature.get("label_point")
+            if point and feature.get("label"):
+                x, y = to_pixel(frame, float(point[0]), float(point[1]))
+                draw.text(
+                    (x, y),
+                    str(feature["label"]),
+                    font=fonts.bold,
+                    fill=(26, 32, 39, 255),
+                    anchor="mm",
+                    stroke_width=3,
+                    stroke_fill=(255, 255, 255, 255),
                 )
 
+    _draw_scale_bar(draw, frame, fonts)
+    _draw_north_arrow(draw, width, fonts)
+    draw.rectangle([0, 0, width - 1, height - 1], outline=(152, 162, 179, 255), width=1)
+
     buffer = io.BytesIO()
-    base.convert("RGB").save(buffer, format="PNG")
+    base.convert("RGB").save(buffer, format="PNG", optimize=False)
     return buffer.getvalue()
+
+
+def _parts(geometry: Mapping[str, Any] | None, frame: Mapping[str, Any]) -> Iterator[tuple[str, Ring]]:
+    if not geometry:
+        return
+    kind = geometry.get("type")
+    coordinates = geometry.get("coordinates")
+    if kind == "GeometryCollection":
+        for item in geometry.get("geometries") or []:
+            yield from _parts(item, frame)
+        return
+    if coordinates is None:
+        return
+    if kind == "Polygon":
+        polygons = [coordinates]
+    elif kind == "MultiPolygon":
+        polygons = coordinates
+    else:
+        polygons = []
+    for polygon in polygons:
+        for ring in polygon:
+            yield "ring", [to_pixel(frame, x, y) for x, y in ring]
+    if kind == "LineString":
+        yield "line", [to_pixel(frame, x, y) for x, y in coordinates]
+    elif kind == "MultiLineString":
+        for line in coordinates:
+            yield "line", [to_pixel(frame, x, y) for x, y in line]
+    elif kind == "Point":
+        yield "point", [to_pixel(frame, coordinates[0], coordinates[1])]
+    elif kind == "MultiPoint":
+        for x, y in coordinates:
+            yield "point", [to_pixel(frame, x, y)]
+
+
+def _polygons(layer: Mapping[str, Any], frame: Mapping[str, Any]) -> Iterator[tuple[Ring, list[Ring]]]:
+    for feature in layer["features"]:
+        yield from _feature_polygons(feature["geometry"], frame)
+
+
+def _feature_polygons(
+    geometry: Mapping[str, Any] | None, frame: Mapping[str, Any]
+) -> Iterator[tuple[Ring, list[Ring]]]:
+    if not geometry:
+        return
+    kind = geometry.get("type")
+    if kind == "GeometryCollection":
+        for item in geometry.get("geometries") or []:
+            yield from _feature_polygons(item, frame)
+        return
+    polygons = (
+        [geometry["coordinates"]]
+        if kind == "Polygon"
+        else geometry["coordinates"]
+        if kind == "MultiPolygon"
+        else []
+    )
+    for polygon in polygons:
+        if not polygon or len(polygon[0]) < 3:
+            continue
+        exterior = [to_pixel(frame, x, y) for x, y in polygon[0]]
+        holes = [[to_pixel(frame, x, y) for x, y in ring] for ring in polygon[1:] if len(ring) >= 3]
+        yield exterior, holes
 
 
 def _draw_ring(
     draw: ImageDraw.ImageDraw,
-    projector: _Projector | _BasemapProjector,
-    ring: list[tuple[float, float]],
+    pixels: Ring,
     color: tuple[int, int, int, int],
     width: int,
-    dash: tuple[float, ...] | None = None,
+    dash: tuple[float, ...] | None,
 ) -> None:
-    if len(ring) < 2:
+    if len(pixels) < 2:
         return
-    pixels = [projector.to_pixel(*pt) for pt in ring]
-    # Domykamy obrys, aby wielokąt był narysowany jako zamknięta pętla.
     if pixels[0] != pixels[-1]:
-        pixels.append(pixels[0])
+        pixels = [*pixels, pixels[0]]
     if dash:
         _draw_dashed(draw, pixels, color, width, dash)
         return
@@ -618,7 +384,7 @@ def _draw_ring(
 
 def _draw_dashed(
     draw: ImageDraw.ImageDraw,
-    pixels: list[tuple[float, float]],
+    pixels: Ring,
     color: tuple[int, int, int, int],
     width: int,
     dash: tuple[float, ...],
@@ -655,13 +421,18 @@ def _draw_dashed(
 
 
 def _pattern_image(
-    pattern: str, rgb: tuple[int, int, int], width: int, height: int
+    pattern: str,
+    rgb: tuple[int, int, int],
+    width: int,
+    height: int,
+    *,
+    alpha: int = 200,
+    spacing: int = 10,
 ) -> Image.Image:
     """Kafelkowany wzór wypełnienia w kolorze obrysu warstwy."""
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    color = (*rgb, 200)
-    spacing = 10
+    color = (*rgb, alpha)
     if pattern in {"diagonal-lines", "diagonal-hatch", "cross-hatch"}:
         for offset in range(-height, width, spacing):
             draw.line([(offset, height), (offset + height, 0)], fill=color, width=1)
@@ -673,8 +444,54 @@ def _pattern_image(
             draw.line([(x, 0), (x, height)], fill=color, width=1)
         for y in range(0, height, spacing):
             draw.line([(0, y), (width, y)], fill=color, width=1)
+    if pattern == "horizontal-lines":
+        for y in range(0, height, spacing // 2 + 2):
+            draw.line([(0, y), (width, y)], fill=color, width=1)
     if pattern == "dots":
         for x in range(spacing // 2, width, spacing):
             for y in range(spacing // 2, height, spacing):
                 draw.ellipse([x - 1.5, y - 1.5, x + 1.5, y + 1.5], fill=color)
     return image
+
+
+def format_length_m(value: float) -> str:
+    """Długość podziałki po polsku: 20 m, 0,5 m, 1 000 m."""
+    if float(value).is_integer():
+        return f"{int(value):,}".replace(",", " ") + " m"
+    return f"{value:g}".replace(".", ",") + " m"
+
+
+def _draw_scale_bar(draw: ImageDraw.ImageDraw, frame: Mapping[str, Any], fonts: _Fonts) -> None:
+    bar = frame["scale_bar"]
+    length_px = float(bar["length_px"])
+    height = int(frame["height_px"])
+    x0, y0 = 20.0, height - 34.0
+    label = format_length_m(float(bar["length_m"]))
+    label_box = draw.textbbox((0, 0), label, font=fonts.regular)
+    box_w = length_px + (label_box[2] - label_box[0]) + 40
+    draw.rectangle([x0 - 8, y0 - 24, x0 + box_w, y0 + 18], fill=(255, 255, 255, 230),
+                   outline=(152, 162, 179, 255))
+    half = length_px / 2.0
+    draw.rectangle([x0, y0, x0 + half, y0 + 8], fill=(26, 32, 39, 255))
+    draw.rectangle([x0 + half, y0, x0 + length_px, y0 + 8], fill=(255, 255, 255, 255),
+                   outline=(26, 32, 39, 255))
+    draw.text((x0, y0 - 4), "0", font=fonts.regular, fill=(26, 32, 39, 255), anchor="lb")
+    draw.text((x0 + length_px + 6, y0 + 8), label, font=fonts.regular, fill=(26, 32, 39, 255),
+              anchor="lb")
+
+
+def _draw_north_arrow(draw: ImageDraw.ImageDraw, width: int, fonts: _Fonts) -> None:
+    cx, top = width - 30.0, 14.0
+    draw.polygon([(cx, top), (cx - 9, top + 26), (cx, top + 20), (cx + 9, top + 26)],
+                 fill=(26, 32, 39, 255))
+    draw.text((cx, top + 30), "N", font=fonts.bold, fill=(26, 32, 39, 255), anchor="mt",
+              stroke_width=2, stroke_fill=(255, 255, 255, 255))
+
+
+def ensure_valid_snapshot(snapshot: Mapping[str, Any]) -> bool:
+    """Czy zapisany snapshot mapy ma obsługiwany schemat (bez wyjątków)."""
+    try:
+        validate_snapshot(snapshot)
+    except MapSnapshotError:
+        return False
+    return True

@@ -56,29 +56,18 @@ def _response(status: str = "covered") -> AnalyzeResponse:
 
 
 def test_utilities_preview_is_rendered_into_report_without_network_metrics() -> None:
-    context = _build_report_context(_response(), None, None)
+    context = _build_report_context(_response())
     html = _render_report_html(context)
 
-    assert "Podgląd uzbrojenia terenu (KIUT)" in html
+    assert "Tabela 7.1. Podgląd uzbrojenia terenu (KIUT)" in html
     assert "powiat publikuje dane GESUT w KIUT" in html
     assert "powiat krakowski" in html
     assert "Raport nie zawiera odległości ani liczby sieci" in html
     assert "Nie da się na podstawie podglądu WMS stwierdzić" in html
-    assert "energetyka — czerwony" in html
-
-
-def test_map_caption_mentions_kiut_only_when_overlay_was_used() -> None:
-    without_overlay = _render_report_html(
-        _build_report_context(_response(), "data:image/png;base64,xx", None, False)
-    )
-    with_overlay = _render_report_html(
-        _build_report_context(_response(), "data:image/png;base64,xx", None, True)
-    )
-
-    assert "z nakładką uzbrojenia terenu (KIUT)" not in without_overlay
-    assert "z nakładką uzbrojenia terenu (KIUT)" in with_overlay
-    assert "nie jest geometrią sieci ze snapshotu" in with_overlay
-    assert "czy dana sieć leży na działce" in with_overlay
+    # BK-503: PDF nie osadza rastra WMS KIUT (ani legendy jego kolorów).
+    assert "PDF nie osadza rastra WMS" in html
+    assert "energetyka — czerwony" not in html
+    assert "z nakładką uzbrojenia terenu (KIUT)" not in html
 
 
 @pytest.mark.parametrize(
@@ -92,6 +81,6 @@ def test_uncertain_coverage_states_are_explicit_report_limitations(
     status: str,
     expected_limitation: str,
 ) -> None:
-    context = _build_report_context(_response(status), None, None)
+    context = _build_report_context(_response(status))
 
     assert any(expected_limitation in item for item in context["limitations"])

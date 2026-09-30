@@ -1,0 +1,3785 @@
+{
+ "parcel_wkt_2180": "POLYGON ((566060 244000, 566060 244040, 566000 244040, 566000 244000, 566060 244000))",
+ "response": {
+  "analysis_id": null,
+  "analyzed_at": "2026-09-20T09:30:00+00:00",
+  "buildable_area_sqm": 1664.0,
+  "infrastructure": [],
+  "manual_zone_context": null,
+  "manual_zone_required": false,
+  "mpzp_zones": [
+   {
+    "act_identifier": "PL.ZIPOZ.1261.MPZP-2019-17",
+    "act_version": "20190517T000000",
+    "act_version_id": 17,
+    "assignment_method": "vector_intersection",
+    "data_release_id": 7,
+    "document_url": "https://bip.example.test/uchwala-XVII-2019.pdf",
+    "intersection_area_sqm": 1500.0,
+    "intersection_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.923187458706046,
+         50.05958959917306
+        ],
+        [
+         19.92319177461135,
+         50.05981448645952
+        ],
+        [
+         19.922353386782593,
+         50.059821151763174
+        ],
+        [
+         19.922349074795385,
+         50.059596264423895
+        ],
+        [
+         19.923187458706046,
+         50.05958959917306
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "mpzp_zone",
+      "zone_symbol": "MN.1"
+     },
+     "type": "Feature"
+    },
+    "intersection_pct": 62.5,
+    "is_dominant": true,
+    "manual_review_required": true,
+    "max_building_coverage_pct": 30.0,
+    "max_building_height_m": 9.0,
+    "max_floor_area_ratio": 0.8,
+    "max_floors": null,
+    "min_biologically_active_pct": 40.0,
+    "min_floor_area_ratio": 0.0,
+    "parameters": [
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna wysokość zabudowy mieszkaniowej: 9 m, dla budynków gospodarczych 5 m.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": false,
+      "name": "max_building_height_m",
+      "normalized_value": 9.0,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "9.0 m",
+      "segment_id": "§8 ust. 2 pkt 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": "storeys-1",
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna liczba kondygnacji nadziemnych: 2.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": true,
+      "name": "max_storeys",
+      "normalized_value": 2,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "2",
+      "segment_id": "§8 ust. 2 pkt 2",
+      "unit": null
+     },
+     {
+      "confidence": 0.61,
+      "conflict_group_id": "storeys-1",
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Dopuszcza się trzy kondygnacje nadziemne, w tym poddasze użytkowe.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 310,
+      "manual_review_required": true,
+      "name": "max_storeys",
+      "normalized_value": 3,
+      "page_number": 31,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "3",
+      "segment_id": "§21 ust. 1",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Minimalny udział powierzchni biologicznie czynnej: 40% powierzchni działki.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 120,
+      "manual_review_required": false,
+      "name": "min_biologically_active_percent",
+      "normalized_value": 40.0,
+      "page_number": 12,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "40.0 percent",
+      "segment_id": "§8 ust. 2 pkt 4",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalny wskaźnik intensywności zabudowy: 0,8.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "max_intensity",
+      "normalized_value": 0.8,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.8",
+      "segment_id": "§8 ust. 2 pkt 5",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Minimalny wskaźnik intensywności zabudowy: 0.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "min_intensity",
+      "normalized_value": 0.0,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0",
+      "segment_id": "§8 ust. 2 pkt 6",
+      "unit": null
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna powierzchnia zabudowy: 30% powierzchni działki budowlanej.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 130,
+      "manual_review_required": false,
+      "name": "max_building_coverage_percent",
+      "normalized_value": 30.0,
+      "page_number": 13,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "30.0 percent",
+      "segment_id": "§8 ust. 2 pkt 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[1] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 200,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_01",
+      "normalized_value": null,
+      "page_number": 20,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§30 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[2] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 210,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_02",
+      "normalized_value": 0.0,
+      "page_number": 21,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§31 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[3] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 220,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_03",
+      "normalized_value": 2.0,
+      "page_number": 22,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "2.0 percent",
+      "segment_id": "§32 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[4] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 230,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_04",
+      "normalized_value": 3.0,
+      "page_number": 23,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "3.0 m",
+      "segment_id": "§33 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[5] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 240,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_05",
+      "normalized_value": null,
+      "page_number": 24,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§34 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[6] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 250,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_06",
+      "normalized_value": 0.0,
+      "page_number": 25,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§35 ust. 3",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[7] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 260,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_07",
+      "normalized_value": 6.0,
+      "page_number": 26,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "6.0 percent",
+      "segment_id": "§36 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[8] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 270,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_08",
+      "normalized_value": 7.0,
+      "page_number": 27,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "7.0 m",
+      "segment_id": "§37 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[9] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 280,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_09",
+      "normalized_value": null,
+      "page_number": 28,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§38 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[10] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 290,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_10",
+      "normalized_value": 0.0,
+      "page_number": 29,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§39 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[11] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 300,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_11",
+      "normalized_value": 10.0,
+      "page_number": 30,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "10.0 percent",
+      "segment_id": "§40 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[12] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 310,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_12",
+      "normalized_value": 11.0,
+      "page_number": 31,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "11.0 m",
+      "segment_id": "§41 ust. 3",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[13] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 320,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_13",
+      "normalized_value": null,
+      "page_number": 32,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§42 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[14] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 330,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_14",
+      "normalized_value": 0.0,
+      "page_number": 33,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§43 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[15] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 340,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_15",
+      "normalized_value": 14.0,
+      "page_number": 34,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "14.0 percent",
+      "segment_id": "§44 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[16] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 350,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_16",
+      "normalized_value": 15.0,
+      "page_number": 35,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "15.0 m",
+      "segment_id": "§45 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[17] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 360,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_17",
+      "normalized_value": null,
+      "page_number": 36,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§46 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[18] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 370,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_18",
+      "normalized_value": 0.0,
+      "page_number": 37,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§47 ust. 3",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[19] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 380,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_19",
+      "normalized_value": 18.0,
+      "page_number": 38,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "18.0 percent",
+      "segment_id": "§48 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[20] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 390,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_20",
+      "normalized_value": 19.0,
+      "page_number": 39,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "19.0 m",
+      "segment_id": "§49 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[21] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 400,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_21",
+      "normalized_value": null,
+      "page_number": 40,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§50 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[22] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 410,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_22",
+      "normalized_value": 0.0,
+      "page_number": 41,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§51 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[23] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 420,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_23",
+      "normalized_value": 22.0,
+      "page_number": 42,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "22.0 percent",
+      "segment_id": "§52 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[24] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 430,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_24",
+      "normalized_value": 23.0,
+      "page_number": 43,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "23.0 m",
+      "segment_id": "§53 ust. 3",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[25] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 440,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_25",
+      "normalized_value": null,
+      "page_number": 44,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§54 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[26] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 450,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_26",
+      "normalized_value": 0.0,
+      "page_number": 45,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§55 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[27] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 460,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_27",
+      "normalized_value": 26.0,
+      "page_number": 46,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "26.0 percent",
+      "segment_id": "§56 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[28] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 470,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_28",
+      "normalized_value": 27.0,
+      "page_number": 47,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "27.0 m",
+      "segment_id": "§57 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[29] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 480,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_29",
+      "normalized_value": null,
+      "page_number": 48,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§58 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[30] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 490,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_30",
+      "normalized_value": 0.0,
+      "page_number": 49,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§59 ust. 3",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[31] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 500,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_31",
+      "normalized_value": 30.0,
+      "page_number": 50,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "30.0 percent",
+      "segment_id": "§60 ust. 1",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[32] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 510,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_32",
+      "normalized_value": 31.0,
+      "page_number": 51,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "31.0 m",
+      "segment_id": "§61 ust. 2",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[33] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 520,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_33",
+      "normalized_value": null,
+      "page_number": 52,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "None",
+      "segment_id": "§62 ust. 3",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[34] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 530,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_34",
+      "normalized_value": 0.0,
+      "page_number": 53,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 m",
+      "segment_id": "§63 ust. 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[35] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 540,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_35",
+      "normalized_value": 34.0,
+      "page_number": 54,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "34.0 percent",
+      "segment_id": "§64 ust. 2",
+      "unit": "percent"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1",
+      "document_version_id": 41,
+      "evidence_text": "[36] Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzona od średniego poziomu terenu przed głównym wejściem do budynku do najwyżej położonej krawędzi dachu, z wyłączeniem kominów, masztów i urządzeń technicznych — żółć, gęś, źdźbło, łódź, ćma, ńwe; dopuszcza się lokalizację budynków gospodarczych i garaży wolnostojących o łącznej powierzchni zabudowy nieprzekraczającej wskazanej w ust. 4.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 550,
+      "manual_review_required": false,
+      "name": "ustalenie_szczegolowe_36",
+      "normalized_value": 35.0,
+      "page_number": 55,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "35.0 m",
+      "segment_id": "§65 ust. 3",
+      "unit": "m"
+     }
+    ],
+    "primary_use": "zabudowa mieszkaniowa jednorodzinna",
+    "source": {
+     "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+     "confidence": 0.9,
+     "data_release_id": 7,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "mpzp_ru",
+     "source_name": "MPZP wektor gminy",
+     "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+    },
+    "supplementary_use": null,
+    "touches_boundary": false,
+    "zone_id": "PL.ZIPOZ.1261.MPZP-2019-17/wydzielenie/MN.1",
+    "zone_symbol": "MN.1"
+   },
+   {
+    "act_identifier": "PL.ZIPOZ.1261.MPZP-2019-17",
+    "act_version": "20190517T000000",
+    "act_version_id": 17,
+    "assignment_method": "vector_intersection",
+    "data_release_id": 7,
+    "document_url": "https://bip.example.test/uchwala-XVII-2019.pdf",
+    "intersection_area_sqm": 900.0,
+    "intersection_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.92319177461135,
+         50.05981448645952
+        ],
+        [
+         19.923194364180706,
+         50.05994941882706
+        ],
+        [
+         19.922355974001068,
+         50.05995608416239
+        ],
+        [
+         19.922353386782593,
+         50.059821151763174
+        ],
+        [
+         19.92319177461135,
+         50.05981448645952
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "mpzp_zone",
+      "zone_symbol": "U.2"
+     },
+     "type": "Feature"
+    },
+    "intersection_pct": 37.5,
+    "is_dominant": false,
+    "manual_review_required": false,
+    "max_building_coverage_pct": 0.0,
+    "max_building_height_m": 12.0,
+    "max_floor_area_ratio": null,
+    "max_floors": null,
+    "min_biologically_active_pct": null,
+    "min_floor_area_ratio": null,
+    "parameters": [
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2",
+      "document_version_id": 41,
+      "evidence_text": "Maksymalna wysokość zabudowy usługowej: 12 m.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 150,
+      "manual_review_required": false,
+      "name": "max_building_height_m",
+      "normalized_value": 12.0,
+      "page_number": 15,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "12.0 m",
+      "segment_id": "§9 ust. 2 pkt 1",
+      "unit": "m"
+     },
+     {
+      "confidence": 0.86,
+      "conflict_group_id": null,
+      "document_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2",
+      "document_version_id": 41,
+      "evidence_text": "Zakaz lokalizacji nowych budynków — powierzchnia zabudowy 0%.",
+      "extraction_method": "pdf_text",
+      "legal_unit_id": 150,
+      "manual_review_required": false,
+      "name": "max_building_coverage_percent",
+      "normalized_value": 0.0,
+      "page_number": 15,
+      "parser_version": "mpzp-parser/3.2",
+      "raw_value": "0.0 percent",
+      "segment_id": "§9 ust. 2 pkt 3",
+      "unit": "percent"
+     }
+    ],
+    "primary_use": "zabudowa usługowa",
+    "source": {
+     "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+     "confidence": 0.9,
+     "data_release_id": 7,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "mpzp_ru",
+     "source_name": "MPZP wektor gminy",
+     "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+    },
+    "supplementary_use": "zieleń urządzona",
+    "touches_boundary": false,
+    "zone_id": "PL.ZIPOZ.1261.MPZP-2019-17/wydzielenie/U.2",
+    "zone_symbol": "U.2"
+   }
+  ],
+  "parcel": {
+   "buildable_area_geojson": {
+    "geometry": {
+     "coordinates": [
+      [
+       [
+        19.923132256954496,
+        50.05962602567849
+       ],
+       [
+        19.922405657021944,
+        50.05963180223653
+       ],
+       [
+        19.92241117672084,
+        50.059919658022814
+       ],
+       [
+        19.923137780999877,
+        50.0599138814062
+       ],
+       [
+        19.923132256954496,
+        50.05962602567849
+       ]
+      ]
+     ],
+     "type": "Polygon"
+    },
+    "properties": {
+     "layer": "buildable_area"
+    },
+    "type": "Feature"
+   },
+   "geometry_geojson": {
+    "geometry": {
+     "coordinates": [
+      [
+       [
+        19.923187458706046,
+        50.05958959917306
+       ],
+       [
+        19.923194364180706,
+        50.05994941882706
+       ],
+       [
+        19.922355974001068,
+        50.05995608416239
+       ],
+       [
+        19.922349074795385,
+        50.059596264423895
+       ],
+       [
+        19.923187458706046,
+        50.05958959917306
+       ]
+      ]
+     ],
+     "type": "Polygon"
+    },
+    "properties": {
+     "layer": "parcel"
+    },
+    "type": "Feature"
+   },
+   "metrics": {
+    "area_ha": 0.24,
+    "area_sqm": 2400.0,
+    "geometry_repaired": false,
+    "is_valid": true,
+    "perimeter_m": 200.0
+   },
+   "parcel_identifier": "126101_1.0001.2417/5",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "uldk",
+    "source_name": "ULDK",
+    "source_url": "https://uldk.example.test/usluga"
+   }
+  },
+  "pog": {
+   "act": {
+    "act_identifier": "PL.ZIPOG.1261.POG",
+    "act_version": "20260315T120000",
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "card_url": null,
+    "card_url_verified": false,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "formal_documents": [],
+    "gml_url": "https://integracja.gugik.gov.pl/cgi-bin/PlanOgolnyGminy?id=1261",
+    "gml_url_verified": true,
+    "id": "PL.ZIPOG.1261.POG",
+    "metadata": null,
+    "publication_date": "2026-03-20",
+    "publication_id": "PL.ZIPOG.1261.POG_20260315T120000",
+    "release_label": "RU POG 2026-09-19",
+    "resolution_date": "2026-03-11",
+    "resolution_number": "CXII/3021/2026",
+    "title": "Plan ogólny gminy — Dla terenu oznaczonego symbolem ustala się następujące zasady kształtowania zabudowy oraz wskaźniki zagospodarowania terenu: maksymalna wysokość zabudowy mierzo",
+    "valid_from": "2026-04-01",
+    "valid_to": null,
+    "version": "20260315T120000",
+    "version_started_at": "2026-03-15T12:00:00+00:00"
+   },
+   "area_ratio": null,
+   "compatibility_assessment": null,
+   "coverage_evidence": null,
+   "coverage_status": "available",
+   "data_availability": "current",
+   "dominant_zone_id": "PL.ZIPOG.1261.POG/strefa/1SW",
+   "downtown_areas": [
+    {
+     "area_pct": 8.3333,
+     "area_sqm": 200.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923192637798955,
+          50.05985946391573
+         ],
+         [
+          19.923194364180706,
+          50.05994941882706
+         ],
+         [
+          19.922914900822384,
+          50.059951641278246
+         ],
+         [
+          19.922913174963046,
+          50.05986168635987
+         ],
+         [
+          19.923192637798955,
+          50.05985946391573
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/ozs/1",
+     "label": "obszar zabudowy śródmiejskiej",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OZS-1",
+     "touches_boundary": false
+    }
+   ],
+   "in_downtown_area": true,
+   "in_ouz": true,
+   "legal_status": "binding",
+   "legal_status_evidence": {
+    "confirmed_at": "2026-09-20T09:29:00+00:00",
+    "official": true,
+    "raw_value": "obowiazujacy",
+    "reference": "data_release:12; RU CSW rekord PL.ZIPOG.1261.POG",
+    "source_id": "pog_app",
+    "source_name": "Rejestr Urbanistyczny — CSW"
+   },
+   "manual_review_required": false,
+   "ouz": [
+    {
+     "area_pct": 50.0,
+     "area_sqm": 1200.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922768266789962,
+          50.05959293255529
+         ],
+         [
+          19.922775169130137,
+          50.059952752251554
+         ],
+         [
+          19.922355974001068,
+          50.05995608416239
+         ],
+         [
+          19.922349074795385,
+          50.059596264423895
+         ],
+         [
+          19.922768266789962,
+          50.05959293255529
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/ouz/1",
+     "label": "obszar uzupełnienia zabudowy",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OUZ-1",
+     "touches_boundary": false
+    }
+   ],
+   "ouz_intersection_area_sqm": 1200.0,
+   "ouz_intersection_pct": 50.0,
+   "planning_zone": "SW",
+   "presentation_style": null,
+   "raw_attributes": {
+    "przestrzenNazw": "PL.ZIPOG.1261.POG"
+   },
+   "schema_version": "2.4",
+   "social_infrastructure_standard_areas": [
+    {
+     "area_pct": 100.0,
+     "area_sqm": 2400.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923737744267644,
+          50.05913537777927
+         ],
+         [
+          19.92376365553552,
+          50.0604847012596
+         ],
+         [
+          19.92166765651193,
+          50.06050136365334
+         ],
+         [
+          19.92164180401583,
+          50.05915203938102
+         ],
+         [
+          19.923737744267644,
+          50.05913537777927
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_area"
+      },
+      "type": "Feature"
+     },
+     "gml_url": null,
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/osdis/1",
+     "label": "standard dostępności — szkoła podstawowa",
+     "source": {
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "OSDIS-1",
+     "touches_boundary": false
+    }
+   ],
+   "source": {
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "confidence": 0.9,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "pog_app",
+    "source_name": "RU WFS APP",
+    "source_url": "https://ru-wfs-app.example.test/usluga"
+   },
+   "status": "adopted",
+   "status_confirmed_at": "2026-09-20T09:29:00+00:00",
+   "touches_ouz_boundary": false,
+   "uchwala_date": "2026-03-11",
+   "uchwala_nr": "CXII/3021/2026",
+   "zone_type": "SW",
+   "zones": [
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260311T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922375274297345,
+          50.059596056226454
+         ],
+         [
+          19.922382173698935,
+          50.05995587596231
+         ],
+         [
+          19.922355974001068,
+          50.05995608416239
+         ],
+         [
+          19.922349074795385,
+          50.059596264423895
+         ],
+         [
+          19.922375274297345,
+          50.059596056226454
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SW"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/1SW",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/1SW",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "1SW",
+     "type": "SW"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260312T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922401473799,
+          50.05959584802309
+         ],
+         [
+          19.922408373396497,
+          50.05995566775632
+         ],
+         [
+          19.922382173698935,
+          50.05995587596231
+         ],
+         [
+          19.922375274297345,
+          50.059596056226454
+         ],
+         [
+          19.922401473799,
+          50.05959584802309
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SJ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/2SJ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/2SJ",
+     "label": null,
+     "max_building_coverage_pct": 21.0,
+     "max_building_height_m": 9.0,
+     "max_overground_floor_area_ratio": 0.1,
+     "min_biologically_active_pct": 11.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "2SJ",
+     "type": "SJ"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260313T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922427673300348,
+          50.05959563981383
+         ],
+         [
+          19.92243457309375,
+          50.0599554595444
+         ],
+         [
+          19.922408373396497,
+          50.05995566775632
+         ],
+         [
+          19.922401473799,
+          50.05959584802309
+         ],
+         [
+          19.922427673300348,
+          50.05959563981383
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SU"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/3SU",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/3SU",
+     "label": null,
+     "max_building_coverage_pct": 22.0,
+     "max_building_height_m": 10.0,
+     "max_overground_floor_area_ratio": 0.2,
+     "min_biologically_active_pct": 12.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "3SU",
+     "type": "SU"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260314T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922453872801384,
+          50.059595431598645
+         ],
+         [
+          19.922460772790693,
+          50.059955251326585
+         ],
+         [
+          19.92243457309375,
+          50.0599554595444
+         ],
+         [
+          19.922427673300348,
+          50.05959563981383
+         ],
+         [
+          19.922453872801384,
+          50.059595431598645
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SZ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/4SZ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/4SZ",
+     "label": null,
+     "max_building_coverage_pct": 23.0,
+     "max_building_height_m": 11.0,
+     "max_overground_floor_area_ratio": 0.3,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "4SZ",
+     "type": "SZ"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92248007230212,
+          50.05959522337757
+         ],
+         [
+          19.922486972487334,
+          50.05995504310285
+         ],
+         [
+          19.922460772790693,
+          50.059955251326585
+         ],
+         [
+          19.922453872801384,
+          50.059595431598645
+         ],
+         [
+          19.92248007230212,
+          50.05959522337757
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SP"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/5SP",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/5SP",
+     "label": null,
+     "max_building_coverage_pct": 24.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.4,
+     "min_biologically_active_pct": 14.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "5SP",
+     "type": "SP"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260316T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922506271802547,
+          50.05959501515054
+         ],
+         [
+          19.922513172183667,
+          50.0599548348732
+         ],
+         [
+          19.922486972487334,
+          50.05995504310285
+         ],
+         [
+          19.92248007230212,
+          50.05959522337757
+         ],
+         [
+          19.922506271802547,
+          50.05959501515054
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SO"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/6SO",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/6SO",
+     "label": null,
+     "max_building_coverage_pct": 25.0,
+     "max_building_height_m": 13.0,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": 15.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "6SO",
+     "type": "SO"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260317T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92253247130267,
+          50.05959480691763
+         ],
+         [
+          19.922539371879694,
+          50.05995462663765
+         ],
+         [
+          19.922513172183667,
+          50.0599548348732
+         ],
+         [
+          19.922506271802547,
+          50.05959501515054
+         ],
+         [
+          19.92253247130267,
+          50.05959480691763
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SR"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/7SR",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/7SR",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": 14.0,
+     "max_overground_floor_area_ratio": 0.6,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "7SR",
+     "type": "SR"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260318T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92255867080248,
+          50.059594598678814
+         ],
+         [
+          19.92256557157541,
+          50.05995441839618
+         ],
+         [
+          19.922539371879694,
+          50.05995462663765
+         ],
+         [
+          19.92253247130267,
+          50.05959480691763
+         ],
+         [
+          19.92255867080248,
+          50.059594598678814
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SI"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/8SI",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/8SI",
+     "label": null,
+     "max_building_coverage_pct": 27.0,
+     "max_building_height_m": 15.0,
+     "max_overground_floor_area_ratio": 0.0,
+     "min_biologically_active_pct": 17.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "8SI",
+     "type": "SI"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260319T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92258487030199,
+          50.05959439043406
+         ],
+         [
+          19.922591771270827,
+          50.05995421014879
+         ],
+         [
+          19.92256557157541,
+          50.05995441839618
+         ],
+         [
+          19.92255867080248,
+          50.059594598678814
+         ],
+         [
+          19.92258487030199,
+          50.05959439043406
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SN"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/9SN",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/9SN",
+     "label": null,
+     "max_building_coverage_pct": 28.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.1,
+     "min_biologically_active_pct": 18.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "9SN",
+     "type": "SN"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260310T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922611069801192,
+          50.05959418218341
+         ],
+         [
+          19.922617970965934,
+          50.0599540018955
+         ],
+         [
+          19.922591771270827,
+          50.05995421014879
+         ],
+         [
+          19.92258487030199,
+          50.05959439043406
+         ],
+         [
+          19.922611069801192,
+          50.05959418218341
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SC"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/10SC",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/10SC",
+     "label": null,
+     "max_building_coverage_pct": 29.0,
+     "max_building_height_m": 17.0,
+     "max_overground_floor_area_ratio": 0.2,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "10SC",
+     "type": "SC"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260311T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922637269300086,
+          50.05959397392683
+         ],
+         [
+          19.922644170660735,
+          50.05995379363629
+         ],
+         [
+          19.922617970965934,
+          50.0599540018955
+         ],
+         [
+          19.922611069801192,
+          50.05959418218341
+         ],
+         [
+          19.922637269300086,
+          50.05959397392683
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SG"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/11SG",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/11SG",
+     "label": null,
+     "max_building_coverage_pct": 30.0,
+     "max_building_height_m": 18.0,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": 20.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "11SG",
+     "type": "SG"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260312T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922663468798675,
+          50.05959376566436
+         ],
+         [
+          19.922670370355227,
+          50.05995358537117
+         ],
+         [
+          19.922644170660735,
+          50.05995379363629
+         ],
+         [
+          19.922637269300086,
+          50.05959397392683
+         ],
+         [
+          19.922663468798675,
+          50.05959376566436
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SH"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/12SH",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/12SH",
+     "label": null,
+     "max_building_coverage_pct": 31.0,
+     "max_building_height_m": 19.0,
+     "max_overground_floor_area_ratio": 0.4,
+     "min_biologically_active_pct": 21.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "12SH",
+     "type": "SH"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260313T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922689668296957,
+          50.05959355739595
+         ],
+         [
+          19.922696570049414,
+          50.059953377100136
+         ],
+         [
+          19.922670370355227,
+          50.05995358537117
+         ],
+         [
+          19.922663468798675,
+          50.05959376566436
+         ],
+         [
+          19.922689668296957,
+          50.05959355739595
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SK"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/13SK",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/13SK",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.5,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "13SK",
+     "type": "SK"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260314T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92271586779493,
+          50.05959334912164
+         ],
+         [
+          19.922722769743295,
+          50.05995316882319
+         ],
+         [
+          19.922696570049414,
+          50.059953377100136
+         ],
+         [
+          19.922689668296957,
+          50.05959355739595
+         ],
+         [
+          19.92271586779493,
+          50.05959334912164
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SW"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/14SW",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/14SW",
+     "label": null,
+     "max_building_coverage_pct": 33.0,
+     "max_building_height_m": 21.0,
+     "max_overground_floor_area_ratio": 0.6,
+     "min_biologically_active_pct": 23.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "14SW",
+     "type": "SW"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922742067292603,
+          50.05959314084143
+         ],
+         [
+          19.92274896943687,
+          50.05995296054033
+         ],
+         [
+          19.922722769743295,
+          50.05995316882319
+         ],
+         [
+          19.92271586779493,
+          50.05959334912164
+         ],
+         [
+          19.922742067292603,
+          50.05959314084143
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SJ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/15SJ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/15SJ",
+     "label": null,
+     "max_building_coverage_pct": 34.0,
+     "max_building_height_m": 22.0,
+     "max_overground_floor_area_ratio": 0.0,
+     "min_biologically_active_pct": 24.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "15SJ",
+     "type": "SJ"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260316T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922768266789962,
+          50.05959293255529
+         ],
+         [
+          19.922775169130137,
+          50.059952752251554
+         ],
+         [
+          19.92274896943687,
+          50.05995296054033
+         ],
+         [
+          19.922742067292603,
+          50.05959314084143
+         ],
+         [
+          19.922768266789962,
+          50.05959293255529
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SU"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/16SU",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/16SU",
+     "label": null,
+     "max_building_coverage_pct": 35.0,
+     "max_building_height_m": 23.0,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "16SU",
+     "type": "SU"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260317T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92279446628702,
+          50.059592724263254
+         ],
+         [
+          19.922801368823094,
+          50.05995254395687
+         ],
+         [
+          19.922775169130137,
+          50.059952752251554
+         ],
+         [
+          19.922768266789962,
+          50.05959293255529
+         ],
+         [
+          19.92279446628702,
+          50.059592724263254
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SZ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/17SZ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/17SZ",
+     "label": null,
+     "max_building_coverage_pct": 36.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.2,
+     "min_biologically_active_pct": 26.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "17SZ",
+     "type": "SZ"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260318T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922820665783767,
+          50.05959251596529
+         ],
+         [
+          19.922827568515753,
+          50.05995233565628
+         ],
+         [
+          19.922801368823094,
+          50.05995254395687
+         ],
+         [
+          19.92279446628702,
+          50.059592724263254
+         ],
+         [
+          19.922820665783767,
+          50.05959251596529
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SP"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/18SP",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/18SP",
+     "label": null,
+     "max_building_coverage_pct": 37.0,
+     "max_building_height_m": 25.0,
+     "max_overground_floor_area_ratio": 0.3,
+     "min_biologically_active_pct": 27.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "18SP",
+     "type": "SP"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260319T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922846865280206,
+          50.05959230766142
+         ],
+         [
+          19.922853768208096,
+          50.05995212734977
+         ],
+         [
+          19.922827568515753,
+          50.05995233565628
+         ],
+         [
+          19.922820665783767,
+          50.05959251596529
+         ],
+         [
+          19.922846865280206,
+          50.05959230766142
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SO"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/19SO",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/19SO",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": 26.0,
+     "max_overground_floor_area_ratio": 0.4,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "19SO",
+     "type": "SO"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260310T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922873064776343,
+          50.05959209935164
+         ],
+         [
+          19.92287996790014,
+          50.059951919037346
+         ],
+         [
+          19.922853768208096,
+          50.05995212734977
+         ],
+         [
+          19.922846865280206,
+          50.05959230766142
+         ],
+         [
+          19.922873064776343,
+          50.05959209935164
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SR"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/20SR",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/20SR",
+     "label": null,
+     "max_building_coverage_pct": 39.0,
+     "max_building_height_m": 27.0,
+     "max_overground_floor_area_ratio": 0.5,
+     "min_biologically_active_pct": 29.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "20SR",
+     "type": "SR"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260311T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92289926427217,
+          50.059591891035936
+         ],
+         [
+          19.922906167591876,
+          50.059951710719005
+         ],
+         [
+          19.92287996790014,
+          50.059951919037346
+         ],
+         [
+          19.922873064776343,
+          50.05959209935164
+         ],
+         [
+          19.92289926427217,
+          50.059591891035936
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SI"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/21SI",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/21SI",
+     "label": null,
+     "max_building_coverage_pct": 40.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": 30.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "21SI",
+     "type": "SI"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260312T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922925463767694,
+          50.059591682714334
+         ],
+         [
+          19.9229323672833,
+          50.05995150239475
+         ],
+         [
+          19.922906167591876,
+          50.059951710719005
+         ],
+         [
+          19.92289926427217,
+          50.059591891035936
+         ],
+         [
+          19.922925463767694,
+          50.059591682714334
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SN"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/22SN",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/22SN",
+     "label": null,
+     "max_building_coverage_pct": 41.0,
+     "max_building_height_m": 29.0,
+     "max_overground_floor_area_ratio": 0.0,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "22SN",
+     "type": "SN"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260313T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922951663262907,
+          50.059591474386814
+         ],
+         [
+          19.92295856697442,
+          50.05995129406459
+         ],
+         [
+          19.9229323672833,
+          50.05995150239475
+         ],
+         [
+          19.922925463767694,
+          50.059591682714334
+         ],
+         [
+          19.922951663262907,
+          50.059591474386814
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SC"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/23SC",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/23SC",
+     "label": null,
+     "max_building_coverage_pct": 42.0,
+     "max_building_height_m": 30.0,
+     "max_overground_floor_area_ratio": 0.1,
+     "min_biologically_active_pct": 32.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "23SC",
+     "type": "SC"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260314T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922977862757822,
+          50.05959126605338
+         ],
+         [
+          19.922984766665234,
+          50.059951085728514
+         ],
+         [
+          19.92295856697442,
+          50.05995129406459
+         ],
+         [
+          19.922951663262907,
+          50.059591474386814
+         ],
+         [
+          19.922977862757822,
+          50.05959126605338
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SG"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/24SG",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/24SG",
+     "label": null,
+     "max_building_coverage_pct": 43.0,
+     "max_building_height_m": 31.0,
+     "max_overground_floor_area_ratio": 0.2,
+     "min_biologically_active_pct": 33.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "24SG",
+     "type": "SG"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260315T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92300406225242,
+          50.05959105771404
+         ],
+         [
+          19.92301096635574,
+          50.059950877386534
+         ],
+         [
+          19.922984766665234,
+          50.059951085728514
+         ],
+         [
+          19.922977862757822,
+          50.05959126605338
+         ],
+         [
+          19.92300406225242,
+          50.05959105771404
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SH"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/25SH",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/25SH",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.3,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "25SH",
+     "type": "SH"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260316T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923030261746717,
+          50.059590849368774
+         ],
+         [
+          19.923037166045944,
+          50.05995066903863
+         ],
+         [
+          19.92301096635574,
+          50.059950877386534
+         ],
+         [
+          19.92300406225242,
+          50.05959105771404
+         ],
+         [
+          19.923030261746717,
+          50.059590849368774
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SK"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/26SK",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/26SK",
+     "label": null,
+     "max_building_coverage_pct": 45.0,
+     "max_building_height_m": 33.0,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": 35.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "26SK",
+     "type": "SK"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260317T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923056461240705,
+          50.0595906410176
+         ],
+         [
+          19.92306336573584,
+          50.05995046068482
+         ],
+         [
+          19.923037166045944,
+          50.05995066903863
+         ],
+         [
+          19.923030261746717,
+          50.059590849368774
+         ],
+         [
+          19.923056461240705,
+          50.0595906410176
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SW"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/27SW",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/27SW",
+     "label": null,
+     "max_building_coverage_pct": 46.0,
+     "max_building_height_m": 34.0,
+     "max_overground_floor_area_ratio": 0.5,
+     "min_biologically_active_pct": 36.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "27SW",
+     "type": "SW"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260318T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923082660734387,
+          50.05959043266051
+         ],
+         [
+          19.923089565425425,
+          50.05995025232509
+         ],
+         [
+          19.92306336573584,
+          50.05995046068482
+         ],
+         [
+          19.923056461240705,
+          50.0595906410176
+         ],
+         [
+          19.923082660734387,
+          50.05959043266051
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SJ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/28SJ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/28SJ",
+     "label": null,
+     "max_building_coverage_pct": 47.0,
+     "max_building_height_m": 35.0,
+     "max_overground_floor_area_ratio": 0.6,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "28SJ",
+     "type": "SJ"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260319T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923108860227764,
+          50.059590224297516
+         ],
+         [
+          19.923115765114705,
+          50.059950043959454
+         ],
+         [
+          19.923089565425425,
+          50.05995025232509
+         ],
+         [
+          19.923082660734387,
+          50.05959043266051
+         ],
+         [
+          19.923108860227764,
+          50.059590224297516
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SU"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/29SU",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/29SU",
+     "label": null,
+     "max_building_coverage_pct": 48.0,
+     "max_building_height_m": null,
+     "max_overground_floor_area_ratio": 0.0,
+     "min_biologically_active_pct": 38.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "29SU",
+     "type": "SU"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260310T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923135059720828,
+          50.05959001592861
+         ],
+         [
+          19.92314196480368,
+          50.059949835587894
+         ],
+         [
+          19.923115765114705,
+          50.059950043959454
+         ],
+         [
+          19.923108860227764,
+          50.059590224297516
+         ],
+         [
+          19.923135059720828,
+          50.05959001592861
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SZ"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/30SZ",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/30SZ",
+     "label": null,
+     "max_building_coverage_pct": 49.0,
+     "max_building_height_m": 37.0,
+     "max_overground_floor_area_ratio": 0.1,
+     "min_biologically_active_pct": 39.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "30SZ",
+     "type": "SZ"
+    },
+    {
+     "additional_profiles": [
+      {
+       "code": "uslugi",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "usługi"
+      }
+     ],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260311T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92316125921359,
+          50.059589807553785
+         ],
+         [
+          19.923168164492346,
+          50.059949627210436
+         ],
+         [
+          19.92314196480368,
+          50.059949835587894
+         ],
+         [
+          19.923135059720828,
+          50.05959001592861
+         ],
+         [
+          19.92316125921359,
+          50.059589807553785
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SP"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/31SP",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/31SP",
+     "label": null,
+     "max_building_coverage_pct": 0.0,
+     "max_building_height_m": 38.0,
+     "max_overground_floor_area_ratio": null,
+     "min_biologically_active_pct": null,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "31SP",
+     "type": "SP"
+    },
+    {
+     "additional_profiles": [],
+     "area_pct": 3.125,
+     "area_sqm": 75.0,
+     "feature_version": "20260312T120000",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.923187458706046,
+          50.05958959917306
+         ],
+         [
+          19.923194364180706,
+          50.05994941882706
+         ],
+         [
+          19.923168164492346,
+          50.059949627210436
+         ],
+         [
+          19.92316125921359,
+          50.059589807553785
+         ],
+         [
+          19.923187458706046,
+          50.05958959917306
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "layer": "pog_zone",
+       "zone_type": "SO"
+      },
+      "type": "Feature"
+     },
+     "gml_url": "https://rejestr-urbanistyczny.example.test/gml/32SO",
+     "gml_url_verified": false,
+     "id": "PL.ZIPOG.1261.POG/strefa/32SO",
+     "label": null,
+     "max_building_coverage_pct": 51.0,
+     "max_building_height_m": 39.0,
+     "max_overground_floor_area_ratio": 0.3,
+     "min_biologically_active_pct": 41.0,
+     "primary_profile": [
+      {
+       "code": "zabudowaMieszkaniowa",
+       "dictionary_source": "ProfilFunkcjonalnyKod (APP 2024)",
+       "label": "zabudowa mieszkaniowa"
+      }
+     ],
+     "source": {
+      "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+      "confidence": 0.9,
+      "data_release_id": 12,
+      "fetched_at": "2026-09-20T09:29:00+00:00",
+      "manual_review_required": false,
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "RU WFS APP",
+      "source_url": "https://ru-wfs-app.example.test/usluga"
+     },
+     "symbol": "32SO",
+     "type": "SO"
+    }
+   ]
+  },
+  "risk_sections": [
+   {
+    "boundary_feature_count": 0,
+    "feature_count": 1,
+    "feature_ids": [
+     "ISOK.OZP.Q1.4123"
+    ],
+    "intersecting_feature_count": 1,
+    "reason_code": null,
+    "relation": "intersection",
+    "schema_version": "1.0",
+    "section": "flood",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "isok",
+     "source_name": "ISOK WFS",
+     "source_url": "https://isok-wfs.example.test/usluga"
+    },
+    "status": "available",
+    "union_intersection_area_sqm": 300.0,
+    "union_intersection_pct": 12.5,
+    "warnings": []
+   },
+   {
+    "boundary_feature_count": 0,
+    "feature_count": 1,
+    "feature_ids": [
+     "GDOS.OChK.12"
+    ],
+    "intersecting_feature_count": 1,
+    "reason_code": null,
+    "relation": "intersection",
+    "schema_version": "1.0",
+    "section": "nature",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "gdos",
+     "source_name": "GDOŚ WFS",
+     "source_url": "https://gdoś-wfs.example.test/usluga"
+    },
+    "status": "available",
+    "union_intersection_area_sqm": 2400.0,
+    "union_intersection_pct": 100.0,
+    "warnings": []
+   }
+  ],
+  "risks": [
+   {
+    "description": "Część działki leży w obszarze szczególnego zagrożenia powodzią (Q1%).",
+    "feature_id": "ISOK.OZP.Q1.4123",
+    "geometry_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.922626810831787,
+         50.05950408841516
+        ],
+        [
+         19.922631124103226,
+         50.05972897574044
+        ],
+        [
+         19.922211930907064,
+         50.05973230712033
+        ],
+        [
+         19.922207619594666,
+         50.05950741976865
+        ],
+        [
+         19.922626810831787,
+         50.05950408841516
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "risk",
+      "risk_type": "flood_zone"
+     },
+     "type": "Feature"
+    },
+    "intersection_area_sqm": 300.0,
+    "intersection_pct": 12.5,
+    "probability_class": "obszar szczególnego zagrożenia powodzią Q1%",
+    "return_period_years": 100,
+    "risk_type": "flood_zone",
+    "section": "flood",
+    "severity": "medium",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "isok",
+     "source_name": "ISOK WFS",
+     "source_url": "https://isok-wfs.example.test/usluga"
+    },
+    "touches_boundary": false,
+    "warnings": []
+   },
+   {
+    "description": "Działka leży w obszarze chronionego krajobrazu.",
+    "feature_id": "GDOS.OChK.12",
+    "geometry_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        [
+         19.925126386965363,
+         50.05867447463293
+        ],
+        [
+         19.925178288519128,
+         50.06137312042718
+        ],
+        [
+         19.920986212760013,
+         50.061406458885166
+        ],
+        [
+         19.9209345462962,
+         50.05870780992169
+        ],
+        [
+         19.925126386965363,
+         50.05867447463293
+        ]
+       ]
+      ],
+      "type": "Polygon"
+     },
+     "properties": {
+      "layer": "risk",
+      "risk_type": "nature_protection"
+     },
+     "type": "Feature"
+    },
+    "intersection_area_sqm": 2400.0,
+    "intersection_pct": 100.0,
+    "name": "Bielańsko-Tyniecki Obszar Chronionego Krajobrazu",
+    "protection_type": "obszar chronionego krajobrazu",
+    "risk_type": "nature_protection",
+    "section": "nature",
+    "severity": "low",
+    "source": {
+     "confidence": 0.9,
+     "fetched_at": "2026-09-20T09:29:00+00:00",
+     "manual_review_required": false,
+     "response_status": 200,
+     "source_id": "gdos",
+     "source_name": "GDOŚ WFS",
+     "source_url": "https://gdoś-wfs.example.test/usluga"
+    },
+    "touches_boundary": false,
+    "warnings": []
+   }
+  ],
+  "sources": [
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "uldk",
+    "source_name": "ULDK",
+    "source_url": "https://uldk.example.test/usluga"
+   },
+   {
+    "artifact_sha256": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc3",
+    "confidence": 0.9,
+    "data_release_id": 12,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "pog_app",
+    "source_name": "RU WFS APP",
+    "source_url": "https://ru-wfs-app.example.test/usluga",
+    "source_version": "2026-09-19"
+   },
+   {
+    "confidence": 0.9,
+    "data_release_id": 7,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "mpzp_ru",
+    "source_name": "MPZP wektor gminy",
+    "source_url": "https://mpzp-wektor-gminy.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "isok",
+    "source_name": "ISOK WFS",
+    "source_url": "https://isok-wfs.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "gdos",
+    "source_name": "GDOŚ WFS",
+    "source_url": "https://gdoś-wfs.example.test/usluga"
+   },
+   {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "nmt",
+    "source_name": "NMT GUGiK",
+    "source_url": "https://nmt-gugik.example.test/usluga"
+   }
+  ],
+  "status": "partial",
+  "terrain": {
+   "grid_size_m": 5.0,
+   "height_difference_m": 1.6,
+   "max_height_m": 213.0,
+   "min_height_m": 211.4,
+   "reason_code": null,
+   "relief": null,
+   "sampled_points": 96,
+   "schema_version": "1.1",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "nmt",
+    "source_name": "NMT GUGiK",
+    "source_url": "https://nmt-gugik.example.test/usluga"
+   },
+   "status": "available",
+   "warnings": []
+  },
+  "utilities_preview": {
+   "county_name": "powiat m. Kraków",
+   "coverage_status": "covered",
+   "layer_available": true,
+   "note": "Powiat publikuje dane GESUT; podgląd nie służy do obliczania odległości.",
+   "source": {
+    "confidence": 0.9,
+    "fetched_at": "2026-09-20T09:29:00+00:00",
+    "manual_review_required": false,
+    "response_status": 200,
+    "source_id": "kiut_wms",
+    "source_name": "KIUT (GUGiK)",
+    "source_url": "https://kiut-(gugik).example.test/usluga"
+   }
+  },
+  "warnings": [
+   {
+    "code": "MPZP_PARAMETER_CONFLICT",
+    "message": "Uchwała zawiera sprzeczne wartości liczby kondygnacji.",
+    "severity": "warning",
+    "source_name": "mpzp"
+   }
+  ]
+ }
+}
