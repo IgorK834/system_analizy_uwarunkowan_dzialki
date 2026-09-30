@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -5,6 +7,7 @@ import {
   ApiError,
   getAddressSuggestions,
   getActivePogTileRelease,
+  getAnalysisAuditPackage,
   getAnalysisReport,
   getPogAreaSummary,
   getPogFeatureDetails,
@@ -32,6 +35,16 @@ function pdfResponse(content = "%PDF-1.7 test") {
   return new Response(content, {
     status: 200,
     headers: { "Content-Type": "application/pdf" },
+  });
+}
+
+const ZIP_BYTES = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3, 4, 5, 6]);
+const ZIP_SHA = createHash("sha256").update(ZIP_BYTES).digest("hex");
+
+function zipResponse(headers: Record<string, string> = {}, body: BodyInit = ZIP_BYTES) {
+  return new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "application/zip", ...headers },
   });
 }
 
@@ -381,5 +394,103 @@ describe("klient API", () => {
     const error = new ApiError(418, "Test");
 
     expect(error).toMatchObject({ name: "ApiError", status: 418, message: "Test" });
+  });
+
+  describe("pakiet audytowy (BK-505)", () => {
+    it("pobiera ZIP z tokenem, zwraca sumę z nagłówka i wersję eksportera", async () => {
+      fetchMock.mockResolvedValue(
+        zipResponse({
+          "X-Audit-Package-SHA256": ZIP_SHA,
+          "X-Audit-Exporter-Version": "audit-exporter/1.0.0",
+        }),
+      );
+      const controller = new AbortController();
+
+      const download = await getAnalysisAuditPackage(42, {
+        accessToken: "tok/en+1",
+        signal: controller.signal,
+      });
+
+      expect(download.blob.size).toBe(ZIP_BYTES.length);
+      expect(download.sha256).toBe(ZIP_SHA);
+      expect(download.exporterVersion).toBe("audit-exporter/1.0.0");
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://api.example.test/report/42/audit.zip?access_token=tok%2Fen%2B1",
+        expect.objectContaining({
+          method: "GET",
+          headers: { Accept: "application/zip" },
+          signal: controller.signal,
+        }),
+      );
+    });
+
+    it("pobiera bez tokenu i liczy sumę lokalnie, gdy serwer jej nie podał", async () => {
+      fetchMock.mockResolvedValue(zipResponse());
+
+      const download = await getAnalysisAuditPackage(7);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://api.example.test/report/7/audit.zip",
+        expect.anything(),
+      );
+      expect(download.sha256).toBe(ZIP_SHA);
+      expect(download.exporterVersion).toBeNull();
+    });
+
+    it("odrzuca pakiet, którego suma różni się od sumy serwera", async () => {
+      fetchMock.mockResolvedValue(zipResponse({ "X-Audit-Package-SHA256": "0".repeat(64) }));
+
+      await expect(getAnalysisAuditPackage(42)).rejects.toThrow("różni się od sumy podanej");
+    });
+
+    it("bez SubtleCrypto zwraca sumę z nagłówka bez weryfikacji lokalnej", async () => {
+      vi.stubGlobal("crypto", undefined);
+      fetchMock.mockResolvedValue(zipResponse({ "X-Audit-Package-SHA256": ZIP_SHA.toUpperCase() }));
+
+      const download = await getAnalysisAuditPackage(42);
+      expect(download.sha256).toBe(ZIP_SHA);
+
+      fetchMock.mockResolvedValue(zipResponse());
+      expect((await getAnalysisAuditPackage(42)).sha256).toBeNull();
+    });
+
+    it("mapuje błędy HTTP na czytelne komunikaty", async () => {
+      const cases: Array<[number, RegExp]> = [
+        [403, /Brak dostępu do pakietu audytowego/],
+        [404, /Nie znaleziono zapisanej analizy/],
+        [413, /przekracza dopuszczalny rozmiar/],
+        [429, /Zbyt wiele żądań pakietu/],
+        [500, /Nie udało się przygotować pakietu audytowego/],
+      ];
+      for (const [status, message] of cases) {
+        fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "x" }, status));
+        await expect(getAnalysisAuditPackage(42)).rejects.toMatchObject({
+          status,
+          message: expect.stringMatching(message),
+        });
+      }
+      fetchMock.mockResolvedValueOnce(new Response("nie json", { status: 500 }));
+      await expect(getAnalysisAuditPackage(42)).rejects.toThrow("przygotować pakietu");
+    });
+
+    it("odrzuca odpowiedź, która nie jest ZIP-em", async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ status: "ok" }));
+      await expect(getAnalysisAuditPackage(42)).rejects.toThrow("nieprawidłowym formacie");
+
+      fetchMock.mockResolvedValueOnce(zipResponse({}, "to nie jest zip"));
+      await expect(getAnalysisAuditPackage(42)).rejects.toThrow("nie jest prawidłowym archiwum ZIP");
+
+      fetchMock.mockResolvedValueOnce(zipResponse({}, new Uint8Array()));
+      await expect(getAnalysisAuditPackage(42)).rejects.toThrow("nie jest prawidłowym archiwum ZIP");
+    });
+
+    it("mapuje awarię sieci i zachowuje AbortError", async () => {
+      fetchMock.mockRejectedValueOnce(new TypeError("network down"));
+      await expect(getAnalysisAuditPackage(42)).rejects.toMatchObject({ status: 0 });
+
+      const abortError = new DOMException("aborted", "AbortError");
+      fetchMock.mockRejectedValueOnce(abortError);
+      await expect(getAnalysisAuditPackage(42)).rejects.toBe(abortError);
+    });
   });
 });

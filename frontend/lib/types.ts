@@ -900,6 +900,78 @@ export type TerrainResult = {
   relief: TerrainReliefResult | null;
 };
 
+/** Status sekcji według kontraktu źródła (BK-504) — niezależny od świeżości. */
+export type SectionQualityStatus =
+  | "available"
+  | "partial"
+  | "no_coverage"
+  | "unavailable"
+  | "error"
+  | "unknown"
+  | "out_of_scope"
+  | "awaiting_input";
+
+export type FreshnessState = "fresh" | "stale" | "unknown";
+export type FreshnessBasis = "source_declared_interval" | "project_decision";
+
+export type SectionQualityKey =
+  | "parcel"
+  | "mpzp"
+  | "pog"
+  | "pog_overlays"
+  | "flood"
+  | "nature"
+  | "terrain"
+  | "utilities"
+  | "transport"
+  | "mpzp_pog_relation";
+
+export type FreshnessAssessment = {
+  state: FreshnessState;
+  reason_code: string | null;
+  /** Punkt odniesienia oceny: chwila analizy (ocena historyczna). */
+  reference_at: string;
+  age_seconds: number | null;
+  max_age_days: number | null;
+  basis: FreshnessBasis | null;
+};
+
+export type SectionQuality = {
+  section: SectionQualityKey;
+  report_section: string;
+  status: SectionQualityStatus;
+  source_id: string | null;
+  source_name: string | null;
+  /** Czas pobrania danych — nie data wejścia aktu w życie. */
+  fetched_at: string | null;
+  data_release_id: number | null;
+  source_version: string | null;
+  manual_review_required: boolean;
+  freshness: FreshnessAssessment;
+  policy_version: string;
+  reason_codes: string[];
+};
+
+export type QualityLegendItem = { id: string; label: string; description: string };
+export type QualityLegendReason = { code: string; label: string };
+export type SectionQualityLegend = {
+  statuses: QualityLegendItem[];
+  freshness: QualityLegendItem[];
+  reasons: QualityLegendReason[];
+};
+
+/** Trwała macierz kompletności i świeżości sekcji zapisana z analizą (BK-504). */
+export type SectionQualityMatrix = {
+  schema_version: string;
+  policy_version: string;
+  reference_at: string;
+  /** stored — ocena z chwili analizy; reconstructed — zapis sprzed BK-504 oceniony przy odczycie. */
+  origin: "stored" | "reconstructed";
+  sections: SectionQuality[];
+  matrix_sha256: string;
+  legend: SectionQualityLegend;
+};
+
 export type AnalyzeResponse = {
   analysis_id: number | null;
   /** Token dostępu do raportu PDF i dokumentu analizy; null dla wyniku niezapisanego. */
@@ -916,6 +988,8 @@ export type AnalyzeResponse = {
   risk_sections?: RiskSectionResult[];
   /** Sekcja NMT; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
   terrain?: TerrainResult | null;
+  /** Macierz kompletności i świeżości sekcji; brak pola = odpowiedź sprzed BK-504. */
+  section_quality?: SectionQualityMatrix | null;
   buildable_area_sqm: number | null;
   manual_zone_required: boolean;
   /** Plan, kandydaci i przypięty dokument pokazywane przed podaniem symbolu. */

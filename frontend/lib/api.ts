@@ -285,6 +285,110 @@ export async function getAnalysisReport(
   return blob;
 }
 
+export type AuditPackageDownload = {
+  blob: Blob;
+  /** SHA-256 całej paczki podany przez serwer poza archiwum (nagłówek). */
+  sha256: string | null;
+  exporterVersion: string | null;
+};
+
+async function sha256Hex(blob: Blob): Promise<string | null> {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) return null;
+  const digest = await subtle.digest("SHA-256", await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Pobiera pakiet audytowy zapisanej analizy (BK-505): ZIP z analysis.json,
+ * sources.json, GeoJSON, README i manifestem SHA-256. Suma paczki z nagłówka jest
+ * porównywana z sumą pobranych bajtów, gdy przeglądarka udostępnia SubtleCrypto.
+ */
+export async function getAnalysisAuditPackage(
+  analysisId: number,
+  options: { accessToken?: string | null; signal?: AbortSignal } = {},
+): Promise<AuditPackageDownload> {
+  let response: Response;
+  const query = options.accessToken
+    ? `?access_token=${encodeURIComponent(options.accessToken)}`
+    : "";
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}/audit.zip${query}`, {
+      method: "GET",
+      headers: { Accept: "application/zip" },
+      signal: options.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw error;
+    }
+    throw new ApiError(
+      0,
+      "Nie udało się połączyć z usługą pakietów audytowych. Spróbuj ponownie.",
+    );
+  }
+
+  if (!response.ok) {
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      // Błąd HTTP bez JSON nadal mapujemy na bezpieczny komunikat poniżej.
+    }
+    const detail = extractDetail(body);
+    const message =
+      response.status === 404
+        ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
+        : response.status === 403
+          ? "Brak dostępu do pakietu audytowego tej analizy. Uruchom analizę ponownie."
+          : response.status === 413
+            ? "Pakiet audytowy tej analizy przekracza dopuszczalny rozmiar."
+            : response.status === 429
+              ? "Zbyt wiele żądań pakietu. Spróbuj ponownie za chwilę."
+              : `Nie udało się przygotować pakietu audytowego.${detail ? ` ${detail}` : ""}`;
+    throw new ApiError(response.status, message);
+  }
+
+  const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/zip")) {
+    throw new ApiError(
+      response.status,
+      "Serwer zwrócił pakiet audytowy w nieprawidłowym formacie.",
+    );
+  }
+
+  const blob = await response.blob();
+  const signature = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+  if (
+    blob.size === 0 ||
+    signature.length !== 4 ||
+    signature[0] !== 0x50 ||
+    signature[1] !== 0x4b ||
+    signature[2] !== 0x03 ||
+    signature[3] !== 0x04
+  ) {
+    throw new ApiError(
+      response.status,
+      "Pobrany plik nie jest prawidłowym archiwum ZIP.",
+    );
+  }
+
+  const declared = response.headers.get("x-audit-package-sha256")?.toLowerCase() ?? null;
+  const actual = await sha256Hex(blob);
+  if (declared && actual && declared !== actual) {
+    throw new ApiError(
+      response.status,
+      "Suma SHA-256 pobranego pakietu różni się od sumy podanej przez serwer — pobierz pakiet ponownie.",
+    );
+  }
+  return {
+    blob,
+    sha256: declared ?? actual,
+    exporterVersion: response.headers.get("x-audit-exporter-version"),
+  };
+}
+
 export async function getAddressSuggestions(
   query: string,
   options: { signal?: AbortSignal } = {},
