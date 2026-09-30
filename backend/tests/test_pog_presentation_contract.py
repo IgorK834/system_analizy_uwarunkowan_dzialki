@@ -46,9 +46,16 @@ from app.schemas.analyze import (
     PogResult,
     PogZoneResult,
 )
+from pyproj import Transformer
+from shapely.geometry import shape
+from shapely.ops import transform
+
 from app.services import report_map
+from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.pog_analyzer import with_presentation_style
 from tests.repo_structure import find_repo_root
+
+_TO_2180 = Transformer.from_crs("EPSG:4326", "EPSG:2180", always_xy=True)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "pog_presentation"
 RDF = "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}"
@@ -263,7 +270,7 @@ def _zone_square(code: str) -> PogZoneResult:
 
 
 class _Response:
-    def __init__(self, pog: PogResult) -> None:
+    def __init__(self, pog: PogResult | None) -> None:
         self.pog = pog
         self.parcel = None
         self.infrastructure = []
@@ -271,8 +278,17 @@ class _Response:
         self.utilities_preview = None
 
 
-def test_old_report_uses_saved_style_version(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(report_map.settings, "report_map_basemap_enabled", False)
+def _pog_map(pog: PogResult) -> tuple[dict, report_map.RenderedMap]:
+    """Mapa POG raportu (BK-503) dla działki równej pierwszej strefie."""
+    square = pog.zones[0].geometry_geojson["geometry"]  # type: ignore[index]
+    parcel = transform(_TO_2180.transform, shape(square))
+    snapshot = build_report_map_snapshot(_Response(pog), parcel, basemap_dir="")
+    rendered = report_map.render_report_maps(snapshot, basemap_dir="").by_id("pog")
+    assert rendered is not None
+    return snapshot, rendered
+
+
+def test_old_report_uses_saved_style_version() -> None:
     saved = style_snapshot()
     saved["style_version"] = "2020.01.01-1"
     saved["zones"]["SU"]["fill"] = "#00ff00"
@@ -281,14 +297,13 @@ def test_old_report_uses_saved_style_version(monkeypatch: pytest.MonkeyPatch) ->
         zones=[_zone_square("SU")],
         presentation_style=PogPresentationStyle.model_validate(saved),
     )
-    rendered = report_map.render_analysis_map_png(_Response(old))
+    snapshot, rendered = _pog_map(old)
     image = Image.open(io.BytesIO(rendered.png_bytes or b"")).convert("RGB")
-    center = image.getpixel((image.width // 2, image.height // 2))
-    assert center[1] > 150 and center[0] < 120, center  # zielony ze snapshotu, nie bieżący SU
-
-    legend, style = report_map.pog_map_legend(_Response(old))
-    assert style is not None and style.version == "2020.01.01-1" and style.from_snapshot
-    assert legend[0]["color"] == "#00ff00"
+    probe = image.getpixel((image.width // 2 + 120, image.height // 2 + 90))
+    assert probe[1] > 150 and probe[0] < 150, probe  # zielony ze snapshotu, nie bieżący SU
+    assert snapshot["render_config"]["pog"]["style_version"] == "2020.01.01-1"
+    assert snapshot["render_config"]["pog"]["style_from_analysis"] is True
+    assert rendered.legend[0]["fill"] == "#00ff00"
 
     legacy = PogResult(touches_ouz_boundary=False, zones=[_zone_square("SU")])
     legacy_style = report_pog_style(legacy)
@@ -362,9 +377,8 @@ def _area(identifier: str, lon: float, lat: float, size: float) -> PogAreaResult
     )
 
 
-def test_report_map_distinguishes_overlays_by_pattern_and_dash(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_report_map_distinguishes_overlays_by_pattern_and_dash() -> None:
     """OUZ/OZS/OSDIS i kod nierozpoznany mają wzór i obrys niezależny od barwy."""
-    monkeypatch.setattr(report_map.settings, "report_map_basemap_enabled", False)
     lon, lat = 18.54, 54.45
     pog = with_style(PogResult(
         touches_ouz_boundary=False,
@@ -373,7 +387,7 @@ def test_report_map_distinguishes_overlays_by_pattern_and_dash(monkeypatch: pyte
         downtown_areas=[_area("ozs", lon + 0.0005, lat, 0.0004)],
         social_infrastructure_standard_areas=[_area("osdis", lon, lat + 0.0005, 0.0004)],
     ))
-    rendered = report_map.render_analysis_map_png(_Response(pog))
+    _, rendered = _pog_map(pog)
     image = Image.open(io.BytesIO(rendered.png_bytes or b"")).convert("RGB")
     colors = {image.getpixel((x, y)) for x in range(0, image.width, 3) for y in range(0, image.height, 3)}
     for overlay_id in ("ouz", "downtown", "social_infrastructure_standard"):
@@ -381,15 +395,15 @@ def test_report_map_distinguishes_overlays_by_pattern_and_dash(monkeypatch: pyte
         assert any(
             sum(abs(a - b) for a, b in zip(color, outline)) < 60 for color in colors
         ), overlay_id
-    legend, style = report_map.pog_map_legend(_Response(pog))
-    assert [entry["pattern_label"] for entry in legend] == [
+    assert [entry["pattern_label"] for entry in rendered.legend] == [
         "wypełnienie jednolite",
         "kratka ukośna",
         "ukośne kreskowanie",
         "wypełnienie z kropek",
         "kratka pionowo-pozioma",
+        "wypełnienie jednolite",  # obrys działki
     ]
-    assert style is not None and style.from_snapshot
+    assert [bool(entry["line_dash"]) for entry in rendered.legend[2:5]] == [True, True, True]
 
 
 def with_style(pog: PogResult) -> PogResult:
@@ -407,7 +421,14 @@ def test_dashed_outline_leaves_gaps() -> None:
 
 
 def test_report_without_pog_or_style_draws_no_pog_layers(monkeypatch: pytest.MonkeyPatch) -> None:
-    assert report_map._pog_layers(None) == []
-    monkeypatch.setattr(report_map, "report_pog_style", lambda pog: None)
-    assert report_map._pog_layers(PogResult(touches_ouz_boundary=False, zones=[_zone_square("SU")])) == []
-    assert report_map.pog_map_legend(_Response(PogResult(touches_ouz_boundary=False))) == ([], None)
+    pog = PogResult(touches_ouz_boundary=False, zones=[_zone_square("SU")])
+    square = pog.zones[0].geometry_geojson["geometry"]  # type: ignore[index]
+    parcel = transform(_TO_2180.transform, shape(square))
+    without = build_report_map_snapshot(_Response(None), parcel, basemap_dir="")
+    pog_map = next(item for item in without["maps"] if item["id"] == "pog")
+    assert pog_map["status"] == "empty" and [layer["id"] for layer in pog_map["layers"]] == ["parcel"]
+    monkeypatch.setattr("app.core.report_config.report_pog_style", lambda pog: None)
+    no_style = build_report_map_snapshot(_Response(pog), parcel, basemap_dir="")
+    assert next(item for item in no_style["maps"] if item["id"] == "pog")["empty_reason"] == (
+        "Brak zapisanego stylu POG — mapy nie narysowano."
+    )

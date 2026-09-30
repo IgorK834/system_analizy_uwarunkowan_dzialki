@@ -296,7 +296,7 @@ async def test_saved_report_keeps_exact_version_without_reading_current_catalog(
     assert doc.title and "ZMIENIONY" not in doc.title
     assert doc.record_sha256 == pog.act.formal_documents[0].record_sha256
 
-    report = _render_report_html(_build_report_context(rebuilt, None, None))
+    report = _render_report_html(_build_report_context(rebuilt))
     assert html.escape(act.card_url or "", quote=True) in report
     assert html.escape(act.gml_url or "", quote=True) in report
     assert 'href="https://bip.sopot.pl/m,287,plan-ogolny.html"' in report

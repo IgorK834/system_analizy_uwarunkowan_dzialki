@@ -123,8 +123,8 @@ def _report_pog_html(pog) -> str:
         warnings=[],
         sources=[],
     )
-    html = _render_report_html(_build_report_context(response, None, None))
-    start = html.index("Plan Ogólny Gminy (POG)")
+    html = _render_report_html(_build_report_context(response))
+    start = html.index('id="sec-pog"')
     return html[start : html.index("</section>", start)]
 
 

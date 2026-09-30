@@ -233,6 +233,7 @@ async def fetch_pog_vector_data(pog_links: Sequence[str]) -> PogVectorData:
         status=status,
         wms_fallback_required=not has_geometry,
         source_metadata=SourceMetadata(
+            source_id="pog_app",
             source_name="POG_APP_VECTOR",
             source_url=source_url,
             fetched_at=datetime.now(timezone.utc),

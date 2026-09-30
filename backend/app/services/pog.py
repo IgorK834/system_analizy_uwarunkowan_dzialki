@@ -356,6 +356,7 @@ async def _discover_from_wms(
         planning_zones=sections["planning_zones"],
         is_discovery_only=True,
         source_metadata=SourceMetadata(
+            source_id="pog_app",
             source_name=source_name,
             source_url=source.wms_url,
             fetched_at=fetched_at,

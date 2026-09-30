@@ -110,7 +110,7 @@ def test_report_links_only_verified_https_and_escapes_titles() -> None:
         document_source(_doc(document_identifier="NS/2", title="Stara", link="http://bip.sopot.pl/s.pdf")),
         document_source(_doc(document_identifier="NS/3", resolution_status="unavailable", title=None, link=None)),
     ]
-    html = _render_report_html(_build_report_context(_response(documents), None, None))
+    html = _render_report_html(_build_report_context(_response(documents)))
 
     assert "<script>" not in html
     assert "&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;" in html
@@ -118,7 +118,7 @@ def test_report_links_only_verified_https_and_escapes_titles() -> None:
     assert 'href="http://bip.sopot.pl/s.pdf"' not in html
     assert "http://bip.sopot.pl/s.pdf" in html  # widoczny tekst, bez linku
     assert "javascript:" not in html
-    assert "GML</a>" in html and ">v1</small>" in html
+    assert "GML obiektu</a>" in html and ">v1</span>" in html
     assert "Dokument niedostępny" in html
     assert "metadane CSW niedostępne" in html
     assert "#5 (ru)" in html and "a" * 64 in html
