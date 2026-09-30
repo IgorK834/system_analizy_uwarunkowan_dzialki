@@ -13,6 +13,7 @@ wersjonowanego modelu provenance opisanego w
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
@@ -59,7 +60,15 @@ from app.services.mpzp_fetch import DocumentBlob
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
+from app.services.report_map_snapshot import build_report_map_snapshot
+from app.services.section_quality import (
+    build_section_quality,
+    quality_from_snapshot,
+    quality_to_snapshot,
+)
 from app.modules.documents.composition import register_document_artifact
+
+logger = logging.getLogger(__name__)
 
 MANUAL_ZONE_NOTICE = (
     "Gmina nie udostępnia wektorowych granic stref MPZP. Porównaj podgląd "
@@ -234,6 +243,10 @@ def save_analysis(
     try:
         parcel = get_or_create_parcel(db, parcel_identifier, parcel_geometry)
         cache_signature, data_release_ids = current_cache_signature(db)
+        # BK-504: macierz jakości jest wystawiana raz, z punktem odniesienia
+        # ``analyzed_at``; orkiestrator dołącza ją do odpowiedzi przed zapisem,
+        # a wywołania bezpośrednie dostają ją tutaj.
+        section_quality = result.section_quality or build_section_quality(result)
         analysis = Analysis(
             parcel_id=parcel.id,
             analyzed_at=result.analyzed_at,
@@ -261,6 +274,7 @@ def save_analysis(
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
+            section_quality=quality_to_snapshot(section_quality),
             data_release_ids=data_release_ids,
             result_contract_version=RESULT_CONTRACT_VERSION,
             cache_signature=cache_signature,
@@ -379,6 +393,10 @@ def save_analysis(
                 )
             )
 
+        # BK-503: mapy raportu są zamrażane razem z analizą — raport nie
+        # sięga później po bieżący stan źródeł ani bieżącą konfigurację.
+        analysis.report_map_snapshot = freeze_report_map_snapshot(result, parcel)
+
         for source_data in collect_source_records(result, context_result):
             db.add(
                 SourceRecord(
@@ -405,6 +423,36 @@ def save_analysis(
     except Exception:
         db.rollback()
         raise
+
+
+def freeze_report_map_snapshot(result: AnalyzeResponse, parcel: Parcel) -> dict[str, Any] | None:
+    """Zamrożona specyfikacja map raportu albo ``None`` przy błędzie budowy.
+
+    Błąd zamrożenia nie może wycofać zapisu analizy: mapa jest prezentacją,
+    a nie ustaleniem. Raport takiej analizy odtwarza mapy ze snapshotu danych
+    i jawnie oznacza brak zamrożonej konfiguracji.
+    """
+    try:
+        return build_report_map_snapshot(result, to_shape(parcel.geometry))
+    except Exception:  # noqa: BLE001 - mapa jest opcjonalną prezentacją
+        logger.exception("report_map_snapshot_freeze_failed parcel=%s", parcel.parcel_identifier)
+        return None
+
+
+def refresh_report_map_snapshot(analysis: Analysis, db: Session) -> None:
+    """Ponownie zamraża mapy i wystawia macierz jakości po zmianie treści analizy.
+
+    Wznowienie MPZP zmienia treść analizy i jej ``analyzed_at``, więc poprzednia
+    ocena jakości (wstrzymanej analizy) jest zastępowana oceną wznowionej —
+    z nowym punktem odniesienia i tym samym mechanizmem zapisu (BK-504).
+    """
+    db.flush()
+    db.expire(analysis)
+    response = build_analyze_response_from_analysis(analysis, db)
+    analysis.report_map_snapshot = freeze_report_map_snapshot(response, analysis.parcel)
+    analysis.section_quality = quality_to_snapshot(
+        build_section_quality(response.model_copy(update={"section_quality": None}))
+    )
 
 
 def add_pending_document(
@@ -697,7 +745,7 @@ def build_analyze_response_from_analysis(
     ]
     waiting = loaded.status == "waiting_for_zone_symbol"
 
-    return AnalyzeResponse(
+    response = AnalyzeResponse(
         analysis_id=loaded.id,
         status=loaded.status,
         analyzed_at=loaded.analyzed_at,
@@ -718,6 +766,15 @@ def build_analyze_response_from_analysis(
         manual_zone_context=build_manual_zone_context(loaded) if waiting else None,
         warnings=warnings,
         sources=sources,
+    )
+    # Ocena jakości pochodzi z zapisu (historyczny stan); stary zapis bez macierzy
+    # jest odtwarzany z ``origin=reconstructed`` i nie jest zapisywany wstecz.
+    return response.model_copy(
+        update={
+            "section_quality": quality_from_snapshot(
+                loaded.section_quality, response, loaded.analyzed_at
+            )
+        }
     )
 
 

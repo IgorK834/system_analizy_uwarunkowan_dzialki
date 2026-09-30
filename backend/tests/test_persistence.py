@@ -485,12 +485,12 @@ def test_pog_v2_three_zone_roundtrip_db_api_and_report_html() -> None:
         saved_row = db.scalar(select(PogData).where(PogData.analysis_id == saved.id))
         assert saved_row.legal_status == "binding"
         assert saved_row.coverage_status == "available"
-        html = _render_report_html(_build_report_context(rebuilt, None, None))
+        html = _render_report_html(_build_report_context(rebuilt))
         assert all(symbol in html for symbol in ("SJ", "SU", "SN", "OSD"))
         assert "620" in html and "280" in html and "100" in html
         with patch(
-            "app.services.report._render_map_data_uri",
-            return_value=(None, None, False),
+            "app.services.report._render_maps",
+            return_value=None,
         ):
             pdf = generate_analysis_report_pdf(saved.id, db)
         assert pdf.startswith(b"%PDF")

@@ -34,7 +34,7 @@ def test_migration_follows_head_022() -> None:
     assert 'revision: str = "023_structured_risks"' in migration
     assert 'down_revision: Union[str, None] = "022_analysis_terrain"' in migration
     assert "description" not in migration.split('"""', 2)[2].replace("``description``", "")
-    assert RESULT_CONTRACT_VERSION.endswith("+risk-v1.0")
+    assert "+risk-v1.0" in RESULT_CONTRACT_VERSION
     assert len(RESULT_CONTRACT_VERSION) <= 64
 
 

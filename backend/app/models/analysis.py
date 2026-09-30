@@ -46,6 +46,16 @@ class Analysis(Base):
     # Status i provenance sekcji ryzyka flood/nature (BK-303). NULL oznacza
     # zapis sprzed migracji 023 i jest odczytywany jako status ``unknown``.
     risk_sections: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    # Zamrożona specyfikacja map raportu (BK-503, ADR-010): geometrie EPSG:2180,
+    # kadr, tryb, kolejność warstw, style, font, wydania i hash semantyczny.
+    # NULL = zapis sprzed migracji 025; raport odtwarza wtedy mapy z danych
+    # snapshotu analizy i bieżącej konfiguracji, z jawną adnotacją w PDF.
+    report_map_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Trwała macierz kompletności i świeżości sekcji (BK-504, ADR-011), wystawiona
+    # przy zapisie analizy z jawnym punktem odniesienia (analyzed_at) i wersją
+    # polityki. NULL = zapis sprzed migracji 026: odczyt odtwarza ocenę bieżącą
+    # polityką, oznacza ją ``origin=reconstructed`` i nie zapisuje wstecz.
+    section_quality: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     data_release_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
     result_contract_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cache_signature: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
