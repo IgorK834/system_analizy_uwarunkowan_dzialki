@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+{#- Raport v2 (BK-501–503, ADR-010). Wszystkie wartości dynamiczne przechodzą
+    przez autoescape Jinja2. null → „nie określono”; 0 jest renderowane liczbowo.
+    Szablon nie zawiera zasobów zewnętrznych: mapy są osadzone jako data URI. -#}
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>{{ title }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm 14mm;
+    @top-left { content: string(parcel-id); font-size: 7.5pt; color: #667085; }
+    @top-right { content: string(section-title); font-size: 7.5pt; color: #667085; }
+    @bottom-center {
+      content: "{{ system_name }} — strona " counter(page) " z " counter(pages);
+      font-size: 7.5pt; color: #667085;
+    }
+  }
+  @page :first { @top-left { content: none; } @top-right { content: none; } }
+  html { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; }
+  body { color: #1a2027; font-size: 9pt; line-height: 1.4; }
+  .parcel-id { string-set: parcel-id content(); }
+  h1 { font-size: 19pt; margin: 0 0 3mm 0; color: #0d5137; }
+  h2 { font-size: 13pt; margin: 0 0 2.5mm 0; padding-bottom: 1mm; color: #0d5137;
+       border-bottom: 1.2pt solid #0d5137; break-after: avoid; string-set: section-title content(); }
+  h3 { font-size: 10.5pt; margin: 4mm 0 1.5mm 0; color: #1a2027; break-after: avoid; }
+  h4 { font-size: 9.5pt; margin: 3mm 0 1mm 0; break-after: avoid; }
+  section.report-section { break-before: page; }
+  p { margin: 1mm 0; orphans: 3; widows: 3; }
+  .cover { padding-top: 18mm; }
+  .cover .subtitle { font-size: 11pt; color: #475467; }
+  .cover table.meta th { width: 38%; }
+  .toc { margin-top: 6mm; }
+  .toc ol { padding-left: 6mm; margin: 1mm 0; }
+  .toc li { margin: 0.8mm 0; }
+  .toc a { color: #1a2027; text-decoration: none; }
+  .toc a::after { content: leader(".") " " target-counter(attr(href), page); color: #475467; }
+  .status-badge { display: inline-block; padding: 0.4mm 2mm; border-radius: 2mm;
+                  background: #eef3f0; color: #0d5137; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5mm 0 2.5mm 0; table-layout: fixed; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th, td { text-align: left; padding: 1.1mm 1.5mm; border-bottom: 0.6pt solid #d0d5dd;
+           vertical-align: top; overflow-wrap: anywhere; hyphens: auto; }
+  th { background: #f2f4f7; font-weight: bold; }
+  table.kv th { width: 36%; background: #f8f9fb; }
+  table.data th, table.data td { font-size: 7.8pt; }
+  table.data thead th { border-bottom: 1pt solid #98a2b3; }
+  td.num, th.num { text-align: right; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 6.8pt; overflow-wrap: anywhere; hyphens: manual; }
+  small { font-size: 7pt; color: #475467; }
+  .empty { color: #6b3a10; font-style: italic; background: #fff7ef; padding: 1.2mm 2mm;
+           border-left: 2pt solid #c96a1f; break-inside: avoid; }
+  .note { font-size: 8pt; color: #475467; }
+  .kind { display: inline-block; font-size: 6.5pt; padding: 0 1mm; border-radius: 1mm;
+          border: 0.5pt solid #98a2b3; color: #344054; }
+  .kind-source_fact { background: #eef4ff; }
+  .kind-computed { background: #ecfdf3; }
+  .kind-approximation { background: #fffaeb; }
+  .kind-manual { background: #fdeceb; }
+  .tag { display: inline-block; padding: 0 1.2mm; border-radius: 1mm; font-size: 6.8pt; }
+  .tag-info { background: #eef3f0; color: #0d5137; }
+  .tag-review { background: #fdeceb; color: #8f2525; }
+  .tag-project { background: #fef0c7; color: #7a2e0e; border: 0.5pt dashed #7a2e0e; }
+  .st { font-weight: bold; hyphens: none; }
+  .st-available { color: #0d5137; }
+  .st-partial, .st-awaiting_input { color: #9a4a00; }
+  .st-no_coverage { color: #1f4e79; }
+  .st-unknown, .st-unavailable, .st-error, .st-out_of_scope { color: #8f2525; }
+  .fr-fresh { color: #0d5137; }
+  .fr-stale { color: #8f2525; font-weight: bold; }
+  .fr-unknown { color: #555; }
+  .tag-stale { background: #fdeceb; color: #8f2525; }
+  figure.map { margin: 2mm 0 3mm 0; break-inside: avoid; }
+  figure.map img { width: 100%; border: 0.6pt solid #98a2b3; }
+  figure.map figcaption { font-size: 7.5pt; color: #344054; margin-top: 1mm; }
+  table.legend { margin: 1mm 0 0 0; }
+  table.legend td { font-size: 7.5pt; padding: 0.6mm 1mm; border-bottom: none; }
+  .swatch { display: inline-block; width: 6mm; height: 3.5mm; border: 1.2pt solid #475467;
+            vertical-align: middle; }
+  .swatch-dashed { border-style: dashed; }
+  .disclaimer { margin-top: 5mm; padding: 2.5mm; border: 1pt solid #c96a1f;
+                background: #fff7ef; color: #6b3a10; break-inside: avoid; }
+  .manual-banner { margin: 5mm 0 0; padding: 2.5mm; border: 1.5pt solid #c43d3d;
+                   background: #fdeceb; color: #8f2525; font-weight: bold; }
+  .informational { font-size: 8pt; color: #475467; font-style: italic; }
+  ul.plain { margin: 1mm 0; padding-left: 5mm; }
+  ul.plain li { margin: 0.6mm 0; }
+  .evidence-text { font-size: 7.2pt; color: #344054; }
+  svg.profile { width: 170mm; height: 42mm; }
+</style>
+</head>
+<body>
+
+{# ---------- Makra ---------- #}
+{% macro kind(k) %}{% if k %}<span class="kind kind-{{ k }}">{{ {"source_fact": "fakt źródłowy", "computed": "wynik obliczenia", "approximation": "przybliżenie", "manual": "dane ręczne"}[k] }}</span>{% endif %}{% endmacro %}
+{% macro na(value) %}{{ value if value is not none else not_specified }}{% endmacro %}
+{% macro source_line(src) %}{% if src %}{{ src.name }}{% if src.version %} ({{ src.version }}){% endif %}{% if src.fetched_at %}, pobrano {{ src.fetched_at }}{% endif %}{% if src.response_status %}, HTTP {{ src.response_status }}{% endif %}{% if src.release %}, wydanie #{{ src.release }}{% endif %}{% if src.confidence %}; pewność {{ src.confidence.pct }} ({{ src.confidence.label }}){% endif %}{% else %}{{ not_specified }}{% endif %}{% endmacro %}
+{% macro map_figure(map_id) %}
+{% set m = maps.get(map_id) %}
+{% if not m %}
+<p class="empty">Mapa niedostępna: {{ map_unavailable or "nie wygenerowano mapy." }}</p>
+{% elif m.status != "rendered" %}
+<p class="empty">{{ m.title }} — nie narysowano. {{ m.empty_reason }}</p>
+{% else %}
+<figure class="map">
+  <img src="{{ m.data_uri }}" alt="{{ m.title }}" />
+  <figcaption>
+    <strong>{{ m.title }}.</strong> {{ m.mode_label }}. Układ {{ m.crs }}; {{ m.scale_text }}. Kadr: {{ m.extent }}.
+    Dane: {% if m.data_dates %}pobrane {{ m.data_dates|join(", ") }}{% else %}data pobrania {{ not_specified }}{% endif %};
+    wydania danych: {% if m.data_release_ids %}#{{ m.data_release_ids|join(", #") }}{% else %}nie dotyczy{% endif %}.
+    {% if m.style_version %}Styl POG {{ m.style_version }}{% if not m.style_from_analysis %} (analiza sprzed zapisu stylu — użyto bieżącego){% endif %}. {% endif %}
+    Konfiguracja {{ m.config_version }}; hash semantyczny <span class="mono">{{ m.semantic_short }}…</span>; PNG <span class="mono">{{ m.png_sha_short }}…</span>.
+    Tło: {% if m.basemap_used %}zapisany artefakt podkładu{% if m.basemap_license %} ({{ m.basemap_license }}){% endif %}{% else %}neutralne (bez pobierania WMS){% endif %}.
+    {% if not m.from_snapshot %}<strong>Mapa odtworzona z danych snapshotu — analiza sprzed zamrażania map.</strong>{% endif %}
+  </figcaption>
+  {% if m.legend %}
+  <table class="legend">
+    {% for entry in m.legend %}
+    <tr><td style="width: 9mm">{% if entry.kind != "note" %}<span class="swatch{% if entry.line_dash %} swatch-dashed{% endif %}" style="background: {{ entry.fill or '#ffffff' }}; border-color: {{ entry.outline }};"></span>{% endif %}</td>
+        <td>{{ entry.label }}{% if entry.kind == "approximation" %} <span class="kind kind-approximation">przybliżenie</span>{% endif %}</td>
+        <td style="width: 45mm">{{ entry.pattern_label }}{% if entry.line_dash %}, obrys przerywany{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</figure>
+{% for note in m.notes %}<p class="note">{{ note }}</p>{% endfor %}
+{% endif %}
+{% endmacro %}
+
+{# ---------- Strona tytułowa ---------- #}
+<section class="cover">
+  <h1>{{ title }}</h1>
+  <div class="subtitle">{{ system_name }} — układ raportu {{ layout_version }}</div>
+  <table class="kv meta">
+    <tr><th>Działka</th><td><span class="parcel-id">{{ parcel_identifier if parcel_identifier else "działka nieustalona" }}</span></td></tr>
+    <tr><th>Identyfikator analizy</th><td>{{ analysis_id if analysis_id is not none else not_specified }}</td></tr>
+    <tr><th>Data analizy (stan danych)</th><td>{{ analyzed_at or not_specified }}</td></tr>
+    <tr><th>Status analizy</th><td><span class="status-badge">{{ status }}</span> — {{ status_label }}</td></tr>
+    <tr><th>Raport wygenerowano</th><td>{{ generated_at or not_specified }} — wyłącznie z zapisanego snapshotu analizy, bez ponownego pobierania źródeł; mapy renderowane lokalnie.</td></tr>
+  </table>
+  {% if manual_zone_declared %}
+  <div class="manual-banner">UWAGA: symbol strefy podano ręcznie (odczyt użytkownika z podglądu rastrowego), bez wektorowej granicy strefy. Udział strefy w powierzchni działki jest nieustalony, a wszystkie zależne parametry wymagają weryfikacji.</div>
+  {% endif %}
+  <div class="toc">
+    <h3>Spis treści</h3>
+    <ol>
+      {% for item in sections %}<li><a href="#sec-{{ item.id }}">{{ item.title }}</a></li>{% endfor %}
+      <li style="list-style: none"><a href="#appendix-mapping">Załącznik A. Mapowanie pól API na elementy raportu</a></li>
+    </ol>
+  </div>
+  <h3>Rodzaje ustaleń</h3>
+  <table class="kv">
+    {% for item in finding_kinds %}<tr><th>{{ kind(item.id) }}</th><td>{{ item.description }}</td></tr>{% endfor %}
+  </table>
+  <p class="note">Brak wartości jest zapisywany jako „{{ not_specified }}” i nie jest równoznaczny z wartością 0. Status „sprawdzono” oznacza, że źródło odpowiedziało i wynik obliczono; brak danych nie jest dowodem braku ograniczenia.</p>
+</section>
+
+{# ---------- 1. Identyfikacja i geometria ---------- #}
+<section class="report-section" id="sec-parcel">
+  <h2>{{ section.parcel.number }}. {{ section.parcel.title }}</h2>
+  {% if parcel %}
+  <h3>Tabela 1.1. Identyfikacja</h3>
+  <table class="kv">
+    <tr><th>Identyfikator działki</th><td>{{ parcel.identifier }} {{ kind("source_fact") }}</td></tr>
+    <tr><th>Identyfikator i status analizy</th><td>{% if analysis_id is not none %}#{{ analysis_id }}{% else %}identyfikator {{ not_specified }}{% endif %} — {{ status }} ({{ status_label }})</td></tr>
+    <tr><th>Data analizy</th><td>{{ analyzed_at or not_specified }}</td></tr>
+    <tr><th>Źródło geometrii</th><td>{{ source_line(parcel.source) }}</td></tr>
+  </table>
+  <h3>Tabela 1.2. Geometria (obliczenia w EPSG:2180)</h3>
+  <table class="kv">
+    {% for label, value, k in parcel.rows %}<tr><th>{{ label }}</th><td>{{ value }} {{ kind(k) }}</td></tr>{% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">Nie ustalono geometrii działki — identyfikacja jest niepełna, a obliczenia przestrzenne nie były możliwe.</p>
+  {% endif %}
+  {{ map_figure("parcel") }}
+</section>
+
+{# ---------- 2. Podsumowanie ---------- #}
+<section class="report-section" id="sec-summary">
+  <h2>{{ section.summary.number }}. {{ section.summary.title }}</h2>
+  <p class="informational">Zestawienie ustaleń z sekcji 3–7. Raport nie przelicza ustaleń na ocenę punktową ani „scoring inwestycyjny”; każdy wiersz wskazuje status sprawdzenia i rodzaj ustalenia.</p>
+  {% for flag in summary.manual_flags %}<p class="empty">{{ flag }}</p>{% endfor %}
+  <table class="data">
+    <colgroup><col style="width: 20%"><col style="width: 15%"><col style="width: 49%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Obszar (sekcja)</th><th>Status</th><th>Ustalenie</th><th>Rodzaj</th></tr></thead>
+    <tbody>
+    {% for row in summary.rows %}
+      <tr><td>{{ row.domain }} <small>(§{{ row.section }})</small></td>
+          <td><span class="st st-{{ row.status }}">{{ row.status_label }}</span>{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}{% if row.freshness_state == "stale" %}<br><span class="tag tag-stale">stary pomiar</span>{% endif %}</td>
+          <td>{{ row.finding }}{% if row.reason %}<br><small>{{ row.reason }}</small>{% endif %}</td>
+          <td>{{ kind(row.kind) if row.kind else "—" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{# ---------- 3. MPZP ---------- #}
+<section class="report-section" id="sec-mpzp">
+  <h2>{{ section.mpzp.number }}. {{ section.mpzp.title }}</h2>
+  {% if mpzp.waiting %}
+  <h3>Tabela 3.4. Analiza wstrzymana — wymagany symbol strefy</h3>
+  <table class="kv">
+    <tr><th>Plan</th><td>{{ na(mpzp.waiting.plan_id) }}</td></tr>
+    <tr><th>Kandydaci symbolu</th><td>{{ mpzp.waiting.candidates }}</td></tr>
+    <tr><th>Dokument</th><td>{{ mpzp.waiting.document_status }}{% if mpzp.waiting.document_fetched_at %}, pobrano {{ mpzp.waiting.document_fetched_at }}{% endif %}{% if mpzp.waiting.document_sha256 %}<br><span class="mono">SHA-256: {{ mpzp.waiting.document_sha256 }}</span>{% endif %}</td></tr>
+    <tr><th>Komunikat</th><td>{{ mpzp.waiting.notice }}</td></tr>
+  </table>
+  {% endif %}
+  {% if mpzp.zones %}
+  {{ map_figure("mpzp") }}
+  <h3>Tabela 3.1. Strefy MPZP przecinające działkę (każda strefa osobno)</h3>
+  <table class="data">
+    <colgroup><col style="width: 5%"><col style="width: 14%"><col style="width: 17%"><col style="width: 13%"><col style="width: 10%"><col style="width: 21%"><col style="width: 20%"></colgroup>
+    <thead><tr><th>Lp.</th><th>Symbol</th><th>ID wydzielenia / sposób przypisania</th><th class="num">Pole [m²]</th><th class="num">Udział [%]</th><th>Plan (akt), wersja, wydanie</th><th>Źródło</th></tr></thead>
+    <tbody>
+    {% for zone in mpzp.zones %}
+      <tr data-row="mpzp-zone">
+        <td>{{ zone.index }}</td>
+        <td><strong>{{ zone.symbol }}</strong>
+          {% if zone.is_dominant %}<br><span class="tag tag-info">największy udział</span>{% endif %}
+          {% if zone.touches_boundary %}<br><span class="tag tag-review">tylko styczność granicy</span>{% endif %}
+          {% if zone.is_manual %}<br><span class="tag tag-review">symbol podano ręcznie</span>{% endif %}
+          {% if zone.manual_review %}<br><span class="tag tag-review">wymaga weryfikacji</span>{% endif %}</td>
+        <td><span class="mono">{{ na(zone.zone_id) }}</span><br><small>{{ zone.assignment_label }}</small></td>
+        {% if zone.area is not none %}
+        <td class="num">{{ zone.area }}</td><td class="num">{{ zone.share }}</td>
+        {% else %}
+        <td colspan="2">nieustalony — brak wektorowej granicy strefy</td>
+        {% endif %}
+        <td>{{ na(zone.act) }}{% if zone.act_version %}<br><span class="mono">wersja {{ zone.act_version }}</span>{% endif %}{% if zone.release %}<br><small>wydanie danych #{{ zone.release }}</small>{% endif %}</td>
+        <td><small>{{ source_line(zone.source) }}</small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if mpzp.shares_sum %}
+  <p class="note shares-sum">Suma udziałów wierszy: {{ mpzp.shares_sum.total }} (odchylenie od 100%: {{ mpzp.shares_sum.deviation }}; wartości nie są korygowane do sumy 100%){% if not mpzp.shares_sum.complete %}; część stref ma udział nieustalony{% endif %}.</p>
+  {% endif %}
+
+  <h3>Tabela 3.2. Parametry stref z jednostkami (bez uśredniania pomiędzy strefami)</h3>
+  <table class="data">
+    <colgroup><col style="width: 13%"><col style="width: 33%"><col style="width: 34%"><col style="width: 10%"><col style="width: 10%"></colgroup>
+    <thead><tr><th>Strefa</th><th>Parametr</th><th>Wartość</th><th>Evidence</th><th>Rodzaj</th></tr></thead>
+    <tbody>
+    {% for row in mpzp.parameters %}
+      <tr data-row="mpzp-parameter">
+        <td>{{ row.zone }}</td><td>{{ row.parameter }}</td>
+        <td>{% if row.status == "conflict" %}<span class="tag tag-review">sprzeczność</span> {{ row.value }}{% elif row.status == "null" %}{{ not_specified }}{% else %}{{ row.display }}{% endif %}</td>
+        <td>{% if row.refs %}[{{ row.refs|join("], [") }}]{% else %}—{% endif %}</td>
+        <td>{{ kind(row.kind) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Tabela 3.3. Evidence parametrów z uchwały</h3>
+  {% if mpzp.evidence %}
+  <table class="data">
+    <colgroup><col style="width: 6%"><col style="width: 20%"><col style="width: 14%"><col style="width: 16%"><col style="width: 44%"></colgroup>
+    <thead><tr><th>Ref.</th><th>Strefa / parametr</th><th>Wartość</th><th>Miejsce w dokumencie</th><th>Fragment dowodowy</th></tr></thead>
+    <tbody>
+    {% for row in mpzp.evidence %}
+      <tr data-row="mpzp-evidence">
+        <td><strong>{{ row.ref }}</strong></td>
+        <td>{{ row.zone }} — {{ row.parameter }}{% if row.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% endif %}{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}</td>
+        <td>{{ row.value }}{% if row.raw_value %}<br><small>dosłownie: „{{ row.raw_value }}”</small>{% endif %}</td>
+        <td>{% if row.document_ref %}dokument [{{ row.document_ref }}]{% else %}dokument {{ not_specified }}{% endif %}<br><small>{% if row.page is not none %}str. {{ row.page }}{% else %}strona {{ not_specified }}{% endif %}{% if row.segment %}, segment {{ row.segment }}{% endif %}{% if row.legal_unit is not none %}, jednostka #{{ row.legal_unit }}{% endif %}</small><br><small>{{ row.extraction or "metoda nieznana" }}{% if row.parser_version %}, {{ row.parser_version }}{% endif %}; pewność {{ row.confidence }}</small></td>
+        <td class="evidence-text">{% if row.text %}„{{ row.text }}”{% else %}<em>brak zapisanego fragmentu</em>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if mpzp.documents %}
+  <table class="data">
+    <colgroup><col style="width: 8%"><col style="width: 72%"><col style="width: 20%"></colgroup>
+    <thead><tr><th>Ref.</th><th>SHA-256 dokumentu uchwały</th><th>Wersja dokumentu</th></tr></thead>
+    <tbody>{% for doc in mpzp.documents %}<tr><td><strong>{{ doc.ref }}</strong></td><td class="mono">{{ doc.sha256 }}</td><td>{{ na(doc.version_id) }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+  {% else %}
+  <p class="empty">Brak zapisanego evidence — wartości parametrów nie mają wskazania miejsca w uchwale.</p>
+  {% endif %}
+
+  {% for selection in mpzp.manual_selections %}
+  <h3>Tabela 3.4. Decyzja użytkownika — strefa {{ selection.zone }}</h3>
+  <p class="empty"><strong>Symbol strefy podano ręcznie</strong> — każdy parametr tej strefy wymaga weryfikacji.</p>
+  <table class="kv">
+    <tr><th>Wpisany symbol</th><td>{{ selection.entered_symbol }} {{ kind("manual") }}{% if not selection.symbol_in_candidates %} <span class="tag tag-review">spoza kandydatów</span>{% endif %}</td></tr>
+    <tr><th>Plan i kandydaci</th><td>plan: {{ selection.plan_id or "nieustalony" }}; kandydaci: {{ selection.candidates }}; wybrano {{ selection.selected_at }}</td></tr>
+    <tr><th>Dokument użyty przy wznowieniu</th><td>{% if selection.document_pinned %}kopia przypięta przy wstrzymaniu analizy{% if selection.document_fetched_at %} (pobrano {{ selection.document_fetched_at }}){% endif %}{% if selection.document_version_id is not none %}, wersja #{{ selection.document_version_id }}{% endif %}<br><span class="mono">SHA-256: {{ selection.document_sha256 }}</span>{% else %}dokument nie został przypięty — parametry nieustalone{% endif %}{% if selection.document_url %}<br><small class="mono">{{ selection.document_url }}</small>{% endif %}</td></tr>
+  </table>
+  {% endfor %}
+  {% else %}
+  <p class="empty">{{ mpzp.empty_reason }}</p>
+  {{ map_figure("mpzp") }}
+  {% endif %}
+</section>
+
+{# ---------- 4. POG ---------- #}
+<section class="report-section" id="sec-pog">
+  <h2>{{ section.pog.number }}. {{ section.pog.title }}</h2>
+  {% if pog %}
+  <h3>Tabela 4.1. Status aktu i zakres danych</h3>
+  <table class="kv">
+    <tr><th>Status prawny aktu</th><td>{{ pog.legal_status_label }} {{ kind("source_fact") }}{% if not pog.binding %} <span class="tag tag-project">dane niewiążące</span>{% endif %}</td></tr>
+    <tr><th>Zakres danych przestrzennych</th><td>{{ pog.coverage_status_label }}</td></tr>
+    <tr><th>Aktualność źródła</th><td>{{ pog.data_availability_label }}{% if pog.status_confirmed_at %} (potwierdzono {{ pog.status_confirmed_at }}){% endif %}</td></tr>
+    {% if pog.status_evidence %}<tr><th>Podstawa statusu</th><td>{{ pog.status_evidence.source_name }}{% if pog.status_evidence.official %} (urzędowe){% endif %}{% if pog.status_evidence.raw_value %} — kod {{ pog.status_evidence.raw_value }}{% endif %}{% if pog.status_evidence.confirmed_at %}, {{ pog.status_evidence.confirmed_at }}{% endif %}{% if pog.status_evidence.reference %}<br><span class="mono">{{ pog.status_evidence.reference }}</span>{% endif %}{% if pog.status_evidence.source_id %}<br><small>źródło {{ pog.status_evidence.source_id }}</small>{% endif %}</td></tr>{% endif %}
+    {% if pog.coverage_evidence %}<tr><th>Podstawa zakresu danych</th><td>{{ pog.coverage_evidence.source_name }}{% if pog.coverage_evidence.raw_value %} — {{ pog.coverage_evidence.raw_value }}{% endif %}{% if pog.coverage_evidence.confirmed_at %}, {{ pog.coverage_evidence.confirmed_at }}{% endif %}{% if pog.coverage_evidence.reference %}<br><span class="mono">{{ pog.coverage_evidence.reference }}</span>{% endif %}</td></tr>{% endif %}
+    {% if pog.legacy_zone %}<tr><th>Strefa dominująca (zapis v1)</th><td>{{ pog.legacy_zone.zone }}{% if pog.legacy_zone.area_ratio %} — {{ pog.legacy_zone.area_ratio }}{% endif %} <small>(snapshot sprzed kontraktu wszystkich stref)</small></td></tr>{% endif %}
+    <tr><th>Uchwała</th><td>{{ pog.uchwala_nr or not_specified }}{% if pog.uchwala_date %} z {{ pog.uchwala_date }}{% endif %}</td></tr>
+    <tr><th>Pewność i weryfikacja</th><td>{% if pog.confidence %}{{ pog.confidence.pct }} ({{ pog.confidence.label }}){% else %}{{ not_specified }}{% endif %}{% if pog.manual_review_required %} <span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span>{% endif %}</td></tr>
+  </table>
+  {% for note in pog.status_notes %}<p class="note">{{ note }}</p>{% endfor %}
+
+  {{ map_figure("pog") }}
+
+  <h3>Tabela 4.2. Strefy planistyczne przecinające działkę</h3>
+  {% if pog.zones %}
+  <table class="data">
+    <colgroup><col style="width: 17%"><col style="width: 27%"><col style="width: 13%"><col style="width: 10%"><col style="width: 15%"><col style="width: 18%"></colgroup>
+    <thead><tr><th>ID / symbol</th><th>Rodzaj strefy</th><th class="num">Pole [m²]</th><th class="num">Udział [%]</th><th>Status aktu</th><th>Źródło obiektu</th></tr></thead>
+    <tbody>
+    {% for zone in pog.zones %}
+      <tr data-row="pog-zone">
+        <td>{% if zone.swatch %}<span class="swatch" style="background: {{ zone.swatch }};"></span> {% endif %}<strong>{{ zone.symbol or zone.type }}</strong><br><span class="mono">{{ zone.id }}</span>{% if zone.is_dominant %}<br><span class="tag tag-info">największy udział</span>{% endif %}</td>
+        <td>{{ zone.type }}{% if zone.label %} — {{ zone.label }}{% endif %}</td>
+        <td class="num">{{ zone.area }}</td><td class="num">{{ zone.share }}</td>
+        <td>{{ zone.status_label }}{% if not zone.binding %}<br><span class="tag tag-project">projekt / dane niewiążące</span>{% endif %}</td>
+        <td><small>{% if zone.gml_url %}<a href="{{ zone.gml_url }}">GML obiektu</a>{% else %}GML {{ not_specified }}{% endif %}{% if zone.feature_version %}<br><span class="mono">{{ zone.feature_version }}</span>{% endif %}{% if zone.source %}<br>{{ source_line(zone.source) }}{% endif %}</small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if pog.zones_sum %}
+  <p class="note shares-sum">Suma udziałów wierszy: {{ pog.zones_sum.total }} (odchylenie od 100%: {{ pog.zones_sum.deviation }}; bez korekty zaokrągleń).</p>
+  {% endif %}
+
+  <h3>Tabela 4.3. Parametry i profile stref (każda strefa osobno — bez średnich)</h3>
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 11%"><col style="width: 11%"><col style="width: 11%"><col style="width: 11%"><col style="width: 21%"><col style="width: 21%"></colgroup>
+    <thead><tr><th>Strefa</th><th class="num">Maks. intensywność [—]</th><th class="num">Maks. wysokość [m]</th><th class="num">Maks. zabudowa [%]</th><th class="num">Min. PBC [%]</th><th>Profil podstawowy</th><th>Profile dodatkowe</th></tr></thead>
+    <tbody>
+    {% for zone in pog.zones %}
+      <tr data-row="pog-parameters">
+        <td><strong>{{ zone.symbol or zone.type }}</strong><br><span class="mono">{{ zone.id }}</span></td>
+        {% for parameter in zone.parameters %}<td class="num">{{ na(parameter.value) }}</td>{% endfor %}
+        <td>{% for profile in zone.primary_profile %}{{ profile.code }} — {{ profile.label }}<br>{% else %}{{ not_specified }}{% endfor %}</td>
+        <td>{% for profile in zone.additional_profiles %}{{ profile.code }} — {{ profile.label }}<br>{% else %}{{ not_specified }}{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note">Parametry są faktami źródłowymi z rekordu APP strefy {{ kind("source_fact") }}; pole i udział są wynikiem obliczenia w EPSG:2180 {{ kind("computed") }}. Słownik profili: {% for zone in pog.zones[:1] %}{% for profile in zone.primary_profile[:1] %}{{ profile.dictionary }}{% else %}{{ not_specified }}{% endfor %}{% endfor %}.</p>
+  {% else %}
+  <p class="empty">{{ pog.zones_empty_reason }}</p>
+  {% endif %}
+
+  {% for group in pog.overlays %}
+  <h3>{{ group.title }}</h3>
+  {% if group.decision_label %}<p>{{ group.decision_label }}: <strong>{{ group.decision }}</strong>{% if group.total_area %}; łącznie {{ group.total_area }} ({{ group.total_share }}){% endif %}{% if group.touches %}; styk z granicą: {{ group.touches }}{% endif %}.</p>{% endif %}
+  {% if group.rows %}
+  <table class="data">
+    <colgroup><col style="width: 24%"><col style="width: 24%"><col style="width: 14%"><col style="width: 11%"><col style="width: 9%"><col style="width: 18%"></colgroup>
+    <thead><tr><th>ID / symbol</th><th>Etykieta</th><th class="num">Pole [m²]</th><th class="num">Udział [%]</th><th>Styk</th><th>Źródło</th></tr></thead>
+    <tbody>
+    {% for row in group.rows %}
+      <tr data-row="pog-{{ group.id }}"><td><strong>{{ row.symbol or row.id }}</strong><br><span class="mono">{{ row.id }}</span></td><td>{{ na(row.label) }}</td><td class="num">{{ row.area }}</td><td class="num">{{ row.share }}</td><td>{{ row.touches_boundary }}</td>
+        <td><small>{% if row.gml_url %}<a href="{{ row.gml_url }}">GML</a>{% endif %}{% if row.feature_version %} <span class="mono">{{ row.feature_version }}</span>{% endif %}{% if row.source %}<br>{{ source_line(row.source) }}{% endif %}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">{{ group.empty_reason }}</p>
+  {% endif %}
+  {% endfor %}
+
+  <h3>Tabela 4.7. Źródła urzędowe aktu</h3>
+  {% if pog.act %}
+  <table class="kv">
+    <tr><th>Identyfikator aktu</th><td>{{ pog.act.identifier }}{% if pog.act.title %}<br><small>{{ pog.act.title }}</small>{% endif %}{% if pog.act.internal_id != pog.act.identifier %}<br><span class="mono">{{ pog.act.internal_id }}</span>{% endif %}</td></tr>
+    <tr><th>Uchwała (wg aktu)</th><td>{{ pog.act.resolution_number or not_specified }}{% if pog.act.resolution_date %} z {{ pog.act.resolution_date }}{% endif %}</td></tr>
+    <tr><th>Wersja aktu</th><td>{{ pog.act.version or not_specified }}{% if pog.act.version_started_at %} (początek wersji {{ pog.act.version_started_at }}){% endif %}</td></tr>
+    {% if pog.act.publication_id %}<tr><th>Identyfikator publikacji</th><td class="mono">{{ pog.act.publication_id }}</td></tr>{% endif %}
+    {% if pog.act.valid_from %}<tr><th>{{ pog.act.valid_from_label }}</th><td>{{ pog.act.valid_from }}{% if pog.act.valid_to %} – {{ pog.act.valid_to }}{% endif %}</td></tr>{% endif %}
+    {% if pog.act.publication_date %}<tr><th>Data publikacji zbioru (CSW)</th><td>{{ pog.act.publication_date }}</td></tr>{% endif %}
+    <tr><th>Wydanie danych</th><td>{% if pog.act.data_release_id %}#{{ pog.act.data_release_id }}{% else %}{{ not_specified }}{% endif %}{% if pog.act.release_label %} ({{ pog.act.release_label }}){% endif %}{% if pog.act.fetched_at %}, pobrano {{ pog.act.fetched_at }}{% endif %}</td></tr>
+    {% if pog.act.artifact_sha256 %}<tr><th>SHA-256 artefaktu</th><td class="mono">{{ pog.act.artifact_sha256 }}</td></tr>{% endif %}
+    <tr><th>GML wersji aktu</th><td>{% if pog.act.gml_url %}<a href="{{ pog.act.gml_url }}">Rejestr Urbanistyczny — WFS APP</a>{% else %}brak zweryfikowanego odnośnika{% endif %}</td></tr>
+    <tr><th>Karta metadanych (CSW)</th><td>{% if pog.act.card_url %}<a href="{{ pog.act.card_url }}">rekord {{ pog.act.metadata.record_id if pog.act.metadata else "" }}</a>{% else %}metadane CSW niedostępne{% endif %}
+      {% if pog.act.metadata %}<br><small>{{ pog.act.metadata.title or "" }}{% if pog.act.metadata.resource_identifier %}; zasób {{ pog.act.metadata.resource_identifier }}{% endif %}{% if pog.act.metadata.publication_date %}; publikacja {{ pog.act.metadata.publication_date }}{% endif %}{% if pog.act.metadata.revision_date %}; rewizja {{ pog.act.metadata.revision_date }}{% endif %}{% if pog.act.metadata.creation_date %}; utworzenie {{ pog.act.metadata.creation_date }}{% endif %}{% if pog.act.metadata.date_stamp %}; znacznik {{ pog.act.metadata.date_stamp }}{% endif %}{% if pog.act.metadata.fetched_at %}; pobrano {{ pog.act.metadata.fetched_at }}{% endif %}</small>
+      {% if pog.act.metadata.record_sha256 %}<br><span class="mono">SHA-256 rekordu: {{ pog.act.metadata.record_sha256 }}</span>{% endif %}{% if pog.act.metadata.response_sha256 %}<br><span class="mono">SHA-256 odpowiedzi: {{ pog.act.metadata.response_sha256 }}</span>{% endif %}{% endif %}</td></tr>
+  </table>
+  <h3>Tabela 4.8. Dokumenty formalne aktu</h3>
+  {% if pog.act.documents %}
+  <table class="data">
+    <colgroup><col style="width: 40%"><col style="width: 28%"><col style="width: 32%"></colgroup>
+    <thead><tr><th>Dokument formalny</th><th>Relacja i daty</th><th>SHA-256 rekordu</th></tr></thead>
+    <tbody>
+    {% for document in pog.act.documents %}
+      <tr>
+        <td>{% if document.link %}<a href="{{ document.link }}">{{ document.title }}</a>{% else %}{{ document.title }}{% endif %}<br><span class="mono">{{ document.identifier }}{% if document.version %} / {{ document.version }}{% endif %}</span>{% if document.identification_number %}<br><small>nr {{ document.identification_number }}</small>{% endif %}{% if document.publication_id %}<br><small class="mono">{{ document.publication_id }}</small>{% endif %}
+          {% if document.raw_link %}<br><small class="mono">{{ document.raw_link }}</small>{% endif %}
+          {% if document.warning %}<br><span class="tag tag-review">{{ document.warning }}</span>{% endif %}</td>
+        <td>{{ document.relation or "—" }} <small>({{ document.status }})</small>{% if document.document_date %}<br>data: {{ document.document_date }}{% endif %}{% if document.effective_date %}<br>w życie: {{ document.effective_date }}{% endif %}{% if document.repeal_date %}<br>uchylony: {{ document.repeal_date }}{% endif %}</td>
+        <td class="mono">{{ document.record_sha256 or "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Brak zapisanych dokumentów formalnych aktu.</p>
+  {% endif %}
+  {% else %}
+  <p class="empty">Brak zapisanego łańcucha provenance aktu (snapshot bez danych aktu).</p>
+  {% endif %}
+
+  {% else %}
+  <p class="empty">Dane niedostępne — brak danych POG/OUZ dla tej działki w zapisanym wyniku. Brak wyniku nie oznacza braku planu.</p>
+  {{ map_figure("pog") }}
+  {% endif %}
+
+  <h3>Tabela 4.9. Relacja MPZP–POG — analiza informacyjna</h3>
+  <p class="informational">Ustalenia MPZP (sekcja 3) i POG (tabele 4.1–4.8) są przedstawione osobno. Ta tabela nie jest opinią prawną i nie stwierdza prawnej możliwości zabudowy.</p>
+  {% if compatibility %}
+  <table class="kv">
+    <tr><th>Wynik oceny</th><td>{{ compatibility.status_label }} <span class="mono">({{ compatibility.status }}, {{ compatibility.reason_code }})</span> {{ kind("computed") }}{% if compatibility.manual_review_required %}<br><span class="tag tag-review">wymaga weryfikacji</span>{% endif %}</td></tr>
+    <tr><th>Stan prawny na dzień</th><td>{{ compatibility.as_of if compatibility.as_of else "nieustalony" }}</td></tr>
+    <tr><th>Zestaw reguł</th><td>{% if compatibility.rule_id %}{{ compatibility.rule_id }} v{{ compatibility.rule_version }}{% else %}brak — zapis historyczny{% endif %}</td></tr>
+    <tr><th>Uzasadnienie</th><td>{{ compatibility.rationale }}</td></tr>
+    <tr><th>Reguła agregacji</th><td><small>{{ compatibility.aggregation }}</small></td></tr>
+    {% if compatibility.legacy %}<tr><th>Zapis historyczny (legacy)</th><td>{{ compatibility.legacy.origin }}: {{ "stwierdzono konflikt" if compatibility.legacy.conflict else ("brak konfliktu" if compatibility.legacy.conflict is sameas false else "brak rozstrzygnięcia") }}{% if compatibility.legacy.result %} ({{ compatibility.legacy.result }}){% endif %}{% if compatibility.legacy.reasoning %}; {{ compatibility.legacy.reasoning }}{% endif %}{% if compatibility.legacy.confidence %}; pewność {{ compatibility.legacy.confidence }}{% endif %} — bez danych reguły, nie jest pełną oceną</td></tr>{% endif %}
+  </table>
+  {% if compatibility.pairs %}
+  <table class="data">
+    <colgroup><col style="width: 20%"><col style="width: 14%"><col style="width: 18%"><col style="width: 16%"><col style="width: 32%"></colgroup>
+    <thead><tr><th>Para stref</th><th>Wynik</th><th>Wspólna część działki</th><th>Reguła i stan prawny</th><th>Uzasadnienie</th></tr></thead>
+    <tbody>
+    {% for pair in compatibility.pairs %}
+      <tr><td>{{ pair.label }}<br><span class="mono">{{ pair.ids }}</span><br><small>{{ pair.mpzp_method }}{% if pair.mpzp_function %}; funkcja MPZP: {{ pair.mpzp_function }}{% endif %}</small></td>
+        <td>{{ pair.status_label }}{% if pair.rule_result %}<br><small>reguła: {{ pair.rule_result }}</small>{% endif %}{% if pair.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}</td>
+        <td>{{ pair.overlap }}{% if not pair.spatial %}<br><small>para niezidentyfikowana przestrzennie</small>{% endif %}</td>
+        <td>{{ pair.rule }}{% if pair.as_of %}<br><small>stan na {{ pair.as_of }}</small>{% endif %}{% if pair.source %}<br><small>{{ pair.source }}</small>{% endif %}</td>
+        <td><small>{{ pair.rationale }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if compatibility.sources %}
+  <table class="data">
+    <thead><tr><th>Źródło oceny</th><th>Odniesienie i wersja</th></tr></thead>
+    <tbody>
+    {% for source in compatibility.sources %}
+      <tr><td>{{ source.label }} <small>({{ source.kind }})</small></td><td><small>{{ source.reference or "—" }}</small>{% if source.version %}<br><span class="mono">wersja {{ source.version }}</span>{% endif %}{% if source.as_of %}<br><small>stan na {{ source.as_of }}</small>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <p class="informational">{{ compatibility.informational_notice }}</p>
+  {% else %}
+  <p class="empty">Nie wykonano oceny relacji MPZP–POG dla tej analizy.</p>
+  {% endif %}
+
+</section>
+
+{# ---------- 5. Środowisko ---------- #}
+<section class="report-section" id="sec-environment">
+  <h2>{{ section.environment.number }}. {{ section.environment.title }}</h2>
+  {{ map_figure("environment") }}
+  {% for risk in risk_sections %}
+  <h3>Tabela 5.{{ risk.number }}. {{ risk.title }}</h3>
+  <table class="kv">
+    <tr><th>Status sekcji</th><td><span class="st st-{{ 'complete' if risk.status == 'available' else 'unavailable' }}">{{ risk.status_label }}</span>{% if risk.reason_code %} <span class="mono">({{ risk.reason_code }})</span>{% endif %}</td></tr>
+    <tr><th>Relacja z działką</th><td>{{ risk.relation_label }}</td></tr>
+    {% if risk.status == "available" %}
+    <tr><th>Obiekty</th><td>{{ na(risk.feature_count) }} (przecięcie: {{ na(risk.intersecting_count) }}, styk granicy: {{ na(risk.boundary_count) }})</td></tr>
+    <tr><th>Łączne pokrycie działki</th><td>{{ na(risk.union_area) }} ({{ na(risk.union_pct) }}) {{ kind("computed") }}<br><small>suma mnogościowa, bez podwójnego liczenia</small></td></tr>
+    {% endif %}
+    <tr><th>Źródło</th><td>{{ source_line(risk.source) }}{% if risk.source and risk.source.sha256 %}<br><span class="mono">SHA-256: {{ risk.source.sha256 }}</span>{% endif %}</td></tr>
+  </table>
+  {% if risk.note %}<p class="empty">{{ risk.note }}</p>{% endif %}
+  {% if risk.features %}
+  <table class="data">
+    {% if risk.name == "flood" %}
+    <thead><tr><th>Klasa prawdopodobieństwa</th><th>Okres powtarzalności</th><th>Poziom</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <tbody>
+    {% for item in risk.features %}
+      <tr><td>{{ item.probability_class or "nieustalona" }}</td><td>{{ na(item.return_period) }}</td><td>{{ na(item.severity) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+    {% else %}
+    <thead><tr><th>Rodzaj formy ochrony</th><th>Nazwa</th><th>Poziom</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <tbody>
+    {% for item in risk.features %}
+      <tr><td>{{ item.protection_type or item.risk_type }}</td><td>{{ na(item.name) }}</td><td>{{ na(item.severity) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+    {% endif %}
+  </table>
+  {% for item in risk.features %}<p class="note">{{ item.description }}{% if item.confidence %} Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }}).{% endif %}{% for warning in item.warnings %} {{ warning }}{% endfor %}</p>{% endfor %}
+  {% elif risk.status == "available" %}
+  <p class="note">Sprawdzono — brak obiektów przecinających działkę ani stykających się z nią.</p>
+  {% endif %}
+  {% for warning in risk.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+  {% endfor %}
+</section>
+
+{# ---------- 6. Teren ---------- #}
+<section class="report-section" id="sec-terrain">
+  <h2>{{ section.terrain.number }}. {{ section.terrain.title }}</h2>
+  <h3>Tabela 6.1. Wysokości w obrysie działki</h3>
+  <table class="kv">
+    <tr><th>Status pomiaru</th><td>{{ terrain.status_label }}{% if terrain.reason_code %} <span class="mono">({{ terrain.reason_code }})</span>{% endif %}</td></tr>
+    {% if terrain.status == "available" %}
+    <tr><th>Najniższa wysokość (Hmin)</th><td>{{ terrain.min_height }} {{ kind("computed") }}</td></tr>
+    <tr><th>Najwyższa wysokość (Hmax)</th><td>{{ terrain.max_height }} {{ kind("computed") }}</td></tr>
+    <tr><th>Deniwelacja (Hmax − Hmin)</th><td><strong>{{ terrain.height_difference }}</strong> {{ kind("computed") }}</td></tr>
+    {% endif %}
+    <tr><th>Siatka próbkowania usługi</th><td>{{ na(terrain.grid_size) }}</td></tr>
+    <tr><th>Liczba punktów siatki</th><td>{{ na(terrain.sampled_points) }}</td></tr>
+    <tr><th>Źródło</th><td>{% if terrain.source %}{{ terrain.source.name }}{% if terrain.source.fetched_at %} — pobrano {{ terrain.source.fetched_at }}{% endif %}{% if terrain.source.response_status %} (HTTP {{ terrain.source.response_status }}){% endif %}{% if terrain.source.sha256 %}<br><span class="mono">SHA-256 odpowiedzi: {{ terrain.source.sha256 }}</span>{% endif %}{% else %}{{ not_specified }}{% endif %}</td></tr>
+  </table>
+  {% if terrain.note %}<p class="{{ 'note' if terrain.status == 'available' else 'empty' }}">{{ terrain.note }}</p>{% endif %}
+  {% for warning in terrain.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+
+  {% set relief = terrain.relief %}
+  <h3>Tabela 6.2. Spadek, ekspozycja i profil (raster NMT)</h3>
+  {% if not relief %}
+  <p class="empty">Nie liczono pochodnych rastra NMT dla tej analizy — brak statystyk nie oznacza płaskiego terenu.</p>
+  {% else %}
+  <table class="kv">
+    <tr><th>Status obliczeń</th><td>{{ relief.status_label }}{% if relief.reason_code %} <span class="mono">({{ relief.reason_code }})</span>{% endif %}</td></tr>
+    <tr><th>Rozdzielczość danych źródłowych</th><td>{{ na(relief.resolution) }}</td></tr>
+    {% if relief.status == "available" %}
+    <tr><th>Zmierzona część działki</th><td>{{ relief.valid_share }} ({{ na(relief.valid_pixel_count) }} z {{ na(relief.parcel_pixel_count) }} pikseli; NoData: {{ na(relief.nodata_pixel_count) }})</td></tr>
+    <tr><th>Wysokości z rastra (min / śr. / max)</th><td>{{ relief.min_height }} / {{ relief.mean_height }} / {{ relief.max_height }}</td></tr>
+    {% endif %}
+    <tr><th>Algorytm</th><td class="mono">{{ relief.algorithm_version }}; klasy {{ relief.slope_classes_version }}</td></tr>
+  </table>
+  {% if relief.slope %}
+  <table class="data">
+    <thead><tr><th>Spadek {{ kind("computed") }}</th><th class="num">Stopnie</th><th class="num">Procent</th></tr></thead>
+    <tbody>
+    {% for label, deg, pct in relief.slope %}
+      <tr><td>{{ label }}</td><td class="num">{{ "%.2f"|format(deg)|replace(".", ",") }}°</td><td class="num">{{ "%.2f"|format(pct)|replace(".", ",") }}%</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if relief.classes %}
+  <h4>Tabela 6.3. Klasy nachylenia</h4>
+  <table class="data">
+    <thead><tr><th>Klasa nachylenia</th><th>Zakres</th><th class="num">Piksele</th><th class="num">Pole [m²]</th><th class="num">Udział [%]</th></tr></thead>
+    <tbody>
+    {% for item in relief.classes %}<tr><td>{{ item.label }} <span class="mono">({{ item.id }})</span></td><td>{{ item.range }}</td><td class="num">{{ item.pixels }}</td><td class="num">{{ item.area }}</td><td class="num">{{ item.share }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if relief.aspect %}
+  <p>Ekspozycja:
+    {% if relief.aspect.status == "flat" %}nie wyznaczono — teren płaski (nachylone ≥ {{ relief.aspect.flat_threshold }}% jest {{ relief.aspect.non_flat_share }} powierzchni).
+    {% elif relief.aspect.status == "dispersed" %}rozproszona — brak dominującego kierunku (średni azymut {{ relief.aspect.azimuth }}°, wypadkowa {{ relief.aspect.resultant }}).
+    {% else %}<strong>{{ relief.aspect.direction }}</strong> (średni azymut spadku {{ relief.aspect.azimuth }}°, wypadkowa {{ relief.aspect.resultant }}).{% endif %}
+    {% if relief.aspect.sectors %}<br><small>Udział sektorów: {{ relief.aspect.sectors|join("; ") }}.</small>{% endif %}
+  </p>
+  {% endif %}
+  {% if relief.profile %}
+  <h4>Tabela 6.4. Profil wysokościowy</h4>
+  <p>Profil: od {{ relief.profile.start }} do {{ relief.profile.end }} ({{ relief.profile.crs }}), długość {{ relief.profile.length }}, krok {{ relief.profile.step }}, {{ relief.profile.sample_count }} próbek ({{ relief.profile.inside_count }} w obrysie działki){% if relief.profile.missing_count %}, w tym {{ relief.profile.missing_count }} bez danych{% endif %}; metoda {{ relief.profile.method }}, interpolacja {{ relief.profile.interpolation }}.</p>
+  {% if relief.profile.segments %}
+  <svg class="profile" viewBox="0 0 {{ relief.profile.width }} {{ relief.profile.height }}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="{{ relief.profile.width }}" height="{{ relief.profile.height }}" fill="#f9fafb" stroke="#d0d5dd"/>
+    {% for points in relief.profile.segments %}<polyline points="{{ points }}" fill="none" stroke="#155eef" stroke-width="2"/>{% endfor %}
+    <text x="10" y="18" font-size="11" fill="#475467">{{ relief.profile.max_label }}</text>
+    <text x="10" y="{{ relief.profile.height - 10 }}" font-size="11" fill="#475467">{{ relief.profile.min_label }}</text>
+  </svg>
+  {% endif %}
+  {% endif %}
+  {% if relief.raster %}
+  <h4>Tabela 6.5. Raster źródłowy</h4>
+  <table class="kv">
+    <tr><th>Pokrycie WCS</th><td class="mono">{{ relief.raster.coverage_id }} ({{ relief.raster.crs }}){% if relief.raster.vertical_datum %} — układ wysokości {{ relief.raster.vertical_datum }}{% endif %}</td></tr>
+    <tr><th>Okno rastra</th><td>{{ relief.raster.size }}, rozdzielczość {{ relief.raster.resolution }}, bufor {{ relief.raster.buffer }}, {{ relief.raster.bytes }}<br><span class="mono">bbox EPSG:2180: {{ relief.raster.bbox }}</span></td></tr>
+    <tr><th>NoData</th><td>{{ na(relief.raster.nodata_value) }}; <small>{{ relief.raster.nodata_policy }}</small></td></tr>
+    {% if relief.raster.gdal_version %}<tr><th>Środowisko</th><td class="mono">{{ relief.raster.gdal_version }}</td></tr>{% endif %}
+  </table>
+  {% endif %}
+  {% if relief.source %}
+  <p class="note">Źródło: {{ relief.source.name }}{% if relief.source.version %} ({{ relief.source.version }}){% endif %}{% if relief.source.fetched_at %}, pobrano {{ relief.source.fetched_at }}{% endif %}{% if relief.source.sha256 %}<br><span class="mono">SHA-256 GeoTIFF: {{ relief.source.sha256 }}</span>{% endif %}</p>
+  {% endif %}
+  {% for warning in relief.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+  {% endif %}
+</section>
+
+{# ---------- 7. Infrastruktura i transport ---------- #}
+<section class="report-section" id="sec-infrastructure">
+  <h2>{{ section.infrastructure.number }}. {{ section.infrastructure.title }}</h2>
+  <p class="informational">Sekcja obejmuje wyłącznie dane o potwierdzonym kontrakcie. Geometria KIUT/GESUT nie jest podstawą wniosków obliczeniowych (BK-306); bufory sieci są przybliżeniem technicznym.</p>
+  <h3>Tabela 7.1. Podgląd uzbrojenia terenu (KIUT)</h3>
+  {% if utilities_preview %}
+  <table class="kv">
+    <tr><th>Status pokrycia</th><td>{{ utilities_preview.coverage_label }} {{ kind("source_fact") }}</td></tr>
+    <tr><th>Powiat</th><td>{{ na(utilities_preview.county_name) }}</td></tr>
+    <tr><th>Warstwa podglądowa potwierdzona</th><td>{{ utilities_preview.layer_available }}</td></tr>
+    <tr><th>Źródło</th><td>{{ source_line(utilities_preview.source) }}</td></tr>
+  </table>
+  <p>{{ utilities_preview.note }}</p>
+  <p><strong>Raport nie zawiera odległości ani liczby sieci wyliczonych z podglądu WMS.</strong>
+     <strong>Nie da się na podstawie podglądu WMS stwierdzić, czy konkretna sieć leży na działce.</strong>
+     Brak linii na obrazie nie oznacza braku sieci; PDF nie osadza rastra WMS.</p>
+  {% else %}
+  <p class="empty">Nie sprawdzono pokrycia KIUT dla tego snapshotu. Brak danych nie oznacza braku sieci.</p>
+  {% endif %}
+  <h3>Tabela 7.2. Techniczne bufory sieci (przybliżenie)</h3>
+  {% if infrastructure %}
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 10%"><col style="width: 13%"><col style="width: 12%"><col style="width: 31%"><col style="width: 20%"></colgroup>
+    <thead><tr><th>Sieć</th><th class="num">Bufor [m]</th><th class="num">Pole strefy [m²]</th><th>Pomniejsza obszar zabudowy</th><th>Podstawa i pewność reguły</th><th>Źródło</th></tr></thead>
+    <tbody>
+    {% for item in infrastructure %}
+      <tr><td>{{ item.network_type }} {{ kind("approximation") }}</td><td class="num">{{ item.buffer }}</td><td class="num">{{ item.zone_area }}</td><td>{{ item.affects_buildable_area }}</td>
+        <td>{{ na(item.rule_source) }}{% if item.rule_confidence %}; pewność reguły {{ item.rule_confidence }}{% endif %}{% if item.rule_note %}<br><small>{{ item.rule_note }}</small>{% endif %}</td>
+        <td><small>{{ source_line(item.source) }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Dane niedostępne — nie wyznaczono buforów sieci (brak potwierdzonej geometrii sieci). Nie oznacza to braku sieci.</p>
+  {% endif %}
+  <h3>Transport i dostęp do drogi</h3>
+  <p class="empty">Nie analizowano — brak potwierdzonego kontraktu źródła danych drogowych (BK-305). Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.</p>
+</section>
+
+{# ---------- 8. Jakość i kompletność ---------- #}
+<section class="report-section" id="sec-quality">
+  <h2>{{ section.quality.number }}. {{ section.quality.title }}</h2>
+  <p>Status analizy: <span class="status-badge">{{ status }}</span> — {{ status_label }}.</p>
+  <p class="informational">Status kompletności i świeżość dotyczą <em>każdej sekcji osobno</em> — żaden zbiorczy status nie gwarantuje kompletności całego raportu. Ocena została wystawiona i zapisana razem z analizą (punkt odniesienia: {{ quality.reference_at }}; polityka <span class="mono">{{ quality.policy_version }}</span>){% if quality.origin == "reconstructed" %}; <strong>zapis sprzed BK-504 nie zawierał oceny — została odtworzona przy odczycie bieżącą polityką i nie odzwierciedla oceny z chwili analizy</strong>{% endif %}. Brak pokrycia źródła, błąd źródła i stary pomiar są odrębnymi stanami; brak danych nie oznacza braku ograniczenia.</p>
+  <h3>Tabela 8.1. Macierz kompletności i świeżości sekcji (ocena historyczna)</h3>
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 14%"><col style="width: 14%"><col style="width: 11%"><col style="width: 9%"><col style="width: 16%"><col style="width: 22%"></colgroup>
+    <thead><tr><th>Sekcja (§)</th><th>Status</th><th>Źródło</th><th>Pobrano</th><th>Wydanie / wersja</th><th>Świeżość</th><th>Powód (kody)</th></tr></thead>
+    <tbody>
+    {% for row in quality.rows %}
+      <tr data-row="quality" data-section="{{ row.key }}"><td>{{ row.domain }} <small>(§{{ row.section }})</small></td>
+        <td><span class="st st-{{ row.status }}">{{ row.status_label }}</span>{% if row.manual_review %}<br><span class="tag tag-review">wymaga weryfikacji</span>{% endif %}</td>
+        <td>{% if row.source_name %}{{ row.source_name }}{% if row.source_id %}<br><small class="mono">{{ row.source_id }}</small>{% endif %}{% else %}brak źródła{% endif %}</td>
+        <td>{{ row.fetched_at or not_specified }}</td>
+        <td>{% if row.release %}#{{ row.release }}{% else %}—{% endif %}{% if row.version %}<br><small>{{ row.version }}</small>{% endif %}</td>
+        <td><span class="fr-{{ row.freshness_state }}">{{ row.freshness_label }}</span><br><small>{{ row.freshness_detail }}</small></td>
+        <td>{% if row.reason_codes %}{% for item in row.reason_codes %}{{ item.label }} <small class="mono">[{{ item.code }}]</small>{% if not loop.last %}<br>{% endif %}{% endfor %}{% else %}—{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note">Suma kontrolna macierzy (SHA-256 treści oceny, bez chwili eksportu): <span class="mono">{{ quality.matrix_sha256 }}</span>{% if not quality.integrity_ok %} — <strong>NIEZGODNA z zapisem: treść oceny została zmieniona po zapisie</strong>{% endif %}.</p>
+  <h3>Tabela 8.2. Legenda statusów i świeżości</h3>
+  <table class="data">
+    <colgroup><col style="width: 22%"><col style="width: 78%"></colgroup>
+    <thead><tr><th>Znacznik</th><th>Znaczenie</th></tr></thead>
+    <tbody>
+    {% for item in quality.legend.statuses %}
+      <tr data-row="legend-status"><td><span class="st st-{{ item.id }}">{{ item.label }}</span>{% if item.used %} <small>(w tej analizie)</small>{% endif %}</td><td>{{ item.description }}</td></tr>
+    {% endfor %}
+    {% for item in quality.legend.freshness %}
+      <tr data-row="legend-freshness"><td><span class="fr-{{ item.id }}">{{ item.label }}</span>{% if item.used %} <small>(w tej analizie)</small>{% endif %}</td><td>{{ item.description }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <h3>Tabela 8.3. Wiek danych na dzień eksportu (ostrzeżenie dodatkowe)</h3>
+  <p class="note">Eksport: {{ quality.export_at }}. Tabela porównuje czas pobrania z dniem eksportu według reguły źródła zapisanej z oceną. Jest to osobne ostrzeżenie — <strong>nie zmienia oceny historycznej z tabeli 8.1</strong> ani sumy kontrolnej macierzy.</p>
+  {% if quality.export_stale %}
+  <p class="empty">Ostrzeżenie: na dzień eksportu dane sekcji: {{ quality.export_stale|join(", ") }} są starsze niż reguła wieku ich źródeł. Aby uzyskać bieżący stan, wykonaj nową analizę.</p>
+  {% endif %}
+  <table class="data">
+    <colgroup><col style="width: 30%"><col style="width: 16%"><col style="width: 24%"><col style="width: 30%"></colgroup>
+    <thead><tr><th>Sekcja</th><th>Wiek na dzień eksportu</th><th>Ocena w dniu eksportu</th><th>Uwaga</th></tr></thead>
+    <tbody>
+    {% for row in quality.rows %}
+      <tr data-row="export-age"><td>{{ row.domain }}</td><td>{{ row.export.age }}</td>
+        <td><span class="fr-{{ row.export.state }}">{{ row.export.label }}</span>{% if row.export.stale %} <span class="tag tag-stale">stare</span>{% endif %}</td>
+        <td><small>{{ row.export.note }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <h3>Tabela 8.4. Ostrzeżenia zapisane w analizie</h3>
+  {% if quality.warnings %}
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 22%"><col style="width: 16%"><col style="width: 48%"></colgroup>
+    <thead><tr><th>Poziom</th><th>Kod</th><th>Źródło</th><th>Treść</th></tr></thead>
+    <tbody>
+    {% for warning in quality.warnings %}
+      <tr><td>{{ warning.severity_label }}</td><td class="mono">{{ warning.code }}</td><td>{{ warning.source_name or "—" }}</td><td>{{ warning.message }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="note">Analiza nie zapisała ostrzeżeń.</p>
+  {% endif %}
+</section>
+
+{# ---------- 9. Źródła i provenance ---------- #}
+<section class="report-section" id="sec-sources">
+  <h2>{{ section.sources.number }}. {{ section.sources.title }}</h2>
+  <h3>Tabela 9.1. Rejestr źródeł danych</h3>
+  {% if sources %}
+  <table class="data">
+    <colgroup><col style="width: 26%"><col style="width: 17%"><col style="width: 13%"><col style="width: 8%"><col style="width: 20%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Źródło</th><th>Wersja / wydanie</th><th>Pobrano</th><th>HTTP</th><th>SHA-256 artefaktu</th><th>Pewność / weryfikacja</th></tr></thead>
+    <tbody>
+    {% for source in sources %}
+      <tr data-row="source">
+        <td>{{ source.source_name }}{% if source.source_id %} <small>({{ source.source_id }})</small>{% endif %}{% if source.source_url %}<br><span class="mono">{{ source.source_url }}</span>{% endif %}</td>
+        <td>{{ source.source_version or "—" }}{% if source.data_release_id %}<br>wydanie #{{ source.data_release_id }}{% endif %}{% if source.act_version %}<br><span class="mono">{{ source.act_version }}</span>{% endif %}</td>
+        <td>{{ source.fetched_at if source.fetched_at else "brak danych" }}</td>
+        <td>{{ source.response_status }}</td>
+        <td class="mono">{{ source.artifact_sha256 or "—" }}</td>
+        <td>{{ source.confidence_pct }} ({{ source.confidence_label }})<br><small>{{ "wymaga ręcznej weryfikacji" if source.manual_review_required else "nie wymaga weryfikacji" }}</small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Dane niedostępne — brak zarejestrowanych źródeł dla tej analizy.</p>
+  {% endif %}
+  <h3>Tabela 9.2. Wydania danych przypięte do analizy</h3>
+  {% if provenance.releases %}<p>Wydania: #{{ provenance.releases|join(", #") }}.</p>{% else %}<p class="note">Analiza nie korzystała z lokalnych wydań danych (data_release) albo ich nie zapisano.</p>{% endif %}
+  {% if provenance.cache_signature %}<p class="note">Sygnatura stanu wydań: <span class="mono">{{ provenance.cache_signature }}</span></p>{% endif %}
+  <h3>Tabela 9.3. Wersje kontraktów snapshotu</h3>
+  <table class="kv">
+    {% for label, value in provenance.contracts %}<tr><th>{{ label }}</th><td class="mono">{{ value }}</td></tr>{% endfor %}
+  </table>
+  <h3>Tabela 9.4. Provenance map raportu</h3>
+  {% if provenance.maps %}
+  <table class="kv">
+    <tr><th>Pochodzenie specyfikacji</th><td>{% if provenance.maps.from_snapshot %}zamrożona przy zapisie analizy (analyses.report_map_snapshot){% else %}odtworzona z danych snapshotu (analiza sprzed BK-503){% endif %}</td></tr>
+    <tr><th>Konfiguracja renderowania</th><td class="mono">{{ provenance.maps.config_version }}; tryb POG {{ provenance.maps.pog_theme }}; styl POG {{ provenance.maps.pog_style_version or "—" }}</td></tr>
+    <tr><th>Hash semantyczny (dane + konfiguracja)</th><td class="mono">{{ provenance.maps.semantic_sha256 }}{% if provenance.maps.from_snapshot %}<br>zgodność z zapisem: {{ "tak" if provenance.maps.integrity_ok else "NIE" }}{% endif %}</td></tr>
+    <tr><th>Środowisko renderowania</th><td><small>Pillow {{ provenance.maps.environment.pillow }}; font {{ provenance.maps.environment.font_family }} — {{ provenance.maps.environment.font_file }}</small>{% if provenance.maps.environment.font_sha256 %}<br><span class="mono">SHA-256 fontu: {{ provenance.maps.environment.font_sha256 }}</span>{% endif %}</td></tr>
+    <tr><th>Podkład</th><td>{% if provenance.maps.basemap.used %}artefakt <span class="mono">{{ provenance.maps.basemap.sha256 }}</span>{% if provenance.maps.basemap.license %}; licencja {{ provenance.maps.basemap.license }}{% endif %}{% else %}neutralne tło — PDF nie pobiera WMS/OSM/KIUT{% endif %}</td></tr>
+  </table>
+  <table class="data">
+    <colgroup><col style="width: 45%"><col style="width: 15%"><col style="width: 40%"></colgroup>
+    <thead><tr><th>Mapa</th><th>Status</th><th>SHA-256 PNG (identyczne środowisko)</th></tr></thead>
+    <tbody>{% for image in provenance.maps.images %}<tr><td>{{ image.title }}</td><td>{{ "narysowana" if image.status == "rendered" else "pusta — powód w sekcji" }}</td><td class="mono">{{ image.sha256 or "—" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% else %}
+  <p class="empty">Mapy nie zostały wygenerowane — brak provenance map.</p>
+  {% endif %}
+</section>
+
+{# ---------- 10. Ograniczenia interpretacyjne ---------- #}
+<section class="report-section" id="sec-limitations">
+  <h2>{{ section.limitations.number }}. {{ section.limitations.title }}</h2>
+  <ul class="plain">
+    {% for limitation in limitations %}<li>{{ limitation }}</li>{% endfor %}
+  </ul>
+  <h3>Znaczenie rodzajów ustaleń</h3>
+  <table class="kv">
+    {% for item in finding_kinds %}<tr><th>{{ item.label }}</th><td>{{ item.description }}</td></tr>{% endfor %}
+  </table>
+  <div class="disclaimer">{{ disclaimer }}</div>
+</section>
+
+{# ---------- Załącznik A ---------- #}
+<section class="report-section" id="appendix-mapping">
+  <h2>Załącznik A. Mapowanie pól API na elementy raportu</h2>
+  <p class="note">Każde pole kontraktu <span class="mono">AnalyzeResponse</span> ma odpowiednik w raporcie albo jawne uzasadnienie pominięcia (wzorce: <span class="mono">[]</span> — element listy, <span class="mono">*</span> — dowolny ciąg). Kolumna „Ta analiza” podaje liczbę wartości obecnych oraz null/pustych w snapshocie.</p>
+  <table class="data">
+    <colgroup><col style="width: 30%"><col style="width: 6%"><col style="width: 36%"><col style="width: 12%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Pole API (wzorzec)</th><th>§</th><th>Element raportu / uzasadnienie pominięcia</th><th>Rodzaj</th><th>Ta analiza</th></tr></thead>
+    <tbody>
+    {% for row in field_mapping %}
+      <tr data-row="mapping"><td class="mono">{{ row.pattern }}</td><td>{{ row.section }}</td><td>{% if row.reason %}<em>pominięte:</em> {{ row.reason }}{% else %}{{ row.element }}{% endif %}</td><td>{{ row.kind }}</td><td><small>{{ row.presence }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>

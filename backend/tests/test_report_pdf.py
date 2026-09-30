@@ -8,22 +8,25 @@ raport był budowany z realnego snapshotu w bazie, nie z danych mockowanych.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
+import socket
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, patch
 
-import httpx
 import pdfplumber
 import pytest
-import respx
+import pymupdf
 from fastapi.testclient import TestClient
-from shapely.geometry import box
+from pyproj import Transformer
+from shapely.geometry import LineString, box, mapping, shape
+from shapely.ops import transform
 from sqlalchemy import delete, select
 
 from app.core.access_control import make_analysis_token
+from app.core import report_config
 from app.core.report_config import REPORT_DISCLAIMER
-from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -52,6 +55,8 @@ from app.schemas.mpzp import (
     MpzpParserWarning,
     MpzpZoneResult as ParserMpzpZoneResult,
 )
+from app.modules.reporting.domain.map_snapshot import verify_semantic_hash
+from app.modules.reporting.domain.sections import REPORT_SECTIONS
 from app.services import report as report_module
 from app.services.context import ContextResult, ContextSectionResult
 from app.services.mpzp_fetch import DocumentBlob
@@ -73,23 +78,20 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 # Geometria działki w EPSG:2180 (rejon Krakowa), tak jak zapisuje persistence.
 _GEOMETRY = box(500000, 200000, 500100, 200100)
 
-# Geometria działki w WGS84 do warstw GeoJSON w wyniku (miniatura mapy).
-_PARCEL_WGS84 = {
-    "type": "Feature",
-    "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [19.940, 50.060],
-                [19.945, 50.060],
-                [19.945, 50.064],
-                [19.940, 50.064],
-                [19.940, 50.060],
-            ]
-        ],
-    },
-    "properties": {"layer": "parcel"},
-}
+_TO_WGS84 = Transformer.from_crs("EPSG:2180", "EPSG:4326", always_xy=True)
+
+
+def _wgs84(geometry_2180, layer: str) -> dict:
+    """GeoJSON EPSG:4326 spójny z geometrią działki EPSG:2180 (jak w analizie)."""
+    return {
+        "type": "Feature",
+        "geometry": mapping(transform(_TO_WGS84.transform, geometry_2180)),
+        "properties": {"layer": layer},
+    }
+
+
+# Geometria działki w WGS84 do warstw GeoJSON w wyniku (mapy raportu).
+_PARCEL_WGS84 = _wgs84(_GEOMETRY, "parcel")
 
 
 def _cleanup() -> None:
@@ -122,13 +124,6 @@ def cleanup_report_rows():
     _cleanup()
     yield
     _cleanup()
-
-
-@pytest.fixture(autouse=True)
-def disable_report_basemap(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Integracyjne testy PDF nie odpytują WMS — domyślnie ścieżka MVP offline."""
-    monkeypatch.setattr(settings, "report_map_basemap_enabled", False)
-    monkeypatch.setattr(settings, "report_map_kiut_overlay_enabled", False)
 
 
 def _source(
@@ -210,30 +205,12 @@ def _full_response(identifier: str) -> AnalyzeResponse:
                 rule_confidence=0.65,
                 rule_note="Bufor techniczny wymaga uzgodnienia z gestorem.",
                 affects_buildable_area=True,
-                network_geometry_geojson={
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [[19.941, 50.061], [19.944, 50.063]],
-                    },
-                    "properties": {"layer": "network"},
-                },
-                protection_zone_geojson={
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [19.941, 50.061],
-                                [19.943, 50.061],
-                                [19.943, 50.063],
-                                [19.941, 50.063],
-                                [19.941, 50.061],
-                            ]
-                        ],
-                    },
-                    "properties": {"layer": "protection_zone"},
-                },
+                network_geometry_geojson=_wgs84(
+                    LineString([(500010, 200010), (500090, 200070)]), "network"
+                ),
+                protection_zone_geojson=_wgs84(
+                    box(500010, 200010, 500050, 200050), "protection_zone"
+                ),
                 source=_source("KIUT", "https://kiut.example.test", confidence=0.7),
             )
         ],
@@ -254,22 +231,7 @@ def _full_response(identifier: str) -> AnalyzeResponse:
             RiskResult(
                 risk_type="flood_zone",
                 description="Część działki leży w strefie zagrożenia powodziowego.",
-                geometry_geojson={
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [19.940, 50.060],
-                                [19.942, 50.060],
-                                [19.942, 50.062],
-                                [19.940, 50.062],
-                                [19.940, 50.060],
-                            ]
-                        ],
-                    },
-                    "properties": {"layer": "risk"},
-                },
+                geometry_geojson=_wgs84(box(499950, 199950, 500040, 200040), "risk"),
                 source=_source("ISOK", "https://isok.example.test"),
             )
         ],
@@ -386,15 +348,14 @@ def test_full_analysis_pdf_contains_all_sections_and_polish_characters() -> None
 
     text = _extract_text(pdf_bytes)
 
-    # Kluczowe sekcje raportu.
-    assert "Parametry geometryczne" in text
-    assert "MPZP" in text
-    assert "Plan Ogólny Gminy" in text
+    # Dziesięć sekcji raportu v2 (BK-501) w ustalonej kolejności.
+    positions = [
+        text.find(f"{section.number}. {section.title}", text.find("Rodzaje ustaleń"))
+        for section in REPORT_SECTIONS
+    ]
+    assert all(position > 0 for position in positions) and positions == sorted(positions)
     assert "Podgląd uzbrojenia terenu" in text
-    assert "Infrastruktura" in text
-    assert "Ryzyka" in text
-    assert "Źródła danych" in text
-    assert "Ograniczenia analizy" in text
+    assert "Załącznik A. Mapowanie pól API" in text
 
     # Polskie znaki muszą przetrwać ekstrakcję tekstu (font z polskim zestawem).
     assert "działki" in text
@@ -488,7 +449,7 @@ def test_report_with_manual_review_shows_limitations() -> None:
         pdf_bytes = generate_analysis_report_pdf(analysis_id, db)
 
     text = _extract_text(pdf_bytes)
-    assert "Ograniczenia analizy" in text
+    assert "Ograniczenia interpretacyjne" in text
     # Ostrzeżenie o ręcznej weryfikacji i fallbacku WMS musi znaleźć się w raporcie.
     assert "weryfikacji" in text
     assert "rastrow" in text  # "mapy rastrowej"
@@ -616,22 +577,15 @@ def test_report_without_context_data_still_generates() -> None:
     text = _extract_text(pdf_bytes)
     assert pdf_bytes.startswith(_PDF_SIGNATURE)
     # Sekcje kontekstowe są jawnie niedostępne, ale raport jest kompletny.
-    assert "Infrastruktura" in text
-    assert "Ryzyka" in text
+    assert "Infrastruktura i transport" in text
+    assert "Środowisko" in text
     assert "niedostępne" in text
 
 
-def test_report_without_drawable_geometry_adds_warning_not_error(
+def test_report_without_maps_adds_explicit_notice_not_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Symulujemy brak geometrii do narysowania: renderer zwraca pusty wynik.
-    from app.services.report_map import MapRenderResult
-
-    monkeypatch.setattr(
-        report_module,
-        "render_analysis_map_png",
-        lambda *a, **k: MapRenderResult(png_bytes=None),
-    )
+    monkeypatch.setattr(report_module, "_render_maps", lambda *a, **k: None)
     identifier = f"{_PARCEL_PREFIX}NOGEO"
     analysis_id = _save(_full_response(identifier), identifier)
     with SessionLocal() as db:
@@ -640,40 +594,16 @@ def test_report_without_drawable_geometry_adds_warning_not_error(
     text = _extract_text(pdf_bytes)
     assert pdf_bytes.startswith(_PDF_SIGNATURE)
     assert _count_images(pdf_bytes) == 0
-    assert "Miniatura mapy jest niedostępna" in text
+    assert "Mapa niedostępna" in text
+    assert "Nie udało się wygenerować map raportu" in text
 
 
-@respx.mock
-def test_report_survives_basemap_failure_with_warning(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Awaria podkładu WMS nie blokuje PDF — obrys na fallback + ostrzeżenie."""
-    wms_url = "https://wms.example.test/report-osm"
-    monkeypatch.setattr(settings, "report_map_basemap_enabled", True)
-    monkeypatch.setattr(settings, "report_map_wms_base_url", wms_url)
-    monkeypatch.setattr(settings, "report_map_wms_layers", "OSM-WMS")
-    monkeypatch.setattr(settings, "report_map_kimpzp_overlay_enabled", False)
-    respx.get(wms_url).mock(return_value=httpx.Response(503))
-
-    identifier = f"{_PARCEL_PREFIX}BASEFAIL"
-    analysis_id = _save(_full_response(identifier), identifier)
-    with SessionLocal() as db:
-        pdf_bytes = generate_analysis_report_pdf(analysis_id, db)
-
-    text = _extract_text(pdf_bytes)
-    assert pdf_bytes.startswith(_PDF_SIGNATURE)
-    assert _count_images(pdf_bytes) >= 1
-    assert "Nie udało się pobrać podkładu mapowego" in text
-
-
-def test_report_survives_map_backdrop_failure(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Awaria opcjonalnego podkładu mapowego nie może zablokować raportu.
+def test_report_survives_map_renderer_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Awaria renderera mapy nie może zablokować raportu.
     def _boom(*args, **kwargs):
         raise RuntimeError("symulowana awaria renderera mapy")
 
-    monkeypatch.setattr(report_module, "render_analysis_map_png", _boom)
+    monkeypatch.setattr(report_module, "render_report_maps", _boom)
     identifier = f"{_PARCEL_PREFIX}MAPFAIL"
     analysis_id = _save(_full_response(identifier), identifier)
     with SessionLocal() as db:
@@ -681,7 +611,131 @@ def test_report_survives_map_backdrop_failure(
 
     text = _extract_text(pdf_bytes)
     assert pdf_bytes.startswith(_PDF_SIGNATURE)
-    assert "Nie udało się wygenerować miniatury mapy" in text
+    assert "Nie udało się wygenerować map raportu" in text
+
+
+# --- BK-503: zamrożone mapy i raport bez sieci ------------------------------------
+
+
+def _stored_snapshot(analysis_id: int) -> dict:
+    with SessionLocal() as db:
+        analysis = db.get(Analysis, analysis_id)
+        assert analysis is not None
+        return analysis.report_map_snapshot
+
+
+def test_save_analysis_freezes_report_map_snapshot_in_epsg_2180() -> None:
+    identifier = f"{_PARCEL_PREFIX}FREEZE"
+    analysis_id = _save(_full_response(identifier), identifier)
+    snapshot = _stored_snapshot(analysis_id)
+
+    assert snapshot["schema"] == "report-map-snapshot/1"
+    assert verify_semantic_hash(snapshot)
+    assert snapshot["frame"]["crs"] == "EPSG:2180"
+    assert snapshot["frame"]["min_x"] < 500000 < 500100 < snapshot["frame"]["max_x"]
+    assert snapshot["data"]["parcel_identifier"] == identifier
+    maps = {item["id"]: item for item in snapshot["maps"]}
+    assert maps["environment"]["status"] == "rendered"  # ISOK w kadrze
+    frozen_parcel = shape(maps["parcel"]["layers"][-1]["features"][0]["geometry"])
+    assert frozen_parcel.equals(_GEOMETRY)
+
+
+def test_report_is_generated_from_snapshot_with_network_blocked(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Zablokowany HTTP: raport powstaje ze snapshotu, bez run_analysis i bez pobrań."""
+    identifier = f"{_PARCEL_PREFIX}OFFLINE"
+    analysis_id = _save(
+        _full_response(identifier), identifier, context_result=_context_result()
+    )
+    attempts: list[object] = []
+
+    def refuse(self, address):  # noqa: ANN001
+        attempts.append(address)
+        raise OSError(f"Sieć zablokowana w teście: {address!r}")
+
+    async def no_analysis(*args, **kwargs):  # noqa: ANN002, ANN003
+        raise AssertionError("Raport nie może uruchamiać analizy")
+
+    # psycopg2 łączy się z bazą przez libpq (C), więc blokada gniazd Pythona
+    # obejmuje wyłącznie klientów HTTP (httpx, urllib, WeasyPrint).
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket.socket, "connect_ex", refuse)
+    monkeypatch.setattr("app.services.analysis_orchestrator.run_analysis", no_analysis)
+    monkeypatch.setattr("app.routers.analyze.run_analysis", no_analysis, raising=False)
+
+    response = client.get(
+        f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.content.startswith(_PDF_SIGNATURE)
+    assert attempts == []
+    text = _extract_text(response.content)
+    assert "neutralne (bez pobierania WMS)" in text
+    snapshot = _stored_snapshot(analysis_id)
+    assert snapshot["semantic_sha256"] in text.replace(" ", "")
+
+
+def test_regenerated_report_keeps_frozen_map_after_config_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    identifier = f"{_PARCEL_PREFIX}REGEN"
+    analysis_id = _save(_full_response(identifier), identifier)
+    with SessionLocal() as db:
+        first = generate_analysis_report_pdf(analysis_id, db)
+    monkeypatch.setattr(report_config, "REPORT_MAP_CONFIG_VERSION", "report-map/2099.01.01-1")
+    monkeypatch.setitem(report_config.REPORT_MAP_LAYER_STYLES, "parcel", report_config.NATURE_LAYER_STYLE)
+    with SessionLocal() as db:
+        second = generate_analysis_report_pdf(analysis_id, db)
+
+    assert _image_digests(first) == _image_digests(second)
+    assert "report-map/2099.01.01-1" not in _extract_text(second)
+    stored = _stored_snapshot(analysis_id)
+    assert stored["render_config"]["config_version"] != "report-map/2099.01.01-1"
+
+
+def test_legacy_analysis_without_map_snapshot_rebuilds_maps_with_notice() -> None:
+    identifier = f"{_PARCEL_PREFIX}LEGACYMAP"
+    analysis_id = _save(_full_response(identifier), identifier)
+    with SessionLocal() as db:
+        analysis = db.get(Analysis, analysis_id)
+        analysis.report_map_snapshot = None
+        db.commit()
+        pdf_bytes = generate_analysis_report_pdf(analysis_id, db)
+
+    text = _extract_text(pdf_bytes)
+    assert _count_images(pdf_bytes) >= 1
+    assert "Mapa odtworzona z danych snapshotu" in text
+    assert "Analiza sprzed zamrażania map (BK-503)" in text
+
+
+def test_resume_refreshes_frozen_map_snapshot() -> None:
+    identifier = f"{_PARCEL_PREFIX}RESUMEMAP"
+    waiting = _minimal_response(identifier).model_copy(
+        update={"status": "waiting_for_user_input", "manual_zone_required": True}
+    )
+    analysis_id = _save(
+        waiting,
+        identifier,
+        database_status="waiting_for_zone_symbol",
+        pending_plan_id="MPZP/MAP/1",
+        pending_zone_symbol_candidates=["7MN"],
+    )
+    before = _stored_snapshot(analysis_id)
+    with patch(
+        "app.services.analysis_resume.parse_mpzp_document",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        resumed = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "7MN"})
+    assert resumed.status_code == 200, resumed.text
+    after = _stored_snapshot(analysis_id)
+    mpzp_before = next(item for item in before["maps"] if item["id"] == "mpzp")
+    mpzp_after = next(item for item in after["maps"] if item["id"] == "mpzp")
+    assert "7MN" not in (mpzp_before["empty_reason"] or "")
+    assert "7MN" in mpzp_after["empty_reason"]
+    assert verify_semantic_hash(after) and after["semantic_sha256"] != before["semantic_sha256"]
 
 
 def test_generate_report_for_missing_analysis_raises_not_found() -> None:
@@ -717,6 +771,25 @@ def test_endpoint_returns_404_for_missing_analysis() -> None:
     assert "Traceback" not in body["detail"]
 
 
+def test_endpoint_returns_500_without_weasyprint_details(monkeypatch: pytest.MonkeyPatch) -> None:
+    identifier = f"{_PARCEL_PREFIX}RENDERFAIL"
+    analysis_id = _save(_minimal_response(identifier), identifier)
+
+    class _Broken:
+        def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
+            pass
+
+        def write_pdf(self) -> bytes:
+            raise RuntimeError("/usr/lib/secret/pango stack")
+
+    monkeypatch.setattr("weasyprint.HTML", _Broken)
+    response = client.get(f"/report/{analysis_id}?access_token={make_analysis_token(analysis_id)}")
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Nie udało się wygenerować raportu PDF."
+    assert "pango" not in response.text
+
+
 def test_endpoint_rejects_non_positive_id() -> None:
     response = client.get("/report/0")
     assert response.status_code == 422
@@ -725,3 +798,14 @@ def test_endpoint_rejects_non_positive_id() -> None:
 def test_openapi_contains_report_path() -> None:
     openapi = client.get("/openapi.json").json()
     assert "/report/{analysis_id}" in openapi["paths"]
+
+
+def _image_digests(pdf_bytes: bytes) -> list[str]:
+    """SHA-256 pikseli obrazów osadzonych w PDF (niezależne od kompresji)."""
+    digests = []
+    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
+        for page in doc:
+            for image in page.get_images(full=True):
+                pixmap = pymupdf.Pixmap(doc, image[0])
+                digests.append(hashlib.sha256(pixmap.samples).hexdigest())
+    return sorted(set(digests))
