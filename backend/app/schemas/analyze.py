@@ -10,6 +10,7 @@ from app.core.access_control import make_analysis_token
 from app.schemas.source import (
     CatalogMetadataSource,
     FormalDocumentSource,
+    SectionQualityMatrix,
     SourceMetadata,
     WarningMessage,
 )
@@ -1667,6 +1668,16 @@ class AnalyzeResponse(BaseModel):
             "od zmierzonej zerowej deniwelacji."
         ),
         json_schema_extra={"example": None},
+    )
+    section_quality: SectionQualityMatrix | None = Field(
+        default=None,
+        description=(
+            "Macierz kompletności i świeżości sekcji zapisana z analizą (BK-504): "
+            "status według kontraktu źródła, źródło, czas pobrania, wydanie, "
+            "manual review i świeżość wg reguły źródła w chwili analizy. Ta sama "
+            "macierz trafia do UI i raportu PDF. null tylko dla wyniku jeszcze "
+            "niezapisanego."
+        ),
     )
     buildable_area_sqm: float | None = Field(
         default=None,
