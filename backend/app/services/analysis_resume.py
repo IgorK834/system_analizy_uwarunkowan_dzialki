@@ -49,6 +49,7 @@ from app.services.persistence import (
     build_analyze_response_from_analysis,
     pending_document_blob,
     pog_result_from_record,
+    refresh_report_map_snapshot,
 )
 from app.services.pog_scenarios import PogScenarioResult, build_pog_scenario_result
 from app.modules.documents.composition import (
@@ -282,6 +283,9 @@ def _apply_resume(
                 artifact_sha256=source.artifact_sha256,
             )
         )
+        # BK-503: treść analizy zmieniła się (strefa ręczna, scenariusz POG),
+        # więc mapy raportu są zamrażane ponownie w tej samej transakcji.
+        refresh_report_map_snapshot(analysis, db)
         db.commit()
         db.refresh(analysis)
     except Exception:

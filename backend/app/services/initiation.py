@@ -51,6 +51,7 @@ async def resolve_parcel(
     if isinstance(payload, ParcelIdAnalyzeRequest):
         raw = await get_parcel_by_id(payload.parcel_identifier)
         source = SourceMetadata(
+            source_id="uldk",
             source_name="ULDK",
             source_url=ULDK_BASE_URL,
             fetched_at=datetime.now(timezone.utc),

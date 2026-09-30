@@ -109,6 +109,7 @@ from app.services.persistence import (
     build_manual_zone_context,
     save_analysis,
 )
+from app.services.section_quality import with_section_quality
 from app.modules.analysis.application.terrain import ReliefOutcome
 from app.modules.analysis.composition import analyze_terrain_relief
 from app.modules.documents.composition import (
@@ -310,6 +311,9 @@ async def run_analysis(
             warnings=warnings,
             sources=_unique_sources([*sources, *terrain_sources(terrain)]),
         )
+        # BK-504: ocena jakości z punktem odniesienia analyzed_at trafia do
+        # odpowiedzi i do zapisu w tej samej postaci.
+        response = with_section_quality(response)
         saved = await asyncio.to_thread(
             save_analysis,
             response,
@@ -406,6 +410,7 @@ async def run_analysis(
         warnings=warnings,
         sources=_unique_sources([*sources, *terrain_sources(terrain)]),
     )
+    response = with_section_quality(response)
     saved = await asyncio.to_thread(
         save_analysis,
         response,

@@ -21,6 +21,7 @@ from app.schemas.analyze import (
     RISK_RESULT_SCHEMA_VERSION,
     TERRAIN_RESULT_SCHEMA_VERSION,
 )
+from app.schemas.source import QUALITY_RESULT_SCHEMA_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +33,14 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # Wersja kontraktu wchodzi do sygnatury cache: snapshot zapisany przed zmianą
 # semantyki statusu (BK-106), provenance (BK-107), przypisania stref MPZP z
 # wektora i evidence parametrów (BK-202/203) albo przed sekcją rzeźby terenu
-# (BK-301/302) albo przed strukturalnymi sekcjami ryzyka (BK-303) nie jest
-# serwowany jako trafienie, nawet gdy aktywne wydania
-# danych się nie zmieniły.
+# (BK-301/302), przed strukturalnymi sekcjami ryzyka (BK-303) albo przed
+# trwałą macierzą jakości sekcji (BK-504) nie jest serwowany jako trafienie,
+# nawet gdy aktywne wydania danych się nie zmieniły.
 RESULT_CONTRACT_VERSION: Final[str] = (
     f"pog-v{POG_RESULT_SCHEMA_VERSION}+mpzp-v{MPZP_RESULT_SCHEMA_VERSION}"
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"
     f"+risk-v{RISK_RESULT_SCHEMA_VERSION}"
+    f"+quality-v{QUALITY_RESULT_SCHEMA_VERSION}"
 )
 
 
