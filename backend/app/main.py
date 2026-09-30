@@ -48,6 +48,9 @@ app.add_middleware(
         "X-Pog-Edition",
         "X-Pog-Tile-Schema",
         "X-Pog-Tile-Features",
+        # BK-505: front pokazuje hash paczki podawany poza archiwum.
+        "X-Audit-Package-SHA256",
+        "X-Audit-Exporter-Version",
     ],
 )
 

@@ -56,6 +56,7 @@ _MIGRATION_TEST_MODULES = frozenset(
         "test_migration_020_021",
         "test_migration_022",
         "test_migration_023",
+        "test_migration_026",
         "test_versioned_model",
     }
 )
