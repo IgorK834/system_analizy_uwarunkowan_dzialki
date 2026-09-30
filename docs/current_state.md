@@ -32,7 +32,7 @@ FastAPI i PostgreSQL 16/PostGIS 3.4. Backend zachowuje starszą ścieżkę
 (`location`, `documents`, `imports`, `planning` itd.). Granice nowych modułów
 opisuje i sprawdza [ADR-001](adr/ADR-001-modular-monolith.md); obecność
 szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
-`001`–`014`. Importy przestrzenne mają model źródeł, artefaktów i aktywnego
+`001`–`026`. Importy przestrzenne mają model źródeł, artefaktów i aktywnego
 `data_release`, lecz utworzenie tabel nie dowodzi, że baza jest zasilona.
 
 1. `POST /analyze` przyjmuje `map`, `address` z wybraną sugestią albo
@@ -70,10 +70,26 @@ szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
    `complete`, `partial` albo wymagać uzupełnienia. Brak danych źródłowych nie
    jest dowodem braku ograniczenia; `null` nie oznacza zera.
 7. `GET /report/{analysis_id}` odtwarza raport z **zapisanego snapshotu** przez
-   Jinja2/WeasyPrint, bez ponownej analizy. Opcjonalna miniatura mapy może
-   jednak pobierać **bieżący** OSM WMS oraz nakładki KIMPZP/KIUT. Jej raster
-   nie jest zatem zamrożonym dowodem stanu źródeł z chwili analizy; awaria
-   podkładu nie blokuje pozostałej części PDF.
+   Jinja2/WeasyPrint, bez ponownej analizy. ~~Opcjonalna miniatura mapy może
+   pobierać bieżący OSM WMS oraz nakładki KIMPZP/KIUT~~ — domknięte w BK-501–503
+   (2026-09-29): raport v2 ma 10 sekcji i tabelę mapowania pól API, pełne tabele
+   stref MPZP/POG z evidence, a mapy są zamrażane przy zapisie analizy
+   (`analyses.report_map_snapshot`, migracja 025, EPSG:2180, hash semantyczny) i
+   renderowane lokalnie bez WMS (ADR-010,
+   `docs/evaluation/results/bk-501-503-verification.md`).
+
+8. Macierz kompletności i świeżości sekcji (BK-504, 2026-09-29): `save_analysis`
+   wystawia raz `SectionQualityMatrix` (10 sekcji, status wg kontraktu źródła,
+   `source_id`, `fetched_at`, wydanie, manual review, świeżość per źródło względem
+   `analyzed_at`, `policy_version`, `reason_codes`, `matrix_sha256`) i zapisuje ją w
+   `analyses.section_quality` (migracja `026`); API, UI, PDF i cache ją czytają.
+   Reguły świeżości są w katalogu źródeł (tylko `isok`, `gdos`, `nmt`, `nmt_wcs`,
+   7 dni, decyzja projektowa); pozostałe źródła mają świeżość `unknown` — nie ma
+   globalnego TTL. Wiek na dzień eksportu jest osobnym ostrzeżeniem (ADR-011).
+9. Pakiet audytowy (BK-505): `GET /report/{analysis_id}/audit.zip` — deterministyczny
+   ZIP ze snapshotu (`analysis.json`, `sources.json`, GeoJSON EPSG:4326, README,
+   `manifest.json` z SHA-256), hash paczki w nagłówku, weryfikacja offline; warstwy
+   i surowe atrybuty źródeł bez zgody katalogu (`redistribution`) nie są kopiowane.
 
 `GET /api/v1/map/preview-sources` i
 `GET /api/v1/map/tiles/{mpzp|pog|kiut}/{z}/{x}/{y}.png` podają wyłącznie
@@ -125,7 +141,15 @@ katalogu wymagają osobnego przeglądu kontraktów; nie są wynikiem BK-001.
   `docs/evaluation/results/bk-301-302-verification.md`).
 - KIUT/GESUT nie daje wiarygodnych odległości ani pewnego rozróżnienia błędu
   pobrania od braku sieci.
-- Brak deterministycznego przeglądarkowego E2E i zamrożonego podkładu mapy PDF.
+- ~~Brak trwałej macierzy jakości sekcji i pakietu audytowego~~ — domknięte w
+  BK-504/BK-505 (2026-09-29, ADR-011,
+  `docs/evaluation/results/bk-504-505-verification.md`). Zostaje: reguły świeżości
+  dla źródeł bez publikowanej częstotliwości aktualizacji (`unknown` do czasu
+  decyzji właściciela danych) i potwierdzenie wartości `redistribution` przez
+  właścicieli danych.
+- Brak deterministycznego przeglądarkowego E2E (BK-701). ~~Brak zamrożonego
+  podkładu mapy PDF~~ — mapy PDF są zamrożone w snapshocie (BK-503); podkład
+  wyłącznie jako zapisany artefakt z SHA-256, domyślnie neutralne tło.
 
 ## Wersje i powtarzalność
 

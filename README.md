@@ -111,6 +111,110 @@ raport PDF). Oba obrazy kopiują go z kontekstu budowania `shared`
 
 Decyzje: `docs/adr/ADR-009-pog-inspector-area-summaries-layer-state.md`.
 
+### Raport PDF v2 i deterministyczne mapy (BK-501–503)
+
+`GET /report/{analysis_id}?access_token=…` (bez zmian kontraktu: `application/pdf`,
+`Content-Disposition: attachment; filename="raport_analizy_{id}.pdf"`, `404`
+dla nieistniejącej analizy, `500` bez szczegółów WeasyPrint) buduje raport
+**wyłącznie** z zapisanego snapshotu analizy i zamrożonego snapshotu map — nie
+uruchamia analizy i nie pobiera żadnych źródeł ani WMS.
+
+- Dziesięć sekcji w stałej kolejności: identyfikacja i geometria, podsumowanie,
+  MPZP, POG + OUZ/OZS/OSDIS, środowisko, teren, infrastruktura/transport,
+  jakość i kompletność, źródła/provenance, ograniczenia; załącznik A to
+  mapowanie pól `AnalyzeResponse` (`docs/report/field-mapping.md`). Każda wartość
+  jest oznaczona jako fakt źródłowy, wynik obliczenia, przybliżenie albo dane
+  ręczne; `null` = „nie określono” (≠ 0), puste sekcje podają powód; brak
+  scoringu i średnich parametrów stref.
+- Pełne tabele: strefy MPZP (pole m², udział %, akt/wydanie), parametry z
+  jednostkami i odsyłaczami `[E#]` do evidence uchwały (strona, segment, SHA-256
+  dokumentu `[D#]`), sprzeczności z listą kandydatów; strefy POG, parametry i
+  profile (wiersz na strefę), status aktu, osobne tabele OUZ, OZS i OSDIS.
+- Mapy (działka, MPZP, POG w trybie tematycznym, ISOK/GDOŚ) są zamrażane przy
+  zapisie analizy w `analyses.report_map_snapshot` (migracja `025`): geometrie
+  EPSG:2180, kadr, podziałka, kolejność warstw, style z wersją, font, wydania i
+  daty danych oraz hash semantyczny. Render lokalny (Pillow) na neutralnym tle
+  albo na zapisanym artefakcie podkładu z SHA-256.
+- Konfiguracja: `REPORT_MAP_POG_THEME` (`zones` | `intensity` |
+  `building_coverage` | `height` | `biologically_active`, zamrażany z analizą),
+  `REPORT_MAP_BASEMAP_ARTIFACT_DIR` (katalog `*.png` + `*.json` z `sha256`,
+  `bbox` EPSG:2180, licencją i `allowed_for_report`; puste = neutralne tło).
+  Usunięto `REPORT_MAP_BASEMAP_ENABLED`, `REPORT_MAP_WMS_*`,
+  `REPORT_MAP_KIMPZP_OVERLAY_ENABLED`, `REPORT_MAP_KIUT_OVERLAY_ENABLED`.
+- Szablon: `backend/app/templates/report.html`. Fixtures i mapy referencyjne:
+  `backend/tests/fixtures/reports/` (odświeżenie:
+  `python -m tests.fixtures.reports.build_fixtures --maps` w kontenerze).
+
+Decyzje: `docs/adr/ADR-010-report-v2-and-deterministic-maps.md`; odbiór:
+`docs/evaluation/results/bk-501-503-verification.md`.
+
+### Macierz kompletności i świeżości oraz pakiet audytowy (BK-504, BK-505)
+
+**Macierz jakości sekcji.** Dla każdej z 10 sekcji analizy (także pustej)
+`AnalyzeResponse.section_quality` niesie: status według kontraktu źródła
+(`available`, `partial`, `no_coverage`, `unavailable`, `error`, `unknown`,
+`out_of_scope`, `awaiting_input` — brak pokrycia i błąd są odrębne), `source_id`
+z katalogu albo kod powodu jego braku, `fetched_at` (czas pobrania, nie wejścia
+aktu w życie), wydanie i wersję danych, flagę `manual_review_required`,
+świeżość (`fresh` | `stale` | `unknown`), `policy_version` i `reason_codes`, a do
+tego legendę i `matrix_sha256`. Ocenę wystawia `save_analysis` **raz**, z punktem
+odniesienia `analyzed_at`, i zapisuje w `analyses.section_quality` (migracja
+`026`); cache, API, PDF i eksport tylko ją czytają — historyczny stan nie zmienia
+się z upływem czasu ani po zmianie polityki.
+
+- **Świeżość zależy od źródła.** Reguła wieku (`freshness_policy`: `max_age_days`,
+  `basis`, `rationale`) jest opcjonalnym polem wpisu w
+  `docs/data_sources/catalog.yaml`. Źródło bez reguły ma świeżość `unknown` —
+  **nie ma globalnego TTL**, a źródło z `expected_update_interval: "unknown"`
+  nie może mieć reguły (walidator katalogu). Obecnie reguły (7 dni,
+  `project_decision`) mają wyłącznie usługi na żywo `isok`, `gdos`, `nmt`,
+  `nmt_wcs`. Czas z przyszłości, bez strefy albo brak czasu daje `unknown`.
+- **Wiek na dzień eksportu to osobne ostrzeżenie** (tabela 8.3 PDF, blok „na dziś”
+  w UI); nie zmienia zapisanej oceny ani `matrix_sha256`. Analizy sprzed migracji
+  nie są uzupełniane — odczyt odtwarza macierz z `origin=reconstructed` (kod
+  `LEGACY_QUALITY_RECONSTRUCTED`) i jej nie zapisuje.
+- Zmiana kontraktu wyniku: `RESULT_CONTRACT_VERSION` ma `+quality-v1.0` (wyniki
+  z cache sprzed zmiany nie są serwowane). Adaptery ULDK, KIMPZP, KIUT WMS i POG
+  podają teraz `source_id` z katalogu.
+
+**Pakiet audytowy.** `GET /report/{analysis_id}/audit.zip?access_token=…`
+(dostęp i limit zapytań jak dla raportu PDF; `404` brak analizy, `413` limit
+rozmiaru, `500` bez szczegółów) strumieniuje ZIP zbudowany wyłącznie z zapisanego
+snapshotu: `analysis.json`, `sources.json`, `parcel.geojson`, dozwolone
+`layers/*.geojson`, `README.md` (CRS, data analizy, znaczenie statusów) i
+`manifest.json` (`schema_version`, nazwa, bajty i SHA-256 każdego pliku poza
+manifestem, pominięte artefakty). Hash paczki jest poza archiwum:
+nagłówek `X-Audit-Package-SHA256`. GeoJSON jest w EPSG:4326, obliczenia w
+EPSG:2180 (opisane osobno). Wpisy są posortowane, mają stały znacznik czasu i
+bezpieczne nazwy; w plikach nie ma czasu eksportu, więc ten sam snapshot w tej
+samej wersji eksportera (`audit-exporter/1.0.0`) daje identyczne bajty.
+
+- **Redystrybucja steruje dołączaniem.** `redistribution` w katalogu
+  (`allowed` | `derived_only` | `forbidden` | `unconfirmed`, domyślnie
+  `unconfirmed`): warstwa pochodna trafia do pakietu, gdy każde jej źródło ma
+  `allowed` albo `derived_only`; surowe atrybuty (np. `pog.raw_attributes`) —
+  tylko przy `allowed`. Zakaz (także źródło nieznane) zostawia w manifeście
+  wyłącznie referencję, SHA-256 i powód; rejestr źródeł nadal opisuje źródło.
+  Wartości w katalogu to ostrożna interpretacja pola `license` i wymagają
+  potwierdzenia właściciela danych.
+- **Limity** (`AUDIT_EXPORT_MAX_FILES` = 200, `AUDIT_EXPORT_MAX_FILE_BYTES` = 32 MiB,
+  `AUDIT_EXPORT_MAX_TOTAL_BYTES` = 64 MiB) — przekroczenie kończy się `413`, nie
+  okrojonym pakietem.
+- **Weryfikacja offline** (tylko biblioteka standardowa Pythona 3; zmiana jednego
+  bajtu jest wykrywana z nazwą pliku):
+
+```bash
+python3 backend/scripts/verify_audit_package.py analiza_123_pakiet_audytowy.zip \
+  --package-sha256 <wartość nagłówka X-Audit-Package-SHA256>
+```
+
+- UI: `ResultPanel` pokazuje macierz z legendą (status ma tekst i znak, nie tylko
+  kolor), `ReportDownloadButton` — drugi przycisk „Pobierz pakiet audytowy (ZIP)”
+  z sumą SHA-256 paczki, porównywaną z sumą pobranych bajtów.
+
+Decyzje: `docs/adr/ADR-011-section-quality-matrix-and-audit-package.md`; odbiór:
+`docs/evaluation/results/bk-504-505-verification.md`.
+
 ### Lokalny indeks podpowiedzi adresowych
 
 Autocomplete korzysta z lokalnego PostgreSQL/PostGIS zasilanego oficjalnymi,

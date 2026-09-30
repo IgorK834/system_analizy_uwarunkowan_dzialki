@@ -862,7 +862,9 @@ PogResult
 - brak danych ma być widoczny;
 - raport generowany wyłącznie z persisted snapshotu.
 
-**Kryteria akceptacji:** wszystkie istotne pola z API mają jednoznaczny odpowiednik w raporcie albo jawne uzasadnienie pominięcia.
+**Kryteria akceptacji:** wszystkie istotne pola z API mają jednoznaczny odpowiednik w raporcie albo jawne uzasadnienie pominięcia
+(tabela `backend/app/modules/reporting/domain/field_mapping.py`, `docs/report/field-mapping.md`,
+szablon `backend/app/templates/report.html` — rozstrzygnięcie w `docs/adr/ADR-010-report-v2-and-deterministic-maps.md`).
 
 ---
 
@@ -879,7 +881,8 @@ PogResult
 - wskazanie evidence MPZP;
 - status POG/projektu;
 - OUZ/OZS/OSDIS osobno;
-- brak średniej parametrów pomiędzy strefami.
+- brak średniej parametrów pomiędzy strefami
+  (evidence przez odsyłacze `[E#]`/`[D#]`, suma udziałów bez korekty zaokrągleń — ADR-010).
 
 ---
 
@@ -898,7 +901,8 @@ PogResult
 - `data_release_id` i data danych;
 - identyczny snapshot analizy + konfiguracja → semantycznie identyczny obraz.
 
-**Kryteria akceptacji:** powtórne generowanie raportu dla tego samego snapshotu nie zmienia znaczenia mapy mimo aktualizacji upstream.
+**Kryteria akceptacji:** powtórne generowanie raportu dla tego samego snapshotu nie zmienia znaczenia mapy mimo aktualizacji upstream
+(migracja `025_report_map_snapshot`, `analyses.report_map_snapshot` z hashem semantycznym, render bez WMS — ADR-010).
 
 ---
 
@@ -916,6 +920,12 @@ PogResult
 - jawne ostrzeżenie dla starego snapshotu lub źródła;
 - nie określać arbitralnie jednej daty ważności dla wszystkich źródeł — reguła może zależeć od źródła.
 
+**Kryteria akceptacji:** każda sekcja (także pusta) ma status, źródło albo powód jego braku, czas/wydanie i flagę manual;
+reguła świeżości jest per źródło z jawnym punktem odniesienia (`analyzed_at`), brak reguły = `unknown`, brak globalnego TTL;
+ocena jest zapisana z analizą (`analyses.section_quality`, migracja `026`, `matrix_sha256`) i tylko czytana przez
+cache/API/UI/PDF, a wiek na dzień eksportu jest osobnym ostrzeżeniem
+(`SectionQuality`, `freshness_policy` w katalogu — ADR-011).
+
 ---
 
 ### BK-505 — Pakiet audytowy analizy
@@ -931,6 +941,11 @@ PogResult
 - README opisujący CRS, datę analizy i znaczenie statusów.
 
 Do pakietu nie wolno wkładać surowych danych z zakazem redystrybucji.
+
+**Kryteria akceptacji:** `GET /report/{analysis_id}/audit.zip` (dostęp jak raport, `404`, `413`, streaming); manifest z SHA-256
+każdego pliku, hash paczki poza archiwum (`X-Audit-Package-SHA256`), weryfikacja offline
+(`backend/scripts/verify_audit_package.py`); `redistribution` w katalogu steruje dołączaniem, zabroniony artefakt = referencja,
+hash i powód w manifeście; deterministyczny ZIP dla tego samego snapshotu i wersji eksportera (ADR-011).
 
 ---
 
