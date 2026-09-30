@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -108,18 +108,22 @@ class Settings(BaseSettings):
     # Wspólny artefakt prezentacji POG (BK-403): paleta, progi, etykiety. Pusta
     # wartość = wykrycie ``/app/shared`` w obrazie albo ``<repo>/shared`` lokalnie.
     pog_presentation_path: str = ""
-    # Podkład miniatury raportu: OSM WMS (działa bez autoryzacji). ORTO/TOPO
-    # Geoportalu zwracają 401 — nie używać jako domyślne. Nakładka KIMPZP
-    # (``report_map_kimpzp_overlay_enabled``) odwzorowuje widok MPZP z UI.
-    # Nakładka KIUT jest tym samym świadomym wyjątkiem UX co KIMPZP: rastrowy
-    # GetMap w chwili generowania PDF, nie geometria ze snapshotu analizy.
-    report_map_basemap_enabled: bool = True
-    report_map_wms_base_url: str = "https://ows.terrestris.de/osm/service?"
-    report_map_wms_layers: str = "OSM-WMS"
-    report_map_kimpzp_overlay_enabled: bool = True
-    report_map_kiut_overlay_enabled: bool = True
-    report_map_wms_timeout_seconds: float = 8.0
-    report_map_wms_max_response_bytes: int = 8 * 1024 * 1024
+    # Mapy raportu PDF (BK-503, ADR-010) są renderowane lokalnie z zamrożonego
+    # snapshotu — generowanie PDF nigdy nie pobiera WMS/OSM/KIUT. Tryb tematyczny
+    # mapy POG jest zamrażany przy zapisie analizy (jeden z pięciu tematów
+    # ``shared/pog-presentation.json``). Podkład jest opcjonalnym, zapisanym
+    # artefaktem PNG z metadanymi i SHA-256 w podanym katalogu (bez sieci);
+    # pusta wartość = neutralne tło.
+    report_map_pog_theme: Literal[
+        "zones", "intensity", "building_coverage", "height", "biologically_active"
+    ] = "zones"
+    report_map_basemap_artifact_dir: str = ""
+    # Pakiet audytowy analizy (BK-505, ADR-011): jawne limity liczby plików i
+    # rozmiaru (po dekompresji). Przekroczenie kończy się odpowiedzią 413, a nie
+    # okrojonym pakietem.
+    audit_export_max_files: int = Field(default=200, ge=1)
+    audit_export_max_file_bytes: int = Field(default=32 * 1024 * 1024, ge=1024)
+    audit_export_max_total_bytes: int = Field(default=64 * 1024 * 1024, ge=1024)
     # Endpointy Rejestru Urbanistycznego są wersjonowanym kontraktem katalogu
     # docs/data_sources/catalog.yaml. Nie dublujemy ich w zmiennych runtime.
     # Oficjalne słowniki off-line GUGiK zasilają lokalny indeks autocomplete.

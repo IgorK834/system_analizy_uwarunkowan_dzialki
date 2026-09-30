@@ -12,6 +12,18 @@
 #     `contract_confirmed: true` (funkcja `ensure_source_runnable`).
 #   * Geometria kanoniczna całego systemu jest w EPSG:2180, dlatego `target_crs`
 #     każdego wpisu musi być równy `EPSG:2180`.
+#   * `freshness_policy` (BK-504, opcjonalne, zawsze per źródło): reguła wieku
+#     danych `max_age_days` + `basis` (`source_declared_interval` — częstotliwość
+#     zadeklarowana przez właściciela, `project_decision` — decyzja projektowa) +
+#     `rationale`. Brak wpisu = świeżość `unknown`; źródło z
+#     `expected_update_interval: "unknown"` NIE może mieć reguły (wymyślony TTL
+#     jest błędem katalogu). Każda zmiana zmienia `quality_policy_version`.
+#   * `redistribution` (BK-505, domyślnie `unconfirmed`): `allowed` — surowe i
+#     pochodne dane mogą trafić do pakietu audytowego; `derived_only` — tylko
+#     warstwy pochodne; `forbidden` — nic poza referencją i hashem;
+#     `unconfirmed` — traktowane jak zakaz. Wartości są ostrożną interpretacją
+#     pola `license` i wymagają potwierdzenia właściciela danych; `allowed` i
+#     `derived_only` mogą mieć wyłącznie źródła `production`.
 #
 # Weryfikacja ręczna źródeł produkcyjnych: 2026-07-22 (oficjalna dokumentacja
 # Geoportal.gov.pl / GUGiK — usługi ULDK, UUG oraz WMS KIMPZP) oraz 2026-07-30
@@ -46,6 +58,7 @@ sources:
       wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.
     attribution: "Źródło: Usługa Lokalizacji Działek Katastralnych (ULDK), GUGiK."
     expected_update_interval: "not_published"
+    redistribution: derived_only
     sla: "not_published"
     last_manual_verification: 2026-07-22
     notes: >-
@@ -171,6 +184,7 @@ sources:
       je jednostek samorządu; zachować atrybucję i dokument źródłowy.
     attribution: "Źródło: Rejestr Urbanistyczny MRiT oraz właściwa jednostka samorządu terytorialnego."
     expected_update_interval: "not_published"
+    redistribution: allowed
     sla: "not_published"
     last_manual_verification: 2026-09-24
     mpzp_classification: act_boundary_document
@@ -363,6 +377,16 @@ sources:
       "brak", czyli brak opłat i brak ograniczeń w dostępie.
     attribution: "Źródło: Generalna Dyrekcja Ochrony Środowiska (GDOŚ), usługa WFS sdi.gdos.gov.pl."
     expected_update_interval: "not_published"
+    freshness_policy:
+      max_age_days: 7
+      basis: project_decision
+      rationale: >-
+        Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji
+        nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w
+        snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz
+        (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia
+        quality_policy_version.
+    redistribution: derived_only
     sla: "not_published"
     last_manual_verification: 2026-07-30
     notes: >-
@@ -404,6 +428,16 @@ sources:
       użytkowania" oraz AccessConstraints "Brak ograniczeń w publicznym dostępie".
     attribution: "Źródło: Mapy Zagrożenia Powodziowego (MZP), PGW Wody Polskie / ISOK."
     expected_update_interval: "not_published"
+    freshness_policy:
+      max_age_days: 7
+      basis: project_decision
+      rationale: >-
+        Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji
+        nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w
+        snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz
+        (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia
+        quality_policy_version.
+    redistribution: allowed
     sla: "not_published"
     last_manual_verification: 2026-07-30
     notes: >-
@@ -442,6 +476,16 @@ sources:
       danymi otwartymi, wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
     attribution: "Źródło: Numeryczny Model Terenu (NMT), GUGiK."
     expected_update_interval: "not_published"
+    freshness_policy:
+      max_age_days: 7
+      basis: project_decision
+      rationale: >-
+        Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji
+        nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w
+        snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz
+        (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia
+        quality_policy_version.
+    redistribution: allowed
     sla: "not_published"
     last_manual_verification: 2026-07-30
     notes: >-
@@ -480,6 +524,16 @@ sources:
       31.07.2020); wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.
     attribution: "Źródło: Numeryczny Model Terenu (NMT GRID1), GUGiK — usługa WCS."
     expected_update_interval: "not_published"
+    freshness_policy:
+      max_age_days: 7
+      basis: project_decision
+      rationale: >-
+        Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji
+        nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w
+        snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz
+        (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia
+        quality_policy_version.
+    redistribution: allowed
     sla: "not_published"
     last_manual_verification: 2026-09-28
     resources:
@@ -534,6 +588,7 @@ sources:
       danych osobowych jest prawnie zabroniona — dlatego status no_redistribution.
     attribution: "Źródło: Ewidencja Gruntów i Budynków (EGiB), właściwe starostwo powiatowe."
     expected_update_interval: "unknown"
+    redistribution: forbidden
     sla: "unknown"
     last_manual_verification: null
     notes: >-
@@ -687,6 +742,7 @@ sources:
       nie stanowi osobnej zgody na redystrybucję surowych zbiorów.
     attribution: "Źródło: Rejestr Urbanistyczny, Ministerstwo Rozwoju i Technologii."
     expected_update_interval: "ciągły; kontrakt sprawdzany ręcznie przed aktualizacją fixtur"
+    redistribution: derived_only
     sla: "brak gwarantowanego SLA"
     last_manual_verification: 2026-09-23
     resources:

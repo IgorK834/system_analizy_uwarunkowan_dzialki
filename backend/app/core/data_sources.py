@@ -32,6 +32,14 @@ from typing import Any
 import yaml  # type: ignore[import-untyped]  # brak types-PyYAML
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from app.shared.data_quality import (
+    MAX_POLICY_AGE_DAYS,
+    FreshnessBasis,
+    FreshnessRule,
+    Redistribution,
+    canonical_sha256,
+)
+
 
 # CRS dozwolone jako źródłowe. Lista obejmuje układy realnie spotykane w polskich
 # danych przestrzennych; nieznany kod jest odrzucany, aby nie ukrywać błędu
@@ -54,6 +62,12 @@ CANONICAL_TARGET_CRS: str = "EPSG:2180"
 
 # Domyślna, względna ścieżka katalogu w repozytorium.
 _CATALOG_RELATIVE_PATH = Path("docs") / "data_sources" / "catalog.yaml"
+
+# Wartości ``expected_update_interval``, które nie niosą częstotliwości. Z żadnej
+# z nich nie wolno wyprowadzić TTL (BK-504).
+_NO_INTERVAL_VALUES: frozenset[str] = frozenset({"unknown", "not_published"})
+# Wersja formatu polityki (reguł świeżości i redystrybucji) w katalogu.
+QUALITY_POLICY_SCHEMA: str = "quality-policy/1"
 
 
 class SourceStatus(str, Enum):
@@ -188,6 +202,28 @@ class MpzpSourceNotUsableError(SourceNotRunnableError):
 # --- Modele Pydantic ---------------------------------------------------------
 
 
+class FreshnessPolicyEntry(BaseModel):
+    """Jawna reguła wieku danych źródła (BK-504) — zawsze per źródło.
+
+    Reguła jest opcjonalna: źródło bez niej ma świeżość ``unknown``. Wartość nie
+    jest deklaracją właściciela danych, chyba że ``basis`` mówi inaczej —
+    dlatego wymagane jest uzasadnienie.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    max_age_days: int = Field(ge=1, le=MAX_POLICY_AGE_DAYS)
+    basis: FreshnessBasis
+    rationale: str = Field(min_length=10)
+
+    def to_rule(self) -> FreshnessRule:
+        return FreshnessRule(
+            max_age_days=self.max_age_days,
+            basis=self.basis,
+            rationale=self.rationale.strip(),
+        )
+
+
 class DataSourceEntry(BaseModel):
     """Pojedynczy wpis katalogu opisujący kontrakt źródła danych."""
 
@@ -219,6 +255,12 @@ class DataSourceEntry(BaseModel):
     field_mapping: dict[str, str] = Field(default_factory=dict)
     resources: list[SourceResource] = Field(default_factory=list)
     mpzp_classification: MpzpDataClassification | None = None
+    # BK-504: reguła wieku danych tego źródła. ``None`` = brak reguły, a więc
+    # świeżość ``unknown`` (nigdy domniemany TTL).
+    freshness_policy: FreshnessPolicyEntry | None = None
+    # BK-505: czy surowe (allowed) albo pochodne (allowed/derived_only) dane
+    # źródła mogą trafić do pakietu audytowego. Domyślnie niepotwierdzona.
+    redistribution: Redistribution = "unconfirmed"
 
     @model_validator(mode="after")
     def _validate_contract(self) -> DataSourceEntry:
@@ -258,8 +300,46 @@ class DataSourceEntry(BaseModel):
             self._validate_production_contract()
 
         self._validate_mpzp_contract()
+        self._validate_quality_policy()
 
         return self
+
+    def _validate_quality_policy(self) -> None:
+        """Reguły świeżości i redystrybucji nie mogą zawierać domniemań."""
+        interval = self.expected_update_interval.strip().casefold()
+        policy = self.freshness_policy
+        if policy is not None:
+            if interval == "unknown":
+                raise ValueError(
+                    f"Źródło {self.source_id!r} ma expected_update_interval=unknown — "
+                    "nie wolno przypisać mu wymyślonego TTL (freshness_policy)."
+                )
+            if (
+                policy.basis == "source_declared_interval"
+                and interval in _NO_INTERVAL_VALUES
+            ):
+                raise ValueError(
+                    f"Źródło {self.source_id!r}: basis=source_declared_interval "
+                    "wymaga zadeklarowanej częstotliwości aktualizacji."
+                )
+        if self.status is SourceStatus.NO_REDISTRIBUTION:
+            # Status no_redistribution implikuje zakaz; jawna sprzeczna wartość
+            # jest błędem katalogu, a brak wartości dziedziczy zakaz.
+            if "redistribution" not in self.model_fields_set:
+                self.redistribution = "forbidden"
+            elif self.redistribution != "forbidden":
+                raise ValueError(
+                    f"Źródło {self.source_id!r} ma status no_redistribution, więc "
+                    "redistribution musi być 'forbidden'."
+                )
+        if self.redistribution in ("allowed", "derived_only") and (
+            self.status is not SourceStatus.PRODUCTION
+        ):
+            raise ValueError(
+                f"Źródło {self.source_id!r} (status {self.status.value!r}) nie może "
+                "mieć redistribution 'allowed'/'derived_only' bez potwierdzonego "
+                "kontraktu produkcyjnego."
+            )
 
     def _validate_mpzp_contract(self) -> None:
         """Nie pozwala nazwać WMS ani samej granicy wektorem stref planu."""
@@ -401,6 +481,41 @@ class DataSourceCatalog(BaseModel):
     def production_sources(self) -> list[DataSourceEntry]:
         """Zwraca wpisy oznaczone jako produkcyjnie gotowe."""
         return [entry for entry in self.sources if entry.production_ready]
+
+    def find(self, source_id: str | None) -> DataSourceEntry | None:
+        """Wpis źródła albo ``None`` (bez wyjątku) — do ocen tolerujących brak."""
+        if not source_id:
+            return None
+        return next((entry for entry in self.sources if entry.source_id == source_id), None)
+
+    def freshness_rule(self, source_id: str | None) -> FreshnessRule | None:
+        """Reguła wieku źródła; brak wpisu albo reguły daje ``None`` (nie TTL)."""
+        entry = self.find(source_id)
+        if entry is None or entry.freshness_policy is None:
+            return None
+        return entry.freshness_policy.to_rule()
+
+    def redistribution_of(self, source_id: str | None) -> Redistribution:
+        """Zgoda na redystrybucję; nieznane źródło jest ``unconfirmed``."""
+        entry = self.find(source_id)
+        return entry.redistribution if entry is not None else "unconfirmed"
+
+    def quality_policy_version(self) -> str:
+        """Wersja polityki jakości: format + odcisk reguł całego katalogu.
+
+        Każda zmiana reguły świeżości (albo jej podstawy) zmienia wersję, więc
+        zapisana ocena jakości wskazuje, wedle jakiej polityki ją wystawiono.
+        Redystrybucja nie wchodzi do wersji — nie wpływa na ocenę jakości.
+        """
+        rules = {
+            entry.source_id: (
+                [entry.freshness_policy.max_age_days, entry.freshness_policy.basis]
+                if entry.freshness_policy is not None
+                else None
+            )
+            for entry in self.sources
+        }
+        return f"{QUALITY_POLICY_SCHEMA}+{canonical_sha256(rules)[:12]}"
 
 
 # --- Loader ------------------------------------------------------------------
