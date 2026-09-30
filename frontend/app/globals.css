@@ -1279,3 +1279,183 @@ input:disabled {
 .terrain-summary > div:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
+
+/* BK-504: macierz kompletności i świeżości sekcji. Kolor nigdy nie jest jedynym
+   nośnikiem znaczenia — status ma tekst i znak, świeżość ma tekst. */
+.quality-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quality-card {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.quality-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.quality-card-head h4 {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.quality-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+}
+
+.quality-facts {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.quality-facts > div {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.quality-facts dt {
+  color: var(--muted);
+}
+
+.quality-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.quality-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.quality-mark {
+  display: inline-block;
+  min-width: 1em;
+  text-align: center;
+}
+
+.quality-tone-ok {
+  color: var(--accent-dark);
+}
+
+.quality-tone-warn {
+  color: #7a4300;
+}
+
+.quality-tone-info {
+  color: #1f4e79;
+}
+
+.quality-tone-bad {
+  color: var(--danger);
+}
+
+.quality-tone-muted {
+  color: var(--muted);
+}
+
+.quality-tag {
+  display: inline-block;
+  margin: 3px 0 0 4px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.quality-tag-review {
+  color: #7a2020;
+  background: #fdeceb;
+}
+
+.quality-freshness {
+  display: block;
+  font-weight: 650;
+}
+
+.quality-freshness-fresh {
+  color: var(--accent-dark);
+}
+
+.quality-freshness-stale {
+  color: var(--danger);
+}
+
+.quality-freshness-unknown {
+  color: var(--muted);
+}
+
+.quality-detail {
+  display: block;
+  color: var(--muted);
+}
+
+.quality-reason {
+  display: block;
+}
+
+.quality-legend {
+  margin-top: 10px;
+  font-size: 0.78rem;
+}
+
+.quality-legend summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.quality-legend dl {
+  margin: 8px 0 0;
+}
+
+.quality-legend dt {
+  font-weight: 700;
+}
+
+.quality-legend dd {
+  margin: 0 0 6px;
+  color: var(--muted);
+}
+
+.quality-hash {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.audit-package-note,
+.audit-package-hash {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.audit-package-hash {
+  overflow-wrap: anywhere;
+}
+
+.audit-package-button {
+  margin-top: 8px;
+}

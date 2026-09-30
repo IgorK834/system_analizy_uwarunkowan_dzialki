@@ -9,6 +9,7 @@ import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { PogZoneShareChart } from "@/components/PogZoneShareChart";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
+import { SectionQualityMatrix } from "@/components/SectionQualityMatrix";
 import { TerrainCard } from "@/components/TerrainCard";
 import {
   BUILDABLE_AREA_FILL_COLOR,
@@ -357,6 +358,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <InfrastructureSection items={result.infrastructure} />
       <RisksSection items={result.risks} />
       <TerrainCard terrain={result.terrain} />
+      <SectionQualityMatrix matrix={result.section_quality} />
       <SourcesSection sources={result.sources} />
       <WarningsSection warnings={result.warnings} />
     </section>

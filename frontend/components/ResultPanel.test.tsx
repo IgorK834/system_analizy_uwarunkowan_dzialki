@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type maplibregl from "maplibre-gl";
 
 import { ResultPanel } from "@/components/ResultPanel";
-import { buildAnalyzeResponse, buildPogResult } from "@/test/fixtures";
+import { buildAnalyzeResponse, buildPogResult, buildQualityMatrix } from "@/test/fixtures";
 
 function createMapMock() {
   const sources = new Map<string, { setData: ReturnType<typeof vi.fn> }>();
@@ -36,6 +36,27 @@ describe("ResultPanel", () => {
 
   beforeEach(() => {
     map = createMapMock();
+  });
+
+  it("pokazuje macierz kompletności i świeżości z odpowiedzi API (BK-504)", () => {
+    const result = buildAnalyzeResponse({ section_quality: buildQualityMatrix() });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getByRole("heading", { name: "Kompletność i świeżość danych" })).toBeVisible();
+    expect(screen.getByTestId("quality-matrix")).toBeVisible();
+    expect(screen.getByTestId("quality-row-terrain")).toHaveTextContent("brak pokrycia źródła");
+    expect(screen.getByTestId("quality-row-nature")).toHaveTextContent("źródło niedostępne");
+    expect(screen.getByTestId("quality-legend")).toBeInTheDocument();
+    // Status analizy nie zastępuje ocen sekcji.
+    expect(screen.getByText(result.status)).toBeVisible();
+  });
+
+  it("nie udaje kompletności, gdy odpowiedź nie ma macierzy jakości", () => {
+    render(<ResultPanel result={buildAnalyzeResponse()} map={null} />);
+
+    expect(screen.getByTestId("quality-missing")).toBeVisible();
+    expect(screen.queryByTestId("quality-matrix")).toBeNull();
   });
 
   it("renderuje sekcje geometrii, MPZP, POG, infrastruktury, ryzyk i źródeł niezależnie od stanu innych sekcji", () => {
