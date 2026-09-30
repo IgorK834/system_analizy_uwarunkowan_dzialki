@@ -185,7 +185,9 @@ def test_structured_risks_survive_api_db_cache_pdf_and_feed_evaluator() -> None:
         "500 lat",
         "styk granicy",
         "Dolina Testowa",
-        "Łączne pokrycie działki 10 000,00 m² (100,0%) — suma mnogościowa, bez podwójnego liczenia",
+        "Łączne pokrycie działki",
+        "10 000,00 m² (100,00%)",
+        "suma mnogościowa, bez podwójnego liczenia",
         "HA-Q1",
     ):
         assert expected in text, expected

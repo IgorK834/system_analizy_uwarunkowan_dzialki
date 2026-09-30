@@ -309,7 +309,7 @@ def test_control_measurement_survives_api_db_cache_and_pdf(relief_enabled: FakeW
     assert report.status_code == 200
     pdf_text = _pdf_text(report.content)
     for expected in (
-        "Rzeźba terenu (NMT)",
+        "6. Teren (NMT)",
         "Najniższa wysokość (Hmin) 112,3 m",
         "Najwyższa wysokość (Hmax) 115,7 m",
         "Deniwelacja (Hmax − Hmin) 3,4 m",
@@ -408,7 +408,7 @@ def test_no_coverage_timeout_legacy_and_real_zero_are_distinct() -> None:
     }.items():
         with SessionLocal() as db:
             response = build_analyze_response_from_analysis(db.get(Analysis, analysis_id), db)
-        html = _render_report_html(_build_report_context(response, None, None))
+        html = _render_report_html(_build_report_context(response))
         notes[name] = html
         _write_evidence(f"bk-301-302/03-report-{name}.html", html)
     assert "Deniwelacja (Hmax − Hmin)" in notes["flat"] and "wynosi 0 m" in notes["flat"]

@@ -147,9 +147,9 @@ def test_report_without_sections_marks_legacy_and_shows_boundary_rows() -> None:
         warnings=[],
         sources=[],
     )
-    html = _render_report_html(_build_report_context(response, None, None))
+    html = _render_report_html(_build_report_context(response))
 
     assert html.count("brak informacji w zapisanym wyniku") >= 2
     assert "styk granicy" in html and "Brzeg" in html
-    limitations = _build_limitations(response, None)
+    limitations = _build_limitations(response)
     assert any("nie zawiera statusu sprawdzenia" in item for item in limitations)

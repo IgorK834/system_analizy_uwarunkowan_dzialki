@@ -97,6 +97,7 @@ async def get_parcel_by_xy(x: float, y: float) -> ParcelLookupResult:
     response = await _request_with_retry(params)
     raw = _parse_uldk_response(response.text, f"punkt ({x}, {y})")
     source = SourceMetadata(
+        source_id="uldk",
         source_name="ULDK",
         source_url=str(response.url),
         fetched_at=fetched_at,

@@ -371,6 +371,7 @@ def _result(
         layer_available=status == "covered",
         note=notes[status],
         source=SourceMetadata(
+            source_id="kiut_wms",
             source_name="KIUT (GUGiK)",
             source_url=source.base_url,
             fetched_at=fetched_at,
