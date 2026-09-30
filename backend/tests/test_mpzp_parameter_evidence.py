@@ -293,7 +293,7 @@ async def test_end_to_end_vector_zones_to_cited_parameters(tmp_path: Path) -> No
     assert [z.model_dump() for z in rebuilt.mpzp_zones] == [z.model_dump() for z in response.mpzp_zones]
 
     # Raport wskazuje stronę, fragment i hash dokumentu dla każdej wartości.
-    report = _render_report_html(_build_report_context(rebuilt, None, None))
+    report = _render_report_html(_build_report_context(rebuilt))
     assert "str. 2" in report and height.document_sha256 in report
     assert "maksymalna wysokość zabudowy: 12 m" in report
     assert "przecięcie z wektorem wydzieleń" in report

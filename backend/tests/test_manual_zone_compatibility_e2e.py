@@ -357,9 +357,9 @@ async def test_bk205_spatial_pairs_api_db_ui_pdf(tmp_path: Path) -> None:
     assert rebuilt.status == "partial"  # ocena informacyjna nie podnosi statusu
 
     # Raport: MPZP i POG osobno, ocena jako analiza informacyjna, bez stwierdzeń prawnych.
-    html = _render_report_html(_build_report_context(rebuilt, None, None))
-    mpzp_at = html.index("Miejscowy Plan Zagospodarowania Przestrzennego (MPZP)")
-    pog_at = html.index("Plan Ogólny Gminy (POG)")
+    html = _render_report_html(_build_report_context(rebuilt))
+    mpzp_at = html.index('id="sec-mpzp"')
+    pog_at = html.index('id="sec-pog"')
     relation_at = html.index("Relacja MPZP–POG — analiza informacyjna")
     assert mpzp_at < pog_at < relation_at
     assert "potencjalna rozbieżność funkcji" in html

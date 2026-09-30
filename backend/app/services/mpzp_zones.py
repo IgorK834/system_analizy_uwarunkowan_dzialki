@@ -73,6 +73,8 @@ _PARSER_TO_API_PARAMETER_MAP: Final[dict[str, str]] = {
     "primary_use": "primary_use",
     "supplementary_use": "supplementary_use",
 }
+# Publiczny alias mapy dla prezentacji (raport PDF grupuje evidence po polu API).
+PARSER_TO_API_PARAMETER_MAP: Final[dict[str, str]] = _PARSER_TO_API_PARAMETER_MAP
 
 
 class InvalidZoneSymbolError(ValueError):

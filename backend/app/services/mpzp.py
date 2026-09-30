@@ -151,6 +151,7 @@ async def discover_mpzp(parcel_geometry: BaseGeometry) -> MpzpDiscoveryResult:
         status=status,
         is_discovery_only=True,
         source_metadata=SourceMetadata(
+            source_id="kimpzp",
             source_name="KIMPZP",
             source_url=settings.kimpzp_wms_base_url,
             fetched_at=fetched_at,

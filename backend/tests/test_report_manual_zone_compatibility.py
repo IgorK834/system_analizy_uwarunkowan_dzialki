@@ -77,7 +77,8 @@ def _response(zones: list[MpzpZoneResult], pog: PogResult | None = None) -> Anal
 
 
 def _html(response: AnalyzeResponse) -> str:
-    return _render_report_html(_build_report_context(response, None, None))
+    # Twarde spacje (NBSP) między liczbą a jednostką są detalem typografii PDF.
+    return _render_report_html(_build_report_context(response)).replace(chr(0xA0), " ")
 
 
 def test_manual_zone_report_shows_banner_selection_and_unknown_share() -> None:
@@ -90,7 +91,7 @@ def test_manual_zone_report_shows_banner_selection_and_unknown_share() -> None:
     assert "kopia przypięta przy wstrzymaniu analizy" in html
     assert SHA in html
     assert "Udział strefy MPZP w powierzchni działki jest nieustalony" in html
-    assert "100,0%" not in html
+    assert "100,00%" not in html
 
 
 def test_manual_zone_without_pinned_document_and_outside_candidates() -> None:
@@ -114,7 +115,7 @@ def test_vector_zone_report_has_no_manual_banner() -> None:
     html = _html(_response([zone]))
 
     assert "symbol strefy podano ręcznie" not in html.lower()
-    assert "60,0%" in html
+    assert "60,00%" in html
 
 
 def test_compatibility_section_is_separate_informational_and_lists_pairs() -> None:
@@ -163,10 +164,10 @@ def test_compatibility_section_is_separate_informational_and_lists_pairs() -> No
 
     html = _html(_response([], pog))
 
-    assert html.index("Plan Ogólny Gminy (POG)") < html.index("Relacja MPZP–POG — analiza informacyjna")
+    assert html.index('id="sec-pog"') < html.index("Relacja MPZP–POG — analiza informacyjna")
     assert "brak wskazanej rozbieżności w tabeli reguł" in html
     assert "nierozstrzygnięte — wymaga analizy ustaleń obu aktów" in html
-    assert "600,00 m² (60,0%)" in html
+    assert "600,00 m² (60,00%)" in html
     assert "para niezidentyfikowana przestrzennie" in html
     assert "stan na 20.09.2026" in html
     assert "mpzp-pog-function-table:single_family_housing:SJ v1.0" in html
