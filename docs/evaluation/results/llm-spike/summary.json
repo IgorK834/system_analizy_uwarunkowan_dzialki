@@ -1,0 +1,141 @@
+{
+  "budget_proposal": {
+    "basis": "1.5 x the largest measured input, rounded up to 1000; requests cap = 2 x assumed blocks per analysis",
+    "max_input_tokens_per_analysis": 12000,
+    "max_input_tokens_per_request": 4000,
+    "max_requests_per_analysis": 6
+  },
+  "checks": {
+    "cost_per_analysis": true,
+    "latency_p95": true,
+    "quotes_verified": true,
+    "schema_valid": true,
+    "stable_values": true
+  },
+  "measured": {
+    "blocks_complete": 10,
+    "blocks_identical_json": 1,
+    "blocks_identical_text": 1,
+    "blocks_stable_values": 9,
+    "calls": 30,
+    "calls_ok": 30,
+    "candidates": 261,
+    "cost": {
+      "from_2027": {
+        "per_1000_analyses_usd": 40.7787,
+        "per_analysis_usd": 0.0407787,
+        "per_call_max_usd": 0.0221835,
+        "per_call_mean_usd": 0.0135929
+      },
+      "promotional": {
+        "per_1000_analyses_usd": 20.38935,
+        "per_analysis_usd": 0.02038935,
+        "per_call_max_usd": 0.01109175,
+        "per_call_mean_usd": 0.00679645
+      }
+    },
+    "finish_reasons": {
+      "STOP": 30
+    },
+    "http_statuses": {
+      "200": 30
+    },
+    "latency_s": {
+      "max": 8.377,
+      "min": 1.554,
+      "p50": 5.42,
+      "p95": 8.296
+    },
+    "model_versions": [
+      "gemini-3.8-flash"
+    ],
+    "quote_verified": 261,
+    "quote_verified_rate": 1.0,
+    "schema_valid_calls": 30,
+    "schema_valid_rate": 1.0,
+    "stability": [
+      {
+        "block_id": "B01",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B02",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B03",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B04",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B05",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B06",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": false
+      },
+      {
+        "block_id": "B07",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B08",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B09",
+        "complete": true,
+        "identical_json": false,
+        "identical_text": false,
+        "stable_verified_values": true
+      },
+      {
+        "block_id": "B10",
+        "complete": true,
+        "identical_json": true,
+        "identical_text": true,
+        "stable_verified_values": true
+      }
+    ],
+    "stable_values_rate": 0.9,
+    "tokens": {
+      "input_max": 2212,
+      "input_mean": 1149.1,
+      "input_total": 34473,
+      "output_max": 2767,
+      "output_mean": 1582.5666666666666,
+      "output_total": 47477,
+      "thoughts_total": 0
+    }
+  },
+  "measured_at": "2026-10-02T12:44:25.760538Z",
+  "recommendation": "GO"
+}

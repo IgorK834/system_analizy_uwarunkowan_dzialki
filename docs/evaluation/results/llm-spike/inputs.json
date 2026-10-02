@@ -1,0 +1,185 @@
+{
+  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "blocks": [
+    {
+      "block_id": "B01",
+      "chars": 2580,
+      "document_id": "szczytno_lxxvi_555_2023",
+      "est_input_tokens": 758,
+      "expected_values": 9,
+      "format": "pdf_text",
+      "gmina": "Szczytno",
+      "input_sha256": "56caf1b7841b3155764acb1422a23e2e9aec6f5de2709870c4ee0456d2ece375",
+      "layout": "1 osobny § na strefę",
+      "sample_id": "F13-szczytno-2023-multi",
+      "symbols": [
+        "1MNW"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B02",
+      "chars": 1351,
+      "document_id": "bielsko_viii_187_2024",
+      "est_input_tokens": 407,
+      "expected_values": 9,
+      "format": "pdf_text",
+      "gmina": "Bielsko-Biała",
+      "input_sha256": "11d1dd126eabb81c3a75177e70ccfb36c119da285def53364aa51fa4dcd9754f",
+      "layout": "1 osobny § na strefę",
+      "sample_id": "D05-bielsko-multi",
+      "symbols": [
+        "230_U"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B03",
+      "chars": 1974,
+      "document_id": "szczytno_xxxviii_262_2021",
+      "est_input_tokens": 586,
+      "expected_values": 16,
+      "format": "pdf_text",
+      "gmina": "Szczytno",
+      "input_sha256": "9b1c681cbb190034671a0f93739328f16f5d89e7158cffb0457c0057f3924f9f",
+      "layout": "2 wspólny § dla listy symboli",
+      "sample_id": "F04-szczytno-2021-shared",
+      "symbols": [
+        "1Up",
+        "2Up"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B04",
+      "chars": 1333,
+      "document_id": "bialystok_lxxxii_1136_24",
+      "est_input_tokens": 402,
+      "expected_values": 10,
+      "format": "pdf_text",
+      "gmina": "Białystok",
+      "input_sha256": "e01ee9c2f1d1a215967b7366bd62a2a5843c18c4294296142ab9a8e8c74fff09",
+      "layout": "2 wspólny § dla listy symboli",
+      "sample_id": "F03-bialystok-multi",
+      "symbols": [
+        "2.1MN"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B05",
+      "chars": 559,
+      "document_id": "krakow_morelowa",
+      "est_input_tokens": 181,
+      "expected_values": 6,
+      "format": "pdf_text",
+      "gmina": "Kraków",
+      "input_sha256": "bc75e88039f388ac1a6dd36faad58cc1aee0637a106bda36dad9d868e880ab9d",
+      "layout": "3 podpunkty „N) dla terenu X:”",
+      "sample_id": "D01-krakow-mn-multi",
+      "symbols": [
+        "MN.11"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B06",
+      "chars": 3169,
+      "document_id": "lodz_lxxviii_2337_23",
+      "est_input_tokens": 927,
+      "expected_values": 10,
+      "format": "html",
+      "gmina": "Łódź",
+      "input_sha256": "bae3de54c510e52f02e050981a1fd8c87f38765b25f9f0b3a01faa42a612a6d5",
+      "layout": "4 wartości per symbol w akapicie",
+      "sample_id": "D04-lodz-html-multi",
+      "symbols": [
+        "6.6.MW/U"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B07",
+      "chars": 2470,
+      "document_id": "raszkow_xxxvi_242_2021",
+      "est_input_tokens": 726,
+      "expected_values": 11,
+      "format": "pdf_text",
+      "gmina": "Raszków",
+      "input_sha256": "4dbbc85b136ca36621723fc870dd4a76221bae6b9a4a83c71ee633844b416b2b",
+      "layout": "5 klauzula ogólna per symbol",
+      "sample_id": "F06-raszkow-short-symbols",
+      "symbols": [
+        "MN"
+      ],
+      "truncated": false,
+      "windows": 2
+    },
+    {
+      "block_id": "B08",
+      "chars": 652,
+      "document_id": "legnica_xiii_161_25",
+      "est_input_tokens": 208,
+      "expected_values": 10,
+      "format": "pdf_table",
+      "gmina": "Legnica",
+      "input_sha256": "312288a6d128f81b497d1e0de1997c5b1162a8bddc7f3d21726726d35356eb95",
+      "layout": "6 tabela",
+      "sample_id": "D03-legnica-table",
+      "symbols": [
+        "1UZ",
+        "2UZ"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B09",
+      "chars": 414,
+      "document_id": "stare_miasto_xliv_305_2002",
+      "est_input_tokens": 140,
+      "expected_values": 2,
+      "format": "ocr_real",
+      "gmina": "Stare Miasto",
+      "input_sha256": "1bd50bf98bcbbbf9ff6d026a7e44ae2ba28a6ff6243680287a5d72949c377023",
+      "layout": "skan OCR (rzeczywisty)",
+      "sample_id": "D06-stare-miasto-ocr",
+      "symbols": [
+        "146 MN"
+      ],
+      "truncated": false,
+      "windows": 1
+    },
+    {
+      "block_id": "B10",
+      "chars": 4891,
+      "document_id": "pisz_xxv_254_98_scan",
+      "est_input_tokens": 1418,
+      "expected_values": 0,
+      "format": "ocr_real",
+      "gmina": "Pisz",
+      "input_sha256": "06a2aa49bfd7a00b1cd09721d6aa142555100a08a41abd4332e8f0115d7a6d89",
+      "layout": "skan OCR (rzeczywisty), próbka ujemna",
+      "sample_id": "F10-pisz-ocr-real",
+      "symbols": [
+        "1 PK"
+      ],
+      "truncated": false,
+      "windows": 1
+    }
+  ],
+  "corpus_id": "BK-603-mpzp-parser-evaluation-2026-09-30",
+  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "prepared_at": "2026-10-02T12:41:34.982422Z",
+  "prompt_version": "spike-v0",
+  "response_schema_sha256": "eb9ef8ffbd2266b56e572989cb16da8e7af60c1cc36f9f64bf93af690b29efc2",
+  "spike_version": "llm-spike/1",
+  "system_instruction_sha256": "797d16b38a0a7b6be70d4a0863f654d4614f806db8549ceb94722cef57136af2",
+  "token_estimate": "characters / 3.5; an estimate, the API usage numbers are the measurement"
+}
