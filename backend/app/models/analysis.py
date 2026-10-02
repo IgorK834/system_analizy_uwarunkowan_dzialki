@@ -71,8 +71,9 @@ class Analysis(Base):
     pending_zone_symbol_candidates: Mapped[list | None] = mapped_column(
         JSONB, nullable=True
     )
+    # 50 znaków (migracja 027): symbol kanoniczny ma do 40 znaków (PV3-04).
     resolved_zone_symbol: Mapped[str | None] = mapped_column(
-        String(20), nullable=True
+        String(50), nullable=True
     )
 
     parcel: Mapped[Parcel] = relationship(back_populates="analyses")

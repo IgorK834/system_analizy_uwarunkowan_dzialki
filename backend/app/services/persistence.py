@@ -60,6 +60,7 @@ from app.services.mpzp_fetch import DocumentBlob
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
+from app.shared.zone_symbol import ZONE_SYMBOL_RULES_VERSION
 from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.section_quality import (
     build_section_quality,
@@ -541,6 +542,7 @@ def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
         document=document,
         symbol_max_length=ZONE_SYMBOL_MAX_LENGTH,
         symbol_allowed_pattern=ZONE_SYMBOL_ALLOWED_PATTERN,
+        symbol_rules_version=ZONE_SYMBOL_RULES_VERSION,
         notice=MANUAL_ZONE_NOTICE
         + ("" if pinned is not None else MANUAL_ZONE_NOTICE_NO_DOCUMENT),
     )

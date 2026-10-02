@@ -34,6 +34,7 @@ from app.schemas.analyze import (
 from app.schemas.mpzp import MpzpParserWarning
 from app.schemas.source import SourceMetadata
 from app.services.mpzp_parser import parse_mpzp_document
+from app.shared.zone_symbol import same_zone_symbol
 from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
     DocumentEvidenceContext,
@@ -122,6 +123,7 @@ class _ResumeInputs:
     """Dane odczytane przed parsowaniem przypiętego dokumentu."""
 
     zone_symbol: str
+    zone_symbol_raw: str
     pinned: AnalysisPendingDocument | None
     plan_id: str | None
     document_url: str | None
@@ -159,6 +161,7 @@ def _prepare_resume(db: Session, analysis_id: int, raw_zone_symbol: str) -> _Res
 
     return _ResumeInputs(
         zone_symbol=zone_symbol,
+        zone_symbol_raw=raw_zone_symbol,
         pinned=pinned,
         plan_id=plan_id,
         document_url=document_url,
@@ -198,9 +201,12 @@ def _apply_resume(
 
         selection = ManualZoneSelection(
             entered_symbol=zone_symbol,
+            entered_symbol_raw=inputs.zone_symbol_raw,
             plan_id=plan_id,
             candidate_zone_symbols=candidates,
-            symbol_in_candidates=zone_symbol in candidates,
+            symbol_in_candidates=any(
+                same_zone_symbol(zone_symbol, candidate) for candidate in candidates
+            ),
             document_url=document_url or (pinned.requested_url if pinned else None),
             document_sha256=pinned.content_sha256 if pinned else None,
             document_version_id=(
@@ -343,7 +349,14 @@ def _manual_zone(
 ) -> tuple[MpzpZoneResult, list[str], bool]:
     """Strefa ręczna: parametry z przypiętego dokumentu, udział nieustalony."""
     matching_zone = (
-        next((zone for zone in parse_result.zones if zone.zone_symbol == zone_symbol), None)
+        next(
+            (
+                zone
+                for zone in parse_result.zones
+                if same_zone_symbol(zone.zone_symbol, zone_symbol)
+            ),
+            None,
+        )
         if parse_result is not None
         else None
     )
