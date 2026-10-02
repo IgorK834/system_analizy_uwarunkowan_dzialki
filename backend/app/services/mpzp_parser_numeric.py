@@ -118,6 +118,10 @@ class _RawMatch:
     normalized_value: float
     raw_value: str
     source_text: str
+    # Zakres dopasowania w tekście przekazanym ekstraktorowi (znaki, ``end`` wyłącznie);
+    # tryb blokowy (PV3-06) odwzorowuje go na stronę i pozycję w dokumencie.
+    start: int | None = None
+    end: int | None = None
 
 
 def _context_excerpt(text: str, start: int, end: int, pad: int = 40) -> str:
@@ -204,6 +208,8 @@ def _extract_max_building_height_m(text: str) -> list[_RawMatch]:
                     source_text=_context_excerpt(
                         text, absolute_start, absolute_end
                     ),
+                    start=absolute_start,
+                    end=absolute_end,
                 )
             )
     return matches
@@ -236,6 +242,8 @@ def _extract_intensity(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
                         source_text=_context_excerpt(
                             text, absolute_start, absolute_end
                         ),
+                        start=absolute_start,
+                        end=absolute_end,
                     )
                 )
 
@@ -258,6 +266,8 @@ def _extract_intensity(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
                         source_text=_context_excerpt(
                             text, absolute_start, absolute_end
                         ),
+                        start=absolute_start,
+                        end=absolute_end,
                     )
                 )
     return min_matches, max_matches
@@ -278,6 +288,8 @@ def _extract_percent_pattern(
                 normalized_value=normalized,
                 raw_value=f"{match.group(1)}%",
                 source_text=_context_excerpt(text, match.start(), match.end()),
+                start=match.start(1),
+                end=match.end(),
             )
         )
     return matches
@@ -311,6 +323,8 @@ def _extract_roof_angle(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
                     normalized_value=min_value,
                     raw_value=range_match.group(0).strip(),
                     source_text=excerpt,
+                    start=absolute_start,
+                    end=absolute_end,
                 )
             )
             max_matches.append(
@@ -318,6 +332,8 @@ def _extract_roof_angle(text: str) -> tuple[list[_RawMatch], list[_RawMatch]]:
                     normalized_value=max_value,
                     raw_value=range_match.group(0).strip(),
                     source_text=excerpt,
+                    start=absolute_start,
+                    end=absolute_end,
                 )
             )
     return min_matches, max_matches
@@ -339,6 +355,8 @@ def _extract_max_storeys(text: str) -> list[_RawMatch]:
                 normalized_value=normalized,
                 raw_value=match.group(0).strip(),
                 source_text=_context_excerpt(text, match.start(), match.end()),
+                start=match.start(),
+                end=match.end(),
             )
         )
     return matches
@@ -357,6 +375,8 @@ def _extract_setback_m(text: str) -> list[_RawMatch]:
                 normalized_value=normalized,
                 raw_value=match.group(0).strip(),
                 source_text=_context_excerpt(text, match.start(), match.end()),
+                start=match.start(),
+                end=match.end(),
             )
         )
     return matches
@@ -375,9 +395,34 @@ def _extract_parking_minimum(text: str) -> list[_RawMatch]:
                 normalized_value=normalized,
                 raw_value=match.group(0).strip(),
                 source_text=_context_excerpt(text, match.start(), match.end()),
+                start=match.start(),
+                end=match.end(),
             )
         )
     return matches
+
+
+def extract_numeric_matches(text: str) -> list[tuple[str, str | None, list[_RawMatch]]]:
+    """Dopasowania wszystkich parametrów liczbowych w tekście: ``(nazwa, jednostka, dopasowania)``.
+
+    Każde dopasowanie niesie zakres w ``text``; kolejność parametrów jest stała. Funkcję
+    współdzielą tryb dotychczasowy (tekst sklejony z segmentów) i tryb blokowy (tekst
+    jednego bloku strefy).
+    """
+    min_intensity, max_intensity = _extract_intensity(text)
+    min_roof, max_roof = _extract_roof_angle(text)
+    return [
+        ("max_building_height_m", "m", _extract_max_building_height_m(text)),
+        ("min_intensity", None, min_intensity),
+        ("max_intensity", None, max_intensity),
+        ("max_building_coverage_percent", "percent", _extract_percent_pattern(text, _COVERAGE_PATTERN)),
+        ("min_biologically_active_percent", "percent", _extract_percent_pattern(text, _BIO_ACTIVE_PATTERN)),
+        ("roof_angle_min_deg", "deg", min_roof),
+        ("roof_angle_max_deg", "deg", max_roof),
+        ("max_storeys", None, _extract_max_storeys(text)),
+        ("setback_m", "m", _extract_setback_m(text)),
+        ("parking_minimum", "miejsca/lokal", _extract_parking_minimum(text)),
+    ]
 
 
 def extract_numeric_parameters(
@@ -392,6 +437,10 @@ def extract_numeric_parameters(
     segmentacji może dać więcej). Brak kandydatów oznacza brak tekstu do
     przeszukania — to nie jest błąd tego modułu, tylko konsekwencja
     wcześniejszego etapu ``segment_document``/``find_zone_sections``.
+
+    Uwaga (PV3-06): to jest tryb dotychczasowy — wartości wszystkich kandydatów dostają
+    stronę pierwszego z nich. Tryb blokowy (``mpzp_parser_blocks``) przypisuje stronę i
+    zakres znaków z miejsca każdego dopasowania.
     """
     segment_by_id = {segment.segment_id: segment for segment in segments}
     relevant_segments = [
@@ -406,69 +455,6 @@ def extract_numeric_parameters(
     page_number = relevant_segments[0].page_number
 
     parameters: list[MpzpParameter] = []
-
-    parameters.extend(
-        _make_parameters(
-            "max_building_height_m",
-            "m",
-            _extract_max_building_height_m(combined_text),
-            page_number,
-        )
-    )
-
-    min_intensity_matches, max_intensity_matches = _extract_intensity(combined_text)
-    parameters.extend(
-        _make_parameters("min_intensity", None, min_intensity_matches, page_number)
-    )
-    parameters.extend(
-        _make_parameters("max_intensity", None, max_intensity_matches, page_number)
-    )
-
-    parameters.extend(
-        _make_parameters(
-            "max_building_coverage_percent",
-            "percent",
-            _extract_percent_pattern(combined_text, _COVERAGE_PATTERN),
-            page_number,
-        )
-    )
-
-    parameters.extend(
-        _make_parameters(
-            "min_biologically_active_percent",
-            "percent",
-            _extract_percent_pattern(combined_text, _BIO_ACTIVE_PATTERN),
-            page_number,
-        )
-    )
-
-    min_roof_matches, max_roof_matches = _extract_roof_angle(combined_text)
-    parameters.extend(
-        _make_parameters("roof_angle_min_deg", "deg", min_roof_matches, page_number)
-    )
-    parameters.extend(
-        _make_parameters("roof_angle_max_deg", "deg", max_roof_matches, page_number)
-    )
-
-    parameters.extend(
-        _make_parameters(
-            "max_storeys", None, _extract_max_storeys(combined_text), page_number
-        )
-    )
-
-    parameters.extend(
-        _make_parameters(
-            "setback_m", "m", _extract_setback_m(combined_text), page_number
-        )
-    )
-
-    parameters.extend(
-        _make_parameters(
-            "parking_minimum",
-            "miejsca/lokal",
-            _extract_parking_minimum(combined_text),
-            page_number,
-        )
-    )
-
+    for name, unit, matches in extract_numeric_matches(combined_text):
+        parameters.extend(_make_parameters(name, unit, matches, page_number))
     return parameters

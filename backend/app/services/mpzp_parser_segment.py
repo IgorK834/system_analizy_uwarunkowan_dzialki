@@ -17,6 +17,7 @@ from dataclasses import dataclass, field, replace
 from typing import Final, Literal
 
 from app.services.mpzp_parser_extract import TextExtractionResult
+from app.shared.zone_symbol import is_tail_of_spaced_symbol, zone_symbol_text_pattern
 
 _MULTI_CANDIDATE_CONFIDENCE_PENALTY: Final[float] = 0.7
 
@@ -30,21 +31,20 @@ _ZONE_REFERENCE_PATTERNS: Final[tuple[tuple[str, float], ...]] = (
     (r"\bobszar\s+oznaczon\w*\s+{symbol}", 0.6),
     (r"{symbol}", 0.5),
 )
-# Symbol strefy jest całym tokenem: kropka, ukośnik, podkreślnik i łącznik
-# należą do symbolu (np. 'MN.1', '6.8.MW/U'). Dzięki temu 'MN' nie dopasuje
-# tekstu strefy 'MN.1', a 'U' nie dopasuje 'MW/U' — symbole podobne nie są
-# scalane przez podciąg. Kropka lub ukośnik na końcu zdania nie przedłuża
-# tokenu, jeśli nie następuje po nich znak symbolu.
-_SYMBOL_CHARACTERS: Final[str] = "0-9A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż"
-_SYMBOL_TOKEN_BEFORE: Final[str] = rf"(?<![{_SYMBOL_CHARACTERS}_./-])"
-_SYMBOL_TOKEN_AFTER: Final[str] = (
-    rf"(?![{_SYMBOL_CHARACTERS}_-]|[./][{_SYMBOL_CHARACTERS}])"
-)
+# Symbol strefy jest całym tokenem (``MN`` nie dopasuje ``MN.1``, ``U`` nie dopasuje
+# ``MW/U``) i jest dopasowywany tolerancyjnie na odstępy (``146 MN`` = ``146MN``).
+# Reguły tokenu i odstępów mieszkają w ``app.shared.zone_symbol`` (PV3-04).
 
 
 def symbol_token_pattern(zone_symbol: str) -> str:
-    """Wzorzec dokładnego tokenu symbolu strefy (bez dopasowań podciągu)."""
-    return f"{_SYMBOL_TOKEN_BEFORE}{re.escape(zone_symbol)}{_SYMBOL_TOKEN_AFTER}"
+    """Wzorzec symbolu strefy: cały token, tolerancyjny na odstępy (bez podciągów).
+
+    Ogon symbolu ze spacją (``MN`` w ``146 MN``) odfiltrowuje ``_search_reference``
+    (``is_tail_of_spaced_symbol``); wzorzec sam tego nie wyraża, bo regex nie ma
+    zmiennej długości lookbehind.
+    """
+    return zone_symbol_text_pattern(zone_symbol)
+
 
 _CHAPTER_HEADING_PATTERN: Final[re.Pattern[str]] = re.compile(r"Rozdział\s+\d+\.[^\n]*")
 _PARAGRAPH_MARKER_PATTERN: Final[re.Pattern[str]] = re.compile(
@@ -280,12 +280,12 @@ def _find_candidates_for_symbol(
     if not zone_symbol:
         return []
 
-    symbol_pattern = symbol_token_pattern(zone_symbol)
+    symbol_pattern = f"(?P<zone_symbol>{symbol_token_pattern(zone_symbol)})"
     candidates: list[ZoneSectionCandidate] = []
     for segment in segments:
         for pattern_template, confidence in _ZONE_REFERENCE_PATTERNS:
             pattern = pattern_template.replace("{symbol}", symbol_pattern)
-            match = re.search(pattern, segment.text, flags=re.IGNORECASE)
+            match = _search_reference(pattern, segment.text)
             if match is None:
                 continue
             candidates.append(
@@ -308,6 +308,14 @@ def _find_candidates_for_symbol(
         )
     )
     return candidates
+
+
+def _search_reference(pattern: str, text: str) -> re.Match[str] | None:
+    """Pierwsze dopasowanie, w którym symbol nie jest ogonem symbolu ze spacją."""
+    for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+        if not is_tail_of_spaced_symbol(text, match.start("zone_symbol")):
+            return match
+    return None
 
 
 def _source_excerpt(text: str, match: re.Match[str]) -> str:

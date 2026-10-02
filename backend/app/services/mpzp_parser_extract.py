@@ -14,8 +14,9 @@ from dataclasses import dataclass, field
 from typing import Final, Literal, Protocol, runtime_checkable
 
 import pdfplumber
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
+from app.modules.documents.domain.parser_models import StructureHint
 from app.services.mpzp_fetch import DocumentBlob
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,9 @@ class TextExtractionResult:
     ocr_engine_version: str | None = None
     manual_review_required: bool = False
     warnings: list[str] = field(default_factory=list)
+    # Znaczniki struktury z HTML (``<li>``, ``<tr>``) ze zakresami w tekście strony;
+    # puste dla PDF i OCR. Używa ich drzewo struktury dokumentu (PV3-05).
+    structure_hints: list[StructureHint] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -300,6 +304,7 @@ def _extract_html_text(document: DocumentBlob) -> TextExtractionResult:
             element.decompose()
 
     cleaned_text = soup.get_text(separator="\n", strip=True)
+    structure_hints = _html_structure_hints(soup, cleaned_text)
     quality_score = 1.0 if cleaned_text else 0.0
     warnings = (
         []
@@ -319,4 +324,40 @@ def _extract_html_text(document: DocumentBlob) -> TextExtractionResult:
         extraction_method="html",
         manual_review_required=not bool(cleaned_text),
         warnings=warnings,
+        structure_hints=structure_hints,
     )
+
+
+def _html_structure_hints(soup: BeautifulSoup, cleaned_text: str) -> list[StructureHint]:
+    """Zakresy ``<li>`` i ``<tr>`` w oczyszczonym tekście strony (PV3-05).
+
+    ``get_text(separator="\\n", strip=True)`` składa napisy elementu w tej samej
+    kolejności, więc napisy elementu połączone ``\\n`` są ciągłym podciągiem tekstu.
+    Elementy zagnieżdżone szukamy od początku rodzica, rodzeństwo — za poprzednim.
+    """
+    hints: list[StructureHint] = []
+    open_elements: list[tuple[Tag, int, int]] = []
+    cursor = 0
+    for element in soup.find_all(["li", "tr"]):
+        pieces = list(element.stripped_strings)
+        if not pieces:
+            continue
+        needle = "\n".join(pieces)
+        while open_elements and open_elements[-1][0] not in element.parents:
+            _, _, ended = open_elements.pop()
+            cursor = max(cursor, ended)
+        search_from = open_elements[-1][1] if open_elements else cursor
+        found = cleaned_text.find(needle, search_from)
+        if found < 0:
+            continue
+        end = found + len(needle)
+        open_elements.append((element, found, end))
+        hints.append(
+            StructureHint(
+                kind="html_list_item" if element.name == "li" else "table_row",
+                page_number=1,
+                raw_start=found,
+                raw_end=end,
+            )
+        )
+    return hints

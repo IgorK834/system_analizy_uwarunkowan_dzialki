@@ -17,6 +17,7 @@ import hashlib
 import logging
 from typing import Literal
 
+from app.modules.planning.domain.zone_scope import resolve_zone_scope
 from app.schemas.mpzp import (
     ExtractedEvidence,
     MpzpParseResult,
@@ -33,6 +34,11 @@ from app.services.mpzp_parser_extract import (
     classify_document,
     extract_document_text,
 )
+from app.services.mpzp_parser_blocks import (
+    MPZP_PARSER_VERSION_BLOCKS,
+    extract_zone_from_blocks,
+    scope_warnings,
+)
 from app.services.mpzp_parser_numeric import extract_numeric_parameters
 from app.services.mpzp_parser_segment import (
     DocumentSegment,
@@ -41,12 +47,17 @@ from app.services.mpzp_parser_segment import (
     find_zone_sections,
     segment_document,
 )
+from app.services.mpzp_parser_structure import build_tree_from_extraction, structure_view
 from app.services.mpzp_parser_validate import validate_mpzp_result
 
 logger = logging.getLogger(__name__)
 
 # Wersja reguł parsera zapisywana przy każdym parametrze (evidence BK-203).
 MPZP_PARSER_VERSION = "mpzp-parser/2.0"
+# Tryb zakresu strefy (PV3-06): ``legacy`` skleja tekst kandydackich segmentów (domyślny do
+# czasu Task 20.14), ``blocks`` przypisuje parametry na poziomie bloku strefy z prawdziwym
+# źródłem (strona i zakres znaków) każdej wartości.
+ScopeMode = Literal["legacy", "blocks"]
 
 
 __all__ = [
@@ -64,15 +75,17 @@ async def parse_mpzp_document(
     document: DocumentBlob,
     zone_symbols: list[str] | None = None,
     ocr_provider: OcrProvider | None = None,
+    scope_mode: ScopeMode = "legacy",
 ) -> MpzpParseResult:
     """Uruchamia pipeline i NIGDY nie podnosi niekontrolowanego wyjątku.
 
     ``zone_symbols`` to pomocniczy zestaw kandydatów z MPZP discovery (Task 3.9),
-    a nie ostateczne przypisanie działki do stref planistycznych.
+    a nie ostateczne przypisanie działki do stref planistycznych. ``scope_mode``
+    wybiera sposób przypisania parametrów do strefy (patrz ``ScopeMode``).
     """
     zone_symbols = zone_symbols or []
     try:
-        return await _run_parse_pipeline(document, zone_symbols, ocr_provider)
+        return await _run_parse_pipeline(document, zone_symbols, ocr_provider, scope_mode)
     except Exception:
         # Granica fasady celowo łapie wszystkie przyszłe tryby awarii etapów,
         # ponieważ publiczny kontrakt gwarantuje wynik failed zamiast wyjątku.
@@ -102,6 +115,7 @@ async def _run_parse_pipeline(
     document: DocumentBlob,
     zone_symbols: list[str],
     ocr_provider: OcrProvider | None,
+    scope_mode: ScopeMode = "legacy",
 ) -> MpzpParseResult:
     _document_kind = classify_document(document)
     extraction = (
@@ -144,9 +158,18 @@ async def _run_parse_pipeline(
             )
         )
     else:
-        zone_section_results = find_zone_sections(segments, active_zone_symbols)
-        warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
-        zones = extract_parameters(zone_section_results, segments)
+        if scope_mode == "blocks":
+            tree = build_tree_from_extraction(extraction)
+            view = structure_view(tree)
+            resolution = resolve_zone_scope(view, active_zone_symbols)
+            warnings.extend(scope_warnings(resolution, active_zone_symbols))
+            zones = [
+                extract_zone_from_blocks(symbol, resolution, tree, view) for symbol in active_zone_symbols
+            ]
+        else:
+            zone_section_results = find_zone_sections(segments, active_zone_symbols)
+            warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
+            zones = extract_parameters(zone_section_results, segments)
         if inferred_symbols:
             warnings.append(
                 MpzpParserWarning(
@@ -202,6 +225,7 @@ async def _run_parse_pipeline(
         segments,
         document_sha256=hashlib.sha256(document.content).hexdigest(),
         extraction_method=extraction.extraction_method,
+        parser_version=MPZP_PARSER_VERSION_BLOCKS if scope_mode == "blocks" else MPZP_PARSER_VERSION,
     )
 
 
@@ -211,12 +235,15 @@ def _attach_evidence_metadata(
     *,
     document_sha256: str,
     extraction_method: str,
+    parser_version: str = MPZP_PARSER_VERSION,
 ) -> MpzpParseResult:
     """Dopina do parametru segment/stronę dowodu, hash dokumentu i wersję parsera.
 
     Segment i strona pochodzą z segmentu, który faktycznie zawiera fragment
     dowodowy — a nie z pierwszego segmentu strefy — więc wskazują miejsce
     wartości w uchwale także wtedy, gdy strefa ma kilka kandydatów sekcji.
+    Parametr z trybu blokowego niesie już stronę, zakres znaków i blok z własnego
+    dopasowania, więc jego miejsce nie jest ponownie wyszukiwane.
     """
     normalized_segments = [
         (segment, " ".join(segment.text.split())) for segment in segments
@@ -235,6 +262,17 @@ def _attach_evidence_metadata(
     for zone in result.zones:
         parameters = []
         for parameter in zone.parameters:
+            if parameter.block_id is not None:
+                parameters.append(
+                    parameter.model_copy(
+                        update={
+                            "document_sha256": document_sha256,
+                            "extraction_method": extraction_method,
+                            "parser_version": parser_version,
+                        }
+                    )
+                )
+                continue
             segment = locate(parameter.source_text)
             parameters.append(
                 parameter.model_copy(
@@ -247,7 +285,7 @@ def _attach_evidence_metadata(
                         ),
                         "document_sha256": document_sha256,
                         "extraction_method": extraction_method,
-                        "parser_version": MPZP_PARSER_VERSION,
+                        "parser_version": parser_version,
                     }
                 )
             )

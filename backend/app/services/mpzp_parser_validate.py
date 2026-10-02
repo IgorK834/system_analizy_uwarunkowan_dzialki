@@ -110,7 +110,7 @@ def _ambiguous_zone_symbols(warnings: list[MpzpParserWarning]) -> set[str]:
     return {
         warning.zone_symbol
         for warning in warnings
-        if warning.code == "ZONE_SECTION_AMBIGUOUS" and warning.zone_symbol
+        if warning.code in {"ZONE_SECTION_AMBIGUOUS", "ZONE_SCOPE_AMBIGUOUS"} and warning.zone_symbol
     }
 
 
@@ -121,7 +121,8 @@ def _validate_zone_parameters(
     ocr_warning_present: bool,
     zone_ambiguous: bool,
 ) -> tuple[list[MpzpParameter], list[str], list[MpzpParserWarning]]:
-    conflicting_names = _find_conflicting_parameter_names(parameters)
+    conflicting_keys = _conflicting_keys(parameters)
+    conflicting_names = {name for name, _ in conflicting_keys}
 
     conflict_flags: list[str] = []
     warnings: list[MpzpParserWarning] = []
@@ -156,14 +157,15 @@ def _validate_zone_parameters(
 
     validated_parameters: list[MpzpParameter] = []
     for parameter in parameters:
-        if parameter.name in conflicting_names:
+        in_conflict = (parameter.name, parameter.scope_kind) in conflicting_keys
+        if in_conflict:
             parameter = parameter.model_copy(
                 update={"conflict_group_id": conflict_group_id(zone_symbol, parameter.name)}
             )
         validated, domain_warning = _validate_single_parameter(
             zone_symbol,
             parameter,
-            has_conflict=parameter.name in conflicting_names,
+            has_conflict=in_conflict,
             ocr_warning_present=ocr_warning_present,
             zone_ambiguous=zone_ambiguous,
         )
@@ -205,6 +207,20 @@ def _find_conflicting_parameter_names(
             parameter.normalized_value
         )
     return {name for name, values in values_by_name.items() if len(values) > 1}
+
+
+def _conflicting_keys(parameters: list[MpzpParameter]) -> set[tuple[str, str | None]]:
+    """Konflikty liczone osobno dla każdego zakresu (``scope_kind``).
+
+    Wartość z klauzuli ogólnej albo resztowej nie jest sprzeczna z wartością z sekcji
+    strefy (to inny zakres, PV3-06); w trybie dotychczasowym ``scope_kind`` jest ``None``
+    i zachowanie jest takie jak wcześniej.
+    """
+    values: dict[tuple[str, str | None], set[float]] = {}
+    for parameter in parameters:
+        if isinstance(parameter.normalized_value, (int, float)):
+            values.setdefault((parameter.name, parameter.scope_kind), set()).add(parameter.normalized_value)
+    return {key for key, found in values.items() if len(found) > 1}
 
 
 def _validate_single_parameter(
