@@ -1,0 +1,293 @@
+{
+  "description": "Kontrolny zestaw BK-603: dwie strefy, celowo dodany fałszywy alarm (FP), brak wykrycia (FN), błędna wartość i przypisanie wartości strefy A do strefy B. Wszystkie oczekiwane liczby policzono ręcznie.",
+  "sample": {
+    "sample_id": "CONTROL-1",
+    "document_id": "control-doc",
+    "split": "final",
+    "format": "pdf_text",
+    "multi_zone": true,
+    "zones": [
+      {
+        "symbol": "A",
+        "annotations": [
+          {"parameter": "max_building_height_m", "normalized_value": 10.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "wysokość 10 m"},
+          {"parameter": "max_building_coverage_percent", "normalized_value": 40.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "zabudowa 40%"},
+          {"parameter": "min_biologically_active_percent", "normalized_value": 30.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "bio 30%"},
+          {"parameter": "max_intensity", "normalized_value": 1.5, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "intensywność do 1,5"},
+          {"parameter": "max_storeys", "normalized_value": 3.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "3 kondygnacje"}
+        ]
+      },
+      {
+        "symbol": "B",
+        "annotations": [
+          {"parameter": "max_building_height_m", "normalized_value": 12.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "wysokość 12 m"},
+          {"parameter": "max_building_coverage_percent", "normalized_value": 50.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "zabudowa 50%"},
+          {"parameter": "min_biologically_active_percent", "normalized_value": 20.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "bio 20%"},
+          {"parameter": "max_intensity", "normalized_value": 2.0, "status": "required", "applicability": "zone_section", "page": 1, "evidence": "intensywność do 2,0"}
+        ]
+      }
+    ]
+  },
+  "parser_output": {
+    "A": [
+      {"name": "max_building_height_m", "value": 10.0, "confidence": 0.85, "manual_review_required": false},
+      {"name": "max_building_coverage_percent", "value": 40.0, "confidence": 0.85, "manual_review_required": false},
+      {"name": "max_intensity", "value": 1.5, "confidence": 0.85, "manual_review_required": false},
+      {"name": "max_storeys", "value": 4.0, "confidence": 0.51, "manual_review_required": false},
+      {"name": "setback_m", "value": 6.0, "confidence": 0.72, "manual_review_required": false}
+    ],
+    "B": [
+      {"name": "max_building_height_m", "value": 10.0, "confidence": 0.43, "manual_review_required": true},
+      {"name": "max_building_coverage_percent", "value": 50.0, "confidence": 0.85, "manual_review_required": false},
+      {"name": "min_biologically_active_percent", "value": 20.0, "confidence": 0.51, "manual_review_required": false},
+      {"name": "max_intensity", "value": 2.0, "confidence": 0.85, "manual_review_required": true},
+      {"name": "max_intensity", "value": 1.0, "confidence": 0.43, "manual_review_required": true}
+    ]
+  },
+  "expected": {
+    "hand_calculation": {
+      "rows": "2 strefy × 9 parametrów katalogu = 18 wierszy",
+      "verdicts": "tp_exact 5 (A: wysokość, zabudowa, intensywność; B: zabudowa, bio), tp_partial 1 (B intensywność 2,0 i 1,0), tp_wrong 2 (A kondygnacje 4≠3; B wysokość 10≠12), fn 1 (A bio), fp 1 (A odsunięcie 6 m bez adnotacji), tn 8",
+      "detection": "TP = 5+1+2 = 8; FP = 1; FN = 1 → precision 8/9, recall 8/9; dokładność wartości wśród znalezionych 5/8; end-to-end 5/9",
+      "zone_assignment": "pary rozróżniające ze zwróconą wartością: 7 (A: wysokość, intensywność, zabudowa; B: wysokość, intensywność, zabudowa, bio); poprawne 6, pomyłka strefy 1 (B dostaje 10 m ze strefy A) → 6/7; kondygnacje A nie są rozróżniające, bo B nie ma adnotacji",
+      "calibration": "10 wartości: low (<0,5) n=2, błędne 2; medium n=3 (0,51; 0,72; 0,51), błędne 2; high n=5, błędne 0; Brier = 1,5009/10; ECE = 0,2·0,43 + 0,3·|1/3−0,58| + 0,5·0,15 = 0,235; Fisher p = 1/21"
+    },
+    "counts": {"tp_exact": 5, "tp_partial": 1, "tp_wrong": 2, "fn": 1, "fp": 1, "tn": 8},
+    "precision": [8, 9],
+    "recall": [8, 9],
+    "exact_among_found": [5, 8],
+    "exact_end_to_end": [5, 9],
+    "zone_assignment": [6, 7],
+    "cross_zone_errors": 1,
+    "calibration": {
+      "n_values": 10,
+      "bands": {"low": [2, 2], "medium": [3, 2], "high": [5, 0]},
+      "brier": 0.15009,
+      "ece": 0.235,
+      "fisher_p": 0.047619047619047616,
+      "flagged": 3,
+      "flagged_errors": 2,
+      "wrong_total": 4,
+      "wrong_flagged": 2
+    }
+  },
+  "source_control": {
+    "description": "Kontrola źródła (PV3-03): ta sama wartość w dwóch strefach, pobrana z niewłaściwej. Strefy A i B mają wysokość 10 m na różnych stronach, C i D wysokość 12 m na jednej stronie. Silnik zwraca poprawną liczbę, ale A bierze ją ze strony B, a D z bloku C; B dostaje powierzchnię zabudowy 40% ze strefy A. Wszystkie oczekiwane liczby policzono ręcznie.",
+    "pages": [
+      "§ 5. Dla terenu A ustala się: 1) wysokość zabudowy do 10 m; 2) udział powierzchni zabudowy do 40%.",
+      "§ 6. Dla terenu B ustala się: 1) wysokość zabudowy do 10 m; 2) udział powierzchni zabudowy do 50%.",
+      "§ 7. Dla terenu C ustala się: wysokość zabudowy do 12 m (dachy płaskie). § 8. Dla terenu D ustala się: wysokość zabudowy do 12 m (dachy strome)."
+    ],
+    "page_numbers": [
+      1,
+      2,
+      3
+    ],
+    "sample": {
+      "sample_id": "CONTROL-2",
+      "document_id": "control-doc-2",
+      "split": "final",
+      "format": "pdf_text",
+      "multi_zone": true,
+      "zones": [
+        {
+          "symbol": "A",
+          "annotations": [
+            {
+              "parameter": "max_building_height_m",
+              "normalized_value": 10.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 1,
+              "evidence": "wysokość zabudowy do 10 m",
+              "anchor": "Dla terenu A ustala się:"
+            },
+            {
+              "parameter": "max_building_coverage_percent",
+              "normalized_value": 40.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 1,
+              "evidence": "udział powierzchni zabudowy do 40%",
+              "anchor": "Dla terenu A ustala się:"
+            }
+          ]
+        },
+        {
+          "symbol": "B",
+          "annotations": [
+            {
+              "parameter": "max_building_height_m",
+              "normalized_value": 10.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 2,
+              "evidence": "wysokość zabudowy do 10 m",
+              "anchor": "Dla terenu B ustala się:"
+            },
+            {
+              "parameter": "max_building_coverage_percent",
+              "normalized_value": 50.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 2,
+              "evidence": "udział powierzchni zabudowy do 50%",
+              "anchor": "Dla terenu B ustala się:"
+            }
+          ]
+        },
+        {
+          "symbol": "C",
+          "annotations": [
+            {
+              "parameter": "max_building_height_m",
+              "normalized_value": 12.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 3,
+              "evidence": "wysokość zabudowy do 12 m",
+              "anchor": "Dla terenu C ustala się:"
+            }
+          ]
+        },
+        {
+          "symbol": "D",
+          "annotations": [
+            {
+              "parameter": "max_building_height_m",
+              "normalized_value": 12.0,
+              "status": "required",
+              "applicability": "zone_section",
+              "page": 3,
+              "evidence": "wysokość zabudowy do 12 m",
+              "anchor": "Dla terenu D ustala się:"
+            }
+          ]
+        }
+      ]
+    },
+    "engine_output": {
+      "A": [
+        {
+          "name": "max_building_height_m",
+          "value": 10.0,
+          "confidence": 0.85,
+          "page": 2,
+          "source_text": "wysokość zabudowy do 10 m; 2) udział",
+          "raw_value": "10 m",
+          "note": "wartość strefy B (inna strona)"
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "value": 40.0,
+          "confidence": 0.85,
+          "page": 1,
+          "source_text": "udział powierzchni zabudowy do 40%",
+          "raw_value": "40%",
+          "note": "właściwe źródło"
+        }
+      ],
+      "B": [
+        {
+          "name": "max_building_height_m",
+          "value": 10.0,
+          "confidence": 0.85,
+          "page": 2,
+          "source_text": "1) wysokość zabudowy do 10 m; 2) udział powierzchni zabudowy do 50%",
+          "raw_value": "10 m",
+          "note": "właściwe źródło"
+        },
+        {
+          "name": "max_building_coverage_percent",
+          "value": 40.0,
+          "confidence": 0.85,
+          "page": 1,
+          "source_text": "udział powierzchni zabudowy do 40%",
+          "raw_value": "40%",
+          "note": "wartość strefy A (błąd wartości, nie źródła)"
+        }
+      ],
+      "C": [
+        {
+          "name": "max_building_height_m",
+          "value": 12.0,
+          "confidence": 0.85,
+          "page": 3,
+          "source_text": "Dla terenu C ustala się: wysokość zabudowy do 12 m (dachy płaskie)",
+          "raw_value": "12 m",
+          "note": "właściwe źródło"
+        }
+      ],
+      "D": [
+        {
+          "name": "max_building_height_m",
+          "value": 12.0,
+          "confidence": 0.85,
+          "page": 3,
+          "source_text": "wysokość zabudowy do 12 m (dachy płaskie). § 8.",
+          "raw_value": "12 m",
+          "note": "blok strefy C na tej samej stronie"
+        }
+      ]
+    },
+    "expected": {
+      "hand_calculation": {
+        "rows": "4 strefy × 9 parametrów katalogu = 36 wierszy",
+        "verdicts": "tp_exact 5 (A: wysokość, zabudowa; B: wysokość; C: wysokość; D: wysokość), tp_wrong 1 (B zabudowa 40≠50), tn 30",
+        "detection": "TP = 5+1 = 6, FP = 0, FN = 0 → precision 6/6, recall 6/6; dokładność wartości wśród znalezionych 5/6",
+        "zone_assignment_by_value": "6 par rozróżniających (każda strefa ma w innej strefie inną wartość); poprawne 5, pomyłka strefy 1 (B dostaje 40% ze strefy A) → 5/6; wg samej wartości kontrola nie widzi błędów źródła",
+        "source": "poprawne co do wartości: A wysokość, A zabudowa, B wysokość, C wysokość, D wysokość = 5 (40% w B jest błędną wartością); spójne ze źródłem: A zabudowa, B wysokość, C wysokość = 3; A wysokość ze strony 2 zamiast 1 = wrong_page; D wysokość z bloku C = wrong_block → source_consistent 3/5",
+        "zone_assignment_source_aware": "pary jak wyżej: poprawne i ze źródłem A zabudowa, B wysokość, C wysokość = 3 z 6 (A wysokość i D wysokość to wrong_source, B zabudowa to cross_zone)",
+        "strict_end_to_end": "tp_exact ze źródłem 3 (A zabudowa, B wysokość, C wysokość) / (TP+FN = 6) → 3/6",
+        "errors": "3 wpisy: B zabudowa = zone_assignment, A wysokość i D wysokość = wrong_source"
+      },
+      "counts": {
+        "tp_exact": 5,
+        "tp_wrong": 1,
+        "fn": 0,
+        "fp": 0,
+        "tn": 30
+      },
+      "precision": [
+        6,
+        6
+      ],
+      "recall": [
+        6,
+        6
+      ],
+      "exact_among_found": [
+        5,
+        6
+      ],
+      "zone_assignment": [
+        5,
+        6
+      ],
+      "cross_zone_errors": 1,
+      "source_consistent": [
+        3,
+        5
+      ],
+      "source_status_counts": {
+        "consistent": 3,
+        "wrong_page": 1,
+        "wrong_block": 1
+      },
+      "zone_assignment_source_aware": [
+        3,
+        6
+      ],
+      "strict_end_to_end": [
+        3,
+        6
+      ],
+      "wrong_source_errors": 2,
+      "error_types": {
+        "B/max_building_coverage_percent": "zone_assignment",
+        "A/max_building_height_m": "wrong_source",
+        "D/max_building_height_m": "wrong_source"
+      }
+    }
+  }
+}
