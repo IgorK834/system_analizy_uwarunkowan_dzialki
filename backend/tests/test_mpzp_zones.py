@@ -52,17 +52,26 @@ def test_validate_zone_symbol_rejects_whitespace_only() -> None:
 
 def test_validate_zone_symbol_rejects_too_long() -> None:
     with pytest.raises(InvalidZoneSymbolError):
-        validate_zone_symbol_format("A" * 21)
+        validate_zone_symbol_format("A" * 41)
 
 
 def test_validate_zone_symbol_accepts_max_length() -> None:
-    symbol = "A" * 20
+    symbol = "A" * 40
     assert validate_zone_symbol_format(symbol) == symbol
 
 
-def test_validate_zone_symbol_rejects_internal_whitespace() -> None:
-    with pytest.raises(InvalidZoneSymbolError):
-        validate_zone_symbol_format("230 U")
+@pytest.mark.parametrize(
+    ("raw", "canonical"),
+    [
+        ("230 U", "230 U"),  # spacja wewnętrzna jest częścią realnych symboli
+        ("146   MN", "146 MN"),
+        ("146\u00a0MN", "146 MN"),
+        ("22 KD G1/2(Z1/4)", "22 KD G1/2(Z1/4)"),
+        ("7 UC,U,M", "7 UC,U,M"),
+    ],
+)
+def test_validate_zone_symbol_returns_the_canonical_form(raw: str, canonical: str) -> None:
+    assert validate_zone_symbol_format(raw) == canonical
 
 
 def test_validate_zone_symbol_rejects_internal_newline() -> None:

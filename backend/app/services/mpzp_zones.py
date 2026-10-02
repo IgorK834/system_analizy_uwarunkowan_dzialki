@@ -12,7 +12,6 @@ Moduł obsługuje dwie ścieżki przypisania strefy:
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -21,6 +20,7 @@ from shapely.geometry.base import BaseGeometry
 from app.schemas import analyze as analyze_schemas
 from app.schemas import mpzp as mpzp_schemas
 from app.schemas.source import SourceMetadata
+from app.shared import zone_symbol as shared_symbol
 
 # Powyżej tego udziału druga (lub kolejna) strefa liczy się jako realny
 # multi_zone, nie tylko dotknięcie granicy. 5% jest świadomym progiem
@@ -36,20 +36,14 @@ _MULTI_ZONE_AREA_RATIO_THRESHOLD_PERCENT: Final[float] = 5.0
 # przy operacjach na geometriach z ULDK, nie realnemu, celowemu podziałowi.
 _BOUNDARY_TOUCH_AREA_RATIO_THRESHOLD_PERCENT: Final[float] = 0.1
 
-# Symbol strefy z mapy rastrowej jest wpisywany przez człowieka, dlatego
-# walidujemy tylko długość i brak znaków kontrolnych/whitespace, a NIE
-# strukturę symbolu — polskie gminy nie mają jednego wspólnego wzorca
-# (widziane w tym projekcie: '230_U', '230_UMW', 'MN.1', 'MN.11', '1UZ',
-# '6.8.MW/U', '2.UP'). Zestaw znaków jest permisywny celowo.
-_ZONE_SYMBOL_MIN_LENGTH: Final[int] = 1
-_ZONE_SYMBOL_MAX_LENGTH: Final[int] = 20
-ZONE_SYMBOL_MAX_LENGTH: Final[int] = _ZONE_SYMBOL_MAX_LENGTH
+# Reguły symbolu strefy (forma kanoniczna, długość, znaki) mieszkają w
+# ``app.shared.zone_symbol`` — jednym źródle dla backendu, API i UI (PV3-04).
+# Nazwy poniżej są zachowane dla dotychczasowych importów.
+ZONE_SYMBOL_MAX_LENGTH: Final[int] = shared_symbol.ZONE_SYMBOL_MAX_LENGTH
 # Ten sam wzorzec jest publikowany w ``manual_zone_context`` i używany przez UI,
 # aby walidacja formularza i API nie mogły się rozjechać.
-ZONE_SYMBOL_ALLOWED_PATTERN: Final[str] = r"^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż._/-]+$"
-_ZONE_SYMBOL_ALLOWED_CHARS_RE: Final[re.Pattern[str]] = re.compile(
-    ZONE_SYMBOL_ALLOWED_PATTERN
-)
+ZONE_SYMBOL_ALLOWED_PATTERN: Final[str] = shared_symbol.ZONE_SYMBOL_ALLOWED_PATTERN
+InvalidZoneSymbolError = shared_symbol.InvalidZoneSymbolError
 
 # Ręczny wpis symbolu strefy pochodzi z odczytu mapy rastrowej przez
 # człowieka, nie z automatycznej ekstrakcji dokumentu — confidence 0.5 jest
@@ -77,44 +71,17 @@ _PARSER_TO_API_PARAMETER_MAP: Final[dict[str, str]] = {
 PARSER_TO_API_PARAMETER_MAP: Final[dict[str, str]] = _PARSER_TO_API_PARAMETER_MAP
 
 
-class InvalidZoneSymbolError(ValueError):
-    """Symbol strefy podany przez użytkownika nie przechodzi walidacji formatu.
-
-    Analogicznie do ``InvalidParcelIdentifierError`` w ``uldk.py`` — błąd
-    dotyczy tylko formatu wejścia, nie treści planistycznej symbolu.
-    """
-
-
 def validate_zone_symbol_format(zone_symbol: str) -> str:
-    """Waliduje i normalizuje symbol strefy wpisany ręcznie przez użytkownika.
+    """Waliduje symbol strefy i zwraca jego formę kanoniczną (PV3-04).
 
-    Regex jest CELOWO permisywny co do znaków — żadna polska gmina nie ma
-    jednego wspólnego wzorca symbolu strefy. Walidujemy tylko długość (1-20
-    znaków po ``strip()``) i odrzucamy whitespace wewnętrzny, znaki
-    kontrolne oraz pusty ciąg. Nie próbujemy walidować struktury symbolu.
+    Forma kanoniczna: NFKC, przycięcie, zwinięcie białych znaków do jednej spacji;
+    dozwolone litery, cyfry, ``. _ / - , + ( )`` i pojedyncze spacje wewnętrzne, do
+    40 znaków, bez znaków kontrolnych. Struktury symbolu nie walidujemy — żadna
+    polska gmina nie ma jednego wspólnego wzorca. Oryginał wpisu zostaje w dowodzie
+    (``ManualZoneSelection.entered_symbol_raw``); wcześniej poprawne symbole nie
+    zmieniają postaci.
     """
-    stripped = zone_symbol.strip()
-    if not stripped:
-        raise InvalidZoneSymbolError("Symbol strefy nie może być pusty.")
-
-    if not (_ZONE_SYMBOL_MIN_LENGTH <= len(stripped) <= _ZONE_SYMBOL_MAX_LENGTH):
-        raise InvalidZoneSymbolError(
-            "Symbol strefy musi mieć od "
-            f"{_ZONE_SYMBOL_MIN_LENGTH} do {_ZONE_SYMBOL_MAX_LENGTH} znaków."
-        )
-
-    if any(ord(ch) < 32 or ord(ch) == 127 for ch in stripped):
-        raise InvalidZoneSymbolError(
-            "Symbol strefy nie może zawierać znaków kontrolnych."
-        )
-
-    if not _ZONE_SYMBOL_ALLOWED_CHARS_RE.fullmatch(stripped):
-        raise InvalidZoneSymbolError(
-            "Symbol strefy zawiera niedozwolone znaki (dozwolone są litery, "
-            "cyfry oraz '.', '_', '/', '-')."
-        )
-
-    return stripped
+    return shared_symbol.validate_zone_symbol(zone_symbol)
 
 
 @dataclass(frozen=True)
