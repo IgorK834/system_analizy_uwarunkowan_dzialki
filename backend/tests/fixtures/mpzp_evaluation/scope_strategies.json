@@ -1,0 +1,35 @@
+{
+  "description": "Etykiety układu strefy (strategie zakresu 1–6, Task 20.6) dla próbek korpusu BK-603: opisowe metadane do rozbicia wyników, NIE ground truth i poza zamrożonymi anotacjami (annotations_sha256). Układ klauzul ogólnych (applicability general_clause) liczony jest jako 5. Etykiety nadał asystent AI (claude-sonnet-5-5) z lektury tekstu; przegląd człowieka oczekuje. Korpus nowej wersji niesie etykiety w polu scope_strategy strefy.",
+  "strategies": {
+    "1": "osobny § (ustęp) na strefę",
+    "2": "wspólny § dla listy lub zakresu symboli",
+    "3": "numerowane podpunkty „N) dla terenu X:”",
+    "4": "wartości przypisane symbolom listą w akapicie",
+    "5": "klauzula ogólna per symbol",
+    "6": "tabela",
+    "0": "skan OCR bez struktury (zapas)"
+  },
+  "labeled_by": "claude-sonnet-5-5 (asystent AI)",
+  "labeled_at": "2026-10-02",
+  "labels": {
+    "D01-krakow-mn-multi": 3,
+    "D02-krakow-mwi-us-u": {"MWi.1": 3, "US.1": 1, "U.1": 3},
+    "D07-krakow-mni-mnu": 3,
+    "D03-legnica-table": 6,
+    "D04-lodz-html-multi": 4,
+    "D05-bielsko-multi": 1,
+    "D06-stare-miasto-ocr": 0,
+    "F01-falenica-multi": 1,
+    "F02-falenica-green": {"A1ZP": 1, "A1ZL": 2},
+    "F03-bialystok-multi": {"2.1MN": 2, "1.4U,MN": 1},
+    "F04-szczytno-2021-shared": 2,
+    "F05-ostrow-multi": {"1MN-U": 2, "1U-P": 2, "3U-P": 1, "1IE": 1},
+    "F14-ostrow-mn": 2,
+    "F06-raszkow-short-symbols": 1,
+    "F07-krzemieniewo-single": 1,
+    "F08-libertow-text": 1,
+    "F09-lodz-html-single": 1,
+    "F10-pisz-ocr-real": 0,
+    "F13-szczytno-2023-multi": 1
+  }
+}
