@@ -37,3 +37,18 @@ class DocumentTextSegment:
     page_number: int | None
     heading: str | None
     source: Literal["paragraph", "table"]
+
+
+@dataclass(frozen=True)
+class StructureHint:
+    """Znacznik struktury z oryginalnego dokumentu (HTML: ``<li>``, ``<tr>``).
+
+    Zakres jest podany w znakach TEKSTU SUROWEGO strony (``raw_start`` włącznie,
+    ``raw_end`` wyłącznie), więc nie zależy od normalizacji. Wskazówki są opcjonalne:
+    dokument bez nich (np. zamrożone migawki tekstu) daje drzewo bez tych węzłów.
+    """
+
+    kind: Literal["html_list_item", "table_row"]
+    page_number: int
+    raw_start: int
+    raw_end: int
