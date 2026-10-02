@@ -78,8 +78,10 @@ python -m scripts.build_mpzp_text_fixture --url <URL> --output-dir <katalog> --p
 ```bash
 python3 backend/scripts/evaluate_mpzp_parser.py --mode offline \
   --output-dir docs/evaluation/results/parser --repeat 2          # silnik legacy (domyślny)
+python3 backend/scripts/evaluate_mpzp_parser.py --engine legacy v3 \
+  --output-dir docs/evaluation/results/parser --repeat 2          # porównanie sparowane legacy → v3
 python3 backend/scripts/evaluate_mpzp_parser.py --engine legacy v3 hybrid \
-  --llm-replay backend/tests/fixtures/mpzp_evaluation/llm_replay   # porównanie sparowane (gdy v3/hybrid istnieją)
+  --llm-replay backend/tests/fixtures/mpzp_evaluation/llm_replay   # z hybrid (gdy będzie istniał)
 python3 backend/scripts/evaluate_mpzp_parser.py --validate-only [--profile final-v2]   # sama walidacja korpusu
 ```
 
@@ -94,10 +96,12 @@ dwa kolejne biegi tego samego silnika dają różne wyniki merytoryczne.
   silnikach, `<output-dir>/comparison/`. Wcześniejszy układ płaski (`<output-dir>/report.md` itd.)
   został zastąpiony; wyniki BK-603 w starym układzie leżą w `parser/bk-603-flat-2026-09-30/` i mają
   te same metryki merytoryczne co `parser/legacy/` (sprawdzone wiersz po wierszu).
-- **Rejestr silników:** `legacy` (produkcyjny parser) działa; `v3` i `hybrid` są zarejestrowane, ale
-  niedostępne do czasu Tasków 20.4–20.14 (wywołanie kończy się kodem 2 z przyczyną).
-  Silnik zwraca neutralny `EngineResult` (wartość, strona, cytat, opcjonalnie zakres znaków,
-  `review_status`, odrzucenia z nazwą bramki, użycie tokenów, opóźnienia i kosztu).
+- **Rejestr silników:** `legacy` (produkcyjny parser w trybie domyślnym) i `v3` (ten sam parser w trybie
+  blokowym: drzewo struktury dokumentu → resolver zakresu strefy → wartości z własnego dopasowania; PV3-05/06)
+  działają; `hybrid` jest zarejestrowany, ale niedostępny do czasu Tasków 20.10–20.14 (wywołanie kończy się
+  kodem 2 z przyczyną). Silnik zwraca neutralny `EngineResult` (wartość, strona, cytat, opcjonalnie zakres
+  znaków, `review_status`, odrzucenia z nazwą bramki, bloki stref `ScopeBlock`, użycie tokenów, opóźnienia i
+  kosztu).
 - **Nowe metryki w `metrics.json` → `detection`:** `source_consistent` (licznik/mianownik: poprawne
   wartości, których strona i miejsce dopasowania leżą w bloku strefy z anotacji), `source_status_counts`,
   `zone_assignment_source_aware`, `strict_end_to_end`, `wrong_source_errors`; nowy typ błędu
@@ -120,6 +124,25 @@ dwa kolejne biegi tego samego silnika dają różne wyniki merytoryczne.
   model, wersja i skrót promptu, wersja schematu, temperatura, SHA-256 wysłanego tekstu); brak klucza w
   katalogu to błąd, nie połączenie sieciowe. `--live` wymaga flagi, zmiennej `GEMINI_API_KEY` i
   zarejestrowanego dostawcy (Task 20.10), nie działa w CI i zapisuje odpowiedzi do `--llm-replay DIR`.
+
+### Zakres strefy (PV3-06, silnik `v3`)
+
+Silnik, który zwraca bloki stref (`EngineResult.blocks`), jest oceniany także pod kątem tego, **gdzie** w
+dokumencie leży tekst przypisany strefie; wyniki są w `metrics.json` → `scope`, w `scope_results.json` i w
+sekcji „Zakres strefy” raportu. `legacy` bloków nie zwraca, więc ma `scope.reported = false`.
+
+- **Zasięg zakresu** (`coverage`): odsetek anotowanych par, których cytat anotacji (strona i pozycja) leży w
+  bloku wybranym dla strefy; osobno per układ strefy (strategie 1–6 i 0), per format i per zakres
+  (`zone_section` / `general_clause`).
+- **Zanieczyszczenie** (`contamination`): odsetek bloków `zone_section`, w których leży cytat innej strefy z
+  tego samego dokumentu (klauzule ogólne i resztowe nie mogą trafić do `zone_section`).
+- **Układy stref** (`scope_strategies.json`): etykiety 1–6 (osobny § na strefę; wspólny § dla listy/zakresu
+  symboli; podpunkty „N) dla terenu X:”; wartości listą w akapicie; klauzula ogólna per symbol; tabela) oraz 0
+  (skan bez struktury, zapas). To metadane opisowe do rozbicia wyników, **nie ground truth** i poza
+  zamrożonymi anotacjami (`annotations_sha256`); etykiety nadał asystent AI, przegląd człowieka oczekuje.
+  Korpus nowej wersji niesie je w polu `scope_strategy` strefy.
+- **Ograniczenie:** resolver był rozwijany na tych samych 21 próbkach, więc wynik na korpusie BK-603 jest
+  wynikiem rozwojowym, nie oceną uogólnienia; ocena niezależna wymaga zbioru końcowego z PV3-02.
 
 ### Zestawy kontrolne
 

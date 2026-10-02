@@ -81,6 +81,21 @@ class EngineValue:
 
 
 @dataclass(frozen=True)
+class ScopeBlock:
+    """Blok tekstu, który silnik uznał za zakres strefy (PV3-06).
+
+    ``spans`` to zakresy w tekście SUROWYM stron (po jednym na segment i stronę); blok z
+    listy bramkowanej po symbolu może mieć kilka rozłącznych zakresów.
+    """
+
+    block_id: str
+    scope_kind: str
+    strategy: int
+    confidence: float
+    spans: tuple[SourceSpan, ...]
+
+
+@dataclass(frozen=True)
 class Rejection:
     """A candidate that a deterministic gate refused (hybrid engines)."""
 
@@ -125,6 +140,8 @@ class EngineResult:
     warning_codes: tuple[str, ...] = ()
     rejections: list[Rejection] = field(default_factory=list)
     usage: EngineUsage = field(default_factory=EngineUsage)
+    # Bloki zakresu per symbol; puste dla silników, które ich nie raportują (``legacy``).
+    blocks: dict[str, list[ScopeBlock]] = field(default_factory=dict)
 
 
 class Engine(Protocol):

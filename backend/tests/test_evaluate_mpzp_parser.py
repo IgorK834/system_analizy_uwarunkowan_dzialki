@@ -388,7 +388,7 @@ def test_cli_writes_reports_and_fails_on_bad_input(tmp_path: Path, manifest: dic
     assert {path.name for path in output.iterdir()} == {
         "calibration.svg", "determinism.json", "errors.csv", "errors.json", "metrics.json", "observations.json",
         "parameter_results.csv", "parameter_results.json", "rejections.csv", "report.md", "run_manifest.json",
-        "values.csv",
+        "scope_results.json", "values.csv",
     }
     run_manifest = json.loads((output / "run_manifest.json").read_text())
     metrics = json.loads((output / "metrics.json").read_text())
@@ -409,7 +409,7 @@ def test_cli_writes_reports_and_fails_on_bad_input(tmp_path: Path, manifest: dic
         assert len(list(csv.DictReader(handle))) == len(errors["errors"])
     report = (output / "report.md").read_text()
     for heading in ("Zamrożony manifest", "Według formatu", "Według gminy", "Źródło wartości", "Kalibracja confidence",
-                    "Błędy", "Bramki odrzuceń", "Koszt i opóźnienie"):
+                    "Błędy", "Zakres strefy", "Bramki odrzuceń", "Koszt i opóźnienie"):
         assert heading in report
     assert "<svg" in (output / "calibration.svg").read_text()
 
@@ -755,9 +755,9 @@ def test_engine_may_not_return_a_verified_value(manifest: dict[str, Any]) -> Non
 
 def test_unavailable_engines_and_bad_flags_exit_with_usage_error(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     out = ["--output-dir", str(tmp_path / "out")]
-    assert ev.main(["--engine", "v3", *out]) == 2
-    assert "not available" in capsys.readouterr().err
-    assert ev.main(["--engine", "hybrid", *out]) == 2  # unavailable before the model flags are even considered
+    assert ev.main(["--engine", "hybrid", *out]) == 2
+    assert "not available" in capsys.readouterr().err  # hybrydy nie ma (Taski 20.10–20.14)
+    assert ev.main(["--engine", "hybrid", "--live", *out]) == 2  # unavailable before the model flags are considered
     assert ev.main(["--engine", "nieistnieje", *out]) == 2
     assert "unknown engine" in capsys.readouterr().err
     assert ev.main(["--engine", "legacy", "--live", *out]) == 2

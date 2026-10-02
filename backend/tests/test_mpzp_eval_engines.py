@@ -211,9 +211,9 @@ def test_planned_engines_are_registered_but_unavailable_until_implemented() -> N
     assert {"legacy", "v3", "hybrid"} <= set(engines.engine_names())
     assert engines.get_engine_spec("hybrid").uses_llm and not engines.get_engine_spec("legacy").uses_llm
     assert engines.create_engine("legacy").name == "legacy"
-    for name in ("v3", "hybrid"):
-        with pytest.raises(EngineUnavailableError, match="not implemented yet"):
-            engines.create_engine(name)
+    assert engines.create_engine("v3").name == "v3"  # bloki stref i źródło wartości (PV3-04–06)
+    with pytest.raises(EngineUnavailableError, match="not implemented yet"):
+        engines.create_engine("hybrid")
 
 
 def test_usage_sums_keep_not_reported_distinct_from_zero() -> None:

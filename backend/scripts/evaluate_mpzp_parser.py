@@ -63,7 +63,10 @@ try:
     from app.schemas.mpzp import MpzpParseResult  # noqa: E402
     from app.schemas.source import SourceMetadata  # noqa: E402
     from app.services.mpzp_fetch import DocumentBlob  # noqa: E402
+    from app.modules.planning.domain.zone_scope import resolve_zone_scope  # noqa: E402
     from app.services.mpzp_parser import MPZP_PARSER_VERSION, parse_mpzp_document  # noqa: E402
+    from app.services.mpzp_parser_blocks import MPZP_PARSER_VERSION_BLOCKS  # noqa: E402
+    from app.services.mpzp_parser_structure import build_tree_from_extraction, structure_view  # noqa: E402
     from app.services.mpzp_parser_extract import (  # noqa: E402
         ExtractedTable,
         TextExtractionResult,
@@ -86,6 +89,8 @@ from scripts.mpzp_eval_engines import (  # noqa: E402
     LiveModeError,
     ReplayIntegrityError,
     ReplayMissError,
+    ScopeBlock,
+    SourceSpan,
     build_gateway,
     create_engine,
     get_engine_spec,
@@ -245,6 +250,15 @@ class TruthText:
             position = page_text.find(needle, position + 1)
         return found
 
+    def pages_between(self, start: int, end: int) -> tuple[int, ...]:
+        """Numery stron źródła, na które sięga zakres ``[start, end)`` tekstu dokumentu."""
+        pages = []
+        for index, page_start in enumerate(self._starts):
+            page_end = page_start + self._lengths[index]
+            if page_start < end and start < page_end + 1:
+                pages.append(self.page_numbers[index])
+        return tuple(pages) or (self.page_numbers[0],)
+
     def raw_span_to_doc(self, page_number: int, raw_start: int, raw_end: int) -> tuple[int, int] | None:
         """Maps a character range of the raw page string to document offsets."""
         if page_number not in self.page_numbers or raw_end <= raw_start:
@@ -277,6 +291,9 @@ class AnnotationLocation:
     block: tuple[int, int] | None  # None: no anchor, only the evidence span is known
     applicability: str
     status: str
+    # Strony, na które sięga cytat (cytat przez granicę strony ma ich kilka); ``page`` to strona
+    # początku cytatu. Wartość z którejkolwiek z nich jest ze źródła cytatu.
+    pages: tuple[int, ...] = ()
 
 
 def zone_block_spans(sample: Mapping[str, Any], truth: TruthText) -> dict[str, tuple[int, int]]:
@@ -315,6 +332,7 @@ def annotation_locations(
                     value=float(annotation["normalized_value"]),
                     page=page,
                     evidence=(start, end),
+                    pages=truth.pages_between(start, end),
                     block=blocks.get(anchor) if anchor else None,
                     applicability=annotation.get("applicability", "zone_section"),
                     status=annotation.get("status", "required"),
@@ -354,7 +372,7 @@ def _inside(position: tuple[int, int], location: AnnotationLocation) -> bool:
 def _check_against(
     output: EngineValue, page: int, location: AnnotationLocation, truth: TruthText, page_only: bool
 ) -> tuple[str, str | None]:
-    if page != location.page:
+    if page != location.page and page not in location.pages:
         return "wrong_page", f"returned page {page}, annotated page {location.page}"
     if page_only:
         return "consistent", "page_only"
@@ -813,14 +831,16 @@ def _blob(source: Mapping[str, Any]) -> DocumentBlob:
     )
 
 
-async def run_parser(loaded: Mapping[str, Any], symbols: Sequence[str]) -> MpzpParseResult:
+async def run_parser(
+    loaded: Mapping[str, Any], symbols: Sequence[str], scope_mode: str = "legacy"
+) -> MpzpParseResult:
     extraction, source = build_extraction(loaded)
     blob = _blob(source)
     with patch(
         "app.services.mpzp_parser.extract_document_text",
         new=AsyncMock(return_value=extraction),
     ):
-        return await parse_mpzp_document(blob, list(symbols))
+        return await parse_mpzp_document(blob, list(symbols), scope_mode=scope_mode)  # type: ignore[arg-type]
 
 
 def engine_result_from_parse(parse_result: MpzpParseResult, page_numbers: Sequence[int]) -> EngineResult:
@@ -837,6 +857,11 @@ def engine_result_from_parse(parse_result: MpzpParseResult, page_numbers: Sequen
                 source_text=p.source_text,
                 raw_value=p.raw_value,
                 conflict_group_id=p.conflict_group_id,
+                span=(
+                    SourceSpan(page_of.get(p.page_number, p.page_number), p.char_start, p.char_end)
+                    if p.char_start is not None and p.char_end is not None and p.page_number is not None
+                    else None
+                ),
             )
             for p in zone.parameters
         ]
@@ -865,11 +890,49 @@ register_engine(
     EngineSpec(name="legacy", description="produkcyjny parser MPZP (mpzp-parser/2.x)", factory=lambda _ctx: LegacyEngine()),
     replace=True,
 )
+class V3Engine:
+    """Rdzeń deterministyczny v3 w zakresie PV3-04–06: bloki stref i prawdziwe źródło wartości.
+
+    Wzorce wartości są nadal dotychczasowe (leksykon ilości to Task 20.7), więc recall nie
+    jest tu celem; silnik mierzy przypisanie do strefy, źródło i zakres bloku. Bloki do
+    metryki zakresu liczone są tym samym kodem co w parserze (deterministycznie).
+    """
+
+    name = "v3"
+    version = MPZP_PARSER_VERSION_BLOCKS
+    supports_discovery = True
+
+    def run(self, loaded: Mapping[str, Any], symbols: Sequence[str]) -> EngineResult:
+        page_numbers = loaded["page_numbers"]
+        result = engine_result_from_parse(asyncio.run(run_parser(loaded, symbols, "blocks")), page_numbers)
+        if symbols:
+            extraction, _ = build_extraction(loaded)
+            tree = build_tree_from_extraction(extraction)
+            resolution = resolve_zone_scope(structure_view(tree), list(symbols))
+            page_of = {index + 1: number for index, number in enumerate(page_numbers)}
+            for symbol in symbols:
+                result.blocks[symbol] = [
+                    ScopeBlock(
+                        block_id=block.block_id,
+                        scope_kind=block.scope_kind,
+                        strategy=block.strategy,
+                        confidence=block.scope_confidence,
+                        spans=tuple(
+                            SourceSpan(page_of.get(page, page), start, end)
+                            for segment in block.segments
+                            for page, start, end in tree.document.raw_spans(*segment)
+                        ),
+                    )
+                    for block in resolution.blocks_for(symbol)
+                ]
+        return result
+
+
 register_engine(
     EngineSpec(
         name="v3",
-        description="rdzeń deterministyczny v3 (bloki stref, resolver zakresu, leksykon ilości)",
-        unavailable_reason="not implemented yet (Tasks 20.4–20.7, 20.12)",
+        description="bloki stref, resolver zakresu i źródło wartości (PV3-04–06); leksykon ilości: Task 20.7",
+        factory=lambda _ctx: V3Engine(),
     ),
     replace=True,
 )
@@ -1098,6 +1161,152 @@ def value_rows(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 }
             )
     return result
+
+
+# --- scope of the zone block (PV3-06) ----------------------------------------------------------
+
+
+def load_scope_labels(base_dir: Path) -> dict[str, Any]:
+    """Etykiety układu strefy (strategie 1–6) spoza zamrożonych anotacji, jeśli istnieją.
+
+    To opisowe metadane do rozbicia wyniku na układy, nie ground truth i nie wchodzą do
+    ``annotations_sha256``. Zbiór z etykietą ``scope_strategy`` w strefie manifestu ma
+    pierwszeństwo.
+    """
+    path = base_dir / "scope_strategies.json"
+    if not path.is_file():
+        return {}
+    return dict(_read_json(path).get("labels", {}))
+
+
+def _zone_label(sample: Mapping[str, Any], zone: Mapping[str, Any], labels: Mapping[str, Any]) -> str:
+    explicit = zone.get("scope_strategy")
+    if explicit is None:
+        entry = labels.get(sample["sample_id"])
+        explicit = entry.get(zone["symbol"]) if isinstance(entry, Mapping) else entry
+    return "unlabelled" if explicit is None else str(explicit)
+
+
+def _merged_intervals(intervals: Sequence[tuple[int, int]], gap: int = 1) -> list[tuple[int, int]]:
+    merged: list[tuple[int, int]] = []
+    for start, end in sorted(intervals):
+        if merged and start <= merged[-1][1] + gap:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def _block_intervals(
+    blocks: Sequence[ScopeBlock], truth: TruthText, kinds: set[str] | None = None
+) -> list[tuple[int, int]]:
+    intervals = []
+    for block in blocks:
+        if kinds is not None and block.scope_kind not in kinds:
+            continue
+        for span in block.spans:
+            mapped = truth.raw_span_to_doc(span.page, span.start, span.end)
+            if mapped is not None:
+                intervals.append(mapped)
+    return _merged_intervals(intervals)
+
+
+def _within(span: tuple[int, int], intervals: Sequence[tuple[int, int]]) -> bool:
+    return any(start <= span[0] and span[1] <= end for start, end in intervals)
+
+
+def score_scope(
+    sample: Mapping[str, Any],
+    result: EngineResult,
+    truth: TruthText | None,
+    labels: Mapping[str, Any],
+    page_only: bool = False,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Zasięg zakresu i zanieczyszczenie: czy cytat anotacji leży w bloku zwróconym dla strefy.
+
+    ``scope`` — dla każdej anotacji: czy jej cytat leży w którymkolwiek bloku zwróconym dla
+    tej strefy. ``contamination`` — dla każdej pary stref: czy cytat anotacji INNEJ strefy
+    (w innym miejscu niż cytaty tej strefy) leży w blokach ``zone_section`` tej strefy.
+    Bez bloków w wyniku silnika albo bez wspólnego tekstu anotacji (skan symulowany) wynik jest pusty.
+    """
+    if truth is None or page_only or not result.blocks:
+        return [], []
+    locations = annotation_locations(sample, truth)
+    scope_rows: list[dict[str, Any]] = []
+    contamination: list[dict[str, Any]] = []
+    own: dict[str, set[tuple[int, int]]] = {
+        zone["symbol"]: {loc.evidence for (symbol, _), locs in locations.items() if symbol == zone["symbol"] for loc in locs}
+        for zone in sample["zones"]
+    }
+    for zone in sample["zones"]:
+        symbol = zone["symbol"]
+        blocks = result.blocks.get(symbol, [])
+        all_intervals = _block_intervals(blocks, truth)
+        section_intervals = _block_intervals(blocks, truth, {"zone_section"})
+        label = _zone_label(sample, zone, labels)
+        for (loc_symbol, parameter), locs in sorted(locations.items()):
+            if loc_symbol != symbol:
+                continue
+            for loc in locs:
+                scope_rows.append(
+                    {
+                        "sample_id": sample["sample_id"], "format": sample["format"], "zone_symbol": symbol,
+                        "parameter": parameter, "value": loc.value, "applicability": loc.applicability,
+                        "label": "5" if loc.applicability == "general_clause" else label,
+                        "covered": _within(loc.evidence, all_intervals),
+                        "in_zone_section": _within(loc.evidence, section_intervals),
+                        "block_kinds": sorted({b.scope_kind for b in blocks}),
+                    }
+                )
+        for other in sample["zones"]:
+            if other["symbol"] == symbol:
+                continue
+            for (loc_symbol, parameter), locs in sorted(locations.items()):
+                if loc_symbol != other["symbol"]:
+                    continue
+                for loc in locs:
+                    if loc.applicability != "zone_section" or loc.evidence in own[symbol]:
+                        continue
+                    contamination.append(
+                        {
+                            "sample_id": sample["sample_id"], "zone_symbol": symbol, "other_zone": other["symbol"],
+                            "parameter": parameter, "label": label, "inside": _within(loc.evidence, section_intervals),
+                        }
+                    )
+    return scope_rows, contamination
+
+
+def scope_metrics(
+    scope_rows: Sequence[Mapping[str, Any]], contamination: Sequence[Mapping[str, Any]], reported: bool
+) -> dict[str, Any]:
+    if not reported:
+        return {"reported": False, "reason": "engine_does_not_report_blocks"}
+
+    def coverage(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        return ratio(sum(bool(row["covered"]) for row in rows), len(rows))
+
+    def grouped(key: str) -> dict[str, Any]:
+        return {
+            str(value): coverage([row for row in scope_rows if row[key] == value])
+            for value in sorted({row[key] for row in scope_rows}, key=str)
+        }
+
+    return {
+        "reported": True,
+        "coverage": coverage(scope_rows),
+        "coverage_in_zone_section": ratio(sum(bool(row["in_zone_section"]) for row in scope_rows), len(scope_rows)),
+        "by_label": grouped("label"),
+        "by_applicability": grouped("applicability"),
+        "by_format": grouped("format"),
+        "contamination": ratio(sum(bool(row["inside"]) for row in contamination), len(contamination)),
+        "contamination_by_label": {
+            label: ratio(
+                sum(bool(row["inside"]) for row in contamination if row["label"] == label),
+                sum(1 for row in contamination if row["label"] == label),
+            )
+            for label in sorted({row["label"] for row in contamination})
+        },
+    }
 
 
 # --- metrics ------------------------------------------------------------------
@@ -1377,6 +1586,10 @@ def evaluate(
     discovery: list[dict[str, Any]] = []
     rejection_records: list[dict[str, Any]] = []
     per_sample: list[dict[str, Any]] = []
+    scope_rows: list[dict[str, Any]] = []
+    contamination_rows: list[dict[str, Any]] = []
+    blocks_reported = False
+    labels = load_scope_labels(base_dir)
     for sample in manifest["samples"]:
         doc_id = sample["document_id"]
         truth_id = sample.get("truth_document_id") or doc_id
@@ -1391,6 +1604,12 @@ def evaluate(
             truth=truths[truth_id], engine=engine.name, page_only=truth_id != doc_id,
         )
         rows.extend(sample_rows)
+        blocks_reported = blocks_reported or bool(result.blocks)
+        sample_scope, sample_contamination = score_scope(
+            sample, result, truths[truth_id], labels, page_only=truth_id != doc_id
+        )
+        scope_rows.extend(sample_scope)
+        contamination_rows.extend(sample_contamination)
         rejection_records.extend(_rejection_records(sample, sample_rows, result.rejections))
         observation = {
             "sample_id": sample["sample_id"],
@@ -1426,6 +1645,7 @@ def evaluate(
         "total": len(rejection_records),
         "by_gate": compare.rejection_gate_table(rejection_records),
     }
+    metrics["scope"] = scope_metrics(scope_rows, contamination_rows, blocks_reported)
     if engine.supports_discovery:
         recalled = sum(len(item["recalled"]) for item in discovery)
         annotated = sum(len(item["annotated_symbols"]) for item in discovery)
@@ -1443,6 +1663,8 @@ def evaluate(
         "metrics": metrics,
         "zone_symbol_discovery": discovery_block,
         "rejection_records": rejection_records,
+        "scope_rows": scope_rows,
+        "contamination_rows": contamination_rows,
         "parser_version": version,
         "observations": {"engine": engine.name, "version": version, "per_sample": per_sample},
     }
@@ -1775,6 +1997,7 @@ def render_report(
     for hint, count in sorted(Counter(item["cause_hint"] for item in errors).items(), key=lambda pair: -pair[1]):
         lines.append(f"| `{hint}` | {count} |")
     lines.append("")
+    lines.extend(_scope_section(metrics["scope"]))
     lines.extend(_rejection_section(metrics["rejections"]))
     lines.extend(_observation_section(result["observations"]))
     return "\n".join(lines)
@@ -1811,6 +2034,31 @@ def _source_section(detection: Mapping[str, Any]) -> list[str]:
             "anotowany nie jest tekstem odczytanym przez silnik, np. skan symulowany).", "",
         ]
     )
+    return lines
+
+
+def _scope_section(scope: Mapping[str, Any]) -> list[str]:
+    lines = ["## Zakres strefy (PV3-06)", ""]
+    if not scope["reported"]:
+        return [*lines, "Silnik nie raportuje bloków zakresu strefy (zakres = cały paragraf kandydackich segmentów), "
+                        "więc zasięg i zanieczyszczenie nie są mierzone.", ""]
+    lines.extend([
+        "**Zasięg zakresu**: cytat anotacji leży w bloku zwróconym dla strefy (dowolny rodzaj bloku). "
+        "**Zanieczyszczenie**: cytat anotacji INNEJ strefy (w innym miejscu niż cytaty tej strefy) leży w bloku "
+        "`zone_section` tej strefy — oczekiwane 0. Układ (strategia 1–6) pochodzi z etykiet poza zamrożonymi "
+        "anotacjami (`scope_strategies.json`) albo z pola `scope_strategy` strefy; klauzule ogólne liczone są jako układ 5.", "",
+        f"Zasięg: {_cell(scope['coverage'])}; w blokach `zone_section`: {_cell(scope['coverage_in_zone_section'])}; "
+        f"zanieczyszczenie: {_cell(scope['contamination'])}.", "",
+        "| Układ | Zasięg zakresu | Zanieczyszczenie |", "|---|---|---|",
+    ])
+    for label, metric in scope["by_label"].items():
+        contamination = scope["contamination_by_label"].get(label)
+        lines.append(f"| `{label}` | {_cell(metric)} | {_cell(contamination) if contamination else 'brak par'} |")
+    lines.extend(["", "| Zastosowalność | Zasięg zakresu |", "|---|---|"])
+    lines.extend(f"| `{key}` | {_cell(metric)} |" for key, metric in scope["by_applicability"].items())
+    lines.extend(["", "| Format | Zasięg zakresu |", "|---|---|"])
+    lines.extend(f"| `{key}` | {_cell(metric)} |" for key, metric in scope["by_format"].items())
+    lines.append("")
     return lines
 
 
@@ -1900,6 +2148,8 @@ def write_outputs(
             **result["observations"],
         },
     )
+    _dump(output_dir / "scope_results.json", {"manifest_sha256": digest, "scope": result["metrics"]["scope"],
+                                               "rows": result["scope_rows"], "contamination": result["contamination_rows"]})
     _write_csv(
         output_dir / "parameter_results.csv",
         ("engine", "sample_id", "document_id", "gmina", "split", "format", "multi_zone", "zone_symbol", "parameter",
