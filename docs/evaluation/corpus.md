@@ -113,3 +113,13 @@ Odświeżenie jest świadomą czynnością badawczą poza CI:
 6. przejrzeć różnicę expected przed akceptacją.
 
 Zmiana źródła albo geometrii nie może automatycznie nadpisać expected w CI.
+
+## Badania oparte na korpusie (BK-601, BK-602)
+
+Korpus jest wejściem badania poprawności (`evaluate_reference_corpus.py --study`, wyniki w
+`results/accuracy/`, analiza w `error_analysis.md`) i eksperymentu centroid vs przecięcie
+(`compare_centroid_intersection.py`, `results/centroid/`). Korpus nie zawiera geometrii
+stref POG/MPZP, tylko ich udziały, więc dokładną część eksperymentu wykonuje się na
+warstwach zamrożonych osobno narzędziem `freeze_pog_zone_layers.py`. Opis wyników i
+ograniczeń: [odbiór BK-601–603](bk-601-603-verification.md).
+

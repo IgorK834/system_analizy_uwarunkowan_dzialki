@@ -57,7 +57,9 @@ szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
    kandydatami (`manual_zone_context`). `POST /analyze/resume` przyjmuje ręczny
    symbol, parsuje wyłącznie przypiętą kopię (bez ponownego pobrania) i zapisuje
    wynik `partial` z nieustalonym udziałem strefy oraz flagami weryfikacji
-   (BK-204, ADR-005).
+   (BK-204, ADR-005). Symbol (do 40 znaków, także ze spacją, przecinkiem i
+   plusem) jest sprowadzany do formy kanonicznej jedną regułą dla API i UI
+   (`shared/zone-symbol-rules.json`, aneks PV3-04 w ADR-005).
 5. POG/OUZ ma discovery (także przez WMS), pobieranie wektorów i realne
    przecięcia. Discovery WMS nie zastępuje geometrii analitycznej. Wewnętrzny
    `PogAnalysisResult` potrafi zachować listę stref, ale obecny `PogResult`
@@ -175,3 +177,48 @@ i ograniczenia aktualnego środowiska są w
 [wynikach baseline](evaluation/results/baseline/README.md). Skrypt
 `scripts/capture_baseline.sh` archiwizuje dokładny commit, uruchamia kroki
 CI w osobnym projekcie Compose i nie kopiuje lokalnego `.env`.
+
+## Badania ilościowe BK-601–BK-603 (2026-09-30)
+
+- BK-601: badanie poprawności na zamrożonym korpusie (`evaluate_reference_corpus.py
+  --study`): pola i statusy sekcji, rejestr 107 błędów i ograniczeń z kategorią przyczyny
+  i dowodem, zamrożony manifest, determinizm. Metryki nagłówkowe są 1,0/0 pp, bo runner
+  odczytuje zamrożone obserwacje; poziom pól ujawnia m.in. literał `NULL` z KIMPZP jako
+  symbol strefy.
+- BK-602: eksperyment centroid vs przecięcie: kontrole ręczne, dolne granice z udziałów
+  korpusu (3 z 11 przypadków musi stracić strefę) i symulacja na 30 rzeczywistych
+  działkach. Wynik dokładny na realnych strefach niezmierzony (RU WFS nieosiągalny).
+- BK-603: korpus 21 anotowanych próbek parsera MPZP; precision 1,00, recall 0,25 (0,20 na
+  zbiorze końcowym), confidence informacyjne, ale niedoszacowane.
+- Ustalenia poza zakresem: odrzucenie legacy `srsName` RU w `pog_fetch` oraz `NULL` jako
+  symbol strefy w `mpzp.py`.
+
+Szczegóły: [odbiór BK-601–603](evaluation/bk-601-603-verification.md).
+
+## Parser MPZP v3 — przygotowanie (Epic 20, 2026-10-01)
+
+Wykonane: **PV3-03** — ewaluator wielosilnikowy (`legacy` działa, `v3` i `hybrid` zarejestrowane i
+niedostępne), metryka `source_consistent` (na korpusie BK-603 legacy: 51/75 poprawnych wartości ze
+spójnym źródłem; 9 z 72 wartości zgodnych z wymaganą pochodzi z innej strony), porównanie sparowane,
+odtwarzanie odpowiedzi modelu (`--llm-replay`), `--live` zablokowany bez flagi, klucza i dostawcy.
+**PV3-02 częściowo** — protokół anotacji, profil walidatora `final-v2`, narzędzia drugiego anotatora,
+zamrożenia i logu pobrań; **korpus nie został zbudowany** (lista źródeł czeka na zatwierdzenie
+właściciela, anotację muszą wykonać ludzie). **PV3-01** — spike’iem (`backend/scripts/llm_spike.py`) zmierzono 2026-10-02 model
+`gemini-3.8-flash` na 10 blokach (schemat 30/30, cytaty 261/261, p95 8,3 s, ok. 0,04 USD na analizę od 2027;
+wynik mechaniczny GO); **decyzję go/no-go zapisuje właściciel w ADR-012**. Stan i polecenia:
+[odbiór PV3-01–03](evaluation/pv3-01-03-verification.md).
+
+## Parser MPZP v3 — fundament (PV3-04–06, 2026-10-02)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-04** — wspólna reguła symbolu strefy (forma kanoniczna
+NFKC + przycięcie + zwinięcie odstępów, ≤ 40 znaków, jeden plik przypadków dla backendu i UI),
+tolerancyjne na odstępy dopasowanie symbolu w tekście bez scalania `MN` z `MN.1`, migracja `027`
+(`analyses.resolved_zone_symbol` 20 → 50), `MPZP_RESULT_SCHEMA_VERSION` 2.2. **PV3-05** — drzewo
+struktury dokumentu z warstwą normalizacji (liście dzielą znormalizowany tekst bez luk, strony
+monotoniczne) i `ZoneBlock` z zakresem znaków, stronami i ścieżką. **PV3-06** — resolver zakresu strefy
+(strategie 1–6 i 0) i silnik `v3` w ewaluatorze: na korpusie BK-603 `source_consistent` 88/88 (legacy
+51/75), zasięg zakresu 294/294 (każdy układ 1–6 = 1,0), zanieczyszczenie `zone_section` 0/428.
+**Wyniki są rozwojowe** (resolver rozwijano na tych 21 próbkach, a etykiety układów nadał asystent AI);
+niezależna ocena wymaga zbioru końcowego z PV3-02. Produkcja nadal używa trybu `legacy`; przełączenie
+na bloki to Task 20.14 (z podniesieniem wersji kontraktu). Stan i polecenia:
+[odbiór PV3-04–06](evaluation/pv3-04-06-verification.md).

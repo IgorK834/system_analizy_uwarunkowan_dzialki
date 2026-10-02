@@ -100,3 +100,31 @@ python3 -m pytest \
 
 Wynik odbiorowy z 23.09.2026: 37 testów przeszło, a pokrycie zmienionych
 modułów wyniosło 95% (port 100%, harness 95%).
+
+## Tryb badania BK-601 (`--study`)
+
+```bash
+python3 backend/scripts/evaluate_reference_corpus.py --study --repeat 3
+```
+
+Domyślnie zapisuje do `docs/evaluation/results/accuracy/` i generuje
+`docs/evaluation/error_analysis.md`. Metryki BK-004 pozostają bez zmian; tryb dodaje:
+
+- `run_manifest.json` — zamrożone wejście: `commit_sha`, odcisk kodu (SHA-256 plików
+  harnessu i analizatorów), `corpus_sha256` i skróty wszystkich artefaktów, wydania
+  źródeł, wersje parsera, stylu POG i kontraktów, środowisko oraz wszystkie parametry
+  (progi, tolerancje, `discrepancy_threshold_pp=0.5`); `manifest_sha256` nie zależy od czasu;
+- porównanie na poziomie pól (`field_results.csv`) i statusów sekcji
+  (`section_results.csv`) z werdyktami `match`, `within_tolerance`, `mismatch`,
+  `missing_actual`, `unexpected_actual` (fałszywa pewność), `both_unknown` i
+  `ambiguous_excluded` (wyłącznie wskazana ścieżka); każda metryka ma licznik i mianownik;
+- rejestr błędów i ograniczeń (`error_ledger.json|csv`) z kategorią przyczyny
+  (`source`, `data`, `geometry`, `parser`, `presentation`), przyczyną źródłową, regułą
+  atrybucji i dowodami (wskaźnik JSON w zamrożonej obserwacji z SHA-256, wskaźnik w
+  ground truth, odwołanie do kodu, próba uruchomienia kodu produkcyjnego);
+- tabelę „co waliduje każda metryka” (`measurement_kinds`): udziały POG/MPZP/OUZ i NMT są
+  odczytem zamrożonych obserwacji, a nie niezależnym przecięciem;
+- kontrolę determinizmu: `--repeat N` porównuje `substantive_sha256`; czas trafia osobno
+  do `timing.json` i nie wchodzi do skrótu. Kod wyjścia `1` także przy mniej niż 24
+  przypadkach, przy `wejścia ≠ ukończone + częściowe + błędne` i przy rozbieżności skrótów.
+

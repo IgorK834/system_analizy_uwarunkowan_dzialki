@@ -9,6 +9,8 @@ RUN npm ci
 # ../shared/pog-presentation.json działa tak samo lokalnie i w obrazie.
 FROM dependencies AS source
 COPY --from=shared pog-presentation.json /workspace/shared/pog-presentation.json
+# PV3-04: reguły symbolu strefy i przypadki zgodności wspólne z backendem.
+COPY --from=shared zone-symbol-rules.json /workspace/shared/zone-symbol-rules.json
 COPY . .
 
 FROM source AS build

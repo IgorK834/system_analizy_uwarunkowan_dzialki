@@ -325,8 +325,12 @@ python3 backend/scripts/evaluate_mpzp_parser.py --mode offline \
 Parser MPZP v3 (wariant C: rdzeń deterministyczny + ekstrakcja modelem językowym z weryfikacją
 cytatu) jest przygotowywany w Epicu 20. Gotowe są: ewaluator wielosilnikowy z metryką `source_consistent`
 (PV3-03), protokół i narzędzia nowego zbioru końcowego (PV3-02) oraz narzędzie spike’u modelu i
-[ADR-012](docs/adr/ADR-012-mpzp-llm-extraction.md) (PV3-01, pomiar na żywo oczekuje na klucz API).
+[ADR-012](docs/adr/ADR-012-mpzp-llm-extraction.md) (PV3-01, pomiar na żywo wykonany 2026-10-02; decyzja go/no-go czeka na właściciela).
 Stan i polecenia: [odbiór PV3-01–03](docs/evaluation/pv3-01-03-verification.md).
+Fundament parsera v3 (PV3-04–06): wspólna reguła symbolu strefy (do 40 znaków, jeden plik przypadków dla
+API i UI), drzewo struktury dokumentu z blokami stref i resolver zakresu strefy, dostępny w ewaluatorze
+jako silnik `v3` (`--engine legacy v3`); produkcja nadal używa trybu `legacy`. Stan, wyniki i ograniczenia:
+[odbiór PV3-04–06](docs/evaluation/pv3-04-06-verification.md).
 
 Geometrie stref POG dla dokładnej części BK-602 zamraża ręcznie (z siecią, poza CI)
 `backend/scripts/freeze_pog_zone_layers.py`.
