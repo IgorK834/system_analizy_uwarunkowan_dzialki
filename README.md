@@ -302,6 +302,35 @@ python3 backend/scripts/evaluate_reference_corpus.py \
   --fail-on-regression
 ```
 
+### Badania ilościowe BK-601–BK-603
+
+Trzy badania działają offline na zamrożonych danych i zapisują komplet artefaktów
+(JSON, CSV, Markdown, SVG, zamrożony manifest z hashami). Opis, wyniki, ograniczenia i
+mapowanie na kryteria akceptacji: [odbiór BK-601–603](docs/evaluation/bk-601-603-verification.md).
+
+```bash
+# BK-601: poprawność na korpusie referencyjnym (pola, statusy, rejestr błędów, determinizm)
+python3 backend/scripts/evaluate_reference_corpus.py --study --repeat 3
+
+# BK-602: centroid vs pełne przecięcie (kontrole, granice z korpusu, symulacja)
+python3 backend/scripts/compare_centroid_intersection.py \
+  --output-dir docs/evaluation/results/centroid
+
+# BK-603 / PV3-03: parser MPZP na anotowanym korpusie (korpus: backend/tests/fixtures/mpzp_evaluation);
+# wyniki silnika w docs/evaluation/results/parser/<silnik>/, porównanie wielu silników w .../comparison/
+python3 backend/scripts/evaluate_mpzp_parser.py --mode offline \
+  --output-dir docs/evaluation/results/parser
+```
+
+Parser MPZP v3 (wariant C: rdzeń deterministyczny + ekstrakcja modelem językowym z weryfikacją
+cytatu) jest przygotowywany w Epicu 20. Gotowe są: ewaluator wielosilnikowy z metryką `source_consistent`
+(PV3-03), protokół i narzędzia nowego zbioru końcowego (PV3-02) oraz narzędzie spike’u modelu i
+[ADR-012](docs/adr/ADR-012-mpzp-llm-extraction.md) (PV3-01, pomiar na żywo oczekuje na klucz API).
+Stan i polecenia: [odbiór PV3-01–03](docs/evaluation/pv3-01-03-verification.md).
+
+Geometrie stref POG dla dokładnej części BK-602 zamraża ręcznie (z siecią, poza CI)
+`backend/scripts/freeze_pog_zone_layers.py`.
+
 ## Wymagania
 
 - Docker
