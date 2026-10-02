@@ -1,0 +1,216 @@
+{
+  "schema": "zone-symbol-rules/1",
+  "rules_version": "zone-symbol/2",
+  "canonicalization": "NFKC, then trim edge whitespace, then reject control characters, then collapse whitespace to one space",
+  "min_length": 1,
+  "max_length": 40,
+  "max_raw_length": 200,
+  "pattern": "^[0-9A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż._/\\-,+()]+(?: [0-9A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż._/\\-,+()]+)*$",
+  "cases": [
+    {
+      "input": "230_U",
+      "valid": true,
+      "canonical": "230_U"
+    },
+    {
+      "input": "6.8.MW/U",
+      "valid": true,
+      "canonical": "6.8.MW/U"
+    },
+    {
+      "input": "MN.11",
+      "valid": true,
+      "canonical": "MN.11"
+    },
+    {
+      "input": "MN/U.1",
+      "valid": true,
+      "canonical": "MN/U.1"
+    },
+    {
+      "input": "ŁŻ-1",
+      "valid": true,
+      "canonical": "ŁŻ-1"
+    },
+    {
+      "input": "22 KD G1/2(Z1/4)",
+      "valid": true,
+      "canonical": "22 KD G1/2(Z1/4)"
+    },
+    {
+      "input": "6KD L",
+      "valid": true,
+      "canonical": "6KD L"
+    },
+    {
+      "input": "7 UC,U,M",
+      "valid": true,
+      "canonical": "7 UC,U,M"
+    },
+    {
+      "input": "KL 1/2",
+      "valid": true,
+      "canonical": "KL 1/2"
+    },
+    {
+      "input": "146 MN",
+      "valid": true,
+      "canonical": "146 MN"
+    },
+    {
+      "input": "1 PK",
+      "valid": true,
+      "canonical": "1 PK"
+    },
+    {
+      "input": "1.4U,MN",
+      "valid": true,
+      "canonical": "1.4U,MN"
+    },
+    {
+      "input": "A+B",
+      "valid": true,
+      "canonical": "A+B"
+    },
+    {
+      "input": "  230_U  ",
+      "valid": true,
+      "canonical": "230_U"
+    },
+    {
+      "input": "146   MN",
+      "valid": true,
+      "canonical": "146 MN"
+    },
+    {
+      "input": "146 MN",
+      "valid": true,
+      "canonical": "146 MN"
+    },
+    {
+      "input": "146 MN",
+      "valid": true,
+      "canonical": "146 MN"
+    },
+    {
+      "input": "\n1 PK\r\n",
+      "valid": true,
+      "canonical": "1 PK"
+    },
+    {
+      "input": "６．８．ＭＷ／Ｕ",
+      "valid": true,
+      "canonical": "6.8.MW/U"
+    },
+    {
+      "input": "A                                                            B",
+      "valid": true,
+      "canonical": "A B"
+    },
+    {
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "canonical": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "input": "",
+      "valid": false,
+      "code": "empty"
+    },
+    {
+      "input": "   ",
+      "valid": false,
+      "code": "empty"
+    },
+    {
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false,
+      "code": "too_long"
+    },
+    {
+      "input": "xxxxxxxxxxxxxxxxxxxx                              yyyyyyyyyyyyyyyyyyyy",
+      "valid": false,
+      "code": "too_long"
+    },
+    {
+      "input": "230\n_U",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230\tU",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230_U\u0000",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230\u0007U",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230\u001fU",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230U",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230;U",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "<b>U</b>",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "MN​U",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "MN#1",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "MN:1",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "'; DROP TABLE x;--",
+      "valid": false,
+      "code": "disallowed_characters"
+    },
+    {
+      "input": "\u001f230_U",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "A",
+      "valid": false,
+      "code": "control_characters"
+    },
+    {
+      "input": "230_U ",
+      "valid": true,
+      "canonical": "230_U"
+    },
+    {
+      "input": "230 U",
+      "valid": true,
+      "canonical": "230 U"
+    }
+  ]
+}
