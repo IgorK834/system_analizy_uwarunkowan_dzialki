@@ -66,3 +66,13 @@ Jeżeli gmina później zmieni uchwałę albo sposób publikacji, zamrożony tek
 nadal jest prawidłowym testem regresyjnym kodu, ale nie może być używany jako
 źródło bieżącego prawa. Znane luki ekstraktorów są opisane w README każdego
 fixture'a i celowo nie są ukrywane przez ręczne poprawianie snapshotów.
+
+## Rozszerzenia skryptu budującego (BK-603)
+
+`scripts/build_mpzp_text_fixture.py` zapisuje teraz w `source.json` także skrót
+SHA-256 pobranych bajtów, rozmiar, metodę ekstrakcji, wersję silnika OCR oraz numery
+stron źródła, a opcje `--pages`, `--ocr`, `--simulate-scan` i `--keep-pdf` pozwalają
+zachować fragment dokumentu, użyć produkcyjnego OCR albo oznaczony jako symulowany
+skan. Istniejące fixtures `expected.json` i pliki `source.json` tego katalogu nie
+zmieniły się; nowe pola są opcjonalne dla `test_mpzp_parser_regression.py`.
+Korpus ewaluacyjny z niezależnymi anotacjami jest w `../mpzp_evaluation/`.
