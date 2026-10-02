@@ -8,7 +8,13 @@ import { getApiResourceUrl } from "@/lib/config";
 import { formatPlDate } from "@/lib/pogStatus";
 import { shortSha, verifiedHttpsHref } from "@/lib/safeLink";
 import type { AnalyzeResponse, PreviewSource } from "@/lib/types";
-import { DEFAULT_ZONE_SYMBOL_MAX_LENGTH, validateZoneSymbol } from "@/lib/zoneSymbol";
+import {
+  DEFAULT_ZONE_SYMBOL_MAX_LENGTH,
+  ZONE_SYMBOL_MAX_RAW_LENGTH,
+  canonicalizeZoneSymbol,
+  sameZoneSymbol,
+  validateZoneSymbol,
+} from "@/lib/zoneSymbol";
 
 export type ManualZonePanelProps = {
   result: AnalyzeResponse;
@@ -57,8 +63,12 @@ export function ManualZonePanel({ result, loading, error, onSubmit }: ManualZone
   const previewKey = context?.raster_preview_source_key ?? "mpzp";
   const rasterSource = sources.find((source) => source.source_key === previewKey);
   const document = context?.document ?? null;
-  const trimmed = symbol.trim();
-  const outsideCandidates = trimmed !== "" && candidates.length > 0 && !candidates.includes(trimmed);
+  // Porównanie z kandydatami jest tolerancyjne na odstępy i wielkość liter (`146MN` = `146 MN`).
+  const canonical = canonicalizeZoneSymbol(symbol);
+  const outsideCandidates =
+    canonical !== "" &&
+    candidates.length > 0 &&
+    !candidates.some((candidate) => sameZoneSymbol(candidate, canonical));
   const disabled = loading || !result.analysis_id;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -163,7 +173,7 @@ export function ManualZonePanel({ result, loading, error, onSubmit }: ManualZone
                   type="button"
                   className="secondary-button"
                   disabled={disabled}
-                  aria-pressed={trimmed === candidate}
+                  aria-pressed={canonical !== "" && sameZoneSymbol(canonical, candidate)}
                   onClick={() => {
                     setSymbol(candidate);
                     setSymbolError(null);
@@ -183,7 +193,7 @@ export function ManualZonePanel({ result, loading, error, onSubmit }: ManualZone
       <input
         id="manual-zone-symbol"
         value={symbol}
-        maxLength={maxLength}
+        maxLength={ZONE_SYMBOL_MAX_RAW_LENGTH}
         disabled={disabled}
         aria-invalid={Boolean(symbolError)}
         aria-describedby="manual-zone-symbol-hint manual-zone-symbol-error"

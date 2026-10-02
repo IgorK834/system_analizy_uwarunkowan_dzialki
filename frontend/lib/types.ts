@@ -28,7 +28,7 @@ export type AnalyzeRequest =
 
 export type AnalyzeResumeRequest = {
   analysis_id: number;
-  /** Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej, max 20 znaków. */
+  /** Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej (surowy wpis do 200 znaków; serwer sprowadza go do formy kanonicznej ≤ 40 znaków). */
   zone_symbol: string;
 };
 
@@ -154,7 +154,10 @@ export type MpzpZoneResult = {
 
 /** Zapis ręcznego wskazania symbolu strefy wraz z przypiętą wersją dokumentu. */
 export type ManualZoneSelection = {
+  /** Symbol w formie kanonicznej (NFKC, jedna spacja wewnętrzna). */
   entered_symbol: string;
+  /** Symbol dokładnie tak, jak wpisał go użytkownik; brak w zapisach sprzed PV3-04. */
+  entered_symbol_raw?: string | null;
   plan_id: string | null;
   candidate_zone_symbols: string[];
   symbol_in_candidates: boolean;
@@ -189,8 +192,10 @@ export type ManualZoneContext = {
   document: ManualZoneSourceDocument | null;
   raster_preview_source_key: "mpzp";
   symbol_max_length: number;
-  /** Wzorzec dozwolonych znaków — wspólny dla UI i API. */
+  /** Wzorzec formy kanonicznej symbolu — wspólny dla UI i API. */
   symbol_allowed_pattern: string;
+  /** Wersja reguł symbolu (forma kanoniczna i wzorzec). */
+  symbol_rules_version?: string;
   notice: string;
 };
 

@@ -82,13 +82,46 @@ describe("ManualZonePanel (BK-204)", () => {
     const user = userEvent.setup();
     const onSubmit = renderPanel();
 
-    await user.type(screen.getByLabelText("Symbol strefy"), "230 U");
+    await user.type(screen.getByLabelText("Symbol strefy"), "230;U");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Wznów analizę" }));
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText(/niedozwolone znaki/)).toBeVisible();
     expect(screen.getByLabelText("Symbol strefy")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("przyjmuje symbol ze spacją i wysyła jego formę kanoniczną", async () => {
+    const user = userEvent.setup();
+    const onSubmit = renderPanel();
+
+    await user.type(screen.getByLabelText("Symbol strefy"), "  146   MN ");
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Wznów analizę" }));
+
+    expect(onSubmit).toHaveBeenCalledWith("146 MN");
+  });
+
+  it("nie uznaje za spoza kandydatów symbolu różniącego się tylko odstępami", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(
+      <ManualZonePanel
+        result={waitingResponse({
+          manual_zone_context: manualZoneContext({ candidate_zone_symbols: ["146 MN", "1 PK"] }),
+        })}
+        loading={false}
+        error={null}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Symbol strefy"), "146MN");
+    expect(screen.queryByRole("note")).toBeNull();
+    expect(screen.getByRole("button", { name: "146 MN" })).toHaveAttribute("aria-pressed", "true");
+    await user.clear(screen.getByLabelText("Symbol strefy"));
+    await user.type(screen.getByLabelText("Symbol strefy"), "146");
+    expect(screen.getByRole("note")).toHaveTextContent("spoza kandydatów");
   });
 
   it("ostrzega o symbolu spoza kandydatów, ale go nie blokuje", async () => {

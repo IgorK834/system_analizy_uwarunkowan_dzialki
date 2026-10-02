@@ -7,6 +7,11 @@ import type {
   PreviewSource,
 } from "@/lib/types";
 import { buildAnalyzeResponse } from "@/test/fixtures";
+import {
+  DEFAULT_ZONE_SYMBOL_MAX_LENGTH,
+  DEFAULT_ZONE_SYMBOL_PATTERN,
+  ZONE_SYMBOL_RULES_VERSION,
+} from "@/lib/zoneSymbol";
 
 export const PINNED_SHA = "b".repeat(64);
 
@@ -60,8 +65,9 @@ export function manualZoneContext(overrides: Partial<ManualZoneContext> = {}): M
       preview_path: "/analyze/77/pending-document",
     },
     raster_preview_source_key: "mpzp",
-    symbol_max_length: 20,
-    symbol_allowed_pattern: "^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż._/-]+$",
+    symbol_max_length: DEFAULT_ZONE_SYMBOL_MAX_LENGTH,
+    symbol_allowed_pattern: DEFAULT_ZONE_SYMBOL_PATTERN,
+    symbol_rules_version: ZONE_SYMBOL_RULES_VERSION,
     notice:
       "Symbol podany ręcznie nie ustala udziału strefy w powierzchni działki (pozostaje nieustalony).",
     ...overrides,
@@ -135,6 +141,7 @@ export function manualZone(overrides: Partial<MpzpZoneResult> = {}): MpzpZoneRes
     ],
     manual_selection: {
       entered_symbol: "230_U",
+      entered_symbol_raw: "230_U",
       plan_id: "MPZP/2020/1",
       candidate_zone_symbols: ["230_U", "231_MN"],
       symbol_in_candidates: true,

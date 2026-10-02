@@ -55,6 +55,12 @@ function ManualSelectionDetails({ selection }: { selection: ManualZoneSelection 
         <dt>Wpisany symbol</dt>
         <dd>
           {selection.entered_symbol}
+          {selection.entered_symbol_raw != null &&
+            selection.entered_symbol_raw !== selection.entered_symbol && (
+              <span className="field-hint">
+                {" "}(wpisano: „{selection.entered_symbol_raw}”)
+              </span>
+            )}
           {!selection.symbol_in_candidates && (
             <span className="manual-review"> · spoza kandydatów discovery</span>
           )}
