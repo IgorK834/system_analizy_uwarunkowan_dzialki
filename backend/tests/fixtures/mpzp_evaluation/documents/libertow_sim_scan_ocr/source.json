@@ -1,0 +1,31 @@
+{
+  "url": "https://bip.malopolska.pl/pobierz/545916.html",
+  "fetched_at": "2026-09-30T09:22:06.323403+00:00",
+  "media_type": "application/pdf",
+  "filename": "545916.html",
+  "quality_score": 0.9134501275406915,
+  "needs_ocr": false,
+  "note": "Libertów MPZP, strony 3-4, symulowany skan + OCR",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "bb35df8e2419db36cb9d2b0c4fbb42f793992fd21978c60a7142bf1f669affb1",
+  "content_length": 73325,
+  "extraction_method": "ocr",
+  "ocr_used": true,
+  "ocr_engine_version": "Tesseract 5.5.0",
+  "manual_review_required": true,
+  "ocr_origin": "simulated_scan_of_real_text_pdf",
+  "simulated_scan": {
+    "dpi": 110,
+    "grayscale": "L",
+    "blur_radius": 0.8,
+    "rotation_deg": 0.6,
+    "jpeg_quality": 55
+  },
+  "scan_fragment_sha256": "c5b246977db66c637a565414b482c6a9147bd98736818a62f50ff314319d6fde",
+  "source_page_numbers": [
+    3,
+    4
+  ],
+  "source_page_count": 7,
+  "fragment_sha256": "ded3c9e3a8923f68fa55070b972743ef724bdf67377b0d5f9915e8f723867963"
+}

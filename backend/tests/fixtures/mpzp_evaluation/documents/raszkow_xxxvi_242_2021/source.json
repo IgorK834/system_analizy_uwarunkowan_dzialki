@@ -1,0 +1,32 @@
+{
+  "url": "https://edziennik.poznan.uw.gov.pl/GetActPdf.ashx?year=2021&book=0&position=6750",
+  "fetched_at": "2026-09-30T09:15:46.203510+00:00",
+  "media_type": "application/pdf",
+  "filename": "GetActPdf.ashx",
+  "quality_score": 0.8571428571428571,
+  "needs_ocr": false,
+  "note": "Uchwała XXXVI/242/2021 Rady Gminy i Miasta Raszków (MPZP)",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "348e7050f200545057f54bf25092d6f93dcd28940bce6bc1d50884e28fdcb0ef",
+  "content_length": 2102284,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ]
+}

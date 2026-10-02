@@ -1,0 +1,25 @@
+{
+  "url": "https://bip.malopolska.pl/pobierz/545916.html",
+  "fetched_at": "2026-09-30T09:16:14.903654+00:00",
+  "media_type": "application/pdf",
+  "filename": "545916.html",
+  "quality_score": 0.8571428571428571,
+  "needs_ocr": false,
+  "note": "MPZP wieś Libertów ul. Korczynowa (BIP Małopolska)",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "bb35df8e2419db36cb9d2b0c4fbb42f793992fd21978c60a7142bf1f669affb1",
+  "content_length": 73325,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}

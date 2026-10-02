@@ -1,0 +1,33 @@
+{
+  "url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+  "fetched_at": "2026-09-30T09:12:34.804081+00:00",
+  "media_type": "application/pdf",
+  "filename": "9df5251f-8fdf-0fe5-7c6f-320198ddca80",
+  "quality_score": 1.0,
+  "needs_ocr": false,
+  "note": "MPZP Falenica A2, m.st. Warszawa, tekst planu",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+  "content_length": 304554,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ]
+}

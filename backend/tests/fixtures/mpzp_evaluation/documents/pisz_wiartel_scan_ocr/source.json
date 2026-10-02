@@ -1,0 +1,22 @@
+{
+  "url": "https://bip.pisz.hi.pl/download.php?id=9857",
+  "fetched_at": "2026-09-30T09:17:00.462414+00:00",
+  "media_type": "application/pdf",
+  "filename": "download.php",
+  "quality_score": 0.9156282056664431,
+  "needs_ocr": false,
+  "note": "Uchwała XXV/254/98 Pisz, Wiartel (skan), OCR produkcyjnym Tesseract",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "1c17e5596ce11a066f963c1e553f878f6ae4e36a52fa19c811bbc721cbfb1410",
+  "content_length": 456246,
+  "extraction_method": "ocr",
+  "ocr_used": true,
+  "ocr_engine_version": "Tesseract 5.5.0",
+  "manual_review_required": true,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4
+  ]
+}

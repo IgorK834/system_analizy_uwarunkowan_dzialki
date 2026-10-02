@@ -1,0 +1,31 @@
+{
+  "url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+  "fetched_at": "2026-09-30T09:22:35.646721+00:00",
+  "media_type": "application/pdf",
+  "filename": "9df5251f-8fdf-0fe5-7c6f-320198ddca80",
+  "quality_score": 0.9152533140050594,
+  "needs_ocr": false,
+  "note": "MPZP Falenica A2, strony 10-11, symulowany skan + OCR",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+  "content_length": 304554,
+  "extraction_method": "ocr",
+  "ocr_used": true,
+  "ocr_engine_version": "Tesseract 5.5.0",
+  "manual_review_required": true,
+  "ocr_origin": "simulated_scan_of_real_text_pdf",
+  "simulated_scan": {
+    "dpi": 110,
+    "grayscale": "L",
+    "blur_radius": 0.8,
+    "rotation_deg": 0.6,
+    "jpeg_quality": 55
+  },
+  "scan_fragment_sha256": "488b37d25f39f12ccd1c22a84214f0b2375e661f23180dde8cd160e7a9d89d22",
+  "source_page_numbers": [
+    10,
+    11
+  ],
+  "source_page_count": 15,
+  "fragment_sha256": "1d5658cd0036e3c10d23314d292515c9b7d83919870fcd9ff74315f3fcb39672"
+}

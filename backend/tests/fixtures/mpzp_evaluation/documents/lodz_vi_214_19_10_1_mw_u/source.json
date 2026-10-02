@@ -1,0 +1,19 @@
+{
+  "url": "https://mapa.mpu.lodz.pl/_wypisy/117_140/10.1.MW_U.html",
+  "fetched_at": "2026-09-30T09:13:51.618239+00:00",
+  "media_type": "text/html",
+  "filename": "10.1.MW_U.html",
+  "quality_score": 1.0,
+  "needs_ocr": false,
+  "note": "Uchwała VI/214/19 Łódź, wypis dla terenu 10.1.MW/U",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "685b851d4671bf4d1bb847d347942037da7ef0655216fe85951be9d04782dad2",
+  "content_length": 166503,
+  "extraction_method": "html",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1
+  ]
+}

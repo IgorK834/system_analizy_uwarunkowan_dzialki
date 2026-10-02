@@ -1,0 +1,31 @@
+{
+  "url": "https://edzienniki.olsztyn.uw.gov.pl/GetActPdf.ashx?year=2021&book=0&position=925",
+  "fetched_at": "2026-09-30T09:12:53.220151+00:00",
+  "media_type": "application/pdf",
+  "filename": "GetActPdf.ashx",
+  "quality_score": 0.7692307692307693,
+  "needs_ocr": false,
+  "note": "Uchwała XXXVIII/262/2021 Rady Gminy Szczytno (MPZP)",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "document_sha256": "5bee60ec71157f9a00036848ab536ba8b5e63504938d484073d1a9bbee82eeb1",
+  "content_length": 1616331,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ]
+}
