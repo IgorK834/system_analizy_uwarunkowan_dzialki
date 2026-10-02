@@ -146,3 +146,48 @@ pewność były schowane w `raw_attributes.scenario`. UI/PDF pokazywały
   zamierzone: brak geometrii nie może dać pozornego rozstrzygnięcia.
 - Przypięte dokumenty zwiększają rozmiar bazy (jeden na wstrzymaną analizę);
   retencja jest do ustalenia razem z polityką magazynu artefaktów.
+
+## Aneks PV3-04 (2026-10-02): reguła symbolu strefy i jego dopasowanie w tekście
+
+Task 20.4 zastępuje wąski wzorzec symbolu (≤ 20 znaków, bez spacji i przecinków)
+jedną regułą dla backendu, API i UI. Dotyczy to wyłącznie ręcznego symbolu
+(BK-204) i dopasowania symbolu w tekście planu; ocena MPZP–POG (BK-205) bez zmian.
+
+18. **Forma kanoniczna.** Wpis użytkownika jest sprowadzany kolejno: NFKC →
+    przycięcie jawnym zestawem `" \t\n\v\f\r   "` → odrzucenie
+    znaków sterujących (kategoria Cc; sprawdzane *przed* zwinięciem, żeby `\n`
+    w środku nie stał się spacją) → zwinięcie ciągów odstępów do jednej spacji.
+    Dopiero forma kanoniczna jest walidowana: ≤ 40 znaków, litery, cyfry,
+    `. _ / - , + ( )` i pojedyncze spacje wewnętrzne. Surowy wpis jest
+    ograniczony do 200 znaków (ochrona przed nadużyciem); kody odrzuceń:
+    `empty`, `too_long`, `control_characters`, `disallowed_characters`.
+19. **Jedno źródło reguł.** `app/shared/zone_symbol.py` (bez frameworków,
+    ADR-001) i `frontend/lib/zoneSymbol.ts` stosują te same reguły; wspólne
+    przypadki leżą w `shared/zone-symbol-rules.json` (41 przypadków, w tym
+    kody błędów). Test backendu i test frontendu iterują ten sam plik, więc
+    rozjazd wyłapie CI. Obraz frontendu dostaje plik przez `COPY --from=shared`
+    (jak `pog-presentation.json`). `ManualZoneContext` niesie
+    `symbol_max_length`, `symbol_allowed_pattern` i `symbol_rules_version`
+    (`zone-symbol/2`).
+20. **Dopasowanie w tekście.** Symbol jest szukany tolerancyjnie na odstępy
+    (`\s*` w miejscach spacji oraz na styku cyfry i litery), ale z granicami
+    tokenu: `MN` nie zlewa się z `MN.1` ani `MN.11`, a ogon symbolu ze spacją
+    (np. `MN` w `146 MN`) nie jest uznawany za samodzielny symbol. Filtr ogona
+    działa w kodzie (`is_tail_of_spaced_symbol`), nie w wyrażeniu regularnym,
+    bo musi odróżnić `MN.5 MN.11` (dwa symbole) od `146 MN` (jeden).
+    Tolerancję OCR (`I/l↔1`, `O↔0`) włącza się wyłącznie jako zapas z karą
+    pewności i ostrzeżeniem (PV3-06); nigdy nie jest domyślna.
+21. **Zapis.** Kolumna `analyses.resolved_zone_symbol` rośnie z 20 do 50 znaków
+    (migracja `027_zone_symbol_length`, downgrade przywraca 20; przy
+    downgrade'ie dłuższe wartości wymagają wcześniejszego przycięcia). Dowód
+    ręcznego wyboru zapisuje obok formy kanonicznej surowy wpis
+    (`entered_symbol_raw`; brak w zapisach sprzed zmiany).
+22. **Wpływ na cache.** Formy już zapisane (bez spacji, ≤ 20 znaków) są
+    kanoniczne bez zmian, więc nie trzeba ich przeliczać. Mimo to
+    `MPZP_RESULT_SCHEMA_VERSION` rośnie 2.1 → 2.2: kontrakt się rozszerzył,
+    a wynik parsera dla symboli ze spacjami lub przecinkami może się różnić od
+    zapisanego. Sygnatura cache (`RESULT_CONTRACT_VERSION`) zmienia się, więc
+    starsze snapshoty nie są serwowane jako trafienie cache; odczyt historyczny
+    działa bez zmian. Zmiany parsera z PV3-05/06 nie zmieniają wyników
+    produkcyjnych, dopóki domyślnym trybem pozostaje `legacy` (przełączenie —
+    Task 20.14 — wymaga kolejnego podniesienia wersji kontraktu).
