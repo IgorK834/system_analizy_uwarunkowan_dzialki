@@ -240,8 +240,9 @@ def test_bk204_waiting_preview_resume_partial_and_pdf() -> None:
     # 3. Pod tym samym URL opublikowano inną uchwałę — resume nie może jej użyć.
     fetch.return_value = document_blob(text_pdf(("§ 5. Dla terenu 1MN: maksymalna wysokość zabudowy: 15 m.",)), document_url)
 
-    # 4. Błędny symbol i nieznana analiza nie zmieniają snapshotu.
-    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "1 MN"}).status_code == 422
+    # 4. Błędny symbol (niedozwolony znak; spacja wewnętrzna jest od PV3-04 poprawna) i
+    # nieznana analiza nie zmieniają snapshotu.
+    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "1 MN!"}).status_code == 422
     assert client.post("/analyze/resume", json={"analysis_id": 999_999_999, "zone_symbol": "1MN"}).status_code == 404
     with SessionLocal() as db:
         assert db.get(Analysis, analysis_id).status == "waiting_for_zone_symbol"

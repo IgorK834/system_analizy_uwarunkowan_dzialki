@@ -19,6 +19,11 @@ from app.shared.planning_compatibility_text import (
     LEGACY_AGGREGATION_NOTE,
 )
 from app.shared.provenance import is_verified_https_url
+from app.shared.zone_symbol import (
+    ZONE_SYMBOL_MAX_LENGTH,
+    ZONE_SYMBOL_MAX_RAW_LENGTH,
+    ZONE_SYMBOL_RULES_VERSION,
+)
 from app.shared.planning_status import (
     COVERAGE_STATUS_ALIASES,
     LEGACY_LEGAL_STATUSES,
@@ -126,9 +131,14 @@ class AnalyzeResumeRequest(BaseModel):
     )
     zone_symbol: str = Field(
         min_length=1,
-        max_length=20,
-        description="Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej.",
-        json_schema_extra={"example": "230_U"},
+        max_length=ZONE_SYMBOL_MAX_RAW_LENGTH,
+        description=(
+            "Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej. "
+            "Serwer sprowadza go do formy kanonicznej (NFKC, przycięcie, zwinięcie "
+            f"białych znaków) i dopiero ją waliduje: do {ZONE_SYMBOL_MAX_LENGTH} znaków, "
+            "litery, cyfry, '. _ / - , + ( )' i pojedyncze spacje wewnętrzne."
+        ),
+        json_schema_extra={"example": "146 MN"},
     )
 
 
@@ -226,7 +236,10 @@ class ParcelGeometryResponse(BaseModel):
 MpzpAssignmentMethod = Literal[
     "vector_intersection", "document_candidate", "manual_user_input", "legacy"
 ]
-MPZP_RESULT_SCHEMA_VERSION = "2.1"
+# 2.2 (PV3-04): symbole stref ze spacjami i przecinkami są przyjmowane i dopasowywane
+# w tekście tolerancyjnie na odstępy, więc wynik parsera dla tego samego dokumentu
+# może się różnić od zapisanego przed zmianą; ręczny dowód niesie też oryginał wpisu.
+MPZP_RESULT_SCHEMA_VERSION = "2.2"
 
 
 class ManualZoneSelection(BaseModel):
@@ -237,7 +250,14 @@ class ManualZoneSelection(BaseModel):
     Nie zawiera udziału powierzchniowego — ręczny symbol go nie ustala.
     """
 
-    entered_symbol: str = Field(description="Symbol po walidacji formatu.")
+    entered_symbol: str = Field(description="Symbol w formie kanonicznej po walidacji.")
+    entered_symbol_raw: str | None = Field(
+        default=None,
+        description=(
+            "Symbol dokładnie tak, jak wpisał go użytkownik (przed normalizacją); "
+            "dowód wprowadzenia. Brak w zapisach sprzed PV3-04."
+        ),
+    )
     plan_id: str | None = Field(default=None, description="ID planu z discovery.")
     candidate_zone_symbols: list[str] = Field(
         default_factory=list,
@@ -473,9 +493,16 @@ class ManualZoneContext(BaseModel):
         default="mpzp",
         description="Klucz podglądu WMS (proxy /api/v1/map/tiles) z obrazem planu.",
     )
-    symbol_max_length: int = 20
+    symbol_max_length: int = ZONE_SYMBOL_MAX_LENGTH
     symbol_allowed_pattern: str = Field(
-        description="Wyrażenie regularne dozwolonych znaków symbolu (walidacja UI = API)."
+        description=(
+            "Wyrażenie regularne formy kanonicznej symbolu (walidacja UI = API); "
+            "stosuje się je po NFKC, przycięciu i zwinięciu białych znaków."
+        )
+    )
+    symbol_rules_version: str = Field(
+        default=ZONE_SYMBOL_RULES_VERSION,
+        description="Wersja reguł symbolu (kanoniczna forma i wzorzec).",
     )
     notice: str = Field(
         description="Ograniczenia trybu ręcznego pokazywane przed formularzem."

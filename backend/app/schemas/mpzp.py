@@ -78,6 +78,30 @@ class MpzpParameter(BaseModel):
         default=None,
         description="Wspólne ID sprzecznych kandydatur tego samego parametru strefy.",
     )
+    char_start: int | None = Field(
+        default=None,
+        description=(
+            "Początek dopasowania wartości w tekście SUROWYM strony ``page_number`` (znaki); "
+            "tylko w trybie blokowym (PV3-06)."
+        ),
+    )
+    char_end: int | None = Field(
+        default=None, description="Koniec dopasowania (wyłącznie), jak ``char_start``."
+    )
+    block_id: str | None = Field(
+        default=None, description="Blok strefy, z którego pochodzi wartość (tryb blokowy)."
+    )
+    scope_kind: Literal["zone_section", "general_clause", "residual_clause", "fallback"] | None = Field(
+        default=None,
+        description=(
+            "Zakres wartości: sekcja strefy, klauzula ogólna, klauzula resztowa albo zapas "
+            "(zakres nierozstrzygnięty); ``None`` w trybie dotychczasowym."
+        ),
+    )
+    scope_confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    scope_strategy: int | None = Field(
+        default=None, ge=0, le=6, description="Strategia zakresu 0–6 (Task 20.6)."
+    )
 
 
 class MpzpZoneResult(BaseModel):

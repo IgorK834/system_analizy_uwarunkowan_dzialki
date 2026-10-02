@@ -241,7 +241,8 @@ def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
     assert body["access_token"] == make_analysis_token(body["analysis_id"])
     assert context["document"]["requested_url_verified"] is True
     assert context["raster_preview_source_key"] == "mpzp"
-    assert context["symbol_max_length"] == 20
+    assert context["symbol_max_length"] == 40
+    assert context["symbol_rules_version"] == "zone-symbol/2"
     assert "nieustalony" in context["notice"]
 
 
@@ -592,7 +593,7 @@ def test_resume_returns_409_when_analysis_not_waiting() -> None:
 
 @pytest.mark.parametrize(
     "symbol",
-    ["230\n_U", "A" * 21, "230 U", "<b>U</b>", "   "],
+    ["230\n_U", "A" * 41, "230;U", "<b>U</b>", "   ", "230\x00U"],
 )
 def test_resume_rejects_invalid_symbol_without_touching_snapshot(symbol: str) -> None:
     analysis_id = _create_waiting_analysis("122101_1.0001.9012")
@@ -805,6 +806,39 @@ def test_resume_warns_when_symbol_is_outside_candidates() -> None:
     body = response.json()
     assert body["mpzp_zones"][0]["manual_selection"]["symbol_in_candidates"] is False
     assert "MPZP_MANUAL_SYMBOL_NOT_IN_CANDIDATES" in {w["code"] for w in body["warnings"]}
+
+
+def test_resume_accepts_a_symbol_with_spaces_and_keeps_the_original_entry() -> None:
+    """PV3-04: ``146 MN`` jest realnym symbolem; zapis ma formę kanoniczną, dowód — oryginał."""
+    analysis_id = _create_waiting_analysis("122101_1.0001.9040", candidates=["146MN", "1 PK"])
+
+    response, parse = _resume(
+        analysis_id, "  146   MN ", parser_result=_parser_result(symbol="146 MN")
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    selection = body["mpzp_zones"][0]["manual_selection"]
+    assert body["mpzp_zones"][0]["zone_symbol"] == "146 MN"
+    assert selection["entered_symbol"] == "146 MN"
+    assert selection["entered_symbol_raw"] == "  146   MN "
+    assert selection["symbol_in_candidates"] is True  # `146MN` z discovery to ten sam symbol
+    assert parse.await_args.args[1] == ["146 MN"]  # parser dostaje formę kanoniczną
+    with SessionLocal() as db:
+        assert db.get(Analysis, analysis_id).resolved_zone_symbol == "146 MN"
+
+
+def test_resume_stores_a_symbol_of_the_maximum_canonical_length() -> None:
+    """Kolumna ``analyses.resolved_zone_symbol`` (migracja 027) mieści symbol 40-znakowy."""
+    symbol = "22 KD G1/2(Z1/4)," + "X" * 23
+    assert len(symbol) == 40
+    analysis_id = _create_waiting_analysis("122101_1.0001.9041")
+
+    response, _ = _resume(analysis_id, symbol, parser_result=_parser_result(symbol=symbol))
+
+    assert response.status_code == 200
+    with SessionLocal() as db:
+        assert db.get(Analysis, analysis_id).resolved_zone_symbol == symbol
 
 
 def test_resume_keeps_manual_symbol_when_parser_does_not_find_it() -> None:
