@@ -1,0 +1,388 @@
+{
+  "bands": {
+    "high": {
+      "lower": 0.9431022368
+    },
+    "low": {
+      "lower": 0.0
+    },
+    "medium": {
+      "lower": 0.9431022368
+    }
+  },
+  "calibration_version": "mpzp-confidence/1.0",
+  "data": {
+    "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+    "calibration_split": "development",
+    "corpus_id": "BK-603-mpzp-parser-evaluation-2026-09-30",
+    "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+    "engines": [
+      "legacy",
+      "v3"
+    ],
+    "errors": 16,
+    "n": 241,
+    "note": "Wiersze: wartości zwrócone przez silniki na podziale kalibracyjnym (cechy dowodu + etykieta: wartość należy do adnotacji strefy). Skrót to SHA-256 kanonicznego zapisu wierszy.",
+    "sha256": "24d198357bc5ebaa8d60c74b1ee586953d937934f2dd012805ba576f75e1c5d0",
+    "test_split": "final"
+  },
+  "engine": {
+    "conditions": "value-conditions/1.0",
+    "language_model": null,
+    "lexicon": "quantity-lexicon/1.0",
+    "note": "Silnik deterministyczny (legacy i bloki). Brak ścieżki modelu językowego: wartość z modelu nie ma tu kalibracji, więc dostaje pewność ograniczoną od góry i zawsze ręczną weryfikację.",
+    "prompt": null,
+    "quantity_engine": "quantity-engine/1.0+quantity-lexicon/1.0",
+    "versions": [
+      "mpzp-parser/3.0-det",
+      "mpzp-parser/3.0-det+scope.1"
+    ]
+  },
+  "manual_review": {
+    "rule": "manual_review_required = (pewność < threshold) lub konflikt lub naruszenie zakresu domenowego",
+    "threshold": 0.9431022368
+  },
+  "measurements": {
+    "calibration": {
+      "bands": {
+        "high": {
+          "error_rate": 0.0,
+          "errors": 0,
+          "n": 177
+        },
+        "low": {
+          "error_rate": 0.25,
+          "errors": 16,
+          "n": 64
+        },
+        "medium": {
+          "error_rate": null,
+          "errors": 0,
+          "n": 0
+        }
+      },
+      "bands_monotone": true,
+      "brier_score": 0.0476429671,
+      "errors": 16,
+      "expected_calibration_error": 0.0277531867,
+      "n": 241,
+      "reliability_curve": [
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.0,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.1
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.1,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.2
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.2,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.3
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.3,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.4
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.4,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.5
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.5,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.6
+        },
+        {
+          "accuracy": 0.5,
+          "errors": 8,
+          "lower": 0.6,
+          "mean_confidence": 0.6688012052,
+          "n": 16,
+          "upper": 0.7
+        },
+        {
+          "accuracy": 0.6,
+          "errors": 2,
+          "lower": 0.7,
+          "mean_confidence": 0.728687944,
+          "n": 5,
+          "upper": 0.8
+        },
+        {
+          "accuracy": 1.0,
+          "errors": 0,
+          "lower": 0.8,
+          "mean_confidence": 0.8834535817,
+          "n": 15,
+          "upper": 0.9
+        },
+        {
+          "accuracy": 0.9707317073,
+          "errors": 6,
+          "lower": 0.9,
+          "mean_confidence": 0.9629460355,
+          "n": 205,
+          "upper": 1.0
+        }
+      ],
+      "split": "development",
+      "without_manual_review": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "n": 177
+      }
+    },
+    "held_out": {
+      "bands": {
+        "high": {
+          "error_rate": 0.0,
+          "errors": 0,
+          "n": 297
+        },
+        "low": {
+          "error_rate": 0.1678832117,
+          "errors": 23,
+          "n": 137
+        },
+        "medium": {
+          "error_rate": null,
+          "errors": 0,
+          "n": 0
+        }
+      },
+      "bands_monotone": true,
+      "brier_score": 0.0342982647,
+      "errors": 23,
+      "expected_calibration_error": 0.0586205428,
+      "n": 434,
+      "reliability_curve": [
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.0,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.1
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.1,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.2
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.2,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.3
+        },
+        {
+          "accuracy": 0.5,
+          "errors": 3,
+          "lower": 0.3,
+          "mean_confidence": 0.3167117544,
+          "n": 6,
+          "upper": 0.4
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.4,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.5
+        },
+        {
+          "accuracy": null,
+          "errors": 0,
+          "lower": 0.5,
+          "mean_confidence": null,
+          "n": 0,
+          "upper": 0.6
+        },
+        {
+          "accuracy": 0.4857142857,
+          "errors": 18,
+          "lower": 0.6,
+          "mean_confidence": 0.6408585922,
+          "n": 35,
+          "upper": 0.7
+        },
+        {
+          "accuracy": 1.0,
+          "errors": 0,
+          "lower": 0.7,
+          "mean_confidence": 0.7188142226,
+          "n": 15,
+          "upper": 0.8
+        },
+        {
+          "accuracy": 0.9090909091,
+          "errors": 2,
+          "lower": 0.8,
+          "mean_confidence": 0.8750894935,
+          "n": 22,
+          "upper": 0.9
+        },
+        {
+          "accuracy": 1.0,
+          "errors": 0,
+          "lower": 0.9,
+          "mean_confidence": 0.960826636,
+          "n": 356,
+          "upper": 1.0
+        }
+      ],
+      "split": "final",
+      "without_manual_review": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "n": 297
+      }
+    },
+    "independence_note": "Podział testowy NIE jest niezależny od projektu leksykonu: sformułowania z całego korpusu BK-603 były znane przy jego budowie, a anotacje zrobił asystent AI. Niezależną ocenę da dopiero nowy zbiór końcowy z drugim anotatorem (PV3-02)."
+  },
+  "model": {
+    "feature_names": [
+      "ocr",
+      "ocr_noise",
+      "html",
+      "scope_fallback",
+      "scope_general",
+      "scope_uncertainty",
+      "scope_legacy",
+      "quote_unverified",
+      "strategy_range",
+      "strategy_bare",
+      "strategy_frame",
+      "flag_conversion",
+      "flag_ocr_artifact",
+      "flag_implied",
+      "flag_number_word",
+      "flag_inherited",
+      "flag_approximate",
+      "multi_candidates",
+      "conflict",
+      "conditional",
+      "zone_ambiguous",
+      "symbols_inferred"
+    ],
+    "intercept": 4.021469361,
+    "l2": 5.0,
+    "l2_cross_validation_log_loss": {
+      "0.5": 0.2214273894,
+      "1.0": 0.2083170262,
+      "10.0": 0.2031058227,
+      "2.0": 0.2004220878,
+      "20.0": 0.2075739391,
+      "5.0": 0.1993120923
+    },
+    "non_positive_features": [
+      "conditional",
+      "conflict",
+      "flag_approximate",
+      "flag_conversion",
+      "flag_implied",
+      "flag_number_word",
+      "flag_ocr_artifact",
+      "multi_candidates",
+      "ocr",
+      "ocr_noise",
+      "quote_unverified",
+      "scope_fallback",
+      "scope_general",
+      "scope_legacy",
+      "scope_uncertainty",
+      "strategy_bare",
+      "strategy_frame",
+      "symbols_inferred",
+      "zone_ambiguous"
+    ],
+    "prior_weights": [
+      -0.7,
+      -1.5,
+      -0.2,
+      -1.0,
+      -0.7,
+      -1.0,
+      -0.3,
+      -2.0,
+      0.0,
+      -0.4,
+      -0.2,
+      -0.3,
+      -0.7,
+      -0.5,
+      -0.2,
+      0.0,
+      -0.7,
+      -0.5,
+      -1.0,
+      -0.3,
+      -0.5,
+      -1.0
+    ],
+    "probability_ceiling": 0.99,
+    "probability_floor": 0.01,
+    "type": "logistic_regression_l2",
+    "weights": [
+      -0.5947396322,
+      -1.4937222326,
+      -0.2,
+      -0.7101815296,
+      -0.6196851375,
+      -0.8100628461,
+      -0.5876150654,
+      -2.0,
+      0.2092316086,
+      -0.298731737,
+      -0.1442076473,
+      -0.2146642754,
+      -0.6259356318,
+      -0.5,
+      -0.2,
+      0.5355003488,
+      -0.7,
+      -0.8554456029,
+      -1.7108912059,
+      -0.664657525,
+      -0.5924722081,
+      -1.0
+    ]
+  },
+  "policy": {
+    "epsilon_high": 0.05,
+    "epsilon_review": 0.1,
+    "meaning": "Próg to najniższa pewność, od której (w górę) odsetek błędów wygładzony regresją izotoniczną na danych kalibracyjnych nie przekracza tolerancji, przy co najmniej minimum_n wartości. Wygładzanie nie pozwala wysokiej pewności rozcieńczyć błędów w niższych przedziałach. Tolerancje (epsilon_*) są decyzją polityki, progi — wynikiem pomiaru.",
+    "minimum_n": 20
+  },
+  "schema_version": "mpzp-confidence-calibration/1",
+  "uncalibrated_cap": 0.84
+}
