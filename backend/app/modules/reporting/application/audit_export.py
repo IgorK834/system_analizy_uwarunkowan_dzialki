@@ -455,6 +455,28 @@ def _readme(
         "",
         "Flaga `manual_review_required` oznacza, że wynik sekcji wymaga ręcznej weryfikacji "
         "w materiale źródłowym; nie zmienia statusu sekcji.",
+        "",
+        "## Parametry MPZP: wartości warunkowe i sprzeczności",
+        "",
+        "Parametry strefy są w `analysis.json` pod `result.mpzp_zones[].parameters[]`; każda wartość to "
+        "osobny wpis z dowodem (`evidence_text`, `page_number`, `raw_value`, SHA-256 dokumentu). "
+        "Uchwała podaje często kilka wartości tego samego parametru, każdą dla innego przypadku, dlatego "
+        "wpis niesie też:",
+        "",
+        "| Pole | Znaczenie |",
+        "| --- | --- |",
+        "| `conditions[]` | warunki wartości: `kind` (`building_type`, `roof_type`, `subzone`, `location`, "
+        "`other`), `label` (nazwa znormalizowana) i `quote` (dosłowny cytat z uchwały; cytat z nagłówka "
+        "nadrzędnej pozycji listy nie musi leżeć w `evidence_text`). Pusta lista = wartość bezwarunkowa |",
+        "| `value_kind` | `unconditional` — bez warunku; `conditional` — wartość alternatywna z warunkami "
+        "(np. inna wysokość dla dachu płaskiego), **nie sprzeczność**; `conflict` — ta sama przesłanka ma "
+        "kilka różnych wartości, wymaga ręcznej weryfikacji (wpisy mają wspólne `conflict_group_id`) |",
+        "",
+        "Płaskie pole strefy (np. `max_building_height_m`) ma wartość tylko wtedy, gdy uchwała podaje "
+        "dokładnie jedną wartość bezwarunkową; w przeciwnym razie jest `null` (brak jednej wartości dla "
+        "całej strefy, nie zero), a wartości z warunkami należy czytać z `parameters[]`. Pakiet "
+        "z eksportera starszego niż 1.1.0 nie ma tych pól: wartości z takich snapshotów traktuj jako "
+        "bezwarunkowe.",
     ]
 
     if source.quality is not None:

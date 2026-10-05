@@ -73,8 +73,12 @@ def _catalog(**redistribution: str) -> DataSourceCatalog:
     return parse_catalog(data)
 
 
-def _input(fixture: str = "multizone", catalog: DataSourceCatalog | None = None) -> AuditInput:
+def _input(
+    fixture: str = "multizone", catalog: DataSourceCatalog | None = None, response_update: Any = None
+) -> AuditInput:
     response, parcel = load_fixture(fixture)
+    if response_update is not None:
+        response = response_update(response)
     analysis = SimpleNamespace(
         id=42,
         parcel=SimpleNamespace(geometry=from_shape(parcel, srid=2180), parcel_identifier="126101_1.0001.2417/5"),
@@ -727,3 +731,38 @@ def test_geojson_fields_are_normalised_to_features_with_properties() -> None:
     assert len(_features(collection, {})) == 2
     geometry_collection = {"type": "GeometryCollection", "geometries": [point]}
     assert _features(geometry_collection, {})[0]["geometry"] == geometry_collection
+
+
+# --- warunki wartości parametrów MPZP (PV3-08) ------------------------------------------------
+
+
+def test_package_carries_value_conditions_and_documents_them() -> None:
+    from app.schemas.analyze import MpzpParameterEvidence, MpzpValueCondition
+
+    def with_conditions(response):
+        zone = response.mpzp_zones[0]
+        parameters = [
+            MpzpParameterEvidence(
+                name="max_building_height_m", normalized_value=9.5, unit="m", raw_value="9,5 m",
+                evidence_text="a dla budynków przekrytych dachem płaskim: 9,5 m", page_number=18, confidence=0.8,
+                conditions=[MpzpValueCondition(kind="roof_type", label="dach płaski", quote="dachem płaskim")],
+            ),
+            MpzpParameterEvidence(
+                name="max_building_height_m", normalized_value=11.0, unit="m", raw_value="11 m",
+                evidence_text="maksymalną wysokość zabudowy: 11 m", page_number=18, confidence=0.8,
+            ),
+        ]
+        return response.model_copy(update={"mpzp_zones": [zone.model_copy(update={"parameters": parameters}), *response.mpzp_zones[1:]]})
+
+    package = build_audit_package(_input(response_update=with_conditions), LIMITS)
+    analysis = json.loads(package.by_name("analysis.json").data)
+    parameters = analysis["result"]["mpzp_zones"][0]["parameters"]
+    conditional, plain = parameters
+    assert conditional["value_kind"] == "conditional"
+    assert conditional["conditions"] == [{"kind": "roof_type", "label": "dach płaski", "quote": "dachem płaskim"}]
+    assert plain["value_kind"] == "unconditional" and plain["conditions"] == []
+    readme = package.by_name("README.md").data.decode("utf-8")
+    assert "wartości warunkowe i sprzeczności" in readme and "`value_kind`" in readme and "`conditions[]`" in readme
+    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.1.0" and AUDIT_EXPORTER_VERSION in readme
+    manifest = json.loads(package.by_name("manifest.json").data)
+    assert manifest["exporter_version"] == AUDIT_EXPORTER_VERSION

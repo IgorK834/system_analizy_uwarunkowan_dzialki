@@ -136,7 +136,7 @@ def test_audit_package_end_to_end_from_persisted_snapshot() -> None:
     package_sha = response.headers["x-audit-package-sha256"]
     assert package_sha == hashlib.sha256(response.content).hexdigest()  # hash poza archiwum
     assert int(response.headers["content-length"]) == len(response.content)
-    assert response.headers["x-audit-exporter-version"] == "audit-exporter/1.0.0"
+    assert response.headers["x-audit-exporter-version"] == "audit-exporter/1.1.0"
 
     members = _members(response.content)
     assert {"analysis.json", "sources.json", "parcel.geojson", "manifest.json", "README.md"} <= set(members)

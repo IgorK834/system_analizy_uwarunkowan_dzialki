@@ -23,8 +23,10 @@ from typing import Any, Final
 
 AUDIT_PACKAGE_SCHEMA_VERSION: Final[str] = "audit-package/1"
 # Podbijana przy każdej zmianie treści lub układu pakietu — determinizm dotyczy
-# tej samej wersji eksportera.
-AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.0.0"
+# tej samej wersji eksportera. 1.1.0 (PV3-08): evidence parametrów MPZP w ``analysis.json`` niesie
+# warunki (``conditions``) i rodzaj wartości (``value_kind``), a README opisuje ich znaczenie;
+# pakiety z 1.0.0 mają te same pliki, ale bez tych pól i bez tej sekcji README.
+AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.1.0"
 MANIFEST_NAME: Final[str] = "manifest.json"
 README_NAME: Final[str] = "README.md"
 
