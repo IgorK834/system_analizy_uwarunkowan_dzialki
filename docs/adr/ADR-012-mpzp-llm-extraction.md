@@ -1,6 +1,6 @@
 # ADR-012: Ekstrakcja parametrów MPZP modelem językowym (Gemini 3.8 Flash) — spike, budżet i wariant awaryjny
 
-- Status: **Proponowany — pomiar na żywo wykonano 2026-10-02 (wynik mechaniczny: GO); decyzję zapisuje właściciel** (patrz „Stan wykonania”)
+- Status: **Zaakceptowany — decyzja właściciela GO z 2026-10-05** (pomiar na żywo 2026-10-02, wynik mechaniczny GO; patrz „Decyzja właściciela”)
 - Data: 2026-10-01
 - Zakres: PV3-01 (Task 20.1); blokuje Task 20.10 (adapter) i Task 20.11 (prompt, schemat)
 - Powiązane: ADR-001 (modularny monolit: port w `application`, adapter w `infrastructure`),
@@ -30,9 +30,9 @@ jest dostępny, tani i wystarczająco powtarzalny, zanim powstanie kod produkcyj
 | 2. Pomiar 10 bloków (opóźnienie, tokeny, koszt, schemat, powtarzalność) | **Wykonane 2026-10-02**: 30/30 wywołań udanych, schemat 30/30, cytaty 261/261, stabilne wartości w 9 z 10 bloków (niestabilny: B06 Łódź, układ 4), p95 8,3 s, koszt na analizę 0,020 USD (promocja) / 0,041 USD (od 2027). Tabela i progi w sekcji „Pomiar”; surowe dane w `results/llm-spike/measurements.json` |
 | 3. Limity RPM/TPM/dzienne, region, SLA, warunki danych | **Częściowo**: warunki danych, ceny i kontekst z dokumentacji; limity per projekt dostawca podaje wyłącznie w AI Studio (nie w dokumentacji); region i SLA — brak deklaracji dla Gemini Developer API |
 | 4. Wariant awaryjny i progi budżetowe | Wariant opisany; progi liczbowe są **formułą** wypełnianą z pomiaru (szacunek wstępny niżej) |
-| 5. Decyzja, kryteria bramki, ograniczenia | Kryteria i ograniczenia zapisane; wynik mechaniczny progów: **GO**. **Decyzji właściciela nie wpisano** — wpisuje ją właściciel (progi są propozycją do potwierdzenia) |
+| 5. Decyzja, kryteria bramki, ograniczenia | Kryteria i ograniczenia zapisane; wynik mechaniczny progów: **GO**. **Decyzja właściciela: GO (2026-10-05)** z progami, warunkami i bramką jakości jak niżej — patrz „Decyzja właściciela” |
 
-Pomiar powstał; zgodnie z zależnością z issue Task 20.10 i 20.11 można zaczynać dopiero po wpisaniu decyzji przez właściciela. Pomiar to jeden bieg z jednego miejsca i jednej chwili na 10 blokach — nie gwarancja jakości (tę mierzy bramka z Task 20.17).
+Pomiar powstał; zgodnie z zależnością z issue Task 20.10 i 20.11 zaczynać można było po wpisaniu decyzji przez właściciela — wpisano ją 2026-10-05 (sekcja „Decyzja właściciela”). Pomiar to jeden bieg z jednego miejsca i jednej chwili na 10 blokach — nie gwarancja jakości (tę mierzy bramka z Task 20.17).
 
 ## Fakty zweryfikowane w dokumentacji dostawcy (2026-10-01)
 
@@ -62,6 +62,40 @@ streszczającym je modelem pomocniczym. Wartości **wymagają potwierdzenia** po
 - że temperatura 0 jest dla tego modelu zalecana lub w ogóle obsługiwana (strona modelu: „nie podano”);
 - limitów RPM/TPM/dziennych naszego projektu, regionu przetwarzania i SLA dla naszej ścieżki;
 - dostępności Vertex AI i regionów europejskich dla tego modelu.
+
+## Decyzja właściciela
+
+**2026-10-05, właściciel projektu (polecenie w rozmowie z asystentem): GO** — z zaproponowanymi progami
+decyzji, warunkami wykorzystania i kryteriami bramki jakości, bez zmian. Dokładnie potwierdzono:
+
+1. **GO dla ścieżki z modelem językowym** (wariant C: rdzeń deterministyczny + ekstrakcja modelem z
+   deterministyczną weryfikacją cytatu), model `gemini-3.8-flash`, transport REST przez `httpx`
+   (decyzje 1–2 poniżej), wyłącznie jako kandydaci do ręcznej weryfikacji.
+2. **Progi decyzji** z sekcji „Progi decyzji go/no-go” (schemat ≥ 0,95; cytaty ≥ 0,90; stabilne wartości
+   ≥ 0,80; p95 ≤ 30 s; koszt na analizę ≤ 0,05 USD wg ceny od 2027) — zmierzony wynik spełnia wszystkie.
+3. **Warunki** z decyzji 3–5 poniżej: wyłącznie warstwa płatna (`GEMINI_API_KEY` tylko ze zmiennej
+   środowiskowej), dane wysyłane ograniczone do tekstu publicznego aktu i symboli stref (bez identyfikatora
+   działki, analizy, użytkownika, adresu i współrzędnych), podstawa wykorzystania tekstów aktów prawa
+   miejscowego oraz zgodność z warunkami dostawcy i RODO (przekazanie poza EOG) — **potwierdzone przez
+   właściciela jako jego oświadczenie; to nie jest opinia prawna ani weryfikacja wykonana przez asystenta**.
+4. **Bramka jakości dla Task 20.17** z sekcji „Kryteria bramki jakości” — **zamrożona tym wpisem**:
+   zmiana progów po obejrzeniu wyników na zbiorze końcowym unieważnia bramkę i wymaga nowego wpisu z datą
+   i uzasadnieniem.
+
+Skutki i zastrzeżenia tej decyzji:
+
+- Decyzja **nie zmienia** stanu domyślnego: `mpzp_llm_enabled=false`. Włączenie ścieżki na produkcji wymaga
+  jawnej konfiguracji (flaga, klucz) oraz osobnego wdrożenia potoku (Task 20.12–20.14); do czasu spełnienia
+  bramki z Task 20.17 wartości z modelu nie trafiają do wyniku jako zweryfikowane.
+- Progi budżetowe (Task 20.15) pozostają formułą z pomiaru (max 4000 tokenów wejściowych na żądanie, 6
+  żądań i 12 000 tokenów wejściowych na analizę); limity wydatków per projekt ustawia się w AI Studio.
+- Wynik pomiaru to jeden bieg z jednego miejsca i jednej chwili na 10 blokach z korpusu, którego
+  anotacje nadał asystent AI (przegląd człowieka oczekuje); decyzja go/no-go nie zastępuje bramki
+  z Task 20.17 na zbiorze końcowym z Task 20.2 (ten zbiór jeszcze nie istnieje).
+- **Kolejność wykonania**: adapter (Task 20.10) i kontrakt (Task 20.11) powstały 2026-10-03 na polecenie
+  właściciela, **przed** zapisaniem tej decyzji (ADR przewidywał odwrotną kolejność). Ścieżka była przez
+  cały ten czas wyłączona domyślnie i nie wykonano żadnego wywołania modelu; ewentualne odrzucenie
+  decyzji oznaczałoby wyłączenie ścieżki (wariant awaryjny 7a), bez utraty działania aplikacji.
 
 ## Decyzje (niezależne od wyniku pomiaru)
 
@@ -200,7 +234,7 @@ Zgodność z adnotacją jest informacyjna (10 bloków) i nie zastępuje bramki j
   Brak identyczności bajtowej przy stabilnych wartościach nie dyskwalifikuje modelu.
 - Zgodność z adnotacją na 10 blokach jest **informacyjna** i nie zastępuje bramki z Task 20.17.
 
-### Progi decyzji go/no-go (proponowane, do potwierdzenia przez właściciela)
+### Progi decyzji go/no-go (potwierdzone przez właściciela 2026-10-05)
 
 | Kryterium | Próg |
 |---|---|
@@ -228,7 +262,7 @@ chcieć inny próg.
 
 ## Kryteria bramki jakości do potwierdzenia w Task 20.17
 
-Proponowane w issue Task 20.17; **do zamrożenia w tym ADR przed pierwszym biegiem na zbiorze
+Proponowane w issue Task 20.17; **zamrożone w tym ADR 2026-10-05, przed pierwszym biegiem na zbiorze
 końcowym z Task 20.2** (zmiana po obejrzeniu wyników unieważnia bramkę):
 
 - precision ≥ 0,95; recall ≥ 0,80;
@@ -260,8 +294,142 @@ Bramka mierzy wartości przyjęte po weryfikacji, nie surowe odpowiedzi modelu.
 
 ## Konsekwencje
 
-- Task 20.10/20.11 mogą ruszyć dopiero po wpisaniu wyniku pomiaru i decyzji go/no-go; adapter
+- Task 20.10/20.11 ruszyły po decyzji GO (2026-10-05; kolejność wykonania w sekcji „Decyzja właściciela”); adapter
   ma domyślnie `mpzp_llm_enabled=false`, a `.env.example` tylko pusty placeholder klucza.
 - Ewaluator (Task 20.3) ma gotowy kontrakt odtwarzania odpowiedzi (`--llm-replay`) o kluczu
   cache obejmującym dostawcę, model, wersje promptu i schematu, temperaturę oraz SHA-256 wysłanego
   tekstu; produkcyjny cache (Task 20.13) powinien używać tego samego klucza.
+
+## Aneks PV3-10 i PV3-11 (2026-10-05): adapter i kontrakt wyjścia
+
+Wykonane 2026-10-03 (kod, testy offline), zapisane tu po decyzji właściciela. Szczegóły i liczby:
+`docs/evaluation/pv3-10-11-verification.md`.
+
+1. **Powierzchnia API: `generateContent`** (otwarty punkt decyzji 2). Wybrana, bo spike ją zmierzył i
+   dokumentuje pola użycia tokenów; Interactions API nie jest używane (domyślnie przechowuje interakcje po
+   stronie dostawcy). Transport: `httpx` (async), **bez nowej zależności** (brak oficjalnego SDK).
+2. **Port i adapter (ADR-001).** Port `StructuredExtractionProvider` w `planning/application/ports.py`
+   zna tylko „instrukcja + tekst + schemat JSON → obiekt JSON”. Adaptery w `planning/infrastructure/llm/`
+   (`gemini_provider.py`, `fake_provider.py`) nie importują domeny MPZP — pilnuje tego test architektury.
+   Host dostawcy jest stałą adaptera (nie ustawieniem), klucz tylko w nagłówku `x-goog-api-key`,
+   `follow_redirects=False`, limit rozmiaru odpowiedzi, odpowiedź czytana strumieniowo.
+3. **Błędy.** 400/401/403/404/413 nie są ponawiane; 408/429/5xx, timeout i błędy transportu — z
+   wykładniczym opóźnieniem i losowaniem, `Retry-After` jako dolna granica (żądanie czekania powyżej 30 s
+   kończy bez czekania). Wyłącznik awaryjny liczy tylko awarie dostępności (401/403/404/429/5xx/timeout/
+   sieć); błędy treści (zły JSON, naruszenie schematu, ucięcie) i żądania go nie otwierają. Wyjątki i logi
+   niosą ustalone kody i skróty, nigdy treść żądania, odpowiedzi ani klucza (komunikat błędu dostawcy jest
+   pomijany — mógłby echować dane).
+4. **Identyfikator modelu.** Zwrócony `modelVersion` różny od skonfigurowanego ustawia `model_mismatch`,
+   jest logowany, a usługa ekstrakcji **nie używa takiej odpowiedzi** (jakość innego modelu nie jest
+   zmierzona ani skalibrowana); operator ustawia `mpzp_llm_model` na faktyczny identyfikator po ponownym
+   pomiarze. Brak pola w odpowiedzi nie jest niezgodnością.
+5. **Kontrakt wyjścia** (`domain/extraction_contract.py`): kandydat ma `zone_symbol`, `parameter` (9
+   parametrów katalogu), `operator`, `raw_value`, `value` (opcjonalna, ignorowana przy niezgodności z liczbą
+   wyliczoną z `raw_value`), `unit` (jednostki katalogu), `applicability`, `conditions[]` (obiekty
+   `{kind, label, quote}` jak w PV3-08), `evidence_quote`, `scope_quote`; jawne `not_found`. Schemat jest
+   jedynym kontraktem: niezgodna odpowiedź jest odrzucana w całości z kodem, kandydat łamiący kontrakt
+   (symbol spoza listy, operator niedozwolony dla parametru, `raw_value` poza cytatem…) — pojedynczo z kodem.
+   Kontrakt nie ma stanu „zweryfikowany”; kandydat to `ai_candidate`.
+6. **Instrukcja** jest plikiem `domain/prompts/mpzp_extraction_v1.md` (decyzja „plik, nie stała”: czytelny
+   przegląd zmian). `PROMPT_VERSION = mpzp-extraction/1`, `SCHEMA_VERSION = mpzp-extraction-schema/1`;
+   skróty SHA-256 instrukcji (z szablonem wiadomości) i schematu są przypięte w testach i wchodzą do
+   provenance. Instrukcja zawiera definicje 9 parametrów z jednostkami, semantykę operatorów,
+   kontrprzykłady (wysokość parteru ≠ wysokość zabudowy) i listę wskaźników ustawowych jako kontekst
+   (tylko parametry katalogu są zwracane).
+7. **Klucz cache = klucz odtwarzania ewaluatora** (dostawca, model, wersja i skrót instrukcji, wersja
+   schematu, temperatura, skrót wiadomości z danymi), więc zmiana instrukcji, schematu, modelu albo tekstu
+   unieważnia zapisane odpowiedzi. Produkcyjny cache (Task 20.13) ma używać tego samego klucza.
+8. **Duże bloki:** limit 6000 znaków na żądanie, podział na granicach punktów listy/akapitów/zdań,
+   nakładka kontekstu 400 znaków i linia otwierająca blok w kolejnych częściach, deduplikacja kandydatów po
+   (symbol, parametr, operator, surowa wartość, położenie cytatu), najwyżej 6 żądań na blok (blok większy
+   jest pomijany z kodem `block_too_large`, bez wywołań).
+9. **Złote odpowiedzi** (`tests/fixtures/mpzp_evaluation/llm_replay/`, 13 plików) składa z adnotacji
+   korpusu `scripts/build_llm_replay_fixtures.py`; **nie są nagraniami modelu**. Prawdziwe nagrania (ręcznie,
+   poza CI) dostaną ten sam klucz.
+10. **Czego to nie obejmuje:** weryfikacja cytatów i przyjęcie wartości do wyniku (Task 20.12), cache
+    (20.13), potok hybrydowy i rejestracja `register_live_provider` w ewaluatorze (20.14), budżet i
+    degradacja (20.15), ochrona danych w żądaniach poza kontraktem tekstu bloku (20.16), bramka jakości
+    (20.17). Ścieżka nie jest podłączona do analizy, więc `MPZP_RESULT_SCHEMA_VERSION` nie rośnie.
+
+## Aneks PV3-12, PV3-13 i PV3-14 (2026-10-05): bramki, cache i tryby parsera
+
+Wykonane 2026-10-05 (kod i testy offline, bez wywołań na żywo). Liczby i mapowanie kryteriów:
+`docs/evaluation/pv3-12-14-verification.md`.
+
+1. **Jedyna droga wartości z modelu do wyniku** to weryfikator `planning/domain/candidate_verifier.py`
+   (domena, bez sieci i ustawień). Bramki w stałej kolejności: G1 katalog, G2 operator, G3 cytat w bloku
+   (po normalizacji białych znaków; granice wyrazów; termin parametru w cytacie albo do 400 znaków przed nim;
+   cytat bez znamion polecenia/JSON; cytaty warunków w bloku; dla OCR tolerancja edycyjna min(6, 8%) przy
+   cytacie ≥ 24 znaki, bez zmiany cyfr, z flagą `quote_ocr_fuzzy` i karą ×0,8), G4 `raw_value` w cytacie i w
+   dopasowanym tekście bloku, bez uciętych liczb, G5 przeliczenie tą samą normalizacją co rdzeń
+   (`normalize_quantity`) — liczba modelu nie jest wymagana, a różna od wyliczonej odrzuca kandydata;
+   `manual` tylko dla zapisów z flagą artefaktu, G6 `validate_planning_rule` (procent 0–100, dodatnie
+   wysokości i intensywność, min ≤ max także między kandydatami), G7 zakres (symbol w `scope_quote` leżącym w
+   bloku albo blok o `scope_confidence` ≥ 0,6; inaczej `applicability=unresolved` i brak przypisania; cytat
+   nazywający tylko inną strefę — odrzucony), G8 deduplikacja. Strona i zakres znaków pochodzą wyłącznie z
+   dopasowania w bloku. Każde odrzucenie ma bramkę i kod, liczniki per bramka trafiają do metryk procesu.
+2. **Status.** Przyjęty kandydat: `review_status=ai_candidate`, `extraction_method=llm_verified`, zawsze
+   ręczna weryfikacja, pewność z modelu PV3-09 z `origin=llm` (poniżej pasma `high`). Gwarancja na trzech
+   poziomach: konstruktor `AcceptedCandidate`, `validate_planning_rule` i więzy bazy
+   `ck_mpzp_parameters_llm_candidate`. Wartość `ai_candidate` nie wypełnia płaskich pól strefy API.
+3. **Cache i provenance (PV3-13).** Tabela `mpzp_llm_extractions` (migracja **029** po faktycznym head `028`;
+   issue mówi „027”, ale numery 027/028 zajęły PV3-04/PV3-08): klucz bloku = SHA-256(`document_sha256`,
+   `block_sha256`, `prompt_version`, `schema_version`, `model_id`, `params_hash`), `params_hash` obejmuje
+   dostawcę, skróty instrukcji i schematu, temperaturę, limity podziału, `thinking_level`, symbole i ścieżkę
+   bloku. Zapis zawiera wyłącznie wyjście modelu i skróty wejścia (bez treści żądania i identyfikatorów
+   działki, analizy, użytkownika), tokeny, opóźnienie, koszt szacowany wg ceny od 2027 i status
+   `ok`/`rejected_schema`/`error`. Tylko `ok` w retencji jest trafieniem; trafienie przechodzi przez ten sam
+   kontrakt i te same bramki co odpowiedź świeża. Retencja `MPZP_LLM_CACHE_RETENTION_DAYS` (domyślnie 180
+   dni), czyszczenie `python -m app.modules.planning purge-llm-cache`. Evidence parametru niesie `model_id`,
+   `prompt_version` i `response_sha256` (skrót zapisu w tabeli). Odczyt zapisanej analizy nie tworzy
+   adaptera (snapshot jest źródłem prawdy).
+4. **Tryby (PV3-14).** `MPZP_PARSER_MODE`: `legacy` (domyślny, wynik bajtowo jak przed zmianą — test na pliku
+   zamrożonym przed zmianą), `v3` (bloki stref), `hybrid_shadow` (odpowiedź i zapis = `v3`; model dla
+   wszystkich par w zadaniu w tle, różnice w logu `app.mpzp_llm` i licznikach), `hybrid` (`v3` + kandydaci
+   modelu tylko dla par bez wartości deterministycznej, z konfliktem albo z zakresem < 0,6). Scalanie:
+   wartość deterministyczna ma pierwszeństwo, zgodność nie dodaje kopii, rozbieżność zostawia obie z ręczną
+   weryfikacją. Niedostępność modelu, timeout, wyczerpany budżet, brak konfiguracji albo błąd potoku:
+   wynik deterministyczny, ostrzeżenie `MPZP_LLM_UNAVAILABLE` z kodem przyczyny i status `partial` (także
+   analizy). Orkiestrator i wznowienie po ręcznym symbolu używają tego samego potoku (wznowienie — na kopii
+   przypiętej, bez pobrania). Budżet: jeden licznik na analizę (6 żądań, 12 000 szacowanych tokenów
+   wejścia — progi wejściowe z „Pomiaru”; dopracowanie w Task 20.15). Sygnatura cache analizy zawiera tryb,
+   wersję parsera oraz — w trybach z modelem — wersje promptu i schematu, model i stan flagi;
+   `MPZP_RESULT_SCHEMA_VERSION` się nie zmienia (jednorazowa zmiana sygnatur unieważnia stare wpisy cache).
+5. **Ewaluator.** Silnik `hybrid` jest zarejestrowany: odtwarzanie przez bramę ewaluatora pod tym samym
+   kluczem co złote odpowiedzi, `--live` ręcznie przez produkcyjny adapter (rejestrowany tylko dla
+   `--engine hybrid --live`); brak zapisanej odpowiedzi przerywa przebieg zamiast mieszać wynik
+   deterministyczny.
+6. **Czego to nie obejmuje:** pomiaru jakości na żywo i bramki (Task 20.17), budżetu dziennego/miesięcznego
+   i wyłącznika między analizami (20.15), dalszej ochrony przed prompt injection poza bramkami G3 (20.16),
+   monitoringu i przypięcia wersji modelu (20.19), oznaczenia w UI i PDF (20.18). Domyślny tryb pozostaje
+   `legacy` do czasu spełnienia bramki jakości.
+
+## Aneks PV3-15, PV3-16 i PV3-17 (2026-10-05): limity, dane, bramka
+
+Szczegóły i mapowanie kryteriów: `docs/evaluation/pv3-15-17-verification.md`; obsługa danych — ADR-014.
+
+1. **Limity (PV3-15).** W analizie (warstwa application): 6 żądań, 12 000 tokenów wejścia na analizę,
+   12 000 na dokument, 4000 na żądanie (próg „max_input_tokens_per_request” z „Pomiaru”), termin od startu
+   analizy (90 s) propagowany do każdego żądania i budżet czasu ścieżki modelu 30 s (próg p95 z tego ADR).
+   Między analizami (adapter `infrastructure/llm/budget.py`): częstotliwość 60/min i współbieżność 4 w
+   procesie, twarde limity doby i miesiąca w UTC — 2 mln tokenów / 5 USD na dobę, 40 mln / 100 USD na miesiąc
+   (wyprowadzone z progu 0,05 USD na analizę × 100 analiz dziennie; **zaakceptowane przez właściciela 2026-10-05**, pkt 5) — w
+   rejestrze `mpzp_llm_usage` (migracja 030) z rezerwacją najgorszego przypadku pod blokadą doradczą; brak
+   rejestru = brak wywołania. Wyłącznik awaryjny jest wspólny dla procesu.
+2. **Degradacja.** Każda awaria, przekroczenie limitu lub terminu i błąd potoku: wynik deterministyczny,
+   `MPZP_LLM_UNAVAILABLE` z kodem i `partial`; kandydaci odrzuceni przez bramki: `MPZP_LLM_CANDIDATES_REJECTED`
+   z licznikami per bramka i `partial`. Metryki: wywołania, odrzucenia per bramka i kod, degradacje, tokeny
+   i koszt szacowany (mikro-USD).
+3. **Dane i bezpieczeństwo (PV3-16)** — ADR-014: lista dozwolonych pól żądania egzekwowana w kontrakcie,
+   redakcja sekretów w logach, skaner sekretów w CI, korpus prompt injection, kill switch plikowy.
+4. **Bramka (PV3-17).** Kryteria z sekcji „Kryteria bramki jakości” pozostają **bez zmian** (zamrożone
+   2026-10-05); `scripts/mpzp_quality_gate.py` ocenia je z licznikami i daje `GO` / `NO_GO` /
+   `NOT_DECIDABLE`. Stan 2026-10-05: **`NOT_DECIDABLE`** — brak zbioru końcowego z Task 20.2, biegu hybrydy
+   na żywo, badania zmienności i przeglądu ręcznego ≥ 100 wartości przez człowieka
+   (`docs/evaluation/results/parser-v3/gate_report.md`). Decyzji go/no-go dla włączenia ścieżki **nie
+   podjęto**; domyślny tryb pozostaje `legacy`.
+5. **Decyzja właściciela 2026-10-05 (polecenie w rozmowie z asystentem):** limity dobowe i miesięczne
+   ścieżki modelu są **zaakceptowane** w proponowanej postaci: doba 2 000 000 tokenów (wejście + wyjście) i
+   5 USD, miesiąc 40 000 000 tokenów i 100 USD (koszt szacowany wg ceny od 2027-01-01, granice doby i
+   miesiąca w UTC, twardy stop). Zmiana tych wartości wymaga nowego wpisu z datą. Limity wydatków w AI Studio
+   (poziom projektu dostawcy) są niezależnym, dodatkowym zabezpieczeniem i nie zastępują tych limitów.

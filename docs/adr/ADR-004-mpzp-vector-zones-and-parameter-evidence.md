@@ -98,3 +98,13 @@ Obie migracje mają pełny downgrade (usuwa dodane kolumny/ograniczenia).
 - Import MPZP może przyjąć opcjonalne pola `zone_identifier` i `document_url`
   w `field_mapping` źródła.
 - Ścieżka rastrowa/ręczna pozostaje działająca, ale nie zgłasza pełnej pewności.
+
+## Aneks PV3-07–09 (2026-10-03): zmiany pkt 4 i 5
+
+Punkty „konflikt” (4) i „OCR” (5) zastąpiono [ADR-013](ADR-013-mpzp-quantity-engine-conditions-calibration.md):
+różne wartości tej samej przesłanki nadal są konfliktem, ale wartości z różnymi warunkami (typ dachu,
+podstrefa, typ budynku, położenie) to wartości warunkowe (`value_kind = conditional`); stała
+`OCR_CONFIDENCE_PENALTY = 0,85` (i pozostałe stałe mnożniki) nie istnieje — obniżenie pewności dla OCR wynika
+z cechy `ocr`/`ocr_noise` w skalibrowanym modelu (`confidence_features`). Równoważny tekstowy PDF i OCR dają
+tę samą wartość, a OCR pewność nie wyższą. Odczyt historyczny (pkt 6) bez zmian: stare wiersze czytane są
+jako bezwarunkowe.

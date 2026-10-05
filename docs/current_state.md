@@ -205,7 +205,7 @@ odtwarzanie odpowiedzi modelu (`--llm-replay`), `--live` zablokowany bez flagi, 
 zamrożenia i logu pobrań; **korpus nie został zbudowany** (lista źródeł czeka na zatwierdzenie
 właściciela, anotację muszą wykonać ludzie). **PV3-01** — spike’iem (`backend/scripts/llm_spike.py`) zmierzono 2026-10-02 model
 `gemini-3.8-flash` na 10 blokach (schemat 30/30, cytaty 261/261, p95 8,3 s, ok. 0,04 USD na analizę od 2027;
-wynik mechaniczny GO); **decyzję go/no-go zapisuje właściciel w ADR-012**. Stan i polecenia:
+wynik mechaniczny GO); **decyzja właściciela GO z 2026-10-05 wpisana w ADR-012** (z progami, warunkami i zamrożoną bramką jakości dla Task 20.17). Stan i polecenia:
 [odbiór PV3-01–03](evaluation/pv3-01-03-verification.md).
 
 ## Parser MPZP v3 — fundament (PV3-04–06, 2026-10-02)
@@ -222,3 +222,69 @@ monotoniczne) i `ZoneBlock` z zakresem znaków, stronami i ścieżką. **PV3-06*
 niezależna ocena wymaga zbioru końcowego z PV3-02. Produkcja nadal używa trybu `legacy`; przełączenie
 na bloki to Task 20.14 (z podniesieniem wersji kontraktu). Stan i polecenia:
 [odbiór PV3-04–06](evaluation/pv3-04-06-verification.md).
+
+## Parser MPZP v3 — silnik wartości, warunki, pewność (PV3-07–09, 2026-10-03)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-07** — jeden deterministyczny silnik wartości liczbowych
+oparty o leksykon (`quantity_engine`/`quantity_lexicon`/`quantity_normalization`), współdzielony przez
+aplikację i ewaluator (ewaluator nie ma już własnej normalizacji); wersja parsera `mpzp-parser/3.0-det`.
+Na korpusie BK-603 (anotacje AI, wynik rozwojowy): silnik `v3` precision 1,000 (248/248), recall 0,992
+(248/250; rozwojowy 89/89, końcowy 159/161), `legacy` (to, co działa na produkcji) recall 0,832, precision
+1,000 — wcześniej 0,248. Poprawność **wartości** wśród znalezionych jest niższa niż detekcja (v3: 0,940;
+skan symulowany 0,43 — pozostałe błędy w raporcie odbioru). **PV3-08** — wartość z warunkiem (typ dachu,
+podstrefa, typ budynku, położenie) to `conditional`, nie `conflict`; pole płaskie API jest `null`, gdy nie
+ma jednej wartości bezwarunkowej; warunki widać w UI, PDF i paczce audytowej (`audit-exporter/1.1.0`);
+migracja `028` (JSONB `conditions`, `value_kind`). **PV3-09** — pewność jako skalibrowane
+prawdopodobieństwo z cech dowodu zamiast stałych mnożników; artefakt
+`backend/app/core/mpzp_confidence_calibration.json`, pasma i próg ręcznej weryfikacji z pomiaru;
+na podziale `final` ECE 0,059, pasmo wysokie 0/297 błędów, niskie 23/137, pasmo średnie puste.
+`MPZP_RESULT_SCHEMA_VERSION` 2.2 → 2.5 (stare snapshoty nie są trafieniem cache). Tryb zakresu
+pozostaje `legacy` (Task 20.14). Stan, liczby i ograniczenia:
+[odbiór PV3-07–09](evaluation/pv3-07-09-verification.md), [ADR-013](adr/ADR-013-mpzp-quantity-engine-conditions-calibration.md).
+
+## Parser MPZP v3 — ścieżka modelu językowego (PV3-10/11, 2026-10-03/05)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-10** — port `StructuredExtractionProvider` w warstwie
+`application` i adapter Gemini (REST, `httpx`) w `infrastructure/llm`: stały host, HTTPS, bez przekierowań,
+limity rozmiaru i czasu, ponowienia z `Retry-After`, wyłącznik awaryjny, wykrywanie innego modelu niż
+skonfigurowany, brak klucza i treści żądania w logach i wyjątkach; **wyłączony domyślnie**
+(`mpzp_llm_enabled=false`, klucz `SecretStr` z `GEMINI_API_KEY`), bez ruchu sieciowego. **PV3-11** — kontrakt
+wyjścia (dosłowny cytat, surowa wartość, cytat zakresu, jawne „nie znaleziono”), wersjonowana instrukcja i
+schemat ze skrótami w provenance, usługa jednego żądania na blok z podziałem dużych bloków bez gubienia i
+dublowania cytatów oraz złote odpowiedzi dla układów 1–6. Testy offline (305), pokrycie nowych modułów
+98–100%. **Nic nie zmierzono na żywo**, a złote odpowiedzi to nie nagrania modelu; ścieżka nie jest
+podłączona do analizy (Task 20.12–20.14), więc zachowanie aplikacji i kontrakt API bez zmian. Stan i
+ograniczenia: [odbiór PV3-10/11](evaluation/pv3-10-11-verification.md), aneks w
+[ADR-012](adr/ADR-012-mpzp-llm-extraction.md).
+
+
+## Parser MPZP v3 — bramki, cache i tryby parsera (PV3-12–14, 2026-10-05)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-12** — weryfikator kandydatów modelu
+(`planning/domain/candidate_verifier.py`) z bramkami G1–G8 względem tekstu bloku strefy; jedyna droga
+wartości z modelu do wyniku; przyjęty kandydat ma status `ai_candidate` (nigdy `verified`) i
+`extraction_method=llm_verified`, strona i zakres znaków pochodzą z dopasowania w bloku. **PV3-13** — tabela
+`mpzp_llm_extractions` (migracja **029** po head `028`) z wyjściem modelu i skrótami wejścia (bez treści
+żądania i danych użytkownika), idempotentny zapis, retencja i `python -m app.modules.planning purge-llm-cache`;
+evidence parametru niesie `model_id`, `prompt_version`, `response_sha256`. **PV3-14** — `MPZP_PARSER_MODE`
+(`legacy` domyślny i bajtowo bez zmian, `v3`, `hybrid_shadow`, `hybrid`), model tylko dla par bez wartości,
+z konfliktem albo niskim zakresem, scalanie z pierwszeństwem rdzenia, `MPZP_LLM_UNAVAILABLE` + `partial` przy
+niedostępności, ten sam potok we wznowieniu po ręcznym symbolu, sygnatura cache z trybem, wersją parsera,
+promptu i modelem; silnik `hybrid` w ewaluatorze. **Nic nie zmierzono na żywo** i nie ma nagranych odpowiedzi
+modelu; domyślne zachowanie się nie zmienia (tryb `legacy`, `mpzp_llm_enabled=false`). Stan, testy i
+ograniczenia: [odbiór PV3-12–14](evaluation/pv3-12-14-verification.md), aneks w
+[ADR-012](adr/ADR-012-mpzp-llm-extraction.md).
+
+## Parser MPZP v3 — limity, dane, bramka jakości (PV3-15–17, 2026-10-05)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-15** — limity ścieżki modelu w analizie (żądania, tokeny na
+analizę/dokument/żądanie, termin propagowany od startu analizy) i między analizami (adapter
+`infrastructure/llm/budget.py`: częstotliwość, współbieżność, twarde limity doby i miesiąca w rejestrze
+`mpzp_llm_usage`, migracja **030**), wspólny wyłącznik awaryjny, 10 scenariuszy wstrzykiwania błędów przez
+prawdziwy adapter (także w pełnej analizie na PostGIS) — zawsze wynik deterministyczny, `partial`, kod
+ostrzeżenia i licznik. **PV3-16** — [ADR-014](adr/ADR-014-llm-data-handling.md): lista dozwolonych pól
+żądania, redakcja sekretów w logach, skaner sekretów w CI, korpus prompt injection (14 przypadków), kill
+switch plikowy; korpus ujawnił i naprawiono kwadratowy koszt rdzenia dla długiego tokenu. **PV3-17** —
+**zablokowane**: brak zbioru końcowego (Task 20.2), biegu hybrydy na żywo i przeglądu ręcznego przez
+człowieka; narzędzie bramki i bieg `legacy`/`v3` są w `evaluation/results/parser-v3/` (decyzja
+`NOT_DECIDABLE`). Stan i ograniczenia: [odbiór PV3-15–17](evaluation/pv3-15-17-verification.md).
