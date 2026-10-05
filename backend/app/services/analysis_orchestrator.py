@@ -68,6 +68,12 @@ from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp
 from app.services.mpzp_fetch import DocumentBlob, fetch_mpzp_document
 from app.schemas.mpzp import MpzpParseResult
 from app.services.mpzp_parser import parse_mpzp_document
+from app.services.mpzp_parser_hybrid import WARNING_LLM_CANDIDATES_REJECTED, WARNING_LLM_UNAVAILABLE
+
+_LLM_DEGRADATION_CODES = frozenset({WARNING_LLM_UNAVAILABLE, WARNING_LLM_CANDIDATES_REJECTED})
+from app.services.mpzp_parser_options import build_mpzp_parser_options
+from app.modules.planning.application.llm_pipeline import BudgetTracker
+from app.modules.planning.composition import new_analysis_llm_budget
 from app.services.mpzp_zones import (
     DocumentEvidenceContext,
     VectorZoneAssessment,
@@ -338,10 +344,12 @@ async def run_analysis(
         _log_completion(started, parcel_identifier, response)
         return response
 
+    # Jeden budżet modelu na analizę (PV3-14), wspólny dla wszystkich dokumentów aktów.
+    llm_budget = new_analysis_llm_budget(started=started)  # termin liczony od startu analizy
     if has_vector_zones:
         assert vector is not None
         mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
-            await _analyze_mpzp_vector_zones(vector, discovery, parcel_identifier, db)
+            await _analyze_mpzp_vector_zones(vector, discovery, parcel_identifier, db, llm_budget=llm_budget)
         )
         mpzp_complete = vector.complete_coverage and vector.overlap_pct <= 0.1
     else:
@@ -351,6 +359,7 @@ async def run_analysis(
                 metrics.area_sqm,
                 parcel_identifier,
                 db,
+                llm_budget=llm_budget,
             )
         )
         mpzp_complete = False
@@ -380,6 +389,9 @@ async def run_analysis(
                     source_name="mpzp",
                 )
             )
+    if any(warning.code in _LLM_DEGRADATION_CODES for warning in mpzp_warnings):
+        # Tryb ``hybrid`` bez modelu albo z odrzuceniami bramek (PV3-14/15): wynik deterministyczny, nigdy ``complete``.
+        mpzp_complete = False
     warnings.extend(mpzp_warnings)
     sources.extend(mpzp_sources)
     pog, scenario_warnings = _apply_pog_scenario(
@@ -619,6 +631,7 @@ async def _parse_document_with_audit(
     act_version: str | None,
     parcel_identifier: str,
     db: Session,
+    llm_budget: BudgetTracker | None = None,
 ) -> tuple[
     MpzpParseResult | None,
     SourceMetadata | None,
@@ -633,7 +646,9 @@ async def _parse_document_with_audit(
     """
     try:
         document = await fetch_mpzp_document(document_url)
-        parsed = await parse_mpzp_document(document, zone_symbols, build_ocr_provider())
+        parsed = await parse_mpzp_document(
+            document, zone_symbols, build_ocr_provider(), **build_mpzp_parser_options(budget=llm_budget).kwargs()
+        )
     except Exception as exc:
         log_analysis_event(
             "section_error",
@@ -706,6 +721,7 @@ async def _analyze_mpzp_vector_zones(
     discovery: MpzpDiscoveryResult | None,
     parcel_identifier: str,
     db: Session,
+    llm_budget: BudgetTracker | None = None,
 ) -> tuple[list[MpzpZoneResult], list[WarningMessage], list[SourceMetadata], str | None]:
     """Parametry uchwały dla stref wyznaczonych geometrią (BK-202 → BK-203).
 
@@ -750,6 +766,7 @@ async def _analyze_mpzp_vector_zones(
             act_version=act_version,
             parcel_identifier=parcel_identifier,
             db=db,
+            llm_budget=llm_budget,
         )
         warnings.extend(parse_warnings)
         if parsed is None:
@@ -818,6 +835,7 @@ async def _analyze_mpzp_best_effort(
     parcel_area_sqm: float,
     parcel_identifier: str,
     db: Session,
+    llm_budget: BudgetTracker | None = None,
 ) -> tuple[
     list[MpzpZoneResult],
     list[WarningMessage],
@@ -858,6 +876,7 @@ async def _analyze_mpzp_best_effort(
         act_version=None,
         parcel_identifier=parcel_identifier,
         db=db,
+        llm_budget=llm_budget,
     )
     if parsed is None or document_source is None:
         return [], warnings, [], None

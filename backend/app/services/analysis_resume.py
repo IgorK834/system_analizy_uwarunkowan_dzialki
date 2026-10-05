@@ -11,6 +11,7 @@ staje się ``complete``.
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -34,6 +35,8 @@ from app.schemas.analyze import (
 from app.schemas.mpzp import MpzpParserWarning
 from app.schemas.source import SourceMetadata
 from app.services.mpzp_parser import parse_mpzp_document
+from app.services.mpzp_parser_options import build_mpzp_parser_options
+from app.modules.planning.composition import new_analysis_llm_budget
 from app.shared.zone_symbol import same_zone_symbol
 from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
@@ -102,13 +105,18 @@ async def resume_analysis_with_zone(
     # Zapytania do bazy są synchroniczne, więc biegną w wątku roboczym — inaczej
     # blokowałyby pętlę zdarzeń dla wszystkich pozostałych żądań. Sesja jest
     # używana sekwencyjnie (nigdy równolegle), więc jest bezpieczna.
+    started = time.monotonic()
     inputs = await asyncio.to_thread(_prepare_resume, db, analysis_id, raw_zone_symbol)
 
     parse_result = None
     if inputs.document is not None:
         try:
+            # Ten sam potok (tryb parsera i ścieżka modelu) co w analizie, na przypiętej kopii dokumentu.
             parse_result = await parse_mpzp_document(
-                inputs.document, [inputs.zone_symbol], build_ocr_provider()
+                inputs.document,
+                [inputs.zone_symbol],
+                build_ocr_provider(),
+                **build_mpzp_parser_options(budget=new_analysis_llm_budget(started=started)).kwargs(),
             )
         except Exception as exc:
             raise AnalysisResumeDocumentError(

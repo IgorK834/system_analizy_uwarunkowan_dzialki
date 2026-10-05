@@ -775,3 +775,165 @@ async def test_unexpected_context_and_discovery_errors_are_degraded() -> None:
     assert response.status == "partial"
     assert any(warning.code == "MPZP_DISCOVERY_ERROR" for warning in response.warnings)
     assert sum(warning.source_name == "isok" for warning in response.warnings) == 1
+
+
+# --- tryby parsera MPZP (PV3-14) -----------------------------------------------------------------------
+
+from app.modules.planning.application.llm_pipeline import MpzpLlmPipeline  # noqa: E402
+from app.modules.planning.application.ports import (  # noqa: E402
+    StructuredExtractionError,
+    StructuredExtractionErrorCode,
+)
+from app.services import mpzp_parser_hybrid as parser_hybrid  # noqa: E402
+from app.services.mpzp_parser_options import MpzpParserOptions  # noqa: E402
+from tests.test_mpzp_parser_modes import TEXT as MODES_TEXT  # noqa: E402
+from tests.test_mpzp_parser_modes import ScriptedProvider  # noqa: E402
+from tests.test_mpzp_parser_modes import extraction as modes_extraction  # noqa: E402
+
+
+def _discovery_1mn() -> MpzpDiscoveryResult:
+    from dataclasses import replace as _replace
+
+    return _replace(_found_discovery(), candidate_zone_symbols=["1MN"])
+
+
+async def _run_in_mode(identifier: str, options: MpzpParserOptions):
+    request = ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier=identifier)
+    with (
+        patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier))),
+        patch("app.services.analysis_orchestrator.analyze_context", new=AsyncMock(return_value=_empty_context())),
+        patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=_discovery_1mn())),
+        patch("app.services.analysis_orchestrator.fetch_mpzp_document", new=AsyncMock(return_value=_document())),
+        patch("app.services.mpzp_parser.extract_document_text", new=AsyncMock(return_value=modes_extraction(MODES_TEXT))),
+        patch("app.services.analysis_orchestrator.build_mpzp_parser_options", new=lambda **_kwargs: options),
+        SessionLocal() as db,
+    ):
+        response = await run_analysis(request, db)
+    await parser_hybrid.drain_shadow_tasks()
+    return response
+
+
+def _stored(analysis_id: int) -> tuple[list[dict], list[tuple]]:
+    with SessionLocal() as db:
+        zones = db.scalars(select(MpzpZone).where(MpzpZone.analysis_id == analysis_id).order_by(MpzpZone.id)).all()
+        snapshots = [
+        {**zone.result_snapshot, "parameters": _without_database_ids(zone.result_snapshot.get("parameters", []))}
+        for zone in zones
+    ]
+        rows = db.execute(
+            select(MpzpParameter.parameter_name, MpzpParameter.normalized_value, MpzpParameter.extraction_method,
+                   MpzpParameter.review_status, MpzpParameter.model_id, MpzpParameter.prompt_version,
+                   MpzpParameter.response_sha256)
+            .where(MpzpParameter.mpzp_zone_id.in_([zone.id for zone in zones]))
+            .order_by(MpzpParameter.id)
+        ).all()
+    return snapshots, [tuple(row) for row in rows]
+
+
+# Identyfikatory nadawane przez bazę przy zapisie audytu dokumentu (inne w każdej analizie, niezależne od trybu).
+_DATABASE_IDS = ("legal_unit_id", "document_version_id")
+
+
+def _without_database_ids(parameters: list[dict]) -> list[dict]:
+    return [{key: value for key, value in item.items() if key not in _DATABASE_IDS} for item in parameters]
+
+
+def _comparable(response) -> dict:  # noqa: ANN001
+    data = response.model_dump(mode="json", exclude={"analysis_id", "analyzed_at", "parcel", "section_quality"})
+    for zone in data["mpzp_zones"]:
+        zone["parameters"] = _without_database_ids(zone["parameters"])
+    return {key: data[key] for key in ("status", "mpzp_zones", "warnings", "manual_zone_required")}
+
+
+@pytest.mark.asyncio
+async def test_shadow_mode_changes_neither_the_response_nor_the_saved_snapshot() -> None:
+    v3 = await _run_in_mode(f"{_PREFIX}MODE_V3", MpzpParserOptions(mode="v3"))
+    provider = ScriptedProvider()
+    shadow = await _run_in_mode(
+        f"{_PREFIX}MODE_SHADOW", MpzpParserOptions(mode="hybrid_shadow", llm=MpzpLlmPipeline(provider))
+    )
+    assert provider.calls == 1  # model policzony w tle
+    assert _comparable(shadow) == _comparable(v3)
+    assert _stored(shadow.analysis_id) == _stored(v3.analysis_id)
+    assert not any(p.review_status for zone in shadow.mpzp_zones for p in zone.parameters)
+
+
+@pytest.mark.asyncio
+async def test_hybrid_mode_persists_ai_candidates_with_provenance_and_reads_them_back() -> None:
+    provider = ScriptedProvider()
+    response = await _run_in_mode(
+        f"{_PREFIX}MODE_HYBRID", MpzpParserOptions(mode="hybrid", llm=MpzpLlmPipeline(provider))
+    )
+    zone = response.mpzp_zones[0]
+    ai = [p for p in zone.parameters if p.review_status == "ai_candidate"]
+    assert [(p.name, p.normalized_value, p.extraction_method) for p in ai] == [("max_storeys", 3.0, "llm_verified")]
+    assert zone.max_floors is None  # wartość modelu nie wypełnia płaskiego pola przed ręczną weryfikacją
+    assert zone.manual_review_required and response.status == "partial"
+    snapshots, rows = _stored(response.analysis_id)
+    llm_rows = [row for row in rows if row[2] == "llm_verified"]
+    assert len(llm_rows) == 1 and llm_rows[0][3:6] == ("ai_candidate", "gemini-3.8-flash", "mpzp-extraction/1")
+    assert llm_rows[0][6] == ai[0].response_sha256 and len(llm_rows[0][6]) == 64
+    with SessionLocal() as db:
+        saved = db.get(Analysis, response.analysis_id)
+        assert saved is not None
+        restored = build_analyze_response_from_analysis(saved, db)
+    assert restored.mpzp_zones[0].model_dump(mode="json") == zone.model_dump(mode="json")
+    assert snapshots[0]["parameters"][-1]["review_status"] == "ai_candidate"
+
+
+@pytest.mark.asyncio
+async def test_hybrid_mode_without_the_model_is_deterministic_partial_with_a_warning() -> None:
+    v3 = await _run_in_mode(f"{_PREFIX}MODE_V3B", MpzpParserOptions(mode="v3"))
+    failing = ScriptedProvider(error=StructuredExtractionError(StructuredExtractionErrorCode.TIMEOUT))
+    response = await _run_in_mode(
+        f"{_PREFIX}MODE_TIMEOUT", MpzpParserOptions(mode="hybrid", llm=MpzpLlmPipeline(failing))
+    )
+    assert response.status == "partial"
+    assert any(w.code == "MPZP_LLM_UNAVAILABLE" and w.source_name == "mpzp" for w in response.warnings)
+    assert _without_database_ids(response.model_dump(mode="json")["mpzp_zones"][0]["parameters"]) == (
+        _without_database_ids(v3.model_dump(mode="json")["mpzp_zones"][0]["parameters"]))
+    disabled = await _run_in_mode(
+        f"{_PREFIX}MODE_DISABLED", MpzpParserOptions(mode="hybrid", llm_unavailable_reason="llm_disabled")
+    )
+    assert disabled.status == "partial" and any(w.code == "MPZP_LLM_UNAVAILABLE" for w in disabled.warnings)
+
+
+@pytest.mark.asyncio
+async def test_the_default_legacy_mode_calls_the_parser_without_a_model_pipeline() -> None:
+    identifier = f"{_PREFIX}MODE_LEGACY"
+    parse = AsyncMock(return_value=_parse_result())
+    with (
+        patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier))),
+        patch("app.services.analysis_orchestrator.analyze_context", new=AsyncMock(return_value=_empty_context())),
+        patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=_found_discovery())),
+        patch("app.services.analysis_orchestrator.fetch_mpzp_document", new=AsyncMock(return_value=_document())),
+        patch("app.services.analysis_orchestrator.parse_mpzp_document", new=parse),
+        patch("app.services.mpzp_parser_options.build_mpzp_llm_pipeline", side_effect=AssertionError("bez modelu")),
+        SessionLocal() as db,
+    ):
+        await run_analysis(ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier=identifier), db)
+    assert parse.await_args.kwargs == {"mode": "legacy"}
+
+
+@pytest.mark.asyncio
+async def test_the_orchestrator_passes_one_model_budget_for_the_whole_analysis() -> None:
+    from app.modules.planning.application.llm_pipeline import BudgetTracker
+
+    received: list[object] = []
+
+    def options(**kwargs: object) -> MpzpParserOptions:
+        received.append(kwargs.get("budget"))
+        return MpzpParserOptions(mode="v3")
+
+    identifier = f"{_PREFIX}MODE_BUDGET"
+    with (
+        patch("app.services.analysis_orchestrator.resolve_parcel", new=AsyncMock(return_value=_lookup(identifier))),
+        patch("app.services.analysis_orchestrator.analyze_context", new=AsyncMock(return_value=_empty_context())),
+        patch("app.services.analysis_orchestrator.discover_mpzp", new=AsyncMock(return_value=_discovery_1mn())),
+        patch("app.services.analysis_orchestrator.fetch_mpzp_document", new=AsyncMock(return_value=_document())),
+        patch("app.services.mpzp_parser.extract_document_text", new=AsyncMock(return_value=modes_extraction(MODES_TEXT))),
+        patch("app.services.analysis_orchestrator.build_mpzp_parser_options", new=options),
+        SessionLocal() as db,
+    ):
+        await run_analysis(ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier=identifier), db)
+    assert len(received) == 1 and isinstance(received[0], BudgetTracker)

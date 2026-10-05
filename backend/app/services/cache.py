@@ -11,7 +11,7 @@ from typing import Final
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
-from app.core.settings import settings
+from app.core.settings import Settings, settings
 from app.models.analysis import Analysis
 from app.models.parcel import Parcel
 from app.models.versioned import DataRelease, DataSource
@@ -22,6 +22,10 @@ from app.schemas.analyze import (
     TERRAIN_RESULT_SCHEMA_VERSION,
 )
 from app.schemas.source import QUALITY_RESULT_SCHEMA_VERSION
+from app.modules.planning.domain.extraction_contract import PROMPT_VERSION, SCHEMA_VERSION
+from app.services.mpzp_parser import MPZP_PARSER_VERSION
+from app.services.mpzp_parser_blocks import MPZP_PARSER_VERSION_BLOCKS
+from app.services.mpzp_parser_hybrid import LLM_MODES
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +39,9 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # wektora i evidence parametrów (BK-202/203) albo przed sekcją rzeźby terenu
 # (BK-301/302), przed strukturalnymi sekcjami ryzyka (BK-303) albo przed
 # trwałą macierzą jakości sekcji (BK-504) nie jest serwowany jako trafienie,
-# nawet gdy aktywne wydania danych się nie zmieniły.
+# nawet gdy aktywne wydania danych się nie zmieniły. Wersja parsera MPZP nie wchodzi do
+# sygnatury, więc każda zmiana wartości zwracanych przez parser (silnik PV3-07, warunki
+# PV3-08, kalibracja pewności PV3-09) podnosi ``MPZP_RESULT_SCHEMA_VERSION``.
 RESULT_CONTRACT_VERSION: Final[str] = (
     f"pog-v{POG_RESULT_SCHEMA_VERSION}+mpzp-v{MPZP_RESULT_SCHEMA_VERSION}"
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"
@@ -44,8 +50,28 @@ RESULT_CONTRACT_VERSION: Final[str] = (
 )
 
 
+def mpzp_parser_signature(app_settings: Settings | None = None) -> dict[str, object]:
+    """Składnik sygnatury cache z trybu parsera MPZP (PV3-14).
+
+    Zawiera tryb (``MPZP_PARSER_MODE``), wersję parsera rdzenia oraz — w trybach z modelem —
+    wersję promptu i schematu, identyfikator modelu i to, czy ścieżka modelu jest włączona. Analiza
+    policzona w innym trybie, innym modelem albo innym promptem nie jest więc trafieniem cache.
+    """
+    active = app_settings or settings
+    mode = active.mpzp_parser_mode
+    with_llm = mode in LLM_MODES
+    return {
+        "mode": mode,
+        "parser_version": MPZP_PARSER_VERSION if mode == "legacy" else MPZP_PARSER_VERSION_BLOCKS,
+        "prompt_version": PROMPT_VERSION if with_llm else None,
+        "schema_version": SCHEMA_VERSION if with_llm else None,
+        "model_id": active.mpzp_llm_model if with_llm else None,
+        "llm_enabled": bool(active.mpzp_llm_enabled) if with_llm else None,
+    }
+
+
 def current_cache_signature(db: Session) -> tuple[str, list[int]]:
-    """Hashuje kontrakt odpowiedzi i pełny zestaw aktywnych wydań danych."""
+    """Hashuje kontrakt odpowiedzi, tryb parsera MPZP i pełny zestaw aktywnych wydań danych."""
     rows = db.execute(
         select(DataSource.source_id, DataRelease.id, DataRelease.version_label)
         .join(DataRelease, DataRelease.data_source_id == DataSource.id)
@@ -57,7 +83,7 @@ def current_cache_signature(db: Session) -> tuple[str, list[int]]:
         for source_id, release_id, version in rows
     ]
     encoded = json.dumps(
-        {"contract": RESULT_CONTRACT_VERSION, "releases": releases},
+        {"contract": RESULT_CONTRACT_VERSION, "mpzp_parser": mpzp_parser_signature(), "releases": releases},
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")

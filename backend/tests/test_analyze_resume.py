@@ -1138,3 +1138,62 @@ def test_pending_document_returns_404_for_unknown_or_unpinned_analysis() -> None
     assert client.get(f"/analyze/999999999/pending-document?access_token={make_analysis_token(999999999)}").status_code == 404
     assert client.get(f"/analyze/{unpinned}/pending-document?access_token={make_analysis_token(unpinned)}").status_code == 404
     assert client.get("/analyze/0/pending-document").status_code == 422
+
+
+# --- ten sam potok parsera na przypiętej kopii (PV3-14) ------------------------------------------------
+
+from app.modules.planning.application.llm_pipeline import MpzpLlmPipeline  # noqa: E402
+from app.services.mpzp_parser_options import MpzpParserOptions  # noqa: E402
+from tests.test_mpzp_parser_modes import GOOD_RESPONSE, ScriptedProvider, _candidate  # noqa: E402
+from tests.test_mpzp_parser_modes import extraction as modes_extraction  # noqa: E402
+
+_RESUME_TEXT = (
+    "§ 5. Dla terenu 230_U ustala się:\n"
+    "1) maksymalna wysokość zabudowy: 12 m;\n"
+    "2) zabudowa nie wyższa aniżeli 3 kondygnacje nadziemne;\n"
+)
+
+
+def test_resume_runs_the_same_hybrid_pipeline_on_the_pinned_copy_without_fetching(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fetch = AsyncMock(side_effect=AssertionError("resume nie może pobierać dokumentu"))
+    monkeypatch.setattr("app.services.mpzp_fetch.fetch_mpzp_document", fetch)
+    analysis_id = _create_waiting_analysis("122101_1.0001.9301")
+    content = {
+        "candidates": [_candidate(zone_symbol="230_U", scope_quote="Dla terenu 230_U ustala się:")],
+        "not_found": [],
+    }
+    provider = ScriptedProvider(content)
+    read_text = AsyncMock(return_value=modes_extraction(_RESUME_TEXT))
+    options = MpzpParserOptions(mode="hybrid", llm=MpzpLlmPipeline(provider))
+    with (
+        patch("app.services.mpzp_parser.extract_document_text", new=read_text),
+        patch("app.services.analysis_resume.build_mpzp_parser_options", new=lambda **_kwargs: options),
+    ):
+        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "230_U"})
+
+    assert response.status_code == 200, response.text
+    fetch.assert_not_awaited()
+    assert read_text.await_args.args[0].content == PINNED_CONTENT  # parser czyta przypiętą kopię
+    assert provider.calls == 1 and "Dla terenu 230_U" in provider.requests[0].user_text
+    zone = response.json()["mpzp_zones"][0]
+    ai = [p for p in zone["parameters"] if p.get("review_status") == "ai_candidate"]
+    assert [(p["name"], p["normalized_value"], p["extraction_method"]) for p in ai] == [("max_storeys", 3.0, "llm_verified")]
+    assert zone["max_floors"] is None and zone["max_building_height_m"] == 12.0
+    assert GOOD_RESPONSE["candidates"]  # ta sama odpowiedź skryptowa co w testach trybów
+
+
+def test_resume_in_hybrid_mode_without_the_model_keeps_the_deterministic_result_and_warns() -> None:
+    analysis_id = _create_waiting_analysis("122101_1.0001.9302")
+    options = MpzpParserOptions(mode="hybrid", llm_unavailable_reason="llm_disabled")
+    with (
+        patch("app.services.mpzp_parser.extract_document_text", new=AsyncMock(return_value=modes_extraction(_RESUME_TEXT))),
+        patch("app.services.analysis_resume.build_mpzp_parser_options", new=lambda **_kwargs: options),
+    ):
+        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "230_U"})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "partial"
+    assert "MPZP_LLM_UNAVAILABLE" in {warning["code"] for warning in body["warnings"]}
+    assert body["mpzp_zones"][0]["max_building_height_m"] == 12.0

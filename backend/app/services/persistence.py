@@ -605,6 +605,12 @@ def add_mpzp_zone_snapshot(
                     parser_version=parameter.parser_version,
                     extraction_method=parameter.extraction_method,
                     conflict_group_id=parameter.conflict_group_id,
+                    conditions=[condition.model_dump(mode="json") for condition in parameter.conditions] or None,
+                    value_kind=parameter.value_kind,
+                    review_status=parameter.review_status,
+                    model_id=parameter.model_id,
+                    prompt_version=parameter.prompt_version,
+                    response_sha256=parameter.response_sha256,
                 )
             )
         return zone_record
