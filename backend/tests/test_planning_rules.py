@@ -179,7 +179,12 @@ def test_conflicting_values_receive_one_deterministic_group_and_review() -> None
     assert len(groups) == 1
     assert None not in groups
     assert all(rule.review_status != "verified" for rule in first)
-    assert all(rule.confidence <= 0.6 for rule in first)
+    from app.modules.planning.domain import evidence_confidence
+
+    artifact = evidence_confidence.current_artifact()
+    cap = max(rule.confidence for rule in first)
+    assert cap < artifact.review_threshold  # sprzeczne reguły zawsze poniżej progu ręcznej weryfikacji
+    assert all(rule.confidence <= cap for rule in first)
     assert {rule.conflict_group for rule in second} == groups
     assert assign_conflict_groups([_candidate()])[0].conflict_group is None
 
@@ -210,3 +215,70 @@ def test_planning_rule_service_extracts_and_replaces_for_exact_units() -> None:
     assert result == repository.rules
     assert all(rule.parser_version == "service/1" for rule in result)
     assert all(rule.conflict_group for rule in result)
+
+
+# --- reguły z silnika leksykonu (PV3-07) -----------------------------------------------------------
+
+
+def test_rules_and_parser_share_one_engine_so_the_same_text_gives_the_same_values() -> None:
+    from app.modules.planning.domain.quantity_engine import find_quantities
+
+    engine_values = {(m.parameter, m.value) for m in find_quantities(_RULE_TEXT)}
+    rules = extract_planning_rules(LegalTextUnit(1, _RULE_TEXT), parser_version="rules-test/1")
+    rule_values = {(r.code, r.value) for r in rules if r.value is not None and r.code != "roof_angle"}
+    mapping = {
+        ("max_building_height_m", 12.5): ("max_building_height", 12.5),
+        ("max_storeys", 3.0): ("max_storeys", 3.0),
+        ("min_biologically_active_percent", 40.0): ("min_biologically_active", 40.0),
+        ("max_building_coverage_percent", 35.0): ("max_building_coverage", 35.0),
+        ("setback_m", 6.0): ("setback", 6.0),
+        ("parking_minimum", 2.0): ("parking_minimum", 2.0),
+        ("min_intensity", 0.2): ("min_intensity", 0.2),
+        ("max_intensity", 1.5): ("max_intensity", 1.5),
+        ("max_retail_sales_area_m2", 2000.0): ("large_retail_area", 2000.0),
+    }
+    for engine_pair, rule_pair in mapping.items():
+        assert engine_pair in engine_values and rule_pair in rule_values
+
+
+def test_rule_evidence_is_the_phrase_from_the_noun_to_the_value() -> None:
+    rules = extract_planning_rules(
+        LegalTextUnit(3, "Maksymalna wysokość zabudowy wynosi 12,5 m."), parser_version="rules-test/1"
+    )
+    (height,) = [r for r in rules if r.code == "max_building_height"]
+    assert height.source_text == "wysokość zabudowy wynosi 12,5 m" and height.raw_value == "wynosi 12,5 m"
+    assert height.operator == "lte" and height.unit == "m" and 0.9 < height.confidence <= 0.99  # skalibrowana, nie stała 0,88
+
+
+def test_roof_angle_rules_cover_range_single_bound_and_equal_bounds() -> None:
+    def roof(text: str):
+        (rule,) = [r for r in extract_planning_rules(LegalTextUnit(1, text), parser_version="t") if r.code == "roof_angle"]
+        return rule
+
+    ranged = roof("Kąt nachylenia połaci od 30° do 45°.")
+    assert (ranged.operator, ranged.min_value, ranged.max_value) == ("range", 30.0, 45.0)
+    upper = roof("Kąt nachylenia połaci do 20°.")
+    assert (upper.operator, upper.value, upper.min_value) == ("lte", 20.0, None)
+    exact = roof("Kąt nachylenia połaci dachowych 35°.")
+    assert (exact.operator, exact.value) == ("eq", 35.0)
+
+
+def test_new_numeric_codes_are_validated_like_the_old_ones() -> None:
+    rules = extract_planning_rules(
+        LegalTextUnit(
+            1,
+            "Minimalny wskaźnik powierzchni zabudowy – 0,05. Minimalną powierzchnię nowo wydzielonej działki budowlanej – 800 m2.",
+        ),
+        parser_version="t",
+    )
+    by_code = {r.code: r for r in rules}
+    assert by_code["min_building_coverage"].value == 5.0 and by_code["min_building_coverage"].unit == "percent"
+    assert by_code["min_plot_area"].value == 800.0 and by_code["min_plot_area"].operator == "gte"
+    with pytest.raises(PlanningRuleValidationError):
+        validate_planning_rule(_candidate(code="min_building_coverage", value=120.0))
+
+
+def test_roof_geometry_rule_keeps_the_word_from_the_text() -> None:
+    rules = extract_planning_rules(LegalTextUnit(1, "Dachy dwuspadowe lub płaskie."), parser_version="t")
+    (roof,) = [r for r in rules if r.code == "roof_geometry"]
+    assert roof.text_value == "dwuspadowe" and roof.raw_value.lower().startswith("dachy dwuspadowe lub płaskie")

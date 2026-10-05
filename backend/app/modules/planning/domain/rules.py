@@ -1,4 +1,10 @@
-"""Deterministyczna ekstrakcja walidowalnych reguł planistycznych."""
+"""Deterministyczna ekstrakcja walidowalnych reguł planistycznych.
+
+Wartości liczbowe (wysokość, kondygnacje, udziały, odsunięcie, parkowanie, intensywność, kąt dachu,
+powierzchnia sprzedaży, minimalna działka) pochodzą z jednego silnika opartego na leksykonie
+(``quantity_engine``), tego samego co w parserach MPZP (PV3-07); tu zostaje mapowanie na kody
+reguł oraz zapis opisowy (przeznaczenie, zakazy, ograniczenia środowiskowe).
+"""
 
 from __future__ import annotations
 
@@ -7,7 +13,9 @@ from dataclasses import dataclass, replace
 from typing import Any, Literal
 from uuid import NAMESPACE_URL, uuid5
 
-from app.shared.numbers import parse_numeric_range, parse_polish_number
+from app.modules.planning.domain.quantity_engine import QuantityMatch, find_quantities
+from app.modules.planning.domain.quantity_lexicon import ROOF_GEOMETRY_PATTERN
+from app.modules.planning.domain import evidence_confidence
 
 RuleOperator = Literal["eq", "lte", "gte", "range", "contains", "prohibits"]
 ReviewStatus = Literal[
@@ -18,79 +26,24 @@ ReviewStatus = Literal[
     "ai_candidate",
 ]
 
-_NUMBER = r"(\d+(?:[.,]\d+)?)"
-
-_SINGLE_NUMBER_PATTERNS: tuple[
-    tuple[str, RuleOperator, str | None, re.Pattern[str]], ...
-] = (
-    (
-        "max_building_height",
-        "lte",
-        "m",
-        re.compile(
-            rf"maksymaln\w*\s+wysoko\w*(?:\s+zabudowy)?\D{{0,50}}?{_NUMBER}\s*m\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "max_storeys",
-        "lte",
-        None,
-        re.compile(
-            rf"(?:maksymalnie|nie\s+więcej\s+niż)\s+{_NUMBER}\s+kondygnacj\w*",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "min_biologically_active",
-        "gte",
-        "percent",
-        re.compile(
-            rf"(?:minimaln\w*\s+)?(?:powierzchni|teren)\w*\s+"
-            rf"biologicznie\s+czynn\w*\D{{0,50}}?{_NUMBER}\s*%",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "max_building_coverage",
-        "lte",
-        "percent",
-        re.compile(
-            rf"maksymaln\w*(?:\s+wskaźnik)?\s+powierzchni\w*\s+"
-            rf"zabudowy\D{{0,50}}?{_NUMBER}\s*%",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "setback",
-        "gte",
-        "m",
-        re.compile(
-            rf"w\s+odległości(?:\s+nie\s+mniejszej\s+niż)?\s+{_NUMBER}\s*m"
-            r"\s+od\s+granicy",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "parking_minimum",
-        "gte",
-        "space",
-        re.compile(
-            rf"{_NUMBER}\s+miejsc\w*\s+(?:parkingow\w*\s+)?na\b",
-            re.IGNORECASE,
-        ),
-    ),
-)
-
-_INTENSITY_PATTERN = re.compile(
-    r"(?:wskaźnik\w*\s+)?intensywno\w*\s+zabudowy(?P<context>.{0,120})",
-    re.IGNORECASE | re.DOTALL,
-)
-_ROOF_ANGLE_PATTERN = re.compile(
-    r"(?:kąt\w*\s+nachylenia\w*|nachyleni\w*\s+połaci\w*)"
-    r"(?P<context>.{0,100})",
-    re.IGNORECASE | re.DOTALL,
-)
+# Parametr silnika → ``(kod reguły, operator, jednostka)``. Kąt dachu składa się osobno (zakres).
+_NUMERIC_RULES: dict[str, tuple[str, RuleOperator, str | None]] = {
+    "max_building_height_m": ("max_building_height", "lte", "m"),
+    "max_storeys": ("max_storeys", "lte", None),
+    "min_biologically_active_percent": ("min_biologically_active", "gte", "percent"),
+    "max_building_coverage_percent": ("max_building_coverage", "lte", "percent"),
+    "min_building_coverage_percent": ("min_building_coverage", "gte", "percent"),
+    "setback_m": ("setback", "gte", "m"),
+    "parking_minimum": ("parking_minimum", "gte", "space"),
+    "min_intensity": ("min_intensity", "gte", None),
+    "max_intensity": ("max_intensity", "lte", None),
+    "max_retail_sales_area_m2": ("large_retail_area", "lte", "m2"),
+    "min_plot_area_m2": ("min_plot_area", "gte", "m2"),
+}
+_ROOF_PARAMETERS = frozenset({"roof_angle_min_deg", "roof_angle_max_deg"})
+# Metoda ekstrakcji wartości z modelu językowego po bramkach deterministycznych (PV3-12). Taka reguła
+# jest wyłącznie kandydatem do ręcznej weryfikacji: status ``ai_candidate``, nigdy ``verified``.
+EXTRACTION_METHOD_LLM_VERIFIED = "llm_verified"
 
 _PRIMARY_USE_PATTERN = re.compile(
     r"przeznaczeni\w*\s+podstawow\w*\s*[:–-]\s*([^.;\n]+)",
@@ -101,24 +54,15 @@ _SUPPLEMENTARY_USE_PATTERN = re.compile(
     r"([^.;\n]+)",
     re.IGNORECASE,
 )
-_ROOF_GEOMETRY_PATTERN = re.compile(
-    r"dach\w*\s+(dwuspadow\w*|wielospadow\w*|płask\w*)",
-    re.IGNORECASE,
-)
 _PROHIBITION_PATTERN = re.compile(r"zakaz\s+[^.;\n]+", re.IGNORECASE)
 _ENVIRONMENT_PATTERN = re.compile(
     r"(?:nakaz\s+ochrony|ograniczeni\w*\s+środowisk\w*)[^.;\n]*",
     re.IGNORECASE,
 )
-_LARGE_RETAIL_PATTERN = re.compile(
-    r"(?:zakaz\w*\s+)?obiekt\w*\s+handlow\w*.{0,80}?"
-    r"(\d[\d\s]*)\s*m\s*(?:2|²|kw\.?)",
-    re.IGNORECASE,
-)
-
 _PERCENT_CODES = {
     "min_biologically_active",
     "max_building_coverage",
+    "min_building_coverage",
 }
 _POSITIVE_CODES = {
     "max_building_height",
@@ -127,6 +71,7 @@ _POSITIVE_CODES = {
     "max_intensity",
     "setback",
     "parking_minimum",
+    "min_plot_area",
 }
 
 
@@ -161,12 +106,36 @@ class PlanningRuleCandidate:
     conditions: tuple[dict[str, Any], ...] = ()
     review_status: ReviewStatus = "unreviewed"
     conflict_group: str | None = None
+    # ``None`` — reguła z silnika deterministycznego; ``llm_verified`` — kandydat modelu po bramkach.
+    extraction_method: str | None = None
+
+
+def numeric_rule_spec(parameter: str) -> tuple[str, RuleOperator, str | None]:
+    """Kod reguły, operator i jednostka dla parametru liczbowego silnika (także kąta dachu)."""
+    if parameter in _ROOF_PARAMETERS:
+        return "roof_angle", ("gte" if parameter == "roof_angle_min_deg" else "lte"), "deg"
+    try:
+        return _NUMERIC_RULES[parameter]
+    except KeyError:
+        raise PlanningRuleValidationError(f"Nieznany parametr liczbowy {parameter!r}.") from None
 
 
 def validate_planning_rule(rule: PlanningRuleCandidate) -> None:
     """Wymusza zakresy oraz zakaz publikacji bez dosłownego dowodu."""
     if not 0 <= rule.confidence <= 1:
         raise PlanningRuleValidationError("Confidence musi mieścić się w 0–1.")
+    if rule.extraction_method == EXTRACTION_METHOD_LLM_VERIFIED:
+        # Wartość z modelu nie jest źródłem prawdy (ADR-012): tylko kandydat z dosłownym dowodem.
+        if rule.review_status != "ai_candidate":
+            raise PlanningRuleValidationError(
+                "Reguła z modelu językowego musi mieć status ai_candidate (nigdy verified)."
+            )
+        if not (rule.source_text or "").strip():
+            raise PlanningRuleValidationError("Reguła z modelu językowego wymaga zweryfikowanego cytatu.")
+    elif rule.review_status == "ai_candidate":
+        raise PlanningRuleValidationError(
+            "Status ai_candidate przysługuje wyłącznie wartościom z modelu po bramkach (llm_verified)."
+        )
     if not (rule.source_text or "").strip():
         if rule.review_status == "verified" or rule.confidence > 0.8:
             raise PlanningRuleValidationError(
@@ -196,6 +165,86 @@ def validate_planning_rule(rule: PlanningRuleCandidate) -> None:
         raise PlanningRuleValidationError("Minimum nie może przekraczać maksimum.")
 
 
+def _conflict_confidence() -> float:
+    """Pułap pewności reguły w grupie sprzeczności: model dla cechy ``conflict`` (poniżej progu weryfikacji)."""
+    return round(
+        evidence_confidence.probability(
+            evidence_confidence.ConfidenceFeatures(value_kind="conflict", candidate_count=2)
+        ),
+        4,
+    )
+
+
+def _rule_confidence(match: QuantityMatch) -> float:
+    """Pewność reguły liczbowej z cech dopasowania (PV3-09); jednostka prawna nie niesie cech dokumentu.
+
+    Brak metody ekstrakcji i zakresu strefy to cechy neutralne, więc liczy się strategia i flagi przeróbek
+    zapisu — dokładnie ten sam model, który ocenia parametry parsera MPZP.
+    """
+    return round(
+        evidence_confidence.probability(
+            evidence_confidence.ConfidenceFeatures(strategy=match.strategy, flags=match.flags, quote_verified=True)
+        ),
+        4,
+    )
+
+
+def _phrase(text: str, match: QuantityMatch) -> str:
+    """Fraza źródłowa od rzeczownika parametru do końca wartości (dowód reguły)."""
+    left = match.noun_start if match.noun_start is not None and match.noun_start < match.start else match.start
+    return " ".join(text[left : match.end].split())
+
+
+def _numeric_rules_from_engine(
+    unit: LegalTextUnit, text: str, parser_version: str
+) -> list[PlanningRuleCandidate]:
+    rules: list[PlanningRuleCandidate] = []
+    roof: dict[tuple[int, int], list[QuantityMatch]] = {}
+    for match in find_quantities(text):
+        if match.parameter in _ROOF_PARAMETERS:
+            roof.setdefault((match.start, match.end), []).append(match)
+            continue
+        code, operator, measurement_unit = _NUMERIC_RULES[match.parameter]
+        rules.append(
+            PlanningRuleCandidate(
+                legal_unit_id=unit.legal_unit_id,
+                code=code,
+                operator=operator,
+                value=match.value,
+                unit=measurement_unit,
+                raw_value=match.raw_value,
+                source_text=_phrase(text, match),
+                parser_version=parser_version,
+                confidence=_rule_confidence(match),
+            )
+        )
+    for span_matches in roof.values():
+        bounds = {m.parameter: m for m in span_matches}
+        first = span_matches[0]
+        minimum = bounds.get("roof_angle_min_deg")
+        maximum = bounds.get("roof_angle_max_deg")
+        common = dict(
+            legal_unit_id=unit.legal_unit_id,
+            code="roof_angle",
+            unit="deg",
+            raw_value=first.raw_value,
+            source_text=_phrase(text, first),
+            parser_version=parser_version,
+            confidence=min(_rule_confidence(m) for m in span_matches),
+        )
+        if minimum is not None and maximum is not None and minimum.value != maximum.value:
+            rules.append(
+                PlanningRuleCandidate(operator="range", min_value=minimum.value, max_value=maximum.value, **common)  # type: ignore[arg-type]
+            )
+        elif minimum is not None and maximum is not None:
+            rules.append(PlanningRuleCandidate(operator="eq", value=minimum.value, **common))  # type: ignore[arg-type]
+        elif minimum is not None:
+            rules.append(PlanningRuleCandidate(operator="gte", value=minimum.value, **common))  # type: ignore[arg-type]
+        elif maximum is not None:
+            rules.append(PlanningRuleCandidate(operator="lte", value=maximum.value, **common))  # type: ignore[arg-type]
+    return rules
+
+
 def extract_planning_rules(
     unit: LegalTextUnit,
     *,
@@ -203,115 +252,26 @@ def extract_planning_rules(
 ) -> list[PlanningRuleCandidate]:
     """Ekstrahuje liczby, przeznaczenia, dachy, parking i ograniczenia."""
     text = unit.source_text
-    rules: list[PlanningRuleCandidate] = []
-
-    for code, operator, measurement_unit, pattern in _SINGLE_NUMBER_PATTERNS:
-        for match in pattern.finditer(text):
-            value = parse_polish_number(match.group(1))
-            rules.append(
-                _numeric_rule(
-                    unit,
-                    code,
-                    operator,
-                    value,
-                    measurement_unit,
-                    match.group(0),
-                    parser_version,
-                )
-            )
-
-    for anchor in _INTENSITY_PATTERN.finditer(text):
-        context = anchor.group("context")
-        numeric_range = parse_numeric_range(context)
-        if numeric_range is not None:
-            excerpt = f"{anchor.group(0)[:160]}"
-            rules.extend(
-                [
-                    _numeric_rule(
-                        unit,
-                        "min_intensity",
-                        "gte",
-                        numeric_range.minimum,
-                        None,
-                        excerpt,
-                        parser_version,
-                    ),
-                    _numeric_rule(
-                        unit,
-                        "max_intensity",
-                        "lte",
-                        numeric_range.maximum,
-                        None,
-                        excerpt,
-                        parser_version,
-                    ),
-                ]
-            )
-            continue
-        minimum = re.search(
-            rf"minimaln\w*\D{{0,20}}?{_NUMBER}", context, re.IGNORECASE
-        )
-        maximum = re.search(
-            rf"maksymaln\w*\D{{0,20}}?{_NUMBER}", context, re.IGNORECASE
-        )
-        if minimum is not None:
-            rules.append(
-                _numeric_rule(
-                    unit,
-                    "min_intensity",
-                    "gte",
-                    parse_polish_number(minimum.group(1)),
-                    None,
-                    minimum.group(0),
-                    parser_version,
-                )
-            )
-        if maximum is not None:
-            rules.append(
-                _numeric_rule(
-                    unit,
-                    "max_intensity",
-                    "lte",
-                    parse_polish_number(maximum.group(1)),
-                    None,
-                    maximum.group(0),
-                    parser_version,
-                )
-            )
-
-    for anchor in _ROOF_ANGLE_PATTERN.finditer(text):
-        numeric_range = parse_numeric_range(anchor.group("context"))
-        if numeric_range is not None:
-            rules.append(
-                PlanningRuleCandidate(
-                    legal_unit_id=unit.legal_unit_id,
-                    code="roof_angle",
-                    operator="range",
-                    min_value=numeric_range.minimum,
-                    max_value=numeric_range.maximum,
-                    unit="deg",
-                    raw_value=numeric_range.raw_value,
-                    source_text=anchor.group(0),
-                    parser_version=parser_version,
-                    confidence=0.86,
-                )
-            )
+    rules: list[PlanningRuleCandidate] = _numeric_rules_from_engine(unit, text, parser_version)
 
     text_patterns: tuple[
         tuple[str, RuleOperator, re.Pattern[str]], ...
     ] = (
         ("primary_use", "eq", _PRIMARY_USE_PATTERN),
         ("supplementary_use", "contains", _SUPPLEMENTARY_USE_PATTERN),
-        ("roof_geometry", "eq", _ROOF_GEOMETRY_PATTERN),
+        ("roof_geometry", "eq", ROOF_GEOMETRY_PATTERN),
         ("prohibition", "prohibits", _PROHIBITION_PATTERN),
         ("environmental_restriction", "contains", _ENVIRONMENT_PATTERN),
     )
     for code, operator, pattern in text_patterns:
         for match in pattern.finditer(text):
             raw = " ".join(match.group(0).split())
-            text_value = " ".join(
-                (match.group(1) if match.lastindex else match.group(0)).split()
-            )
+            if code == "roof_geometry":
+                text_value = " ".join(match.group("first").split())
+            else:
+                text_value = " ".join(
+                    (match.group(1) if match.lastindex else match.group(0)).split()
+                )
             rules.append(
                 PlanningRuleCandidate(
                     legal_unit_id=unit.legal_unit_id,
@@ -321,23 +281,9 @@ def extract_planning_rules(
                     raw_value=raw,
                     source_text=raw,
                     parser_version=parser_version,
-                    confidence=0.84,
+                    confidence=evidence_confidence.uncalibrated_text_confidence(),
                 )
             )
-
-    for match in _LARGE_RETAIL_PATTERN.finditer(text):
-        area = parse_polish_number(match.group(1))
-        rules.append(
-            _numeric_rule(
-                unit,
-                "large_retail_area",
-                "lte",
-                area,
-                "m2",
-                match.group(0),
-                parser_version,
-            )
-        )
 
     for rule in rules:
         validate_planning_rule(rule)
@@ -377,30 +323,8 @@ def assign_conflict_groups(
                 rule,
                 conflict_group=conflict_group,
                 review_status="unreviewed",
-                confidence=min(rule.confidence, 0.6),
+                confidence=min(rule.confidence, _conflict_confidence()),
             )
             for rule in grouped
         )
     return result
-
-
-def _numeric_rule(
-    unit: LegalTextUnit,
-    code: str,
-    operator: RuleOperator,
-    value: float,
-    measurement_unit: str | None,
-    raw_value: str,
-    parser_version: str,
-) -> PlanningRuleCandidate:
-    return PlanningRuleCandidate(
-        legal_unit_id=unit.legal_unit_id,
-        code=code,
-        operator=operator,
-        value=value,
-        unit=measurement_unit,
-        raw_value=" ".join(raw_value.split()),
-        source_text=" ".join(raw_value.split()),
-        parser_version=parser_version,
-        confidence=0.88,
-    )

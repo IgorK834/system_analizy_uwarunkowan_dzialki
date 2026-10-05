@@ -86,8 +86,10 @@ _KEYED_ZONE_AREA: Final[re.Pattern[str]] = re.compile(r"^(?:w|dla)\s+(?:strefie|
 _KEY_SPLIT: Final[re.Pattern[str]] = re.compile(r"\s*(?:,\s+|;|\si\s|\soraz\s)\s*")
 _ORDINAL: Final[re.Pattern[str]] = re.compile(r"^(?P<pre>.*?)(?P<num>\d+)(?P<suf>\D*)$")
 _RANGE_TOKEN: Final[str] = r"[0-9A-Za-zĄ-ż][0-9A-Za-ząćęłńóśźż._/()+\-]*"
+# Początek ``a`` tylko na granicy słowa: start w środku tokenu i tak kończy się porażką (ten sam koniec
+# tokenu), a bez tej granicy długi token bez odstępu (np. śmieci OCR) dawał koszt kwadratowy (PV3-16).
 _RANGE_MENTION: Final[re.Pattern[str]] = re.compile(
-    rf"(?P<a>{_RANGE_TOKEN})(?:\s*[–—]\s*|\s+-\s+)(?P<b>{_RANGE_TOKEN})"
+    rf"(?<![0-9A-Za-zĄ-ż])(?P<a>{_RANGE_TOKEN})(?:\s*[–—]\s*|\s+-\s+)(?P<b>{_RANGE_TOKEN})"
 )
 _MAX_RANGE: Final[int] = 200
 

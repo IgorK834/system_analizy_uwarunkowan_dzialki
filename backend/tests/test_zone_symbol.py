@@ -140,7 +140,7 @@ def test_symbols_rejected_by_the_old_rule_are_the_only_ones_that_can_change_form
 
 
 def test_result_contract_version_changes_the_cache_signature() -> None:
-    assert "mpzp-v2.2" in cache.RESULT_CONTRACT_VERSION  # wynik z reguł sprzed PV3-04 nie jest serwowany z cache
+    assert "mpzp-v2.5" in cache.RESULT_CONTRACT_VERSION  # wynik z reguł sprzed PV3-04/PV3-07 nie jest serwowany z cache
 
 
 # --- klucz porównania ---------------------------------------------------------------------------------

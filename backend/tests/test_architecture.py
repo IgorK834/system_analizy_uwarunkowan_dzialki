@@ -167,3 +167,127 @@ def test_violation_str_is_readable() -> None:
     text = str(violation)
     assert violation.rule in text
     assert str(violation.path) in text
+
+
+# --- Ekstrakcja modelem językowym (PV3-10/11, ADR-001, ADR-012) ----------------------------------------
+
+
+import ast  # noqa: E402
+
+_PLANNING = default_modules_root() / "planning"
+_LLM_INFRA = _PLANNING / "infrastructure" / "llm"
+_PORT_MODULE = "app.modules.planning.application.ports"
+_PLANNING_DOMAIN = "app.modules.planning.domain"
+
+
+def _class_names(path: Path) -> set[str]:
+    return {node.name for node in ast.walk(ast.parse(path.read_text("utf-8"))) if isinstance(node, ast.ClassDef)}
+
+
+def _app_imports(path: Path) -> set[str]:
+    return {usage.module for usage in extract_imports(path.read_text("utf-8")) if usage.module.split(".")[0] == "app"}
+
+
+def _external_imports(path: Path) -> set[str]:
+    return {usage.module.split(".")[0] for usage in extract_imports(path.read_text("utf-8")) if usage.module.split(".")[0] != "app"}
+
+
+# Repozytorium cache wywołań (PV3-13) i rejestr zużycia (PV3-15) są adapterami bazy: każdy zna dodatkowo
+# wyłącznie własny model ORM.
+_REPOSITORY_EXTRA = ("app.models.mpzp_llm_extraction",)
+_ORM_EXTRA = {"repository.py": _REPOSITORY_EXTRA, "budget.py": ("app.models.mpzp_llm_usage",)}
+
+
+def _adapter_violations(source: str, extra: tuple[str, ...] = ()) -> list[str]:
+    """Adapter modelu językowego zna tylko port i własny pakiet — nie domenę MPZP, serwisy ani ustawienia."""
+    allowed = (_PORT_MODULE, "app.modules.planning.infrastructure.llm", *extra)
+    return [
+        usage.module
+        for usage in extract_imports(source)
+        if usage.module.split(".")[0] == "app" and not any(usage.module == a or usage.module.startswith(a + ".") for a in allowed)
+    ]
+
+
+def test_the_extraction_port_is_in_the_application_layer() -> None:
+    ports = _PLANNING / "application" / "ports.py"
+    assert "StructuredExtractionProvider" in _class_names(ports)
+    assert classify_path(ports, default_modules_root()) == ("planning", "application")
+    # Protokół nie jest definiowany w żadnym adapterze ani w domenie.
+    for path in list((_PLANNING / "infrastructure").rglob("*.py")) + list((_PLANNING / "domain").rglob("*.py")):
+        assert "StructuredExtractionProvider" not in _class_names(path), path
+
+
+def test_the_adapters_are_in_the_infrastructure_layer_and_implement_the_port() -> None:
+    for name, class_name in (("gemini_provider.py", "GeminiStructuredExtractionProvider"), ("fake_provider.py", "ReplayStructuredExtractionProvider")):
+        path = _LLM_INFRA / name
+        assert path.is_file() and classify_path(path, default_modules_root()) == ("planning", "infrastructure")
+        assert class_name in _class_names(path)
+        assert _PORT_MODULE in _app_imports(path)  # adapter zależy od portu, nie odwrotnie
+
+
+def test_the_adapters_do_not_know_the_mpzp_domain() -> None:
+    files = sorted(p for p in _LLM_INFRA.glob("*.py") if p.name != "__init__.py")
+    assert {p.name for p in files} >= {"gemini_provider.py", "fake_provider.py", "json_schema.py", "resilience.py"}
+    for path in files:
+        extra = _ORM_EXTRA.get(path.name, ())
+        assert _adapter_violations(path.read_text("utf-8"), extra) == [], path
+        assert not any(name.startswith(_PLANNING_DOMAIN) for name in _app_imports(path)), path
+
+
+def test_the_adapter_rule_detects_a_domain_import() -> None:
+    bad = (
+        "from app.modules.planning.domain.rules import PlanningRuleCandidate\n"
+        "from app.core.settings import settings\n"
+        "from app.modules.planning.application.ports import StructuredExtractionRequest\n"
+        "from app.modules.planning.infrastructure.llm.resilience import RetryPolicy\n"
+    )
+    assert _adapter_violations(bad) == ["app.modules.planning.domain.rules", "app.core.settings"]
+
+
+def test_application_and_domain_of_the_extraction_do_not_use_http_or_settings() -> None:
+    for path in (_PLANNING / "application" / "llm_extraction.py", _PLANNING / "application" / "ports.py",
+                 _PLANNING / "domain" / "extraction_contract.py"):
+        assert _external_imports(path).isdisjoint(FORBIDDEN_DOMAIN_IMPORTS | {"requests", "aiohttp", "google"}), path
+        imports = _app_imports(path)
+        assert not any(".infrastructure" in name or name.startswith("app.core") or name.startswith("app.services") for name in imports), path
+    contract_imports = _app_imports(_PLANNING / "domain" / "extraction_contract.py")
+    assert not any(name.startswith("app.modules.planning.application") for name in contract_imports)
+
+
+def test_the_composition_root_is_the_only_place_that_wires_the_provider() -> None:
+    wiring = [
+        path for path in default_modules_root().rglob("*.py")
+        if any(name.startswith("app.modules.planning.infrastructure.llm") for name in _app_imports(path))
+        and "infrastructure/llm" not in str(path)
+    ]
+    assert [p.name for p in wiring] == ["composition.py"]
+    api_imports = set()
+    for path in (_PLANNING / "api").rglob("*.py"):
+        api_imports |= _app_imports(path)
+    assert not any("llm" in name for name in api_imports)  # API nie omija warstwy application
+
+
+
+def test_the_llm_cache_repository_knows_only_the_port_and_its_orm_model() -> None:
+    path = _LLM_INFRA / "repository.py"
+    assert "SqlAlchemyLlmExtractionCache" in _class_names(path)
+    assert _PORT_MODULE in _app_imports(path)
+    assert _app_imports(path) <= {_PORT_MODULE, *_REPOSITORY_EXTRA}
+    assert _adapter_violations("from app.models.analysis import Analysis\n", _REPOSITORY_EXTRA) == ["app.models.analysis"]
+
+
+def test_the_verifier_and_the_pipeline_respect_the_layers() -> None:
+    domain = _PLANNING / "domain" / "candidate_verifier.py"
+    assert _external_imports(domain).isdisjoint(FORBIDDEN_DOMAIN_IMPORTS | {"requests", "aiohttp", "google"})
+    assert all(name.startswith((_PLANNING_DOMAIN, "app.shared")) for name in _app_imports(domain))
+    for name in ("llm_pipeline.py", "llm_metrics.py"):
+        path = _PLANNING / "application" / name
+        assert _external_imports(path).isdisjoint(FORBIDDEN_DOMAIN_IMPORTS | {"requests", "aiohttp", "google"}), path
+        assert not any(".infrastructure" in item or item.startswith(("app.core", "app.services", "app.models"))
+                       for item in _app_imports(path)), path
+
+
+def test_the_usage_ledger_adapter_knows_only_the_port_and_its_orm_model() -> None:
+    path = _LLM_INFRA / "budget.py"
+    assert {"BudgetedStructuredExtractionProvider", "SqlAlchemyUsageLedger"} <= _class_names(path)
+    assert _app_imports(path) <= {_PORT_MODULE, *_ORM_EXTRA["budget.py"]}
