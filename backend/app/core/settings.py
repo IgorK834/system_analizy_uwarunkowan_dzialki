@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -124,6 +124,81 @@ class Settings(BaseSettings):
     audit_export_max_files: int = Field(default=200, ge=1)
     audit_export_max_file_bytes: int = Field(default=32 * 1024 * 1024, ge=1024)
     audit_export_max_total_bytes: int = Field(default=64 * 1024 * 1024, ge=1024)
+    # Ekstrakcja parametrów MPZP modelem językowym (PV3-10, ADR-012). WYŁĄCZONA domyślnie:
+    # bez ``MPZP_LLM_ENABLED=true`` adapter nie jest tworzony i aplikacja nie otwiera żadnego
+    # połączenia z dostawcą modelu. Wynik modelu jest wyłącznie kandydatem do ręcznej weryfikacji.
+    # Do modelu trafia tylko tekst publicznego aktu planistycznego i symbole stref — nigdy
+    # identyfikator działki, analizy ani użytkownika. Adres dostawcy jest stałą adaptera (nie
+    # konfiguracją), żeby klucz nie mógł zostać skierowany pod obcy host.
+    mpzp_llm_enabled: bool = False
+    # ``gemini`` — Gemini Developer API (REST); ``fake`` — odtwarzanie zapisanych odpowiedzi
+    # z ``mpzp_llm_replay_dir`` (bez sieci i bez klucza).
+    mpzp_llm_provider: Literal["gemini", "fake"] = "gemini"
+    # Identyfikator modelu z ADR-012; wartość nie jest zgadywana — potwierdza ją ``models.list``.
+    mpzp_llm_model: str = Field(default="gemini-3.8-flash", pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+    # Klucz projektu płatnego (warstwa bezpłatna jest wykluczona w ADR-012). Wyłącznie ze zmiennej
+    # środowiskowej ``GEMINI_API_KEY``; ``SecretStr`` ukrywa go w ``repr`` i zrzutach ustawień.
+    gemini_api_key: SecretStr | None = None
+    mpzp_llm_replay_dir: str = ""
+    mpzp_llm_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    mpzp_llm_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=60)
+    mpzp_llm_max_output_tokens: int = Field(default=8192, ge=256, le=65_536)
+    # Temperatura jest stała: ekstrakcja ma być jak najbardziej powtarzalna (ADR-012).
+    mpzp_llm_temperature: float = Field(default=0.0, ge=0.0, le=0.0)
+    mpzp_llm_thinking_level: Literal["low", "medium", "high"] = "low"
+    mpzp_llm_max_request_bytes: int = Field(default=200_000, ge=1_024)
+    mpzp_llm_max_response_bytes: int = Field(default=1_048_576, ge=1_024)
+    mpzp_llm_max_retries: int = Field(default=2, ge=0, le=5)
+    mpzp_llm_retry_base_delay_seconds: float = Field(default=1.0, ge=0, le=30)
+    mpzp_llm_retry_max_delay_seconds: float = Field(default=20.0, ge=0, le=120)
+    mpzp_llm_max_retry_after_seconds: float = Field(default=30.0, ge=0, le=300)
+    mpzp_llm_breaker_failure_threshold: int = Field(default=5, ge=1, le=100)
+    mpzp_llm_breaker_cooldown_seconds: float = Field(default=60.0, ge=0, le=3_600)
+    # Podział dużych bloków strefy (PV3-11): limit znaków tekstu jednego żądania, nakładka
+    # kontekstu między częściami i górny limit liczby żądań na blok.
+    mpzp_llm_block_char_limit: int = Field(default=6_000, ge=1_000, le=60_000)
+    mpzp_llm_chunk_overlap_chars: int = Field(default=400, ge=0, le=5_000)
+    mpzp_llm_max_chunks_per_block: int = Field(default=6, ge=1, le=50)
+    # Tryb parsera MPZP (PV3-14): ``legacy`` (domyślny, zachowanie sprzed PV3-14), ``v3`` (rdzeń
+    # deterministyczny na blokach stref), ``hybrid_shadow`` (odpowiedź = ``v3``; model liczony i
+    # porównywany w tle, bez wpływu na odpowiedź i zapis), ``hybrid`` (``v3`` + zweryfikowani kandydaci
+    # modelu ze statusem ``ai_candidate``). Domyślny tryb zmienia się dopiero po bramce jakości z
+    # Task 20.17 (ADR-012). Tryby z modelem wymagają też ``MPZP_LLM_ENABLED=true``.
+    mpzp_parser_mode: Literal["legacy", "v3", "hybrid_shadow", "hybrid"] = "legacy"
+    # Budżet jednej analizy (ADR-012, progi wejściowe Task 20.15): żądanie ponad budżet nie jest
+    # wysyłane, a wynik pozostaje deterministyczny z ostrzeżeniem ``MPZP_LLM_UNAVAILABLE``.
+    mpzp_llm_max_requests_per_analysis: int = Field(default=6, ge=0, le=100)
+    mpzp_llm_max_input_tokens_per_analysis: int = Field(default=12_000, ge=0, le=1_000_000)
+    # Próg pewności zakresu bloku (bramka G7 i wybór par do modelu w trybie ``hybrid``).
+    mpzp_llm_scope_confidence_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
+    # Cache i provenance wywołań (PV3-13): zapis wyłącznie wyjścia modelu i skrótów wejścia w
+    # ``mpzp_llm_extractions``; zapisy starsze niż retencja nie są trafieniem i są usuwane poleceniem
+    # ``python -m app.modules.planning purge-llm-cache``.
+    mpzp_llm_cache_enabled: bool = True
+    mpzp_llm_cache_retention_days: int = Field(default=180, ge=1, le=3_650)
+    # Cena za 1 mln tokenów do szacowania kosztu (ADR-012: cena od 2027-01-01, nie promocyjna).
+    mpzp_llm_price_input_usd_per_mtok: float = Field(default=1.50, ge=0)
+    mpzp_llm_price_output_usd_per_mtok: float = Field(default=7.50, ge=0)
+    # Limity i bezpieczna degradacja (PV3-15, progi z ADR-012, limity doby/miesiąca zaakceptowane przez właściciela 2026-10-05).
+    # Na żądanie: tokeny wejścia (ADR-012: 4000); na dokument: tokeny wejścia; czas: ile ścieżka modelu może
+    # dodać do analizy (od pierwszego żądania) i termin całej analizy (od jej startu, propagowany).
+    mpzp_llm_max_input_tokens_per_request: int = Field(default=4_000, ge=1, le=1_000_000)
+    mpzp_llm_max_input_tokens_per_document: int = Field(default=12_000, ge=0, le=1_000_000)
+    mpzp_llm_time_budget_seconds: float = Field(default=30.0, gt=0, le=600)
+    mpzp_llm_analysis_deadline_seconds: float = Field(default=90.0, gt=0, le=3_600)
+    # Twarde limity między analizami (rejestr ``mpzp_llm_usage``, doba i miesiąc w UTC): tokeny wejścia +
+    # wyjścia i koszt szacowany wg ceny od 2027. Pusta wartość = brak limitu (nie 0).
+    mpzp_llm_daily_token_limit: int | None = Field(default=2_000_000, ge=0)
+    mpzp_llm_daily_cost_limit_usd: float | None = Field(default=5.0, ge=0)
+    mpzp_llm_monthly_token_limit: int | None = Field(default=40_000_000, ge=0)
+    mpzp_llm_monthly_cost_limit_usd: float | None = Field(default=100.0, ge=0)
+    # Współbieżność i częstotliwość w JEDNYM procesie (przy N procesach efektywnie N × wartość).
+    mpzp_llm_max_concurrency: int = Field(default=4, ge=1, le=64)
+    mpzp_llm_concurrency_wait_seconds: float = Field(default=2.0, ge=0, le=60)
+    mpzp_llm_max_requests_per_minute: int = Field(default=60, ge=1, le=10_000)
+    # Kill switch (PV3-16): istnienie tego pliku natychmiast wyłącza ścieżkę modelu (bez restartu i bez
+    # wdrożenia kodu); pusta wartość = brak przełącznika plikowego. ``MPZP_LLM_ENABLED=false`` też wyłącza.
+    mpzp_llm_kill_switch_file: str = "/var/lib/dzialki/llm-disabled"
     # Endpointy Rejestru Urbanistycznego są wersjonowanym kontraktem katalogu
     # docs/data_sources/catalog.yaml. Nie dublujemy ich w zmiennych runtime.
     # Oficjalne słowniki off-line GUGiK zasilają lokalny indeks autocomplete.
@@ -174,6 +249,18 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
+
+    @field_validator(
+        "mpzp_llm_daily_token_limit",
+        "mpzp_llm_daily_cost_limit_usd",
+        "mpzp_llm_monthly_token_limit",
+        "mpzp_llm_monthly_cost_limit_usd",
+        mode="before",
+    )
+    @classmethod
+    def empty_limit_means_unlimited(cls, value: Any) -> Any:
+        # ``MPZP_LLM_DAILY_TOKEN_LIMIT=`` (pusty) znaczy „bez limitu”, a nie 0.
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("backend_cors_origins", mode="before")
     @classmethod
