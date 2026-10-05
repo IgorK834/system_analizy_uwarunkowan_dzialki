@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SerializerFunctionWrapHandler, model_serializer
 
 
 class ExtractedEvidence(BaseModel):
@@ -29,6 +29,27 @@ class ExtractedEvidence(BaseModel):
         default=None,
         description="Numer strony; None dla materiałów bez pojęcia strony.",
     )
+
+
+ConditionKind = Literal["building_type", "roof_type", "subzone", "location", "other"]
+# Pola provenance wartości z modelu językowego (PV3-13); pomijane w JSON, gdy puste.
+LLM_PROVENANCE_FIELDS: tuple[str, ...] = ("review_status", "model_id", "prompt_version", "response_sha256")
+ValueKind = Literal["unconditional", "conditional", "conflict"]
+
+
+class ValueCondition(BaseModel):
+    """Warunek, od którego zależy wartość parametru (PV3-08).
+
+    Wysokość dla dachu płaskiego i wysokość dla pozostałych budynków to dwie wartości
+    warunkowe, nie sprzeczność. ``quote`` to dosłowny fragment uchwały wskazujący warunek;
+    może leżeć w nagłówku nadrzędnej pozycji listy, więc nie musi należeć do ``source_text``.
+    """
+
+    kind: ConditionKind = Field(
+        description="Rodzaj warunku: building_type, roof_type, subzone, location albo other."
+    )
+    label: str = Field(description="Znormalizowana, krótka nazwa warunku do wyświetlenia.")
+    quote: str = Field(description="Dosłowny cytat z uchwały wskazujący warunek.")
 
 
 class MpzpParameter(BaseModel):
@@ -70,7 +91,11 @@ class MpzpParameter(BaseModel):
         default=None, description="Segment dokumentu zawierający fragment dowodowy."
     )
     extraction_method: str | None = Field(
-        default=None, description="Metoda ekstrakcji tekstu: pdf_text, html albo ocr."
+        default=None,
+        description=(
+            "Metoda ekstrakcji: pdf_text, html albo ocr (tekst dokumentu); llm_verified — wartość z "
+            "modelu językowego po bramkach deterministycznych (PV3-12)."
+        ),
     )
     parser_version: str | None = Field(default=None)
     document_sha256: str | None = Field(default=None)
@@ -102,6 +127,78 @@ class MpzpParameter(BaseModel):
     scope_strategy: int | None = Field(
         default=None, ge=0, le=6, description="Strategia zakresu 0–6 (Task 20.6)."
     )
+    conditions: list[ValueCondition] = Field(
+        default_factory=list,
+        description=(
+            "Warunki wartości (PV3-08); pusta lista oznacza wartość bezwarunkową. Różne warunki "
+            "tego samego parametru to wartości warunkowe, nie sprzeczność."
+        ),
+    )
+    value_kind: ValueKind = Field(
+        default="unconditional",
+        description=(
+            "unconditional — wartość bez warunku; conditional — wartość alternatywna z warunkami; "
+            "conflict — ta sama przesłanka ma kilka różnych wartości (ręczna weryfikacja)."
+        ),
+    )
+    confidence_band: Literal["low", "medium", "high"] | None = Field(
+        default=None,
+        description=(
+            "Pasmo pewności z artefaktu kalibracji (PV3-09): low/medium/high. ``None`` — wartość bez "
+            "skalibrowanej pewności (zapis opisowy albo parametr poza kalibracją)."
+        ),
+    )
+    confidence_calibration: str | None = Field(
+        default=None,
+        description="Identyfikator artefaktu kalibracji, z którego pochodzi ``confidence`` (wersja + skrót danych).",
+    )
+    confidence_features: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Cechy dowodu, z których wyliczono pewność (PV3-09): metoda ekstrakcji, jakość OCR, zakres, "
+            "weryfikacja cytatu, strategia, flagi, liczba kandydatów, rodzaj wartości. Brak samooceny modelu."
+        ),
+    )
+    extraction_strategy: str | None = Field(
+        default=None,
+        description=(
+            "Strategia dopasowania silnika ilości (PV3-07): adjective, max_min_noun, comparative, "
+            "up_to, range_from_to, range_dash, exact_word, bare, frame_setback, frame_parking."
+        ),
+    )
+    normalization_flags: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Przeróbki zapisu wykonane przy normalizacji (PV3-07): ratio_to_percent, "
+            "degree_artifact, number_word, inherited_noun, operator_implied itd. Wartość z flagą "
+            "nie była zapisana dosłownie, więc ma obniżoną pewność."
+        ),
+    )
+
+    # PV3-13: provenance wartości z modelu językowego. Pola są emitowane WYŁĄCZNIE dla wartości z modelu
+    # (``extraction_method = llm_verified``), więc wynik trybów deterministycznych ma bajtowo ten sam JSON co
+    # przed PV3-13. Wartość z modelu jest zawsze kandydatem do ręcznej weryfikacji, nigdy „verified”.
+    review_status: Literal["ai_candidate"] | None = Field(
+        default=None,
+        description=(
+            "``ai_candidate`` — wartość z modelu językowego po bramkach deterministycznych (PV3-12); "
+            "brak — wartość z silnika deterministycznego."
+        ),
+    )
+    model_id: str | None = Field(default=None, description="Model, który zaproponował wartość.")
+    prompt_version: str | None = Field(default=None, description="Wersja instrukcji ekstrakcji.")
+    response_sha256: str | None = Field(
+        default=None, description="SHA-256 odpowiedzi modelu zapisanej w ``mpzp_llm_extractions``."
+    )
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_llm_provenance(self, handler: SerializerFunctionWrapHandler) -> Any:
+        data = handler(self)
+        if isinstance(data, dict):
+            for key in LLM_PROVENANCE_FIELDS:
+                if key in data and data[key] is None:
+                    del data[key]
+        return data
 
 
 class MpzpZoneResult(BaseModel):

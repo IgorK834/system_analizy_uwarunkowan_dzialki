@@ -609,6 +609,19 @@ _MPZP_TEXT_ROWS: tuple[tuple[str, str], ...] = (
 _UNIT_LABELS: dict[str, str] = {"percent": "%", "m": "m", "%": "%"}
 
 
+_CONDITION_KIND_LABELS: dict[str, str] = {
+    "building_type": "rodzaj zabudowy",
+    "roof_type": "rodzaj dachu",
+    "subzone": "podstrefa",
+    "location": "położenie",
+    "other": "inny warunek",
+}
+
+
+def _conditions_text(parameter: Any) -> str:
+    return "; ".join(condition.label for condition in parameter.conditions)
+
+
 class _EvidenceRegistry:
     """Numeruje dowody [E#] i dokumenty [D#] w kolejności pierwszego użycia."""
 
@@ -648,7 +661,13 @@ class _EvidenceRegistry:
                 "extraction": _EXTRACTION_LABELS.get(parameter.extraction_method or "", parameter.extraction_method),
                 "parser_version": parameter.parser_version,
                 "confidence": _format_percent(parameter.confidence * 100.0),
-                "conflict": parameter.conflict_group_id is not None,
+                "conflict": parameter.value_kind == "conflict",
+                "value_kind": parameter.value_kind,
+                "conditions": [
+                    {"kind": condition.kind, "kind_label": _CONDITION_KIND_LABELS[condition.kind],
+                     "label": condition.label, "quote": condition.quote}
+                    for condition in parameter.conditions
+                ],
                 "manual_review": parameter.manual_review_required,
                 "text": parameter.evidence_text,
             }
@@ -747,33 +766,57 @@ def _mpzp_parameter_rows(zone: MpzpZoneResult, registry: _EvidenceRegistry) -> l
         value = getattr(zone, field)
         candidates = by_field.get(field, [])
         refs = [registry.add(zone, item, label) for item in candidates]
-        distinct = {item.normalized_value for item in candidates if item.normalized_value is not None}
-        conflict = value is None and (len(distinct) > 1 or any(item.conflict_group_id for item in candidates))
-        if conflict:
-            options = "; ".join(
-                f"{_format_trimmed(float(item.normalized_value), 3) if isinstance(item.normalized_value, (int, float)) else item.normalized_value}"
-                f"{_unit_suffix(unit)} [{ref}]"
-                for item, ref in zip(candidates, refs)
-                if item.normalized_value is not None
+        pairs = list(zip(candidates, refs))
+        conflicting = [(item, ref) for item, ref in pairs if item.value_kind == "conflict"]
+        conditional = [(item, ref) for item, ref in pairs if item.value_kind == "conditional"]
+
+        def candidate_text(item: Any, ref: str, with_condition: bool = False) -> str:
+            number = (
+                _format_trimmed(float(item.normalized_value), 3)
+                if isinstance(item.normalized_value, (int, float))
+                else item.normalized_value
             )
-            rows.append(_parameter_row(zone, label, f"wymaga weryfikacji — kandydaci: {options}", None, refs,
-                                       kind, "conflict"))
-            continue
-        text = (
+            suffix = f" — {_conditions_text(item)}" if with_condition and item.conditions else ""
+            return f"{number}{_unit_suffix(unit)}{suffix} [{ref}]"
+
+        base_text = (
             (str(int(value)) if field == "max_floors" else _format_trimmed(float(value), 3))
             if value is not None
             else None
         )
-        rows.append(_parameter_row(zone, label, text, unit, refs, kind, "ok" if value is not None else "null"))
+        conditional_text = "; ".join(
+            candidate_text(item, ref, True) for item, ref in conditional if item.normalized_value is not None
+        )
+        if conflicting:
+            options = "; ".join(
+                candidate_text(item, ref, True) for item, ref in conflicting if item.normalized_value is not None
+            )
+            text = f"wymaga weryfikacji — kandydaci: {options}"
+            if conditional_text:
+                text += f"; warunkowo: {conditional_text}"
+            rows.append(_parameter_row(zone, label, text, None, refs, kind, "conflict"))
+            continue
+        if conditional_text:
+            head = f"{base_text}{_unit_suffix(unit)}" if base_text is not None else "brak jednej wartości dla całej strefy"
+            rows.append(
+                _parameter_row(zone, label, f"{head}; warunkowo: {conditional_text}", None, refs, kind, "conditional")
+            )
+            continue
+        rows.append(_parameter_row(zone, label, base_text, unit, refs, kind, "ok" if value is not None else "null"))
     for parameter in unmapped:
         label = f"Inny zapis uchwały: {parameter.name}"
         ref = registry.add(zone, parameter, label)
         value = parameter.normalized_value
+        shown = _format_trimmed(float(value), 3) if isinstance(value, (int, float)) else value
+        if shown is not None and parameter.conditions:
+            shown = f"{shown}{_unit_suffix(_UNIT_LABELS.get(parameter.unit or '', parameter.unit))} — {_conditions_text(parameter)}"
+            rows.append(_parameter_row(zone, label, shown, None, [ref], kind, "conditional"))
+            continue
         rows.append(
             _parameter_row(
                 zone,
                 label,
-                _format_trimmed(float(value), 3) if isinstance(value, (int, float)) else value,
+                shown,
                 _UNIT_LABELS.get(parameter.unit or "", parameter.unit),
                 [ref],
                 kind,
@@ -1713,13 +1756,23 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
             "dokument); przypisanie ma obniżoną pewność."
         )
     if any(
-        parameter.conflict_group_id
+        parameter.value_kind == "conflict"
         for zone in response.mpzp_zones
         for parameter in zone.parameters
     ):
         limitations.append(
             "Uchwała zawiera sprzeczne wartości parametrów MPZP; żadna nie została "
             "wybrana automatycznie."
+        )
+    if any(
+        parameter.value_kind == "conditional"
+        for zone in response.mpzp_zones
+        for parameter in zone.parameters
+    ):
+        limitations.append(
+            "Część parametrów MPZP ma wartości zależne od warunków (np. rodzaj dachu, rodzaj zabudowy, "
+            "podstrefa); płaskie pole strefy jest puste, gdy uchwała nie podaje jednej wartości dla całej "
+            "strefy. Warunki i ich cytaty są w tabeli evidence."
         )
     if any(
         zone.assignment_method == "manual_user_input"

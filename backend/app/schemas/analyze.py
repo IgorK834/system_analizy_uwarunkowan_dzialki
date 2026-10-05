@@ -3,7 +3,16 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Annotated, Any, Literal, Self, Union
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    computed_field,
+    model_serializer,
+    model_validator,
+)
+
+from app.schemas.mpzp import LLM_PROVENANCE_FIELDS
 
 from app.core.access_control import make_analysis_token
 
@@ -239,7 +248,18 @@ MpzpAssignmentMethod = Literal[
 # 2.2 (PV3-04): symbole stref ze spacjami i przecinkami są przyjmowane i dopasowywane
 # w tekście tolerancyjnie na odstępy, więc wynik parsera dla tego samego dokumentu
 # może się różnić od zapisanego przed zmianą; ręczny dowód niesie też oryginał wpisu.
-MPZP_RESULT_SCHEMA_VERSION = "2.2"
+# 2.3 (PV3-07): parametry parsera pochodzą z silnika leksykonu (``mpzp-parser/3.0-det``): inne
+# sformułowania są rozpoznawane, a wartości niosą strategię i flagi przeróbek zapisu; wynik
+# zapisany parserem ``2.0`` nie jest serwowany z cache jako trafienie.
+# 2.5 (PV3-09): ``confidence`` jest skalibrowanym prawdopodobieństwem poprawności z cech dowodu
+# (nie iloczynem stałych mnożników), a ``manual_review_required`` odpowiada zmierzonemu progowi;
+# evidence niesie ``confidence_band`` i ``confidence_calibration``. Zapisy 2.4 i starsze mają
+# pewność z poprzednich reguł (bez pasma) i nie są serwowane z cache jako trafienie.
+# 2.4 (PV3-08): evidence parametru niesie ``conditions`` i ``value_kind``; wartości warunkowe
+# (inna wysokość dla dachu płaskiego) nie są już sprzecznością, a płaskie pola strefy są ``null``,
+# gdy nie ma jednej wartości bezwarunkowej. Snapshot 2.3 i starsze czytają się jako wartości
+# bezwarunkowe; ich wyniki nie są serwowane z cache.
+MPZP_RESULT_SCHEMA_VERSION = "2.5"
 
 
 class ManualZoneSelection(BaseModel):
@@ -286,11 +306,34 @@ class ManualZoneSelection(BaseModel):
     selected_at: datetime
 
 
+MpzpConditionKind = Literal["building_type", "roof_type", "subzone", "location", "other"]
+MpzpValueKind = Literal["unconditional", "conditional", "conflict"]
+
+
+class MpzpValueCondition(BaseModel):
+    """Warunek wartości parametru (PV3-08): rodzaj, nazwa do wyświetlenia i dosłowny cytat."""
+
+    kind: MpzpConditionKind = Field(
+        description="building_type, roof_type, subzone, location albo other."
+    )
+    label: str = Field(description="Znormalizowana, krótka nazwa warunku (np. „dach płaski”).")
+    quote: str = Field(
+        description=(
+            "Dosłowny cytat z uchwały wskazujący warunek. Może leżeć w nagłówku nadrzędnej pozycji "
+            "listy, więc nie musi należeć do ``evidence_text``."
+        )
+    )
+
+
 class MpzpParameterEvidence(BaseModel):
     """Jedna kandydatura parametru uchwały z pełnym, cytowalnym dowodem (BK-203).
 
     Sprzeczne kandydatury tego samego parametru w strefie mają wspólne
-    ``conflict_group_id`` i nie są automatycznie rozstrzygane.
+    ``conflict_group_id`` i nie są automatycznie rozstrzygane. Od PV3-08 kandydatura niesie też
+    ``conditions`` i ``value_kind``: różne wartości z różnymi warunkami (inna wysokość dla dachu
+    płaskiego) są ``conditional``, a nie sprzeczne; sprzeczność (``conflict``) oznacza kilka
+    wartości tej samej przesłanki. Zapisy sprzed PV3-08 nie mają warunków i czytają się jako
+    ``unconditional`` (``conflict``, gdy mają ``conflict_group_id``).
     """
 
     name: str = Field(description="Znormalizowana nazwa parametru parsera.")
@@ -304,10 +347,79 @@ class MpzpParameterEvidence(BaseModel):
     document_sha256: str | None = Field(default=None, min_length=64, max_length=64)
     document_version_id: int | None = None
     parser_version: str | None = None
-    extraction_method: str | None = Field(default=None, description="pdf_text, html albo ocr.")
+    extraction_method: str | None = Field(
+        default=None,
+        description="pdf_text, html albo ocr; llm_verified — wartość z modelu po bramkach deterministycznych (PV3-12).",
+    )
     confidence: float = Field(ge=0.0, le=1.0)
     conflict_group_id: str | None = None
     manual_review_required: bool = False
+    conditions: list[MpzpValueCondition] = Field(
+        default_factory=list,
+        description="Warunki wartości; pusta lista = wartość bezwarunkowa (także w zapisach sprzed PV3-08).",
+    )
+    value_kind: MpzpValueKind | None = Field(
+        default=None,
+        description=(
+            "unconditional, conditional albo conflict. Brak w zapisie sprzed PV3-08 jest uzupełniany: "
+            "conflict przy conflict_group_id, w przeciwnym razie conditional przy warunkach, inaczej "
+            "unconditional."
+        ),
+    )
+    confidence_band: Literal["low", "medium", "high"] | None = Field(
+        default=None,
+        description=(
+            "Pasmo pewności z artefaktu kalibracji (PV3-09). ``confidence`` jest prawdopodobieństwem "
+            "poprawności wartości wyprowadzonym z cech dowodu, nie stałym mnożnikiem; ``None`` — wartość "
+            "bez skalibrowanej pewności (zapis sprzed PV3-09 albo zapis opisowy)."
+        ),
+    )
+    confidence_calibration: str | None = Field(
+        default=None, description="Identyfikator artefaktu kalibracji pewności (wersja + skrót danych)."
+    )
+    extraction_strategy: str | None = Field(
+        default=None, description="Strategia dopasowania silnika ilości (PV3-07), np. comparative."
+    )
+    normalization_flags: list[str] = Field(
+        default_factory=list,
+        description="Przeróbki zapisu przy normalizacji (np. ratio_to_percent, degree_artifact).",
+    )
+
+    # PV3-13: provenance wartości z modelu językowego. Pola są emitowane WYŁĄCZNIE dla wartości z modelu
+    # (``extraction_method = llm_verified``), więc wynik trybów deterministycznych ma bajtowo ten sam JSON co
+    # przed PV3-13. Wartość z modelu jest zawsze kandydatem do ręcznej weryfikacji, nigdy „verified”.
+    review_status: Literal["ai_candidate"] | None = Field(
+        default=None,
+        description=(
+            "``ai_candidate`` — wartość z modelu językowego po bramkach deterministycznych (PV3-12); "
+            "brak — wartość z silnika deterministycznego."
+        ),
+    )
+    model_id: str | None = Field(default=None, description="Model, który zaproponował wartość.")
+    prompt_version: str | None = Field(default=None, description="Wersja instrukcji ekstrakcji.")
+    response_sha256: str | None = Field(
+        default=None, description="SHA-256 odpowiedzi modelu zapisanej w ``mpzp_llm_extractions``."
+    )
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_llm_provenance(self, handler: SerializerFunctionWrapHandler) -> Any:
+        data = handler(self)
+        if isinstance(data, dict):
+            for key in LLM_PROVENANCE_FIELDS:
+                if key in data and data[key] is None:
+                    del data[key]
+        return data
+
+    @model_validator(mode="after")
+    def _derive_value_kind(self) -> Self:
+        if self.value_kind is None:
+            if self.conflict_group_id is not None:
+                self.value_kind = "conflict"
+            elif self.conditions:
+                self.value_kind = "conditional"
+            else:
+                self.value_kind = "unconditional"
+        return self
 
 
 class MpzpZoneResult(BaseModel):

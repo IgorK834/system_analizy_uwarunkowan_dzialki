@@ -62,6 +62,7 @@
   .tag { display: inline-block; padding: 0 1.2mm; border-radius: 1mm; font-size: 6.8pt; }
   .tag-info { background: #eef3f0; color: #0d5137; }
   .tag-review { background: #fdeceb; color: #8f2525; }
+  .tag-cond { background: #e8f1fb; color: #1f4f8b; }
   .tag-project { background: #fef0c7; color: #7a2e0e; border: 0.5pt dashed #7a2e0e; }
   .st { font-weight: bold; hyphens: none; }
   .st-available { color: #0d5137; }
@@ -248,7 +249,7 @@
     {% for row in mpzp.parameters %}
       <tr data-row="mpzp-parameter">
         <td>{{ row.zone }}</td><td>{{ row.parameter }}</td>
-        <td>{% if row.status == "conflict" %}<span class="tag tag-review">sprzeczność</span> {{ row.value }}{% elif row.status == "null" %}{{ not_specified }}{% else %}{{ row.display }}{% endif %}</td>
+        <td>{% if row.status == "conflict" %}<span class="tag tag-review">sprzeczność</span> {{ row.value }}{% elif row.status == "conditional" %}<span class="tag tag-cond">warunkowe</span> {{ row.value }}{% elif row.status == "null" %}{{ not_specified }}{% else %}{{ row.display }}{% endif %}</td>
         <td>{% if row.refs %}[{{ row.refs|join("], [") }}]{% else %}—{% endif %}</td>
         <td>{{ kind(row.kind) }}</td>
       </tr>
@@ -265,7 +266,7 @@
     {% for row in mpzp.evidence %}
       <tr data-row="mpzp-evidence">
         <td><strong>{{ row.ref }}</strong></td>
-        <td>{{ row.zone }} — {{ row.parameter }}{% if row.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% endif %}{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}</td>
+        <td>{{ row.zone }} — {{ row.parameter }}{% if row.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% elif row.conditions %}<br><span class="tag tag-cond">warunkowa</span>{% endif %}{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}{% for condition in row.conditions %}<br><small>{{ condition.kind_label }}: {{ condition.label }}{% if condition.quote %} — „{{ condition.quote }}”{% endif %}</small>{% endfor %}</td>
         <td>{{ row.value }}{% if row.raw_value %}<br><small>dosłownie: „{{ row.raw_value }}”</small>{% endif %}</td>
         <td>{% if row.document_ref %}dokument [{{ row.document_ref }}]{% else %}dokument {{ not_specified }}{% endif %}<br><small>{% if row.page is not none %}str. {{ row.page }}{% else %}strona {{ not_specified }}{% endif %}{% if row.segment %}, segment {{ row.segment }}{% endif %}{% if row.legal_unit is not none %}, jednostka #{{ row.legal_unit }}{% endif %}</small><br><small>{{ row.extraction or "metoda nieznana" }}{% if row.parser_version %}, {{ row.parser_version }}{% endif %}; pewność {{ row.confidence }}</small></td>
         <td class="evidence-text">{% if row.text %}„{{ row.text }}”{% else %}<em>brak zapisanego fragmentu</em>{% endif %}</td>
