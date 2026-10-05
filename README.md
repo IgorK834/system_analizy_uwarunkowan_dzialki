@@ -187,7 +187,7 @@ manifestem, pominięte artefakty). Hash paczki jest poza archiwum:
 nagłówek `X-Audit-Package-SHA256`. GeoJSON jest w EPSG:4326, obliczenia w
 EPSG:2180 (opisane osobno). Wpisy są posortowane, mają stały znacznik czasu i
 bezpieczne nazwy; w plikach nie ma czasu eksportu, więc ten sam snapshot w tej
-samej wersji eksportera (`audit-exporter/1.0.0`) daje identyczne bajty.
+samej wersji eksportera (`audit-exporter/1.1.0`) daje identyczne bajty.
 
 - **Redystrybucja steruje dołączaniem.** `redistribution` w katalogu
   (`allowed` | `derived_only` | `forbidden` | `unconfirmed`, domyślnie
@@ -325,12 +325,38 @@ python3 backend/scripts/evaluate_mpzp_parser.py --mode offline \
 Parser MPZP v3 (wariant C: rdzeń deterministyczny + ekstrakcja modelem językowym z weryfikacją
 cytatu) jest przygotowywany w Epicu 20. Gotowe są: ewaluator wielosilnikowy z metryką `source_consistent`
 (PV3-03), protokół i narzędzia nowego zbioru końcowego (PV3-02) oraz narzędzie spike’u modelu i
-[ADR-012](docs/adr/ADR-012-mpzp-llm-extraction.md) (PV3-01, pomiar na żywo wykonany 2026-10-02; decyzja go/no-go czeka na właściciela).
+[ADR-012](docs/adr/ADR-012-mpzp-llm-extraction.md) (PV3-01, pomiar na żywo wykonany 2026-10-02; decyzja właściciela: GO, 2026-10-05).
 Stan i polecenia: [odbiór PV3-01–03](docs/evaluation/pv3-01-03-verification.md).
 Fundament parsera v3 (PV3-04–06): wspólna reguła symbolu strefy (do 40 znaków, jeden plik przypadków dla
 API i UI), drzewo struktury dokumentu z blokami stref i resolver zakresu strefy, dostępny w ewaluatorze
 jako silnik `v3` (`--engine legacy v3`); produkcja nadal używa trybu `legacy`. Stan, wyniki i ograniczenia:
 [odbiór PV3-04–06](docs/evaluation/pv3-04-06-verification.md).
+Silnik wartości liczbowych (PV3-07–09): jeden deterministyczny silnik oparty o leksykon
+(`app/modules/planning/domain/quantity_*.py`, wersja parsera `mpzp-parser/3.0-det`) współdzielony przez
+aplikację i ewaluator; warunki wartości (`conditional` ≠ `conflict`, API/PDF/paczka audytowa/UI pokazują
+warunek) oraz skalibrowana pewność z artefaktem `backend/app/core/mpzp_confidence_calibration.json`
+(pasma low/medium/high z zmierzonymi błędami, raport niezawodności w ewaluatorze). Rekalibracja po każdej
+zmianie silnika: `python3 backend/scripts/calibrate_mpzp_confidence.py` (`--check` sprawdza zgodność).
+Stan, liczby i ograniczenia: [odbiór PV3-07–09](docs/evaluation/pv3-07-09-verification.md),
+[ADR-013](docs/adr/ADR-013-mpzp-quantity-engine-conditions-calibration.md).
+Ścieżka modelu językowego (PV3-10/11): port `StructuredExtractionProvider` (`planning/application`), adapter
+Gemini przez REST (`planning/infrastructure/llm`, wyłączony domyślnie: `MPZP_LLM_ENABLED=false`, klucz tylko
+z `GEMINI_API_KEY`), kontrakt wyjścia z wersjonowaną instrukcją i schematem oraz usługa ekstrakcji bloków
+stref; wynik modelu to wyłącznie kandydat do ręcznej weryfikacji, a w CI nie ma internetu ani klucza
+(odtwarzanie złotych odpowiedzi). Stan i ograniczenia: [odbiór PV3-10/11](docs/evaluation/pv3-10-11-verification.md).
+Tryb parsera (PV3-12–14): `MPZP_PARSER_MODE=legacy` (domyślny, bez zmian zachowania), `v3` (rdzeń
+deterministyczny na blokach stref), `hybrid_shadow` (odpowiedź = `v3`, model liczony w tle do porównań) albo
+`hybrid` (`v3` + kandydaci modelu po bramkach deterministycznych G1–G8, zawsze `ai_candidate`); tryby z modelem
+wymagają `MPZP_LLM_ENABLED=true`, a niedostępny model daje wynik deterministyczny z ostrzeżeniem
+`MPZP_LLM_UNAVAILABLE`. Odpowiedzi modelu są cache'owane w `mpzp_llm_extractions` (bez treści żądania); zapisy
+poza retencją usuwa `docker compose exec backend python -m app.modules.planning purge-llm-cache`. Stan i
+ograniczenia: [odbiór PV3-12–14](docs/evaluation/pv3-12-14-verification.md).
+Limity, dane i bramka (PV3-15–17): twarde limity doby/miesiąca (`MPZP_LLM_DAILY_*`, `MPZP_LLM_MONTHLY_*`),
+współbieżność, częstotliwość i budżet czasu; dostawca modelu jest **przetwarzającym** publiczny tekst aktu, nie
+źródłem danych (do modelu nie trafiają identyfikator działki ani dane użytkownika); kill switch bez wdrożenia:
+`docker compose exec backend touch /var/lib/dzialki/llm-disabled`. Skanowanie sekretów:
+`python3 backend/scripts/secret_scan.py .`. Szczegóły: [ADR-014](docs/adr/ADR-014-llm-data-handling.md),
+[odbiór PV3-15–17](docs/evaluation/pv3-15-17-verification.md).
 
 Geometrie stref POG dla dokładnej części BK-602 zamraża ręcznie (z siecią, poza CI)
 `backend/scripts/freeze_pog_zone_layers.py`.

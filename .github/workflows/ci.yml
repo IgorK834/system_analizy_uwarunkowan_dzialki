@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # ADR-014 (PV3-16): skanowanie sekretów bez zewnętrznej akcji — skrypt z repozytorium, sama biblioteka
+      # standardowa; uruchamiany PRZED utworzeniem .env, na plikach objętych repozytorium.
+      - name: Skanowanie sekretów
+        run: python3 backend/scripts/secret_scan.py .
+
       - name: Przygotuj zmienne środowiskowe
         run: cp .env.example .env
 
