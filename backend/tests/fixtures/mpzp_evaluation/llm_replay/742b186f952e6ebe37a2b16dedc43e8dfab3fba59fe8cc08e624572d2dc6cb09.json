@@ -1,0 +1,73 @@
+{
+  "block": {
+    "scope_kind": "fallback",
+    "strategy": 0,
+    "symbols": [
+      "1 PK"
+    ]
+  },
+  "cache_key": "742b186f952e6ebe37a2b16dedc43e8dfab3fba59fe8cc08e624572d2dc6cb09",
+  "case": "N1",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "11f2931a9065bf1bf362d329be1792e08c2bff43a08a1288da4ef1b2ed9afe08",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [],
+      "not_found": [
+        {
+          "parameter": "max_building_height_m",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "1 PK"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "1 PK"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "152f6c60f47761a9091075824cca8e1bd52837ef9c7162d7cd463f66ee34ae9e",
+  "schema_version": "1.0.0"
+}

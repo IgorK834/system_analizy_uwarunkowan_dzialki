@@ -1,0 +1,90 @@
+{
+  "block": {
+    "scope_kind": "general_clause",
+    "strategy": 5,
+    "symbols": [
+      "MN"
+    ]
+  },
+  "cache_key": "33250f2341108b94b54ee3daa1e9bbacbd9f159948edd6ec20964299afe3f480",
+  "case": "L5",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "be84e5fa1b2df13f572e96c7361a9f6aa5d79af719ec0e5ff9659357694b6f1f",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "general_clause",
+          "conditions": [],
+          "evidence_quote": "MN – 0,01- 1,2",
+          "operator": "range_lower",
+          "parameter": "min_intensity",
+          "raw_value": "0,01- 1,2",
+          "scope_quote": "wskaźnik intensywności zabudowy dla terenów",
+          "unit": "ratio",
+          "value": 0.01,
+          "zone_symbol": "MN"
+        },
+        {
+          "applicability": "general_clause",
+          "conditions": [],
+          "evidence_quote": "MN – 0,01- 1,2",
+          "operator": "range_upper",
+          "parameter": "max_intensity",
+          "raw_value": "0,01- 1,2",
+          "scope_quote": "wskaźnik intensywności zabudowy dla terenów",
+          "unit": "ratio",
+          "value": 1.2,
+          "zone_symbol": "MN"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "max_building_height_m",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "MN"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "cfd9c3bbca45bef3f55c473358cf33d18535848c315c7739d317edd0e77a8f62",
+  "schema_version": "1.0.0"
+}

@@ -1,0 +1,132 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 3,
+    "symbols": [
+      "MN.11"
+    ]
+  },
+  "cache_key": "af6d6b5d2e5374903ef61ee3a674f0537d595f0c9f436908f593bdf2dcd9d2df",
+  "case": "L3",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "1d6cac7919df84e35fbf872a19c9171d129b02e9b4241bf9f24fab9df5991dc0",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "minimalny wskaźnik terenu biologicznie czynnego: 60%",
+          "operator": "min",
+          "parameter": "min_biologically_active_percent",
+          "raw_value": "60%",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "percent",
+          "value": 60.0,
+          "zone_symbol": "MN.11"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik powierzchni zabudowy: 30%",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "30%",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "percent",
+          "value": 30.0,
+          "zone_symbol": "MN.11"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik intensywności zabudowy: 0,1 – 0,6",
+          "operator": "range_lower",
+          "parameter": "min_intensity",
+          "raw_value": "0,1 – 0,6",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "ratio",
+          "value": 0.1,
+          "zone_symbol": "MN.11"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik intensywności zabudowy: 0,1 – 0,6",
+          "operator": "range_upper",
+          "parameter": "max_intensity",
+          "raw_value": "0,1 – 0,6",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "ratio",
+          "value": 0.6,
+          "zone_symbol": "MN.11"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "maksymalną wysokość zabudowy: 11 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "11 m",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "m",
+          "value": 11.0,
+          "zone_symbol": "MN.11"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [
+            {
+              "kind": "roof_type",
+              "label": "wartość dla budynków z dachem płaskim",
+              "quote": "dla budynków przekrytych dachem płaskim: 9,5 m"
+            }
+          ],
+          "evidence_quote": "dla budynków przekrytych dachem płaskim: 9,5 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "9,5 m",
+          "scope_quote": "dla terenu MN.11:",
+          "unit": "m",
+          "value": 9.5,
+          "zone_symbol": "MN.11"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "MN.11"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "c35b8afef13c93a50173750a5eb2b4afc5dd6bed4607474a6730b2400b017749",
+  "schema_version": "1.0.0"
+}

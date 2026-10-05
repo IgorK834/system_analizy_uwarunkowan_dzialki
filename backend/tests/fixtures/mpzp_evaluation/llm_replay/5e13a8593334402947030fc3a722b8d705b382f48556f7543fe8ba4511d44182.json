@@ -1,0 +1,106 @@
+{
+  "block": {
+    "scope_kind": "fallback",
+    "strategy": 4,
+    "symbols": [
+      "6.6.MW/U"
+    ]
+  },
+  "cache_key": "5e13a8593334402947030fc3a722b8d705b382f48556f7543fe8ba4511d44182",
+  "case": "L4",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "9c7066cfa41a210116cfdeffd5e3f0fdc3d97d3f3103d380130526a3ce7bdfcb",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "unresolved",
+          "conditions": [],
+          "evidence_quote": "w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "maksimum 22,0 m",
+          "scope_quote": "",
+          "unit": "m",
+          "value": 22.0,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "unresolved",
+          "conditions": [],
+          "evidence_quote": "w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "maksimum 25,5 m",
+          "scope_quote": "",
+          "unit": "m",
+          "value": 25.5,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "unresolved",
+          "conditions": [],
+          "evidence_quote": "w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "maksimum 27,0 m",
+          "scope_quote": "",
+          "unit": "m",
+          "value": 27.0,
+          "zone_symbol": "6.6.MW/U"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "6.6.MW/U"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "0a10008b1debf1f38ef9b2c9e4ea20502bc4543d872db45057e33ed9ba3c5f2b",
+  "schema_version": "1.0.0"
+}

@@ -15,6 +15,7 @@ from typing import Any
 
 import pytest
 
+from app.services.mpzp_parser import MPZP_PARSER_VERSION
 from app.schemas.mpzp import MpzpParameter, MpzpParseResult, MpzpZoneResult
 from scripts import evaluate_mpzp_parser as ev
 from tests.parcel_fixtures_config import find_repo_root
@@ -319,7 +320,7 @@ def test_evaluation_covers_every_zone_and_catalog_parameter(
     counts = evaluation["metrics"]["overall"]["detection"]["counts"]
     assert sum(counts.values()) == len(rows)
     assert {row["sample_id"] for row in rows} == {s["sample_id"] for s in manifest["samples"]}
-    assert evaluation["parser_version"] == "mpzp-parser/2.0"
+    assert evaluation["parser_version"] == MPZP_PARSER_VERSION
 
 
 def test_split_and_format_slices_partition_the_rows(evaluation: dict[str, Any]) -> None:
@@ -345,7 +346,7 @@ def test_every_wrong_outcome_has_a_trace(evaluation: dict[str, Any]) -> None:
     assert len({item["error_id"] for item in errors}) == len(errors)
     for item in errors:
         assert item["document_url"].startswith("http")
-        assert item["parser_version"] == "mpzp-parser/2.0"
+        assert item["parser_version"] == MPZP_PARSER_VERSION
         assert item["sample_id"] and item["zone_symbol"] and item["parameter"]
         assert item["category"] in {"recognition", "normalization_or_value", "assignment"}
         assert item["cause_hint"]
@@ -396,7 +397,7 @@ def test_cli_writes_reports_and_fails_on_bad_input(tmp_path: Path, manifest: dic
     errors = json.loads((output / "errors.json").read_text())
     assert run_manifest["manifest_sha256"] == metrics["manifest_sha256"] == results["manifest_sha256"] == errors["manifest_sha256"]
     assert run_manifest["annotations_sha256"] == manifest["freeze"]["annotations_sha256"]
-    assert run_manifest["parser_version"] == "mpzp-parser/2.0"
+    assert run_manifest["parser_version"] == MPZP_PARSER_VERSION
     assert run_manifest["engine"] == "legacy" and run_manifest["parameters"]["mode"] == "offline"
     determinism = json.loads((output / "determinism.json").read_text())
     assert determinism["identical"] is True and determinism["excluded"] == ["observations"]
@@ -754,10 +755,17 @@ def test_engine_may_not_return_a_verified_value(manifest: dict[str, Any]) -> Non
 
 
 def test_unavailable_engines_and_bad_flags_exit_with_usage_error(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from scripts import mpzp_eval_engines as engines
+
     out = ["--output-dir", str(tmp_path / "out")]
     assert ev.main(["--engine", "hybrid", *out]) == 2
-    assert "not available" in capsys.readouterr().err  # hybrydy nie ma (Taski 20.10–20.14)
-    assert ev.main(["--engine", "hybrid", "--live", *out]) == 2  # unavailable before the model flags are considered
+    assert "--llm-replay" in capsys.readouterr().err  # hybryda (PV3-14) wymaga odtwarzania albo --live
+    engines.register_engine(engines.EngineSpec("planned", "t", unavailable_reason="not implemented"))
+    try:
+        assert ev.main(["--engine", "planned", *out]) == 2
+        assert "not available" in capsys.readouterr().err
+    finally:
+        engines.unregister_engine("planned")
     assert ev.main(["--engine", "nieistnieje", *out]) == 2
     assert "unknown engine" in capsys.readouterr().err
     assert ev.main(["--engine", "legacy", "--live", *out]) == 2
@@ -927,3 +935,48 @@ def test_live_run_records_responses_and_replay_reproduces_it_offline(
     finally:
         engines.unregister_engine("llmfake")
         engines.register_live_provider(None)
+
+
+# --- niezawodność pewności (PV3-09) -------------------------------------------------------------
+
+
+def test_reliability_metrics_follow_the_shipped_artifact(evaluation: dict[str, Any]) -> None:
+    from app.modules.planning.domain import evidence_confidence as confidence_model
+
+    reliability = evaluation["metrics"]["overall"]["reliability"]
+    values = evaluation["values"]
+    artifact = confidence_model.default_artifact()
+    assert reliability["n_values"] == len(values) and reliability["calibration"]["id"] == artifact.calibration_id
+    assert sum(band["n"] for band in reliability["bands"].values()) == len(values)
+    assert sum(row["n"] for row in reliability["curve"]) == len(values)
+    assert 0.0 <= reliability["brier_score"] <= 1.0 and 0.0 <= reliability["expected_calibration_error"] <= 1.0
+    flagged = sum(1 for v in values if v["manual_review_required"])
+    assert reliability["manual_review"]["n"] == flagged
+    assert reliability["auto_accepted"]["n"] == len(values) - flagged
+    for split in evaluation["metrics"]["by_split"].values():
+        assert "reliability" in split
+
+
+def test_reliability_hand_calculation_on_a_control_set() -> None:
+    values = [
+        {"confidence": 0.95, "correct": True, "manual_review_required": False},
+        {"confidence": 0.95, "correct": True, "manual_review_required": False},
+        {"confidence": 0.95, "correct": False, "manual_review_required": False},
+        {"confidence": 0.35, "correct": False, "manual_review_required": True},
+        {"confidence": 0.35, "correct": True, "manual_review_required": True},
+    ]
+    reliability = ev.reliability_metrics(values)
+    assert reliability["n_values"] == 5
+    assert reliability["auto_accepted"] == {"n": 3, "errors": 1, "error_rate": pytest.approx(1 / 3)}
+    assert reliability["manual_review"] == {"n": 2, "errors": 1, "error_rate": 0.5}
+    assert reliability["error_recall_of_manual_review"]["numerator"] == 1 and reliability["error_recall_of_manual_review"]["denominator"] == 2
+    expected_ece = 3 / 5 * abs(2 / 3 - 0.95) + 2 / 5 * abs(0.5 - 0.35)
+    assert reliability["expected_calibration_error"] == pytest.approx(expected_ece)
+    assert reliability["brier_score"] == pytest.approx((0.0025 * 2 + 0.9025 + 0.1225 + 0.4225) / 5)
+
+
+def test_report_contains_the_reliability_section_with_counts(evaluation: dict[str, Any], manifest: dict[str, Any]) -> None:
+    run_manifest = ev.build_run_manifest(manifest, "0" * 64, "1" * 64)
+    text = ev.render_report(run_manifest, manifest, evaluation, ev.build_error_trace(evaluation["rows"]))
+    assert "## Niezawodność pewności (PV3-09)" in text and "ECE" in text and "Artefakt kalibracji" in text
+    assert "Pasma monotoniczne" in text and "| `high` |" in text and "Podział `final`" in text

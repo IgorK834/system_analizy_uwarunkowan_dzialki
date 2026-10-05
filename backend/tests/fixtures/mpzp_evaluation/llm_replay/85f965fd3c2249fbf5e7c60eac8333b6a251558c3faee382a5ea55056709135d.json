@@ -1,0 +1,82 @@
+{
+  "block": {
+    "scope_kind": "residual_clause",
+    "strategy": 4,
+    "symbols": [
+      "6.6.MW/U"
+    ]
+  },
+  "cache_key": "85f965fd3c2249fbf5e7c60eac8333b6a251558c3faee382a5ea55056709135d",
+  "case": "L4",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "f9ddf7e25f156d98672c1f52eeb26e621ad713a4efde16011a4ac94a7fe62446",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "residual_clause",
+          "conditions": [],
+          "evidence_quote": "w pozostałych terenach - minimum 20%",
+          "operator": "min",
+          "parameter": "min_biologically_active_percent",
+          "raw_value": "minimum 20%",
+          "scope_quote": "c)",
+          "unit": "percent",
+          "value": 20.0,
+          "zone_symbol": "6.6.MW/U"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "max_building_height_m",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "6.6.MW/U"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "b3345c89aef23253a4c76c3aa2418e5e7b74fd7cf79c85928a5523361acc8dee",
+  "schema_version": "1.0.0"
+}

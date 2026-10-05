@@ -1,0 +1,106 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 1,
+    "symbols": [
+      "MN"
+    ]
+  },
+  "cache_key": "40428662d2154fc3ec0b4b5b4be71196c49b357dcb7784ecddcce4785ce0cde8",
+  "case": "L5",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "07d8e2e35e16276f19a0b9714d2b68fbbeaaeea86b0aaf962a669ab9531f9e12",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [
+            {
+              "kind": "building_type",
+              "label": "budynki mieszkalne jednorodzinne",
+              "quote": "dla budynków mieszkalnych jednorodzinnych nie wyższe niż 12,0 m"
+            }
+          ],
+          "evidence_quote": "dla budynków mieszkalnych jednorodzinnych nie wyższe niż 12,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "12,0 m",
+          "scope_quote": "Dla terenu oznaczonego na rysunku planu symbolem MN obowiązują następujące ustalenia",
+          "unit": "m",
+          "value": 12.0,
+          "zone_symbol": "MN"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [
+            {
+              "kind": "building_type",
+              "label": "pozostałe budynki",
+              "quote": "dla pozostałych budynków – nie wyższe niż 5,0 m"
+            }
+          ],
+          "evidence_quote": "dla pozostałych budynków – nie wyższe niż 5,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "5,0 m",
+          "scope_quote": "Dla terenu oznaczonego na rysunku planu symbolem MN obowiązują następujące ustalenia",
+          "unit": "m",
+          "value": 5.0,
+          "zone_symbol": "MN"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "MN"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "d110c2953f45ad2a5966ba2a4b5ad359ae14d1f893d06ab39e0071fb97180af4",
+  "schema_version": "1.0.0"
+}

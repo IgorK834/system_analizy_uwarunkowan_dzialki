@@ -1,0 +1,98 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 6,
+    "symbols": [
+      "2UZ"
+    ]
+  },
+  "cache_key": "d3be8241c2a03b5e2c5d9438924752d4591793cb1bbe2acd287fc91aae894985",
+  "case": "L6",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "9a8aa00f4d6b409d56eead1efa13e514920db4723464a5b2c2c4f6f15647d788",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "nadziemna intensywność zabudowy 0,15 – 2,50",
+          "operator": "range_lower",
+          "parameter": "min_intensity",
+          "raw_value": "0,15 – 2,50",
+          "scope_quote": "Ustalenia dla terenów oznaczonych symbolami 1UZ i 2UZ",
+          "unit": "ratio",
+          "value": 0.15,
+          "zone_symbol": "2UZ"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "nadziemna intensywność zabudowy 0,15 – 2,50",
+          "operator": "range_upper",
+          "parameter": "max_intensity",
+          "raw_value": "0,15 – 2,50",
+          "scope_quote": "Ustalenia dla terenów oznaczonych symbolami 1UZ i 2UZ",
+          "unit": "ratio",
+          "value": 2.5,
+          "zone_symbol": "2UZ"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "maksymalna wysokość budynku funkcji usługowej 16 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "16 m",
+          "scope_quote": "Ustalenia dla terenów oznaczonych symbolami 1UZ i 2UZ",
+          "unit": "m",
+          "value": 16.0,
+          "zone_symbol": "2UZ"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "2UZ"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "2UZ"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "2UZ"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "2UZ"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "2UZ"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "2UZ"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "d5ff6d879cdf63e8c528e41323c81f14c0fd2efcf908831f82ce275bef7ebc7d",
+  "schema_version": "1.0.0"
+}

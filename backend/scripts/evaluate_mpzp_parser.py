@@ -44,7 +44,7 @@ import time
 from bisect import bisect_left
 from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -63,6 +63,12 @@ try:
     from app.schemas.mpzp import MpzpParseResult  # noqa: E402
     from app.schemas.source import SourceMetadata  # noqa: E402
     from app.services.mpzp_fetch import DocumentBlob  # noqa: E402
+    from app.modules.planning.domain import evidence_confidence as confidence_model  # noqa: E402
+    from app.modules.planning.domain.quantity_normalization import (  # noqa: E402
+        NORMALIZATION_RULES,
+        QuantityNormalizationError,
+        normalize_annotation_value,
+    )
     from app.modules.planning.domain.zone_scope import resolve_zone_scope  # noqa: E402
     from app.services.mpzp_parser import MPZP_PARSER_VERSION, parse_mpzp_document  # noqa: E402
     from app.services.mpzp_parser_blocks import MPZP_PARSER_VERSION_BLOCKS  # noqa: E402
@@ -87,6 +93,7 @@ from scripts.mpzp_eval_engines import (  # noqa: E402
     EngineUsage,
     EngineValue,
     LiveModeError,
+    Rejection,
     ReplayIntegrityError,
     ReplayMissError,
     ScopeBlock,
@@ -117,26 +124,11 @@ CATALOG: dict[str, dict[str, Any]] = {
     "max_storeys": {"operators": ("max",), "unit": "count"},
     "setback_m": {"operators": ("exact",), "unit": "m"},
 }
-NORMALIZATION_RULES = (
-    "identity",
-    "ratio_to_percent",
-    "range_lower",
-    "range_upper",
-    "word_number",
-    "manual",
-)
 APPLICABILITY = ("zone_section", "general_clause")
 STATUSES = ("required", "acceptable")
 SAMPLE_FORMATS = ("pdf_text", "pdf_table", "html", "ocr_real", "ocr_simulated")
 SPLITS = ("development", "final")
 CONFIDENCE_BANDS = (("low", 0.0, 0.5), ("medium", 0.5, 0.8), ("high", 0.8, 1.0000001))
-
-_WORD_NUMBERS = {
-    "jeden": 1, "jedna": 1, "jednokondygnacyjne": 1, "jednokondygnacyjny": 1,
-    "dwa": 2, "dwie": 2, "dwóch": 2, "dwu": 2,
-    "trzy": 3, "trzech": 3, "cztery": 4, "czterech": 4, "pięć": 5, "pięciu": 5,
-}
-
 
 class EvaluationError(ValueError):
     """The corpus or the evaluation contract is invalid."""
@@ -145,30 +137,17 @@ class EvaluationError(ValueError):
 # --- normalization and evidence ----------------------------------------------
 
 
-def _numbers(raw: str) -> list[float]:
-    return [float(item.replace(",", ".")) for item in re.findall(r"\d+(?:[.,]\d+)?", raw)]
-
-
 def normalize_value(rule: str, raw: str) -> float | None:
-    """Explicit normalization of an annotated raw fragment; ``None`` = manual."""
-    if rule == "manual":
-        return None
-    if rule == "word_number":
-        for token in re.findall(r"[^\W\d_]+", raw.lower()):
-            if token in _WORD_NUMBERS:
-                return float(_WORD_NUMBERS[token])
-        raise EvaluationError(f"No number word in {raw!r}.")
-    numbers = _numbers(raw)
-    if rule in {"identity", "ratio_to_percent", "range_lower"}:
-        if not numbers:
-            raise EvaluationError(f"No number in {raw!r}.")
-        value = numbers[0]
-        return round(value * 100.0, 9) if rule == "ratio_to_percent" else value
-    if rule == "range_upper":
-        if len(numbers) < 2:
-            raise EvaluationError(f"No range in {raw!r}.")
-        return numbers[1]
-    raise EvaluationError(f"Unknown normalization rule {rule!r}.")
+    """Explicit normalization of an annotated raw fragment; ``None`` = manual.
+
+    There is deliberately no second implementation here: the rules live in
+    ``app.modules.planning.domain.quantity_normalization`` and are the very code the application
+    uses (PV3-07), so the evaluator and the parser cannot normalize one fragment differently.
+    """
+    try:
+        return normalize_annotation_value(rule, raw)
+    except QuantityNormalizationError as exc:
+        raise EvaluationError(str(exc)) from exc
 
 
 def normalize_text(text: str) -> str:
@@ -372,7 +351,13 @@ def _inside(position: tuple[int, int], location: AnnotationLocation) -> bool:
 def _check_against(
     output: EngineValue, page: int, location: AnnotationLocation, truth: TruthText, page_only: bool
 ) -> tuple[str, str | None]:
-    if page != location.page and page not in location.pages:
+    # Gdy silnik podaje DOKŁADNY zakres znaków wartości (``span``) i adnotacja ma kotwicę (blok
+    # strefy w offsetach dokumentu), o źródle rozstrzyga położenie względem bloku, a nie sama strona:
+    # blok strefy bywa dłuższy niż strona, a ta sama liczba powtarza się w jego kolejnych punktach.
+    # Bez dokładnego zakresu (parser dotychczasowy) strona pozostaje twardym warunkiem.
+    exact_in_block = output.span is not None and location.block is not None
+    on_annotated_page = page == location.page or page in location.pages
+    if not exact_in_block and not on_annotated_page:
         return "wrong_page", f"returned page {page}, annotated page {location.page}"
     if page_only:
         return "consistent", "page_only"
@@ -857,6 +842,7 @@ def engine_result_from_parse(parse_result: MpzpParseResult, page_numbers: Sequen
                 source_text=p.source_text,
                 raw_value=p.raw_value,
                 conflict_group_id=p.conflict_group_id,
+                features=p.confidence_features,
                 span=(
                     SourceSpan(page_of.get(p.page_number, p.page_number), p.char_start, p.char_end)
                     if p.char_start is not None and p.char_end is not None and p.page_number is not None
@@ -936,12 +922,79 @@ register_engine(
     ),
     replace=True,
 )
+class HybridEngine:
+    """Tryb ``hybrid`` produkcyjnego parsera (PV3-14): rdzeń v3 + zweryfikowani kandydaci modelu.
+
+    Model jest wołany przez bramę ewaluatora (odtwarzanie albo nagrywanie ``--live``), pod tym samym
+    kluczem co złote odpowiedzi i produkcyjny cache. Brak zapisanej odpowiedzi przerywa przebieg
+    (``ReplayMissError``): wynik nie może po cichu stać się deterministycznym.
+    """
+
+    name = "hybrid"
+    version = f"{MPZP_PARSER_VERSION_BLOCKS}+llm"
+    supports_discovery = False
+
+    def __init__(self, gateway: Any) -> None:
+        from scripts.mpzp_eval_hybrid import GatewayStructuredExtractionProvider
+
+        self.provider = GatewayStructuredExtractionProvider(gateway)
+
+    def run(self, loaded: Mapping[str, Any], symbols: Sequence[str]) -> EngineResult:
+        from app.modules.planning.application.llm_pipeline import LlmBudget, MpzpLlmPipeline
+
+        extraction, source = build_extraction(loaded)
+        before = (self.provider.calls, self.provider.misses)
+        usage_before = {name: getattr(self.provider, name) for name in ("input_tokens", "output_tokens", "latency_ms", "cost_usd")}
+        outcomes: list[Any] = []
+
+        class _Capturing(MpzpLlmPipeline):
+            async def run(self, *args: Any, **kwargs: Any) -> Any:
+                outcome = await super().run(*args, **kwargs)
+                outcomes.append(outcome)
+                return outcome
+
+        # Bez cache i z budżetem ewaluacji: liczy się każde żądanie, a limity analizy nie obcinają korpusu.
+        pipeline = _Capturing(self.provider, budget=LlmBudget(max_requests=1_000, max_input_tokens=10_000_000))
+        with patch("app.services.mpzp_parser.extract_document_text", new=AsyncMock(return_value=extraction)):
+            parsed = asyncio.run(parse_mpzp_document(_blob(source), list(symbols), mode="hybrid", llm=pipeline))
+        if self.provider.misses > before[1]:
+            raise ReplayMissError(f"{self.provider.misses - before[1]} model response(s) missing in the replay store")
+        result = engine_result_from_parse(parsed, loaded["page_numbers"])
+        statuses = {
+            (zone.zone_symbol, p.name, p.normalized_value): p.review_status for zone in parsed.zones for p in zone.parameters
+        }
+        for symbol, values in result.zones.items():
+            result.zones[symbol] = [
+                replace(value, review_status=statuses.get((symbol, value.parameter, value.value))) for value in values
+            ]
+        # Odrzucenia bramek (PV3-12) per kandydat: bramka i kod, bez treści cytatu.
+        result.rejections = [
+            Rejection(zone_symbol=item.zone_symbol, gate=item.gate, parameter=item.parameter, reason=item.code)
+            for outcome in outcomes for item in outcome.report.rejected
+        ]
+        def delta(name: str) -> Any:
+            # Zużycie TEJ próbki (dostawca liczy narastająco); ``None`` = nie zgłoszono, nigdy 0.
+            now, earlier = getattr(self.provider, name), usage_before[name]
+            return None if now is None else now - (earlier or 0)
+
+        result.usage = EngineUsage(calls=self.provider.calls - before[0], input_tokens=delta("input_tokens"),
+                                   output_tokens=delta("output_tokens"), latency_ms=delta("latency_ms"),
+                                   cost_usd=delta("cost_usd"))
+        return result
+
+
+def _hybrid_factory(context: EngineContext) -> HybridEngine:
+    if context.gateway is None:
+        raise EngineUnavailableError("engine 'hybrid' needs --llm-replay DIR (or --live)")
+    return HybridEngine(context.gateway)
+
+
 register_engine(
     EngineSpec(
         name="hybrid",
-        description="rdzeń v3 + ekstrakcja modelem językowym z weryfikacją cytatu",
+        description="rdzeń v3 + kandydaci modelu językowego po bramkach deterministycznych (PV3-12/14)",
+        factory=_hybrid_factory,
         uses_llm=True,
-        unavailable_reason="not implemented yet (Tasks 20.10–20.14)",
     ),
     replace=True,
 )
@@ -1093,6 +1146,7 @@ def score_sample(
                         "source_text": p.source_text,
                         "raw_value": p.raw_value,
                         "conflict_group_id": p.conflict_group_id,
+                        "features": dict(p.features) if p.features is not None else None,
                         "review_status": p.review_status,
                         "value_correct": number is not None and any(_close(number, item) for item in allowed),
                         "source_check": check_source(p, matches, truth, page_only),
@@ -1155,6 +1209,7 @@ def value_rows(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
                     "value": float(value),
                     "confidence": float(output["confidence"]),
                     "manual_review_required": bool(output["manual_review_required"]),
+                    "features": output.get("features"),
                     "correct": any(_close(float(value), other) for other in allowed),
                     "source_status": output["source_check"]["status"],
                     "verdict": row["verdict"],
@@ -1471,8 +1526,49 @@ def calibration_metrics(values: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
+def reliability_metrics(values: Sequence[Mapping[str, Any]], bins: int = 10) -> dict[str, Any]:
+    """Niezawodność pewności (PV3-09): krzywa, Brier, ECE z licznikami oraz pasma artefaktu kalibracji.
+
+    Pasma i próg ręcznej weryfikacji pochodzą z artefaktu dostarczanego z aplikacją
+    (``mpzp_confidence_calibration.json``), więc raport mierzy dokładnie to, co użytkownik widzi.
+    """
+    artifact = confidence_model.current_artifact()
+    predictions = [float(row["confidence"]) for row in values]
+    correct = [bool(row["correct"]) for row in values]
+    table = confidence_model.band_error_table(predictions, correct, artifact)
+    accepted = [row for row in values if not row["manual_review_required"]]
+    flagged = [row for row in values if row["manual_review_required"]]
+
+    def share(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        errors = sum(not row["correct"] for row in rows)
+        return {"n": len(rows), "errors": errors, "error_rate": (errors / len(rows)) if rows else None}
+
+    return {
+        "n_values": len(values),
+        "brier_score": confidence_model.brier_score(predictions, correct),
+        "expected_calibration_error": confidence_model.expected_calibration_error(predictions, correct, bins),
+        "curve": confidence_model.reliability_table(predictions, correct, bins),
+        "bands": table,
+        "bands_monotone": confidence_model.is_monotone(table),
+        "calibration": {
+            "id": artifact.calibration_id,
+            "band_thresholds": dict(artifact.band_thresholds),
+            "review_threshold": artifact.review_threshold,
+        },
+        "auto_accepted": share(accepted),
+        "manual_review": share(flagged),
+        "error_recall_of_manual_review": ratio(
+            sum(not row["correct"] for row in flagged), sum(not row["correct"] for row in values)
+        ),
+    }
+
+
 def slice_metrics(rows: Sequence[Mapping[str, Any]], values: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    return {"detection": detection_metrics(rows), "calibration": calibration_metrics(values)}
+    return {
+        "detection": detection_metrics(rows),
+        "calibration": calibration_metrics(values),
+        "reliability": reliability_metrics(values),
+    }
 
 
 def build_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -1875,6 +1971,47 @@ def _calibration_lines(calibration: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def _reliability_lines(title: str, reliability: Mapping[str, Any]) -> list[str]:
+    """Sekcja niezawodności pewności (PV3-09): krzywa, Brier, ECE z licznikami, pasma i próg weryfikacji."""
+    n = reliability["n_values"]
+    if not n:
+        return [f"### {title}", "", "Brak zwróconych wartości.", ""]
+    calibration = reliability["calibration"]
+    lines = [
+        f"### {title}", "",
+        f"Artefakt kalibracji `{calibration['id']}`; progi pasm: medium ≥ {calibration['band_thresholds']['medium']:.3f}, "
+        f"high ≥ {calibration['band_thresholds']['high']:.3f}; próg `manual_review_required` "
+        f"{calibration['review_threshold']:.3f}. n = {n}; Brier = {reliability['brier_score']:.3f}; "
+        f"**ECE = {reliability['expected_calibration_error']:.3f}** (10 równych przedziałów).", "",
+        "| Przedział pewności | n | błędne | średnia pewność | trafność |", "|---|---:|---:|---:|---:|",
+    ]
+    for row in reliability["curve"]:
+        if not row["n"]:
+            continue
+        lines.append(
+            f"| [{row['lower']:.1f}; {row['upper']:.1f}) | {row['n']} | {row['errors']} | "
+            f"{row['mean_confidence']:.3f} | {row['accuracy']:.3f} |"
+        )
+    lines.extend(["", "| Pasmo | n | błędne | odsetek błędów |", "|---|---:|---:|---:|"])
+    for name in ("low", "medium", "high"):
+        band = reliability["bands"][name]
+        rate = "n/a" if band["error_rate"] is None else f"{band['error_rate']:.3f}"
+        lines.append(f"| `{name}` | {band['n']} | {band['errors']} | {rate} |")
+    accepted, flagged = reliability["auto_accepted"], reliability["manual_review"]
+    rate = lambda item: "n/a" if item["error_rate"] is None else f"{item['error_rate']:.3f}"  # noqa: E731
+    lines.extend(
+        [
+            "",
+            f"Pasma monotoniczne (odsetek błędów nie rośnie od `low` do `high`): "
+            f"**{'tak' if reliability['bands_monotone'] else 'nie'}**. Bez ręcznej weryfikacji: "
+            f"{accepted['n']} wartości, odsetek błędów {rate(accepted)}; z flagą ręcznej weryfikacji: "
+            f"{flagged['n']} wartości, odsetek błędów {rate(flagged)}; błędy wychwycone flagą: "
+            f"{_cell(reliability['error_recall_of_manual_review'])}.", "",
+        ]
+    )
+    return lines
+
+
 def render_report(
     run_manifest: Mapping[str, Any], manifest: Mapping[str, Any], result: Mapping[str, Any], errors: Sequence[Mapping[str, Any]]
 ) -> str:
@@ -1956,6 +2093,10 @@ def render_report(
         )
     else:
         lines.append("Niskie vs wysokie confidence: co najmniej jeden przedział jest pusty, porównanie niemożliwe.")
+    lines.extend(["", "## Niezawodność pewności (PV3-09)", ""])
+    lines.extend(_reliability_lines("Wszystkie wartości", overall["reliability"]))
+    for split_name, sliced in result["metrics"].get("by_split", {}).items():
+        lines.extend(_reliability_lines(f"Podział `{split_name}`", sliced["reliability"]))
     flag = overall["calibration"]["manual_review_flag"]
     lines.extend(
         [
@@ -2264,6 +2405,10 @@ def _resolve_engines(args: argparse.Namespace) -> tuple[list[str], Any]:
         raise UsageError("--llm-replay/--live apply only to engines that use a model (e.g. hybrid)")
     gateway = None
     if needs_model:
+        if args.live and "hybrid" in names:
+            from scripts.mpzp_eval_hybrid import register_live_gemini
+
+            register_live_gemini()  # produkcyjny adapter Gemini (tylko --live, nigdy w CI)
         try:
             gateway = build_gateway(replay_dir=args.llm_replay, live=args.live)
         except LiveModeError as exc:

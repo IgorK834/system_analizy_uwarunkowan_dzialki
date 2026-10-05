@@ -9,6 +9,7 @@ from typing import Mapping
 
 import pytest
 
+from app.services.mpzp_parser import MPZP_PARSER_VERSION
 from scripts import evaluate_reference_corpus as evaluation
 from tests.parcel_fixtures_config import find_repo_root
 
@@ -529,7 +530,7 @@ def test_run_manifest_is_frozen_and_independent_of_time(corpus_path: Path) -> No
     assert "missing" not in first["code_fingerprint"].values()
     assert first["parameters"]["discrepancy_threshold_pp"] == 0.5
     assert first["parameters"]["measurement_kinds"]["pog.*"]["kind"] == "observation_passthrough"
-    assert first["versions"]["mpzp_parser"] == "mpzp-parser/2.0"
+    assert first["versions"]["mpzp_parser"] == MPZP_PARSER_VERSION
     assert not any(str(v).startswith("unavailable") for v in first["versions"].values())
     # Zmiana wejścia zmienia skrót manifestu.
     changed = evaluation.build_run_manifest(manifest, "f" * 64)

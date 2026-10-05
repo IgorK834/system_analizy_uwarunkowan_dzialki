@@ -1,0 +1,73 @@
+{
+  "block": {
+    "scope_kind": "general_clause",
+    "strategy": 5,
+    "symbols": [
+      "MN.11"
+    ]
+  },
+  "cache_key": "dc7e36aaac7524a3039fc6f9d2f7f740d632a1cf4b0866c50ec63777cd70677c",
+  "case": "L3",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "720dc902fb774b44b0156d57b1916cc3f876a07901e2d5a3369ab4328c3ad28a",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [],
+      "not_found": [
+        {
+          "parameter": "max_building_height_m",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "max_building_coverage_percent",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "MN.11"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "MN.11"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "547831e0fbde4f7ab3ff9c998e9f65017e1ea5e59d3cfaeac856ead43e57c7ec",
+  "schema_version": "1.0.0"
+}

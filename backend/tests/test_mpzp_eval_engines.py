@@ -212,7 +212,8 @@ def test_planned_engines_are_registered_but_unavailable_until_implemented() -> N
     assert engines.get_engine_spec("hybrid").uses_llm and not engines.get_engine_spec("legacy").uses_llm
     assert engines.create_engine("legacy").name == "legacy"
     assert engines.create_engine("v3").name == "v3"  # bloki stref i źródło wartości (PV3-04–06)
-    with pytest.raises(EngineUnavailableError, match="not implemented yet"):
+    # Hybryda (PV3-14) jest zaimplementowana, ale bez bramy odpowiedzi (odtwarzanie/--live) nie powstaje.
+    with pytest.raises(EngineUnavailableError, match="needs --llm-replay"):
         engines.create_engine("hybrid")
 
 

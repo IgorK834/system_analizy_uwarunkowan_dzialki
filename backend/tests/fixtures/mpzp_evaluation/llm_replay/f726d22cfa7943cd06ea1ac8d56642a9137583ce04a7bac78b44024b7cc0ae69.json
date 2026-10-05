@@ -1,0 +1,82 @@
+{
+  "block": {
+    "scope_kind": "general_clause",
+    "strategy": 5,
+    "symbols": [
+      "MN"
+    ]
+  },
+  "cache_key": "f726d22cfa7943cd06ea1ac8d56642a9137583ce04a7bac78b44024b7cc0ae69",
+  "case": "L5",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "48ef77adc4ef96fd85ec377c6a97cc5393aad12cd6b7231b72f0273209e7f60c",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "general_clause",
+          "conditions": [],
+          "evidence_quote": "MN – 60 % powierzchni działki budowlanej",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "60 %",
+          "scope_quote": "maksymalny wskaźnik powierzchni zabudowy, dla terenów",
+          "unit": "percent",
+          "value": 60.0,
+          "zone_symbol": "MN"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "max_building_height_m",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "min_intensity",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_intensity",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "roof_angle_max_deg",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "MN"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "MN"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "13d2a87534e06ac12db4000845a8750866a296dce9885c222f19b2c259c53ebe",
+  "schema_version": "1.0.0"
+}

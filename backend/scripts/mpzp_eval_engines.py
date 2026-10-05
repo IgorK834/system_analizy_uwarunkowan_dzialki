@@ -78,6 +78,8 @@ class EngineValue:
     conflict_group_id: str | None = None
     span: SourceSpan | None = None
     review_status: str | None = None
+    # Cechy dowodu, z których silnik wyliczył pewność (PV3-09); brak = silnik ich nie raportuje.
+    features: Mapping[str, Any] | None = field(default=None, compare=False, hash=False)
 
 
 @dataclass(frozen=True)

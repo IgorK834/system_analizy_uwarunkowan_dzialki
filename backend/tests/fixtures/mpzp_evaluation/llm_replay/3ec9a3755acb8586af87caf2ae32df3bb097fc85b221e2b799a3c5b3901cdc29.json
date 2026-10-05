@@ -1,0 +1,239 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 2,
+    "symbols": [
+      "1Up",
+      "2Up"
+    ]
+  },
+  "cache_key": "3ec9a3755acb8586af87caf2ae32df3bb097fc85b221e2b799a3c5b3901cdc29",
+  "case": "L2",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "46d7a086719183a572490dee1ed3a9c2f1c7216791c847880d5699bcd4e616c9",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "powierzchnia biologicznie czynna działki budowlanej – minimum 30%",
+          "operator": "min",
+          "parameter": "min_biologically_active_percent",
+          "raw_value": "30%",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "percent",
+          "value": 30.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "maksymalny wskaźnik powierzchni zabudowy w stosunku do powierzchni działki budowlanej – 0,50 (50%)",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "50%",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "percent",
+          "value": 50.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik minimalnej intensywności zabudowy – 0,01",
+          "operator": "min",
+          "parameter": "min_intensity",
+          "raw_value": "0,01",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "ratio",
+          "value": 0.01,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik maksymalnej intensywności zabudowy – 2,00",
+          "operator": "max",
+          "parameter": "max_intensity",
+          "raw_value": "2,00",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "ratio",
+          "value": 2.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "nie wyżej jednak niż 15,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "15,0 m",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "m",
+          "value": 15.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wysokość zabudowy - do 4 kondygnacji nadziemnych",
+          "operator": "max",
+          "parameter": "max_storeys",
+          "raw_value": "do 4 kondygnacji",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "count",
+          "value": 4.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 5º do 45º",
+          "operator": "range_lower",
+          "parameter": "roof_angle_min_deg",
+          "raw_value": "od 5º do 45º",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "deg",
+          "value": 5.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 5º do 45º",
+          "operator": "range_upper",
+          "parameter": "roof_angle_max_deg",
+          "raw_value": "od 5º do 45º",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "deg",
+          "value": 45.0,
+          "zone_symbol": "1Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "powierzchnia biologicznie czynna działki budowlanej – minimum 30%",
+          "operator": "min",
+          "parameter": "min_biologically_active_percent",
+          "raw_value": "30%",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "percent",
+          "value": 30.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "maksymalny wskaźnik powierzchni zabudowy w stosunku do powierzchni działki budowlanej – 0,50 (50%)",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "50%",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "percent",
+          "value": 50.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik minimalnej intensywności zabudowy – 0,01",
+          "operator": "min",
+          "parameter": "min_intensity",
+          "raw_value": "0,01",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "ratio",
+          "value": 0.01,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik maksymalnej intensywności zabudowy – 2,00",
+          "operator": "max",
+          "parameter": "max_intensity",
+          "raw_value": "2,00",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "ratio",
+          "value": 2.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "nie wyżej jednak niż 15,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "15,0 m",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "m",
+          "value": 15.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wysokość zabudowy - do 4 kondygnacji nadziemnych",
+          "operator": "max",
+          "parameter": "max_storeys",
+          "raw_value": "do 4 kondygnacji",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "count",
+          "value": 4.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 5º do 45º",
+          "operator": "range_lower",
+          "parameter": "roof_angle_min_deg",
+          "raw_value": "od 5º do 45º",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "deg",
+          "value": 5.0,
+          "zone_symbol": "2Up"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 5º do 45º",
+          "operator": "range_upper",
+          "parameter": "roof_angle_max_deg",
+          "raw_value": "od 5º do 45º",
+          "scope_quote": "oznaczonych w planie symbolami 1Up, 2Up:",
+          "unit": "deg",
+          "value": 45.0,
+          "zone_symbol": "2Up"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "1Up"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "2Up"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "25435f640ee51ae861756fc637ba875b608a5f0bf808740dfde3319a9c42055a",
+  "schema_version": "1.0.0"
+}

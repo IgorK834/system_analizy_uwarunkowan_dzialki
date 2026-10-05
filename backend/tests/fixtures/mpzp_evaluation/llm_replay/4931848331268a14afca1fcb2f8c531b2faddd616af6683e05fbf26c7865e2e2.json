@@ -1,0 +1,132 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 2,
+    "symbols": [
+      "6.6.MW/U"
+    ]
+  },
+  "cache_key": "4931848331268a14afca1fcb2f8c531b2faddd616af6683e05fbf26c7865e2e2",
+  "case": "L4",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "a2bae6edebfdc7dcd94219c1f89d79174c7cc27bc9c490050af197c323867efa",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "w terenie 6.6.MW/U - maksimum 55%",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "55%",
+          "scope_quote": "§ 18. 1.",
+          "unit": "percent",
+          "value": 55.0,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "w terenach 3.5.MW/U i 6.6.MW/U - minimum 0,5, maksimum 2,5",
+          "operator": "min",
+          "parameter": "min_intensity",
+          "raw_value": "minimum 0,5",
+          "scope_quote": "§ 18. 1.",
+          "unit": "ratio",
+          "value": 0.5,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "w terenach 3.5.MW/U i 6.6.MW/U - minimum 0,5, maksimum 2,5",
+          "operator": "max",
+          "parameter": "max_intensity",
+          "raw_value": "maksimum 2,5",
+          "scope_quote": "§ 18. 1.",
+          "unit": "ratio",
+          "value": 2.5,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "maksimum 21,0 m",
+          "scope_quote": "§ 18. 1.",
+          "unit": "m",
+          "value": 21.0,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [
+            {
+              "kind": "other",
+              "label": "wysokość przy granicy z sąsiednią działką",
+              "quote": "maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m"
+            }
+          ],
+          "evidence_quote": "maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "wynosi 11,0 m",
+          "scope_quote": "§ 18. 1.",
+          "unit": "m",
+          "value": 11.0,
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "o spadkach połaci do 30º",
+          "operator": "max",
+          "parameter": "roof_angle_max_deg",
+          "raw_value": "do 30º",
+          "scope_quote": "§ 18. 1.",
+          "unit": "deg",
+          "value": 30.0,
+          "zone_symbol": "6.6.MW/U"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "min_biologically_active_percent",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "roof_angle_min_deg",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "max_storeys",
+          "zone_symbol": "6.6.MW/U"
+        },
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "6.6.MW/U"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "b7d8903a05cef3d2d98789ee2b424729a64cfa3be424d6b15ec392557c2e274e",
+  "schema_version": "1.0.0"
+}

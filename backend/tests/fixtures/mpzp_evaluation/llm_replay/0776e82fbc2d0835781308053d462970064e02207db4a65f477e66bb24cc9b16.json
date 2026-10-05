@@ -1,0 +1,156 @@
+{
+  "block": {
+    "scope_kind": "zone_section",
+    "strategy": 1,
+    "symbols": [
+      "1MNW"
+    ]
+  },
+  "cache_key": "0776e82fbc2d0835781308053d462970064e02207db4a65f477e66bb24cc9b16",
+  "case": "L1",
+  "origin": "golden_fixture",
+  "recorded_at": "2026-10-03T00:00:00Z",
+  "request": {
+    "input_sha256": "cee230e46b44f25f0d80772c4c9f19d62371fa49f5721c2206fd9c0a820ff2e1",
+    "model": "gemini-3.8-flash",
+    "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+    "prompt_version": "mpzp-extraction/1",
+    "provider": "gemini",
+    "schema_version": "mpzp-extraction-schema/1",
+    "temperature": 0.0
+  },
+  "response": {
+    "content": {
+      "candidates": [
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "powierzchnia biologicznie czynna działki budowlanej – minimum 60%",
+          "operator": "min",
+          "parameter": "min_biologically_active_percent",
+          "raw_value": "60%",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "percent",
+          "value": 60.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "maksymalny wskaźnik powierzchni zabudowy w stosunku do powierzchni działki budowlanej – 0,3 (30%)",
+          "operator": "max",
+          "parameter": "max_building_coverage_percent",
+          "raw_value": "30%",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "percent",
+          "value": 30.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik minimalnej intensywności zabudowy – 0,05",
+          "operator": "min",
+          "parameter": "min_intensity",
+          "raw_value": "0,05",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "ratio",
+          "value": 0.05,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wskaźnik maksymalnej intensywności zabudowy – 0,9",
+          "operator": "max",
+          "parameter": "max_intensity",
+          "raw_value": "0,9",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "ratio",
+          "value": 0.9,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "nie wyżej jednak niż 10,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "10,0 m",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "m",
+          "value": 10.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "wysokość zabudowy - do 2 kondygnacji nadziemnych",
+          "operator": "max",
+          "parameter": "max_storeys",
+          "raw_value": "do 2 kondygnacji",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "count",
+          "value": 2.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [
+            {
+              "kind": "building_type",
+              "label": "budynki gospodarcze, garaże, wiaty",
+              "quote": "wysokość zabudowy – nie wyżej niż 6,0 m"
+            }
+          ],
+          "evidence_quote": "wysokość zabudowy – nie wyżej niż 6,0 m",
+          "operator": "max",
+          "parameter": "max_building_height_m",
+          "raw_value": "6,0 m",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "m",
+          "value": 6.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "operator": "range_lower",
+          "parameter": "roof_angle_min_deg",
+          "raw_value": "od 30º do 45º",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "deg",
+          "value": 30.0,
+          "zone_symbol": "1MNW"
+        },
+        {
+          "applicability": "zone_section",
+          "conditions": [],
+          "evidence_quote": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "operator": "range_upper",
+          "parameter": "roof_angle_max_deg",
+          "raw_value": "od 30º do 45º",
+          "scope_quote": "oznaczonego w planie symbolem 1MNW:",
+          "unit": "deg",
+          "value": 45.0,
+          "zone_symbol": "1MNW"
+        }
+      ],
+      "not_found": [
+        {
+          "parameter": "setback_m",
+          "zone_symbol": "1MNW"
+        }
+      ]
+    },
+    "cost_usd": null,
+    "finish_reason": "STOP",
+    "input_tokens": null,
+    "latency_ms": null,
+    "model_returned": "gemini-3.8-flash",
+    "output_tokens": null
+  },
+  "response_sha256": "0cb0c3539e029a6e59f2c7a7924635ff6108cf7d2538cb8f7537966fa8c4c990",
+  "schema_version": "1.0.0"
+}
