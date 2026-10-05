@@ -98,6 +98,22 @@ export type MpzpAssignmentMethod =
   | "manual_user_input"
   | "legacy";
 
+/** Rodzaj warunku, od którego zależy wartość parametru uchwały (PV3-08). */
+export type MpzpConditionKind = "building_type" | "roof_type" | "subzone" | "location" | "other";
+
+/**
+ * unconditional — wartość bez warunku; conditional — wartość alternatywna z warunkami (np. inna
+ * wysokość dla dachu płaskiego), NIE sprzeczność; conflict — ta sama przesłanka ma kilka wartości.
+ */
+export type MpzpValueKind = "unconditional" | "conditional" | "conflict";
+
+/** Warunek wartości: rodzaj, nazwa do wyświetlenia i dosłowny cytat z uchwały. */
+export type MpzpValueCondition = {
+  kind: MpzpConditionKind;
+  label: string;
+  quote: string;
+};
+
 /** Kandydatura parametru uchwały z cytowalnym dowodem (BK-203). */
 export type MpzpParameterEvidence = {
   name: string;
@@ -116,6 +132,23 @@ export type MpzpParameterEvidence = {
   /** Wspólne ID sprzecznych kandydatur; brak automatycznego wyboru. */
   conflict_group_id: string | null;
   manual_review_required: boolean;
+  /** Warunki wartości (PV3-08); brak lub pusta lista = wartość bezwarunkowa (także zapisy sprzed PV3-08). */
+  conditions?: MpzpValueCondition[];
+  /** Brak w odpowiedziach sprzed PV3-08: wtedy `conflict` przy `conflict_group_id`, inaczej `unconditional`. */
+  value_kind?: MpzpValueKind;
+  /** Strategia dopasowania silnika ilości (PV3-07), np. `comparative`. */
+  extraction_strategy?: string | null;
+  /** Przeróbki zapisu przy normalizacji (np. `ratio_to_percent`, `degree_artifact`). */
+  normalization_flags?: string[];
+  /**
+   * PV3-13/14: obecne wyłącznie dla wartości z modelu językowego po bramkach deterministycznych
+   * (`extraction_method = "llm_verified"`). Taka wartość jest kandydatem do ręcznej weryfikacji,
+   * nigdy „verified”, i nie wypełnia płaskich pól strefy.
+   */
+  review_status?: "ai_candidate";
+  model_id?: string;
+  prompt_version?: string;
+  response_sha256?: string;
 };
 
 export type MpzpZoneResult = {

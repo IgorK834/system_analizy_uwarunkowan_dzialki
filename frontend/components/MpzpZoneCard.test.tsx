@@ -252,4 +252,73 @@ describe("MpzpZoneCard — symbol podany ręcznie (BK-204)", () => {
       "Symbol strefy podano ręcznie — wynik jest częściowy",
     );
   });
+
+  describe("wartości warunkowe (PV3-08)", () => {
+    const flatRoof = { kind: "roof_type", label: "dach płaski", quote: "dachem płaskim" } as const;
+
+    it("pokazuje dwie wartości z warunkami jako warunkowe, a nie jako sprzeczność", () => {
+      render(
+        <ul>
+          <MpzpZoneCard
+            zone={zone({
+              max_building_height_m: null,
+              parameters: [
+                parameter({
+                  normalized_value: 8,
+                  raw_value: "8,0 m",
+                  value_kind: "conditional",
+                  conditions: [flatRoof],
+                }),
+                parameter({
+                  normalized_value: 10,
+                  raw_value: "10,0 m",
+                  value_kind: "conditional",
+                  conditions: [{ kind: "roof_type", label: "dach stromy", quote: "dachem stromym" }],
+                }),
+              ],
+            })}
+          />
+        </ul>,
+      );
+      const rows = screen.getAllByRole("row").filter((row) => row.getAttribute("data-value-kind"));
+      expect(rows.map((row) => row.getAttribute("data-value-kind"))).toEqual(["conditional", "conditional"]);
+      expect(rows.every((row) => row.getAttribute("data-conflict") === null)).toBe(true);
+      expect(within(rows[0]).getByText(/rodzaj dachu: dach płaski — „dachem płaskim”/)).toBeInTheDocument();
+      expect(within(rows[1]).getByText(/rodzaj dachu: dach stromy — „dachem stromym”/)).toBeInTheDocument();
+      expect(screen.getAllByTestId("conditional-tag")).toHaveLength(2);
+      expect(screen.getByTestId("conditional-values-note")).toHaveTextContent(/to nie jest sprzeczność/);
+      expect(screen.queryByText(/sprzeczne wartości parametru/)).not.toBeInTheDocument();
+    });
+
+    it("prawdziwa sprzeczność nadal jest ostrzeżeniem, także obok wartości warunkowej", () => {
+      render(
+        <ul>
+          <MpzpZoneCard
+            zone={zone({
+              parameters: [
+                parameter({ normalized_value: 9, value_kind: "conflict", conflict_group_id: "g" }),
+                parameter({ normalized_value: 12, value_kind: "conflict", conflict_group_id: "g" }),
+                parameter({ normalized_value: 6, value_kind: "conditional", conditions: [flatRoof] }),
+              ],
+            })}
+          />
+        </ul>,
+      );
+      expect(screen.getByText(/sprzeczne wartości parametru/)).toBeInTheDocument();
+      const rows = screen.getAllByRole("row").filter((row) => row.getAttribute("data-value-kind"));
+      expect(rows.map((row) => row.getAttribute("data-value-kind"))).toEqual(["conflict", "conflict", "conditional"]);
+      expect(screen.getAllByText(/sprzeczna kandydatura/)).toHaveLength(2);
+    });
+
+    it("odpowiedź sprzed PV3-08 (bez warunków i bez value_kind) renderuje się jak wcześniej", () => {
+      render(
+        <ul>
+          <MpzpZoneCard zone={zone({ parameters: [parameter({ conflict_group_id: "x" }), parameter()] })} />
+        </ul>,
+      );
+      const rows = screen.getAllByRole("row").filter((row) => row.getAttribute("data-value-kind"));
+      expect(rows.map((row) => row.getAttribute("data-value-kind"))).toEqual(["conflict", "unconditional"]);
+      expect(screen.queryByTestId("conditional-values-note")).not.toBeInTheDocument();
+    });
+  });
 });

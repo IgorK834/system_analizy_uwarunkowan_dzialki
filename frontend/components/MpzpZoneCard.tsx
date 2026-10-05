@@ -1,3 +1,9 @@
+import {
+  CONDITION_KIND_LABELS,
+  conditionsOf,
+  summarizeValueKinds,
+  valueKindOf,
+} from "@/lib/mpzpConditions";
 import { formatPlDate } from "@/lib/pogStatus";
 import { shortSha } from "@/lib/safeLink";
 import type {
@@ -90,12 +96,16 @@ function ManualSelectionDetails({ selection }: { selection: ManualZoneSelection 
 /**
  * Strefa MPZP z pochodzeniem przypisania (BK-202) i cytowalnym dowodem
  * każdej wartości parametru (BK-203). Sprzeczne kandydatury są pokazywane
- * obok siebie z ostrzeżeniem; żadna nie jest wybierana automatycznie.
+ * obok siebie z ostrzeżeniem; żadna nie jest wybierana automatycznie. Wartości
+ * warunkowe (PV3-08, np. inna wysokość dla dachu płaskiego) są pokazywane z
+ * warunkiem i jego cytatem — to nie jest sprzeczność.
  */
 export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
   const method = zone.assignment_method ?? "legacy";
   const parameters = zone.parameters ?? [];
-  const hasConflict = parameters.some((parameter) => parameter.conflict_group_id);
+  const kinds = summarizeValueKinds(parameters);
+  const hasConflict = kinds.conflict > 0;
+  const hasConditional = kinds.conditional > 0;
   return (
     <li className="result-list-item" data-zone-id={zone.zone_id ?? undefined}>
       <div className="result-list-item-heading">
@@ -126,6 +136,13 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
           Uchwała podaje sprzeczne wartości parametru — żadna nie została wybrana automatycznie.
         </p>
       )}
+      {hasConditional && (
+        <p className="field-hint" role="note" data-testid="conditional-values-note">
+          Część parametrów ma wartości zależne od warunków (rodzaj zabudowy, rodzaj dachu, podstrefa,
+          położenie) — to nie jest sprzeczność. Pole zbiorcze strefy jest puste, gdy uchwała nie podaje
+          jednej wartości dla całej strefy.
+        </p>
+      )}
       {zone.manual_review_required && !hasConflict && (
         <p className="manual-review">Przypisanie lub parametry wymagają weryfikacji.</p>
       )}
@@ -142,17 +159,24 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
               </tr>
             </thead>
             <tbody>
-              {parameters.map((parameter, index) => (
+              {parameters.map((parameter, index) => {
+                const valueKind = valueKindOf(parameter);
+                const conditions = conditionsOf(parameter);
+                return (
                 <tr
                   key={`${parameter.name}-${index}`}
-                  data-conflict={parameter.conflict_group_id ? "true" : undefined}
+                  data-conflict={valueKind === "conflict" ? "true" : undefined}
+                  data-value-kind={valueKind}
                 >
                   <th scope="row">
                     {parameter.name}
-                    {parameter.conflict_group_id && (
+                    {valueKind === "conflict" && (
                       <span className="manual-review"> · sprzeczna kandydatura</span>
                     )}
-                    {parameter.manual_review_required && !parameter.conflict_group_id && (
+                    {valueKind === "conditional" && (
+                      <span className="field-hint" data-testid="conditional-tag"> · warunkowa</span>
+                    )}
+                    {parameter.manual_review_required && valueKind !== "conflict" && (
                       <span className="manual-review" data-testid="parameter-review">
                         {" "}· wymaga weryfikacji
                       </span>
@@ -162,6 +186,16 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
                     {formatValue(parameter)}
                     {parameter.raw_value && (
                       <span className="field-hint"> (dosłownie: „{parameter.raw_value}”)</span>
+                    )}
+                    {conditions.length > 0 && (
+                      <ul className="field-hint value-conditions" aria-label="Warunki wartości">
+                        {conditions.map((condition) => (
+                          <li key={`${condition.kind}-${condition.label}`} data-condition-kind={condition.kind}>
+                            {CONDITION_KIND_LABELS[condition.kind]}: {condition.label}
+                            {condition.quote ? ` — „${condition.quote}”` : ""}
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </td>
                   <td>
@@ -178,7 +212,8 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
                   </td>
                   <td>{(parameter.confidence * 100).toFixed(0)}%</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

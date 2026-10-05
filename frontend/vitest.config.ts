@@ -23,6 +23,7 @@ export default defineConfig({
         "lib/pogStatus.ts",
         "lib/safeLink.ts",
         "lib/zoneSymbol.ts",
+        "lib/mpzpConditions.ts",
         "lib/compatibility.ts",
         "lib/terrain.ts",
         "lib/quality.ts",
