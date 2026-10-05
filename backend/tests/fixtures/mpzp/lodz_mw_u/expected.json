@@ -11,11 +11,11 @@
       "parameters": [
         {
           "name": "max_building_coverage_percent",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 40.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Realne 40% jest współdzielone przez 6.5.MW/U i 6.8.MW/U oraz zapisane jako „wskaźnik ... maksimum”, poza anchorem ekstraktora."
+          "min_confidence": 0.7,
+          "reason_if_not_found": null
         },
         {
           "name": "setback_m",
@@ -23,7 +23,7 @@
           "normalized_value": null,
           "allowed_values": null,
           "min_confidence": null,
-          "reason_if_not_found": "Regex setback_m nie obsługuje wariantu „w odległości do 4,0 m od tej granicy”."
+          "reason_if_not_found": "Wartość 4,0 m z fragmentu „w odległości do 4,0 m od tej granicy” opisuje pas przy granicy działki, w którym obowiązuje inny limit wysokości (warunek położenia), a nie odsunięcie budynku — silnik leksykonu nie przypisuje jej do setback_m."
         }
       ]
     }

@@ -12,43 +12,43 @@
       "parameters": [
         {
           "name": "min_intensity",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 0.15,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Ekstraktor wymaga etykiety „minimalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_intensity",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 2.5,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Ekstraktor wymaga etykiety „maksymalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_building_coverage_percent",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 60.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,60 bez znaku %, którego wymaga ekstraktor."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "min_biologically_active_percent",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 15.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,15 bez znaku %, którego wymaga ekstraktor."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_building_height_m",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 16.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Wiersz używa frazy „maksymalna wysokość budynku funkcji usługowej”, a ekstraktor wymaga anchoru wysokości zabudowy."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         }
       ]
     },
@@ -58,43 +58,43 @@
       "parameters": [
         {
           "name": "min_intensity",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 0.15,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Ekstraktor wymaga etykiety „minimalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_intensity",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 2.5,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Ekstraktor wymaga etykiety „maksymalna –”, a tabela podaje zwarty zakres 0,15 – 2,50."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_building_coverage_percent",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 60.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,60 bez znaku %, którego wymaga ekstraktor."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "min_biologically_active_percent",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 15.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Tabela zapisuje udział jako ułamek 0,15 bez znaku %, którego wymaga ekstraktor."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         },
         {
           "name": "max_building_height_m",
-          "expected_found": false,
-          "normalized_value": null,
+          "expected_found": true,
+          "normalized_value": 16.0,
           "allowed_values": null,
-          "min_confidence": null,
-          "reason_if_not_found": "Wiersz używa frazy „maksymalna wysokość budynku funkcji usługowej”, a ekstraktor wymaga anchoru wysokości zabudowy."
+          "min_confidence": 0.6,
+          "reason_if_not_found": null
         }
       ]
     }

@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from app.schemas.mpzp import MpzpParameter, MpzpParseResult, MpzpZoneResult
+from app.schemas.mpzp import MpzpParameter, MpzpParserWarning, MpzpParseResult, MpzpZoneResult
 from app.services.mpzp_parser import MPZP_PARSER_VERSION, parse_mpzp_document
 from app.services.mpzp_parser_blocks import MPZP_PARSER_VERSION_BLOCKS
 from app.services.mpzp_parser_numeric import extract_numeric_matches
@@ -152,12 +152,19 @@ def test_validator_compares_values_only_within_the_same_scope() -> None:
 def test_the_ambiguous_scope_warning_lowers_confidence_like_the_legacy_ambiguity() -> None:
     from app.schemas.mpzp import MpzpParserWarning
 
-    result = MpzpParseResult(
-        plan_id=None, status="complete", zones=[MpzpZoneResult(zone_symbol="MN", parameters=[_parameter(9.0, "fallback")])],
-        warnings=[MpzpParserWarning(stage="segment_document", code="ZONE_SCOPE_AMBIGUOUS", message="m", zone_symbol="MN",
-                                    severity="warning")],
-    )
-    assert validate_mpzp_result(result).zones[0].parameters[0].confidence == pytest.approx(0.8 * 0.85)
+    def validated(warnings: list[MpzpParserWarning]) -> Any:
+        result = MpzpParseResult(
+            plan_id=None, status="complete",
+            zones=[MpzpZoneResult(zone_symbol="MN", parameters=[_parameter(9.0, "fallback")])], warnings=warnings,
+        )
+        return validate_mpzp_result(result).zones[0].parameters[0]
+
+    ambiguous = validated([MpzpParserWarning(stage="segment_document", code="ZONE_SCOPE_AMBIGUOUS", message="m",
+                                             zone_symbol="MN", severity="warning")])
+    plain = validated([])
+    # Od PV3-09 wieloznaczność zakresu to cecha ``zone_ambiguous`` modelu skalibrowanego, nie mnożnik 0,85.
+    assert ambiguous.confidence < plain.confidence
+    assert ambiguous.confidence_features["zone_ambiguous"] is True and plain.confidence_features["zone_ambiguous"] is False
 
 
 # --- dopasowania mają zakres w tekście ---------------------------------------------------------------------------------------

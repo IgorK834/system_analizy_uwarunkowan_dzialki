@@ -165,12 +165,18 @@ def apply_parser_zone(
 ) -> tuple[analyze_schemas.MpzpZoneResult, list[str], list[str]]:
     """Dołącza parametry uchwały do strefy (BK-203).
 
-    - Wszystkie kandydatury trafiają do ``parameters`` z evidence.
-    - Płaskie pole API dostaje wartość tylko, gdy parser znalazł jedną
-      dystynktywną wartość. Sprzeczne wartości zostawiają pole ``None``
-      (brak rozstrzygnięcia, nie zero) i wymuszają ręczną weryfikację.
+    - Wszystkie kandydatury trafiają do ``parameters`` z evidence i warunkami (PV3-08).
+    - Płaskie pole API dostaje wartość tylko, gdy istnieje DOKŁADNIE JEDNA wartość bezwarunkowa.
+      Wartości warunkowe (inna wysokość dla dachu płaskiego) nie są sprzecznością: gdy nie ma
+      wartości bezwarunkowej, pole zostaje ``None`` (brak jednej wartości dla całej strefy, nie
+      zero), a wartości z warunkami są w ``parameters``. Sprzeczność (kilka wartości tej samej
+      przesłanki — bez warunku albo z tym samym warunkiem) zostawia pole ``None`` i wymusza
+      ręczną weryfikację.
     - Symbol parsera musi być dokładnie symbolem strefy; podobne symbole nie
       są łączone.
+    - Wartość z modelu językowego (``review_status = ai_candidate``, PV3-14) trafia wyłącznie do
+      ``parameters``: nie wypełnia płaskiego pola, dopóki nie przejdzie ręcznej weryfikacji, ale
+      różna od wartości deterministycznej czyni pole spornym (obie zostają, ręczna weryfikacja).
 
     Zwraca (strefę, pominięte nazwy parametrów, nazwy parametrów w konflikcie).
     """
@@ -183,7 +189,7 @@ def apply_parser_zone(
     parameters = [
         _parameter_evidence(parameter, evidence) for parameter in parser_zone.parameters
     ]
-    values_by_field: dict[str, list[float | str]] = {}
+    candidates_by_field: dict[str, list[mpzp_schemas.MpzpParameter]] = {}
     skipped: list[str] = []
     for parameter in parser_zone.parameters:
         api_field = _PARSER_TO_API_PARAMETER_MAP.get(parameter.name)
@@ -191,29 +197,43 @@ def apply_parser_zone(
             skipped.append(parameter.name)
             continue
         if parameter.normalized_value is not None:
-            values_by_field.setdefault(api_field, []).append(parameter.normalized_value)
+            candidates_by_field.setdefault(api_field, []).append(parameter)
 
     updates: dict[str, object] = {}
     conflicts: list[str] = []
-    for api_field, values in values_by_field.items():
-        distinct = list(dict.fromkeys(values))
+    for api_field, candidates in candidates_by_field.items():
         if api_field in _NUMERIC_API_FIELDS:
-            if len(distinct) == 1:
+            unconditional = list(
+                dict.fromkeys(
+                    p.normalized_value
+                    for p in candidates
+                    if not p.conditions and p.value_kind != "conflict" and p.review_status is None
+                )
+            )
+            contested = any(p.value_kind == "conflict" or p.conflict_group_id is not None for p in candidates) or len(
+                set(p.normalized_value for p in candidates if not p.conditions)
+            ) > 1
+            if contested:
+                conflicts.append(api_field)
+            # Wartość modelu różna od jedynej wartości rdzenia czyni pole spornym (obie zostają w ``parameters``).
+            model_values = {p.normalized_value for p in candidates if p.review_status is not None and not p.conditions}
+            if len(unconditional) == 1 and model_values <= set(unconditional) and not any(
+                p.value_kind == "conflict" for p in candidates if not p.conditions
+            ):
+                value = unconditional[0]
                 updates[api_field] = (
-                    _as_int_or_none(distinct[0])
-                    if api_field == "max_floors"
-                    else _as_float_or_none(distinct[0])
+                    _as_int_or_none(value) if api_field == "max_floors" else _as_float_or_none(value)
                 )
             else:
-                conflicts.append(api_field)
                 updates[api_field] = None
-        elif api_field == "primary_use" and zone.primary_use:
+            continue
+        distinct = list(dict.fromkeys(p.normalized_value for p in candidates))
+        if api_field == "primary_use" and zone.primary_use:
             # Kategoria z urzędowego wektora ma pierwszeństwo; opis z uchwały
             # pozostaje w liście parametrów jako dowód.
             continue
-        else:
-            # Parametry opisowe są listami współistniejących ustaleń uchwały.
-            updates[api_field] = "; ".join(str(value) for value in distinct)
+        # Parametry opisowe są listami współistniejących ustaleń uchwały.
+        updates[api_field] = "; ".join(str(value) for value in distinct)
 
     manual_review = (
         zone.manual_review_required
@@ -257,6 +277,19 @@ def _parameter_evidence(
         confidence=parameter.confidence,
         conflict_group_id=group,
         manual_review_required=parameter.manual_review_required or group is not None,
+        conditions=[
+            analyze_schemas.MpzpValueCondition(kind=c.kind, label=c.label, quote=c.quote)
+            for c in parameter.conditions
+        ],
+        value_kind=parameter.value_kind,
+        confidence_band=parameter.confidence_band,
+        confidence_calibration=parameter.confidence_calibration,
+        extraction_strategy=parameter.extraction_strategy,
+        normalization_flags=list(parameter.normalization_flags),
+        review_status=parameter.review_status,
+        model_id=parameter.model_id,
+        prompt_version=parameter.prompt_version,
+        response_sha256=parameter.response_sha256,
     )
 
 

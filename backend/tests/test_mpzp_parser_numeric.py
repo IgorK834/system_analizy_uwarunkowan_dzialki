@@ -79,9 +79,9 @@ def test_real_230_u_has_single_max_building_height() -> None:
     assert height_params[0].source_text
 
 
-def test_real_230_umw_has_conflicting_max_building_height() -> None:
-    # Prawdziwy konflikt z §11: 15 m dla zabudowy pierzejowej, 13 m dla
-    # pozostałej części terenu, w tym samym segmencie.
+def test_real_230_umw_has_two_conditional_max_building_heights_not_a_conflict() -> None:
+    # §11: 15 m dla zabudowy pierzejowej, 13 m dla pozostałej części terenu, w tym samym segmencie.
+    # Od PV3-08 to dwie wartości WARUNKOWE (różne warunki), a nie sprzeczność.
     segments = _real_bielsko_biala_segments()
     zone_section = _zone_result("230_UMW", segments)
 
@@ -89,8 +89,30 @@ def test_real_230_umw_has_conflicting_max_building_height() -> None:
     height_params = _params_by_name(params, "max_building_height_m")
 
     assert {p.normalized_value for p in height_params} == {15.0, 13.0}
-    assert all(p.manual_review_required is True for p in height_params)
-    assert all(p.confidence < 0.6 for p in height_params)
+    assert {p.value_kind for p in height_params} == {"conditional"}
+    assert all(p.manual_review_required is False and p.confidence >= 0.8 for p in height_params)
+    by_value = {p.normalized_value: [(c.kind, c.label) for c in p.conditions] for p in height_params}
+    assert by_value == {
+        15.0: [("building_type", "zabudowy pierzejowej")],
+        13.0: [("other", "pozostałej części terenu")],
+    }
+    assert all(c.quote in p.source_text for p in height_params for c in p.conditions)  # cytat warunku leży w dowodzie
+
+
+def test_same_condition_with_different_values_is_still_a_conflict() -> None:
+    segment = _segment(
+        "a) maksymalna wysokość zabudowy: 12 m,\n"
+        "b) maksymalna wysokość zabudowy: 15 m,\n"
+        "c) maksymalna wysokość zabudowy: 8 m dla budynków z dachem płaskim, 9 m dla budynków z dachem płaskim"
+    )
+    params = extract_numeric_parameters("U", _section("U", segment), [segment])
+    heights = _params_by_name(params, "max_building_height_m")
+    unconditional = [p for p in heights if not p.conditions]
+    flat_roof = [p for p in heights if p.conditions]
+    assert {p.normalized_value for p in unconditional} == {12.0, 15.0}
+    assert all(p.value_kind == "conflict" and p.manual_review_required and p.confidence < 0.6 for p in unconditional)
+    assert {p.normalized_value for p in flat_roof} == {8.0, 9.0}  # to samo ``dach płaski`` z dwiema wartościami
+    assert all(p.value_kind == "conflict" for p in flat_roof)
 
 
 def test_real_230_zp_does_not_match_urzadzenia_sportu_height_as_building_height() -> (
@@ -217,9 +239,8 @@ def test_real_min_biologically_active_percent_per_zone(
 # --- kąt nachylenia dachu (realny fixture, konflikt w 230_U) ------------
 
 
-def test_real_230_u_has_conflicting_roof_angle_ranges() -> None:
-    # Prawdziwy konflikt z §10: 30°-50° (dwuspadowe/wielospadowe) i 0°-15°
-    # (płaskie) w tym samym segmencie.
+def test_real_230_u_has_roof_angle_ranges_conditional_on_the_roof_type() -> None:
+    # §10: 30°–50° dla dachów dwuspadowych/wielospadowych i 0°–15° dla płaskich w tym samym segmencie.
     segments = _real_bielsko_biala_segments()
     zone_section = _zone_result("230_U", segments)
 
@@ -229,8 +250,9 @@ def test_real_230_u_has_conflicting_roof_angle_ranges() -> None:
 
     assert {p.normalized_value for p in min_params} == {30.0, 0.0}
     assert {p.normalized_value for p in max_params} == {50.0, 15.0}
-    assert all(p.manual_review_required is True for p in min_params)
-    assert all(p.manual_review_required is True for p in max_params)
+    assert all(p.value_kind == "conditional" and p.manual_review_required is False for p in min_params + max_params)
+    labels = {p.normalized_value: p.conditions[0].label for p in min_params}
+    assert labels == {30.0: "dach dwuspadowy lub wielospadowy", 0.0: "dach płaski"}
     assert all(p.unit == "deg" for p in min_params + max_params)
 
 
@@ -512,3 +534,115 @@ def test_table_segment_extracts_height_identically_to_paragraph() -> None:
 
     assert len(height_params) == 1
     assert height_params[0].normalized_value == 15.0
+
+
+# --- silnik leksykonu (PV3-07): jeden mechanizm za parserem liczbowym ------------------------------
+
+
+def _segment(text: str, segment_id: str = "seg-pv3-0001") -> DocumentSegment:
+    return DocumentSegment(segment_id=segment_id, text=text, page_number=2, heading=None, source="paragraph")
+
+
+def _section(zone_symbol: str, segment: DocumentSegment) -> ZoneSectionResult:
+    return ZoneSectionResult(
+        zone_symbol=zone_symbol,
+        candidates=[
+            ZoneSectionCandidate(
+                zone_symbol=zone_symbol,
+                segment_id=segment.segment_id,
+                source_text=segment.text[:80],
+                page_number=segment.page_number,
+                confidence=0.9,
+                match_pattern="synthetic",
+            )
+        ],
+    )
+
+
+def test_matches_list_covers_nine_catalog_and_four_statutory_parameters_in_fixed_order() -> None:
+    from app.services.mpzp_parser_numeric import extract_numeric_matches
+
+    names = [name for name, _unit, _matches in extract_numeric_matches("")]
+    assert names[:9] == [
+        "max_building_height_m",
+        "min_intensity",
+        "max_intensity",
+        "max_building_coverage_percent",
+        "min_biologically_active_percent",
+        "roof_angle_min_deg",
+        "roof_angle_max_deg",
+        "max_storeys",
+        "setback_m",
+    ]
+    assert set(names[9:]) == {"parking_minimum", "min_building_coverage_percent", "min_plot_area_m2", "max_retail_sales_area_m2"}
+    units = {name: unit for name, unit, _ in extract_numeric_matches("")}
+    assert units["max_building_height_m"] == "m" and units["roof_angle_min_deg"] == "deg"
+    assert units["parking_minimum"] == "miejsca/lokal" and units["min_intensity"] is None
+
+
+def test_new_wordings_that_used_to_be_gaps_are_recognized() -> None:
+    # Dosłowne sformułowania z fixture'ów krakow_morelowa / legnica_szpital, zapisane wcześniej jako luki.
+    text = (
+        "1) dla terenu MN.1:\n"
+        "a) minimalny wskaźnik terenu biologicznie czynnego: 60%,\n"
+        "b) maksymalny wskaźnik powierzchni zabudowy: 30%,\n"
+        "c) wskaźnik intensywności zabudowy: 0,01 – 0,5,\n"
+        "d) maksymalną wysokość zabudowy: 11 m, a dla budynków przekrytych dachem\npłaskim: 9,5 m;\n"
+    )
+    segment = _segment(text)
+    params = extract_numeric_parameters("MN.1", _section("MN.1", segment), [segment])
+    by_name = {name: sorted(p.normalized_value for p in params if p.name == name) for name in {p.name for p in params}}
+    assert by_name == {
+        "min_biologically_active_percent": [60.0],
+        "max_building_coverage_percent": [30.0],
+        "min_intensity": [0.01],
+        "max_intensity": [0.5],
+        "max_building_height_m": [9.5, 11.0],
+    }
+
+
+def test_table_ratio_is_converted_to_percent_with_a_flag_and_lower_confidence() -> None:
+    segment = _segment("maksymalny udział powierzchni zabudowy 0,60\nminimalny udział powierzchni biologicznie czynnej 0,15")
+    params = extract_numeric_parameters("1UZ", _section("1UZ", segment), [segment])
+    assert {p.name: p.normalized_value for p in params} == {
+        "max_building_coverage_percent": 60.0,
+        "min_biologically_active_percent": 15.0,
+    }
+    assert all(p.normalization_flags == ["ratio_to_percent"] for p in params)
+    assert all(p.extraction_strategy == "adjective" and p.confidence < 0.85 for p in params)
+    assert all(p.raw_value in {"0,60", "0,15"} for p in params)
+
+
+def test_values_named_for_another_zone_are_not_returned_for_this_zone() -> None:
+    segment = _segment(
+        "1) dla terenu MN.1:\na) maksymalna wysokość zabudowy: 11 m,\n"
+        "2) dla terenu MN.2:\na) maksymalna wysokość zabudowy: 9 m,\n"
+    )
+    for symbol, expected in (("MN.1", 11.0), ("MN.2", 9.0)):
+        params = extract_numeric_parameters(symbol, _section(symbol, segment), [segment])
+        assert [p.normalized_value for p in params if p.name == "max_building_height_m"] == [expected]
+
+
+def test_degree_artifacts_are_flagged_and_marked_with_lower_confidence() -> None:
+    segment = _segment("geometria dachów: o pochyleniu połaci w przedziale od 300 do 450")
+    params = extract_numeric_parameters("MN", _section("MN", segment), [segment])
+    assert {(p.name, p.normalized_value) for p in params} == {("roof_angle_min_deg", 30.0), ("roof_angle_max_deg", 45.0)}
+    assert all("degree_artifact" in p.normalization_flags and p.confidence < 0.7 for p in params)
+
+
+def test_statutory_parameters_are_extracted_alongside_the_catalog_ones() -> None:
+    segment = _segment(
+        "2) ustala się:\n"
+        "a) minimalny wskaźnik powierzchni zabudowy w stosunku do powierzchni działki budowlanej – 0,01 (1%),\n"
+        "b) minimalną powierzchnię nowo wydzielonej działki budowlanej – 1000 m2,\n"
+        "c) zapewnić 2 miejsca postojowe na lokal,\n"
+        "d) zakaz obiektów handlowych o powierzchni sprzedaży powyżej 2000 m²."
+    )
+    params = extract_numeric_parameters("U", _section("U", segment), [segment])
+    values = {p.name: p.normalized_value for p in params}
+    assert values == {
+        "min_building_coverage_percent": 1.0,
+        "min_plot_area_m2": 1000.0,
+        "parking_minimum": 2.0,
+        "max_retail_sales_area_m2": 2000.0,
+    }

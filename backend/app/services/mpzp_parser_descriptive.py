@@ -10,6 +10,10 @@ konwencji nazwy parametru i wartości, nie z osobnego pola schematu.
 Podobnie jak ``mpzp_parser_numeric.py``, ekstraktory działają na PEŁNYM
 tekście segmentu (``DocumentSegment.text``) wskazanym przez kandydatów
 ``ZoneSectionResult``, nie na krótkim ``source_text`` kandydata.
+
+Od PV3-07 to, co w ustaleniach jest ILOŚCIĄ (powierzchnia sprzedaży obiektów handlowych) albo
+słownictwem leksykonu (rodzaje dachu), pochodzi z tego samego leksykonu i silnika co parser
+liczbowy (``quantity_engine``, ``quantity_lexicon``); tu zostaje wyłącznie zapis opisowy.
 """
 
 from __future__ import annotations
@@ -19,6 +23,8 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
+from app.modules.planning.domain.quantity_engine import find_quantities
+from app.modules.planning.domain.quantity_lexicon import FAMILY_RETAIL, find_roof_geometry
 from app.schemas.mpzp import MpzpParameter
 from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionResult
 
@@ -59,29 +65,11 @@ _ENVIRONMENT_RESTRICTION_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"dopuszczalny\s+poziom\s+hałasu[^.;]*[.;]", re.IGNORECASE),
 )
 
-_LARGE_RETAIL_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"obiekt\w*\s+handlow\w*.{0,80}?(\d[\d\s]*)\s*m\s*(?:2|²|kw\.?)",
-    re.IGNORECASE,
-)
-
 _PARKING_DESCRIPTIVE_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"nakaz\s+lokalizacji\s+miejsc\s+przeznaczonych\s+na\s+parkowanie[^.;:]*"
     r"[.;:]",
     re.IGNORECASE,
 )
-
-_ROOF_GEOMETRY_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"dachy\s+(dwuspadow\w*(?:\s+lub\s+wielospadow\w*)?|wielospadow\w*|płask\w*)",
-    re.IGNORECASE,
-)
-_ROOF_GEOMETRY_NORMALIZATION: Final[dict[str, str]] = {
-    "dwuspadowe": "dwuspadowy",
-    "dwuspadowa": "dwuspadowy",
-    "wielospadowe": "wielospadowy",
-    "płaskie": "płaski",
-    "płaska": "płaski",
-}
-
 
 @dataclass(frozen=True)
 class _RawTextMatch:
@@ -201,9 +189,11 @@ def _extract_environmental_restrictions(text: str) -> list[_RawTextMatch]:
 
 def _extract_large_retail_restriction(text: str) -> list[_RawTextMatch]:
     matches: list[_RawTextMatch] = []
-    for match in _LARGE_RETAIL_PATTERN.finditer(text):
-        excerpt = _context_excerpt(text, match.start(), match.end(), pad=10)
-        area = match.group(1).replace(" ", "")
+    for quantity in find_quantities(text, families=[FAMILY_RETAIL]):
+        # Kontekst liczony od rzeczownika (``obiektów handlowych``) do wartości, jak w zapisie źródłowym.
+        left = quantity.noun_start if quantity.noun_start is not None else quantity.start
+        excerpt = _context_excerpt(text, left, quantity.end, pad=10)
+        area = f"{quantity.value:.0f}" if float(quantity.value).is_integer() else f"{quantity.value}"
         value = f"zakaz obiektów handlowych o powierzchni sprzedaży > {area} m²"
         matches.append(_RawTextMatch(value=value, source_text=excerpt))
     return matches
@@ -220,19 +210,14 @@ def _extract_parking_requirement_descriptive(text: str) -> list[_RawTextMatch]:
 def _extract_roof_geometry(text: str) -> list[_RawTextMatch]:
     matches: list[_RawTextMatch] = []
     seen_categories: set[str] = set()
-    for match in _ROOF_GEOMETRY_PATTERN.finditer(text):
-        raw_category = match.group(1).lower()
-        if "dwuspadow" in raw_category and "wielospadow" in raw_category:
-            normalized = "dwuspadowy_lub_wielospadowy"
-        else:
-            normalized = _ROOF_GEOMETRY_NORMALIZATION.get(raw_category, raw_category)
+    for roof in find_roof_geometry(text):
         # Ta sama kategoria wspomniana wielokrotnie w tym samym segmencie nie
         # jest nową informacją — deduplikujemy po znormalizowanej nazwie.
-        if normalized in seen_categories:
+        if roof.canonical in seen_categories:
             continue
-        seen_categories.add(normalized)
-        excerpt = _context_excerpt(text, match.start(), match.end())
-        matches.append(_RawTextMatch(value=normalized, source_text=excerpt))
+        seen_categories.add(roof.canonical)
+        excerpt = _context_excerpt(text, roof.start, roof.end)
+        matches.append(_RawTextMatch(value=roof.canonical, source_text=excerpt))
     return matches
 
 

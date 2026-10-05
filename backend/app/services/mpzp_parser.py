@@ -17,6 +17,7 @@ import hashlib
 import logging
 from typing import Literal
 
+from app.modules.planning.application.llm_pipeline import MpzpLlmPipeline
 from app.modules.planning.domain.zone_scope import resolve_zone_scope
 from app.schemas.mpzp import (
     ExtractedEvidence,
@@ -48,12 +49,23 @@ from app.services.mpzp_parser_segment import (
     segment_document,
 )
 from app.services.mpzp_parser_structure import build_tree_from_extraction, structure_view
+from app.services.mpzp_parser_hybrid import (
+    LLM_MODES,
+    BlocksContext,
+    ParserMode,
+    apply_hybrid,
+    close_pipeline,
+    schedule_shadow,
+)
 from app.services.mpzp_parser_validate import validate_mpzp_result
 
 logger = logging.getLogger(__name__)
 
-# Wersja reguł parsera zapisywana przy każdym parametrze (evidence BK-203).
-MPZP_PARSER_VERSION = "mpzp-parser/2.0"
+# Wersja reguł parsera zapisywana przy każdym parametrze (evidence BK-203). ``3.0-det`` (PV3-07):
+# wartości liczbowe i słownictwo dachów pochodzą z jednego silnika opartego na leksykonie
+# (``quantity_engine``) zamiast z rozproszonych wzorców; wersja wchodzi do sygnatury cache przez
+# ``MPZP_RESULT_SCHEMA_VERSION`` (analizy sparsowane wersją ``2.0`` nie są serwowane z cache).
+MPZP_PARSER_VERSION = "mpzp-parser/3.0-det"
 # Tryb zakresu strefy (PV3-06): ``legacy`` skleja tekst kandydackich segmentów (domyślny do
 # czasu Task 20.14), ``blocks`` przypisuje parametry na poziomie bloku strefy z prawdziwym
 # źródłem (strona i zakres znaków) każdej wartości.
@@ -62,6 +74,7 @@ ScopeMode = Literal["legacy", "blocks"]
 
 __all__ = [
     "DocumentSegment",
+    "ParserMode",
     "ZoneSectionResult",
     "extract_parameters",
     "find_zone_sections",
@@ -71,25 +84,44 @@ __all__ = [
 ]
 
 
+def scope_mode_for(mode: ParserMode) -> ScopeMode:
+    """Tryb zakresu rdzenia dla trybu parsera: ``legacy`` skleja segmenty, pozostałe używają bloków."""
+    return "legacy" if mode == "legacy" else "blocks"
+
+
 async def parse_mpzp_document(
     document: DocumentBlob,
     zone_symbols: list[str] | None = None,
     ocr_provider: OcrProvider | None = None,
     scope_mode: ScopeMode = "legacy",
+    *,
+    mode: ParserMode | None = None,
+    llm: MpzpLlmPipeline | None = None,
+    llm_unavailable_reason: str | None = None,
+    scope_threshold: float = 0.6,
 ) -> MpzpParseResult:
     """Uruchamia pipeline i NIGDY nie podnosi niekontrolowanego wyjątku.
 
     ``zone_symbols`` to pomocniczy zestaw kandydatów z MPZP discovery (Task 3.9),
     a nie ostateczne przypisanie działki do stref planistycznych. ``scope_mode``
     wybiera sposób przypisania parametrów do strefy (patrz ``ScopeMode``).
+
+    ``mode`` (PV3-14, ``MPZP_PARSER_MODE``) ma pierwszeństwo przed ``scope_mode``: ``legacy`` i ``v3``
+    są deterministyczne, ``hybrid`` dokłada zweryfikowanych kandydatów modelu (``llm``), a
+    ``hybrid_shadow`` zwraca wynik ``v3`` i liczy model w tle. Bez ``mode`` zachowanie jest
+    dokładnie takie jak przed PV3-14. Błąd ścieżki modelu nigdy nie zmienia wyniku w ``failed``.
     """
     zone_symbols = zone_symbols or []
+    if mode is not None:
+        scope_mode = scope_mode_for(mode)
+    capture: dict[str, object] = {}
     try:
-        return await _run_parse_pipeline(document, zone_symbols, ocr_provider, scope_mode)
+        result = await _run_parse_pipeline(document, zone_symbols, ocr_provider, scope_mode, capture)
     except Exception:
         # Granica fasady celowo łapie wszystkie przyszłe tryby awarii etapów,
         # ponieważ publiczny kontrakt gwarantuje wynik failed zamiast wyjątku.
         logger.exception("Nieoczekiwany błąd w pipeline parsera MPZP.")
+        await close_pipeline(llm)
         return MpzpParseResult(
             plan_id=None,
             zones=[],
@@ -109,6 +141,17 @@ async def parse_mpzp_document(
                 )
             ],
         )
+    if mode not in LLM_MODES:
+        await close_pipeline(llm)
+        return result
+    context = capture.get("context")
+    blocks_context = context if isinstance(context, BlocksContext) and result.status != "failed" else None
+    if mode == "hybrid_shadow":
+        await schedule_shadow(result, blocks_context, llm)
+        return result
+    return await apply_hybrid(
+        result, blocks_context, llm, unavailable_reason=llm_unavailable_reason, threshold=scope_threshold
+    )
 
 
 async def _run_parse_pipeline(
@@ -116,6 +159,7 @@ async def _run_parse_pipeline(
     zone_symbols: list[str],
     ocr_provider: OcrProvider | None,
     scope_mode: ScopeMode = "legacy",
+    capture: dict[str, object] | None = None,
 ) -> MpzpParseResult:
     _document_kind = classify_document(document)
     extraction = (
@@ -166,6 +210,17 @@ async def _run_parse_pipeline(
             zones = [
                 extract_zone_from_blocks(symbol, resolution, tree, view) for symbol in active_zone_symbols
             ]
+            if capture is not None:
+                capture["context"] = BlocksContext(
+                    tree=tree,
+                    view=view,
+                    resolution=resolution,
+                    symbols=tuple(active_zone_symbols),
+                    extraction_method=extraction.extraction_method,
+                    quality_score=extraction.quality_score,
+                    document_sha256=hashlib.sha256(document.content).hexdigest(),
+                    parser_version=MPZP_PARSER_VERSION_BLOCKS,
+                )
         else:
             zone_section_results = find_zone_sections(segments, active_zone_symbols)
             warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
@@ -186,16 +241,13 @@ async def _run_parse_pipeline(
                     severity="warning",
                 )
             )
+            # Odkryte symbole to cecha pewności (``symbols_inferred``, ostrzeżenie ``ZONE_SYMBOLS_INFERRED``
+            # czyta ``validate_mpzp_result``), a nie stały mnożnik; tu wymuszamy tylko ręczną weryfikację.
             zones = [
                 zone.model_copy(
                     update={
                         "parameters": [
-                            parameter.model_copy(
-                                update={
-                                    "confidence": parameter.confidence * 0.65,
-                                    "manual_review_required": True,
-                                }
-                            )
+                            parameter.model_copy(update={"manual_review_required": True})
                             for parameter in zone.parameters
                         ]
                     }

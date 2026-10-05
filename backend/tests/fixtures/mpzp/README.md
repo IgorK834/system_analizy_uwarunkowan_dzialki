@@ -76,3 +76,17 @@ zachować fragment dokumentu, użyć produkcyjnego OCR albo oznaczony jako symul
 skan. Istniejące fixtures `expected.json` i pliki `source.json` tego katalogu nie
 zmieniły się; nowe pola są opcjonalne dla `test_mpzp_parser_regression.py`.
 Korpus ewaluacyjny z niezależnymi anotacjami jest w `../mpzp_evaluation/`.
+
+## Warunki wartości w oczekiwaniach (PV3-08)
+
+Parametr z kilkoma wartościami, które zależą od warunku (typ dachu, podstrefa, typ budynku, położenie),
+nie jest już sprzecznością. Oczekiwanie takiego parametru ma `allowed_values` (zbiór dopuszczalnych
+wartości) i opcjonalne `expected_conditions`: mapę „wartość (tekst, np. `"9.5"`) → lista kluczy warunków
+w postaci `kind:etykieta` (`roof_type:dach płaski`). Pusta lista oznacza wartość bezwarunkową. Test
+regresyjny sprawdza wtedy, że każda wartość ma dokładnie te warunki, a pole płaskie (`max_building_height_m`
+itd.) pozostaje `null`, bo nie ma jednej wartości bezwarunkowej. Prawdziwa sprzeczność (ta sama przesłanka,
+dwie różne wartości) nadal oznacza `manual_review_required` i `conflict_group_id`; znane przykłady są
+w `legnica_szpital` i `lodz_mw_u`. Luki, które PV3-07 zamknął (np. wysokości z rozbitych wypunktowań),
+zmieniono z `expected_found: false` na wartość oczekiwaną — snapshoty tekstu (`pages.json`) nie były
+ruszane.
+

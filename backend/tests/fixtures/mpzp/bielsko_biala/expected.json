@@ -59,8 +59,16 @@
             30.0,
             0.0
           ],
-          "min_confidence": 0.4,
-          "reason_if_not_found": null
+          "min_confidence": 0.7,
+          "reason_if_not_found": null,
+          "expected_conditions": {
+            "30.0": [
+              "roof_type:dach dwuspadowy lub wielospadowy"
+            ],
+            "0.0": [
+              "roof_type:dach płaski"
+            ]
+          }
         },
         {
           "name": "roof_angle_max_deg",
@@ -70,8 +78,16 @@
             50.0,
             15.0
           ],
-          "min_confidence": 0.4,
-          "reason_if_not_found": null
+          "min_confidence": 0.7,
+          "reason_if_not_found": null,
+          "expected_conditions": {
+            "50.0": [
+              "roof_type:dach dwuspadowy lub wielospadowy"
+            ],
+            "15.0": [
+              "roof_type:dach płaski"
+            ]
+          }
         }
       ]
     },
@@ -87,8 +103,16 @@
             15.0,
             13.0
           ],
-          "min_confidence": 0.5,
-          "reason_if_not_found": null
+          "min_confidence": 0.7,
+          "reason_if_not_found": null,
+          "expected_conditions": {
+            "15.0": [
+              "building_type:zabudowy pierzejowej"
+            ],
+            "13.0": [
+              "other:pozostałej części terenu"
+            ]
+          }
         },
         {
           "name": "min_intensity",

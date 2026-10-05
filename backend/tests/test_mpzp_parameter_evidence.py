@@ -37,7 +37,6 @@ from app.services.analysis_orchestrator import (
 from app.services.initiation import ParcelLookupResult
 from app.services.mpzp import MpzpDiscoveryResult
 from app.services.mpzp_parser import MPZP_PARSER_VERSION, parse_mpzp_document
-from app.services.mpzp_parser_validate import OCR_CONFIDENCE_PENALTY
 from app.services.mpzp_zones import apply_parser_zone
 from app.services.persistence import add_mpzp_zone_snapshot, build_analyze_response_from_analysis
 from app.services.report import _build_report_context, _render_report_html
@@ -116,23 +115,27 @@ async def test_two_zones_of_same_resolution_get_their_own_heights_with_evidence(
     assert "9 m" in (first.source_text or "")
 
 
-@pytest.mark.asyncio
-async def test_conflicting_values_are_kept_and_not_resolved() -> None:
-    pages = (
-        "§ 5. Dla terenu oznaczonego symbolem 1MN ustala się:\n"
-        "1) maksymalna wysokość zabudowy: 9 m;\n"
-        "2) dla budynków gospodarczych maksymalna wysokość zabudowy: 6 m.",
-    )
+async def _mapped_height_zone(pages: tuple[str, ...]):
     result = await parse_mpzp_document(document_blob(text_pdf(pages)), ["1MN"])
-    parser_zone = result.zones[0]
     base = MpzpZoneResult(
         zone_symbol="1MN", intersection_area_sqm=1000, intersection_pct=100,
         is_dominant=True, source=_source(), assignment_method="vector_intersection",
     )
-    mapped, _skipped, conflicts = apply_parser_zone(base, parser_zone)
+    return apply_parser_zone(base, result.zones[0])
+
+
+@pytest.mark.asyncio
+async def test_conflicting_values_are_kept_and_not_resolved() -> None:
+    # Ta sama przesłanka (zabudowa w strefie, bez warunku) i dwie różne wartości = prawdziwy konflikt.
+    mapped, _skipped, conflicts = await _mapped_height_zone((
+        "§ 5. Dla terenu oznaczonego symbolem 1MN ustala się:\n"
+        "1) maksymalna wysokość zabudowy: 9 m;\n"
+        "2) maksymalna wysokość zabudowy: 6 m.",
+    ))
     heights = [p for p in mapped.parameters if p.name == "max_building_height_m"]
     assert sorted(p.normalized_value for p in heights) == [6.0, 9.0]
     assert len({p.conflict_group_id for p in heights}) == 1 and heights[0].conflict_group_id
+    assert {p.value_kind for p in heights} == {"conflict"}
     assert all(p.manual_review_required for p in heights)
     assert conflicts == ["max_building_height_m"]
     assert mapped.max_building_height_m is None  # brak automatycznego wyboru
@@ -140,6 +143,24 @@ async def test_conflicting_values_are_kept_and_not_resolved() -> None:
     assert _result_status(
         context=_empty_context(), mpzp_zones=[mapped], pog=None, sources=[]
     ) == "partial"
+
+
+@pytest.mark.asyncio
+async def test_conditional_values_are_not_a_conflict() -> None:
+    # PV3-08: wartość z warunkiem (inny typ budynku) obok bezwarunkowej to nie sprzeczność.
+    mapped, _skipped, conflicts = await _mapped_height_zone((
+        "§ 5. Dla terenu oznaczonego symbolem 1MN ustala się:\n"
+        "1) maksymalna wysokość zabudowy: 9 m;\n"
+        "2) dla budynków gospodarczych maksymalna wysokość zabudowy: 6 m.",
+    ))
+    heights = {p.normalized_value: p for p in mapped.parameters if p.name == "max_building_height_m"}
+    assert set(heights) == {6.0, 9.0}
+    assert heights[9.0].value_kind == "unconditional" and heights[9.0].conditions == []
+    assert heights[6.0].value_kind == "conditional"
+    assert [(c.kind, c.label) for c in heights[6.0].conditions] == [("building_type", "budynków gospodarczych")]
+    assert all(p.conflict_group_id is None for p in heights.values())
+    assert conflicts == []
+    assert mapped.max_building_height_m == 9.0  # jedyna wartość bezwarunkowa
 
 
 @pytest.mark.asyncio
@@ -160,10 +181,10 @@ async def test_ocr_gives_same_value_with_lower_confidence() -> None:
         ocr_parameter = ocr_values[key]
         assert ocr_parameter.normalized_value == text_parameter.normalized_value
         assert ocr_parameter.extraction_method == "ocr"
+        # PV3-09: obniżenie wynika z cech dowodu (metoda ekstrakcji), nie ze stałego mnożnika.
         assert ocr_parameter.confidence < text_parameter.confidence
-        assert ocr_parameter.confidence == pytest.approx(
-            text_parameter.confidence * OCR_CONFIDENCE_PENALTY
-        )
+        assert ocr_parameter.confidence_features["extraction_method"] == "ocr"
+        assert text_parameter.confidence_features["extraction_method"] == "pdf_text"
 
 
 @pytest.mark.asyncio

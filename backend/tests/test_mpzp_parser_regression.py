@@ -139,7 +139,26 @@ def _assert_parameter_matches(
     assert actual, f"Strefa {zone.zone_symbol}: nie znaleziono parametru {name}"
     allowed_values = parameter_expected["allowed_values"]
     min_confidence = parameter_expected["min_confidence"]
-    if allowed_values is not None:
+    expected_conditions = parameter_expected.get("expected_conditions")
+    if expected_conditions is not None:
+        # Wartości warunkowe (PV3-08): każda wartość ma dokładnie oczekiwane warunki ``rodzaj:etykieta``,
+        # nie jest sprzecznością i nie wymusza ręcznej weryfikacji.
+        found = {
+            str(parameter.normalized_value): sorted(f"{c.kind}:{c.label}" for c in parameter.conditions)
+            for parameter in actual
+        }
+        assert found == {key: sorted(value) for key, value in expected_conditions.items()}, (
+            f"Strefa {zone.zone_symbol}: {name} ma inne warunki niż oczekiwane"
+        )
+        # Wartość warunkowa nie jest sprzecznością: bez grupy konfliktu i bez rodzaju ``conflict``. Ręczna
+        # weryfikacja może jej wymagać z powodu skalibrowanej pewności (np. wieloznaczna sekcja w trybie
+        # dotychczasowym), ale nigdy z powodu konfliktu.
+        assert all(
+            parameter.value_kind == ("conditional" if parameter.conditions else "unconditional")
+            and parameter.conflict_group_id is None
+            for parameter in actual
+        ), f"Strefa {zone.zone_symbol}: wartości warunkowe {name} nie są sprzecznością"
+    elif allowed_values is not None:
         actual_values = {parameter.normalized_value for parameter in actual}
         assert actual_values <= set(allowed_values), (
             f"Strefa {zone.zone_symbol}: {name}={actual_values} wykracza poza "

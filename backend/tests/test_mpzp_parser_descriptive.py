@@ -338,3 +338,26 @@ def test_no_candidates_returns_empty_list_without_error() -> None:
     params = extract_descriptive_parameters("MN", zone_section, [])
 
     assert params == []
+
+
+# --- słownik dachów z leksykonu (PV3-07) -----------------------------------------------------------
+
+
+def test_roof_geometry_uses_the_shared_lexicon_vocabulary() -> None:
+    segment = DocumentSegment(
+        segment_id="seg-roof",
+        text="Dachy strome o spadku 30°, dachy jednospadowe oraz dachy dwuspadowe lub wielospadowe.",
+        page_number=1,
+        heading=None,
+        source="paragraph",
+    )
+    section = ZoneSectionResult(
+        zone_symbol="MN",
+        candidates=[ZoneSectionCandidate("MN", "seg-roof", segment.text, 1, 0.9, "synthetic")],
+    )
+    params = extract_descriptive_parameters("MN", section, [segment])
+    assert [p.normalized_value for p in params if p.name == "roof_geometry"] == [
+        "stromy",
+        "jednospadowy",
+        "dwuspadowy_lub_wielospadowy",
+    ]
