@@ -253,6 +253,8 @@ async def apply_hybrid(
         # Brak bloków albo wszystkie pary mają pewną wartość deterministyczną: model nie jest wołany.
         await close_pipeline(pipeline)
         return result
+    # Odsetek degradacji (PV3-19) liczy się wśród analiz, które doszły do kroku modelu.
+    llm_metrics.metrics.increment("llm.analyses")
     if pipeline is None:
         return _degraded(result, [unavailable_reason or REASON_LLM_DISABLED])
     try:
@@ -265,6 +267,7 @@ async def apply_hybrid(
         zones, added, disagreements = merge_llm_candidates(result.zones, outcome.report.accepted, context)
     except Exception as exc:  # noqa: BLE001 - błąd ścieżki modelu nie może zepsuć wyniku deterministycznego
         logger.warning("mpzp_llm hybrid step failed: %s", type(exc).__name__)
+        llm_metrics.record_run(False)
         return _degraded(result, ["pipeline_error"])
     finally:
         await close_pipeline(pipeline)

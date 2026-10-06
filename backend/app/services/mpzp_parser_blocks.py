@@ -38,7 +38,7 @@ from app.services.mpzp_parser_descriptive import extract_descriptive_parameters
 from app.services.mpzp_parser_numeric import _condition_models, extract_numeric_matches
 from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionCandidate, ZoneSectionResult
 
-MPZP_PARSER_VERSION_BLOCKS: Final[str] = "mpzp-parser/3.0-det+scope.1"
+MPZP_PARSER_VERSION_BLOCKS: Final[str] = "mpzp-parser/3.1-det+scope.1"
 _BASE_CONFIDENCE: Final[float] = 0.85
 _DEDICATED_SCOPE_CONFIDENCE: Final[float] = 0.9
 _CONFLICT_PENALTY: Final[float] = 0.6

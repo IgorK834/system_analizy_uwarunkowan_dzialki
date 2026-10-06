@@ -42,11 +42,6 @@ from app.modules.planning.domain.value_conditions import (
 from app.schemas.mpzp import MpzpParameter
 from app.schemas.mpzp import ValueCondition as ValueConditionModel
 from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionResult
-from app.shared.numbers import parse_polish_number
-
-# Tymczasowy alias kompatybilności dla istniejących testów/wywołań prywatnej
-# funkcji; jedyna implementacja pozostaje w app.shared.numbers.
-_parse_polish_number = parse_polish_number
 
 logger = logging.getLogger(__name__)
 

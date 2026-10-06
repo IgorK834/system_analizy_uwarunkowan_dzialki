@@ -32,7 +32,6 @@ from app.services.mpzp_fetch import DocumentBlob
 from app.services.mpzp_parser_descriptive import extract_descriptive_parameters
 from app.services.mpzp_parser_extract import (
     OcrProvider,
-    classify_document,
     extract_document_text,
 )
 from app.services.mpzp_parser_blocks import (
@@ -64,8 +63,10 @@ logger = logging.getLogger(__name__)
 # Wersja reguł parsera zapisywana przy każdym parametrze (evidence BK-203). ``3.0-det`` (PV3-07):
 # wartości liczbowe i słownictwo dachów pochodzą z jednego silnika opartego na leksykonie
 # (``quantity_engine``) zamiast z rozproszonych wzorców; wersja wchodzi do sygnatury cache przez
-# ``MPZP_RESULT_SCHEMA_VERSION`` (analizy sparsowane wersją ``2.0`` nie są serwowane z cache).
-MPZP_PARSER_VERSION = "mpzp-parser/3.0-det"
+# ``MPZP_RESULT_SCHEMA_VERSION`` (analizy sparsowane wersją ``2.0`` nie są serwowane z cache). ``3.1-det``
+# (PV3-21): zapisy opisowe z jednego silnika domenowego (``descriptive_engine``), wspólnego z regułami
+# planistycznymi — przeznaczenie z etykiety i z listy, zakazy przełamane w wierszu, liczby dziesiętne.
+MPZP_PARSER_VERSION = "mpzp-parser/3.1-det"
 # Tryb zakresu strefy (PV3-06): ``legacy`` skleja tekst kandydackich segmentów (domyślny do
 # czasu Task 20.14), ``blocks`` przypisuje parametry na poziomie bloku strefy z prawdziwym
 # źródłem (strona i zakres znaków) każdej wartości.
@@ -161,7 +162,6 @@ async def _run_parse_pipeline(
     scope_mode: ScopeMode = "legacy",
     capture: dict[str, object] | None = None,
 ) -> MpzpParseResult:
-    _document_kind = classify_document(document)
     extraction = (
         await extract_document_text(document, ocr_provider)
         if ocr_provider is not None
