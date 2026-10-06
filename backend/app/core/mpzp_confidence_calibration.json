@@ -34,8 +34,8 @@
     "prompt": null,
     "quantity_engine": "quantity-engine/1.0+quantity-lexicon/1.0",
     "versions": [
-      "mpzp-parser/3.0-det",
-      "mpzp-parser/3.0-det+scope.1"
+      "mpzp-parser/3.1-det",
+      "mpzp-parser/3.1-det+scope.1"
     ]
   },
   "manual_review": {
