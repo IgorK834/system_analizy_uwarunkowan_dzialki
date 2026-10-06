@@ -26,7 +26,10 @@ AUDIT_PACKAGE_SCHEMA_VERSION: Final[str] = "audit-package/1"
 # tej samej wersji eksportera. 1.1.0 (PV3-08): evidence parametrów MPZP w ``analysis.json`` niesie
 # warunki (``conditions``) i rodzaj wartości (``value_kind``), a README opisuje ich znaczenie;
 # pakiety z 1.0.0 mają te same pliki, ale bez tych pól i bez tej sekcji README.
-AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.1.0"
+# 1.2.0 (PV3-18): ``analysis.json`` ma blok ``model_provenance`` (model, wersja promptu, skrót odpowiedzi,
+# zweryfikowany cytat wartości z modelu językowego); cytat podlega regule redystrybucji źródła, odpowiedź
+# modelu nie jest nigdy dołączana (tylko jej skrót), a README opisuje odczyt automatyczny.
+AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.2.0"
 MANIFEST_NAME: Final[str] = "manifest.json"
 README_NAME: Final[str] = "README.md"
 

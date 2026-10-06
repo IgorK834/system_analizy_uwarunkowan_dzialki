@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Final, Literal
 
-MappingKind = Literal["source_fact", "computed", "approximation", "manual", "metadata"]
+MappingKind = Literal["source_fact", "computed", "approximation", "manual", "metadata", "model_reading"]
 
 MAPPING_KIND_LABELS: Final[dict[str, str]] = {
     "source_fact": "fakt źródłowy",
@@ -27,6 +27,7 @@ MAPPING_KIND_LABELS: Final[dict[str, str]] = {
     "approximation": "przybliżenie",
     "manual": "dane ręczne",
     "metadata": "metadane",
+    "model_reading": "odczyt automatyczny",
 }
 
 
@@ -80,6 +81,17 @@ FIELD_MAPPINGS: Final[tuple[FieldMapping, ...]] = (
        "Tabela 3.1 — plakietka weryfikacji; macierz 8.1", "metadata"),
     _m("mpzp_zones[].manual_selection.*", "mpzp",
        "Tabela 3.4 — decyzja użytkownika i przypięty dokument (tryb ręczny)", "manual"),
+    # PV3-18: pola obecne wyłącznie dla wartości z modelu językowego (kandydat ``ai_candidate``); wartość
+    # deterministyczna ich nie ma i nie jest tak oznaczana.
+    _m("mpzp_zones[].parameters[].review_status", "mpzp",
+       "Tabele 3.2 i 3.3 — znacznik odczytu automatycznego i status kandydata (tylko wartości z modelu)",
+       "model_reading"),
+    _m("mpzp_zones[].parameters[].model_id", "mpzp",
+       "Tabela 3.3 — provenance odczytu automatycznego: model", "model_reading"),
+    _m("mpzp_zones[].parameters[].prompt_version", "mpzp",
+       "Tabela 3.3 — provenance odczytu automatycznego: wersja instrukcji", "model_reading"),
+    _m("mpzp_zones[].parameters[].response_sha256", "mpzp",
+       "Tabela 3.3 — provenance odczytu automatycznego: skrót (SHA-256) odpowiedzi modelu", "model_reading"),
     _m("mpzp_zones[].parameters[].*", "mpzp",
        "Tabela 3.3 — evidence parametrów (odsyłacze [E#]: strona, segment, SHA-256)", "source_fact"),
     _m("mpzp_zones[].source.*", "sources", f"Tabela 3.1 — kolumna „źródło”; {_SOURCES_TABLE}", "source_fact"),

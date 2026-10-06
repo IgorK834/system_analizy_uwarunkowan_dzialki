@@ -43,6 +43,13 @@ from app.modules.reporting.domain.audit_package import (
     render_json,
     sha256_hex,
 )
+from app.shared.model_reading import (
+    EXTRACTION_METHOD_LLM_VERIFIED,
+    MODEL_READING_DISCLAIMER,
+    MODEL_READING_MARK,
+    REVIEW_STATUS_AI_CANDIDATE,
+    is_model_reading,
+)
 from app.shared.data_quality import (
     FRESHNESS_DESCRIPTIONS_PL,
     FRESHNESS_LABELS_PL,
@@ -55,6 +62,11 @@ from app.shared.data_quality import (
 )
 
 ANALYSIS_SCHEMA_VERSION: Final[str] = "audit-analysis/1"
+MODEL_PROVENANCE_SCHEMA: Final[str] = "audit-model-provenance/1"
+# Kody ostrzeżeń ścieżki modelu (``services/mpzp_parser_hybrid``): provenance niepełnego wyniku też jest zapisane.
+LLM_WARNING_CODES: Final[frozenset[str]] = frozenset({"MPZP_LLM_UNAVAILABLE", "MPZP_LLM_CANDIDATES_REJECTED"})
+# Pola wartości z modelu, które są dosłownym fragmentem uchwały (cytat): podlegają regule redystrybucji źródła.
+QUOTE_FIELDS: Final[tuple[str, ...]] = ("evidence_text", "raw_value")
 SOURCES_SCHEMA_VERSION: Final[str] = "audit-sources/1"
 PARCEL_FILE: Final[str] = "parcel.geojson"
 ANALYSIS_FILE: Final[str] = "analysis.json"
@@ -111,6 +123,8 @@ class AuditInput:
     quality: Mapping[str, Any] | None
     computation_parcel_2180: Mapping[str, Any] | None
     parcel_source_ids: tuple[str | None, ...] = ()
+    # Identyfikatory źródeł stref w kolejności ``analysis["mpzp_zones"]`` (PV3-18); puste = nieustalone.
+    zone_source_ids: tuple[str | None, ...] = ()
     extra_context: Mapping[str, Any] = field(default_factory=dict)
 
 
@@ -236,12 +250,110 @@ def _set_path(payload: Any, path: Sequence[str | int], value: Any) -> None:
         parent[path[-1]] = value  # type: ignore[index]
 
 
+def _zone_source(source: AuditInput, zone_index: int) -> str | None:
+    return source.zone_source_ids[zone_index] if zone_index < len(source.zone_source_ids) else None
+
+
+def _model_parameters(source: AuditInput) -> list[tuple[int, int, Mapping[str, Any]]]:
+    """(indeks strefy, indeks parametru, parametr) dla wartości z modelu językowego w ``analysis``."""
+    found: list[tuple[int, int, Mapping[str, Any]]] = []
+    for zone_index, zone in enumerate(source.analysis.get("mpzp_zones") or []):
+        for parameter_index, parameter in enumerate((zone or {}).get("parameters") or []):
+            if is_model_reading(parameter):
+                found.append((zone_index, parameter_index, parameter))
+    return found
+
+
+def _model_quote_blocks(source: AuditInput) -> list[AuditRawBlock]:
+    """Cytaty wartości z modelu (``evidence_text``, ``raw_value``, cytaty warunków) jako bloki surowe źródła.
+
+    Cytat jest dosłownym fragmentem uchwały, więc trafia do pakietu tylko przy ``allowed``; w pozostałych
+    przypadkach (``derived_only``, ``forbidden``, ``unconfirmed``, źródło spoza katalogu) zostaje SHA-256
+    i powód, a pole w ``analysis.json`` jest ``null``. Wartość liczbowa, strona, skrót dokumentu i
+    provenance modelu (model, wersja instrukcji, skrót odpowiedzi) zostają zawsze.
+    """
+    blocks: list[AuditRawBlock] = []
+    for zone_index, parameter_index, parameter in _model_parameters(source):
+        base = ("mpzp_zones", zone_index, "parameters", parameter_index)
+        zone = source.analysis["mpzp_zones"][zone_index]
+        label = f"zweryfikowany cytat odczytu automatycznego (strefa {zone.get('zone_symbol')}, parametr {parameter.get('name')})"
+        source_id = _zone_source(source, zone_index)
+        for name in QUOTE_FIELDS:
+            blocks.append(AuditRawBlock((*base, name), source_id, f"{label}: {name}"))
+        for condition_index, _ in enumerate(parameter.get("conditions") or []):
+            blocks.append(AuditRawBlock((*base, "conditions", condition_index, "quote"), source_id, f"{label}: cytat warunku"))
+    return blocks
+
+
+def _model_provenance_document(source: AuditInput, redactions: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Blok ``model_provenance`` (PV3-18): provenance każdej wartości z modelu, cytat tylko jeśli źródło pozwala.
+
+    Odpowiedź modelu nigdy nie jest dołączana — tylko jej skrót (``response_sha256``) i zweryfikowany
+    cytat. Wartość ma status ``ai_candidate`` (kandydat do ręcznej weryfikacji), nigdy „verified”.
+    """
+    omitted = {item["pointer"]: item for item in redactions}
+    entries: list[dict[str, Any]] = []
+    for zone_index, parameter_index, parameter in _model_parameters(source):
+        zone = source.analysis["mpzp_zones"][zone_index]
+        pointer = f"/result/mpzp_zones/{zone_index}/parameters/{parameter_index}"
+        quote_pointer = f"{pointer}/evidence_text"
+        quote = parameter.get("evidence_text")
+        omission = omitted.get(quote_pointer)
+        source_id = _zone_source(source, zone_index)
+        entries.append(
+            {
+                "pointer": pointer,
+                "zone_symbol": zone.get("zone_symbol"),
+                "zone_id": zone.get("zone_id"),
+                "parameter": parameter.get("name"),
+                "value": parameter.get("normalized_value"),
+                "unit": parameter.get("unit"),
+                "review_status": parameter.get("review_status") or REVIEW_STATUS_AI_CANDIDATE,
+                "extraction_method": parameter.get("extraction_method") or EXTRACTION_METHOD_LLM_VERIFIED,
+                "manual_review_required": True,
+                "model_id": parameter.get("model_id"),
+                "prompt_version": parameter.get("prompt_version"),
+                "response_sha256": parameter.get("response_sha256"),
+                "page_number": parameter.get("page_number"),
+                "document_sha256": parameter.get("document_sha256"),
+                "confidence": parameter.get("confidence"),
+                "source_id": source_id,
+                "redistribution": _policy_of(source_id, source.redistribution),
+                "quote": None if omission is not None else quote,
+                "quote_sha256": omission["sha256"] if omission is not None else (
+                    sha256_hex(canonical_bytes(quote)) if quote is not None else None
+                ),
+                "quote_included": omission is None and quote is not None,
+                "quote_omitted_reason": omission["reason"] if omission is not None else None,
+            }
+        )
+    warnings = [
+        {"code": item.get("code"), "message": item.get("message")}
+        for item in (source.analysis.get("warnings") or [])
+        if isinstance(item, Mapping) and item.get("code") in LLM_WARNING_CODES
+    ]
+    return {
+        "schema": MODEL_PROVENANCE_SCHEMA,
+        "present": bool(entries),
+        "mark": MODEL_READING_MARK,
+        "disclaimer": MODEL_READING_DISCLAIMER,
+        "model_responses_included": False,
+        "note": (
+            "Pakiet zawiera wyłącznie provenance wartości z modelu językowego: model, wersję instrukcji, "
+            "skrót SHA-256 odpowiedzi i zweryfikowany cytat z uchwały (cytat — tylko gdy katalog źródeł "
+            "pozwala na redystrybucję surowych danych źródła). Treść odpowiedzi modelu nie jest dołączana."
+        ),
+        "entries": entries,
+        "warnings": warnings,
+    }
+
+
 def _redact_raw_blocks(
     analysis: dict[str, Any], source: AuditInput
 ) -> tuple[list[OmittedArtifact], list[dict[str, Any]]]:
     omitted: list[OmittedArtifact] = []
     redactions: list[dict[str, Any]] = []
-    for block in source.raw_blocks:
+    for block in [*source.raw_blocks, *_model_quote_blocks(source)]:
         value = _get_path(analysis, block.path)
         if value in (None, {}, []):
             continue
@@ -325,6 +437,7 @@ def _analysis_document(
         "computation": computation,
         "result": result,
         "section_quality": dict(source.quality) if source.quality is not None else None,
+        "model_provenance": _model_provenance_document(source, redactions),
         "geometry_files": layer_index,
         "redactions": sorted(redactions, key=lambda item: item["pointer"]),
         "sources_file": SOURCES_FILE,
@@ -477,6 +590,36 @@ def _readme(
         "całej strefy, nie zero), a wartości z warunkami należy czytać z `parameters[]`. Pakiet "
         "z eksportera starszego niż 1.1.0 nie ma tych pól: wartości z takich snapshotów traktuj jako "
         "bezwarunkowe.",
+        "",
+        "## Parametry MPZP: odczyt automatyczny (model językowy)",
+        "",
+        "Wartość oznaczona `review_status: ai_candidate` (`extraction_method: llm_verified`) pochodzi z "
+        f"odczytu automatycznego modelem językowym: **{MODEL_READING_MARK}**. Model zaproponował wartość, "
+        "a program potwierdził wyłącznie, że cytat i liczba występują w tekście uchwały na wskazanej "
+        "stronie — wartość jest kandydatem do ręcznej weryfikacji, nigdy „verified”, i nie wypełnia "
+        "płaskich pól strefy. " + MODEL_READING_DISCLAIMER,
+        "",
+        "Provenance wszystkich takich wartości jest zebrany w `analysis.json` pod `model_provenance`:",
+        "",
+        "| Pole | Znaczenie |",
+        "| --- | --- |",
+        "| `model_id`, `prompt_version` | model i wersja instrukcji, które zaproponowały wartość |",
+        "| `response_sha256` | skrót SHA-256 odpowiedzi modelu zapisanej w systemie (treść odpowiedzi "
+        "**nie** jest dołączona: `model_responses_included: false`) |",
+        "| `quote`, `quote_sha256`, `quote_included` | zweryfikowany cytat z uchwały i jego skrót (SHA-256 "
+        "kanonicznego zapisu JSON cytatu — ten sam co w `redactions`). Cytat jest "
+        "dosłownym fragmentem źródła, więc trafia do pakietu tylko wtedy, gdy katalog źródeł pozwala na "
+        "redystrybucję surowych danych (`redistribution: allowed`); w przeciwnym razie `quote` i pola "
+        "`evidence_text`, `raw_value`, cytaty warunków w `result` są `null`, a pozostaje skrót, powód "
+        "(`quote_omitted_reason`) i wpis w `redactions` |",
+        "| `redistribution` | zgoda na redystrybucję źródła strefy z katalogu |",
+        "| `page_number`, `document_sha256` | strona i skrót dokumentu uchwały |",
+        "",
+        "Gdy ścieżka modelu była niedostępna albo bramki odrzuciły kandydatów, wynik pochodzi z rdzenia "
+        "deterministycznego, a `model_provenance.warnings` zawiera odpowiednie ostrzeżenia "
+        "(`MPZP_LLM_UNAVAILABLE`, `MPZP_LLM_CANDIDATES_REJECTED`). Brak wartości (`null`) nie jest zerem, "
+        "a brak danych nie oznacza braku ograniczenia. Pakiet z eksportera starszego niż 1.2.0 nie ma "
+        "bloku `model_provenance`.",
     ]
 
     if source.quality is not None:

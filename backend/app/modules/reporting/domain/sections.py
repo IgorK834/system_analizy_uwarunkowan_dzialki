@@ -45,6 +45,7 @@ FINDING_KIND_LABELS: Final[dict[str, str]] = {
     "computed": "wynik obliczenia",
     "approximation": "przybliżenie",
     "manual": "dane ręczne",
+    "model_reading": "odczyt automatyczny",
 }
 FINDING_KIND_DESCRIPTIONS: Final[dict[str, str]] = {
     "source_fact": (
@@ -62,6 +63,10 @@ FINDING_KIND_DESCRIPTIONS: Final[dict[str, str]] = {
     "manual": (
         "wartość wprowadzona lub wskazana przez użytkownika — wymaga weryfikacji "
         "w materiale źródłowym"
+    ),
+    "model_reading": (
+        "wartość zaproponowana przez model językowy i potwierdzona programowo wyłącznie co do tego, że "
+        "cytat i liczba występują w tekście uchwały — kandydat do ręcznej weryfikacji, nie interpretacja prawna"
     ),
 }
 
