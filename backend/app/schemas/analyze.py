@@ -259,7 +259,10 @@ MpzpAssignmentMethod = Literal[
 # (inna wysokość dla dachu płaskiego) nie są już sprzecznością, a płaskie pola strefy są ``null``,
 # gdy nie ma jednej wartości bezwarunkowej. Snapshot 2.3 i starsze czytają się jako wartości
 # bezwarunkowe; ich wyniki nie są serwowane z cache.
-MPZP_RESULT_SCHEMA_VERSION = "2.5"
+# 2.6 (PV3-21): zapisy opisowe (przeznaczenie, zakazy, ochrona środowiska, dachy) z jednego silnika
+# domenowego wspólnego z regułami planistycznymi (``mpzp-parser/3.1-det``): przeznaczenie także z etykiety
+# i listy podpunktów, zakazy przełamane w wierszu, liczby dziesiętne w zakazie; zapisy 2.5 nie są trafieniem.
+MPZP_RESULT_SCHEMA_VERSION = "2.6"
 
 
 class ManualZoneSelection(BaseModel):

@@ -39,9 +39,10 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # wektora i evidence parametrów (BK-202/203) albo przed sekcją rzeźby terenu
 # (BK-301/302), przed strukturalnymi sekcjami ryzyka (BK-303) albo przed
 # trwałą macierzą jakości sekcji (BK-504) nie jest serwowany jako trafienie,
-# nawet gdy aktywne wydania danych się nie zmieniły. Wersja parsera MPZP nie wchodzi do
-# sygnatury, więc każda zmiana wartości zwracanych przez parser (silnik PV3-07, warunki
-# PV3-08, kalibracja pewności PV3-09) podnosi ``MPZP_RESULT_SCHEMA_VERSION``.
+# nawet gdy aktywne wydania danych się nie zmieniły. Każda zmiana wartości zwracanych przez parser
+# (silnik PV3-07, warunki PV3-08, kalibracja pewności PV3-09, silnik opisowy PV3-21) podnosi
+# ``MPZP_RESULT_SCHEMA_VERSION``; od PV3-14 sygnatura zawiera też tryb i wersję parsera
+# (``mpzp_parser_signature``), więc zmiana trybu albo wersji parsera sama w sobie jest chybieniem.
 RESULT_CONTRACT_VERSION: Final[str] = (
     f"pog-v{POG_RESULT_SCHEMA_VERSION}+mpzp-v{MPZP_RESULT_SCHEMA_VERSION}"
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"

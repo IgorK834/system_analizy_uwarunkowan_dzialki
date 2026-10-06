@@ -16,7 +16,12 @@ def test_health_returns_http_200() -> None:
 def test_health_returns_expected_json() -> None:
     response = client.get("/health")
 
-    assert response.json() == {"status": "ok", "service": "backend"}
+    # Domyślnie ścieżka modelu jest wyłączona: komponent ``llm`` to ``disabled`` (stan zamierzony), nie błąd.
+    assert response.json() == {
+        "status": "ok",
+        "service": "backend",
+        "components": {"llm": {"status": "disabled", "reasons": [], "mode": "legacy"}},
+    }
 
 
 def test_health_live_returns_200_without_touching_database() -> None:

@@ -324,4 +324,4 @@ async def test_html_document_runs_end_to_end_into_citable_rules(
         rule.code for rule in rules
     }
     assert all(rule.source_text for rule in rules)
-    assert all(rule.parser_version == "mpzp-rules/1.0" for rule in rules)
+    assert all(rule.parser_version == "mpzp-rules/2.0" for rule in rules)

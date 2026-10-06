@@ -280,7 +280,7 @@ def test_the_verifier_and_the_pipeline_respect_the_layers() -> None:
     domain = _PLANNING / "domain" / "candidate_verifier.py"
     assert _external_imports(domain).isdisjoint(FORBIDDEN_DOMAIN_IMPORTS | {"requests", "aiohttp", "google"})
     assert all(name.startswith((_PLANNING_DOMAIN, "app.shared")) for name in _app_imports(domain))
-    for name in ("llm_pipeline.py", "llm_metrics.py"):
+    for name in ("llm_pipeline.py", "llm_metrics.py", "llm_monitoring.py", "llm_drift.py"):
         path = _PLANNING / "application" / name
         assert _external_imports(path).isdisjoint(FORBIDDEN_DOMAIN_IMPORTS | {"requests", "aiohttp", "google"}), path
         assert not any(".infrastructure" in item or item.startswith(("app.core", "app.services", "app.models"))
@@ -291,3 +291,11 @@ def test_the_usage_ledger_adapter_knows_only_the_port_and_its_orm_model() -> Non
     path = _LLM_INFRA / "budget.py"
     assert {"BudgetedStructuredExtractionProvider", "SqlAlchemyUsageLedger"} <= _class_names(path)
     assert _app_imports(path) <= {_PORT_MODULE, *_ORM_EXTRA["budget.py"]}
+
+
+def test_the_model_pin_adapter_is_standard_library_only() -> None:
+    """Przypięcie (PV3-19) to plik danych i czysta logika: bez domeny, ustawień, serwisów i sieci."""
+    path = _LLM_INFRA / "pin.py"
+    assert "ModelPin" in _class_names(path)
+    assert _app_imports(path) == set()
+    assert _external_imports(path).isdisjoint({"httpx", "requests", "aiohttp", "sqlalchemy", "pydantic"})
