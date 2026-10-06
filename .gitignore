@@ -11,10 +11,6 @@ backend/.env.*
 !backend/.env.example
 frontend/.env.local
 frontend/.env.*.local
-docs/evaluation
-docs/adr
-docs/progress
-docs/cureent_state.md
 backlog.md
 
 # Python
