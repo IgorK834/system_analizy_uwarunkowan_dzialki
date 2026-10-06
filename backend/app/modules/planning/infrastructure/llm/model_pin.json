@@ -1,0 +1,15 @@
+{
+  "adr_log": "docs/adr/ADR-012-mpzp-llm-extraction.md",
+  "evaluation": {
+    "note": "Brak biegu --live ewaluatora hybrid na zbiorze złotym dla tej pary (model, prompt); wymaga zgody właściciela na wysyłkę tekstów publicznych i koszt. Do czasu wpisu `scripts/check_llm_pin.py check --require-evaluation` kończy się błędem.",
+    "status": "pending"
+  },
+  "model_id": "gemini-3.8-flash",
+  "prompt_sha256": "126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb",
+  "prompt_version": "mpzp-extraction/1",
+  "provider": "gemini",
+  "schema": "mpzp-llm-pin/1",
+  "schema_sha256": "5286e624523a2d52c76e989ccf9629bb4a2f6317340bb24d56906c3e72bd7ca4",
+  "schema_version": "mpzp-extraction-schema/1",
+  "thinking_level": "low"
+}
