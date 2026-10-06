@@ -1,0 +1,1174 @@
+{
+  "bounds": [
+    {
+      "case_id": "real-005-126105-9-0001-580-4",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "KP.1"
+      ]
+    },
+    {
+      "case_id": "real-006-126105-9-0001-49-2",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "MW/U.4"
+      ]
+    },
+    {
+      "case_id": "real-007-126105-9-0001-540-15",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 3,
+      "dominant_share_pct": 97.628921,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 99.958318,
+      "min_missing_zones": 2,
+      "min_omitted_area_pct": 2.3710789999999946,
+      "municipality": "Kraków",
+      "shares_pct": [
+        97.628921,
+        2.328743,
+        0.041682
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 3,
+      "zone_symbols": [
+        "KD/L+T",
+        "U.11",
+        "ZP.4"
+      ]
+    },
+    {
+      "case_id": "real-008-126105-9-0119-181-10",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "manual_review",
+      "zone_count": 1,
+      "zone_symbols": [
+        "ZPb.9"
+      ]
+    },
+    {
+      "case_id": "real-009-246101-1-0056-155-3",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.987245,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.012754999999998518,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.012754999999998518,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.987245
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SK"
+      ]
+    },
+    {
+      "case_id": "real-010-246101-1-0055-68-13",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.999056,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.0009440000000040527,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0009440000000040527,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.999056
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SW"
+      ]
+    },
+    {
+      "case_id": "real-011-246101-1-0081-7",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SW"
+      ]
+    },
+    {
+      "case_id": "real-012-246101-1-0056-110-1",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.997791,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.002208999999993466,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.002208999999993466,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.997791
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SU"
+      ]
+    },
+    {
+      "case_id": "real-027-246101-1-0001-1043",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.998649,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.001350999999999658,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.001350999999999658,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.998649
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SJ"
+      ]
+    },
+    {
+      "case_id": "real-028-246101-1-0004-737-26",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 2,
+      "dominant_share_pct": 80.34066,
+      "layer": "pog",
+      "max_omitted_area_pct": 80.34066,
+      "min_missing_zones": 1,
+      "min_omitted_area_pct": 19.65934,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        80.34066,
+        19.65934
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 2,
+      "zone_symbols": [
+        "SO",
+        "SJ"
+      ]
+    },
+    {
+      "case_id": "real-029-246101-1-0004-741-132",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 2,
+      "dominant_share_pct": 50.070792,
+      "layer": "pog",
+      "max_omitted_area_pct": 50.070792,
+      "min_missing_zones": 1,
+      "min_omitted_area_pct": 49.929208,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        50.070792,
+        49.929208
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 2,
+      "zone_symbols": [
+        "SO",
+        "SJ"
+      ]
+    }
+  ],
+  "bounds_summary": {
+    "cases": 11,
+    "min_missing_zones_total": 4,
+    "multi_significant_zone_guaranteed_loss": {
+      "denominator": 11,
+      "numerator": 3,
+      "reason": null,
+      "value": 0.2727272727272727
+    },
+    "multi_zone_guaranteed_loss": {
+      "denominator": 11,
+      "numerator": 3,
+      "reason": null,
+      "value": 0.2727272727272727
+    }
+  },
+  "control_failures": [],
+  "controls": [
+    {
+      "case_id": "control-rectangle-60-40",
+      "centroid": {
+        "location": "inside_parcel",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": true,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "A"
+      ],
+      "dominant_id": "A",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 60.0,
+          "pct": 60.0,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 40.0,
+          "pct": 40.0,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "B"
+      ],
+      "missing_significant_ids": [
+        "B"
+      ],
+      "omitted_area_pct": 40.0,
+      "parameter_differences": [
+        {
+          "centroid_values": [
+            9.0
+          ],
+          "differs": true,
+          "intersection_values": [
+            {
+              "share_pct": 60.0,
+              "value": 9.0,
+              "zone_id": "A"
+            },
+            {
+              "share_pct": 40.0,
+              "value": 12.0,
+              "zone_id": "B"
+            }
+          ],
+          "parameter": "max_building_height_m"
+        }
+      ],
+      "parcel_area_sqm": 100.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-concave-l-shape",
+      "centroid": {
+        "location": "outside_parcel",
+        "x": 3.2222222222222223,
+        "y": 3.2222222222222223
+      },
+      "centroid_is_dominant": false,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "N"
+      ],
+      "dominant_id": "S",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "S",
+        "W"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 20.0,
+          "pct": 55.55555555555556,
+          "zone_id": "S"
+        },
+        {
+          "area_sqm": 16.0,
+          "pct": 44.44444444444444,
+          "zone_id": "W"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "S",
+        "W"
+      ],
+      "missing_significant_ids": [
+        "S",
+        "W"
+      ],
+      "omitted_area_pct": 100.0,
+      "parameter_differences": [],
+      "parcel_area_sqm": 36.0,
+      "phantom_ids": [
+        "N"
+      ],
+      "significant_zone_ids": [
+        "S",
+        "W"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-hole",
+      "centroid": {
+        "location": "in_hole",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": true,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "A"
+      ],
+      "dominant_id": "A",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 45.0,
+          "pct": 53.57142857142857,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 39.0,
+          "pct": 46.42857142857143,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "B"
+      ],
+      "missing_significant_ids": [
+        "B"
+      ],
+      "omitted_area_pct": 46.42857142857143,
+      "parameter_differences": [],
+      "parcel_area_sqm": 84.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-boundary-tie",
+      "centroid": {
+        "location": "inside_parcel",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": null,
+      "centroid_status": "tie",
+      "centroid_zone_ids": [
+        "A",
+        "B"
+      ],
+      "dominant_id": null,
+      "dominant_tie": true,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 50.0,
+          "pct": 50.0,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 50.0,
+          "pct": 50.0,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [],
+      "missing_significant_ids": [],
+      "omitted_area_pct": 0.0,
+      "parameter_differences": [],
+      "parcel_area_sqm": 100.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    }
+  ],
+  "engine_agreement": [
+    {
+      "case_id": "control-rectangle-60-40",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-concave-l-shape",
+      "mpzp_zones": [
+        "S",
+        "W"
+      ],
+      "pog_zones": [
+        "S",
+        "W"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-hole",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-boundary-tie",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    }
+  ],
+  "manifest_sha256": "eb48ff51a15306042a9cb3e8863053682061b5af2e6d7ab57a8aec3a8b90e4c2",
+  "parcel_descriptor_summary": {
+    "centroid_location_counts": {
+      "in_hole": 1,
+      "inside_parcel": 27,
+      "outside_parcel": 2
+    },
+    "parcels": 30,
+    "parcels_solidity_below_0_95": 18,
+    "parcels_with_holes": 2
+  },
+  "real_layers": {
+    "missing": [
+      {
+        "case_id": "real-005-126105-9-0001-580-4",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-006-126105-9-0001-49-2",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-007-126105-9-0001-540-15",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-008-126105-9-0119-181-10",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-009-246101-1-0056-155-3",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-010-246101-1-0055-68-13",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-011-246101-1-0081-7",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-012-246101-1-0056-110-1",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-027-246101-1-0001-1043",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-028-246101-1-0004-737-26",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      },
+      {
+        "case_id": "real-029-246101-1-0004-741-132",
+        "layer": "pog",
+        "reason": "zone geometry not frozen (RU WFS layer not captured)"
+      }
+    ],
+    "results": [],
+    "summary": {
+      "cases": 0,
+      "cases_with_intersecting_zone": 0,
+      "centroid_location_counts": {},
+      "centroid_not_dominant_among_decided": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "centroid_phantom_zone": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "centroid_status_counts": {},
+      "centroid_unresolved": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "multi_zone_cases": 0,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "10": {
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "25": {
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "5": {
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "50": {
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      },
+      "omitted_significant_zones_total": 0,
+      "omitted_zones_total": 0,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    }
+  },
+  "simulation_summary": {
+    "all_scenarios": {
+      "cases": 540,
+      "cases_with_intersecting_zone": 540,
+      "centroid_location_counts": {
+        "in_hole": 18,
+        "inside_parcel": 486,
+        "outside_parcel": 36
+      },
+      "centroid_not_dominant_among_decided": {
+        "denominator": 540,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.009259259259259259
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 540,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.009259259259259259
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_phantom_zone": {
+        "denominator": 540,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "centroid_status_counts": {
+        "unique": 540
+      },
+      "centroid_unresolved": {
+        "denominator": 540,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "multi_zone_cases": 540,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 540,
+          "numerator": 536,
+          "reason": null,
+          "value": 0.9925925925925926
+        },
+        "10": {
+          "denominator": 540,
+          "numerator": 384,
+          "reason": null,
+          "value": 0.7111111111111111
+        },
+        "25": {
+          "denominator": 540,
+          "numerator": 230,
+          "reason": null,
+          "value": 0.42592592592592593
+        },
+        "5": {
+          "denominator": 540,
+          "numerator": 451,
+          "reason": null,
+          "value": 0.8351851851851851
+        },
+        "50": {
+          "denominator": 540,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.009259259259259259
+        }
+      },
+      "omitted_significant_zones_total": 540,
+      "omitted_zones_total": 540,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    },
+    "by_solidity": {
+      "0.80<=solidity<0.95": {
+        "cases": 144,
+        "cases_with_intersecting_zone": 144,
+        "centroid_location_counts": {
+          "in_hole": 18,
+          "inside_parcel": 126
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 144
+        },
+        "centroid_unresolved": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 144,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 144,
+            "numerator": 144,
+            "reason": null,
+            "value": 1.0
+          },
+          "10": {
+            "denominator": 144,
+            "numerator": 103,
+            "reason": null,
+            "value": 0.7152777777777778
+          },
+          "25": {
+            "denominator": 144,
+            "numerator": 62,
+            "reason": null,
+            "value": 0.4305555555555556
+          },
+          "5": {
+            "denominator": 144,
+            "numerator": 120,
+            "reason": null,
+            "value": 0.8333333333333334
+          },
+          "50": {
+            "denominator": 144,
+            "numerator": 0,
+            "reason": null,
+            "value": 0.0
+          }
+        },
+        "omitted_significant_zones_total": 144,
+        "omitted_zones_total": 144,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 8
+      },
+      "solidity<0.80": {
+        "cases": 180,
+        "cases_with_intersecting_zone": 180,
+        "centroid_location_counts": {
+          "inside_parcel": 144,
+          "outside_parcel": 36
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 180,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.027777777777777776
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 180,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.027777777777777776
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 180,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 180
+        },
+        "centroid_unresolved": {
+          "denominator": 180,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 180,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 180,
+            "numerator": 176,
+            "reason": null,
+            "value": 0.9777777777777777
+          },
+          "10": {
+            "denominator": 180,
+            "numerator": 136,
+            "reason": null,
+            "value": 0.7555555555555555
+          },
+          "25": {
+            "denominator": 180,
+            "numerator": 85,
+            "reason": null,
+            "value": 0.4722222222222222
+          },
+          "5": {
+            "denominator": 180,
+            "numerator": 157,
+            "reason": null,
+            "value": 0.8722222222222222
+          },
+          "50": {
+            "denominator": 180,
+            "numerator": 5,
+            "reason": null,
+            "value": 0.027777777777777776
+          }
+        },
+        "omitted_significant_zones_total": 180,
+        "omitted_zones_total": 180,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 10
+      },
+      "solidity>=0.95": {
+        "cases": 216,
+        "cases_with_intersecting_zone": 216,
+        "centroid_location_counts": {
+          "inside_parcel": 216
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 216,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 216,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 216,
+          "numerator": 216,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 216,
+          "numerator": 216,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 216,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 216
+        },
+        "centroid_unresolved": {
+          "denominator": 216,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 216,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 216,
+          "numerator": 216,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 216,
+            "numerator": 216,
+            "reason": null,
+            "value": 1.0
+          },
+          "10": {
+            "denominator": 216,
+            "numerator": 145,
+            "reason": null,
+            "value": 0.6712962962962963
+          },
+          "25": {
+            "denominator": 216,
+            "numerator": 83,
+            "reason": null,
+            "value": 0.38425925925925924
+          },
+          "5": {
+            "denominator": 216,
+            "numerator": 174,
+            "reason": null,
+            "value": 0.8055555555555556
+          },
+          "50": {
+            "denominator": 216,
+            "numerator": 0,
+            "reason": null,
+            "value": 0.0
+          }
+        },
+        "omitted_significant_zones_total": 216,
+        "omitted_zones_total": 216,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 12
+      }
+    },
+    "parameters": {
+      "cut_fractions": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ],
+      "engine": "pog",
+      "orientations": [
+        "vertical",
+        "horizontal"
+      ],
+      "zones_per_scenario": 2
+    },
+    "two_zone_scenarios": {
+      "cases": 540,
+      "cases_with_intersecting_zone": 540,
+      "centroid_location_counts": {
+        "in_hole": 18,
+        "inside_parcel": 486,
+        "outside_parcel": 36
+      },
+      "centroid_not_dominant_among_decided": {
+        "denominator": 540,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.009259259259259259
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 540,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.009259259259259259
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_phantom_zone": {
+        "denominator": 540,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "centroid_status_counts": {
+        "unique": 540
+      },
+      "centroid_unresolved": {
+        "denominator": 540,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "multi_zone_cases": 540,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 540,
+        "numerator": 540,
+        "reason": null,
+        "value": 1.0
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 540,
+          "numerator": 536,
+          "reason": null,
+          "value": 0.9925925925925926
+        },
+        "10": {
+          "denominator": 540,
+          "numerator": 384,
+          "reason": null,
+          "value": 0.7111111111111111
+        },
+        "25": {
+          "denominator": 540,
+          "numerator": 230,
+          "reason": null,
+          "value": 0.42592592592592593
+        },
+        "5": {
+          "denominator": 540,
+          "numerator": 451,
+          "reason": null,
+          "value": 0.8351851851851851
+        },
+        "50": {
+          "denominator": 540,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.009259259259259259
+        }
+      },
+      "omitted_significant_zones_total": 540,
+      "omitted_zones_total": 540,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    }
+  }
+}

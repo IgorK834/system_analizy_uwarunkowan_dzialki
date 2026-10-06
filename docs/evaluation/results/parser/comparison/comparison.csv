@@ -1,0 +1,64 @@
+baseline,candidate,outcome,dimension,slice,n_pairs,n_samples,baseline_successes,candidate_successes,difference,ci_low,ci_high,only_baseline,only_candidate,mcnemar_exact_p
+legacy,v3,exact,overall,overall,250,20,188,233,0.18,0.09545454545454546,0.26459143968871596,2,47,4.355626970209414e-12
+legacy,v3,exact,format,html,23,2,18,20,0.08695652173913043,,,0,2,0.5
+legacy,v3,exact,format,ocr_real,2,1,2,2,0.0,,,0,0,
+legacy,v3,exact,format,ocr_simulated,23,2,7,9,0.08695652173913043,,,2,4,0.6875
+legacy,v3,exact,format,pdf_table,10,1,10,10,0.0,,,0,0,
+legacy,v3,exact,format,pdf_text,192,14,151,192,0.21354166666666666,0.10919540229885058,0.3193717277486911,0,41,9.094947017729282e-13
+legacy,v3,exact,gmina,Białystok,14,1,12,14,0.14285714285714285,,,0,2,0.5
+legacy,v3,exact,gmina,Bielsko-Biała,15,1,15,15,0.0,,,0,0,
+legacy,v3,exact,gmina,Kraków,44,3,33,44,0.25,,,0,11,0.0009765625
+legacy,v3,exact,gmina,Krzemieniewo,9,1,8,9,0.1111111111111111,,,0,1,1.0
+legacy,v3,exact,gmina,Legnica,10,1,10,10,0.0,,,0,0,
+legacy,v3,exact,gmina,Mogilany,10,2,6,8,0.2,,,0,2,0.5
+legacy,v3,exact,gmina,Ostrów Wielkopolski,33,2,23,33,0.30303030303030304,,,0,10,0.001953125
+legacy,v3,exact,gmina,Pisz,0,0,0,0,,,,0,0,
+legacy,v3,exact,gmina,Raszków,11,1,7,11,0.36363636363636365,,,0,4,0.125
+legacy,v3,exact,gmina,Stare Miasto,2,1,2,2,0.0,,,0,0,
+legacy,v3,exact,gmina,Szczytno,32,2,23,32,0.28125,,,0,9,0.00390625
+legacy,v3,exact,gmina,Warszawa,47,3,31,35,0.0851063829787234,,,2,6,0.2890625
+legacy,v3,exact,gmina,Łódź,23,2,18,20,0.08695652173913043,,,0,2,0.5
+legacy,v3,exact,split,development,89,7,75,86,0.12359550561797752,0.0,0.25,0,11,0.0009765625
+legacy,v3,exact,split,final,161,13,113,147,0.2111801242236025,0.11052631578947368,0.33098591549295775,2,36,5.398760549724102e-09
+legacy,v3,strict,overall,overall,250,20,161,224,0.252,0.14622641509433962,0.36531365313653136,4,67,8.735848890518809e-16
+legacy,v3,strict,format,html,23,2,15,17,0.08695652173913043,,,0,2,0.5
+legacy,v3,strict,format,ocr_real,2,1,2,2,0.0,,,0,0,
+legacy,v3,strict,format,ocr_simulated,23,2,7,9,0.08695652173913043,,,2,4,0.6875
+legacy,v3,strict,format,pdf_table,10,1,10,10,0.0,,,0,0,
+legacy,v3,strict,format,pdf_text,192,14,127,186,0.3072916666666667,0.18354430379746836,0.43548387096774194,2,61,4.373671563806525e-16
+legacy,v3,strict,gmina,Białystok,14,1,9,14,0.35714285714285715,,,0,5,0.0625
+legacy,v3,strict,gmina,Bielsko-Biała,15,1,15,15,0.0,,,0,0,
+legacy,v3,strict,gmina,Kraków,44,3,17,44,0.6136363636363636,,,0,27,1.4901161193847656e-08
+legacy,v3,strict,gmina,Krzemieniewo,9,1,8,9,0.1111111111111111,,,0,1,1.0
+legacy,v3,strict,gmina,Legnica,10,1,10,10,0.0,,,0,0,
+legacy,v3,strict,gmina,Mogilany,10,2,6,8,0.2,,,0,2,0.5
+legacy,v3,strict,gmina,Ostrów Wielkopolski,33,2,20,33,0.3939393939393939,,,0,13,0.000244140625
+legacy,v3,strict,gmina,Pisz,0,0,0,0,,,,0,0,
+legacy,v3,strict,gmina,Raszków,11,1,7,11,0.36363636363636365,,,0,4,0.125
+legacy,v3,strict,gmina,Stare Miasto,2,1,2,2,0.0,,,0,0,
+legacy,v3,strict,gmina,Szczytno,32,2,23,26,0.09375,,,2,5,0.453125
+legacy,v3,strict,gmina,Warszawa,47,3,29,35,0.1276595744680851,,,2,8,0.109375
+legacy,v3,strict,gmina,Łódź,23,2,15,17,0.08695652173913043,,,0,2,0.5
+legacy,v3,strict,split,development,89,7,56,83,0.30337078651685395,0.061855670103092786,0.5409836065573771,0,27,1.4901161193847656e-08
+legacy,v3,strict,split,final,161,13,105,141,0.2236024844720497,0.13414634146341464,0.32298136645962733,4,40,1.7051434042514302e-08
+legacy,v3,false_alarm,overall,overall,173,20,0,0,0.0,0.0,0.0,0,0,
+legacy,v3,false_alarm,format,html,13,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,format,ocr_real,16,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,format,ocr_simulated,13,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,format,pdf_table,8,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,format,pdf_text,123,13,0,0,0.0,0.0,0.0,0,0,
+legacy,v3,false_alarm,gmina,Białystok,4,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Bielsko-Biała,12,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Kraków,46,3,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Krzemieniewo,0,0,0,0,,,,0,0,
+legacy,v3,false_alarm,gmina,Legnica,8,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Mogilany,8,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Ostrów Wielkopolski,12,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Pisz,9,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Raszków,16,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Stare Miasto,7,1,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Szczytno,4,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Warszawa,34,3,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,gmina,Łódź,13,2,0,0,0.0,,,0,0,
+legacy,v3,false_alarm,split,development,82,7,0,0,0.0,0.0,0.0,0,0,
+legacy,v3,false_alarm,split,final,91,13,0,0,0.0,0.0,0.0,0,0,

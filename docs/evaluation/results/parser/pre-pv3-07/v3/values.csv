@@ -1,0 +1,107 @@
+engine,sample_id,zone_symbol,parameter,split,format,gmina,value,confidence,manual_review_required,correct,source_status,verdict
+v3,D01-krakow-mn-multi,MN.11,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN.11,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN.2,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN.2,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN.3,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN.3,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN/U.1,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D01-krakow-mn-multi,MN/U.1,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D02-krakow-mwi-us-u,MWi.1,max_building_height_m,development,pdf_text,Kraków,11.0,0.85,False,True,consistent,tp_exact
+v3,D02-krakow-mwi-us-u,U.1,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D02-krakow-mwi-us-u,U.1,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D02-krakow-mwi-us-u,US.1,max_building_height_m,development,pdf_text,Kraków,5.0,0.85,False,True,consistent,tp_exact
+v3,D04-lodz-html-multi,4.2.MW/U,max_building_height_m,development,html,Łódź,4.0,0.38539,True,False,not_applicable,tp_wrong
+v3,D04-lodz-html-multi,4.2.MW/U,max_building_height_m,development,html,Łódź,11.0,0.38539,True,True,consistent,tp_wrong
+v3,D04-lodz-html-multi,4.2.MW/U,min_biologically_active_percent,development,html,Łódź,20.0,0.481695,True,True,consistent,tp_exact
+v3,D04-lodz-html-multi,6.6.MW/U,max_building_height_m,development,html,Łódź,4.0,0.38539,True,False,not_applicable,tp_wrong
+v3,D04-lodz-html-multi,6.6.MW/U,max_building_height_m,development,html,Łódź,11.0,0.38539,True,True,consistent,tp_wrong
+v3,D04-lodz-html-multi,6.6.MW/U,min_biologically_active_percent,development,html,Łódź,20.0,0.481695,True,True,consistent,tp_exact
+v3,D04-lodz-html-multi,6.8.MW/U,max_building_height_m,development,html,Łódź,4.0,0.38539,True,False,not_applicable,tp_wrong
+v3,D04-lodz-html-multi,6.8.MW/U,max_building_height_m,development,html,Łódź,11.0,0.38539,True,True,consistent,tp_wrong
+v3,D05-bielsko-multi,230_U,max_building_coverage_percent,development,pdf_text,Bielsko-Biała,60.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,max_building_height_m,development,pdf_text,Bielsko-Biała,15.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,max_intensity,development,pdf_text,Bielsko-Biała,3.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,min_biologically_active_percent,development,pdf_text,Bielsko-Biała,10.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,min_intensity,development,pdf_text,Bielsko-Biała,0.1,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,roof_angle_max_deg,development,pdf_text,Bielsko-Biała,50.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,roof_angle_max_deg,development,pdf_text,Bielsko-Biała,15.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,roof_angle_min_deg,development,pdf_text,Bielsko-Biała,30.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_U,roof_angle_min_deg,development,pdf_text,Bielsko-Biała,0.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,max_building_coverage_percent,development,pdf_text,Bielsko-Biała,50.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,max_building_height_m,development,pdf_text,Bielsko-Biała,15.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,max_building_height_m,development,pdf_text,Bielsko-Biała,13.0,0.51,True,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,max_intensity,development,pdf_text,Bielsko-Biała,2.5,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,min_biologically_active_percent,development,pdf_text,Bielsko-Biała,20.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,min_intensity,development,pdf_text,Bielsko-Biała,0.1,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,roof_angle_max_deg,development,pdf_text,Bielsko-Biała,45.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_UMW,roof_angle_min_deg,development,pdf_text,Bielsko-Biała,20.0,0.85,False,True,consistent,tp_exact
+v3,D05-bielsko-multi,230_ZP,min_biologically_active_percent,development,pdf_text,Bielsko-Biała,75.0,0.85,False,True,consistent,tp_exact
+v3,D06-stare-miasto-ocr,146 MN,max_storeys,development,ocr_real,Stare Miasto,2.0,0.20468424999999998,True,True,consistent,tp_exact
+v3,D06-stare-miasto-ocr,146 MN,setback_m,development,ocr_real,Stare Miasto,6.0,0.20468424999999998,True,True,consistent,tp_exact
+v3,D07-krakow-mni-mnu,MN/U.3,max_building_height_m,development,pdf_text,Kraków,11.0,0.51,True,True,consistent,tp_exact
+v3,D07-krakow-mni-mnu,MN/U.3,max_building_height_m,development,pdf_text,Kraków,9.5,0.51,True,True,consistent,tp_exact
+v3,D07-krakow-mni-mnu,MNi.1,max_building_height_m,development,pdf_text,Kraków,11.0,0.85,False,True,consistent,tp_exact
+v3,D07-krakow-mni-mnu,MNi.3,max_building_height_m,development,pdf_text,Kraków,11.0,0.85,False,True,consistent,tp_exact
+v3,F01-falenica-multi,A1MN,max_building_height_m,final,pdf_text,Warszawa,10.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A1MN,max_building_height_m,final,pdf_text,Warszawa,6.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A1MN,min_biologically_active_percent,final,pdf_text,Warszawa,60.0,0.85,False,True,consistent,tp_exact
+v3,F01-falenica-multi,A1U-O,max_building_height_m,final,pdf_text,Warszawa,12.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A1U-O,max_building_height_m,final,pdf_text,Warszawa,11.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A1U-O,min_biologically_active_percent,final,pdf_text,Warszawa,80.0,0.85,False,True,consistent,tp_exact
+v3,F01-falenica-multi,A1U-S,max_building_height_m,final,pdf_text,Warszawa,12.0,0.85,False,True,consistent,tp_exact
+v3,F01-falenica-multi,A1U-S,min_biologically_active_percent,final,pdf_text,Warszawa,60.0,0.85,False,True,consistent,tp_exact
+v3,F01-falenica-multi,A2MN,max_building_height_m,final,pdf_text,Warszawa,10.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A2MN,max_building_height_m,final,pdf_text,Warszawa,6.0,0.51,True,True,consistent,tp_exact
+v3,F01-falenica-multi,A2MN,min_biologically_active_percent,final,pdf_text,Warszawa,60.0,0.85,False,True,consistent,tp_exact
+v3,F02-falenica-green,A1ZL,min_biologically_active_percent,final,pdf_text,Warszawa,90.0,0.6139,True,True,consistent,tp_exact
+v3,F02-falenica-green,A1ZP,max_building_height_m,final,pdf_text,Warszawa,10.0,0.85,False,True,consistent,tp_exact
+v3,F02-falenica-green,A1ZP,min_biologically_active_percent,final,pdf_text,Warszawa,70.0,0.85,False,True,consistent,tp_exact
+v3,F03-bialystok-multi,"1.4U,MN",roof_angle_max_deg,final,pdf_text,Białystok,45.0,0.85,False,True,consistent,tp_partial
+v3,F03-bialystok-multi,"1.4U,MN",roof_angle_min_deg,final,pdf_text,Białystok,30.0,0.85,False,True,consistent,tp_exact
+v3,F03-bialystok-multi,2.1MN,roof_angle_max_deg,final,pdf_text,Białystok,45.0,0.7556,False,True,consistent,tp_partial
+v3,F03-bialystok-multi,2.1MN,roof_angle_min_deg,final,pdf_text,Białystok,30.0,0.7556,False,True,consistent,tp_exact
+v3,F04-szczytno-2021-shared,1Up,max_storeys,final,pdf_text,Szczytno,4.0,0.7556,False,True,consistent,tp_exact
+v3,F04-szczytno-2021-shared,1Up,min_biologically_active_percent,final,pdf_text,Szczytno,30.0,0.7556,False,True,consistent,tp_exact
+v3,F04-szczytno-2021-shared,2Up,max_storeys,final,pdf_text,Szczytno,4.0,0.7556,False,True,consistent,tp_exact
+v3,F04-szczytno-2021-shared,2Up,min_biologically_active_percent,final,pdf_text,Szczytno,30.0,0.7556,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,1IE,min_biologically_active_percent,final,pdf_text,Ostrów Wielkopolski,10.0,0.85,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,1MN-U,min_biologically_active_percent,final,pdf_text,Ostrów Wielkopolski,35.0,0.7556,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,1MN-U,setback_m,final,pdf_text,Ostrów Wielkopolski,1.5,0.7556,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,1U-P,min_biologically_active_percent,final,pdf_text,Ostrów Wielkopolski,20.0,0.7556,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,1U-P,setback_m,final,pdf_text,Ostrów Wielkopolski,1.5,0.7556,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,3U-P,min_biologically_active_percent,final,pdf_text,Ostrów Wielkopolski,20.0,0.85,False,True,consistent,tp_exact
+v3,F05-ostrow-multi,3U-P,setback_m,final,pdf_text,Ostrów Wielkopolski,1.5,0.85,False,True,consistent,tp_exact
+v3,F07-krzemieniewo-single,UW-PP-PS,max_building_coverage_percent,final,pdf_text,Krzemieniewo,65.0,0.85,False,True,consistent,tp_exact
+v3,F07-krzemieniewo-single,UW-PP-PS,max_building_height_m,final,pdf_text,Krzemieniewo,15.0,0.85,False,True,consistent,tp_exact
+v3,F09-lodz-html-single,10.1.MW/U,min_biologically_active_percent,final,html,Łódź,15.0,0.85,False,True,consistent,tp_exact
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,10.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,6.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,0.5,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,12.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,11.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,max_building_height_m,final,ocr_simulated,Warszawa,1.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,min_biologically_active_percent,final,ocr_simulated,Warszawa,60.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A1MN,min_biologically_active_percent,final,ocr_simulated,Warszawa,80.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,10.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,6.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,0.5,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,12.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,11.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,max_building_height_m,final,ocr_simulated,Warszawa,1.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,min_biologically_active_percent,final,ocr_simulated,Warszawa,60.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A1U-O,min_biologically_active_percent,final,ocr_simulated,Warszawa,80.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,10.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,6.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,0.5,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,12.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,11.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,max_building_height_m,final,ocr_simulated,Warszawa,1.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,min_biologically_active_percent,final,ocr_simulated,Warszawa,60.0,0.09211875,True,True,consistent,tp_partial
+v3,F12-falenica-sim-ocr,A2MN,min_biologically_active_percent,final,ocr_simulated,Warszawa,80.0,0.09211875,True,False,not_applicable,tp_partial
+v3,F13-szczytno-2023-multi,1ML-U,max_storeys,final,pdf_text,Szczytno,2.0,0.85,False,True,consistent,tp_exact
+v3,F13-szczytno-2023-multi,1ML-U,min_biologically_active_percent,final,pdf_text,Szczytno,70.0,0.85,False,True,consistent,tp_exact
+v3,F13-szczytno-2023-multi,1MNW,max_storeys,final,pdf_text,Szczytno,2.0,0.85,False,True,consistent,tp_exact
+v3,F13-szczytno-2023-multi,1MNW,min_biologically_active_percent,final,pdf_text,Szczytno,60.0,0.85,False,True,consistent,tp_exact
+v3,F14-ostrow-mn,5MN,min_biologically_active_percent,final,pdf_text,Ostrów Wielkopolski,40.0,0.7556,False,True,consistent,tp_exact
+v3,F14-ostrow-mn,5MN,setback_m,final,pdf_text,Ostrów Wielkopolski,1.5,0.7556,False,True,consistent,tp_exact

@@ -1,0 +1,3760 @@
+{
+  "by_format": {
+    "html": {
+      "calibration": {
+        "brier_score": 0.22743729999999998,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.7495416372469643,
+              "low": 0.15821985399244537
+            },
+            "error_rate": 0.42857142857142855,
+            "errors": 3,
+            "mean_confidence": 0.5403571428571429,
+            "n": 7
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.8123836950195918,
+              "low": 0.18761630498040816
+            },
+            "error_rate": 0.5,
+            "errors": 3,
+            "mean_confidence": 0.51,
+            "n": 6
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "expected_calibration_error": 0.05179999999999996,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.5655175313406071
+            },
+            "denominator": 5,
+            "numerator": 5,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.8112214802294544,
+              "low": 0.26665129180087416
+            },
+            "denominator": 9,
+            "numerator": 5,
+            "reason": null,
+            "value": 0.5555555555555556
+          },
+          "flagged": 9
+        },
+        "n_values": 10
+      },
+      "detection": {
+        "counts": {
+          "fn": 18,
+          "tn": 13,
+          "tp_exact": 1,
+          "tp_partial": 1,
+          "tp_wrong": 3
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.6244653729700049,
+            "low": 0.03622410822563066
+          },
+          "denominator": 5,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.2
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2099115525545071,
+            "low": 0.007716666057951335
+          },
+          "denominator": 23,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.043478260869565216
+        },
+        "f1": 0.3571428571428571,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.5655175313406071
+          },
+          "denominator": 5,
+          "numerator": 5,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.4190348318675122,
+            "low": 0.09663977965448592
+          },
+          "denominator": 23,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.21739130434782608
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "ocr_real": {
+      "calibration": {
+        "brier_score": 0.07700625000000004,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.6576197760453506,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 2
+          }
+        },
+        "by_confidence_value": {
+          "0.72": {
+            "ci95": {
+              "high": 0.6576197760453506,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 2
+          }
+        },
+        "expected_calibration_error": 0.2775000000000001,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "flagged": 0
+        },
+        "n_values": 2
+      },
+      "detection": {
+        "counts": {
+          "tn": 16,
+          "tp_exact": 2
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "f1": 1.0,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "ocr_simulated": {
+      "calibration": {
+        "brier_score": 0.22669325,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "error_rate": 0.3333333333333333,
+            "errors": 1,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "error_rate": 0.3333333333333333,
+            "errors": 1,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "expected_calibration_error": 0.24425000000000008,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.2065493117918027
+            },
+            "denominator": 1,
+            "numerator": 1,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "denominator": 3,
+            "numerator": 1,
+            "reason": null,
+            "value": 0.3333333333333333
+          },
+          "flagged": 3
+        },
+        "n_values": 4
+      },
+      "detection": {
+        "counts": {
+          "fn": 21,
+          "tn": 13,
+          "tp_exact": 1,
+          "tp_partial": 1
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9054687953607992,
+            "low": 0.09453120463920084
+          },
+          "denominator": 2,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.5
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2099115525545071,
+            "low": 0.007716666057951335
+          },
+          "denominator": 23,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.043478260869565216
+        },
+        "f1": 0.16,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.2679598125741516,
+            "low": 0.02418000426569175
+          },
+          "denominator": 23,
+          "numerator": 2,
+          "reason": null,
+          "value": 0.08695652173913043
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    },
+    "pdf_table": {
+      "calibration": {
+        "brier_score": null,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          }
+        },
+        "by_confidence_value": {},
+        "expected_calibration_error": null,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "flagged": 0
+        },
+        "n_values": 0
+      },
+      "detection": {
+        "counts": {
+          "fn": 10,
+          "tn": 8
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2775328030260577,
+            "low": 0.0
+          },
+          "denominator": 10,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "f1": null,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.2775328030260577,
+            "low": 0.0
+          },
+          "denominator": 10,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "pdf_text": {
+      "calibration": {
+        "brier_score": 0.16340776369863017,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.21531080540298042,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 14
+          },
+          "low": {
+            "ci95": {
+              "high": 0.47059288582378966,
+              "low": 0.15253995979312637
+            },
+            "error_rate": 0.2857142857142857,
+            "errors": 8,
+            "mean_confidence": 0.4335,
+            "n": 28
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.11025539700802303,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.6676612903225806,
+            "n": 31
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.47059288582378966,
+              "low": 0.15253995979312637
+            },
+            "error_rate": 0.2857142857142857,
+            "errors": 8,
+            "mean_confidence": 0.4335,
+            "n": 28
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.3244075683414076,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.51,
+            "n": 8
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.14311662038507353,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7225,
+            "n": 23
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.21531080540298042,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 14
+          }
+        },
+        "expected_calibration_error": 0.27759589041095895,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.026333136731082816,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.2857142857142857,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.38084703082142346,
+              "low": 0.11716331916128725
+            },
+            "denominator": 36,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.2222222222222222
+          },
+          "flagged": 36
+        },
+        "n_values": 73
+      },
+      "detection": {
+        "counts": {
+          "fn": 139,
+          "general_missed": 12,
+          "tn": 111,
+          "tp_exact": 46,
+          "tp_partial": 7
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9345214675120143,
+            "low": 0.751597445822794
+          },
+          "denominator": 53,
+          "numerator": 46,
+          "reason": null,
+          "value": 0.8679245283018868
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.3046884621469263,
+            "low": 0.1846944265875153
+          },
+          "denominator": 192,
+          "numerator": 46,
+          "reason": null,
+          "value": 0.23958333333333334
+        },
+        "f1": 0.4326530612244898,
+        "general_clause_found": 0,
+        "general_clause_missed": 12,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9324180104293549
+          },
+          "denominator": 53,
+          "numerator": 53,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.3431980180788551,
+            "low": 0.21767126623276478
+          },
+          "denominator": 192,
+          "numerator": 53,
+          "reason": null,
+          "value": 0.2760416666666667
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.901099006269668
+          },
+          "denominator": 35,
+          "numerator": 35,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    }
+  },
+  "by_multi_zone": {
+    "false": {
+      "calibration": {
+        "brier_score": 0.1226997777777778,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 1
+          },
+          "low": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.43448246865939283,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 5
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.43448246865939283,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 5
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 1
+          }
+        },
+        "expected_calibration_error": 0.20422222222222225,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.5,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.6666666666666666,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "denominator": 3,
+            "numerator": 2,
+            "reason": null,
+            "value": 0.6666666666666666
+          },
+          "flagged": 3
+        },
+        "n_values": 9
+      },
+      "detection": {
+        "counts": {
+          "fn": 25,
+          "tn": 31,
+          "tp_exact": 6,
+          "tp_partial": 1
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9743203759421759,
+            "low": 0.486872167860775
+          },
+          "denominator": 7,
+          "numerator": 6,
+          "reason": null,
+          "value": 0.8571428571428571
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.35309155347561394,
+            "low": 0.0888954463773112
+          },
+          "denominator": 32,
+          "numerator": 6,
+          "reason": null,
+          "value": 0.1875
+        },
+        "f1": 0.358974358974359,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.6456695613241317
+          },
+          "denominator": 7,
+          "numerator": 7,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.38754993793964265,
+            "low": 0.11023836192799005
+          },
+          "denominator": 32,
+          "numerator": 7,
+          "reason": null,
+          "value": 0.21875
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "true": {
+      "calibration": {
+        "brier_score": 0.17699534062500002,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.22809537513180025,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.8499999999999999,
+            "n": 13
+          },
+          "low": {
+            "ci95": {
+              "high": 0.4659232947267443,
+              "low": 0.16095800079274927
+            },
+            "error_rate": 0.2903225806451613,
+            "errors": 9,
+            "mean_confidence": 0.4335,
+            "n": 31
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.21826691386217598,
+              "low": 0.028748611111890116
+            },
+            "error_rate": 0.08333333333333333,
+            "errors": 3,
+            "mean_confidence": 0.639861111111111,
+            "n": 36
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.4659232947267443,
+              "low": 0.16095800079274927
+            },
+            "error_rate": 0.2903225806451613,
+            "errors": 9,
+            "mean_confidence": 0.4335,
+            "n": 31
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.4758923079830535,
+              "low": 0.07571386653293533
+            },
+            "error_rate": 0.21428571428571427,
+            "errors": 3,
+            "mean_confidence": 0.51,
+            "n": 14
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.14865487660514556,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 22
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.22809537513180025,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.8499999999999999,
+            "n": 13
+          }
+        },
+        "expected_calibration_error": 0.2559562500000001,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.028437307708585734,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.2903225806451613,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.41038837872874045,
+              "low": 0.1596490345467663
+            },
+            "denominator": 45,
+            "numerator": 12,
+            "reason": null,
+            "value": 0.26666666666666666
+          },
+          "flagged": 45
+        },
+        "n_values": 80
+      },
+      "detection": {
+        "counts": {
+          "fn": 163,
+          "general_missed": 12,
+          "tn": 130,
+          "tp_exact": 44,
+          "tp_partial": 8,
+          "tp_wrong": 3
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.884477851408011,
+            "low": 0.6763512073441295
+          },
+          "denominator": 55,
+          "numerator": 44,
+          "reason": null,
+          "value": 0.8
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2600664126008696,
+            "low": 0.153929507478429
+          },
+          "denominator": 218,
+          "numerator": 44,
+          "reason": null,
+          "value": 0.2018348623853211
+        },
+        "f1": 0.40293040293040294,
+        "general_clause_found": 0,
+        "general_clause_missed": 12,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9347150979202339
+          },
+          "denominator": 55,
+          "numerator": 55,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.3138974871930965,
+            "low": 0.19926835410355148
+          },
+          "denominator": 218,
+          "numerator": 55,
+          "reason": null,
+          "value": 0.25229357798165136
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9059421728185313
+          },
+          "denominator": 37,
+          "numerator": 37,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    }
+  },
+  "by_parameter": {
+    "max_building_coverage_percent": {
+      "counts": {
+        "fn": 31,
+        "general_missed": 3,
+        "tn": 10,
+        "tp_exact": 3
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.22960486705060304,
+          "low": 0.030465943437106874
+        },
+        "denominator": 34,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.08823529411764706
+      },
+      "f1": 0.1621621621621622,
+      "general_clause_found": 0,
+      "general_clause_missed": 3,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.22960486705060304,
+          "low": 0.030465943437106874
+        },
+        "denominator": 34,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.08823529411764706
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "max_building_height_m": {
+      "counts": {
+        "fn": 20,
+        "tn": 4,
+        "tp_exact": 13,
+        "tp_partial": 7,
+        "tp_wrong": 3
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 0.7436536478893558,
+          "low": 0.3681137494517215
+        },
+        "denominator": 23,
+        "numerator": 13,
+        "reason": null,
+        "value": 0.5652173913043478
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.45105364298597994,
+          "low": 0.18602000061933952
+        },
+        "denominator": 43,
+        "numerator": 13,
+        "reason": null,
+        "value": 0.3023255813953488
+      },
+      "f1": 0.6969696969696969,
+      "general_clause_found": 0,
+      "general_clause_missed": 0,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.8568833796149266
+        },
+        "denominator": 23,
+        "numerator": 23,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.6748894239522614,
+          "low": 0.3891564036467999
+        },
+        "denominator": 43,
+        "numerator": 23,
+        "reason": null,
+        "value": 0.5348837209302325
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 0.9999999999999999,
+          "low": 0.7846891945970195
+        },
+        "denominator": 14,
+        "numerator": 14,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "max_intensity": {
+      "counts": {
+        "fn": 37,
+        "general_missed": 3,
+        "tn": 5,
+        "tp_exact": 2
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.16885640175960576,
+          "low": 0.01417795528745254
+        },
+        "denominator": 39,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.05128205128205128
+      },
+      "f1": 0.09756097560975609,
+      "general_clause_found": 0,
+      "general_clause_missed": 3,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.16885640175960576,
+          "low": 0.01417795528745254
+        },
+        "denominator": 39,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.05128205128205128
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "max_storeys": {
+      "counts": {
+        "fn": 5,
+        "tn": 38,
+        "tp_exact": 4
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 0.9999999999999999,
+          "low": 0.5101091596030786
+        },
+        "denominator": 4,
+        "numerator": 4,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.7333487081991259,
+          "low": 0.18877851977054566
+        },
+        "denominator": 9,
+        "numerator": 4,
+        "reason": null,
+        "value": 0.4444444444444444
+      },
+      "f1": 0.6153846153846153,
+      "general_clause_found": 0,
+      "general_clause_missed": 0,
+      "precision": {
+        "ci95": {
+          "high": 0.9999999999999999,
+          "low": 0.5101091596030786
+        },
+        "denominator": 4,
+        "numerator": 4,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.7333487081991259,
+          "low": 0.18877851977054566
+        },
+        "denominator": 9,
+        "numerator": 4,
+        "reason": null,
+        "value": 0.4444444444444444
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": null,
+          "low": null
+        },
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      }
+    },
+    "min_biologically_active_percent": {
+      "counts": {
+        "fn": 21,
+        "general_missed": 3,
+        "tn": 4,
+        "tp_exact": 18,
+        "tp_partial": 1
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 0.9906480060413981,
+          "low": 0.7536126862526763
+        },
+        "denominator": 19,
+        "numerator": 18,
+        "reason": null,
+        "value": 0.9473684210526315
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.601709083134955,
+          "low": 0.3070530771108914
+        },
+        "denominator": 40,
+        "numerator": 18,
+        "reason": null,
+        "value": 0.45
+      },
+      "f1": 0.6440677966101694,
+      "general_clause_found": 0,
+      "general_clause_missed": 3,
+      "precision": {
+        "ci95": {
+          "high": 0.9999999999999999,
+          "low": 0.8318207737404363
+        },
+        "denominator": 19,
+        "numerator": 19,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.6250263800287721,
+          "low": 0.329354700094151
+        },
+        "denominator": 40,
+        "numerator": 19,
+        "reason": null,
+        "value": 0.475
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.7961166964035129
+        },
+        "denominator": 15,
+        "numerator": 15,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "min_intensity": {
+      "counts": {
+        "fn": 27,
+        "general_missed": 3,
+        "tn": 15,
+        "tp_exact": 2
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.2196458030800441,
+          "low": 0.01912126599683843
+        },
+        "denominator": 29,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.06896551724137931
+      },
+      "f1": 0.12903225806451613,
+      "general_clause_found": 0,
+      "general_clause_missed": 3,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.2196458030800441,
+          "low": 0.01912126599683843
+        },
+        "denominator": 29,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.06896551724137931
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": null,
+          "low": null
+        },
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      }
+    },
+    "roof_angle_max_deg": {
+      "counts": {
+        "fn": 24,
+        "tn": 20,
+        "tp_exact": 2,
+        "tp_partial": 1
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 0.9385080559790691,
+          "low": 0.2076595988078242
+        },
+        "denominator": 3,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.6666666666666666
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.23369592848118886,
+          "low": 0.020554653875390336
+        },
+        "denominator": 27,
+        "numerator": 2,
+        "reason": null,
+        "value": 0.07407407407407407
+      },
+      "f1": 0.19999999999999998,
+      "general_clause_found": 0,
+      "general_clause_missed": 0,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.2805780098213858,
+          "low": 0.03852034798244741
+        },
+        "denominator": 27,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.1111111111111111
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "roof_angle_min_deg": {
+      "counts": {
+        "fn": 18,
+        "tn": 26,
+        "tp_exact": 3
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.34636060466862695,
+          "low": 0.04981012460790432
+        },
+        "denominator": 21,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.14285714285714285
+      },
+      "f1": 0.25,
+      "general_clause_found": 0,
+      "general_clause_missed": 0,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.34636060466862695,
+          "low": 0.04981012460790432
+        },
+        "denominator": 21,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.14285714285714285
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.3423802239546494
+        },
+        "denominator": 2,
+        "numerator": 2,
+        "reason": null,
+        "value": 1.0
+      }
+    },
+    "setback_m": {
+      "counts": {
+        "fn": 5,
+        "tn": 39,
+        "tp_exact": 3
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.694257607346229,
+          "low": 0.13684428473912286
+        },
+        "denominator": 8,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.375
+      },
+      "f1": 0.5454545454545454,
+      "general_clause_found": 0,
+      "general_clause_missed": 0,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.43850296436068037
+        },
+        "denominator": 3,
+        "numerator": 3,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.694257607346229,
+          "low": 0.13684428473912286
+        },
+        "denominator": 8,
+        "numerator": 3,
+        "reason": null,
+        "value": 0.375
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": null,
+          "low": null
+        },
+        "denominator": 0,
+        "numerator": 0,
+        "reason": "no_eligible_cases",
+        "value": null
+      }
+    }
+  },
+  "by_split": {
+    "development": {
+      "calibration": {
+        "brier_score": 0.2034705597826087,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          },
+          "low": {
+            "ci95": {
+              "high": 0.3851660761507122,
+              "low": 0.07306884532528965
+            },
+            "error_rate": 0.18181818181818182,
+            "errors": 4,
+            "mean_confidence": 0.43349999999999994,
+            "n": 22
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.4102945877077837,
+              "low": 0.06191126589146398
+            },
+            "error_rate": 0.17647058823529413,
+            "errors": 3,
+            "mean_confidence": 0.6224999999999999,
+            "n": 17
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.3851660761507122,
+              "low": 0.07306884532528965
+            },
+            "error_rate": 0.18181818181818182,
+            "errors": 4,
+            "mean_confidence": 0.43349999999999994,
+            "n": 22
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.694257607346229,
+              "low": 0.13684428473912286
+            },
+            "error_rate": 0.375,
+            "errors": 3,
+            "mean_confidence": 0.51,
+            "n": 8
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.299145051727044,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 9
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          }
+        },
+        "expected_calibration_error": 0.2810978260869565,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.30798703212496314,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.18181818181818182,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6456695613241317
+            },
+            "denominator": 7,
+            "numerator": 7,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.40928326306719587,
+              "low": 0.11792388080557861
+            },
+            "denominator": 30,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.23333333333333334
+          },
+          "flagged": 30
+        },
+        "n_values": 46
+      },
+      "detection": {
+        "counts": {
+          "fn": 59,
+          "tn": 82,
+          "tp_exact": 23,
+          "tp_partial": 4,
+          "tp_wrong": 3
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.8820761191944214,
+            "low": 0.5907167369328042
+          },
+          "denominator": 30,
+          "numerator": 23,
+          "reason": null,
+          "value": 0.7666666666666667
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.35802941367426566,
+            "low": 0.17881543432647107
+          },
+          "denominator": 89,
+          "numerator": 23,
+          "reason": null,
+          "value": 0.25842696629213485
+        },
+        "f1": 0.5042016806722689,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.886486605238548
+          },
+          "denominator": 30,
+          "numerator": 30,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.4402111972337673,
+            "low": 0.24742835141789238
+          },
+          "denominator": 89,
+          "numerator": 30,
+          "reason": null,
+          "value": 0.33707865168539325
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 0.9999999999999999,
+            "low": 0.8318207737404363
+          },
+          "denominator": 19,
+          "numerator": 19,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    },
+    "final": {
+      "calibration": {
+        "brier_score": 0.13730882558139534,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          },
+          "low": {
+            "ci95": {
+              "high": 0.8067396875653928,
+              "low": 0.31951131084242423
+            },
+            "error_rate": 0.5833333333333334,
+            "errors": 7,
+            "mean_confidence": 0.4335,
+            "n": 12
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.13797620655132792,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.6693749999999999,
+            "n": 24
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.8067396875653928,
+              "low": 0.31951131084242423
+            },
+            "error_rate": 0.5833333333333334,
+            "errors": 7,
+            "mean_confidence": 0.4335,
+            "n": 12
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.39033429165637346,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.51,
+            "n": 6
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.17587922593328437,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 18
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          }
+        },
+        "expected_calibration_error": 0.21365116279069774,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.01571802810192903,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.5833333333333334,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6456695613241317
+            },
+            "denominator": 7,
+            "numerator": 7,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.6138095855788537,
+              "low": 0.2030524646285427
+            },
+            "denominator": 18,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.3888888888888889
+          },
+          "flagged": 18
+        },
+        "n_values": 43
+      },
+      "detection": {
+        "counts": {
+          "fn": 129,
+          "general_missed": 12,
+          "tn": 79,
+          "tp_exact": 27,
+          "tp_partial": 5
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9313557976092527,
+            "low": 0.6824585025525295
+          },
+          "denominator": 32,
+          "numerator": 27,
+          "reason": null,
+          "value": 0.84375
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.23300166786209275,
+            "low": 0.11788978428738273
+          },
+          "denominator": 161,
+          "numerator": 27,
+          "reason": null,
+          "value": 0.16770186335403728
+        },
+        "f1": 0.3316062176165803,
+        "general_clause_found": 0,
+        "general_clause_missed": 12,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.8928208002353198
+          },
+          "denominator": 32,
+          "numerator": 32,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.2671009039661633,
+            "low": 0.14445489844971626
+          },
+          "denominator": 161,
+          "numerator": 32,
+          "reason": null,
+          "value": 0.19875776397515527
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.8241207740667156
+          },
+          "denominator": 18,
+          "numerator": 18,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    }
+  },
+  "by_split_and_format": {
+    "development/html": {
+      "calibration": {
+        "brier_score": 0.2501,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.8123836950195918,
+              "low": 0.18761630498040816
+            },
+            "error_rate": 0.5,
+            "errors": 3,
+            "mean_confidence": 0.51,
+            "n": 6
+          }
+        },
+        "by_confidence_value": {
+          "0.51": {
+            "ci95": {
+              "high": 0.8123836950195918,
+              "low": 0.18761630498040816
+            },
+            "error_rate": 0.5,
+            "errors": 3,
+            "mean_confidence": 0.51,
+            "n": 6
+          }
+        },
+        "expected_calibration_error": 0.010000000000000009,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.43850296436068037
+            },
+            "denominator": 3,
+            "numerator": 3,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.8123836950195918,
+              "low": 0.18761630498040816
+            },
+            "denominator": 6,
+            "numerator": 3,
+            "reason": null,
+            "value": 0.5
+          },
+          "flagged": 6
+        },
+        "n_values": 6
+      },
+      "detection": {
+        "counts": {
+          "fn": 15,
+          "tn": 9,
+          "tp_wrong": 3
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.5614970356393196,
+            "low": 0.0
+          },
+          "denominator": 3,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.17587922593328437,
+            "low": 0.0
+          },
+          "denominator": 18,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "f1": 0.2857142857142857,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.43850296436068037
+          },
+          "denominator": 3,
+          "numerator": 3,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.39222038302033446,
+            "low": 0.05836576760185505
+          },
+          "denominator": 18,
+          "numerator": 3,
+          "reason": null,
+          "value": 0.16666666666666666
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "development/ocr_real": {
+      "calibration": {
+        "brier_score": 0.07700625000000004,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.6576197760453506,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 2
+          }
+        },
+        "by_confidence_value": {
+          "0.72": {
+            "ci95": {
+              "high": 0.6576197760453506,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 2
+          }
+        },
+        "expected_calibration_error": 0.2775000000000001,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "flagged": 0
+        },
+        "n_values": 2
+      },
+      "detection": {
+        "counts": {
+          "tn": 7,
+          "tp_exact": 2
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "f1": 1.0,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "development/pdf_table": {
+      "calibration": {
+        "brier_score": null,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          }
+        },
+        "by_confidence_value": {},
+        "expected_calibration_error": null,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "flagged": 0
+        },
+        "n_values": 0
+      },
+      "detection": {
+        "counts": {
+          "fn": 10,
+          "tn": 8
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2775328030260577,
+            "low": 0.0
+          },
+          "denominator": 10,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "f1": null,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.2775328030260577,
+            "low": 0.0
+          },
+          "denominator": 10,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "development/pdf_text": {
+      "calibration": {
+        "brier_score": 0.20276403289473685,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          },
+          "low": {
+            "ci95": {
+              "high": 0.3851660761507122,
+              "low": 0.07306884532528965
+            },
+            "error_rate": 0.18181818181818182,
+            "errors": 4,
+            "mean_confidence": 0.43349999999999994,
+            "n": 22
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.299145051727044,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.6752777777777778,
+            "n": 9
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.3851660761507122,
+              "low": 0.07306884532528965
+            },
+            "error_rate": 0.18181818181818182,
+            "errors": 4,
+            "mean_confidence": 0.43349999999999994,
+            "n": 22
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.6576197760453506,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.51,
+            "n": 2
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 7
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          }
+        },
+        "expected_calibration_error": 0.32725000000000004,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.30798703212496314,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.18181818181818182,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.3585307082129004,
+              "low": 0.06678676282131818
+            },
+            "denominator": 24,
+            "numerator": 4,
+            "reason": null,
+            "value": 0.16666666666666666
+          },
+          "flagged": 24
+        },
+        "n_values": 38
+      },
+      "detection": {
+        "counts": {
+          "fn": 34,
+          "tn": 58,
+          "tp_exact": 21,
+          "tp_partial": 4
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9359654858790167,
+            "low": 0.6534637822439173
+          },
+          "denominator": 25,
+          "numerator": 21,
+          "reason": null,
+          "value": 0.84
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.4834450411958297,
+            "low": 0.24603291328463434
+          },
+          "denominator": 59,
+          "numerator": 21,
+          "reason": null,
+          "value": 0.3559322033898305
+        },
+        "f1": 0.5952380952380952,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.866807747239609
+          },
+          "denominator": 25,
+          "numerator": 25,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.5506551729754796,
+            "low": 0.30612727351417773
+          },
+          "denominator": 59,
+          "numerator": 25,
+          "reason": null,
+          "value": 0.423728813559322
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 0.9999999999999999,
+            "low": 0.8318207737404363
+          },
+          "denominator": 19,
+          "numerator": 19,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    },
+    "final/html": {
+      "calibration": {
+        "brier_score": 0.19344325,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 2,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "expected_calibration_error": 0.1445,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.9385080559790691,
+              "low": 0.2076595988078242
+            },
+            "denominator": 3,
+            "numerator": 2,
+            "reason": null,
+            "value": 0.6666666666666666
+          },
+          "flagged": 3
+        },
+        "n_values": 4
+      },
+      "detection": {
+        "counts": {
+          "fn": 3,
+          "tn": 4,
+          "tp_exact": 1,
+          "tp_partial": 1
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9054687953607992,
+            "low": 0.09453120463920084
+          },
+          "denominator": 2,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.5
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.6244653729700049,
+            "low": 0.03622410822563066
+          },
+          "denominator": 5,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.2
+        },
+        "f1": 0.5714285714285715,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.7692757205908813,
+            "low": 0.11762077314099711
+          },
+          "denominator": 5,
+          "numerator": 2,
+          "reason": null,
+          "value": 0.4
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "final/ocr_real": {
+      "calibration": {
+        "brier_score": null,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "medium": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          }
+        },
+        "by_confidence_value": {},
+        "expected_calibration_error": null,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "flagged": 0
+        },
+        "n_values": 0
+      },
+      "detection": {
+        "counts": {
+          "tn": 9
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "f1": null,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "recall": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": null,
+            "low": null
+          },
+          "denominator": 0,
+          "numerator": 0,
+          "reason": "no_eligible_cases",
+          "value": null
+        }
+      }
+    },
+    "final/ocr_simulated": {
+      "calibration": {
+        "brier_score": 0.22669325,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "error_rate": null,
+            "errors": 0,
+            "mean_confidence": null,
+            "n": 0
+          },
+          "low": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "error_rate": 0.3333333333333333,
+            "errors": 1,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "error_rate": 0.3333333333333333,
+            "errors": 1,
+            "mean_confidence": 0.4335,
+            "n": 3
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.7934506882081973,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 1
+          }
+        },
+        "expected_calibration_error": 0.24425000000000008,
+        "low_vs_high": null,
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.2065493117918027
+            },
+            "denominator": 1,
+            "numerator": 1,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.7923404011921757,
+              "low": 0.06149194402093078
+            },
+            "denominator": 3,
+            "numerator": 1,
+            "reason": null,
+            "value": 0.3333333333333333
+          },
+          "flagged": 3
+        },
+        "n_values": 4
+      },
+      "detection": {
+        "counts": {
+          "fn": 21,
+          "tn": 13,
+          "tp_exact": 1,
+          "tp_partial": 1
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9054687953607992,
+            "low": 0.09453120463920084
+          },
+          "denominator": 2,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.5
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.2099115525545071,
+            "low": 0.007716666057951335
+          },
+          "denominator": 23,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.043478260869565216
+        },
+        "f1": 0.16,
+        "general_clause_found": 0,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.2679598125741516,
+            "low": 0.02418000426569175
+          },
+          "denominator": 23,
+          "numerator": 2,
+          "reason": null,
+          "value": 0.08695652173913043
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.3423802239546494
+          },
+          "denominator": 2,
+          "numerator": 2,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    },
+    "final/pdf_text": {
+      "calibration": {
+        "brier_score": 0.12067810000000002,
+        "by_band": {
+          "high": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          },
+          "low": {
+            "ci95": {
+              "high": 0.9032285897864654,
+              "low": 0.29999331299474324
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 4,
+            "mean_confidence": 0.4335,
+            "n": 6
+          },
+          "medium": {
+            "ci95": {
+              "high": 0.14865487660514556,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.6645454545454546,
+            "n": 22
+          }
+        },
+        "by_confidence_value": {
+          "0.43": {
+            "ci95": {
+              "high": 0.9032285897864654,
+              "low": 0.29999331299474324
+            },
+            "error_rate": 0.6666666666666666,
+            "errors": 4,
+            "mean_confidence": 0.4335,
+            "n": 6
+          },
+          "0.51": {
+            "ci95": {
+              "high": 0.39033429165637346,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.51,
+            "n": 6
+          },
+          "0.72": {
+            "ci95": {
+              "high": 0.1936076829974049,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.7224999999999999,
+            "n": 16
+          },
+          "0.85": {
+            "ci95": {
+              "high": 0.35433043867586833,
+              "low": 0.0
+            },
+            "error_rate": 0.0,
+            "errors": 0,
+            "mean_confidence": 0.85,
+            "n": 7
+          }
+        },
+        "expected_calibration_error": 0.25802857142857144,
+        "low_vs_high": {
+          "fisher_one_sided_p": 0.02097902097902098,
+          "high_error_rate": 0.0,
+          "low_error_rate": 0.6666666666666666,
+          "low_more_error_prone": true
+        },
+        "manual_review_flag": {
+          "error_recall_of_flag": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          },
+          "errors_flagged": {
+            "ci95": {
+              "high": 0.6093779130595061,
+              "low": 0.13812009012485987
+            },
+            "denominator": 12,
+            "numerator": 4,
+            "reason": null,
+            "value": 0.3333333333333333
+          },
+          "flagged": 12
+        },
+        "n_values": 35
+      },
+      "detection": {
+        "counts": {
+          "fn": 105,
+          "general_missed": 12,
+          "tn": 53,
+          "tp_exact": 25,
+          "tp_partial": 3
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.962881633460356,
+            "low": 0.7280414829086315
+          },
+          "denominator": 28,
+          "numerator": 25,
+          "reason": null,
+          "value": 0.8928571428571429
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.26277182585677555,
+            "low": 0.13068684757055993
+          },
+          "denominator": 133,
+          "numerator": 25,
+          "reason": null,
+          "value": 0.18796992481203006
+        },
+        "f1": 0.34782608695652173,
+        "general_clause_found": 0,
+        "general_clause_missed": 12,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.8793566935605293
+          },
+          "denominator": 28,
+          "numerator": 28,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.28744057371496706,
+            "low": 0.1498644606694285
+          },
+          "denominator": 133,
+          "numerator": 28,
+          "reason": null,
+          "value": 0.21052631578947367
+        },
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.8063923170025951
+          },
+          "denominator": 16,
+          "numerator": 16,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    }
+  },
+  "manifest_sha256": "95e0b2cbca5f03809881a1b13c34ca6b44e63d9ed91f78d0584dc3ea809693f5",
+  "overall": {
+    "calibration": {
+      "brier_score": 0.17150477808988765,
+      "by_band": {
+        "high": {
+          "ci95": {
+            "high": 0.21531080540298042,
+            "low": 0.0
+          },
+          "error_rate": 0.0,
+          "errors": 0,
+          "mean_confidence": 0.85,
+          "n": 14
+        },
+        "low": {
+          "ci95": {
+            "high": 0.49157105539396384,
+            "low": 0.1913164348150548
+          },
+          "error_rate": 0.3235294117647059,
+          "errors": 11,
+          "mean_confidence": 0.4335,
+          "n": 34
+        },
+        "medium": {
+          "ci95": {
+            "high": 0.19427448662838706,
+            "low": 0.02519783043757287
+          },
+          "error_rate": 0.07317073170731707,
+          "errors": 3,
+          "mean_confidence": 0.6499390243902439,
+          "n": 41
+        }
+      },
+      "by_confidence_value": {
+        "0.43": {
+          "ci95": {
+            "high": 0.49157105539396384,
+            "low": 0.1913164348150548
+          },
+          "error_rate": 0.3235294117647059,
+          "errors": 11,
+          "mean_confidence": 0.4335,
+          "n": 34
+        },
+        "0.51": {
+          "ci95": {
+            "high": 0.4758923079830535,
+            "low": 0.07571386653293533
+          },
+          "error_rate": 0.21428571428571427,
+          "errors": 3,
+          "mean_confidence": 0.51,
+          "n": 14
+        },
+        "0.72": {
+          "ci95": {
+            "high": 0.12455503146207125,
+            "low": 0.0
+          },
+          "error_rate": 0.0,
+          "errors": 0,
+          "mean_confidence": 0.7224999999999999,
+          "n": 27
+        },
+        "0.85": {
+          "ci95": {
+            "high": 0.21531080540298042,
+            "low": 0.0
+          },
+          "error_rate": 0.0,
+          "errors": 0,
+          "mean_confidence": 0.85,
+          "n": 14
+        }
+      },
+      "expected_calibration_error": 0.24397191011235958,
+      "low_vs_high": {
+        "fisher_one_sided_p": 0.012661881963444777,
+        "high_error_rate": 0.0,
+        "low_error_rate": 0.3235294117647059,
+        "low_more_error_prone": true
+      },
+      "manual_review_flag": {
+        "error_recall_of_flag": {
+          "ci95": {
+            "high": 0.9999999999999999,
+            "low": 0.7846891945970195
+          },
+          "denominator": 14,
+          "numerator": 14,
+          "reason": null,
+          "value": 1.0
+        },
+        "errors_flagged": {
+          "ci95": {
+            "high": 0.4317925992458151,
+            "low": 0.18241578856605184
+          },
+          "denominator": 48,
+          "numerator": 14,
+          "reason": null,
+          "value": 0.2916666666666667
+        },
+        "flagged": 48
+      },
+      "n_values": 89
+    },
+    "detection": {
+      "counts": {
+        "fn": 188,
+        "general_missed": 12,
+        "tn": 161,
+        "tp_exact": 50,
+        "tp_partial": 9,
+        "tp_wrong": 3
+      },
+      "cross_zone_errors": 0,
+      "exact_value_accuracy_among_found": {
+        "ci95": {
+          "high": 0.8856619180770975,
+          "low": 0.691482037200523
+        },
+        "denominator": 62,
+        "numerator": 50,
+        "reason": null,
+        "value": 0.8064516129032258
+      },
+      "exact_value_accuracy_end_to_end": {
+        "ci95": {
+          "high": 0.25395597382476087,
+          "low": 0.1551240060135816
+        },
+        "denominator": 250,
+        "numerator": 50,
+        "reason": null,
+        "value": 0.2
+      },
+      "f1": 0.3974358974358974,
+      "general_clause_found": 0,
+      "general_clause_missed": 12,
+      "precision": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.9416559270319074
+        },
+        "denominator": 62,
+        "numerator": 62,
+        "reason": null,
+        "value": 1.0
+      },
+      "recall": {
+        "ci95": {
+          "high": 0.30507561690596896,
+          "low": 0.19855156615823866
+        },
+        "denominator": 250,
+        "numerator": 62,
+        "reason": null,
+        "value": 0.248
+      },
+      "zone_assignment_accuracy": {
+        "ci95": {
+          "high": 1.0,
+          "low": 0.9059421728185313
+        },
+        "denominator": 37,
+        "numerator": 37,
+        "reason": null,
+        "value": 1.0
+      }
+    }
+  },
+  "zone_symbol_discovery": {
+    "per_sample": [
+      {
+        "annotated_symbols": [
+          "MN.2",
+          "MN.3",
+          "MN.11",
+          "MN/U.1"
+        ],
+        "discovered_symbols": [
+          "E4",
+          "G.1",
+          "KDD.1",
+          "KDL.1",
+          "KDW.1",
+          "KDX.1",
+          "KDZ.1",
+          "US.1",
+          "ZP.1"
+        ],
+        "recalled": [],
+        "sample_id": "D01-krakow-mn-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "MWi.1",
+          "US.1",
+          "U.1"
+        ],
+        "discovered_symbols": [
+          "E4",
+          "G.1",
+          "KDD.1",
+          "KDL.1",
+          "KDW.1",
+          "KDX.1",
+          "KDZ.1",
+          "US.1",
+          "ZP.1"
+        ],
+        "recalled": [
+          "US.1"
+        ],
+        "sample_id": "D02-krakow-mwi-us-u",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "MNi.1",
+          "MNi.3",
+          "MN/U.3"
+        ],
+        "discovered_symbols": [
+          "E4",
+          "G.1",
+          "KDD.1",
+          "KDL.1",
+          "KDW.1",
+          "KDX.1",
+          "KDZ.1",
+          "US.1",
+          "ZP.1"
+        ],
+        "recalled": [],
+        "sample_id": "D07-krakow-mni-mnu",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "1UZ",
+          "2UZ"
+        ],
+        "discovered_symbols": [
+          "na",
+          "symbolami",
+          "symbolem"
+        ],
+        "recalled": [],
+        "sample_id": "D03-legnica-table",
+        "status_with_symbols": "partial",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "6.6.MW/U",
+          "4.2.MW/U",
+          "6.8.MW/U"
+        ],
+        "discovered_symbols": [
+          "na",
+          "symbolami"
+        ],
+        "recalled": [],
+        "sample_id": "D04-lodz-html-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "230_U",
+          "230_UMW",
+          "230_ZP"
+        ],
+        "discovered_symbols": [
+          "230_U",
+          "230_UMW",
+          "230_ZP",
+          "symbolem"
+        ],
+        "recalled": [
+          "230_U",
+          "230_UMW",
+          "230_ZP"
+        ],
+        "sample_id": "D05-bielsko-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "146 MN"
+        ],
+        "discovered_symbols": [
+          "w"
+        ],
+        "recalled": [],
+        "sample_id": "D06-stare-miasto-ocr",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "OCR_APPLIED"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "A1MN",
+          "A2MN",
+          "A1U-O",
+          "A1U-S"
+        ],
+        "discovered_symbols": [
+          "A1KDL",
+          "A1KDZ",
+          "A1KP",
+          "A1MN",
+          "A1U-O",
+          "A1U-S",
+          "A1ZP",
+          "A2MN",
+          "KDD",
+          "KDL",
+          "KDZ",
+          "KP",
+          "MN",
+          "U-O",
+          "U-S",
+          "ZL",
+          "ZP"
+        ],
+        "recalled": [
+          "A1MN",
+          "A2MN",
+          "A1U-O",
+          "A1U-S"
+        ],
+        "sample_id": "F01-falenica-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "A1ZP",
+          "A1ZL"
+        ],
+        "discovered_symbols": [
+          "A1KDL",
+          "A1KDZ",
+          "A1KP",
+          "A1MN",
+          "A1U-O",
+          "A1U-S",
+          "A1ZP",
+          "A2MN",
+          "KDD",
+          "KDL",
+          "KDZ",
+          "KP",
+          "MN",
+          "U-O",
+          "U-S",
+          "ZL",
+          "ZP"
+        ],
+        "recalled": [
+          "A1ZP"
+        ],
+        "sample_id": "F02-falenica-green",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "2.1MN",
+          "1.4U,MN"
+        ],
+        "discovered_symbols": [
+          "na",
+          "symbolami"
+        ],
+        "recalled": [],
+        "sample_id": "F03-bialystok-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "1Up",
+          "2Up"
+        ],
+        "discovered_symbols": [
+          "literowym"
+        ],
+        "recalled": [],
+        "sample_id": "F04-szczytno-2021-shared",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "1MN-U",
+          "1U-P",
+          "3U-P",
+          "1IE"
+        ],
+        "discovered_symbols": [
+          "na",
+          "symbolami",
+          "symbolem"
+        ],
+        "recalled": [],
+        "sample_id": "F05-ostrow-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "5MN"
+        ],
+        "discovered_symbols": [
+          "na",
+          "symbolami",
+          "symbolem"
+        ],
+        "recalled": [],
+        "sample_id": "F14-ostrow-mn",
+        "status_with_symbols": "complete",
+        "warning_codes": []
+      },
+      {
+        "annotated_symbols": [
+          "MN",
+          "US",
+          "US/WS"
+        ],
+        "discovered_symbols": [
+          "MN",
+          "na",
+          "w"
+        ],
+        "recalled": [
+          "MN"
+        ],
+        "sample_id": "F06-raszkow-short-symbols",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "UW-PP-PS"
+        ],
+        "discovered_symbols": [
+          "symbolami"
+        ],
+        "recalled": [],
+        "sample_id": "F07-krzemieniewo-single",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "MN"
+        ],
+        "discovered_symbols": [
+          "identyfikującym",
+          "na"
+        ],
+        "recalled": [],
+        "sample_id": "F08-libertow-text",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "MN"
+        ],
+        "discovered_symbols": [
+          "identyfikującym",
+          "na"
+        ],
+        "recalled": [],
+        "sample_id": "F11-libertow-sim-ocr",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "OCR_APPLIED"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "10.1.MW/U"
+        ],
+        "discovered_symbols": [
+          "11.1.KK",
+          "1KDG",
+          "1KDX",
+          "1KDZ",
+          "2KDG",
+          "2KDZ",
+          "3KDD",
+          "4.2.ZP",
+          "4.6.MW/U",
+          "na",
+          "symbolami",
+          "symbolem"
+        ],
+        "recalled": [],
+        "sample_id": "F09-lodz-html-single",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_AMBIGUOUS"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "1 PK"
+        ],
+        "discovered_symbols": [
+          "UNKNOWN"
+        ],
+        "recalled": [],
+        "sample_id": "F10-pisz-ocr-real",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "OCR_APPLIED"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "A1MN",
+          "A2MN",
+          "A1U-O"
+        ],
+        "discovered_symbols": [
+          "A1U-0",
+          "A2MN",
+          "AIMN"
+        ],
+        "recalled": [
+          "A2MN"
+        ],
+        "sample_id": "F12-falenica-sim-ocr",
+        "status_with_symbols": "complete",
+        "warning_codes": [
+          "OCR_APPLIED",
+          "PARAMETER_CONFLICT",
+          "ZONE_SECTION_NOT_FOUND"
+        ]
+      },
+      {
+        "annotated_symbols": [
+          "1MNW",
+          "1ML-U"
+        ],
+        "discovered_symbols": [
+          "UNKNOWN"
+        ],
+        "recalled": [],
+        "sample_id": "F13-szczytno-2023-multi",
+        "status_with_symbols": "complete",
+        "warning_codes": []
+      }
+    ],
+    "recall": {
+      "ci95": {
+        "high": 0.37224257668075733,
+        "low": 0.13603274526919518
+      },
+      "denominator": 47,
+      "numerator": 11,
+      "reason": null,
+      "value": 0.23404255319148937
+    }
+  }
+}

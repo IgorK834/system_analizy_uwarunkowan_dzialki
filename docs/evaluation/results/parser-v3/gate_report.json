@@ -1,0 +1,452 @@
+{
+ "blockers": [
+  "zbiór nie jest niezależnym zbiorem końcowym (profil final-v2): 89 problemów, np. 14 final samples < 20",
+  "brak wyników silnika hybrid (bieg --live albo odtworzenie zapisanych odpowiedzi)",
+  "brak przeglądu ręcznego (arkusz review-sheet wypełniony przez człowieka)",
+  "brak badania zmienności (3 biegi na żywo)"
+ ],
+ "corpus": "/Users/igor/system_analizy_uwarunkowan_dzialki/backend/tests/fixtures/mpzp_evaluation/manifest.json",
+ "criteria": [
+  {
+   "counts": null,
+   "criterion": "precision",
+   "label": "precision",
+   "operator": ">=",
+   "passed": null,
+   "threshold": 0.95,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "recall",
+   "label": "recall",
+   "operator": ">=",
+   "passed": null,
+   "threshold": 0.8,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "source_consistent",
+   "label": "source_consistent (Task 20.3)",
+   "operator": ">=",
+   "passed": null,
+   "threshold": 0.98,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "unverified_quotes",
+   "label": "przyjęte wartości bez zweryfikowanego cytatu",
+   "operator": "==",
+   "passed": null,
+   "threshold": 0,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "zone_assignment_error_rate",
+   "label": "błędy przypisania do strefy / znalezione",
+   "operator": "<=",
+   "passed": null,
+   "threshold": 0.02,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "ece",
+   "label": "ECE (kalibracja pewności)",
+   "operator": "<=",
+   "passed": null,
+   "threshold": 0.1,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "cost_per_analysis_usd",
+   "label": "koszt na analizę, cena od 2027 [USD]",
+   "operator": "<=",
+   "passed": null,
+   "threshold": 0.05,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "additional_latency_p95_s",
+   "label": "dodatkowe opóźnienie p95 względem v3 [s]",
+   "operator": "<=",
+   "passed": null,
+   "threshold": 30.0,
+   "value": null
+  },
+  {
+   "counts": null,
+   "criterion": "manual_review_count",
+   "label": "ocenione ręcznie wartości ai_candidate",
+   "operator": ">=",
+   "passed": null,
+   "threshold": 100,
+   "value": null
+  }
+ ],
+ "criteria_frozen_on": "2026-10-05",
+ "decision": "NOT_DECIDABLE",
+ "disclaimer": "Wynik jest rekomendacją opartą na pomiarze z jawnymi ograniczeniami (liczba gmin, formaty, zmienność modelu, anotacje), a nie gwarancją jakości.",
+ "engines": {
+  "hybrid": null,
+  "legacy": {
+   "by_format": {
+    "html": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.925
+    },
+    "ocr_real": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "ocr_simulated": {
+     "precision": 1.0,
+     "recall": 0.391304347826087,
+     "source_consistent": 1.0
+    },
+    "pdf_table": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "pdf_text": {
+     "precision": 1.0,
+     "recall": 0.8541666666666666,
+     "source_consistent": 0.7142857142857143
+    }
+   },
+   "by_gmina": {
+    "Białystok": {
+     "precision": 1.0,
+     "recall": 0.8571428571428571,
+     "source_consistent": 0.8461538461538461
+    },
+    "Bielsko-Biała": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Kraków": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.2653061224489796
+    },
+    "Krzemieniewo": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Legnica": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Mogilany": {
+     "precision": 1.0,
+     "recall": 0.6,
+     "source_consistent": 1.0
+    },
+    "Ostrów Wielkopolski": {
+     "precision": 1.0,
+     "recall": 0.696969696969697,
+     "source_consistent": 0.6923076923076923
+    },
+    "Pisz": {
+     "precision": null,
+     "recall": null,
+     "source_consistent": null
+    },
+    "Raszków": {
+     "precision": 1.0,
+     "recall": 0.6363636363636364,
+     "source_consistent": 1.0
+    },
+    "Stare Miasto": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Szczytno": {
+     "precision": 1.0,
+     "recall": 0.75,
+     "source_consistent": 1.0
+    },
+    "Warszawa": {
+     "precision": 1.0,
+     "recall": 0.7021276595744681,
+     "source_consistent": 0.6756756756756757
+    },
+    "Łódź": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.925
+    }
+   },
+   "counts": {
+    "fn": 42,
+    "general_found": 12,
+    "tn": 161,
+    "tp_exact": 188,
+    "tp_partial": 20
+   },
+   "cross_zone_errors": 0,
+   "determinism": {
+    "engine": "legacy",
+    "excluded": [
+     "observations"
+    ],
+    "identical": true,
+    "repeat": 2,
+    "substantive_sha256": [
+     "817cb90c6ed352592e7a5094355a3d5c3cb8b893513437a72b9778d95f20959f",
+     "817cb90c6ed352592e7a5094355a3d5c3cb8b893513437a72b9778d95f20959f"
+    ],
+    "timestamp": "2026-10-05T09:36:51.417735Z"
+   },
+   "ece": 0.04902442523728011,
+   "manifest_sha256": "3b944b3709c6f418d2d5ab57bc51d4dea1f93a5e6614a85e568715600e692755",
+   "observations": {
+    "calls": 0,
+    "cost_usd_per_document": null,
+    "cost_usd_per_sample": null,
+    "cost_usd_per_zone": null,
+    "cost_usd_total": null,
+    "documents": 17,
+    "input_tokens": null,
+    "model_latency_ms_p50": null,
+    "model_latency_ms_p95": null,
+    "output_tokens": null,
+    "samples": 21,
+    "wall_ms_p50": 18.487,
+    "wall_ms_p95": 53.731,
+    "zones": 47
+   },
+   "precision": {
+    "ci95": {
+     "high": 1.0,
+     "low": 0.9818663499506557
+    },
+    "denominator": 208,
+    "numerator": 208,
+    "reason": null,
+    "value": 1.0
+   },
+   "recall": {
+    "ci95": {
+     "high": 0.8732414471921603,
+     "low": 0.7807100417867405
+    },
+    "denominator": 250,
+    "numerator": 208,
+    "reason": null,
+    "value": 0.832
+   },
+   "rejections": {
+    "by_gate": {},
+    "total": 0
+   },
+   "source_consistent": {
+    "ci95": {
+     "high": 0.814569224703186,
+     "low": 0.7147203193418549
+    },
+    "denominator": 272,
+    "numerator": 209,
+    "reason": null,
+    "value": 0.7683823529411765
+   }
+  },
+  "v3": {
+   "by_format": {
+    "html": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.925
+    },
+    "ocr_real": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "ocr_simulated": {
+     "precision": 1.0,
+     "recall": 0.9130434782608695,
+     "source_consistent": 1.0
+    },
+    "pdf_table": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "pdf_text": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.9785714285714285
+    }
+   },
+   "by_gmina": {
+    "Białystok": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Bielsko-Biała": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Kraków": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Krzemieniewo": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Legnica": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Mogilany": {
+     "precision": 1.0,
+     "recall": 0.8,
+     "source_consistent": 1.0
+    },
+    "Ostrów Wielkopolski": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Pisz": {
+     "precision": null,
+     "recall": null,
+     "source_consistent": null
+    },
+    "Raszków": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Stare Miasto": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Szczytno": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.8636363636363636
+    },
+    "Warszawa": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 1.0
+    },
+    "Łódź": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "source_consistent": 0.925
+    }
+   },
+   "counts": {
+    "fn": 2,
+    "general_found": 12,
+    "tn": 161,
+    "tp_exact": 233,
+    "tp_partial": 15
+   },
+   "cross_zone_errors": 0,
+   "determinism": {
+    "engine": "v3",
+    "excluded": [
+     "observations"
+    ],
+    "identical": true,
+    "repeat": 2,
+    "substantive_sha256": [
+     "893539a9f00e9cd03264fa545b8d35eb0d338c1771cd1cfa42e2d4c0ebb86afc",
+     "893539a9f00e9cd03264fa545b8d35eb0d338c1771cd1cfa42e2d4c0ebb86afc"
+    ],
+    "timestamp": "2026-10-05T09:36:51.437462Z"
+   },
+   "ece": 0.024679278146886734,
+   "manifest_sha256": "498756aa2ab7a1834ec6b49ec10ade0a99f428fdcfa99b16f0fa2926ef33c2d9",
+   "observations": {
+    "calls": 0,
+    "cost_usd_per_document": null,
+    "cost_usd_per_sample": null,
+    "cost_usd_per_zone": null,
+    "cost_usd_total": null,
+    "documents": 17,
+    "input_tokens": null,
+    "model_latency_ms_p50": null,
+    "model_latency_ms_p95": null,
+    "output_tokens": null,
+    "samples": 21,
+    "wall_ms_p50": 40.094,
+    "wall_ms_p95": 94.082,
+    "zones": 47
+   },
+   "precision": {
+    "ci95": {
+     "high": 0.9999999999999999,
+     "low": 0.9847465191062658
+    },
+    "denominator": 248,
+    "numerator": 248,
+    "reason": null,
+    "value": 1.0
+   },
+   "recall": {
+    "ci95": {
+     "high": 0.9978033628994382,
+     "low": 0.9713054701656801
+    },
+    "denominator": 250,
+    "numerator": 248,
+    "reason": null,
+    "value": 0.992
+   },
+   "rejections": {
+    "by_gate": {},
+    "total": 0
+   },
+   "source_consistent": {
+    "ci95": {
+     "high": 0.9869384972481565,
+     "low": 0.9536841314579125
+    },
+    "denominator": 364,
+    "numerator": 355,
+    "reason": null,
+    "value": 0.9752747252747253
+   }
+  }
+ },
+ "evaluated_at": "2026-10-05T09:36:51.971643Z",
+ "failed": [],
+ "gate_version": "mpzp-quality-gate/1",
+ "manual_review": null,
+ "unmeasured": [
+  "precision",
+  "recall",
+  "source_consistent",
+  "unverified_quotes",
+  "zone_assignment_error_rate",
+  "ece",
+  "cost_per_analysis_usd",
+  "additional_latency_p95_s",
+  "manual_review_count"
+ ],
+ "variance": null
+}

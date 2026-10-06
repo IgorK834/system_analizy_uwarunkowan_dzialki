@@ -1,0 +1,5 @@
+condition,tp,fp,fn,tn,precision,recall,f1
+flood_intersection,8,0,0,21,1.0,1.0,1.0
+nature_intersection,2,0,0,26,1.0,1.0,1.0
+ouz_presence,4,0,0,2,1.0,1.0,1.0
+aggregate,14,0,0,49,1.0,1.0,1.0

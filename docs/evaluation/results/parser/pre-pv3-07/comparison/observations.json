@@ -1,0 +1,37 @@
+{
+  "note": "observations only; excluded from the determinism digest",
+  "summary": {
+    "legacy": {
+      "calls": 0,
+      "cost_usd_per_document": null,
+      "cost_usd_per_sample": null,
+      "cost_usd_per_zone": null,
+      "cost_usd_total": null,
+      "documents": 17,
+      "input_tokens": null,
+      "model_latency_ms_p50": null,
+      "model_latency_ms_p95": null,
+      "output_tokens": null,
+      "samples": 21,
+      "wall_ms_p50": 8.805,
+      "wall_ms_p95": 21.344,
+      "zones": 47
+    },
+    "v3": {
+      "calls": 0,
+      "cost_usd_per_document": null,
+      "cost_usd_per_sample": null,
+      "cost_usd_per_zone": null,
+      "cost_usd_total": null,
+      "documents": 17,
+      "input_tokens": null,
+      "model_latency_ms_p50": null,
+      "model_latency_ms_p95": null,
+      "output_tokens": null,
+      "samples": 21,
+      "wall_ms_p50": 69.254,
+      "wall_ms_p95": 113.245,
+      "zones": 47
+    }
+  }
+}

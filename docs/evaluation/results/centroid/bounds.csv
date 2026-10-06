@@ -1,0 +1,12 @@
+case_id,municipality,layer,zone_symbols,distinct_symbol_count,zone_count,significant_zone_count,shares_pct,dominant_share_pct,centroid_loses_zone_guaranteed,centroid_loses_significant_zone_guaranteed,min_missing_zones,min_omitted_area_pct,max_omitted_area_pct,status
+real-005-126105-9-0001-580-4,Kraków,mpzp,"[""KP.1""]",1,1,1,[100.0],100.0,False,False,0,0.0,0.0,available
+real-006-126105-9-0001-49-2,Kraków,mpzp,"[""MW/U.4""]",1,1,1,[100.0],100.0,False,False,0,0.0,0.0,available
+real-007-126105-9-0001-540-15,Kraków,mpzp,"[""KD/L+T"",""U.11"",""ZP.4""]",3,3,2,"[97.628921,2.328743,0.041682]",97.628921,True,True,2,2.3710789999999946,99.958318,available
+real-008-126105-9-0119-181-10,Kraków,mpzp,"[""ZPb.9""]",1,1,1,[100.0],100.0,False,False,0,0.0,0.0,manual_review
+real-009-246101-1-0056-155-3,Bielsko-Biała,pog,"[""SK""]",1,1,1,[99.987245],99.987245,False,False,0,0.012754999999998518,0.012754999999998518,available
+real-010-246101-1-0055-68-13,Bielsko-Biała,pog,"[""SW""]",1,1,1,[99.999056],99.999056,False,False,0,0.0009440000000040527,0.0009440000000040527,available
+real-011-246101-1-0081-7,Bielsko-Biała,pog,"[""SW""]",1,1,1,[100.0],100.0,False,False,0,0.0,0.0,available
+real-012-246101-1-0056-110-1,Bielsko-Biała,pog,"[""SU""]",1,1,1,[99.997791],99.997791,False,False,0,0.002208999999993466,0.002208999999993466,available
+real-027-246101-1-0001-1043,Bielsko-Biała,pog,"[""SJ""]",1,1,1,[99.998649],99.998649,False,False,0,0.001350999999999658,0.001350999999999658,available
+real-028-246101-1-0004-737-26,Bielsko-Biała,pog,"[""SO"",""SJ""]",2,2,2,"[80.34066,19.65934]",80.34066,True,True,1,19.65934,80.34066,available
+real-029-246101-1-0004-741-132,Bielsko-Biała,pog,"[""SO"",""SJ""]",2,2,2,"[50.070792,49.929208]",50.070792,True,True,1,49.929208,50.070792,available

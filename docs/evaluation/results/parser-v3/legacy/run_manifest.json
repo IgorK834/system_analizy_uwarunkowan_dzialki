@@ -1,0 +1,104 @@
+{
+  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "commit_sha": "644e39a249d44beaead0bc30925bc02aac187ce7",
+  "corpus_id": "BK-603-mpzp-parser-evaluation-2026-09-30",
+  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "engine": "legacy",
+  "engine_version": "mpzp-parser/3.0-det",
+  "environment": {
+    "platform": "Darwin arm64",
+    "python": "3.13.3"
+  },
+  "evaluator_sha256": "54ec4d7315fb8b326eab80b4c8fdae1c7293971edde26ac131625efa797d68ff",
+  "freeze": {
+    "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+    "frozen_at": "2026-09-30",
+    "parser_run_on_final_split_before_freeze": false,
+    "parser_version_at_freeze": "mpzp-parser/2.0",
+    "statement": "Anotacje zbioru końcowego powstały z lektury tekstu źródłowego, zanim parser został uruchomiony na dokumentach zbioru końcowego. Zbiór rozwojowy składa się z dokumentów użytych wcześniej do rozwoju i regresji parsera. Po zamrożeniu anotacji nie wolno zmieniać bez nowego skrótu i nowego numeru wersji korpusu; parser nie jest stroiony w tym badaniu."
+  },
+  "llm": null,
+  "manifest_sha256": "3b944b3709c6f418d2d5ab57bc51d4dea1f93a5e6614a85e568715600e692755",
+  "parameters": {
+    "catalog": {
+      "max_building_coverage_percent": {
+        "operators": [
+          "max"
+        ],
+        "unit": "percent"
+      },
+      "max_building_height_m": {
+        "operators": [
+          "max"
+        ],
+        "unit": "m"
+      },
+      "max_intensity": {
+        "operators": [
+          "max",
+          "range_upper"
+        ],
+        "unit": "ratio"
+      },
+      "max_storeys": {
+        "operators": [
+          "max"
+        ],
+        "unit": "count"
+      },
+      "min_biologically_active_percent": {
+        "operators": [
+          "min"
+        ],
+        "unit": "percent"
+      },
+      "min_intensity": {
+        "operators": [
+          "min",
+          "range_lower"
+        ],
+        "unit": "ratio"
+      },
+      "roof_angle_max_deg": {
+        "operators": [
+          "max",
+          "range_upper"
+        ],
+        "unit": "deg"
+      },
+      "roof_angle_min_deg": {
+        "operators": [
+          "min",
+          "range_lower"
+        ],
+        "unit": "deg"
+      },
+      "setback_m": {
+        "operators": [
+          "exact"
+        ],
+        "unit": "m"
+      }
+    },
+    "confidence_bands": [
+      [
+        "low",
+        0.0
+      ],
+      [
+        "medium",
+        0.5
+      ],
+      [
+        "high",
+        0.8
+      ]
+    ],
+    "mode": "offline",
+    "parser_called_with": "annotated zone symbols of the sample",
+    "source_block_tolerance_chars": 300,
+    "value_tolerance": 1e-06
+  },
+  "parser_version": "mpzp-parser/3.0-det",
+  "schema_version": "2.0.0"
+}

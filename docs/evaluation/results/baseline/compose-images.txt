@@ -1,0 +1,3 @@
+CONTAINER                   REPOSITORY          TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+bk001-8418bddc-99736-db-1   postgis/postgis     16-3.4              linux/amd64         44126d872ac9        213MB               23 months ago
+exit_code=0

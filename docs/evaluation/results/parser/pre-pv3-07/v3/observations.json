@@ -1,0 +1,423 @@
+{
+  "engine": "v3",
+  "manifest_sha256": "e2bcddd54f245a2c433286a0116772cfef9ad357f70e7a3fcbd7f74c6c415126",
+  "note": "observations only; excluded from the determinism digest",
+  "per_sample": [
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 118.615
+      },
+      "document_id": "krakow_morelowa",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D01-krakow-mn-multi",
+      "wall_ms": 134.713,
+      "zones": 4
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 114.377
+      },
+      "document_id": "krakow_morelowa",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D02-krakow-mwi-us-u",
+      "wall_ms": 105.019,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 114.8
+      },
+      "document_id": "krakow_morelowa",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D07-krakow-mni-mnu",
+      "wall_ms": 107.744,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 12.325
+      },
+      "document_id": "legnica_xiii_161_25",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D03-legnica-table",
+      "wall_ms": 29.341,
+      "zones": 2
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 20.689
+      },
+      "document_id": "lodz_lxxviii_2337_23",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D04-lodz-html-multi",
+      "wall_ms": 71.398,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 39.796
+      },
+      "document_id": "bielsko_viii_187_2024",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D05-bielsko-multi",
+      "wall_ms": 77.798,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 0.944
+      },
+      "document_id": "stare_miasto_xliv_305_2002",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "D06-stare-miasto-ocr",
+      "wall_ms": 1.615,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 105.268
+      },
+      "document_id": "warszawa_falenica_a2",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F01-falenica-multi",
+      "wall_ms": 104.272,
+      "zones": 4
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 99.37
+      },
+      "document_id": "warszawa_falenica_a2",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F02-falenica-green",
+      "wall_ms": 69.254,
+      "zones": 2
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 27.65
+      },
+      "document_id": "bialystok_lxxxii_1136_24",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F03-bialystok-multi",
+      "wall_ms": 92.73,
+      "zones": 2
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 8.665
+      },
+      "document_id": "szczytno_xxxviii_262_2021",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F04-szczytno-2021-shared",
+      "wall_ms": 28.8,
+      "zones": 2
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 23.274
+      },
+      "document_id": "ostrow_wlkp_xi_105_2025",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F05-ostrow-multi",
+      "wall_ms": 81.194,
+      "zones": 4
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 23.468
+      },
+      "document_id": "ostrow_wlkp_xi_105_2025",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F14-ostrow-mn",
+      "wall_ms": 41.665,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 16.355
+      },
+      "document_id": "raszkow_xxxvi_242_2021",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F06-raszkow-short-symbols",
+      "wall_ms": 27.582,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 36.223
+      },
+      "document_id": "krzemieniewo_x_87_2025",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F07-krzemieniewo-single",
+      "wall_ms": 70.445,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 6.61
+      },
+      "document_id": "libertow_xxv_213_05",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F08-libertow-text",
+      "wall_ms": 9.406,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 2.689
+      },
+      "document_id": "libertow_xxv_213_05_sim_ocr",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F11-libertow-sim-ocr",
+      "wall_ms": 4.855,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 89.432
+      },
+      "document_id": "lodz_vi_214_19",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F09-lodz-html-single",
+      "wall_ms": 37.997,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 1.588
+      },
+      "document_id": "pisz_xxv_254_98_scan",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F10-pisz-ocr-real",
+      "wall_ms": 6.264,
+      "zones": 1
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 7.278
+      },
+      "document_id": "falenica_sim_ocr",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F12-falenica-sim-ocr",
+      "wall_ms": 15.331,
+      "zones": 3
+    },
+    {
+      "calls": 0,
+      "cost_usd": null,
+      "discovery": {
+        "calls": 0,
+        "cost_usd": null,
+        "input_tokens": null,
+        "latency_ms": null,
+        "output_tokens": null,
+        "wall_ms": 2.23
+      },
+      "document_id": "szczytno_lxxvi_555_2023",
+      "input_tokens": null,
+      "latency_ms": null,
+      "output_tokens": null,
+      "sample_id": "F13-szczytno-2023-multi",
+      "wall_ms": 113.245,
+      "zones": 2
+    }
+  ],
+  "summary": {
+    "calls": 0,
+    "cost_usd_per_document": null,
+    "cost_usd_per_sample": null,
+    "cost_usd_per_zone": null,
+    "cost_usd_total": null,
+    "documents": 17,
+    "input_tokens": null,
+    "model_latency_ms_p50": null,
+    "model_latency_ms_p95": null,
+    "output_tokens": null,
+    "samples": 21,
+    "wall_ms_p50": 69.254,
+    "wall_ms_p95": 113.245,
+    "zones": 47
+  },
+  "version": "mpzp-parser/3.0-scope.1"
+}

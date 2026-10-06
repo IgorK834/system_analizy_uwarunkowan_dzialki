@@ -1,0 +1,5030 @@
+{
+  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "baseline": "legacy",
+  "bootstrap": {
+    "method": "cluster (sample) percentile",
+    "resamples": 2000,
+    "seed": 603
+  },
+  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "engine_manifest_sha256": {
+    "legacy": "3b944b3709c6f418d2d5ab57bc51d4dea1f93a5e6614a85e568715600e692755",
+    "v3": "498756aa2ab7a1834ec6b49ec10ade0a99f428fdcfa99b16f0fa2926ef33c2d9"
+  },
+  "engines": [
+    "legacy",
+    "v3"
+  ],
+  "headline": {
+    "legacy": {
+      "by_format": {
+        "html": {
+          "counts": {
+            "tn": 13,
+            "tp_exact": 18,
+            "tp_partial": 5
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9033602203455142,
+              "low": 0.5809651681324879
+            },
+            "denominator": 23,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.782608695652174
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9033602203455142,
+              "low": 0.5809651681324879
+            },
+            "denominator": 23,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.782608695652174
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 7,
+            "evidence": 33
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9741639744267374,
+              "low": 0.8013576634835684
+            },
+            "denominator": 40,
+            "numerator": 37,
+            "reason": null,
+            "value": 0.925
+          },
+          "source_status_counts": {
+            "consistent": 37,
+            "wrong_block": 3
+          },
+          "source_status_counts_required_values": {
+            "consistent": 25,
+            "wrong_block": 3
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8118872415619854,
+              "low": 0.4489033522338618
+            },
+            "denominator": 23,
+            "numerator": 15,
+            "reason": null,
+            "value": 0.6521739130434783
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "ocr_real": {
+          "counts": {
+            "tn": 16,
+            "tp_exact": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 2
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 2
+          },
+          "source_status_counts_required_values": {
+            "consistent": 2
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "ocr_simulated": {
+          "counts": {
+            "fn": 14,
+            "tn": 13,
+            "tp_exact": 7,
+            "tp_partial": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9367748934594303,
+              "low": 0.4525889666922117
+            },
+            "denominator": 9,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.7777777777777778
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.5086575642878356,
+              "low": 0.1560402436889323
+            },
+            "denominator": 23,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.30434782608695654
+          },
+          "f1": 0.5625,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.5921447775576323,
+              "low": 0.22157622687390552
+            },
+            "denominator": 23,
+            "numerator": 9,
+            "reason": null,
+            "value": 0.391304347826087
+          },
+          "source_basis_counts": {
+            "page": 10
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 10
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.5086575642878356,
+              "low": 0.1560402436889323
+            },
+            "denominator": 23,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.30434782608695654
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "pdf_table": {
+          "counts": {
+            "tn": 8,
+            "tp_exact": 10
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 10
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 10
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "pdf_text": {
+          "counts": {
+            "fn": 28,
+            "general_found": 12,
+            "tn": 111,
+            "tp_exact": 151,
+            "tp_partial": 13
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9530922580992546,
+              "low": 0.8691122253448448
+            },
+            "denominator": 164,
+            "numerator": 151,
+            "reason": null,
+            "value": 0.9207317073170732
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8385089162047081,
+              "low": 0.7231699061874062
+            },
+            "denominator": 192,
+            "numerator": 151,
+            "reason": null,
+            "value": 0.7864583333333334
+          },
+          "f1": 0.9213483146067416,
+          "general_clause_found": 12,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9771125745277701
+            },
+            "denominator": 164,
+            "numerator": 164,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.8971359758476938,
+              "low": 0.7973032954734656
+            },
+            "denominator": 192,
+            "numerator": 164,
+            "reason": null,
+            "value": 0.8541666666666666
+          },
+          "source_basis_counts": {
+            "block": 210
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.7711071166157301,
+              "low": 0.6497654329395891
+            },
+            "denominator": 210,
+            "numerator": 150,
+            "reason": null,
+            "value": 0.7142857142857143
+          },
+          "source_status_counts": {
+            "consistent": 150,
+            "indeterminate": 30,
+            "wrong_block": 1,
+            "wrong_page": 29
+          },
+          "source_status_counts_required_values": {
+            "consistent": 137,
+            "indeterminate": 30,
+            "wrong_block": 1,
+            "wrong_page": 29
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.6055874914804186,
+              "low": 0.4658989040967597
+            },
+            "denominator": 192,
+            "numerator": 103,
+            "reason": null,
+            "value": 0.5364583333333334
+          },
+          "wrong_source_errors": 27,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9567605155333085
+            },
+            "denominator": 85,
+            "numerator": 85,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.7507807786760177,
+              "low": 0.5531313850816215
+            },
+            "denominator": 85,
+            "numerator": 56,
+            "reason": null,
+            "value": 0.6588235294117647
+          }
+        }
+      },
+      "by_gmina": {
+        "Białystok": {
+          "counts": {
+            "fn": 2,
+            "tn": 4,
+            "tp_exact": 12
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.959906079092351,
+              "low": 0.600586202762663
+            },
+            "denominator": 14,
+            "numerator": 12,
+            "reason": null,
+            "value": 0.8571428571428571
+          },
+          "f1": 0.923076923076923,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.959906079092351,
+              "low": 0.600586202762663
+            },
+            "denominator": 14,
+            "numerator": 12,
+            "reason": null,
+            "value": 0.8571428571428571
+          },
+          "source_basis_counts": {
+            "block": 26
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9384996631922972,
+              "low": 0.6646880050648342
+            },
+            "denominator": 26,
+            "numerator": 22,
+            "reason": null,
+            "value": 0.8461538461538461
+          },
+          "source_status_counts": {
+            "consistent": 22,
+            "wrong_page": 4
+          },
+          "source_status_counts_required_values": {
+            "consistent": 22,
+            "wrong_page": 4
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8365526834990504,
+              "low": 0.38764422924295516
+            },
+            "denominator": 14,
+            "numerator": 9,
+            "reason": null,
+            "value": 0.6428571428571429
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9775825088000281,
+              "low": 0.5291118149439162
+            },
+            "denominator": 8,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.875
+          }
+        },
+        "Bielsko-Biała": {
+          "counts": {
+            "tn": 12,
+            "tp_exact": 15
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 18
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8241207740667156
+            },
+            "denominator": 18,
+            "numerator": 18,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 18
+          },
+          "source_status_counts_required_values": {
+            "consistent": 18
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7719046248681998
+            },
+            "denominator": 13,
+            "numerator": 13,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7719046248681998
+            },
+            "denominator": 13,
+            "numerator": 13,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Kraków": {
+          "counts": {
+            "tn": 46,
+            "tp_exact": 33,
+            "tp_partial": 11
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.8542578623445767,
+              "low": 0.6055943351936777
+            },
+            "denominator": 44,
+            "numerator": 33,
+            "reason": null,
+            "value": 0.75
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8542578623445767,
+              "low": 0.6055943351936777
+            },
+            "denominator": 44,
+            "numerator": 33,
+            "reason": null,
+            "value": 0.75
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 49
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.40262289086000647,
+              "low": 0.1621128207018636
+            },
+            "denominator": 49,
+            "numerator": 13,
+            "reason": null,
+            "value": 0.2653061224489796
+          },
+          "source_status_counts": {
+            "consistent": 13,
+            "indeterminate": 16,
+            "wrong_block": 1,
+            "wrong_page": 19
+          },
+          "source_status_counts_required_values": {
+            "consistent": 13,
+            "indeterminate": 16,
+            "wrong_block": 1,
+            "wrong_page": 19
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.2397915253797293,
+              "low": 0.04952780569751397
+            },
+            "denominator": 44,
+            "numerator": 5,
+            "reason": null,
+            "value": 0.11363636363636363
+          },
+          "wrong_source_errors": 19,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8513451233948545
+            },
+            "denominator": 22,
+            "numerator": 22,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.5704829206386436,
+              "low": 0.1973320457082143
+            },
+            "denominator": 22,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.36363636363636365
+          }
+        },
+        "Krzemieniewo": {
+          "counts": {
+            "tp_exact": 8,
+            "tp_partial": 1
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9801091125830901,
+              "low": 0.565000291629209
+            },
+            "denominator": 9,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8888888888888888
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9801091125830901,
+              "low": 0.565000291629209
+            },
+            "denominator": 9,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8888888888888888
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 12
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 12
+          },
+          "source_status_counts_required_values": {
+            "consistent": 11
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9801091125830901,
+              "low": 0.565000291629209
+            },
+            "denominator": 9,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8888888888888888
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Legnica": {
+          "counts": {
+            "tn": 8,
+            "tp_exact": 10
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 10
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 10
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Mogilany": {
+          "counts": {
+            "fn": 4,
+            "tn": 8,
+            "tp_exact": 6
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6096657083436265
+            },
+            "denominator": 6,
+            "numerator": 6,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.831819671473593,
+              "low": 0.3126737679211953
+            },
+            "denominator": 10,
+            "numerator": 6,
+            "reason": null,
+            "value": 0.6
+          },
+          "f1": 0.7499999999999999,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6096657083436265
+            },
+            "denominator": 6,
+            "numerator": 6,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.831819671473593,
+              "low": 0.3126737679211953
+            },
+            "denominator": 10,
+            "numerator": 6,
+            "reason": null,
+            "value": 0.6
+          },
+          "source_basis_counts": {
+            "block": 3,
+            "page": 3
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6096657083436265
+            },
+            "denominator": 6,
+            "numerator": 6,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 6
+          },
+          "source_status_counts_required_values": {
+            "consistent": 6
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.831819671473593,
+              "low": 0.3126737679211953
+            },
+            "denominator": 10,
+            "numerator": 6,
+            "reason": null,
+            "value": 0.6
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Ostrów Wielkopolski": {
+          "counts": {
+            "fn": 10,
+            "tn": 12,
+            "tp_exact": 23
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8262446865476278,
+              "low": 0.5266186471733927
+            },
+            "denominator": 33,
+            "numerator": 23,
+            "reason": null,
+            "value": 0.696969696969697
+          },
+          "f1": 0.8214285714285715,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.8262446865476278,
+              "low": 0.5266186471733927
+            },
+            "denominator": 33,
+            "numerator": 23,
+            "reason": null,
+            "value": 0.696969696969697
+          },
+          "source_basis_counts": {
+            "block": 26
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.8349868448809437,
+              "low": 0.500117415261907
+            },
+            "denominator": 26,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.6923076923076923
+          },
+          "source_status_counts": {
+            "consistent": 18,
+            "indeterminate": 4,
+            "wrong_page": 4
+          },
+          "source_status_counts_required_values": {
+            "consistent": 18,
+            "indeterminate": 4,
+            "wrong_page": 4
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.6478162466735632,
+              "low": 0.3250404199632815
+            },
+            "denominator": 33,
+            "numerator": 16,
+            "reason": null,
+            "value": 0.48484848484848486
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.7462184038374761,
+              "low": 0.25378159616252394
+            },
+            "denominator": 12,
+            "numerator": 6,
+            "reason": null,
+            "value": 0.5
+          }
+        },
+        "Pisz": {
+          "counts": {
+            "tn": 9
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "f1": null,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "recall": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "source_basis_counts": {},
+          "source_consistent": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_source_checks",
+            "value": null
+          },
+          "source_status_counts": {},
+          "source_status_counts_required_values": {},
+          "strict_end_to_end": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Raszków": {
+          "counts": {
+            "fn": 4,
+            "general_found": 12,
+            "tn": 4,
+            "tp_exact": 7
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6456695613241317
+            },
+            "denominator": 7,
+            "numerator": 7,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8483352901086686,
+              "low": 0.35380117262012434
+            },
+            "denominator": 11,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.6363636363636364
+          },
+          "f1": 0.7777777777777778,
+          "general_clause_found": 12,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6456695613241317
+            },
+            "denominator": 7,
+            "numerator": 7,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.8483352901086686,
+              "low": 0.35380117262012434
+            },
+            "denominator": 11,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.6363636363636364
+          },
+          "source_basis_counts": {
+            "block": 22
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8513451233948545
+            },
+            "denominator": 22,
+            "numerator": 22,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 22
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8483352901086686,
+              "low": 0.35380117262012434
+            },
+            "denominator": 11,
+            "numerator": 7,
+            "reason": null,
+            "value": 0.6363636363636364
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Stare Miasto": {
+          "counts": {
+            "tn": 7,
+            "tp_exact": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 2
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 2
+          },
+          "source_status_counts_required_values": {
+            "consistent": 2
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Szczytno": {
+          "counts": {
+            "fn": 8,
+            "tn": 4,
+            "tp_exact": 23,
+            "tp_partial": 1
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9926065439164028,
+              "low": 0.7975819334115467
+            },
+            "denominator": 24,
+            "numerator": 23,
+            "reason": null,
+            "value": 0.9583333333333334
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8443541957679932,
+              "low": 0.5462549043349592
+            },
+            "denominator": 32,
+            "numerator": 23,
+            "reason": null,
+            "value": 0.71875
+          },
+          "f1": 0.8571428571428571,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.862023793448672
+            },
+            "denominator": 24,
+            "numerator": 24,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.8674759914885746,
+              "low": 0.5789344086290853
+            },
+            "denominator": 32,
+            "numerator": 24,
+            "reason": null,
+            "value": 0.75
+          },
+          "source_basis_counts": {
+            "block": 24
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.862023793448672
+            },
+            "denominator": 24,
+            "numerator": 24,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 24
+          },
+          "source_status_counts_required_values": {
+            "consistent": 24
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8443541957679932,
+              "low": 0.5462549043349592
+            },
+            "denominator": 32,
+            "numerator": 23,
+            "reason": null,
+            "value": 0.71875
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.5101091596030786
+            },
+            "denominator": 4,
+            "numerator": 4,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Warszawa": {
+          "counts": {
+            "fn": 14,
+            "tn": 34,
+            "tp_exact": 31,
+            "tp_partial": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9832191170641916,
+              "low": 0.8039375504673153
+            },
+            "denominator": 33,
+            "numerator": 31,
+            "reason": null,
+            "value": 0.9393939393939394
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.7783255623483881,
+              "low": 0.5167092444816402
+            },
+            "denominator": 47,
+            "numerator": 31,
+            "reason": null,
+            "value": 0.6595744680851063
+          },
+          "f1": 0.825,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.8134874956680418,
+              "low": 0.5602232596499943
+            },
+            "denominator": 47,
+            "numerator": 33,
+            "reason": null,
+            "value": 0.7021276595744681
+          },
+          "source_basis_counts": {
+            "block": 30,
+            "page": 7
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.8036673355286044,
+              "low": 0.514636671137366
+            },
+            "denominator": 37,
+            "numerator": 25,
+            "reason": null,
+            "value": 0.6756756756756757
+          },
+          "source_status_counts": {
+            "consistent": 25,
+            "indeterminate": 10,
+            "wrong_page": 2
+          },
+          "source_status_counts_required_values": {
+            "consistent": 25,
+            "indeterminate": 10,
+            "wrong_page": 2
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.5875454026742175,
+              "low": 0.3141096617157729
+            },
+            "denominator": 47,
+            "numerator": 21,
+            "reason": null,
+            "value": 0.44680851063829785
+          },
+          "wrong_source_errors": 2,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.871271076371412
+            },
+            "denominator": 26,
+            "numerator": 26,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.8349868448809437,
+              "low": 0.500117415261907
+            },
+            "denominator": 26,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.6923076923076923
+          }
+        },
+        "Łódź": {
+          "counts": {
+            "tn": 13,
+            "tp_exact": 18,
+            "tp_partial": 5
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9033602203455142,
+              "low": 0.5809651681324879
+            },
+            "denominator": 23,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.782608695652174
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9033602203455142,
+              "low": 0.5809651681324879
+            },
+            "denominator": 23,
+            "numerator": 18,
+            "reason": null,
+            "value": 0.782608695652174
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 7,
+            "evidence": 33
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9741639744267374,
+              "low": 0.8013576634835684
+            },
+            "denominator": 40,
+            "numerator": 37,
+            "reason": null,
+            "value": 0.925
+          },
+          "source_status_counts": {
+            "consistent": 37,
+            "wrong_block": 3
+          },
+          "source_status_counts_required_values": {
+            "consistent": 25,
+            "wrong_block": 3
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8118872415619854,
+              "low": 0.4489033522338618
+            },
+            "denominator": 23,
+            "numerator": 15,
+            "reason": null,
+            "value": 0.6521739130434783
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          }
+        }
+      },
+      "overall": {
+        "counts": {
+          "fn": 42,
+          "general_found": 12,
+          "tn": 161,
+          "tp_exact": 188,
+          "tp_partial": 20
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9368911758537755,
+            "low": 0.8561547221832926
+          },
+          "denominator": 208,
+          "numerator": 188,
+          "reason": null,
+          "value": 0.9038461538461539
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.8014484338417613,
+            "low": 0.694924383094031
+          },
+          "denominator": 250,
+          "numerator": 188,
+          "reason": null,
+          "value": 0.752
+        },
+        "f1": 0.9082969432314411,
+        "general_clause_found": 12,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9818663499506557
+          },
+          "denominator": 208,
+          "numerator": 208,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.8732414471921603,
+            "low": 0.7807100417867405
+          },
+          "denominator": 250,
+          "numerator": 208,
+          "reason": null,
+          "value": 0.832
+        },
+        "source_basis_counts": {
+          "block": 229,
+          "evidence": 33,
+          "page": 10
+        },
+        "source_consistent": {
+          "ci95": {
+            "high": 0.814569224703186,
+            "low": 0.7147203193418549
+          },
+          "denominator": 272,
+          "numerator": 209,
+          "reason": null,
+          "value": 0.7683823529411765
+        },
+        "source_status_counts": {
+          "consistent": 209,
+          "indeterminate": 30,
+          "wrong_block": 4,
+          "wrong_page": 29
+        },
+        "source_status_counts_required_values": {
+          "consistent": 184,
+          "indeterminate": 30,
+          "wrong_block": 4,
+          "wrong_page": 29
+        },
+        "strict_end_to_end": {
+          "ci95": {
+            "high": 0.6085025609759676,
+            "low": 0.48604464224989763
+          },
+          "denominator": 250,
+          "numerator": 137,
+          "reason": null,
+          "value": 0.548
+        },
+        "wrong_source_errors": 30,
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 0.9999999999999999,
+            "low": 0.9622800093057041
+          },
+          "denominator": 98,
+          "numerator": 98,
+          "reason": null,
+          "value": 1.0
+        },
+        "zone_assignment_source_aware": {
+          "ci95": {
+            "high": 0.7853681938489985,
+            "low": 0.6073991568880237
+          },
+          "denominator": 98,
+          "numerator": 69,
+          "reason": null,
+          "value": 0.7040816326530612
+        }
+      }
+    },
+    "v3": {
+      "by_format": {
+        "html": {
+          "counts": {
+            "tn": 13,
+            "tp_exact": 20,
+            "tp_partial": 3
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9546234094181704,
+              "low": 0.6787251755146014
+            },
+            "denominator": 23,
+            "numerator": 20,
+            "reason": null,
+            "value": 0.8695652173913043
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9546234094181704,
+              "low": 0.6787251755146014
+            },
+            "denominator": 23,
+            "numerator": 20,
+            "reason": null,
+            "value": 0.8695652173913043
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 7,
+            "evidence": 33
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9741639744267374,
+              "low": 0.8013576634835684
+            },
+            "denominator": 40,
+            "numerator": 37,
+            "reason": null,
+            "value": 0.925
+          },
+          "source_status_counts": {
+            "consistent": 37,
+            "wrong_block": 3
+          },
+          "source_status_counts_required_values": {
+            "consistent": 25,
+            "wrong_block": 3
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8745138402805501,
+              "low": 0.5352999499700668
+            },
+            "denominator": 23,
+            "numerator": 17,
+            "reason": null,
+            "value": 0.7391304347826086
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "ocr_real": {
+          "counts": {
+            "tn": 16,
+            "tp_exact": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 2
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 2
+          },
+          "source_status_counts_required_values": {
+            "consistent": 2
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "ocr_simulated": {
+          "counts": {
+            "fn": 2,
+            "tn": 13,
+            "tp_exact": 9,
+            "tp_partial": 12
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.6345344577581422,
+              "low": 0.2446996880971642
+            },
+            "denominator": 21,
+            "numerator": 9,
+            "reason": null,
+            "value": 0.42857142857142855
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.5921447775576323,
+              "low": 0.22157622687390552
+            },
+            "denominator": 23,
+            "numerator": 9,
+            "reason": null,
+            "value": 0.391304347826087
+          },
+          "f1": 0.9545454545454545,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8453609790128563
+            },
+            "denominator": 21,
+            "numerator": 21,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9758199957343082,
+              "low": 0.7320401874258483
+            },
+            "denominator": 23,
+            "numerator": 21,
+            "reason": null,
+            "value": 0.9130434782608695
+          },
+          "source_basis_counts": {
+            "page": 32
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8928208002353198
+            },
+            "denominator": 32,
+            "numerator": 32,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 32
+          },
+          "source_status_counts_required_values": {
+            "consistent": 32
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.5921447775576323,
+              "low": 0.22157622687390552
+            },
+            "denominator": 23,
+            "numerator": 9,
+            "reason": null,
+            "value": 0.391304347826087
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7575059904469021
+            },
+            "denominator": 12,
+            "numerator": 12,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "pdf_table": {
+          "counts": {
+            "tn": 8,
+            "tp_exact": 10
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 10
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 10
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "pdf_text": {
+          "counts": {
+            "general_found": 12,
+            "tn": 111,
+            "tp_exact": 192
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.980384853629872
+            },
+            "denominator": 192,
+            "numerator": 192,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.980384853629872
+            },
+            "denominator": 192,
+            "numerator": 192,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 12,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.980384853629872
+            },
+            "denominator": 192,
+            "numerator": 192,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.980384853629872
+            },
+            "denominator": 192,
+            "numerator": 192,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 280
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9901429675995781,
+              "low": 0.9540460915190865
+            },
+            "denominator": 280,
+            "numerator": 274,
+            "reason": null,
+            "value": 0.9785714285714285
+          },
+          "source_status_counts": {
+            "consistent": 274,
+            "wrong_block": 6
+          },
+          "source_status_counts_required_values": {
+            "consistent": 256,
+            "wrong_block": 6
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9856007178428293,
+              "low": 0.9335100824351757
+            },
+            "denominator": 192,
+            "numerator": 186,
+            "reason": null,
+            "value": 0.96875
+          },
+          "wrong_source_errors": 6,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9619059568959835
+            },
+            "denominator": 97,
+            "numerator": 97,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9619059568959835
+            },
+            "denominator": 97,
+            "numerator": 97,
+            "reason": null,
+            "value": 1.0
+          }
+        }
+      },
+      "by_gmina": {
+        "Białystok": {
+          "counts": {
+            "tn": 4,
+            "tp_exact": 14
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7846891945970195
+            },
+            "denominator": 14,
+            "numerator": 14,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7846891945970195
+            },
+            "denominator": 14,
+            "numerator": 14,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7846891945970195
+            },
+            "denominator": 14,
+            "numerator": 14,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7846891945970195
+            },
+            "denominator": 14,
+            "numerator": 14,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 29
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8830301998708162
+            },
+            "denominator": 29,
+            "numerator": 29,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 29
+          },
+          "source_status_counts_required_values": {
+            "consistent": 29
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7846891945970195
+            },
+            "denominator": 14,
+            "numerator": 14,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Bielsko-Biała": {
+          "counts": {
+            "tn": 12,
+            "tp_exact": 15
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 18
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8241207740667156
+            },
+            "denominator": 18,
+            "numerator": 18,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 18
+          },
+          "source_status_counts_required_values": {
+            "consistent": 18
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7961166964035129
+            },
+            "denominator": 15,
+            "numerator": 15,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7719046248681998
+            },
+            "denominator": 13,
+            "numerator": 13,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7719046248681998
+            },
+            "denominator": 13,
+            "numerator": 13,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Kraków": {
+          "counts": {
+            "tn": 46,
+            "tp_exact": 44
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 50
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9286523998213857
+            },
+            "denominator": 50,
+            "numerator": 50,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 50
+          },
+          "source_status_counts_required_values": {
+            "consistent": 50
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.9197043950765086
+            },
+            "denominator": 44,
+            "numerator": 44,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8513451233948545
+            },
+            "denominator": 22,
+            "numerator": 22,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8513451233948545
+            },
+            "denominator": 22,
+            "numerator": 22,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Krzemieniewo": {
+          "counts": {
+            "tp_exact": 9
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 34
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8984854444077807
+            },
+            "denominator": 34,
+            "numerator": 34,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 34
+          },
+          "source_status_counts_required_values": {
+            "consistent": 29
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Legnica": {
+          "counts": {
+            "tn": 8,
+            "tp_exact": 10
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 10
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 10
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.7224671969739421
+            },
+            "denominator": 10,
+            "numerator": 10,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Mogilany": {
+          "counts": {
+            "fn": 2,
+            "tn": 8,
+            "tp_exact": 8
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9433178490622331,
+              "low": 0.4901624691221323
+            },
+            "denominator": 10,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8
+          },
+          "f1": 0.888888888888889,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9433178490622331,
+              "low": 0.4901624691221323
+            },
+            "denominator": 10,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8
+          },
+          "source_basis_counts": {
+            "block": 8,
+            "page": 3
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 11
+          },
+          "source_status_counts_required_values": {
+            "consistent": 10
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9433178490622331,
+              "low": 0.4901624691221323
+            },
+            "denominator": 10,
+            "numerator": 8,
+            "reason": null,
+            "value": 0.8
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Ostrów Wielkopolski": {
+          "counts": {
+            "tn": 12,
+            "tp_exact": 33
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 39
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9103331450047065
+            },
+            "denominator": 39,
+            "numerator": 39,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 39
+          },
+          "source_status_counts_required_values": {
+            "consistent": 39
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8957300009841286
+            },
+            "denominator": 33,
+            "numerator": 33,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8063923170025951
+            },
+            "denominator": 16,
+            "numerator": 16,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8063923170025951
+            },
+            "denominator": 16,
+            "numerator": 16,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Pisz": {
+          "counts": {
+            "tn": 9
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "f1": null,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "recall": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "source_basis_counts": {},
+          "source_consistent": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_source_checks",
+            "value": null
+          },
+          "source_status_counts": {},
+          "source_status_counts_required_values": {},
+          "strict_end_to_end": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Raszków": {
+          "counts": {
+            "general_found": 12,
+            "tn": 4,
+            "tp_exact": 11
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 12,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 26
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.871271076371412
+            },
+            "denominator": 26,
+            "numerator": 26,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 26
+          },
+          "source_status_counts_required_values": {
+            "consistent": 14
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.7411670300055737
+            },
+            "denominator": 11,
+            "numerator": 11,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Stare Miasto": {
+          "counts": {
+            "tn": 7,
+            "tp_exact": 2
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 2
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 2
+          },
+          "source_status_counts_required_values": {
+            "consistent": 2
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.3423802239546494
+            },
+            "denominator": 2,
+            "numerator": 2,
+            "reason": null,
+            "value": 1.0
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": null,
+              "low": null
+            },
+            "denominator": 0,
+            "numerator": 0,
+            "reason": "no_eligible_cases",
+            "value": null
+          }
+        },
+        "Szczytno": {
+          "counts": {
+            "tn": 4,
+            "tp_exact": 32
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8928208002353198
+            },
+            "denominator": 32,
+            "numerator": 32,
+            "reason": null,
+            "value": 1.0
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8928208002353198
+            },
+            "denominator": 32,
+            "numerator": 32,
+            "reason": null,
+            "value": 1.0
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8928208002353198
+            },
+            "denominator": 32,
+            "numerator": 32,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8928208002353198
+            },
+            "denominator": 32,
+            "numerator": 32,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 44
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9359704553982842,
+              "low": 0.7329054682937222
+            },
+            "denominator": 44,
+            "numerator": 38,
+            "reason": null,
+            "value": 0.8636363636363636
+          },
+          "source_status_counts": {
+            "consistent": 38,
+            "wrong_block": 6
+          },
+          "source_status_counts_required_values": {
+            "consistent": 38,
+            "wrong_block": 6
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.9111045536226888,
+              "low": 0.6469084465243861
+            },
+            "denominator": 32,
+            "numerator": 26,
+            "reason": null,
+            "value": 0.8125
+          },
+          "wrong_source_errors": 6,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.6755924316585924
+            },
+            "denominator": 8,
+            "numerator": 8,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Warszawa": {
+          "counts": {
+            "tn": 34,
+            "tp_exact": 35,
+            "tp_partial": 12
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.8474684602847101,
+              "low": 0.6049182435213335
+            },
+            "denominator": 47,
+            "numerator": 35,
+            "reason": null,
+            "value": 0.7446808510638298
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.8474684602847101,
+              "low": 0.6049182435213335
+            },
+            "denominator": 47,
+            "numerator": 35,
+            "reason": null,
+            "value": 0.7446808510638298
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9244423947340892
+            },
+            "denominator": 47,
+            "numerator": 47,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9244423947340892
+            },
+            "denominator": 47,
+            "numerator": 47,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 32,
+            "page": 29
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.9407561312226413
+            },
+            "denominator": 61,
+            "numerator": 61,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_status_counts": {
+            "consistent": 61
+          },
+          "source_status_counts_required_values": {
+            "consistent": 61
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8474684602847101,
+              "low": 0.6049182435213335
+            },
+            "denominator": 47,
+            "numerator": 35,
+            "reason": null,
+            "value": 0.7446808510638298
+          },
+          "wrong_source_errors": 0,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8984854444077807
+            },
+            "denominator": 34,
+            "numerator": 34,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 0.9999999999999999,
+              "low": 0.8984854444077807
+            },
+            "denominator": 34,
+            "numerator": 34,
+            "reason": null,
+            "value": 1.0
+          }
+        },
+        "Łódź": {
+          "counts": {
+            "tn": 13,
+            "tp_exact": 20,
+            "tp_partial": 3
+          },
+          "cross_zone_errors": 0,
+          "exact_value_accuracy_among_found": {
+            "ci95": {
+              "high": 0.9546234094181704,
+              "low": 0.6787251755146014
+            },
+            "denominator": 23,
+            "numerator": 20,
+            "reason": null,
+            "value": 0.8695652173913043
+          },
+          "exact_value_accuracy_end_to_end": {
+            "ci95": {
+              "high": 0.9546234094181704,
+              "low": 0.6787251755146014
+            },
+            "denominator": 23,
+            "numerator": 20,
+            "reason": null,
+            "value": 0.8695652173913043
+          },
+          "f1": 1.0,
+          "general_clause_found": 0,
+          "general_clause_missed": 0,
+          "precision": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "recall": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.8568833796149266
+            },
+            "denominator": 23,
+            "numerator": 23,
+            "reason": null,
+            "value": 1.0
+          },
+          "source_basis_counts": {
+            "block": 7,
+            "evidence": 33
+          },
+          "source_consistent": {
+            "ci95": {
+              "high": 0.9741639744267374,
+              "low": 0.8013576634835684
+            },
+            "denominator": 40,
+            "numerator": 37,
+            "reason": null,
+            "value": 0.925
+          },
+          "source_status_counts": {
+            "consistent": 37,
+            "wrong_block": 3
+          },
+          "source_status_counts_required_values": {
+            "consistent": 25,
+            "wrong_block": 3
+          },
+          "strict_end_to_end": {
+            "ci95": {
+              "high": 0.8745138402805501,
+              "low": 0.5352999499700668
+            },
+            "denominator": 23,
+            "numerator": 17,
+            "reason": null,
+            "value": 0.7391304347826086
+          },
+          "wrong_source_errors": 3,
+          "zone_assignment_accuracy": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          },
+          "zone_assignment_source_aware": {
+            "ci95": {
+              "high": 1.0,
+              "low": 0.700854948272956
+            },
+            "denominator": 9,
+            "numerator": 9,
+            "reason": null,
+            "value": 1.0
+          }
+        }
+      },
+      "overall": {
+        "counts": {
+          "fn": 2,
+          "general_found": 12,
+          "tn": 161,
+          "tp_exact": 233,
+          "tp_partial": 15
+        },
+        "cross_zone_errors": 0,
+        "exact_value_accuracy_among_found": {
+          "ci95": {
+            "high": 0.9630069019117902,
+            "low": 0.9026170543993628
+          },
+          "denominator": 248,
+          "numerator": 233,
+          "reason": null,
+          "value": 0.9395161290322581
+        },
+        "exact_value_accuracy_end_to_end": {
+          "ci95": {
+            "high": 0.9571140815764412,
+            "low": 0.8938107474563457
+          },
+          "denominator": 250,
+          "numerator": 233,
+          "reason": null,
+          "value": 0.932
+        },
+        "f1": 0.9959839357429718,
+        "general_clause_found": 12,
+        "general_clause_missed": 0,
+        "precision": {
+          "ci95": {
+            "high": 0.9999999999999999,
+            "low": 0.9847465191062658
+          },
+          "denominator": 248,
+          "numerator": 248,
+          "reason": null,
+          "value": 1.0
+        },
+        "recall": {
+          "ci95": {
+            "high": 0.9978033628994382,
+            "low": 0.9713054701656801
+          },
+          "denominator": 250,
+          "numerator": 248,
+          "reason": null,
+          "value": 0.992
+        },
+        "source_basis_counts": {
+          "block": 299,
+          "evidence": 33,
+          "page": 32
+        },
+        "source_consistent": {
+          "ci95": {
+            "high": 0.9869384972481565,
+            "low": 0.9536841314579125
+          },
+          "denominator": 364,
+          "numerator": 355,
+          "reason": null,
+          "value": 0.9752747252747253
+        },
+        "source_status_counts": {
+          "consistent": 355,
+          "wrong_block": 9
+        },
+        "source_status_counts_required_values": {
+          "consistent": 325,
+          "wrong_block": 9
+        },
+        "strict_end_to_end": {
+          "ci95": {
+            "high": 0.9280347677172128,
+            "low": 0.8519796588961751
+          },
+          "denominator": 250,
+          "numerator": 224,
+          "reason": null,
+          "value": 0.896
+        },
+        "wrong_source_errors": 9,
+        "zone_assignment_accuracy": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9684716604958045
+          },
+          "denominator": 118,
+          "numerator": 118,
+          "reason": null,
+          "value": 1.0
+        },
+        "zone_assignment_source_aware": {
+          "ci95": {
+            "high": 1.0,
+            "low": 0.9684716604958045
+          },
+          "denominator": 118,
+          "numerator": 118,
+          "reason": null,
+          "value": 1.0
+        }
+      }
+    }
+  },
+  "paired": {
+    "v3": {
+      "by_format": {
+        "html": {
+          "exact": {
+            "baseline_rate": 0.782608695652174,
+            "baseline_successes": 18,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.8695652173913043,
+            "candidate_successes": 20,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 13,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6521739130434783,
+            "baseline_successes": 15,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.7391304347826086,
+            "candidate_successes": 17,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          }
+        },
+        "ocr_real": {
+          "exact": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 2,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 2,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 2,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 16,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 2,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 2,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 2,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "ocr_simulated": {
+          "exact": {
+            "baseline_rate": 0.30434782608695654,
+            "baseline_successes": 7,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.391304347826087,
+            "candidate_successes": 9,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.6875,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 2,
+            "only_candidate": 4
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 13,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.30434782608695654,
+            "baseline_successes": 7,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.391304347826087,
+            "candidate_successes": 9,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.6875,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 2,
+            "only_candidate": 4
+          }
+        },
+        "pdf_table": {
+          "exact": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 10,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 10,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 10,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 8,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 10,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 10,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 10,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "pdf_text": {
+          "exact": {
+            "baseline_rate": 0.7864583333333334,
+            "baseline_successes": 151,
+            "bootstrap_ci95": {
+              "high": 0.3193717277486911,
+              "low": 0.10919540229885058,
+              "reason": null
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 192,
+            "difference": 0.21354166666666666,
+            "mcnemar_exact_p": 9.094947017729282e-13,
+            "n_pairs": 192,
+            "n_samples": 14,
+            "only_baseline": 0,
+            "only_candidate": 41
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": 0.0,
+              "low": 0.0,
+              "reason": null
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 123,
+            "n_samples": 13,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6614583333333334,
+            "baseline_successes": 127,
+            "bootstrap_ci95": {
+              "high": 0.43548387096774194,
+              "low": 0.18354430379746836,
+              "reason": null
+            },
+            "candidate_rate": 0.96875,
+            "candidate_successes": 186,
+            "difference": 0.3072916666666667,
+            "mcnemar_exact_p": 4.373671563806525e-16,
+            "n_pairs": 192,
+            "n_samples": 14,
+            "only_baseline": 2,
+            "only_candidate": 61
+          }
+        }
+      },
+      "by_gmina": {
+        "Białystok": {
+          "exact": {
+            "baseline_rate": 0.8571428571428571,
+            "baseline_successes": 12,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 14,
+            "difference": 0.14285714285714285,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 14,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 2
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 4,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6428571428571429,
+            "baseline_successes": 9,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 14,
+            "difference": 0.35714285714285715,
+            "mcnemar_exact_p": 0.0625,
+            "n_pairs": 14,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 5
+          }
+        },
+        "Bielsko-Biała": {
+          "exact": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 15,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 15,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 15,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 12,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 15,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 15,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 15,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "Kraków": {
+          "exact": {
+            "baseline_rate": 0.75,
+            "baseline_successes": 33,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 44,
+            "difference": 0.25,
+            "mcnemar_exact_p": 0.0009765625,
+            "n_pairs": 44,
+            "n_samples": 3,
+            "only_baseline": 0,
+            "only_candidate": 11
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 46,
+            "n_samples": 3,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.38636363636363635,
+            "baseline_successes": 17,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 44,
+            "difference": 0.6136363636363636,
+            "mcnemar_exact_p": 1.4901161193847656e-08,
+            "n_pairs": 44,
+            "n_samples": 3,
+            "only_baseline": 0,
+            "only_candidate": 27
+          }
+        },
+        "Krzemieniewo": {
+          "exact": {
+            "baseline_rate": 0.8888888888888888,
+            "baseline_successes": 8,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 9,
+            "difference": 0.1111111111111111,
+            "mcnemar_exact_p": 1.0,
+            "n_pairs": 9,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 1
+          },
+          "false_alarm": {
+            "baseline_rate": null,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": null,
+            "candidate_successes": 0,
+            "difference": null,
+            "mcnemar_exact_p": null,
+            "n_pairs": 0,
+            "n_samples": 0,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.8888888888888888,
+            "baseline_successes": 8,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 9,
+            "difference": 0.1111111111111111,
+            "mcnemar_exact_p": 1.0,
+            "n_pairs": 9,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 1
+          }
+        },
+        "Legnica": {
+          "exact": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 10,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 10,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 10,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 8,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 10,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 10,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 10,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "Mogilany": {
+          "exact": {
+            "baseline_rate": 0.6,
+            "baseline_successes": 6,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.8,
+            "candidate_successes": 8,
+            "difference": 0.2,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 10,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 8,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6,
+            "baseline_successes": 6,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.8,
+            "candidate_successes": 8,
+            "difference": 0.2,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 10,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          }
+        },
+        "Ostrów Wielkopolski": {
+          "exact": {
+            "baseline_rate": 0.696969696969697,
+            "baseline_successes": 23,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 33,
+            "difference": 0.30303030303030304,
+            "mcnemar_exact_p": 0.001953125,
+            "n_pairs": 33,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 10
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 12,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6060606060606061,
+            "baseline_successes": 20,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 33,
+            "difference": 0.3939393939393939,
+            "mcnemar_exact_p": 0.000244140625,
+            "n_pairs": 33,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 13
+          }
+        },
+        "Pisz": {
+          "exact": {
+            "baseline_rate": null,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": null,
+            "candidate_successes": 0,
+            "difference": null,
+            "mcnemar_exact_p": null,
+            "n_pairs": 0,
+            "n_samples": 0,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 9,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": null,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": null,
+            "candidate_successes": 0,
+            "difference": null,
+            "mcnemar_exact_p": null,
+            "n_pairs": 0,
+            "n_samples": 0,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "Raszków": {
+          "exact": {
+            "baseline_rate": 0.6363636363636364,
+            "baseline_successes": 7,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 11,
+            "difference": 0.36363636363636365,
+            "mcnemar_exact_p": 0.125,
+            "n_pairs": 11,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 4
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 16,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6363636363636364,
+            "baseline_successes": 7,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 11,
+            "difference": 0.36363636363636365,
+            "mcnemar_exact_p": 0.125,
+            "n_pairs": 11,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 4
+          }
+        },
+        "Stare Miasto": {
+          "exact": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 2,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 2,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 2,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 7,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 1.0,
+            "baseline_successes": 2,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 2,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 2,
+            "n_samples": 1,
+            "only_baseline": 0,
+            "only_candidate": 0
+          }
+        },
+        "Szczytno": {
+          "exact": {
+            "baseline_rate": 0.71875,
+            "baseline_successes": 23,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 1.0,
+            "candidate_successes": 32,
+            "difference": 0.28125,
+            "mcnemar_exact_p": 0.00390625,
+            "n_pairs": 32,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 9
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 4,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.71875,
+            "baseline_successes": 23,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.8125,
+            "candidate_successes": 26,
+            "difference": 0.09375,
+            "mcnemar_exact_p": 0.453125,
+            "n_pairs": 32,
+            "n_samples": 2,
+            "only_baseline": 2,
+            "only_candidate": 5
+          }
+        },
+        "Warszawa": {
+          "exact": {
+            "baseline_rate": 0.6595744680851063,
+            "baseline_successes": 31,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.7446808510638298,
+            "candidate_successes": 35,
+            "difference": 0.0851063829787234,
+            "mcnemar_exact_p": 0.2890625,
+            "n_pairs": 47,
+            "n_samples": 3,
+            "only_baseline": 2,
+            "only_candidate": 6
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 34,
+            "n_samples": 3,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6170212765957447,
+            "baseline_successes": 29,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.7446808510638298,
+            "candidate_successes": 35,
+            "difference": 0.1276595744680851,
+            "mcnemar_exact_p": 0.109375,
+            "n_pairs": 47,
+            "n_samples": 3,
+            "only_baseline": 2,
+            "only_candidate": 8
+          }
+        },
+        "Łódź": {
+          "exact": {
+            "baseline_rate": 0.782608695652174,
+            "baseline_successes": 18,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.8695652173913043,
+            "candidate_successes": 20,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 13,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6521739130434783,
+            "baseline_successes": 15,
+            "bootstrap_ci95": {
+              "high": null,
+              "low": null,
+              "reason": "fewer than 5 samples"
+            },
+            "candidate_rate": 0.7391304347826086,
+            "candidate_successes": 17,
+            "difference": 0.08695652173913043,
+            "mcnemar_exact_p": 0.5,
+            "n_pairs": 23,
+            "n_samples": 2,
+            "only_baseline": 0,
+            "only_candidate": 2
+          }
+        }
+      },
+      "by_split": {
+        "development": {
+          "exact": {
+            "baseline_rate": 0.8426966292134831,
+            "baseline_successes": 75,
+            "bootstrap_ci95": {
+              "high": 0.25,
+              "low": 0.0,
+              "reason": null
+            },
+            "candidate_rate": 0.9662921348314607,
+            "candidate_successes": 86,
+            "difference": 0.12359550561797752,
+            "mcnemar_exact_p": 0.0009765625,
+            "n_pairs": 89,
+            "n_samples": 7,
+            "only_baseline": 0,
+            "only_candidate": 11
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": 0.0,
+              "low": 0.0,
+              "reason": null
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 82,
+            "n_samples": 7,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6292134831460674,
+            "baseline_successes": 56,
+            "bootstrap_ci95": {
+              "high": 0.5409836065573771,
+              "low": 0.061855670103092786,
+              "reason": null
+            },
+            "candidate_rate": 0.9325842696629213,
+            "candidate_successes": 83,
+            "difference": 0.30337078651685395,
+            "mcnemar_exact_p": 1.4901161193847656e-08,
+            "n_pairs": 89,
+            "n_samples": 7,
+            "only_baseline": 0,
+            "only_candidate": 27
+          }
+        },
+        "final": {
+          "exact": {
+            "baseline_rate": 0.7018633540372671,
+            "baseline_successes": 113,
+            "bootstrap_ci95": {
+              "high": 0.33098591549295775,
+              "low": 0.11052631578947368,
+              "reason": null
+            },
+            "candidate_rate": 0.9130434782608695,
+            "candidate_successes": 147,
+            "difference": 0.2111801242236025,
+            "mcnemar_exact_p": 5.398760549724102e-09,
+            "n_pairs": 161,
+            "n_samples": 13,
+            "only_baseline": 2,
+            "only_candidate": 36
+          },
+          "false_alarm": {
+            "baseline_rate": 0.0,
+            "baseline_successes": 0,
+            "bootstrap_ci95": {
+              "high": 0.0,
+              "low": 0.0,
+              "reason": null
+            },
+            "candidate_rate": 0.0,
+            "candidate_successes": 0,
+            "difference": 0.0,
+            "mcnemar_exact_p": null,
+            "n_pairs": 91,
+            "n_samples": 13,
+            "only_baseline": 0,
+            "only_candidate": 0
+          },
+          "strict": {
+            "baseline_rate": 0.6521739130434783,
+            "baseline_successes": 105,
+            "bootstrap_ci95": {
+              "high": 0.32298136645962733,
+              "low": 0.13414634146341464,
+              "reason": null
+            },
+            "candidate_rate": 0.8757763975155279,
+            "candidate_successes": 141,
+            "difference": 0.2236024844720497,
+            "mcnemar_exact_p": 1.7051434042514302e-08,
+            "n_pairs": 161,
+            "n_samples": 13,
+            "only_baseline": 4,
+            "only_candidate": 40
+          }
+        }
+      },
+      "n_pairs_total": 423,
+      "overall": {
+        "exact": {
+          "baseline_rate": 0.752,
+          "baseline_successes": 188,
+          "bootstrap_ci95": {
+            "high": 0.26459143968871596,
+            "low": 0.09545454545454546,
+            "reason": null
+          },
+          "candidate_rate": 0.932,
+          "candidate_successes": 233,
+          "difference": 0.18,
+          "mcnemar_exact_p": 4.355626970209414e-12,
+          "n_pairs": 250,
+          "n_samples": 20,
+          "only_baseline": 2,
+          "only_candidate": 47
+        },
+        "false_alarm": {
+          "baseline_rate": 0.0,
+          "baseline_successes": 0,
+          "bootstrap_ci95": {
+            "high": 0.0,
+            "low": 0.0,
+            "reason": null
+          },
+          "candidate_rate": 0.0,
+          "candidate_successes": 0,
+          "difference": 0.0,
+          "mcnemar_exact_p": null,
+          "n_pairs": 173,
+          "n_samples": 20,
+          "only_baseline": 0,
+          "only_candidate": 0
+        },
+        "strict": {
+          "baseline_rate": 0.644,
+          "baseline_successes": 161,
+          "bootstrap_ci95": {
+            "high": 0.36531365313653136,
+            "low": 0.14622641509433962,
+            "reason": null
+          },
+          "candidate_rate": 0.896,
+          "candidate_successes": 224,
+          "difference": 0.252,
+          "mcnemar_exact_p": 8.735848890518809e-16,
+          "n_pairs": 250,
+          "n_samples": 20,
+          "only_baseline": 4,
+          "only_candidate": 67
+        }
+      }
+    }
+  },
+  "rejection_gates": {
+    "legacy": {},
+    "v3": {}
+  }
+}

@@ -1,0 +1,4411 @@
+{
+  "errors": [
+    {
+      "acceptable_values": [
+        11.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "residual_clause",
+            "note": "zabudowa frontowa w pozostałych terenach"
+          },
+          "evidence": "dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "wysokość przy granicy z sąsiednią działką"
+          },
+          "evidence": "maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m",
+          "page": 1
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-001",
+      "error_type": "wrong_source",
+      "format": "html",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "imum 24,0 m, -- dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m, -- dla pozostałej",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 1,
+            "status": "wrong_block"
+          },
+          "source_text": "imum 21,0 m, -- dla pozostałej zabudowy - maksimum 21,0 m, z zastrzeżeniem bu",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9091743645677642,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "exact_word",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "wynosi 11,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "go części położonej bezpośrednio przy granicy z sąsiednią działką budowlaną, dla których maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m, a w przypadku przy",
+          "value": 11.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 22,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "okość zabudowy: - w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m, - w strefie SWZ 25",
+          "value": 22.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 25,5 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 22,0 m, - w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m, - w strefie SWZ 27",
+          "value": 25.5,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 27,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 25,5 m, - w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m, - dla zabudowy poz",
+          "value": 27.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        21.0
+      ],
+      "returned_values": [
+        11.0,
+        21.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 1,
+          "status": "wrong_block",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 11.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 22.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 25.5
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 27.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_exact",
+      "zone_symbol": "4.2.MW/U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "residual_clause",
+            "note": "wartość z klauzuli „w pozostałych terenach”"
+          },
+          "evidence": "w pozostałych terenach - minimum 20%",
+          "page": 1
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "residual_clause",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-002",
+      "error_type": "value_error",
+      "format": "html",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.9310111951173914,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "minimum 60%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "gicznie czynnego w powierzchni strefy - minimum 60%, - w terenie 1.10.MW/U - zakaz realizac",
+          "value": 60.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.9535044385975141,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.6,
+            "scope_kind": "residual_clause",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "unconditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "minimum 20%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "minimum 10%, - w pozostałych terenach - minimum 20%, d) w przypadku realizacji garażu o pow",
+          "value": 20.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        20.0
+      ],
+      "returned_values": [
+        20.0,
+        60.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 20.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_partial",
+      "zone_symbol": "4.2.MW/U"
+    },
+    {
+      "acceptable_values": [
+        11.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "residual_clause",
+            "note": "zabudowa frontowa w pozostałych terenach"
+          },
+          "evidence": "dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "wysokość przy granicy z sąsiednią działką"
+          },
+          "evidence": "maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m",
+          "page": 1
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-003",
+      "error_type": "wrong_source",
+      "format": "html",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "imum 24,0 m, -- dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m, -- dla pozostałej",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 1,
+            "status": "wrong_block"
+          },
+          "source_text": "imum 21,0 m, -- dla pozostałej zabudowy - maksimum 21,0 m, z zastrzeżeniem bu",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9091743645677642,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "exact_word",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "wynosi 11,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "go części położonej bezpośrednio przy granicy z sąsiednią działką budowlaną, dla których maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m, a w przypadku przy",
+          "value": 11.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 22,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "okość zabudowy: - w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m, - w strefie SWZ 25",
+          "value": 22.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 25,5 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 22,0 m, - w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m, - w strefie SWZ 27",
+          "value": 25.5,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 27,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 25,5 m, - w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m, - dla zabudowy poz",
+          "value": 27.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        21.0
+      ],
+      "returned_values": [
+        11.0,
+        21.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 1,
+          "status": "wrong_block",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 11.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 22.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 25.5
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 27.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_exact",
+      "zone_symbol": "6.6.MW/U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "residual_clause",
+            "note": "wartość z klauzuli „w pozostałych terenach”"
+          },
+          "evidence": "w pozostałych terenach - minimum 20%",
+          "page": 1
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "residual_clause",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-004",
+      "error_type": "value_error",
+      "format": "html",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.9310111951173914,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "minimum 60%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "gicznie czynnego w powierzchni strefy - minimum 60%, - w terenie 1.10.MW/U - zakaz realizac",
+          "value": 60.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.9535044385975141,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.6,
+            "scope_kind": "residual_clause",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "unconditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "minimum 20%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "minimum 10%, - w pozostałych terenach - minimum 20%, d) w przypadku realizacji garażu o pow",
+          "value": 20.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        20.0
+      ],
+      "returned_values": [
+        20.0,
+        60.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 20.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_partial",
+      "zone_symbol": "6.6.MW/U"
+    },
+    {
+      "acceptable_values": [
+        11.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "residual_clause",
+            "note": "zabudowa frontowa w pozostałych terenach"
+          },
+          "evidence": "dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "applicability_unresolved",
+            "note": "przynależność terenu do strefy SWZ wynika wyłącznie z rysunku planu"
+          },
+          "evidence": "w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m",
+          "page": 1
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "wysokość przy granicy z sąsiednią działką"
+          },
+          "evidence": "maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m",
+          "page": 1
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-005",
+      "error_type": "wrong_source",
+      "format": "html",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "imum 24,0 m, -- dla zabudowy frontowej w pozostałych terenach - maksimum 21,0 m, -- dla pozostałej",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9584263994030136,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "maksimum 21,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 1,
+            "status": "wrong_block"
+          },
+          "source_text": "imum 21,0 m, -- dla pozostałej zabudowy - maksimum 21,0 m, z zastrzeżeniem bu",
+          "value": 21.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9091743645677642,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "exact_word",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "wynosi 11,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "go części położonej bezpośrednio przy granicy z sąsiednią działką budowlaną, dla których maksymalna wysokość zabudowy w odległości do 4,0 m od tej granicy wynosi 11,0 m, a w przypadku przy",
+          "value": 11.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 22,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "okość zabudowy: - w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m, - w strefie SWZ 25",
+          "value": 22.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 25,5 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 22,0 m, - w strefie SWZ 25,5 oznaczonej na rysunku planu - maksimum 25,5 m, - w strefie SWZ 27",
+          "value": 25.5,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.8831510788294965,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.3,
+            "scope_kind": "fallback",
+            "scope_strategy": 4,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "maksimum 27,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "aksimum 25,5 m, - w strefie SWZ 27 oznaczonej na rysunku planu - maksimum 27,0 m, - dla zabudowy poz",
+          "value": 27.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        21.0
+      ],
+      "returned_values": [
+        11.0,
+        21.0,
+        22.0,
+        25.5,
+        27.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 1,
+          "status": "wrong_block",
+          "value": 21.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 11.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 22.0
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 25.5
+        },
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 27.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_exact",
+      "zone_symbol": "6.8.MW/U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "symbol_typo_in_source",
+            "note": "w wykazie terenów wpisano 6.8MW/U bez kropki"
+          },
+          "evidence": "w terenach: 1.10.MW/U, 5.3.MW/U, 6.4.MW/U i 6.8MW/U - minimum 10%",
+          "page": 1
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "lodz_lxxviii_2337_23",
+      "document_sha256": null,
+      "document_url": "https://mapa.mpu.lodz.pl/_wypisy/190/6.8.MW_U.html",
+      "engine": "v3",
+      "error_id": "P-006",
+      "error_type": "value_error",
+      "format": "html",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.9781718496443446,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "inherited_noun"
+            ],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "unconditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": false,
+          "page": 1,
+          "raw_value": "minimum 10%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              1
+            ],
+            "basis": "evidence",
+            "reason": null,
+            "returned_page": 1,
+            "status": "consistent"
+          },
+          "source_text": "10.MW/U, 5.3.MW/U, 6.4.MW/U i 6.8MW/U - minimum 10%, - w pozostałych terenach - minimum 20%",
+          "value": 10.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9310111951173914,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 1.0,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.8,
+            "scope_kind": "zone_section",
+            "scope_strategy": 2,
+            "strategy": "max_min_noun",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 1,
+          "raw_value": "minimum 60%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "gicznie czynnego w powierzchni strefy - minimum 60%, - w terenie 1.10.MW/U - zakaz realizac",
+          "value": 60.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        10.0
+      ],
+      "returned_values": [
+        10.0,
+        60.0
+      ],
+      "sample_id": "D04-lodz-html-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            1
+          ],
+          "basis": "evidence",
+          "reason": null,
+          "returned_page": 1,
+          "status": "consistent",
+          "value": 10.0
+        }
+      ],
+      "split": "development",
+      "verdict": "tp_partial",
+      "zone_symbol": "6.8.MW/U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "wskaźnik intensywności zabudowy nie może przekraczać 0,4",
+          "page": 4
+        }
+      ],
+      "category": "recognition",
+      "cause_hint": "ocr_noise_or_wording",
+      "document_id": "libertow_xxv_213_05_sim_ocr",
+      "document_sha256": "bb35df8e2419db36cb9d2b0c4fbb42f793992fd21978c60a7142bf1f669affb1",
+      "document_url": "https://bip.malopolska.pl/pobierz/545916.html",
+      "engine": "v3",
+      "error_id": "P-007",
+      "error_type": "detection_fn",
+      "format": "ocr_simulated",
+      "parameter": "max_intensity",
+      "parser_outputs": [],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        0.4
+      ],
+      "returned_values": [],
+      "sample_id": "F11-libertow-sim-ocr",
+      "source_checks": [],
+      "split": "final",
+      "verdict": "fn",
+      "zone_symbol": "MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "building_line_not_setback_phrase",
+            "note": "odległość od linii rozgraniczających drogi, nie od granicy działki"
+          },
+          "evidence": "nieprzekraczalna linia zabudowy w odległości 6,0 m od linii rozgraniczających drogi",
+          "page": 4
+        }
+      ],
+      "category": "recognition",
+      "cause_hint": "building_line_not_setback_phrase",
+      "document_id": "libertow_xxv_213_05_sim_ocr",
+      "document_sha256": "bb35df8e2419db36cb9d2b0c4fbb42f793992fd21978c60a7142bf1f669affb1",
+      "document_url": "https://bip.malopolska.pl/pobierz/545916.html",
+      "engine": "v3",
+      "error_id": "P-008",
+      "error_type": "detection_fn",
+      "format": "ocr_simulated",
+      "parameter": "setback_m",
+      "parser_outputs": [],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        6.0
+      ],
+      "returned_values": [],
+      "sample_id": "F11-libertow-sim-ocr",
+      "source_checks": [],
+      "split": "final",
+      "verdict": "fn",
+      "zone_symbol": "MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "implicit_percent",
+            "note": "udział podany jako ułamek"
+          },
+          "evidence": "ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "implicit_percent",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-009",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_coverage_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,35",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maks",
+          "value": 35.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,25",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: -_ budynków mieszkalnych: wolnostojąca, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,25. d) ustala się maks",
+          "value": 25.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "0,3",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maks",
+          "value": 30.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        35.0
+      ],
+      "returned_values": [
+        25.0,
+        30.0,
+        35.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 35.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną wysokość zabudowy: 10,0 m",
+          "page": 10
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "budynki z dachem płaskim"
+          },
+          "evidence": "dla budynków mieszkalnych jednorodzinnych z dachem płaskim: 6,0 m",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "conditional_value",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-010",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "10.0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 10.0 m, przy czym dla budynków mieszkalnych je",
+          "value": 10.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": ".0 m, przy czym dla budynków mieszkalnych jednorodzinnych z dachem płaskim: 6,0 m; z uwzględnieniem $",
+          "value": 6.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "12,0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 12,0 m, przy czym dla budynków usługowych z da",
+          "value": 12.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "11,0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": ",0 m, przy czym dla budynków usługowych z dachem płaskim: 11,0 m; z uwzględnieniem $",
+          "value": 11.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        6.0,
+        10.0
+      ],
+      "returned_values": [
+        6.0,
+        10.0,
+        11.0,
+        12.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 10.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 6.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną intensywność zabudowy: 1,0",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-011",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_intensity",
+      "parser_outputs": [
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A1MN:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "1.0",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A1MN:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,8",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "a się maksymalną intensywność zabudowy: 0,8, e) ustala się minimalny udział procent",
+          "value": 0.8,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "1,0",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        1.0
+      ],
+      "returned_values": [
+        0.8,
+        1.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 1.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 1.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 60%",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-012",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "60%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 60%, z zachowaniem wymo",
+          "value": 60.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "80%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 80%, z zachowaniem wymo",
+          "value": 80.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        60.0
+      ],
+      "returned_values": [
+        60.0,
+        80.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 60.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "implicit_percent",
+            "note": "udział podany jako ułamek"
+          },
+          "evidence": "ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3",
+          "page": 11
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "implicit_percent",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-013",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_coverage_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,35",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maks",
+          "value": 35.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,25",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: -_ budynków mieszkalnych: wolnostojąca, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,25. d) ustala się maks",
+          "value": 25.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "0,3",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maks",
+          "value": 30.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        30.0
+      ],
+      "returned_values": [
+        25.0,
+        30.0,
+        35.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 30.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1U-O"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną wysokość zabudowy: 12,0 m",
+          "page": 11
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "budynki z dachem płaskim"
+          },
+          "evidence": "dla budynków usługowych z dachem płaskim: 11,0 m",
+          "page": 11
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "conditional_value",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-014",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "10.0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 10.0 m, przy czym dla budynków mieszkalnych je",
+          "value": 10.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "6,0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": ".0 m, przy czym dla budynków mieszkalnych jednorodzinnych z dachem płaskim: 6,0 m; z uwzględnieniem $",
+          "value": 6.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "12,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 12,0 m, przy czym dla budynków usługowych z da",
+          "value": 12.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "11,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": ",0 m, przy czym dla budynków usługowych z dachem płaskim: 11,0 m; z uwzględnieniem $",
+          "value": 11.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        11.0,
+        12.0
+      ],
+      "returned_values": [
+        6.0,
+        10.0,
+        11.0,
+        12.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 12.0
+        },
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 11.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1U-O"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną intensywność zabudowy: 1,0",
+          "page": 11
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-015",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_intensity",
+      "parser_outputs": [
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A1U-O:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "1.0",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A1U-O:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,8",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "a się maksymalną intensywność zabudowy: 0,8, e) ustala się minimalny udział procent",
+          "value": 0.8,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "1,0",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        1.0
+      ],
+      "returned_values": [
+        0.8,
+        1.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 1.0
+        },
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 1.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1U-O"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 80%",
+          "page": 11
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-016",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "60%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 60%, z zachowaniem wymo",
+          "value": 60.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "80%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              11
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 11,
+            "status": "consistent"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 80%, z zachowaniem wymo",
+          "value": 80.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        80.0
+      ],
+      "returned_values": [
+        60.0,
+        80.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            11
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 11,
+          "status": "consistent",
+          "value": 80.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A1U-O"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": {
+            "kind": "implicit_percent",
+            "note": "udział podany jako ułamek"
+          },
+          "evidence": "ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,25",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "implicit_percent",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-017",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_coverage_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,35",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maks",
+          "value": 35.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,25",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "formę zabudowy: -_ budynków mieszkalnych: wolnostojąca, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,25. d) ustala się maks",
+          "value": 25.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6201929964674296,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [
+              "ratio_to_percent"
+            ],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "0,3",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maks",
+          "value": 30.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        25.0
+      ],
+      "returned_values": [
+        25.0,
+        30.0,
+        35.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 25.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A2MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną wysokość zabudowy: 10,0 m",
+          "page": 10
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "budynki z dachem płaskim"
+          },
+          "evidence": "dla budynków mieszkalnych jednorodzinnych z dachem płaskim: 6,0 m",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "conditional_value",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-018",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "10.0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 10.0 m, przy czym dla budynków mieszkalnych je",
+          "value": 10.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": ".0 m, przy czym dla budynków mieszkalnych jednorodzinnych z dachem płaskim: 6,0 m; z uwzględnieniem $",
+          "value": 6.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "12,0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "stala się maksymalną wysokość zabudowy: 12,0 m, przy czym dla budynków usługowych z da",
+          "value": 12.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "11,0 m",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": ",0 m, przy czym dla budynków usługowych z dachem płaskim: 11,0 m; z uwzględnieniem $",
+          "value": 11.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        6.0,
+        10.0
+      ],
+      "returned_values": [
+        6.0,
+        10.0,
+        11.0,
+        12.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 10.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 6.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A2MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się maksymalną intensywność zabudowy: 0,8",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-019",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "max_intensity",
+      "parser_outputs": [
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A2MN:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "1.0",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": false
+        },
+        {
+          "confidence": 0.31671175443126465,
+          "conflict_group_id": "A2MN:max_intensity#fa24493363",
+          "features": {
+            "candidate_count": 2,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conflict",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "0,8",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "a się maksymalną intensywność zabudowy: 0,8, e) ustala się minimalny udział procent",
+          "value": 0.8,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6693024305566488,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "adjective",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "1,0",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się mini",
+          "value": 1.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        0.8
+      ],
+      "returned_values": [
+        0.8,
+        1.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 0.8
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A2MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 60%",
+          "page": 10
+        }
+      ],
+      "category": "normalization_or_value",
+      "cause_hint": "value_from_other_context",
+      "document_id": "falenica_sim_ocr",
+      "document_sha256": "d4727f4405b658b4eea46c0f930b58a78d364e135b2834ad432eea54544da657",
+      "document_url": "https://architektura.um.warszawa.pl/documents/12025039/36955346/MPZP_Falenica_A2_tekst.pdf/9df5251f-8fdf-0fe5-7c6f-320198ddca80?t=1637831017276",
+      "engine": "v3",
+      "error_id": "P-020",
+      "error_type": "value_error",
+      "format": "ocr_simulated",
+      "parameter": "min_biologically_active_percent",
+      "parser_outputs": [
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 10,
+          "raw_value": "60%",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "page",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ę formę zabudowy: — budynków mieszkalnych: wolnostojąca, bliźniacza lub szeregowa, — wiat, budynków gospodarczych i garażowych: zintegrowana z budynkiem mieszkalnym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,35, d) ustala się maksymalną intensywność zabudowy: 1.0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 60%, z zachowaniem wymo",
+          "value": 60.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.6002003607612012,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "ocr",
+            "flags": [],
+            "ocr_quality": 0.9152533140050594,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.225,
+            "scope_kind": "fallback",
+            "scope_strategy": 0,
+            "strategy": "bare",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": true
+          },
+          "manual_review_required": true,
+          "page": 11,
+          "raw_value": "80%",
+          "review_status": null,
+          "source_check": {
+            "basis": null,
+            "reason": "value not in the annotation",
+            "status": "not_applicable"
+          },
+          "source_text": "formę zabudowy: —_ budynki usługowe: wolnostojące, zespoły budynków, — budynki o funkcji gospodarczej i garaże: wolnostojące lub zintegrowane z budynkiem usługowym, c) ustala się maksymalną wielkość powierzchni zabudowy w stosunku do powierzchni działki: 0,3, d) ustala się maksymalną intensywność zabudowy: 1,0, e) ustala się minimalny udział procentowy powierzchni biologicznie czynnej w odniesieniu do powierzchni działki: 80%, z zachowaniem wymo",
+          "value": 80.0,
+          "value_correct": false
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        60.0
+      ],
+      "returned_values": [
+        60.0,
+        80.0
+      ],
+      "sample_id": "F12-falenica-sim-ocr",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "page",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 60.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_partial",
+      "zone_symbol": "A2MN"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "nie wyżej jednak niż 10,0 m",
+          "page": 10
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "budynki gospodarcze, garaże, wiaty"
+          },
+          "evidence": "wysokość zabudowy – nie wyżej niż 6,0 m",
+          "page": 10
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-021",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "nie wyżej jednak niż 10,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "nadziemnych (w tym poddasze użytkowe) – nie wyżej jednak niż 10,0 m, b) dopuszcza się wykonanie jednej kond",
+          "value": 10.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "nie wyżej niż 6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "ch i garażowych: a) wysokość zabudowy – nie wyżej niż 6,0 m, b) usytuowanie głównych kalenic budynk",
+          "value": 6.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "nie wyżej niż 6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 10,
+            "status": "wrong_block"
+          },
+          "source_text": "a wiaty, altany: a) wysokość zabudowy – nie wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o",
+          "value": 6.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        6.0,
+        10.0
+      ],
+      "returned_values": [
+        6.0,
+        10.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 10.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 6.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 10,
+          "status": "wrong_block",
+          "value": 6.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1ML-U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "page": 10
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-022",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "roof_angle_max_deg",
+      "parser_outputs": [
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, d) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, c) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 10,
+            "status": "wrong_block"
+          },
+          "source_text": "wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        45.0
+      ],
+      "returned_values": [
+        45.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 45.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 45.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 10,
+          "status": "wrong_block",
+          "value": 45.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1ML-U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "page": 10
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-023",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "roof_angle_min_deg",
+      "parser_outputs": [
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, d) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 10,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, c) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 10,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              10
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 10,
+            "status": "wrong_block"
+          },
+          "source_text": "wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        30.0
+      ],
+      "returned_values": [
+        30.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 30.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 10,
+          "status": "consistent",
+          "value": 30.0
+        },
+        {
+          "annotation_pages": [
+            10
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 10,
+          "status": "wrong_block",
+          "value": 30.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1ML-U"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "nie wyżej jednak niż 10,0 m",
+          "page": 8
+        },
+        {
+          "ambiguity": {
+            "kind": "conditional_value",
+            "note": "budynki gospodarcze, garaże, wiaty"
+          },
+          "evidence": "wysokość zabudowy – nie wyżej niż 6,0 m",
+          "page": 9
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-024",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "max_building_height_m",
+      "parser_outputs": [
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 8,
+          "raw_value": "nie wyżej jednak niż 10,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 8,
+            "status": "consistent"
+          },
+          "source_text": "nadziemnych (w tym poddasze użytkowe) – nie wyżej jednak niż 10,0 m, b) dopuszcza się wykonanie jednej kond",
+          "value": 10.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "nie wyżej niż 6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              9
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 9,
+            "status": "consistent"
+          },
+          "source_text": "ch i garażowych: a) wysokość zabudowy – nie wyżej niż 6,0 m, b) usytuowanie głównych kalenic budynk",
+          "value": 6.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9635894077946554,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "comparative",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "nie wyżej niż 6,0 m",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              9
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 9,
+            "status": "wrong_block"
+          },
+          "source_text": "a wiaty, altany: a) wysokość zabudowy – nie wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o",
+          "value": 6.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        6.0,
+        10.0
+      ],
+      "returned_values": [
+        6.0,
+        10.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 8,
+          "status": "consistent",
+          "value": 10.0
+        },
+        {
+          "annotation_pages": [
+            9
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 9,
+          "status": "consistent",
+          "value": 6.0
+        },
+        {
+          "annotation_pages": [
+            9
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 9,
+          "status": "wrong_block",
+          "value": 6.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1MNW"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "page": 8
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-025",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "roof_angle_max_deg",
+      "parser_outputs": [
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 8,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 8,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, d) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 9,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, c) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 9,
+            "status": "wrong_block"
+          },
+          "source_text": "wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 45.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        45.0
+      ],
+      "returned_values": [
+        45.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 8,
+          "status": "consistent",
+          "value": 45.0
+        },
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 9,
+          "status": "consistent",
+          "value": 45.0
+        },
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 9,
+          "status": "wrong_block",
+          "value": 45.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1MNW"
+    },
+    {
+      "acceptable_values": [],
+      "annotation_evidence": [
+        {
+          "ambiguity": null,
+          "evidence": "kącie nachylenia połaci dachowych od 30º do 45º",
+          "page": 8
+        }
+      ],
+      "category": "assignment",
+      "cause_hint": "value_from_other_source",
+      "document_id": "szczytno_lxxvi_555_2023",
+      "document_sha256": "ce76f5d6bb32fa2b4e9bca844cd732565fcf8ab27fb3c968269b526f6df91229",
+      "document_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2023/5351/akt.pdf",
+      "engine": "v3",
+      "error_id": "P-026",
+      "error_type": "wrong_source",
+      "format": "pdf_text",
+      "parameter": "roof_angle_min_deg",
+      "parser_outputs": [
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 8,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 8,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, d) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": null,
+            "returned_page": 9,
+            "status": "consistent"
+          },
+          "source_text": "iałkę budowlaną, c) dachy dwuspadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        },
+        {
+          "confidence": 0.9457872499669712,
+          "conflict_group_id": null,
+          "features": {
+            "candidate_count": 1,
+            "extraction_method": "pdf_text",
+            "flags": [
+              "degree_letter"
+            ],
+            "ocr_quality": 0.9545454545454546,
+            "origin": "deterministic",
+            "quote_verified": true,
+            "scope_confidence": 0.9,
+            "scope_kind": "zone_section",
+            "scope_strategy": 1,
+            "strategy": "range_from_to",
+            "symbols_inferred": false,
+            "value_kind": "conditional",
+            "zone_ambiguous": false
+          },
+          "manual_review_required": false,
+          "page": 9,
+          "raw_value": "od 30º do 45º",
+          "review_status": null,
+          "source_check": {
+            "annotation_pages": [
+              8
+            ],
+            "basis": "block",
+            "reason": "value lies outside the annotated zone block",
+            "returned_page": 9,
+            "status": "wrong_block"
+          },
+          "source_text": "wyżej niż 6,0 m, b) dachy dwuspadowe lub wielospadowe o kącie nachylenia połaci dachowych od 30º do 45º, kryte dachówką cer",
+          "value": 30.0,
+          "value_correct": true
+        }
+      ],
+      "parser_version": "mpzp-parser/3.0-det+scope.1",
+      "required_values": [
+        30.0
+      ],
+      "returned_values": [
+        30.0
+      ],
+      "sample_id": "F13-szczytno-2023-multi",
+      "source_checks": [
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 8,
+          "status": "consistent",
+          "value": 30.0
+        },
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": null,
+          "returned_page": 9,
+          "status": "consistent",
+          "value": 30.0
+        },
+        {
+          "annotation_pages": [
+            8
+          ],
+          "basis": "block",
+          "reason": "value lies outside the annotated zone block",
+          "returned_page": 9,
+          "status": "wrong_block",
+          "value": 30.0
+        }
+      ],
+      "split": "final",
+      "verdict": "tp_exact",
+      "zone_symbol": "1MNW"
+    }
+  ],
+  "manifest_sha256": "498756aa2ab7a1834ec6b49ec10ade0a99f428fdcfa99b16f0fa2926ef33c2d9"
+}

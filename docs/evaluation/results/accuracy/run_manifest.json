@@ -1,0 +1,202 @@
+{
+  "code_fingerprint": {
+    "app/services/geometry.py": "4666a3a12ab150ff48ed3c08cf246ab7d441ac49721a531c87f0833dabcaef1f",
+    "app/services/mpzp.py": "422c4b44d7338bef4171e90dcf5bbb7325fa8da9ef34b5df20bc629bd7e6c969",
+    "app/services/mpzp_parser.py": "dc0595ae72aad42f2288f4f8adfb63db1f5b1e14d9715b5a90689da433880ca9",
+    "app/services/mpzp_zones.py": "389518ad154f7a5622836b906e7d8e33293e05cdc791dcb32ac181fbce9c1103",
+    "app/services/pog_analyzer.py": "5d908945895bd79a6bb2ce4ddf3111729b4eb7f66982c69c396af618ca82f105",
+    "scripts/evaluate_reference_corpus.py": "b77106ce97796ad6339f6b26f48f3cdfd6c6320bbce4a83459dede74eb3dc51b",
+    "tests/parcel_fixtures_config.py": "2e2363253b382bb88dea8ac970981b2fc18c9404d3399bab57f3e84174394014"
+  },
+  "commit_sha": "cbefc0a22ba65bbcdfd205132ebd8070c34120db",
+  "corpus_artifact_count": 60,
+  "corpus_artifact_hashes": {
+    "evidence:real-001-146510-8-0502-1-3": "937808640ff12437a1a7840ce4bfcf672a6f5dd86da6fce6e0c556ecb33b7194",
+    "evidence:real-002-146510-8-0310-82-2": "4982a059986f0342372906515686f91a2cda85dfe811976ddb7d868e39c6d7fe",
+    "evidence:real-003-146510-8-0504-1": "7a46e132f8aefb517559172e36021102d588c9614e08adbdbf36555e0a2cc93b",
+    "evidence:real-004-146510-8-0309-1-4": "7b740032617e935a5593da12efd6d68e82fae3650bd0b2663ec0715ddf161587",
+    "evidence:real-005-126105-9-0001-580-4": "732fce1fac021f09294760885f0299a1a1f134c64f6f1ae1f9132571d1338585",
+    "evidence:real-006-126105-9-0001-49-2": "4dc9ad4241a898c4141e26cca7d7f956a5d36ecda6b575dd55ee6585cba50a96",
+    "evidence:real-007-126105-9-0001-540-15": "91c455c553cbc49804b8147b4cfc5143103083798606a7bcb52a1e8717cab86c",
+    "evidence:real-008-126105-9-0119-181-10": "c49ce8bdaf74aef8b1b093c434ccc660b5a54ded1dcccf19af5dea7b5f8d33f8",
+    "evidence:real-009-246101-1-0056-155-3": "56e18c81bc4e202ac231970c06c4b1f6e6c81edc022e45e40d8558ad474391dc",
+    "evidence:real-010-246101-1-0055-68-13": "26db3424ae45e76194df3385d21af73efd822f49c8de5cac96e396f71631782c",
+    "evidence:real-011-246101-1-0081-7": "486b74ef740b4947095474a91e333b75f9440597da59609e6ebf0a3aff4117cf",
+    "evidence:real-012-246101-1-0056-110-1": "1008a06a32b18edbfb62bb789c9f4dbde7a0114322079033cec815e9c3e142c8",
+    "evidence:real-013-026201-1-0009-1319-4": "54af1ee6e5c35762059aed9c0bae563b594606a20f5f100f6698c3d962ca375f",
+    "evidence:real-014-026201-1-0010-410-1": "491a6e7d2d5bf93688094c47274dac3327214ea61b316917bdb8a8c666bc3496",
+    "evidence:real-015-026201-1-0015-530": "8bf57e78ae882f3f5a41da4aae899c5769c25da9ec7896fbfc83a3fe89ae3bf4",
+    "evidence:real-016-026201-1-0009-579-9": "724b87429151cf8e41bd53245be4e955aa97ff08da6d72471f553e525274df84",
+    "evidence:real-017-281603-4-0001-496-5": "47552c5cbf33414300f4589404a298876e0e25a6f5dcd7ecf09efdcedecbb83b",
+    "evidence:real-018-281603-4-0001-358": "08befffa9a6d1c27355cdba5cd5bf469aff37ce5a50942d5c25854e80941353c",
+    "evidence:real-019-281603-4-0001-740": "4e1228380651836300d39f5f797594de67bc17c700b3afb5192f68a503497799",
+    "evidence:real-020-281603-4-0002-130": "dfc0c20667b211287ce3c40f35ffad1ef0019d4aedd6f5a0204a92ed68cedcb4",
+    "evidence:real-021-022104-2-0002-352": "75cb2d5e07e69bdb45b404e4e13e5bfd166a365ac307a8868fe0e522b52d953e",
+    "evidence:real-022-022104-2-0002-288-20": "016b7d9ad091f870d91d03d88d1b43cb56fff8fea78cd0e4f1fc3bb820048212",
+    "evidence:real-023-022104-2-0002-776": "a78a33f80cc711bb63e3db2c9f83be1463e0bde5bf0feec9e72e1447eb2c6ebd",
+    "evidence:real-024-022104-2-0002-230-2": "54ee72a8dbf96ea475c2ccbee0649987f44089a1ec07a2d9dbd951af2d5c20e7",
+    "evidence:real-025-281603-4-0001-431-66": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+    "evidence:real-026-281604-5-0011-107": "ae5cebe5ca426d8ef8c386f9caf4112a24d39002c3de442bdf33f968920a42b2",
+    "evidence:real-027-246101-1-0001-1043": "fa99addcadcb2e7101aa56d95ba9310b68107ee8e55a4d0c14b15e86669df2bc",
+    "evidence:real-028-246101-1-0004-737-26": "1871266f25b5b5e8b9f238c3d37323f58ee01c310906ea6697beb24d551c9262",
+    "evidence:real-029-246101-1-0004-741-132": "d182ba46cb21263a8ee0de88966b8a0e8b4cd78fbf1451c6d66448d49bd796b7",
+    "evidence:real-030-026201-1-0009-578-2": "2e9bd71843d6716ec65dcd38d69c94f40cf3f492152924b1b8b21a0791171ad5",
+    "geometry:real-001-146510-8-0502-1-3": "9b78b469d4e98efc8f4e23867ebb623f75ec6d2426d4bbe1250a99328fc3f155",
+    "geometry:real-002-146510-8-0310-82-2": "2c41e95120ed28e5efda6050f08d6644627b7f824aa40ddd982df9b323ef742c",
+    "geometry:real-003-146510-8-0504-1": "eb68a3e7436b6271e2e77df428c18157b4584fd3b8201ecef4eb8b03d0c3bf74",
+    "geometry:real-004-146510-8-0309-1-4": "d7e695ea9f3ae84bbcf7a19c6b4c884e4a5e21ecfe95a7eddace76dcdaef5735",
+    "geometry:real-005-126105-9-0001-580-4": "3dfe1c53b5e4845375b94a1bae27fa7bfd9b8fcad85d0b9ec96736b5e4c5caeb",
+    "geometry:real-006-126105-9-0001-49-2": "051caf199aaf72e77b2d3f57c62d6abad8e521760a4a68f145c3806ed41a004f",
+    "geometry:real-007-126105-9-0001-540-15": "4e0deda337555f5e60a989454249f181bf96d17d4bee971c82afbe1cb78edcea",
+    "geometry:real-008-126105-9-0119-181-10": "7b6b4fc269b64e6bfc56a2c3322869b2054d673b41b4b67ababeacca02ced084",
+    "geometry:real-009-246101-1-0056-155-3": "53dd0b622ab6cd52b1b96e6b9b5bfb77e6a110182286b41ac81ce281abfff128",
+    "geometry:real-010-246101-1-0055-68-13": "05c1e38472c7abfca4977eca7c58bc8497dad98df532316be7021829749641aa",
+    "geometry:real-011-246101-1-0081-7": "2504a98b6710dae6d93cdccbcce19659f4a0009d5f69ea78b76f261f8f99eb1f",
+    "geometry:real-012-246101-1-0056-110-1": "26f1ef2702e1c47d16981cc597015d3d5dc8896c8979b6451388e02ff53386ef",
+    "geometry:real-013-026201-1-0009-1319-4": "64488086e120d7fc6b83820035eacd551edfa1338fc23b58860f545a8b010d8d",
+    "geometry:real-014-026201-1-0010-410-1": "dcea0c5d77028add25229ddef60fa79ab21985e1c879702b3181260f8068a892",
+    "geometry:real-015-026201-1-0015-530": "dd8505809a0386aa1d2919d92937b4269fc22b24019d588ac0b0be7a33d4bd60",
+    "geometry:real-016-026201-1-0009-579-9": "8415c9e985ac230dc1def727517b3f72dd7f1e7a48326f509f21a75d47115f21",
+    "geometry:real-017-281603-4-0001-496-5": "b649a3e392200edc4f5bfd1d1f6ca8f3ed0a6dd6a78cd1c87b4e6afcddacd41c",
+    "geometry:real-018-281603-4-0001-358": "32891262f0c040b8bf0c893d3adf70121ed8153baf39654991bd493b7ab6e81a",
+    "geometry:real-019-281603-4-0001-740": "885112548dd916ce8c82979a395b4f81c1905ed41e4cb4a42586273efe5fc0db",
+    "geometry:real-020-281603-4-0002-130": "53b3175cdd6b6503a49f5d2815f45c0ee0b7788cad0c2f1ed00214521b0b2339",
+    "geometry:real-021-022104-2-0002-352": "a652f317043b5ed2a41ed02c9618daf12fbde1f1385b5b70112ddeaebf172aef",
+    "geometry:real-022-022104-2-0002-288-20": "9538ebb4585bda0217d4d06cb2e02ad4770fa2723abab2040d5d4ad9154be8b8",
+    "geometry:real-023-022104-2-0002-776": "3ca8f6db818747e7f37f7e3d206fcfd8f3d3c1cb73d34004d0287378343eb695",
+    "geometry:real-024-022104-2-0002-230-2": "ba2f77faa6fd303027c3255453e2f783f50a200119603b41e1d950f65b64e81a",
+    "geometry:real-025-281603-4-0001-431-66": "1535a582569209d3862977fb169160974fadea9e02a023328e387e7cdbe75ec7",
+    "geometry:real-026-281604-5-0011-107": "85644e860ef56399379ab660c655f20d6691e187ff4d6d4831cf7bb489489df2",
+    "geometry:real-027-246101-1-0001-1043": "fb94c97c9fe25e4711cf11e47edd57a9f2e695adba7e6574c0f15cc2edb2b6fc",
+    "geometry:real-028-246101-1-0004-737-26": "d147e98ff777d28d8a9f0f99b6d53f40c74bab0b5124b112d02ca619317f9e1b",
+    "geometry:real-029-246101-1-0004-741-132": "f6ee6f2f1470441fe50d74d750f866e6f0b989537fbac988775ef04a3b9709ee",
+    "geometry:real-030-026201-1-0009-578-2": "46b022199111c340e8f9b83879faba914a4350b540ecceba9d05782b46876787"
+  },
+  "corpus_id": "BK-002-real-parcels-2026-09-23",
+  "corpus_sha256": "65f16dc25c4fcde8ba6ee9051b3604f909477be7eebdb205fe8dcb8a1786d106",
+  "environment": {
+    "geos": "3.13.1",
+    "implementation": "CPython",
+    "platform": "Darwin arm64",
+    "proj": "9.5.1",
+    "pyproj": "3.7.2",
+    "python": "3.13.3",
+    "shapely": "2.1.2"
+  },
+  "manifest_sha256": "f8d42cb487fce424a11ded34b026538d669e04b8c52efd0b02f64a849becfcd1",
+  "parameters": {
+    "binary_conditions": [
+      "flood_intersection",
+      "nature_intersection",
+      "ouz_presence"
+    ],
+    "completeness_paths": [
+      "geometry.area",
+      "geometry.perimeter",
+      "pog.legal_status",
+      "pog.zone_count",
+      "ouz.intersection_area",
+      "ouz.relation",
+      "ouz.share",
+      "mpzp.mode",
+      "mpzp.plan_id",
+      "mpzp.zone_count",
+      "flood.feature_count",
+      "flood.relation",
+      "nature.feature_count",
+      "nature.relation",
+      "terrain.minimum",
+      "terrain.maximum",
+      "terrain.relief",
+      "terrain.class"
+    ],
+    "discrepancy_threshold_pp": 0.5,
+    "evaluation_thresholds": {
+      "max_failed_cases": 0,
+      "max_zone_share_mae_pp": 0.1,
+      "min_field_completeness": 0.6,
+      "min_parcel_identification_accuracy": 1.0,
+      "min_zone_class_accuracy": 0.95
+    },
+    "measurement_kinds": {
+      "flood.*": {
+        "kind": "production_contract_mapping",
+        "what": "obserwacja ISOK mapowana przez risk_section_from_structured (ten sam kontrakt co API); wartości przecięć z obserwacji"
+      },
+      "geometry.area": {
+        "kind": "production_computation",
+        "what": "calculate_geometry_metrics na zamrożonej geometrii ULDK"
+      },
+      "geometry.perimeter": {
+        "kind": "production_computation",
+        "what": "calculate_geometry_metrics na zamrożonej geometrii ULDK"
+      },
+      "mpzp.*": {
+        "kind": "observation_passthrough",
+        "what": "symbole i udziały z zamrożonego discovery KIMPZP / pomiaru Krakowa; tryb z reguły harnessu"
+      },
+      "nature.*": {
+        "kind": "production_contract_mapping",
+        "what": "obserwacja GDOŚ mapowana przez risk_section_from_structured; wartości przecięć z obserwacji"
+      },
+      "ouz.*": {
+        "kind": "observation_passthrough",
+        "what": "pole i udział OUZ skopiowane z obserwacji; relacja z reguł progowych harnessu"
+      },
+      "pog.*": {
+        "kind": "observation_passthrough",
+        "what": "udziały i pola stref skopiowane z zamrożonej obserwacji RU; brak przecięcia na geometrii stref (geometrii stref nie zamrożono)"
+      },
+      "terrain.*": {
+        "kind": "observation_passthrough",
+        "what": "wysokości z obserwacji NMT; klasa z progów harnessu (2 m, 10 m)"
+      }
+    },
+    "min_cases": 24,
+    "mode": "offline",
+    "perimeter_tolerance_m": 0.02,
+    "runner": "FrozenArtifactAnalysisRunner",
+    "seed": 20260923,
+    "tolerance_policy": "per case from manifest.cases[].tolerances"
+  },
+  "source_release_ids": {
+    "gdos": "gdos@2026-09-23",
+    "isok": "isok@2026-09-23",
+    "kimpzp": "kimpzp@2026-09-23",
+    "krakow_mpzp": "krakow_mpzp@2026-09-23",
+    "nmt": "nmt@2026-09-23",
+    "ru_pog": "ru_pog@2026-09-23",
+    "uldk": "uldk@2026-09-23"
+  },
+  "study_schema_version": "1.0.0",
+  "versions": {
+    "analysis_result_contract": "pog-v2.4+mpzp-v2.1+terrain-v1.0+risk-v1.0+quality-v1.0",
+    "mpzp_parser": "mpzp-parser/2.0",
+    "planning_rule_set": "1.0",
+    "pog_presentation_style": "2026.09.29-1",
+    "quality_policy_schema": "quality-policy/1",
+    "report_layout": "report-v2/2026.09.29-1",
+    "report_map_config": "report-map/2026.09.29-1",
+    "terrain_algorithm": "horn1981-3x3-v1",
+    "terrain_slope_classes": "slope-classes-pl-v1"
+  },
+  "worktree": {
+    "changed_paths": [
+      "README.md",
+      "backend/.coverage",
+      "backend/_imp.py",
+      "backend/scripts/build_mpzp_text_fixture.py",
+      "backend/scripts/compare_centroid_intersection.py",
+      "backend/scripts/evaluate_mpzp_parser.py",
+      "backend/scripts/evaluate_reference_corpus.py",
+      "backend/scripts/freeze_pog_zone_layers.py",
+      "backend/tests/fixtures/mpzp/README.md",
+      "backend/tests/fixtures/mpzp_evaluation/",
+      "backend/tests/test_centroid_experiment.py",
+      "backend/tests/test_evaluate_mpzp_parser.py",
+      "backend/tests/test_evaluate_reference_corpus.py",
+      "docs/evaluation/harness.md"
+    ],
+    "dirty": true
+  }
+}

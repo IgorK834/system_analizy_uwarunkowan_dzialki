@@ -1,0 +1,42 @@
+{
+  "code_fingerprint": {
+    "app/services/mpzp_zones.py": "389518ad154f7a5622836b906e7d8e33293e05cdc791dcb32ac181fbce9c1103",
+    "app/services/pog_analyzer.py": "5d908945895bd79a6bb2ce4ddf3111729b4eb7f66982c69c396af618ca82f105",
+    "scripts/compare_centroid_intersection.py": "fbec57f84d8c9379b1c7ca831fbfb0bd23e6420ec244dc6487253ec4f5e50c56"
+  },
+  "commit_sha": "cbefc0a22ba65bbcdfd205132ebd8070c34120db",
+  "corpus_id": "BK-002-real-parcels-2026-09-23",
+  "corpus_sha256": "65f16dc25c4fcde8ba6ee9051b3604f909477be7eebdb205fe8dcb8a1786d106",
+  "environment": {
+    "geos": "3.13.1",
+    "python": "3.13.3",
+    "shapely": "2.1.2"
+  },
+  "manifest_sha256": "eb48ff51a15306042a9cb3e8863053682061b5af2e6d7ab57a8aec3a8b90e4c2",
+  "parameters": {
+    "area_tolerance_sqm": 1e-06,
+    "boundary_rule": "covers (boundary inclusive); several covering zones = tie, none = none",
+    "centroid": "shapely parcel.centroid (never representative_point)",
+    "crs": "EPSG:2180",
+    "intersection_engine": "production analyze_pog_vectors / calculate_mpzp_zone_intersections",
+    "randomness": "none (deterministic)",
+    "significant_share_pct": 0.1,
+    "simulation_fractions": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "simulation_orientations": [
+      "vertical",
+      "horizontal"
+    ]
+  },
+  "schema_version": "1.0.0",
+  "zone_layers_manifest_sha256": null
+}

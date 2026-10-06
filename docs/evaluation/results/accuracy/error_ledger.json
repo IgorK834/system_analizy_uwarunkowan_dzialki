@@ -1,0 +1,3953 @@
+{
+  "entries": [
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-001-146510-8-0502-1-3",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-001",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/0/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-001-146510-8-0502-1-3",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-002",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/0/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-001-146510-8-0502-1-3",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-003",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-001-146510-8-0502-1-3",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-001-146510-8-0502-1-3.json",
+          "sha256": "937808640ff12437a1a7840ce4bfcf672a6f5dd86da6fce6e0c556ecb33b7194",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/0/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-002-146510-8-0310-82-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-004",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/1/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-002-146510-8-0310-82-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-005",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/1/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-002-146510-8-0310-82-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-006",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-002-146510-8-0310-82-2",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-002-146510-8-0310-82-2.json",
+          "sha256": "4982a059986f0342372906515686f91a2cda85dfe811976ddb7d868e39c6d7fe",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/1/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-003-146510-8-0504-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-007",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/2/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-003-146510-8-0504-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-008",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/2/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-003-146510-8-0504-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-009",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-003-146510-8-0504-1",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-003-146510-8-0504-1.json",
+          "sha256": "7a46e132f8aefb517559172e36021102d588c9614e08adbdbf36555e0a2cc93b",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/2/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:gdos_error",
+      "case_id": "real-003-146510-8-0504-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-010",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-003-146510-8-0504-1",
+          "json_pointer": "/observations/gdos",
+          "path": "artifacts/evidence/real-003-146510-8-0504-1.json",
+          "sha256": "7a46e132f8aefb517559172e36021102d588c9614e08adbdbf36555e0a2cc93b",
+          "type": "frozen_observation",
+          "value": {
+            "error": "Usługa GDOŚ zwróciła błąd: Server error '500 Internal Server Error' for url 'https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS%3ARezerwaty&bbox=637536.997121127%2C486371.225874029%2C637790.261896401%2C486472.231730355%2CEPSG%3A2180'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+            "error_type": "GdosServiceUnavailableError",
+            "status": "unknown"
+          }
+        },
+        {
+          "manifest_pointer": "/cases/2/expected/nature/status",
+          "method": "Błąd co najmniej jednej warstwy GDOŚ zachowano jako unknown.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja GDOŚ `unknown`: Usługa GDOŚ zwróciła błąd: Server error '500 Internal Server Error' for url 'https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS%3ARezerwaty&bbox=637536.997121127%2C486371.225874029%2C637790.261896401%2C486472.231730355%2CEPSG%3A2180'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-14",
+      "section": "nature",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-004-146510-8-0309-1-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-011",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/3/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-004-146510-8-0309-1-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-012",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/3/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-004-146510-8-0309-1-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-013",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-004-146510-8-0309-1-4",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-004-146510-8-0309-1-4.json",
+          "sha256": "7b740032617e935a5593da12efd6d68e82fae3650bd0b2663ec0715ddf161587",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/3/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-005-126105-9-0001-580-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-014",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/4/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-005-126105-9-0001-580-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-015",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/4/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-006-126105-9-0001-49-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-016",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/5/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-006-126105-9-0001-49-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-017",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/5/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-007-126105-9-0001-540-15",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-018",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/6/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-007-126105-9-0001-540-15",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-019",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/6/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-020",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/7/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-021",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/7/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector",
+      "basis": "rule:mpzp_status_label_inconsistency;verdict=mismatch",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "category": "data",
+      "difference": null,
+      "disposition": "ground_truth_inconsistency",
+      "entry_id": "E-022",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-008-126105-9-0119-181-10",
+          "json_pointer": "/observations/krakow_mpzp_derived/layers/0/intersections",
+          "path": "artifacts/evidence/real-008-126105-9-0119-181-10.json",
+          "sha256": "c49ce8bdaf74aef8b1b093c434ccc660b5a54ded1dcccf19af5dea7b5f8d33f8",
+          "type": "frozen_observation",
+          "value": [
+            {
+              "area_sqm": 307.503,
+              "attributes": {
+                "Data_DUWM": "2021-02-24T00:00:00",
+                "Data_obowiązywania": "2021-03-11T00:00:00",
+                "Data_uchwalenia": "2021-02-18T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "KLEPARZ",
+                "Ogłoszenie": "2021.1156",
+                "Oznaczenie": "ZPb.9",
+                "Rodzaj_oznaczenia": "ZPb",
+                "Uchwalenie": "LIII/1464/21",
+                "WWW": "https://www.bip.krakow.pl/?dok_id=137657",
+                "gdb_id": "5BC2EBC4FAA60174E0630D0A1EACC972",
+                "id_pg": "14703",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 100.0
+            }
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/7/expected/mpzp/values/mode",
+          "method": "Symbol potwierdzono w WFS, a ustalenia szczegółowe wymagają ręcznego odczytu tekstu uchwały BIP.",
+          "type": "ground_truth",
+          "value": "document_parse"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "document_parse",
+      "explanation": "`mode`: korpus 'document_parse', harness 'vector'; te same dowody wektorowe co w real-005…007, które mają inną etykietę.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-03",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": "available",
+      "basis": "rule:mpzp_status_label_inconsistency;status",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "category": "data",
+      "difference": null,
+      "disposition": "ground_truth_inconsistency",
+      "entry_id": "E-023",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-008-126105-9-0119-181-10",
+          "json_pointer": "/observations/krakow_mpzp_derived/layers/0/intersections",
+          "path": "artifacts/evidence/real-008-126105-9-0119-181-10.json",
+          "sha256": "c49ce8bdaf74aef8b1b093c434ccc660b5a54ded1dcccf19af5dea7b5f8d33f8",
+          "type": "frozen_observation",
+          "value": [
+            {
+              "area_sqm": 307.503,
+              "attributes": {
+                "Data_DUWM": "2021-02-24T00:00:00",
+                "Data_obowiązywania": "2021-03-11T00:00:00",
+                "Data_uchwalenia": "2021-02-18T00:00:00",
+                "Data_zasilenia": "2026-09-23",
+                "Nazwa_MPZP": "KLEPARZ",
+                "Ogłoszenie": "2021.1156",
+                "Oznaczenie": "ZPb.9",
+                "Rodzaj_oznaczenia": "ZPb",
+                "Uchwalenie": "LIII/1464/21",
+                "WWW": "https://www.bip.krakow.pl/?dok_id=137657",
+                "gdb_id": "5BC2EBC4FAA60174E0630D0A1EACC972",
+                "id_pg": "14703",
+                "opis_oznac": "Tereny zieleni urządzonej"
+              },
+              "share_pct": 100.0
+            }
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/7/expected/mpzp/status",
+          "method": "Symbol potwierdzono w WFS, a ustalenia szczegółowe wymagają ręcznego odczytu tekstu uchwały BIP.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "`status`: korpus 'manual_review', harness 'available'; te same dowody wektorowe co w real-005…007, które mają inną etykietę.",
+      "field": "status",
+      "kind": "status_disagreement",
+      "root_cause": "RC-03",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:gdos_error",
+      "case_id": "real-008-126105-9-0119-181-10",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-024",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-008-126105-9-0119-181-10",
+          "json_pointer": "/observations/gdos",
+          "path": "artifacts/evidence/real-008-126105-9-0119-181-10.json",
+          "sha256": "c49ce8bdaf74aef8b1b093c434ccc660b5a54ded1dcccf19af5dea7b5f8d33f8",
+          "type": "frozen_observation",
+          "value": {
+            "error": "Nie udało się sparsować odpowiedzi GDOŚ (warstwa GDOS:UzytkiEkologiczne): Usługa zwróciła ows:ExceptionReport: NoApplicableCode; java.util.ConcurrentModificationException\nnull",
+            "error_type": "GdosServiceUnavailableError",
+            "status": "unknown"
+          }
+        },
+        {
+          "manifest_pointer": "/cases/7/expected/nature/status",
+          "method": "Błąd co najmniej jednej warstwy GDOŚ zachowano jako unknown.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja GDOŚ `unknown`: Nie udało się sparsować odpowiedzi GDOŚ (warstwa GDOS:UzytkiEkologiczne): Usługa zwróciła ows:ExceptionReport: NoApplicableCode; java.util.ConcurrentModificationException\nnull",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-14",
+      "section": "nature",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-009-246101-1-0056-155-3",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-025",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-009-246101-1-0056-155-3",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-009-246101-1-0056-155-3.json",
+          "sha256": "56e18c81bc4e202ac231970c06c4b1f6e6c81edc022e45e40d8558ad474391dc",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/8/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-010-246101-1-0055-68-13",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-026",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-010-246101-1-0055-68-13",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-010-246101-1-0055-68-13.json",
+          "sha256": "26db3424ae45e76194df3385d21af73efd822f49c8de5cac96e396f71631782c",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/9/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-011-246101-1-0081-7",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-027",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-011-246101-1-0081-7",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-011-246101-1-0081-7.json",
+          "sha256": "486b74ef740b4947095474a91e333b75f9440597da59609e6ebf0a3aff4117cf",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/10/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-012-246101-1-0056-110-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-028",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-012-246101-1-0056-110-1",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-012-246101-1-0056-110-1.json",
+          "sha256": "1008a06a32b18edbfb62bb789c9f4dbde7a0114322079033cec815e9c3e142c8",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/11/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "moderate",
+      "basis": "rule:terrain_class_definition;verdict=mismatch",
+      "case_id": "real-012-246101-1-0056-110-1",
+      "category": "presentation",
+      "difference": null,
+      "disposition": "definition_gap",
+      "entry_id": "E-029",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-012-246101-1-0056-110-1",
+          "json_pointer": "/observations/nmt/relief_m",
+          "path": "artifacts/evidence/real-012-246101-1-0056-110-1.json",
+          "sha256": "1008a06a32b18edbfb62bb789c9f4dbde7a0114322079033cec815e9c3e142c8",
+          "type": "frozen_observation",
+          "value": 9.0
+        },
+        {
+          "manifest_pointer": "/cases/11/expected/terrain/values/class",
+          "method": "Hmin i Hmax odczytano z publicznego NMT GetMinMaxByPolygon; zgodność pola poligonu sprawdzono przed akceptacją.",
+          "type": "ground_truth",
+          "value": "relief"
+        },
+        {
+          "note": "progi klas 2 m i 10 m przyjęte przez harness",
+          "ref": "backend/scripts/evaluate_reference_corpus.py::_terrain_section",
+          "type": "code"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "relief",
+      "explanation": "Deniwelacja 9.0 m: korpus `relief`, harness `moderate` (progi harnessu 2 m / 10 m nie są zdefiniowane w protokole).",
+      "field": "class",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-02",
+      "section": "terrain",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-030",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/12/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-031",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/12/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-032",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-013-026201-1-0009-1319-4",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-013-026201-1-0009-1319-4.json",
+          "sha256": "54af1ee6e5c35762059aed9c0bae563b594606a20f5f100f6698c3d962ca375f",
+          "type": "frozen_observation",
+          "value": [
+            "7 UC,U,M",
+            "22 KD G1/2(Z1/4)"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/12/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-014-026201-1-0010-410-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-033",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/13/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-014-026201-1-0010-410-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-034",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/13/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-014-026201-1-0010-410-1",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-035",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-014-026201-1-0010-410-1",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-014-026201-1-0010-410-1.json",
+          "sha256": "491a6e7d2d5bf93688094c47274dac3327214ea61b316917bdb8a8c666bc3496",
+          "type": "frozen_observation",
+          "value": [
+            "MU9.9"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/13/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-015-026201-1-0015-530",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-036",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/14/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-015-026201-1-0015-530",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-037",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/14/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-015-026201-1-0015-530",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-038",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-015-026201-1-0015-530",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-015-026201-1-0015-530.json",
+          "sha256": "8bf57e78ae882f3f5a41da4aae899c5769c25da9ec7896fbfc83a3fe89ae3bf4",
+          "type": "frozen_observation",
+          "value": [
+            "KL 1/2"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/14/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-016-026201-1-0009-579-9",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-039",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/15/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-016-026201-1-0009-579-9",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-040",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/15/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-016-026201-1-0009-579-9",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-041",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-016-026201-1-0009-579-9",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-016-026201-1-0009-579-9.json",
+          "sha256": "724b87429151cf8e41bd53245be4e955aa97ff08da6d72471f553e525274df84",
+          "type": "frozen_observation",
+          "value": [
+            "13MWU"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/15/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-042",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/16/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-043",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/16/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-044",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-017-281603-4-0001-496-5",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-017-281603-4-0001-496-5.json",
+          "sha256": "47552c5cbf33414300f4589404a298876e0e25a6f5dcd7ecf09efdcedecbb83b",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/16/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-045",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-017-281603-4-0001-496-5",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-017-281603-4-0001-496-5.json",
+          "sha256": "47552c5cbf33414300f4589404a298876e0e25a6f5dcd7ecf09efdcedecbb83b",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/16/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-046",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-017-281603-4-0001-496-5",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-017-281603-4-0001-496-5.json",
+          "sha256": "47552c5cbf33414300f4589404a298876e0e25a6f5dcd7ecf09efdcedecbb83b",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/16/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-017-281603-4-0001-496-5",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-047",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-017-281603-4-0001-496-5",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-017-281603-4-0001-496-5.json",
+          "sha256": "47552c5cbf33414300f4589404a298876e0e25a6f5dcd7ecf09efdcedecbb83b",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/16/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-048",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/17/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-049",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/17/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-050",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-018-281603-4-0001-358",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-018-281603-4-0001-358.json",
+          "sha256": "08befffa9a6d1c27355cdba5cd5bf469aff37ce5a50942d5c25854e80941353c",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/17/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-051",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-018-281603-4-0001-358",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-018-281603-4-0001-358.json",
+          "sha256": "08befffa9a6d1c27355cdba5cd5bf469aff37ce5a50942d5c25854e80941353c",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/17/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-052",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-018-281603-4-0001-358",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-018-281603-4-0001-358.json",
+          "sha256": "08befffa9a6d1c27355cdba5cd5bf469aff37ce5a50942d5c25854e80941353c",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/17/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-018-281603-4-0001-358",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-053",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-018-281603-4-0001-358",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-018-281603-4-0001-358.json",
+          "sha256": "08befffa9a6d1c27355cdba5cd5bf469aff37ce5a50942d5c25854e80941353c",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/17/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-054",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/18/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-055",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/18/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-056",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-019-281603-4-0001-740",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-019-281603-4-0001-740.json",
+          "sha256": "4e1228380651836300d39f5f797594de67bc17c700b3afb5192f68a503497799",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/18/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-057",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-019-281603-4-0001-740",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-019-281603-4-0001-740.json",
+          "sha256": "4e1228380651836300d39f5f797594de67bc17c700b3afb5192f68a503497799",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/18/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-058",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-019-281603-4-0001-740",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-019-281603-4-0001-740.json",
+          "sha256": "4e1228380651836300d39f5f797594de67bc17c700b3afb5192f68a503497799",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/18/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-019-281603-4-0001-740",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-059",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-019-281603-4-0001-740",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-019-281603-4-0001-740.json",
+          "sha256": "4e1228380651836300d39f5f797594de67bc17c700b3afb5192f68a503497799",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/18/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-020-281603-4-0002-130",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-060",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/19/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-020-281603-4-0002-130",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-061",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/19/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-020-281603-4-0002-130",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-062",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-020-281603-4-0002-130",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-020-281603-4-0002-130.json",
+          "sha256": "dfc0c20667b211287ce3c40f35ffad1ef0019d4aedd6f5a0204a92ed68cedcb4",
+          "type": "frozen_observation",
+          "value": [
+            "B-18UT"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/19/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-063",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/20/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-064",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/20/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-065",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-021-022104-2-0002-352",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-021-022104-2-0002-352.json",
+          "sha256": "75cb2d5e07e69bdb45b404e4e13e5bfd166a365ac307a8868fe0e522b52d953e",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/20/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-066",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-021-022104-2-0002-352",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-021-022104-2-0002-352.json",
+          "sha256": "75cb2d5e07e69bdb45b404e4e13e5bfd166a365ac307a8868fe0e522b52d953e",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/20/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-067",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-021-022104-2-0002-352",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-021-022104-2-0002-352.json",
+          "sha256": "75cb2d5e07e69bdb45b404e4e13e5bfd166a365ac307a8868fe0e522b52d953e",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/20/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-021-022104-2-0002-352",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-068",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-021-022104-2-0002-352",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-021-022104-2-0002-352.json",
+          "sha256": "75cb2d5e07e69bdb45b404e4e13e5bfd166a365ac307a8868fe0e522b52d953e",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/20/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-069",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/21/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-070",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/21/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-071",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-022-022104-2-0002-288-20",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-022-022104-2-0002-288-20.json",
+          "sha256": "016b7d9ad091f870d91d03d88d1b43cb56fff8fea78cd0e4f1fc3bb820048212",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/21/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-072",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-022-022104-2-0002-288-20",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-022-022104-2-0002-288-20.json",
+          "sha256": "016b7d9ad091f870d91d03d88d1b43cb56fff8fea78cd0e4f1fc3bb820048212",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/21/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-073",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-022-022104-2-0002-288-20",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-022-022104-2-0002-288-20.json",
+          "sha256": "016b7d9ad091f870d91d03d88d1b43cb56fff8fea78cd0e4f1fc3bb820048212",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/21/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-022-022104-2-0002-288-20",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-074",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-022-022104-2-0002-288-20",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-022-022104-2-0002-288-20.json",
+          "sha256": "016b7d9ad091f870d91d03d88d1b43cb56fff8fea78cd0e4f1fc3bb820048212",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/21/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-075",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/22/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-076",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/22/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-077",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-023-022104-2-0002-776",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-023-022104-2-0002-776.json",
+          "sha256": "a78a33f80cc711bb63e3db2c9f83be1463e0bde5bf0feec9e72e1447eb2c6ebd",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/22/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-078",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-023-022104-2-0002-776",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-023-022104-2-0002-776.json",
+          "sha256": "a78a33f80cc711bb63e3db2c9f83be1463e0bde5bf0feec9e72e1447eb2c6ebd",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/22/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-079",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-023-022104-2-0002-776",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-023-022104-2-0002-776.json",
+          "sha256": "a78a33f80cc711bb63e3db2c9f83be1463e0bde5bf0feec9e72e1447eb2c6ebd",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/22/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-023-022104-2-0002-776",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-080",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-023-022104-2-0002-776",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-023-022104-2-0002-776.json",
+          "sha256": "a78a33f80cc711bb63e3db2c9f83be1463e0bde5bf0feec9e72e1447eb2c6ebd",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/22/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-081",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/23/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-082",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/23/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-083",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-024-022104-2-0002-230-2",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-024-022104-2-0002-230-2.json",
+          "sha256": "54ee72a8dbf96ea475c2ccbee0649987f44089a1ec07a2d9dbd951af2d5c20e7",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/23/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 1,
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-084",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-024-022104-2-0002-230-2",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-024-022104-2-0002-230-2.json",
+          "sha256": "54ee72a8dbf96ea475c2ccbee0649987f44089a1ec07a2d9dbd951af2d5c20e7",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/23/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zone_count`: oczekiwano None, harness/adapter daje 1.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-085",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-024-022104-2-0002-230-2",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-024-022104-2-0002-230-2.json",
+          "sha256": "54ee72a8dbf96ea475c2ccbee0649987f44089a1ec07a2d9dbd951af2d5c20e7",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/23/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['NULL']; `zones.symbols`: oczekiwano None, harness/adapter daje ['NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-024-022104-2-0002-230-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-086",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-024-022104-2-0002-230-2",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-024-022104-2-0002-230-2.json",
+          "sha256": "54ee72a8dbf96ea475c2ccbee0649987f44089a1ec07a2d9dbd951af2d5c20e7",
+          "type": "frozen_observation",
+          "value": [
+            "NULL"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/23/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-087",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/24/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-088",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/24/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "vector_discovery",
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-089",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": [
+            "16.U/US",
+            "NULL",
+            "15.U"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/mpzp/values/mode",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "raster_manual"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "raster_manual",
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['16.U/US', 'NULL', '15.U']; `mode`: oczekiwano 'raster_manual', harness/adapter daje 'vector_discovery'.",
+      "field": "mode",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": 3,
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "parser",
+      "difference": 1.0,
+      "disposition": "open_defect",
+      "entry_id": "E-090",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": [
+            "16.U/US",
+            "NULL",
+            "15.U"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": 2,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['16.U/US', 'NULL', '15.U']; `zone_count`: oczekiwano 2, harness/adapter daje 3.",
+      "field": "zone_count",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": 0.0,
+      "unit": "count"
+    },
+    {
+      "actual": [
+        "15.U",
+        "16.U/US",
+        "NULL"
+      ],
+      "basis": "rule:mpzp_null_symbol;verdict=mismatch",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-091",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": [
+            "16.U/US",
+            "NULL",
+            "15.U"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": [
+        "15.U",
+        "16.U/US"
+      ],
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['16.U/US', 'NULL', '15.U']; `zones.symbols`: oczekiwano ['15.U', '16.U/US'], harness/adapter daje ['15.U', '16.U/US', 'NULL'].",
+      "field": "zones.symbols",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "NULL",
+      "basis": "rule:mpzp_null_symbol;verdict=unexpected_actual",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "parser",
+      "difference": null,
+      "disposition": "open_defect",
+      "entry_id": "E-092",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": [
+            "16.U/US",
+            "NULL",
+            "15.U"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        },
+        {
+          "note": "przyjmuje dowolny niepusty napis, także NULL, jako symbol strefy",
+          "ref": "backend/app/services/mpzp.py::_first_matching_attribute",
+          "type": "code"
+        },
+        {
+          "call": "app.services.mpzp._parse_get_feature_info_response(symbol=NULL)",
+          "result": {
+            "zone_symbol_from_payload_NULL": {
+              "html": "NULL",
+              "json": "NULL"
+            }
+          },
+          "type": "code_probe"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": null,
+      "explanation": "Obserwacja discovery zawiera `NULL` wśród symboli ['16.U/US', 'NULL', '15.U']; `zones[NULL].presence`: oczekiwano None, harness/adapter daje 'NULL'.",
+      "field": "zones[NULL].presence",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-01",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": "code"
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-093",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": [
+            "16.U/US",
+            "NULL",
+            "15.U"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:nmt_limit",
+      "case_id": "real-025-281603-4-0001-431-66",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-094",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-025-281603-4-0001-431-66",
+          "json_pointer": "/observations/nmt",
+          "path": "artifacts/evidence/real-025-281603-4-0001-431-66.json",
+          "sha256": "85d39b8af271df9297ef76c22e4e5183e2cf4c74e3ee6d2f69993e8dc2c8b0dd",
+          "type": "frozen_observation",
+          "value": {
+            "error": "Usługa NMT zgłosiła błąd: Powierzchnia poligonu (237428.842506199) większa niż 100000 m2",
+            "error_type": "NmtServiceUnavailableError",
+            "status": "unknown"
+          }
+        },
+        {
+          "manifest_pointer": "/cases/24/expected/terrain/status",
+          "method": "Limit powierzchni lub brak odpowiedzi NMT zachowano jako unknown.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "NMT `unknown`: Usługa NMT zgłosiła błąd: Powierzchnia poligonu (237428.842506199) większa niż 100000 m2",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-15",
+      "section": "terrain",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-026-281604-5-0011-107",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-095",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/25/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-026-281604-5-0011-107",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-096",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/25/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-026-281604-5-0011-107",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-097",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-026-281604-5-0011-107",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-026-281604-5-0011-107.json",
+          "sha256": "ae5cebe5ca426d8ef8c386f9caf4112a24d39002c3de442bdf33f968920a42b2",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/25/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:nmt_limit",
+      "case_id": "real-026-281604-5-0011-107",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-098",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-026-281604-5-0011-107",
+          "json_pointer": "/observations/nmt",
+          "path": "artifacts/evidence/real-026-281604-5-0011-107.json",
+          "sha256": "ae5cebe5ca426d8ef8c386f9caf4112a24d39002c3de442bdf33f968920a42b2",
+          "type": "frozen_observation",
+          "value": {
+            "error": "Usługa NMT zgłosiła błąd: Powierzchnia poligonu (265703.13863403) większa niż 100000 m2",
+            "error_type": "NmtServiceUnavailableError",
+            "status": "unknown"
+          }
+        },
+        {
+          "manifest_pointer": "/cases/25/expected/terrain/status",
+          "method": "Limit powierzchni lub brak odpowiedzi NMT zachowano jako unknown.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "NMT `unknown`: Usługa NMT zgłosiła błąd: Powierzchnia poligonu (265703.13863403) większa niż 100000 m2",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-15",
+      "section": "terrain",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:ouz_boundary_sliver",
+      "case_id": "real-027-246101-1-0001-1043",
+      "category": "geometry",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-099",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-027-246101-1-0001-1043",
+          "json_pointer": "/observations/pog_ouz/ouz_area_sqm",
+          "path": "artifacts/evidence/real-027-246101-1-0001-1043.json",
+          "sha256": "fa99addcadcb2e7101aa56d95ba9310b68107ee8e55a4d0c14b15e86669df2bc",
+          "type": "frozen_observation",
+          "value": 0.158
+        },
+        {
+          "manifest_pointer": "/cases/26/expected/ouz/values/intersection_area",
+          "method": "Ręczny overlay geometrii OUZ z RU i działki w EPSG:2180; przecięcie do 1 m² traktowane jako niejednoznaczność granicy.",
+          "type": "ground_truth",
+          "value": 0.158
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Przecięcie OUZ poniżej tolerancji 1 m²; status `manual_review`, relacja niejednoznaczna.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-16",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-027-246101-1-0001-1043",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-100",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-027-246101-1-0001-1043",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-027-246101-1-0001-1043.json",
+          "sha256": "fa99addcadcb2e7101aa56d95ba9310b68107ee8e55a4d0c14b15e86669df2bc",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/26/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-028-246101-1-0004-737-26",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-101",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-028-246101-1-0004-737-26",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-028-246101-1-0004-737-26.json",
+          "sha256": "1871266f25b5b5e8b9f238c3d37323f58ee01c310906ea6697beb24d551c9262",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/27/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:mpzp_no_plan",
+      "case_id": "real-029-246101-1-0004-741-132",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-102",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-029-246101-1-0004-741-132",
+          "json_pointer": "/observations/mpzp_discovery/status",
+          "path": "artifacts/evidence/real-029-246101-1-0004-741-132.json",
+          "sha256": "d182ba46cb21263a8ee0de88966b8a0e8b4cd78fbf1451c6d66448d49bd796b7",
+          "type": "frozen_observation",
+          "value": "no_mpzp"
+        },
+        {
+          "manifest_pointer": "/cases/28/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "KIMPZP nie zwróciło planu dla próbki punktów; wynik `unknown`.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-12",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:pog_unknown",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-103",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/29/expected/pog/status",
+          "method": "Sprawdzono RU według TERYT; brak zweryfikowanej lokalnej geometrii POG nie jest dowodem braku aktu.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja POG pozostaje `unknown`; ground truth: brak zweryfikowanej lokalnej geometrii POG.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-10",
+      "section": "pog",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "unknown",
+      "basis": "rule:ouz_unknown",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-104",
+      "evidence": [
+        {
+          "manifest_pointer": "/cases/29/expected/ouz/status",
+          "method": "Bez zweryfikowanej geometrii POG/OUZ wynik pozostaje nieznany.",
+          "type": "ground_truth",
+          "value": "unknown"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "unknown",
+      "explanation": "Sekcja OUZ pozostaje `unknown`; brak zweryfikowanej geometrii POG/OUZ.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-11",
+      "section": "ouz",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "manual_review",
+      "basis": "rule:mpzp_discovery_only",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "category": "source",
+      "difference": null,
+      "disposition": "expected_limitation",
+      "entry_id": "E-105",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-030-026201-1-0009-578-2",
+          "json_pointer": "/observations/mpzp_discovery/candidate_zone_symbols",
+          "path": "artifacts/evidence/real-030-026201-1-0009-578-2.json",
+          "sha256": "2e9bd71843d6716ec65dcd38d69c94f40cf3f492152924b1b8b21a0791171ad5",
+          "type": "frozen_observation",
+          "value": [
+            "6KD L"
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/29/expected/mpzp/status",
+          "method": "Wielopunktowy GetFeatureInfo KIMPZP użyto wyłącznie do discovery; NULL/raster i brak cechy pozostają do ręcznej kontroli dokumentu i rysunku.",
+          "type": "ground_truth",
+          "value": "manual_review"
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "Discovery lub raster bez wektora stref; udział stref `null`, wymagana kontrola dokumentu.",
+      "field": "status",
+      "kind": "limitation",
+      "root_cause": "RC-13",
+      "section": "mpzp",
+      "threshold": null,
+      "unit": null
+    },
+    {
+      "actual": "intersection",
+      "basis": "rule:isok_boundary_feature_absent;verdict=mismatch",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "category": "data",
+      "difference": null,
+      "disposition": "unresolved_hypothesis",
+      "entry_id": "E-106",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-030-026201-1-0009-578-2",
+          "json_pointer": "/observations/isok/features",
+          "path": "artifacts/evidence/real-030-026201-1-0009-578-2.json",
+          "sha256": "2e9bd71843d6716ec65dcd38d69c94f40cf3f492152924b1b8b21a0791171ad5",
+          "type": "frozen_observation",
+          "value": [
+            {
+              "area_ratio": 0.78337731,
+              "intersection_area_sqm": 4728.919,
+              "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+              "severity": "low",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 0.51953962,
+              "intersection_area_sqm": 3136.242,
+              "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+              "severity": "high",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 0.92778474,
+              "intersection_area_sqm": 5600.646,
+              "probability_class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+              "severity": "high",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 1.0,
+              "intersection_area_sqm": 6036.579,
+              "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+              "severity": "medium",
+              "type": "flood"
+            }
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/29/expected/flood/values/boundary_feature_area",
+          "method": "Przecięcia policzono z wektorów MZP/MRP WFS w EPSG:2180; styk Q0,2% sprawdzono dodatkowo próbkami po obu stronach granicy.",
+          "type": "ground_truth",
+          "value": 0.0
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "intersection_and_boundary",
+      "explanation": "`relation`: korpus 'intersection_and_boundary', harness 'intersection'; obserwacja ISOK ma 4 cech, wszystkie z dodatnim polem.",
+      "field": "relation",
+      "kind": "field_discrepancy",
+      "root_cause": "RC-04",
+      "section": "flood",
+      "threshold": null,
+      "unit": "class"
+    },
+    {
+      "actual": "available",
+      "basis": "rule:isok_boundary_feature_absent;status",
+      "case_id": "real-030-026201-1-0009-578-2",
+      "category": "data",
+      "difference": null,
+      "disposition": "unresolved_hypothesis",
+      "entry_id": "E-107",
+      "evidence": [
+        {
+          "artifact_id": "evidence:real-030-026201-1-0009-578-2",
+          "json_pointer": "/observations/isok/features",
+          "path": "artifacts/evidence/real-030-026201-1-0009-578-2.json",
+          "sha256": "2e9bd71843d6716ec65dcd38d69c94f40cf3f492152924b1b8b21a0791171ad5",
+          "type": "frozen_observation",
+          "value": [
+            {
+              "area_ratio": 0.78337731,
+              "intersection_area_sqm": 4728.919,
+              "probability_class": "scenariusz Q 0,2% (raz na 500 lat)",
+              "severity": "low",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 0.51953962,
+              "intersection_area_sqm": 3136.242,
+              "probability_class": "scenariusz Q 1% (raz na 100 lat)",
+              "severity": "high",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 0.92778474,
+              "intersection_area_sqm": 5600.646,
+              "probability_class": "scenariusz calkowitego zniszczenia walu przeciwpowodziowego przy przeplywie Q 1%",
+              "severity": "high",
+              "type": "flood"
+            },
+            {
+              "area_ratio": 1.0,
+              "intersection_area_sqm": 6036.579,
+              "probability_class": "scenariusz zniszczenia lub uszkodzenia budowli piętrzących (scenariusz zdarzeń ekstremalnych)",
+              "severity": "medium",
+              "type": "flood"
+            }
+          ]
+        },
+        {
+          "manifest_pointer": "/cases/29/expected/flood/values/boundary_feature_area",
+          "method": "Przecięcia policzono z wektorów MZP/MRP WFS w EPSG:2180; styk Q0,2% sprawdzono dodatkowo próbkami po obu stronach granicy.",
+          "type": "ground_truth",
+          "value": 0.0
+        }
+      ],
+      "exceeds_0_5_pp": null,
+      "expected": "manual_review",
+      "explanation": "`status`: korpus 'manual_review', harness 'available'; obserwacja ISOK ma 4 cech, wszystkie z dodatnim polem.",
+      "field": "status",
+      "kind": "status_disagreement",
+      "root_cause": "RC-04",
+      "section": "flood",
+      "threshold": null,
+      "unit": null
+    }
+  ],
+  "manifest_sha256": "f8d42cb487fce424a11ded34b026538d669e04b8c52efd0b02f64a849becfcd1",
+  "root_causes": {
+    "RC-01": {
+      "category": "parser",
+      "description": "`discover_mpzp` przyjmuje każdy niepusty napis z atrybutu symbolu (`_first_matching_attribute`) jako symbol strefy. Dla planów rastrowych KIMPZP zwraca napis `NULL`; trafia on do `candidate_zone_symbols`, sekcja dostaje tryb `vector_discovery` i liczbę stref większą o jeden, a ground truth klasyfikuje taki przypadek jako `raster_manual`.",
+      "disposition": "open_defect",
+      "title": "Literał NULL z KIMPZP GetFeatureInfo traktowany jak symbol strefy"
+    },
+    "RC-02": {
+      "category": "presentation",
+      "description": "Kod produkcyjny ma wyłącznie klasy spadku w procentach (`slope-classes-pl-v1`), a protokół BK-003 nie definiuje klas deniwelacji. Harness przyjmuje progi 2 m i 10 m, natomiast etykiety korpusu dzielą przypadki inaczej (9,0 m = `relief`, 7,2 m = `moderate`). Wartości liczbowe są zgodne; różni się etykieta pochodna.",
+      "disposition": "definition_gap",
+      "title": "Klasy terenu flat/moderate/relief bez definicji w protokole i kodzie produkcyjnym"
+    },
+    "RC-03": {
+      "category": "data",
+      "description": "Przypadki Krakowa real-005…008 mają ten sam rodzaj dowodu wektorowego (symbol, pole, udział) i równoważne zastrzeżenie, że interpretacja parametrów tekstowych wymaga aktu BIP. Mimo to real-008 ma w korpusie status `manual_review` i tryb `document_parse`, a real-005…007 — `available` i `vector`. Harness nie odtwarza rozróżnienia, bo dane nie zawierają kryterium, które je uzasadnia.",
+      "disposition": "ground_truth_inconsistency",
+      "title": "Niespójna etykieta statusu MPZP w korpusie dla tej samej metody pomiaru"
+    },
+    "RC-04": {
+      "category": "data",
+      "description": "Ground truth real-030 opisuje styk z granicą jednej cechy Q0,2% (`boundary_feature_area=0`, relacja `intersection_and_boundary`). Zamrożona obserwacja ISOK ma cztery cechy o dodatnim polu i żadnej cechy stycznej, więc relacja to `intersection`. Offline nie da się rozstrzygnąć, czy styk pominął adapter przy zbieraniu obserwacji, czy został wykryty wyłącznie osobną sondą ground truth.",
+      "disposition": "unresolved_hypothesis",
+      "title": "Cecha ISOK styczna do granicy opisana w ground truth, nieobecna w zamrożonej obserwacji"
+    },
+    "RC-10": {
+      "category": "source",
+      "description": "Korpus nie zawiera zweryfikowanej lokalnej geometrii POG dla tej gminy. Z danych offline nie wynika, czy RU nie publikuje aktu, czy geometrii; `unknown` nie jest dowodem braku aktu ani braku ograniczeń.",
+      "disposition": "expected_limitation",
+      "title": "Brak zweryfikowanej lokalnej geometrii POG dla gminy"
+    },
+    "RC-11": {
+      "category": "source",
+      "description": "Bez zweryfikowanej geometrii POG/OUZ relacja działki z OUZ pozostaje nieznana.",
+      "disposition": "expected_limitation",
+      "title": "Brak zweryfikowanej geometrii OUZ"
+    },
+    "RC-12": {
+      "category": "source",
+      "description": "Discovery na próbce punktów nie znalazło planu. To nie dowodzi braku ograniczeń, tylko braku danych z tego źródła.",
+      "disposition": "expected_limitation",
+      "title": "KIMPZP nie zwróciło planu miejscowego dla próbki punktów działki"
+    },
+    "RC-13": {
+      "category": "source",
+      "description": "Źródło nie udostępnia wektora stref dla działki; symbole są kandydatami z GetFeatureInfo, a udział stref pozostaje `null` do ręcznej kontroli dokumentu i rysunku.",
+      "disposition": "expected_limitation",
+      "title": "MPZP tylko jako discovery lub raster: udziałów stref nie da się ustalić z wektora"
+    },
+    "RC-14": {
+      "category": "source",
+      "description": "Usługa zgłosiła błąd; wynik zachowano jako `unknown`, nie jako brak obszaru chronionego.",
+      "disposition": "expected_limitation",
+      "title": "Przejściowy błąd usługi GDOŚ podczas zbierania obserwacji"
+    },
+    "RC-15": {
+      "category": "source",
+      "description": "Usługa NMT GetMinMaxByPolygon odrzuca poligony większe niż 100 000 m²; wynik zachowano jako `unknown`.",
+      "disposition": "expected_limitation",
+      "title": "Limit powierzchni poligonu NMT (100 000 m²) lub brak pokrycia"
+    },
+    "RC-16": {
+      "category": "geometry",
+      "description": "Ślad 0,158 m² jest mniejszy od tolerancji 1 m²; relacja OUZ jest świadomie niejednoznaczna (`ambiguous` tylko dla `ouz.relation`).",
+      "disposition": "expected_limitation",
+      "title": "Przecięcie OUZ mniejsze niż tolerancja ręcznego pomiaru"
+    },
+    "RC-99": {
+      "category": "data",
+      "description": "Wpis nie pasuje do żadnej zadeklarowanej reguły; wymaga ręcznej analizy.",
+      "disposition": "needs_manual_triage",
+      "title": "Rozbieżność bez reguły atrybucji"
+    }
+  }
+}

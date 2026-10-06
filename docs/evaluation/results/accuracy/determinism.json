@@ -1,0 +1,28 @@
+{
+  "identical": true,
+  "manifest_sha256": "f8d42cb487fce424a11ded34b026538d669e04b8c52efd0b02f64a849becfcd1",
+  "repeat": 3,
+  "substantive_sha256": [
+    "a9dd98d131db79d8b00bbd5f1b5c84050cc216c2b5442efcbaf82bf0faf57495",
+    "a9dd98d131db79d8b00bbd5f1b5c84050cc216c2b5442efcbaf82bf0faf57495",
+    "a9dd98d131db79d8b00bbd5f1b5c84050cc216c2b5442efcbaf82bf0faf57495"
+  ],
+  "timing_ms": [
+    {
+      "p50": 0.03724999987753108,
+      "p95": 0.13058925615041508,
+      "run": 1
+    },
+    {
+      "p50": 0.03562500205589458,
+      "p95": 0.11155610263813283,
+      "run": 2
+    },
+    {
+      "p50": 0.03354199725436047,
+      "p95": 0.0930166948819533,
+      "run": 3
+    }
+  ],
+  "timing_note": "Czas jest obserwacją i nie wchodzi do substantive_sha256."
+}

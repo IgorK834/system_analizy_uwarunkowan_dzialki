@@ -1,0 +1,9 @@
+{
+  "contamination": [],
+  "manifest_sha256": "fb20dd25f907463c6ad86e861890508143e28491feb7f15e848d26b2f1781896",
+  "rows": [],
+  "scope": {
+    "reason": "engine_does_not_report_blocks",
+    "reported": false
+  }
+}
