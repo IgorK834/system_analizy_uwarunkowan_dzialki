@@ -389,6 +389,8 @@ class EngineContext:
     """What a factory may use; ``gateway`` is set only for engines that use a model."""
 
     gateway: LlmGateway | None = None
+    # Model zapisywany w kluczach odpowiedzi (PV3-19, ``--model``); ``None`` = domyślny silnika.
+    model: str | None = None
 
 
 @dataclass(frozen=True)

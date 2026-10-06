@@ -934,10 +934,10 @@ class HybridEngine:
     version = f"{MPZP_PARSER_VERSION_BLOCKS}+llm"
     supports_discovery = False
 
-    def __init__(self, gateway: Any) -> None:
+    def __init__(self, gateway: Any, model: str | None = None) -> None:
         from scripts.mpzp_eval_hybrid import GatewayStructuredExtractionProvider
 
-        self.provider = GatewayStructuredExtractionProvider(gateway)
+        self.provider = GatewayStructuredExtractionProvider(gateway, model) if model else GatewayStructuredExtractionProvider(gateway)
 
     def run(self, loaded: Mapping[str, Any], symbols: Sequence[str]) -> EngineResult:
         from app.modules.planning.application.llm_pipeline import LlmBudget, MpzpLlmPipeline
@@ -986,7 +986,7 @@ class HybridEngine:
 def _hybrid_factory(context: EngineContext) -> HybridEngine:
     if context.gateway is None:
         raise EngineUnavailableError("engine 'hybrid' needs --llm-replay DIR (or --live)")
-    return HybridEngine(context.gateway)
+    return HybridEngine(context.gateway, context.model)
 
 
 register_engine(
@@ -2356,6 +2356,32 @@ def write_comparison(
     (output_dir / "comparison.svg").write_text(compare.comparison_svg(comparison), encoding="utf-8")
 
 
+def _llm_identity(engine: Any) -> dict[str, Any]:
+    """Co dokładnie oceniono (PV3-19): model, prompt i schemat — podstawa zapisu w ``model_pin.json``."""
+    from app.modules.planning.domain import extraction_contract as contract
+
+    provider = getattr(engine, "provider", None)
+    return {
+        "model_id": getattr(provider, "model", None),
+        "prompt_version": contract.PROMPT_VERSION,
+        "prompt_sha256": contract.prompt_sha256(),
+        "schema_version": contract.SCHEMA_VERSION,
+        "schema_sha256": contract.SCHEMA_SHA256,
+    }
+
+
+def _llm_run_info(gateway: Any, engine: Any) -> dict[str, Any]:
+    """Blok ``llm`` manifestu biegu: tryb, liczniki odpowiedzi i to, co dokładnie oceniono (model, prompt, schemat)."""
+    return {
+        "mode": gateway.mode,
+        "replay_store_sha256": gateway.store.digest(),
+        "responses_in_store": len(gateway.store.keys()),
+        "replayed": gateway.replayed,
+        "recorded": gateway.recorded,
+        **_llm_identity(engine),
+    }
+
+
 class UsageError(ValueError):
     """The command line asks for something that cannot or must not run."""
 
@@ -2376,6 +2402,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repeat", type=int, default=2)
     parser.add_argument("--llm-replay", type=Path, metavar="DIR",
                         help="directory of recorded model responses, read offline by cache key")
+    parser.add_argument("--model", metavar="ID",
+                        help="model of the hybrid engine (default: the pinned model); part of every response key, "
+                             "so a replay needs the same --model as the recording (PV3-19)")
     parser.add_argument("--live", action="store_true",
                         help="call the model for real and record responses in --llm-replay DIR; needs "
                              f"{LLM_API_KEY_ENV} in the environment, never runs in CI")
@@ -2408,7 +2437,8 @@ def _resolve_engines(args: argparse.Namespace) -> tuple[list[str], Any]:
         if args.live and "hybrid" in names:
             from scripts.mpzp_eval_hybrid import register_live_gemini
 
-            register_live_gemini()  # produkcyjny adapter Gemini (tylko --live, nigdy w CI)
+            # produkcyjny adapter Gemini (tylko --live, nigdy w CI)
+            register_live_gemini(args.model) if args.model else register_live_gemini()
         try:
             gateway = build_gateway(replay_dir=args.llm_replay, live=args.live)
         except LiveModeError as exc:
@@ -2463,7 +2493,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         run_manifests: dict[str, dict[str, Any]] = {}
         for name in names:
             spec = get_engine_spec(name)
-            engine = create_engine(name, EngineContext(gateway=gateway if spec.uses_llm else None))
+            engine = create_engine(name, EngineContext(gateway=gateway if spec.uses_llm else None, model=args.model))
             runs = [evaluate(manifest, corpus_path.parent, engine=engine) for _ in range(args.repeat)]
             digests = [
                 sha256_bytes(canonical_json({"rows": r["rows"], "metrics": r["metrics"]}).encode()) for r in runs
@@ -2474,9 +2504,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             results[name] = {**runs[0], "digests": digests}
             llm_info = None
             if spec.uses_llm and gateway is not None:
-                llm_info = {"mode": gateway.mode, "replay_store_sha256": gateway.store.digest(),
-                            "responses_in_store": len(gateway.store.keys()),
-                            "replayed": gateway.replayed, "recorded": gateway.recorded}
+                llm_info = _llm_run_info(gateway, engine)
             run_manifests[name] = build_run_manifest(
                 manifest, corpus_sha256, evaluator_sha256, engine=name, engine_version=runs[0]["parser_version"],
                 run_mode=(gateway.mode if spec.uses_llm and gateway else "offline"), llm=llm_info,

@@ -7,6 +7,11 @@ SPRZED wprowadzenia flagi ``MPZP_PARSER_MODE``; test ``test_mpzp_parser_modes`` 
 ``legacy`` (domyślny) i ``v3`` dawały identyczny wynik. Ponowne zamrożenie jest dozwolone wyłącznie
 przy świadomej zmianie parsera (z podniesieniem ``MPZP_RESULT_SCHEMA_VERSION``).
 
+Ponowne zamrożenia: 2026-10-05, PV3-21 (``mpzp-parser/3.1-det``, kontrakt 2.6) — jeden silnik zapisów
+opisowych; zmieniły się wyłącznie parametry opisowe trzech dokumentów (Łódź: przeznaczenie z listy po
+etykiecie i pełne „4,0 m” w zakazie; Poznań: drugie przeznaczenie uzupełniające; Kraków, tryb ``legacy``:
+trzy zakazy przełamane w wierszu) oraz wersja parsera w evidence. Wartości liczbowe — bez zmian.
+
     python3 scripts/freeze_mpzp_parser_modes.py          # zapis
     python3 scripts/freeze_mpzp_parser_modes.py --check  # porównanie (kod 1 przy różnicy)
 """
