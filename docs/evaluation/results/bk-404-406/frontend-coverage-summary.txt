@@ -1,0 +1,61 @@
+# npm run typecheck && npm run test:coverage — obraz dzialki-frontend-test (Node v22.23.3), 2026-09-29
+ Test Files  37 passed (37)
+      Tests  353 passed (353)
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   97.15 |    90.69 |   98.82 |   98.49 |                   
+ app               |   96.42 |     82.6 |     100 |     100 |                   
+  page.tsx         |   96.42 |     82.6 |     100 |     100 | 61-66,111,139     
+ components        |    95.7 |    89.22 |   97.99 |   97.69 |                   
+  ...smentCard.tsx |     100 |    88.88 |     100 |     100 | 44,77-81,106      
+  ...ilityNote.tsx |   83.33 |    71.42 |     100 |   83.33 | 70                
+  LayerToggle.tsx  |     100 |      100 |     100 |     100 |                   
+  ...ZonePanel.tsx |   98.11 |    93.22 |     100 |     100 | 45-50,125-129     
+  MapView.tsx      |   98.24 |       96 |     100 |     100 | 81                
+  ...iewLoader.tsx |   66.66 |      100 |      50 |      80 | 8                 
+  ...erPreview.tsx |   98.55 |    91.17 |     100 |     100 | 29,31,80          
+  MpzpZoneCard.tsx |     100 |    97.56 |     100 |     100 | 26-29             
+  ...eaSummary.tsx |   96.82 |    90.66 |   95.23 |   98.24 | 216               
+  ...Inspector.tsx |   97.43 |    88.29 |     100 |     100 | ...89-190,240,265 
+  ...yerStatus.tsx |     100 |     92.3 |     100 |     100 | 63                
+  PogLegend.tsx    |     100 |      100 |     100 |     100 |                   
+  PogMapPanel.tsx  |     100 |      100 |     100 |     100 |                   
+  ...alSources.tsx |     100 |    92.59 |     100 |     100 | 52,82,109,141     
+  ...eSelector.tsx |     100 |    81.81 |     100 |     100 | 20,54             
+  ...hareChart.tsx |     100 |      100 |     100 |     100 |                   
+  ...wOverlays.tsx |   96.17 |    89.25 |     100 |   98.69 | 278-279           
+  ...oadButton.tsx |   91.17 |       76 |     100 |     100 | 31-62             
+  ResultPanel.tsx  |   90.85 |     85.2 |   97.67 |    92.9 | ...41-742,781-782 
+  SearchPanel.tsx  |   94.94 |    82.43 |   94.73 |   95.87 | 153-157           
+  TerrainCard.tsx  |     100 |    89.79 |     100 |     100 | ...81-184,206,244 
+ hooks             |    98.3 |    89.33 |     100 |   99.35 |                   
+  ...lyzeParcel.ts |   97.14 |    76.92 |     100 |     100 | 34,39             
+  ...leActivity.ts |   97.87 |     92.3 |     100 |     100 | 57,64             
+  ...ileRelease.ts |     100 |      100 |     100 |     100 |                   
+  ...meAnalysis.ts |   97.43 |    83.33 |     100 |   97.29 | 47                
+ lib               |   99.14 |     94.5 |     100 |   99.42 |                   
+  api.ts           |    98.8 |    92.04 |     100 |   98.76 | 44                
+  compatibility.ts |     100 |      100 |     100 |     100 |                   
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  layerState.ts    |     100 |      100 |     100 |     100 |                   
+  layerStyles.ts   |     100 |      100 |     100 |     100 |                   
+  mapStyle.ts      |     100 |      100 |     100 |     100 |                   
+  pogLayerState.ts |     100 |    98.01 |     100 |     100 | 141,198           
+  pogLayers.ts     |     100 |       88 |     100 |     100 | ...51,313,318-319 
+  pogPatterns.ts   |     100 |      100 |     100 |     100 |                   
+  pogStatus.ts     |     100 |      100 |     100 |     100 |                   
+  pogThemes.ts     |   96.49 |    92.68 |     100 |      96 | 66,72             
+  pogZones.ts      |   98.94 |    95.31 |     100 |     100 | 134,240-245       
+  safeLink.ts      |     100 |      100 |     100 |     100 |                   
+  terrain.ts       |      98 |    88.63 |     100 |     100 | 65,75,103,164-172 
+  zoneSymbol.ts    |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+exit=0
+
+# docker compose build frontend (npm ci + next build)
+✓ Compiled successfully in 1734ms
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 166ms
+Route (app)
+┌ ○ /
+└ ○ /_not-found

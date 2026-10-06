@@ -1,0 +1,22 @@
+tests/test_geometry.py::test_calculate_network_protection_zones_uses_default_rules_when_none_passed PASSED [ 27%]
+TOTAL                                                      13858   1083    92%
+Required test coverage of 80% reached. Total coverage: 92.19%
+========== 1578 passed, 3 deselected, 2 warnings in 71.36s (0:01:11) ===========
+app/core/data_sources.py                                     218      9    96%   120, 126, 132, 141, 288, 293, 329, 367, 438
+app/core/settings.py                                          60      0   100%
+app/models/analysis.py                                        32      0   100%
+app/modules/analysis/application/terrain.py                  105      0   100%
+app/modules/analysis/composition.py                           49      1    98%   91
+app/modules/analysis/domain/terrain.py                       262      0   100%
+app/modules/analysis/infrastructure/terrain_raster.py        212     10    95%   277, 364, 377, 389, 396, 404-405, 447, 474, 481
+app/modules/imports/composition.py                           158     11    93%   95, 124-136, 205-210, 325, 327, 371, 454, 477
+app/modules/imports/infrastructure/ogc_client.py             424     51    88%   113, 126, 128, 189-190, 247, 295, 314-315, 323, 331-340, 366, 386, 410-413, 457, 469-470, 478, 487-495, 514, 525, 566-567, 575, 629, 635, 764, 832, 867, 875, 887, 916, 945, 971, 1003, 1007, 1022-1023, 1030, 1039-1040, 1077, 1089, 1215, 1219-1229
+app/modules/imports/infrastructure/raster/gdal.py            200      1    99%   305
+app/schemas/analyze.py                                       533      7    99%   598, 862, 975, 980, 1099, 1343, 1346
+app/services/analysis_orchestrator.py                        486     57    88%   499, 561-566, 642-652, 691, 698-699, 724, 733, 748-759, 762, 765, 808, 856, 868, 948-981, 1176-1180, 1204, 1228, 1256-1275, 1278, 1293, 1352, 1357-1361, 1367, 1403, 1434, 1503, 1552, 1737-1741, 1766, 1775, 1806, 1810, 1812, 1815, 1825
+app/services/cache.py                                         35      0   100%
+app/services/context.py                                       76      0   100%
+app/services/nmt.py                                          120      1    99%   338
+app/services/persistence.py                                  234      3    99%   759, 983-984
+app/services/report.py                                       252      6    98%   824, 871, 943-945, 952
+app/services/terrain.py                                       80      2    98%   242, 261

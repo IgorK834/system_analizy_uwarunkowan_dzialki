@@ -1,0 +1,88 @@
+{
+  "zones": [
+    {
+      "feature_id": "PL.ZIPPZP.10011/226401-POG/1POG-100SU",
+      "feature_version": "20260819T010000",
+      "symbol": "SU",
+      "label": "strefa usługowa",
+      "legal_status": "binding",
+      "teryt": "226401",
+      "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+      "data_release_id": 1,
+      "zone_code": "SU",
+      "max_overground_floor_area_ratio": 0.9,
+      "max_building_height_m": 4.0,
+      "max_building_coverage_pct": 90.0,
+      "min_biologically_active_pct": 5.0,
+      "primary_profiles": "KPT-MPZP-U,KPT-MPZP-K,KPT-MPZP-ZP,KPT-MPZP-ZD,KPT-MPZP-I",
+      "additional_profiles": "KPT-MPZP-ZN,KPT-MPZP-L,KPT-MPZP-W"
+    },
+    {
+      "feature_id": "PL.ZIPPZP.99999/226401-POG/2POG-1SJ",
+      "feature_version": "20260901T000000",
+      "symbol": "SJ",
+      "label": "strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną",
+      "legal_status": "project",
+      "teryt": "226401",
+      "act_id": "PL.ZIPPZP.99999/226401-POG/2POG",
+      "data_release_id": 1,
+      "zone_code": "SJ",
+      "max_overground_floor_area_ratio": 0.0,
+      "max_building_coverage_pct": 0.0
+    }
+  ],
+  "ouz": [
+    {
+      "feature_id": "PL.ZIPPZP.10011/226401-POG/1POG-10OUZ",
+      "feature_version": "20260819T010000",
+      "symbol": "OUZ",
+      "label": "Obszar uzupełnienia zabudowy",
+      "legal_status": "binding",
+      "teryt": "226401",
+      "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+      "data_release_id": 1
+    }
+  ],
+  "downtown": [
+    {
+      "feature_id": "PL.ZIPPZP.10011/226401-POG/1POG-1OZS",
+      "feature_version": "20260819T010000",
+      "symbol": "OZS",
+      "label": "Obszar zabudowy śródmiejskiej",
+      "legal_status": "binding",
+      "teryt": "226401",
+      "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+      "data_release_id": 1
+    }
+  ],
+  "social_infrastructure_standard": [
+    {
+      "feature_id": "PL.ZIPPZP.10067/240203-POG/1POG-10OSD",
+      "feature_version": "20260907T111337",
+      "symbol": "OSD",
+      "label": "Obszar standardów dostępności infrastruktury społecznej",
+      "legal_status": "binding",
+      "teryt": "226401",
+      "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+      "data_release_id": 1
+    }
+  ],
+  "act_boundary": [
+    {
+      "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+      "label": "Plan ogólny miasta Sopotu",
+      "legal_status": "binding",
+      "teryt": "226401",
+      "data_release_id": 1,
+      "act_version": "20260819T010000"
+    },
+    {
+      "act_id": "PL.ZIPPZP.99999/226401-POG/2POG",
+      "label": "Projekt zmiany planu ogólnego (syntetyczny)",
+      "legal_status": "project",
+      "teryt": "226401",
+      "data_release_id": 1,
+      "act_version": "20260901T000000"
+    }
+  ]
+}

@@ -1,0 +1,1903 @@
+{
+  "analysis_id": 430,
+  "status": "partial",
+  "analyzed_at": "2026-09-29T21:24:50.633675Z",
+  "parcel": {
+    "parcel_identifier": "BK301_302_E2E_ceea56",
+    "geometry_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.007762265272753,
+              52.22296473472159
+            ],
+            [
+              21.007802817286382,
+              52.22386351357184
+            ],
+            [
+              21.00633931014163,
+              52.223888409248445
+            ],
+            [
+              21.006298787638407,
+              52.22298962959674
+            ],
+            [
+              21.007762265272753,
+              52.22296473472159
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_identifier": "BK301_302_E2E_ceea56",
+        "layer": "parcel"
+      }
+    },
+    "metrics": {
+      "area_sqm": 10000.0,
+      "area_ha": 1.0,
+      "perimeter_m": 400.0,
+      "is_valid": true,
+      "geometry_repaired": false
+    },
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    "buildable_area_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.007705348200698,
+              52.22300168202321
+            ],
+            [
+              21.006358947691133,
+              52.22302458533783
+            ],
+            [
+              21.00639622948009,
+              52.22385146258791
+            ],
+            [
+              21.007742654967256,
+              52.22382855859493
+            ],
+            [
+              21.007705348200698,
+              52.22300168202321
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "layer": "buildable_area",
+        "setback_m": 4.0,
+        "is_technical_approximation": true
+      }
+    }
+  },
+  "mpzp_zones": [],
+  "pog": {
+    "schema_version": "2.4",
+    "legal_status": "binding",
+    "coverage_status": "available",
+    "data_availability": "current",
+    "status_confirmed_at": "2026-07-16T12:00:00Z",
+    "legal_status_evidence": {
+      "source_name": "POG_GMINA_WMS",
+      "official": true,
+      "reference": "https://pog.example.test/wms",
+      "source_id": null,
+      "raw_value": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+      "confirmed_at": "2026-07-16T12:00:00Z"
+    },
+    "coverage_evidence": null,
+    "act": null,
+    "zones": [
+      {
+        "id": "pog:SJ",
+        "symbol": null,
+        "type": "SJ",
+        "label": null,
+        "area_sqm": 10000.0,
+        "area_pct": 100.0,
+        "max_overground_floor_area_ratio": null,
+        "max_building_height_m": null,
+        "max_building_coverage_pct": null,
+        "min_biologically_active_pct": null,
+        "primary_profile": [],
+        "additional_profiles": [],
+        "source": {
+          "source_id": null,
+          "source_version": null,
+          "artifact_sha256": null,
+          "data_release_id": null,
+          "act_version": null,
+          "source_name": "POG_APP",
+          "source_url": "https://bip.example.test/pog.gml",
+          "fetched_at": "2026-09-28T10:00:00Z",
+          "response_status": null,
+          "confidence": 0.9,
+          "manual_review_required": false
+        },
+        "feature_version": null,
+        "gml_url": null,
+        "gml_url_verified": false,
+        "geometry_geojson": {
+          "type": "Feature",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  21.007762265272753,
+                  52.22296473472159
+                ],
+                [
+                  21.006298787638407,
+                  52.22298962959674
+                ],
+                [
+                  21.00633931014163,
+                  52.223888409248445
+                ],
+                [
+                  21.007802817286382,
+                  52.22386351357184
+                ],
+                [
+                  21.007762265272753,
+                  52.22296473472159
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "layer": "pog_zone",
+            "id": "pog:SJ",
+            "zone_code": "SJ"
+          }
+        }
+      }
+    ],
+    "dominant_zone_id": "pog:SJ",
+    "ouz": [],
+    "downtown_areas": [],
+    "social_infrastructure_standard_areas": [],
+    "status": "binding",
+    "planning_zone": "SJ",
+    "zone_type": "SJ",
+    "in_ouz": false,
+    "area_ratio": 1.0,
+    "in_downtown_area": false,
+    "uchwala_nr": "X/42/2026",
+    "uchwala_date": "2026-02-10",
+    "manual_review_required": true,
+    "compatibility_assessment": {
+      "schema_version": "1.0",
+      "status": "unknown",
+      "reason_code": "MPZP_ZONES_MISSING",
+      "as_of": "2026-07-16",
+      "rule_id": "mpzp-pog-function-table",
+      "rule_version": "1.0",
+      "aggregation": "Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.",
+      "sources": [
+        {
+          "kind": "rule_set",
+          "label": "Tabela reguł funkcja MPZP × strefa POG",
+          "reference": "Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.",
+          "version": "1.0",
+          "as_of": "2026-07-16"
+        },
+        {
+          "kind": "pog",
+          "label": "POG",
+          "reference": "https://bip.example.test/pog.gml",
+          "version": null,
+          "as_of": "2026-07-16"
+        }
+      ],
+      "rationale": "POG obowiązuje, ale analiza nie ustaliła strefy MPZP; brak danych MPZP nie oznacza braku ograniczeń.",
+      "manual_review_required": true,
+      "zone_pairs": [],
+      "informational_notice": "Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.",
+      "legacy_evidence": null
+    },
+    "raw_attributes": {
+      "discovery": {
+        "legal_status": "binding",
+        "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+        "source_responded": true,
+        "uchwala_nr": "X/42/2026",
+        "uchwala_date": "2026-02-10",
+        "links": [
+          "https://bip.example.test/pog.gml"
+        ],
+        "is_discovery_only": true,
+        "layers": {
+          "planning_act": {
+            "status": "found",
+            "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+            "matched_wms_layer": null,
+            "feature_count": 1
+          },
+          "downtown_area": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          },
+          "ouz": {
+            "status": "found",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 1
+          },
+          "planning_zones": {
+            "status": "found",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 1
+          }
+        }
+      },
+      "app_metadata": {
+        "uchwala_nr": "X/42/2026"
+      },
+      "zone_intersections": [
+        {
+          "zone_type": "SJ",
+          "source_zone_type": "SJ",
+          "area_sqm": 10000.0,
+          "area_ratio": 1.0,
+          "parameters": {},
+          "parameters_informational": false
+        }
+      ],
+      "ouz": {
+        "status": "unknown",
+        "in_ouz": false,
+        "intersection_area_sqm": 0.0,
+        "area_ratio_pct": 0.0,
+        "touches_boundary": false,
+        "legal_disclaimer": "Wynik ma charakter informacyjny, zależy od aktualnego stanu prawnego i nie stanowi decyzji administracyjnej ani porady prawnej dotyczącej możliwości uzyskania decyzji o warunkach zabudowy."
+      }
+    },
+    "ouz_intersection_area_sqm": 0.0,
+    "ouz_intersection_pct": 0.0,
+    "touches_ouz_boundary": false,
+    "presentation_style": {
+      "style_version": "2026.09.29-1",
+      "style_sha256": "a2b1199aa033620b7fe51d9e72e2ff8d86bc016cba004bb13ff7483705245fc2",
+      "zones": {
+        "SW": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną",
+          "fill": "#b5523b",
+          "outline": "#6e2f20"
+        },
+        "SJ": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną",
+          "fill": "#f0b067",
+          "outline": "#9a6425"
+        },
+        "SZ": {
+          "label": "strefa wielofunkcyjna z zabudową zagrodową",
+          "fill": "#dcc873",
+          "outline": "#8a7a2e"
+        },
+        "SU": {
+          "label": "strefa usługowa",
+          "fill": "#d4445f",
+          "outline": "#851f33"
+        },
+        "SH": {
+          "label": "strefa handlu wielkopowierzchniowego",
+          "fill": "#9c3a7a",
+          "outline": "#5b1f47"
+        },
+        "SP": {
+          "label": "strefa gospodarcza",
+          "fill": "#7b6c9c",
+          "outline": "#453a5e"
+        },
+        "SR": {
+          "label": "strefa produkcji rolniczej",
+          "fill": "#c2cf8f",
+          "outline": "#6d7a3a"
+        },
+        "SI": {
+          "label": "strefa infrastrukturalna",
+          "fill": "#6f93a8",
+          "outline": "#3a5566"
+        },
+        "SN": {
+          "label": "strefa zieleni i rekreacji",
+          "fill": "#4e9a61",
+          "outline": "#2a5e37"
+        },
+        "SC": {
+          "label": "strefa cmentarzy",
+          "fill": "#56645a",
+          "outline": "#2c352f"
+        },
+        "SG": {
+          "label": "strefa górnictwa",
+          "fill": "#8d6a48",
+          "outline": "#4f3a26"
+        },
+        "SO": {
+          "label": "strefa otwarta",
+          "fill": "#d3e6c4",
+          "outline": "#7f9a6d"
+        },
+        "SK": {
+          "label": "strefa komunikacyjna",
+          "fill": "#bdbdbd",
+          "outline": "#6b6b6b"
+        }
+      },
+      "unknown_zone": {
+        "code": "unknown",
+        "label": "strefa nierozpoznana (kod spoza słownika)",
+        "fill": "#ffffff",
+        "outline": "#5c5c5c",
+        "pattern": "cross-hatch",
+        "description": "Białe tło z kratką — kod strefy nie występuje w słowniku RodzajStrefyPlanistycznejKod."
+      },
+      "null_style": {
+        "code": null,
+        "label": "brak wartości w danych",
+        "fill": "#f2f2f2",
+        "outline": "#7a7a7a",
+        "pattern": "diagonal-hatch",
+        "description": "Jasnoszare tło z ukośnym kreskowaniem — parametr nie został określony (to nie jest wartość 0)."
+      },
+      "overlays": {
+        "ouz": {
+          "short_label": "OUZ",
+          "label": "obszar uzupełnienia zabudowy",
+          "outline": "#1f4e79",
+          "line_width": 2.0,
+          "line_dasharray": [
+            4.0,
+            2.0
+          ],
+          "pattern": "diagonal-lines",
+          "description": "Granatowy obrys przerywany i ukośne kreskowanie (OUZ)."
+        },
+        "downtown": {
+          "short_label": "OZS",
+          "label": "obszar zabudowy śródmiejskiej",
+          "outline": "#6a1b4d",
+          "line_width": 2.0,
+          "line_dasharray": [
+            1.0,
+            1.5
+          ],
+          "pattern": "dots",
+          "description": "Śliwkowy obrys kropkowany i wypełnienie z kropek (OZS)."
+        },
+        "social_infrastructure_standard": {
+          "short_label": "OSDIS",
+          "label": "obszar standardów dostępności infrastruktury społecznej",
+          "outline": "#0b6e4f",
+          "line_width": 2.0,
+          "line_dasharray": [
+            6.0,
+            2.0,
+            1.0,
+            2.0
+          ],
+          "pattern": "cross-lines",
+          "description": "Zielony obrys kreska-kropka i kratka pionowo-pozioma (OSDIS)."
+        },
+        "act_boundary": {
+          "short_label": "Granica aktu",
+          "label": "granica obszaru objętego planem ogólnym",
+          "outline": "#202020",
+          "line_width": 2.5,
+          "line_dasharray": null,
+          "pattern": null,
+          "description": "Ciągła, ciemna linia granicy aktu."
+        }
+      }
+    },
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "infrastructure": [],
+  "utilities_preview": {
+    "coverage_status": "covered",
+    "county_name": "Warszawa",
+    "layer_available": true,
+    "note": "Podgląd nie służy do odległości.",
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "risks": [],
+  "risk_sections": [
+    {
+      "schema_version": "1.0",
+      "section": "flood",
+      "status": "available",
+      "reason_code": null,
+      "relation": "no_match",
+      "feature_count": 0,
+      "intersecting_feature_count": 0,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 0.0,
+      "union_intersection_pct": 0.0,
+      "feature_ids": [],
+      "source": {
+        "source_id": "isok",
+        "source_version": null,
+        "artifact_sha256": null,
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "ISOK",
+        "source_url": null,
+        "fetched_at": null,
+        "response_status": null,
+        "confidence": 0.0,
+        "manual_review_required": true
+      },
+      "warnings": []
+    },
+    {
+      "schema_version": "1.0",
+      "section": "nature",
+      "status": "available",
+      "reason_code": null,
+      "relation": "no_match",
+      "feature_count": 0,
+      "intersecting_feature_count": 0,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 0.0,
+      "union_intersection_pct": 0.0,
+      "feature_ids": [],
+      "source": {
+        "source_id": "gdos",
+        "source_version": null,
+        "artifact_sha256": null,
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "GDOS",
+        "source_url": null,
+        "fetched_at": null,
+        "response_status": null,
+        "confidence": 0.0,
+        "manual_review_required": true
+      },
+      "warnings": []
+    }
+  ],
+  "terrain": {
+    "schema_version": "1.0",
+    "status": "available",
+    "reason_code": null,
+    "min_height_m": 112.3,
+    "max_height_m": 115.7,
+    "height_difference_m": 3.4,
+    "grid_size_m": 4.0,
+    "sampled_points": 676,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "912ed836be23cb99ed3899129b8b9fd5f6e8b2f99cbb5e4aa04ea97f509043ec",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:24:50.417230Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    "warnings": [],
+    "relief": {
+      "schema_version": "1.0",
+      "algorithm_version": "horn1981-3x3-v1",
+      "slope_classes_version": "slope-classes-pl-v1",
+      "status": "available",
+      "reason_code": null,
+      "resolution_m": 1.0,
+      "parcel_pixel_count": 10000,
+      "valid_pixel_count": 10000,
+      "nodata_pixel_count": 0,
+      "valid_area_share_pct": 100.0,
+      "min_height_m": 105.19,
+      "max_height_m": 116.22,
+      "mean_height_m": 114.26,
+      "slope": {
+        "mean_deg": 4.2218,
+        "median_deg": 1.4745,
+        "p90_deg": 9.0969,
+        "max_deg": 78.4418,
+        "mean_pct": 9.5422,
+        "median_pct": 2.574,
+        "p90_pct": 16.0119,
+        "max_pct": 488.9744
+      },
+      "slope_classes": [
+        {
+          "class_id": "flat",
+          "label": "płaski (< 2%)",
+          "min_pct": 0.0,
+          "max_pct": 2.0,
+          "pixel_count": 3648,
+          "area_sqm": 3648.0,
+          "share_pct": 36.48
+        },
+        {
+          "class_id": "gentle",
+          "label": "łagodny (2–5%)",
+          "min_pct": 2.0,
+          "max_pct": 5.0,
+          "pixel_count": 3858,
+          "area_sqm": 3858.0,
+          "share_pct": 38.58
+        },
+        {
+          "class_id": "moderate",
+          "label": "umiarkowany (5–10%)",
+          "min_pct": 5.0,
+          "max_pct": 10.0,
+          "pixel_count": 1128,
+          "area_sqm": 1128.0,
+          "share_pct": 11.28
+        },
+        {
+          "class_id": "strong",
+          "label": "znaczny (10–15%)",
+          "min_pct": 10.0,
+          "max_pct": 15.0,
+          "pixel_count": 316,
+          "area_sqm": 316.0,
+          "share_pct": 3.16
+        },
+        {
+          "class_id": "steep",
+          "label": "stromy (15–30%)",
+          "min_pct": 15.0,
+          "max_pct": 30.0,
+          "pixel_count": 435,
+          "area_sqm": 435.0,
+          "share_pct": 4.35
+        },
+        {
+          "class_id": "very_steep",
+          "label": "bardzo stromy (≥ 30%)",
+          "min_pct": 30.0,
+          "max_pct": null,
+          "pixel_count": 615,
+          "area_sqm": 615.0,
+          "share_pct": 6.15
+        }
+      ],
+      "aspect": {
+        "status": "dispersed",
+        "mean_azimuth_deg": 90.9641,
+        "resultant_length": 0.1971,
+        "dominant_direction": null,
+        "sector_shares_pct": {
+          "N": 17.71,
+          "NE": 13.41,
+          "E": 15.05,
+          "SE": 18.04,
+          "S": 13.55,
+          "SW": 7.65,
+          "W": 7.19,
+          "NW": 7.38
+        },
+        "non_flat_share_pct": 63.52,
+        "flat_threshold_pct": 2.0
+      },
+      "profile": {
+        "method": "parcel_long_axis_through_rectangle_center",
+        "crs": "EPSG:2180",
+        "start": [
+          637000.0,
+          486050.0
+        ],
+        "end": [
+          637100.0,
+          486050.0
+        ],
+        "length_m": 100.0,
+        "step_m": 1.0,
+        "interpolation": "bilinear",
+        "samples": [
+          {
+            "distance_m": 0.0,
+            "x": 637000.0,
+            "y": 486050.0,
+            "height_m": 115.069,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 1.0,
+            "x": 637001.0,
+            "y": 486050.0,
+            "height_m": 114.95,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 2.0,
+            "x": 637002.0,
+            "y": 486050.0,
+            "height_m": 114.913,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 3.0,
+            "x": 637003.0,
+            "y": 486050.0,
+            "height_m": 114.908,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 4.0,
+            "x": 637004.0,
+            "y": 486050.0,
+            "height_m": 114.906,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 5.0,
+            "x": 637005.0,
+            "y": 486050.0,
+            "height_m": 114.907,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 6.0,
+            "x": 637006.0,
+            "y": 486050.0,
+            "height_m": 114.932,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 7.0,
+            "x": 637007.0,
+            "y": 486050.0,
+            "height_m": 114.916,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 8.0,
+            "x": 637008.0,
+            "y": 486050.0,
+            "height_m": 114.902,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 9.0,
+            "x": 637009.0,
+            "y": 486050.0,
+            "height_m": 114.902,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 10.0,
+            "x": 637010.0,
+            "y": 486050.0,
+            "height_m": 114.888,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 11.0,
+            "x": 637011.0,
+            "y": 486050.0,
+            "height_m": 114.94,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 12.0,
+            "x": 637012.0,
+            "y": 486050.0,
+            "height_m": 114.96,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 13.0,
+            "x": 637013.0,
+            "y": 486050.0,
+            "height_m": 115.118,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 14.0,
+            "x": 637014.0,
+            "y": 486050.0,
+            "height_m": 115.172,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 15.0,
+            "x": 637015.0,
+            "y": 486050.0,
+            "height_m": 115.173,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 16.0,
+            "x": 637016.0,
+            "y": 486050.0,
+            "height_m": 115.382,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 17.0,
+            "x": 637017.0,
+            "y": 486050.0,
+            "height_m": 115.609,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 18.0,
+            "x": 637018.0,
+            "y": 486050.0,
+            "height_m": 115.828,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 19.0,
+            "x": 637019.0,
+            "y": 486050.0,
+            "height_m": 116.014,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 20.0,
+            "x": 637020.0,
+            "y": 486050.0,
+            "height_m": 116.094,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 21.0,
+            "x": 637021.0,
+            "y": 486050.0,
+            "height_m": 116.123,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 22.0,
+            "x": 637022.0,
+            "y": 486050.0,
+            "height_m": 116.13,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 23.0,
+            "x": 637023.0,
+            "y": 486050.0,
+            "height_m": 116.161,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 24.0,
+            "x": 637024.0,
+            "y": 486050.0,
+            "height_m": 116.147,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 25.0,
+            "x": 637025.0,
+            "y": 486050.0,
+            "height_m": 116.14,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 26.0,
+            "x": 637026.0,
+            "y": 486050.0,
+            "height_m": 116.145,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 27.0,
+            "x": 637027.0,
+            "y": 486050.0,
+            "height_m": 116.158,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 28.0,
+            "x": 637028.0,
+            "y": 486050.0,
+            "height_m": 116.106,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 29.0,
+            "x": 637029.0,
+            "y": 486050.0,
+            "height_m": 115.814,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 30.0,
+            "x": 637030.0,
+            "y": 486050.0,
+            "height_m": 115.331,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 31.0,
+            "x": 637031.0,
+            "y": 486050.0,
+            "height_m": 115.068,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 32.0,
+            "x": 637032.0,
+            "y": 486050.0,
+            "height_m": 114.952,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 33.0,
+            "x": 637033.0,
+            "y": 486050.0,
+            "height_m": 114.85,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 34.0,
+            "x": 637034.0,
+            "y": 486050.0,
+            "height_m": 114.771,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 35.0,
+            "x": 637035.0,
+            "y": 486050.0,
+            "height_m": 114.767,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 36.0,
+            "x": 637036.0,
+            "y": 486050.0,
+            "height_m": 114.768,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 37.0,
+            "x": 637037.0,
+            "y": 486050.0,
+            "height_m": 114.815,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 38.0,
+            "x": 637038.0,
+            "y": 486050.0,
+            "height_m": 114.781,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 39.0,
+            "x": 637039.0,
+            "y": 486050.0,
+            "height_m": 114.827,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 40.0,
+            "x": 637040.0,
+            "y": 486050.0,
+            "height_m": 114.853,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 41.0,
+            "x": 637041.0,
+            "y": 486050.0,
+            "height_m": 114.781,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 42.0,
+            "x": 637042.0,
+            "y": 486050.0,
+            "height_m": 114.68,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 43.0,
+            "x": 637043.0,
+            "y": 486050.0,
+            "height_m": 114.606,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 44.0,
+            "x": 637044.0,
+            "y": 486050.0,
+            "height_m": 114.482,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 45.0,
+            "x": 637045.0,
+            "y": 486050.0,
+            "height_m": 114.466,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 46.0,
+            "x": 637046.0,
+            "y": 486050.0,
+            "height_m": 114.501,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 47.0,
+            "x": 637047.0,
+            "y": 486050.0,
+            "height_m": 114.527,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 48.0,
+            "x": 637048.0,
+            "y": 486050.0,
+            "height_m": 114.553,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 49.0,
+            "x": 637049.0,
+            "y": 486050.0,
+            "height_m": 114.583,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 50.0,
+            "x": 637050.0,
+            "y": 486050.0,
+            "height_m": 114.615,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 51.0,
+            "x": 637051.0,
+            "y": 486050.0,
+            "height_m": 114.65,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 52.0,
+            "x": 637052.0,
+            "y": 486050.0,
+            "height_m": 114.721,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 53.0,
+            "x": 637053.0,
+            "y": 486050.0,
+            "height_m": 114.813,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 54.0,
+            "x": 637054.0,
+            "y": 486050.0,
+            "height_m": 114.912,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 55.0,
+            "x": 637055.0,
+            "y": 486050.0,
+            "height_m": 114.937,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 56.0,
+            "x": 637056.0,
+            "y": 486050.0,
+            "height_m": 114.871,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 57.0,
+            "x": 637057.0,
+            "y": 486050.0,
+            "height_m": 114.919,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 58.0,
+            "x": 637058.0,
+            "y": 486050.0,
+            "height_m": 114.964,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 59.0,
+            "x": 637059.0,
+            "y": 486050.0,
+            "height_m": 114.94,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 60.0,
+            "x": 637060.0,
+            "y": 486050.0,
+            "height_m": 114.929,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 61.0,
+            "x": 637061.0,
+            "y": 486050.0,
+            "height_m": 114.91,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 62.0,
+            "x": 637062.0,
+            "y": 486050.0,
+            "height_m": 114.898,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 63.0,
+            "x": 637063.0,
+            "y": 486050.0,
+            "height_m": 114.885,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 64.0,
+            "x": 637064.0,
+            "y": 486050.0,
+            "height_m": 114.865,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 65.0,
+            "x": 637065.0,
+            "y": 486050.0,
+            "height_m": 114.847,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 66.0,
+            "x": 637066.0,
+            "y": 486050.0,
+            "height_m": 114.827,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 67.0,
+            "x": 637067.0,
+            "y": 486050.0,
+            "height_m": 114.805,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 68.0,
+            "x": 637068.0,
+            "y": 486050.0,
+            "height_m": 114.782,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 69.0,
+            "x": 637069.0,
+            "y": 486050.0,
+            "height_m": 114.763,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 70.0,
+            "x": 637070.0,
+            "y": 486050.0,
+            "height_m": 114.745,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 71.0,
+            "x": 637071.0,
+            "y": 486050.0,
+            "height_m": 114.7,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 72.0,
+            "x": 637072.0,
+            "y": 486050.0,
+            "height_m": 114.575,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 73.0,
+            "x": 637073.0,
+            "y": 486050.0,
+            "height_m": 114.407,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 74.0,
+            "x": 637074.0,
+            "y": 486050.0,
+            "height_m": 114.309,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 75.0,
+            "x": 637075.0,
+            "y": 486050.0,
+            "height_m": 114.305,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 76.0,
+            "x": 637076.0,
+            "y": 486050.0,
+            "height_m": 114.318,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 77.0,
+            "x": 637077.0,
+            "y": 486050.0,
+            "height_m": 114.279,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 78.0,
+            "x": 637078.0,
+            "y": 486050.0,
+            "height_m": 114.277,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 79.0,
+            "x": 637079.0,
+            "y": 486050.0,
+            "height_m": 114.273,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 80.0,
+            "x": 637080.0,
+            "y": 486050.0,
+            "height_m": 114.238,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 81.0,
+            "x": 637081.0,
+            "y": 486050.0,
+            "height_m": 114.265,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 82.0,
+            "x": 637082.0,
+            "y": 486050.0,
+            "height_m": 114.269,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 83.0,
+            "x": 637083.0,
+            "y": 486050.0,
+            "height_m": 114.298,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 84.0,
+            "x": 637084.0,
+            "y": 486050.0,
+            "height_m": 114.331,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 85.0,
+            "x": 637085.0,
+            "y": 486050.0,
+            "height_m": 114.362,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 86.0,
+            "x": 637086.0,
+            "y": 486050.0,
+            "height_m": 114.393,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 87.0,
+            "x": 637087.0,
+            "y": 486050.0,
+            "height_m": 114.423,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 88.0,
+            "x": 637088.0,
+            "y": 486050.0,
+            "height_m": 114.453,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 89.0,
+            "x": 637089.0,
+            "y": 486050.0,
+            "height_m": 114.485,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 90.0,
+            "x": 637090.0,
+            "y": 486050.0,
+            "height_m": 114.526,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 91.0,
+            "x": 637091.0,
+            "y": 486050.0,
+            "height_m": 114.564,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 92.0,
+            "x": 637092.0,
+            "y": 486050.0,
+            "height_m": 114.518,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 93.0,
+            "x": 637093.0,
+            "y": 486050.0,
+            "height_m": 114.415,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 94.0,
+            "x": 637094.0,
+            "y": 486050.0,
+            "height_m": 114.254,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 95.0,
+            "x": 637095.0,
+            "y": 486050.0,
+            "height_m": 114.263,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 96.0,
+            "x": 637096.0,
+            "y": 486050.0,
+            "height_m": 114.258,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 97.0,
+            "x": 637097.0,
+            "y": 486050.0,
+            "height_m": 114.252,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 98.0,
+            "x": 637098.0,
+            "y": 486050.0,
+            "height_m": 114.219,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 99.0,
+            "x": 637099.0,
+            "y": 486050.0,
+            "height_m": 114.23,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 100.0,
+            "x": 637100.0,
+            "y": 486050.0,
+            "height_m": 114.222,
+            "inside_parcel": true
+          }
+        ],
+        "line_geojson": {
+          "type": "Feature",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                21.006319048623908,
+                52.223439019442594
+              ],
+              [
+                21.007782541013263,
+                52.22341412416672
+              ]
+            ]
+          },
+          "properties": {
+            "layer": "terrain_profile",
+            "length_m": 100.0,
+            "step_m": 1.0
+          }
+        }
+      },
+      "raster": {
+        "coverage_id": "DTM_PL-KRON86-NH_TIFF",
+        "crs": "EPSG:2180",
+        "resolution_m": 1.0,
+        "width_px": 105,
+        "height_px": 105,
+        "bbox": [
+          636997.343266,
+          485997.66941,
+          637102.343266,
+          486102.66941
+        ],
+        "buffer_m": 2.0,
+        "size_bytes": 44591,
+        "nodata_value": null,
+        "nodata_policy": "GDAL_NODATA (jeśli zadeklarowane), NaN oraz niezadeklarowane 0.0 poza zasięgiem danych (kontrakt WCS NMT potwierdzony 2026-09-28)",
+        "vertical_datum": "PL-KRON86-NH",
+        "gdal_version": "GDAL 3.10.3, released 2025/04/01"
+      },
+      "source": {
+        "source_id": "nmt_wcs",
+        "source_version": "DTM_PL-KRON86-NH_TIFF (WCS 2.0.1)",
+        "artifact_sha256": "603a9ddd93e210544ee26ea31fdd941bd49af28fc7f70c61c777021e70b276ec",
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "NMT_WCS",
+        "source_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?request=GetCoverage",
+        "fetched_at": "2026-09-28T10:00:00Z",
+        "response_status": 200,
+        "confidence": 0.9,
+        "manual_review_required": false
+      },
+      "warnings": [
+        "Wysokości z rastra WCS 1 m (105,19–116,22 m) różnią się od usługi GetMinMaxByPolygon (112,30–115,70 m) o więcej niż 1 m. Źródła mają inną siatkę i mogą pochodzić z różnych aktualizacji NMT — wynik wymaga weryfikacji."
+      ]
+    }
+  },
+  "section_quality": {
+    "schema_version": "1.0",
+    "policy_version": "quality-policy/1+2e0adf938c7b",
+    "reference_at": "2026-09-29T21:24:50.633675Z",
+    "origin": "stored",
+    "sections": [
+      {
+        "section": "parcel",
+        "report_section": "parcel",
+        "status": "available",
+        "source_id": "uldk",
+        "source_name": "ULDK",
+        "fetched_at": "2026-09-28T10:00:00Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": 127490,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "mpzp",
+        "report_section": "mpzp",
+        "status": "unknown",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "MPZP_NOT_DETERMINED"
+        ]
+      },
+      {
+        "section": "pog",
+        "report_section": "pog",
+        "status": "available",
+        "source_id": null,
+        "source_name": "POG_APP",
+        "fetched_at": "2026-09-28T10:00:00Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": 127490,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_REVIEW_REQUIRED",
+          "SOURCE_ID_UNRESOLVED"
+        ]
+      },
+      {
+        "section": "pog_overlays",
+        "report_section": "pog",
+        "status": "available",
+        "source_id": null,
+        "source_name": "POG_APP",
+        "fetched_at": "2026-09-28T10:00:00Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": 127490,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_REVIEW_REQUIRED",
+          "SOURCE_ID_UNRESOLVED"
+        ]
+      },
+      {
+        "section": "flood",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "isok",
+        "source_name": "ISOK",
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_FETCH_TIME",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": null,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "SOURCE_REVIEW_REQUIRED"
+        ]
+      },
+      {
+        "section": "nature",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "gdos",
+        "source_name": "GDOS",
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_FETCH_TIME",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": null,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "SOURCE_REVIEW_REQUIRED"
+        ]
+      },
+      {
+        "section": "terrain",
+        "report_section": "terrain",
+        "status": "available",
+        "source_id": "nmt",
+        "source_name": "NMT",
+        "fetched_at": "2026-09-29T21:24:50.417230Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": 0,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "utilities",
+        "report_section": "infrastructure",
+        "status": "partial",
+        "source_id": "kiut_wms",
+        "source_name": "KIUT (GUGiK)",
+        "fetched_at": "2026-09-28T10:00:00Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": 127490,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "KIUT_PREVIEW_ONLY"
+        ]
+      },
+      {
+        "section": "transport",
+        "report_section": "infrastructure",
+        "status": "out_of_scope",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "NO_SOURCE_CONTRACT"
+        ]
+      },
+      {
+        "section": "mpzp_pog_relation",
+        "report_section": "pog",
+        "status": "unknown",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:24:50.633675Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "MPZP_ZONES_MISSING",
+          "COMPATIBILITY_REVIEW_REQUIRED",
+          "DERIVED_SECTION"
+        ]
+      }
+    ],
+    "matrix_sha256": "6e1a302b9137d428dc6861000abaf89a824d44d4e81c695773a3360a561d311d",
+    "legend": {
+      "statuses": [
+        {
+          "id": "available",
+          "label": "sprawdzono",
+          "description": "źródło zwróciło wynik zgodny z kontraktem; pusty wynik oznacza sprawdzony brak obiektów, a nie brak ograniczeń poza zakresem źródła"
+        },
+        {
+          "id": "partial",
+          "label": "częściowo",
+          "description": "wynik jest niepełny albo obniżonej pewności (np. strefa bez wektora, podgląd zamiast geometrii, sprzeczne parametry)"
+        },
+        {
+          "id": "no_coverage",
+          "label": "brak pokrycia źródła",
+          "description": "źródło potwierdziło brak danych dla tego obszaru (np. poza zasięgiem NMT albo powiat nie publikuje GESUT) — to nie jest błąd źródła i nie dowodzi braku ograniczeń"
+        },
+        {
+          "id": "unavailable",
+          "label": "źródło niedostępne",
+          "description": "próba pobrania nie powiodła się (limit czasu, błąd HTTP, odpowiedź niezgodna z kontraktem) — wynik nie jest znany"
+        },
+        {
+          "id": "error",
+          "label": "błąd sprawdzenia",
+          "description": "nieoczekiwany błąd przetwarzania sekcji — wynik nie jest znany"
+        },
+        {
+          "id": "unknown",
+          "label": "nieustalone",
+          "description": "brak zapisanego wyniku albo niemożliwe rozstrzygnięcie; brak danych nie oznacza braku ograniczenia ani braku planu"
+        },
+        {
+          "id": "out_of_scope",
+          "label": "poza zakresem",
+          "description": "sekcja nie jest analizowana, bo brakuje potwierdzonego kontraktu źródła"
+        },
+        {
+          "id": "awaiting_input",
+          "label": "oczekuje na dane użytkownika",
+          "description": "analiza wstrzymana do czasu podania danych przez użytkownika"
+        }
+      ],
+      "freshness": [
+        {
+          "id": "fresh",
+          "label": "aktualne wg reguły",
+          "description": "wiek danych w punkcie odniesienia mieści się w regule wieku przypisanej do źródła"
+        },
+        {
+          "id": "stale",
+          "label": "starsze niż reguła",
+          "description": "wiek danych w punkcie odniesienia przekracza regułę wieku źródła — dane mogą nie odzwierciedlać bieżącego stanu źródła"
+        },
+        {
+          "id": "unknown",
+          "label": "świeżość nieustalona",
+          "description": "brak reguły wieku dla źródła, brak czasu pobrania albo czas nieprawidłowy — system nie zgaduje terminu ważności"
+        }
+      ],
+      "reasons": [
+        {
+          "code": "FRESHNESS_NO_POLICY",
+          "label": "brak reguły wieku dla źródła — terminu ważności nie zgadujemy"
+        },
+        {
+          "code": "MPZP_NOT_DETERMINED",
+          "label": "nie znaleziono albo nie sprawdzono planu (nie dowodzi braku planu)"
+        },
+        {
+          "code": "FRESHNESS_NO_SOURCE",
+          "label": "brak źródła danych dla sekcji"
+        },
+        {
+          "code": "POG_REVIEW_REQUIRED",
+          "label": "wynik POG wymaga ręcznej weryfikacji"
+        },
+        {
+          "code": "SOURCE_ID_UNRESOLVED",
+          "label": "źródło bez identyfikatora z katalogu"
+        },
+        {
+          "code": "SOURCE_REVIEW_REQUIRED",
+          "label": "źródło oznaczyło wynik jako wymagający weryfikacji"
+        },
+        {
+          "code": "FRESHNESS_NO_FETCH_TIME",
+          "label": "brak czasu pobrania danych"
+        },
+        {
+          "code": "KIUT_PREVIEW_ONLY",
+          "label": "podgląd nie jest geometrią sieci — brak odległości i liczby sieci"
+        },
+        {
+          "code": "NO_SOURCE_CONTRACT",
+          "label": "brak potwierdzonego kontraktu źródła danych (BK-305)"
+        },
+        {
+          "code": "MPZP_ZONES_MISSING",
+          "label": "POG obowiązuje, ale nie ustalono strefy MPZP (brak danych ≠ brak ograniczeń)"
+        },
+        {
+          "code": "COMPATIBILITY_REVIEW_REQUIRED",
+          "label": "relacja MPZP–POG wymaga weryfikacji"
+        },
+        {
+          "code": "DERIVED_SECTION",
+          "label": "sekcja wyliczona z innych sekcji — bez własnego źródła"
+        }
+      ]
+    }
+  },
+  "buildable_area_sqm": 8464.0,
+  "manual_zone_required": false,
+  "manual_zone_context": null,
+  "warnings": [
+    {
+      "code": "NMT_RELIEF_WARNING",
+      "message": "Wysokości z rastra WCS 1 m (105,19–116,22 m) różnią się od usługi GetMinMaxByPolygon (112,30–115,70 m) o więcej niż 1 m. Źródła mają inną siatkę i mogą pochodzić z różnych aktualizacji NMT — wynik wymaga weryfikacji.",
+      "severity": "warning",
+      "source_name": "nmt_wcs"
+    },
+    {
+      "code": "OUZ_DATA_UNAVAILABLE",
+      "message": "Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.",
+      "severity": "error",
+      "source_name": "ouz"
+    },
+    {
+      "code": "MPZP_NOT_FOUND",
+      "message": "Nie znaleziono danych MPZP pozwalających przypisać strefę do działki.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "MPZP_POG_INPUT_INCOMPLETE",
+      "message": "Ocena relacji MPZP–POG wymaga ustalonych stref obu aktów na działce.",
+      "severity": "warning",
+      "source_name": "pog"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT",
+      "source_url": "https://kiut.example.test/wfs",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "912ed836be23cb99ed3899129b8b9fd5f6e8b2f99cbb5e4aa04ea97f509043ec",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:24:50.417230Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_GMINA_WMS",
+      "source_url": "https://pog.example.test/wms",
+      "fetched_at": "2026-07-16T12:00:00Z",
+      "response_status": 200,
+      "confidence": 0.65,
+      "manual_review_required": true
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIMPZP",
+      "source_url": null,
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": null,
+      "confidence": 0.3,
+      "manual_review_required": true
+    },
+    {
+      "source_id": "nmt_wcs",
+      "source_version": "DTM_PL-KRON86-NH_TIFF (WCS 2.0.1)",
+      "artifact_sha256": "603a9ddd93e210544ee26ea31fdd941bd49af28fc7f70c61c777021e70b276ec",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT_WCS",
+      "source_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?request=GetCoverage",
+      "fetched_at": "2026-09-28T10:00:00Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  ],
+  "access_token": "lqbjNdNe_27gZXZXEeLCILXVqhX01scYoQpTWzqNiJw"
+}

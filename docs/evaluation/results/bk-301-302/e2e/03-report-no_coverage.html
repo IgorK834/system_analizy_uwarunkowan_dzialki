@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>Raport analizy uwarunkowań przestrzennych działki</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {
+      content: "System analizy uwarunkowań przestrzennych działki — strona " counter(page) " z " counter(pages);
+      font-size: 8pt;
+      color: #667085;
+    }
+  }
+  body {
+    font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+    color: #1a2027;
+    font-size: 10pt;
+    line-height: 1.45;
+  }
+  h1 { font-size: 20pt; margin: 0 0 4mm 0; color: #0d5137; }
+  h2 { font-size: 13pt; margin: 6mm 0 2mm 0; color: #0d5137;
+       border-bottom: 1px solid #d0d5dd; padding-bottom: 1mm; }
+  .cover { text-align: center; padding: 30mm 0 10mm 0; }
+  .cover .subtitle { font-size: 12pt; color: #475467; margin-top: 2mm; }
+  .cover .meta { margin-top: 12mm; font-size: 11pt; }
+  .cover .meta div { margin: 1.5mm 0; }
+  .status-badge {
+    display: inline-block; padding: 1mm 3mm; border-radius: 3mm;
+    background: #eef3f0; color: #0d5137; font-weight: bold;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0; }
+  th, td { text-align: left; padding: 1.5mm 2mm; border-bottom: 1px solid #e4e7ec;
+           vertical-align: top; }
+  th { background: #f8f9fb; font-weight: bold; width: 42%; }
+  .section { margin-top: 4mm; }
+  .empty { color: #98a2b3; font-style: italic; }
+  .map-figure { text-align: center; margin: 3mm 0; }
+  .map-figure img { max-width: 100%; border: 1px solid #d0d5dd; }
+  .map-caption { font-size: 8.5pt; color: #475467; margin: 1.5mm 0 0; text-align: left; }
+  .item { border: 1px solid #e4e7ec; border-radius: 2mm; padding: 2mm 3mm;
+          margin: 2mm 0; break-inside: avoid; }
+  .item .item-title { font-weight: bold; font-size: 11pt; }
+  .tag { display: inline-block; padding: 0.3mm 2mm; border-radius: 2mm;
+         font-size: 8pt; margin-left: 2mm; }
+  .tag-dominant { background: #eef3f0; color: #0d5137; }
+  .tag-review { background: #fdeceb; color: #8f2525; }
+  .confidence { font-size: 8.5pt; color: #475467; margin-top: 1mm; }
+  .status-note { font-size: 9pt; color: #6b3a10; margin: 1mm 0; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 7.5pt; word-break: break-all; }
+  table.provenance td, table.provenance th { font-size: 8.5pt; }
+  table.zones { table-layout: fixed; }
+  table.evidence { table-layout: fixed; }
+  table.evidence th, table.evidence td { width: auto; font-size: 8pt; padding: 1mm; overflow-wrap: anywhere; }
+  table.zones th, table.zones td { width: auto; font-size: 8pt; padding: 1mm; }
+  a { color: #0d5137; }
+  .warning-info { border-left: 3px solid #1769aa; }
+  .warning-warning { border-left: 3px solid #c96a1f; }
+  .warning-error { border-left: 3px solid #c43d3d; }
+  ul.limitations { margin: 2mm 0; padding-left: 6mm; }
+  ul.limitations li { margin: 1mm 0; }
+  .disclaimer {
+    margin-top: 8mm; padding: 3mm; border: 1px solid #c96a1f;
+    background: #fff7ef; color: #6b3a10; font-size: 9.5pt; break-inside: avoid;
+  }
+  .page-break { break-before: page; }
+  .manual-banner {
+    margin: 8mm auto 0; padding: 3mm; max-width: 150mm; text-align: left;
+    border: 2px solid #c43d3d; background: #fdeceb; color: #8f2525;
+    font-weight: bold; font-size: 10pt;
+  }
+  .informational { font-size: 9pt; color: #475467; font-style: italic; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <h1>Raport analizy uwarunkowań przestrzennych działki</h1>
+  <div class="subtitle">System analizy uwarunkowań przestrzennych działki</div>
+  <div class="meta">
+    <div><strong>Działka:</strong> BK301_302_E2E_no_coverage_4f3357</div>
+    <div><strong>Identyfikator analizy:</strong> 2736</div>
+    <div><strong>Data analizy:</strong> 28.09.2026 10:26</div>
+    <div><strong>Status:</strong> <span class="status-badge">partial</span></div>
+    <div><strong>Raport wygenerowano:</strong> 28.09.2026 10:26</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Mapa działki</h2>
+  <p class="empty">Miniatura mapy jest niedostępna.</p>
+</section>
+
+<section class="section">
+  <h2>Parametry geometryczne</h2>
+  <table>
+    <tr><th>Powierzchnia</th><td>10 000,00 m²</td></tr>
+    <tr><th>Powierzchnia (ha)</th><td>1,0000 ha</td></tr>
+    <tr><th>Obwód</th><td>400,00 m</td></tr>
+    <tr><th>Geometria poprawna</th><td>Tak</td></tr>
+    <tr><th>Geometria naprawiana</th><td>Nie</td></tr>
+    <tr><th>Szacowany obszar zabudowy (przybliżenie techniczne)</th><td>8 464,00 m²</td></tr>
+  </table>
+</section>
+
+<section class="section">
+  <h2>Miejscowy Plan Zagospodarowania Przestrzennego (MPZP)</h2>
+  <p class="empty">Dane niedostępne — nie znaleziono ani nie sprawdzono stref MPZP przecinających działkę.</p>
+</section>
+
+<section class="section">
+  <h2>Plan Ogólny Gminy (POG) i Obszar Uzupełnienia Zabudowy (OUZ)</h2>
+  <table>
+    <tr><th>Status prawny aktu</th><td>obowiązuje (potwierdzone urzędowym kodem statusu)</td></tr>
+    <tr><th>Zakres danych przestrzennych</th><td>dane przestrzenne dostępne dla działki</td></tr>
+    <tr><th>Aktualność źródła</th><td>sprawdzone w źródle przy tej analizie (potwierdzono 16.07.2026 12:00)</td></tr>
+<tr><th>Podstawa statusu</th><td>POG_GMINA_WMS — kod http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce<br><small class="mono">https://pog.example.test/wms</small></td></tr>    <tr><th>Strefa planistyczna</th><td>SJ</td></tr>
+    <tr><th>Obszar Uzupełnienia Zabudowy (OUZ)</th><td>Nie</td></tr>
+<tr><th>Udział OUZ w działce</th><td>0,0% (0,00 m²)</td></tr>    <tr><th>Dotyka granicy OUZ</th><td>Nie</td></tr>
+    <tr><th>Obszar śródmiejski</th><td>Nie</td></tr>
+<tr><th>Numer uchwały</th><td>X/42/2026</td></tr><tr><th>Data uchwały</th><td>10.02.2026</td></tr>  </table>
+  <h3>Strefy planistyczne przecinające działkę</h3>
+  <table class="zones">
+    <thead><tr><th>Strefa</th><th>Powierzchnia</th><th>Udział</th><th>Intensywność</th><th>Wysokość</th><th>Zabudowa</th><th>Biologicznie czynna</th><th>Źródło</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>SJ</td>
+        <td>10 000,00 m²</td><td>100,0%</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+<p><span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span></p><div class="confidence">Pewność danych: 90,0% (wysoka)</div></section>
+
+<section class="section">
+  <h2>Relacja MPZP–POG — analiza informacyjna</h2>
+  <p class="informational">Ustalenia MPZP i POG są przedstawione osobno w sekcjach powyżej. Ta sekcja nie jest opinią prawną i nie stwierdza prawnej możliwości zabudowy.</p>
+  <table>
+    <tr><th>Wynik oceny</th><td>nieustalone — brak danych lub reguły <small class="mono">(unknown, MPZP_ZONES_MISSING)</small><br><span class="tag tag-review">wymaga weryfikacji</span></td></tr>
+    <tr><th>Stan prawny na dzień</th><td>16.07.2026</td></tr>
+    <tr><th>Zestaw reguł</th><td>mpzp-pog-function-table v1.0</td></tr>
+    <tr><th>Uzasadnienie</th><td>POG obowiązuje, ale analiza nie ustaliła strefy MPZP; brak danych MPZP nie oznacza braku ograniczeń.</td></tr>
+    <tr><th>Reguła agregacji</th><td><small>Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.</small></td></tr>
+  </table>
+  <table class="provenance">
+    <thead><tr><th>Źródło oceny</th><th>Odniesienie i wersja</th></tr></thead>
+    <tbody>
+      <tr><td>Tabela reguł funkcja MPZP × strefa POG</td><td><small>Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.</small><br><small class="mono">wersja 1.0</small><br><small>stan na 16.07.2026</small></td></tr>
+      <tr><td>POG</td><td><small>https://bip.example.test/pog.gml</small><br><small>stan na 16.07.2026</small></td></tr>
+    </tbody>
+  </table>
+  <p class="informational">Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.</p>
+</section>
+
+<section class="section">
+  <h2>Podgląd uzbrojenia terenu (KIUT)</h2>
+  <table>
+    <tr><th>Status pokrycia</th><td>powiat publikuje dane GESUT w KIUT</td></tr>
+<tr><th>Powiat</th><td>Warszawa</td></tr>    <tr><th>Warstwa podglądowa potwierdzona</th><td>Tak</td></tr>
+    <tr><th>Źródło</th><td>KIUT (GUGiK)</td></tr>
+<tr><th>Sprawdzono</th><td>28.09.2026 10:00</td></tr>  </table>
+  <p>Podgląd nie służy do odległości.</p>
+<p>Kolory poglądowego obrazu WMS (styl GUGiK): energetyka — czerwony, woda — niebieski, kanalizacja — brązowy, gaz — żółty.</p>  <p><strong>Raport nie zawiera odległości ani liczby sieci wyliczonych z podglądu WMS.</strong></p>
+  <p><strong>Nie da się na podstawie podglądu WMS stwierdzić, czy konkretna sieć leży na działce.</strong>
+     Brak linii na obrazie nie oznacza braku sieci, a linia na obrazie nie jest geometrią do pomiaru przecięcia.</p>
+</section>
+
+<section class="section">
+  <h2>Infrastruktura i sieci uzbrojenia terenu</h2>
+  <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono sieci uzbrojenia terenu.</p>
+</section>
+
+<section class="section">
+  <h2>Ryzyka i formy ochrony</h2>
+  <p class="empty">Dane niedostępne — nie wykryto ani nie sprawdzono ryzyk ani form ochrony.</p>
+</section>
+
+<section class="section">
+  <h2>Rzeźba terenu (NMT)</h2>
+  <table>
+    <tr><th>Status pomiaru</th><td>brak pokrycia danymi NMT <small class="mono">(NO_COVERAGE_SENTINEL)</small></td></tr>
+<tr><th>Siatka próbkowania usługi</th><td>4 m</td></tr><tr><th>Liczba punktów siatki</th><td>676</td></tr>    <tr><th>Źródło</th><td>NMT — pobrano 28.09.2026 10:26 (HTTP 200)<br><small class="mono">SHA-256 odpowiedzi: 61bb4f72aaa342572cffc87f87a83721cc0a0dd4f0919c7c906afe2a97d6209f</small></td></tr>
+  </table>
+<p class="informational">Źródło potwierdziło brak danych wysokościowych dla obszaru działki. Deniwelacja jest nieznana — brak pokrycia nie oznacza płaskiego terenu.</p><p class="informational">NMT nie ma danych wysokościowych dla obszaru działki — deniwelacja jest nieznana; brak pokrycia nie oznacza płaskiego terenu.</p>
+  <h3>Spadek, ekspozycja i profil (raster NMT)</h3>
+  <p class="empty">Nie liczono pochodnych rastra NMT dla tej analizy.</p>
+</section>
+
+<section class="section">
+  <h2>Źródła danych</h2>
+  <table>
+    <tr>
+      <th style="width:18%">Źródło</th>
+      <th style="width:22%">Data pobrania</th>
+      <th style="width:20%">Pewność</th>
+      <th style="width:15%">Status</th>
+      <th style="width:25%">Weryfikacja</th>
+    </tr>
+    <tr>
+      <td>ULDK</td>
+      <td>28.09.2026 10:00</td>
+      <td>95,0% (wysoka)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>KIUT (GUGiK)</td>
+      <td>28.09.2026 10:00</td>
+      <td>90,0% (wysoka)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>NMT</td>
+      <td>28.09.2026 10:26</td>
+      <td>90,0% (wysoka)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>POG_GMINA_WMS</td>
+      <td>16.07.2026 12:00</td>
+      <td>65,0% (wymaga weryfikacji)</td>
+      <td>200</td>
+      <td>wymaga ręcznej weryfikacji</td>
+    </tr>
+    <tr>
+      <td>POG_APP</td>
+      <td>28.09.2026 10:00</td>
+      <td>90,0% (wysoka)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>KIMPZP</td>
+      <td>28.09.2026 10:00</td>
+      <td>30,0% (wymaga weryfikacji)</td>
+      <td>brak danych</td>
+      <td>wymaga ręcznej weryfikacji</td>
+    </tr>
+    <tr>
+      <td>kiut</td>
+      <td>brak danych</td>
+      <td>0,0% (niska)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>isok</td>
+      <td>brak danych</td>
+      <td>0,0% (niska)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+    <tr>
+      <td>gdos</td>
+      <td>brak danych</td>
+      <td>0,0% (niska)</td>
+      <td>brak danych</td>
+      <td>nie wymaga</td>
+    </tr>
+  </table>
+</section>
+
+<section class="section">
+  <h2>Ostrzeżenia</h2>
+    <div class="item warning-warning">
+      <div class="item-title">Ostrzeżenie — nmt</div>
+      <p>NMT nie ma danych wysokościowych dla obszaru działki — deniwelacja jest nieznana; brak pokrycia nie oznacza płaskiego terenu.</p>
+    </div>
+    <div class="item warning-error">
+      <div class="item-title">Błąd — ouz</div>
+      <p>Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.</p>
+    </div>
+    <div class="item warning-warning">
+      <div class="item-title">Ostrzeżenie — mpzp</div>
+      <p>Nie znaleziono danych MPZP pozwalających przypisać strefę do działki.</p>
+    </div>
+    <div class="item warning-warning">
+      <div class="item-title">Ostrzeżenie — pog</div>
+      <p>Ocena relacji MPZP–POG wymaga ustalonych stref obu aktów na działce.</p>
+    </div>
+</section>
+
+<section class="section">
+  <h2>Ograniczenia analizy</h2>
+  <ul class="limitations">
+<li>Brak stref MPZP w wyniku — nie sprawdzono planu albo działka nie przecina wektorowych danych MPZP.</li><li>Wynik POG wymaga ręcznej weryfikacji.</li><li>Ocena relacji MPZP–POG jest analizą informacyjną według jawnej tabeli reguł; nie stwierdza prawnej możliwości zabudowy.</li><li>Brak pokrycia danymi NMT — deniwelacja nieznana; nie oznacza to płaskiego terenu.</li>  </ul>
+</section>
+
+<div class="disclaimer">Raport ma charakter informacyjny i nie stanowi oficjalnego dokumentu urzędowego ani porady prawnej.</div>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+ "status": "succeeded",
+ "release": 1,
+ "stats": {
+  "input": 3,
+  "rejected": 0,
+  "repaired": 0,
+  "new": 3,
+  "changed": 0,
+  "unchanged": 0,
+  "legal_status:binding": 2,
+  "feature:planning_zone": 4,
+  "feature:ouz": 1,
+  "feature:downtown_area": 1,
+  "feature:social_infrastructure_standard": 1,
+  "legal_status:project": 1,
+  "feature_count": 7,
+  "carried_forward": 0,
+  "area_summaries": 6,
+  "area_summaries_incomplete": 4
+ },
+ "warnings": [
+  "pog_document_unavailable:PL.ZIPPZP.10011/226401-POG/1",
+  "pog_document_unavailable:PL.ZIPPZP.10011/226401-POG/XXIV.300.2026",
+  "pog_not_binding:PL.ZIPPZP.99999/226401-POG/2POG:project",
+  "pog_aggregate_incomplete:PL.ZIPPZP.10011/226401-POG/1POG:missing_area,share_sum_out_of_tolerance",
+  "pog_aggregate_incomplete:PL.ZIPPZP.99999/226401-POG/2POG:missing_area,share_sum_out_of_tolerance",
+  "pog_aggregate_incomplete:226401:binding:missing_area,share_sum_out_of_tolerance",
+  "pog_aggregate_incomplete:226401:project:missing_area,share_sum_out_of_tolerance"
+ ]
+}

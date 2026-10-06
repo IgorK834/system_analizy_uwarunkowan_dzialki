@@ -1,0 +1,32 @@
+# pytest -m 'not docker_cli' --cov=app --cov-report=term-missing --cov-fail-under=80 (kontener backend, REPO_ROOT=/repo), 2026-09-28
+# 4 niepowodzenia to istniejące przed zmianą testy buforów sieci BK-306 (potwierdzone na czystym HEAD a4599a1) — patrz bk-401-403-verification.md
+
+Name                                                       Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------
+app/core/pog_presentation.py                                 175     15    91%   102, 105, 107, 112, 167, 172, 174, 178-181, 187, 193, 236-237
+app/core/report_config.py                                     78      3    96%   61, 189-190
+app/modules/imports/infrastructure/repository.py             294     22    93%   85-88, 130-155, 1049, 1117-1120, 1166, 1169-1172, 1175-1176
+app/modules/planning/application/__init__.py                   0      0   100%
+app/modules/planning/application/pog_tiles.py                 58      0   100%
+app/modules/planning/application/ports.py                      5      0   100%
+app/modules/planning/application/service.py                   11      0   100%
+app/modules/planning/composition.py                           16      0   100%
+app/modules/planning/domain/pog_features.py                   99      2    98%   183, 218
+app/modules/planning/domain/pog_tiles.py                     110      1    99%   145
+app/modules/planning/infrastructure/__init__.py                0      0   100%
+app/modules/planning/infrastructure/mvt.py                    99      0   100%
+app/modules/planning/infrastructure/repository.py             17      0   100%
+app/routers/map_tiles.py                                     127      6    95%   65, 161-162, 170, 262-263
+app/services/context.py                                       85      1    99%   116
+app/services/pog_analyzer.py                                 177     11    94%   137, 143, 425, 456, 484-488, 545-546
+app/services/report.py                                       293      7    98%   294, 967, 1014, 1104-1106, 1113
+app/services/report_map.py                                   361     21    94%   140, 206-208, 275, 344, 355-357, 361, 378, 428-430, 436, 531, 534-536, 552, 607, 611
+----------------------------------------------------------------------------------------
+TOTAL                                                      15168   1282    92%
+Required test coverage of 80% reached. Total coverage: 91.55%
+
+FAILED tests/test_analysis_orchestrator.py::test_unavailable_isok_keeps_kiut_and_gdos_results
+FAILED tests/test_geometry.py::test_calculate_network_protection_zones_line_through_center_reduces_area_predictably
+FAILED tests/test_geometry.py::test_calculate_network_protection_zones_gas_rule_applies_even_outside_parcel
+FAILED tests/test_geometry.py::test_calculate_network_protection_zones_multiple_networks_sum_correctly
+4 failed, 1666 passed, 3 deselected, 2 warnings in 98.34s (0:01:38)

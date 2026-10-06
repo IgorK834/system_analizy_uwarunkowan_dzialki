@@ -1,0 +1,231 @@
+{
+  "case_count": {
+    "value": 1,
+    "unit": "case",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  },
+  "failed_cases": {
+    "value": 0,
+    "unit": "case",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  },
+  "parcel_identification_accuracy": {
+    "value": 0.0,
+    "unit": "ratio",
+    "numerator": 0,
+    "denominator": 1,
+    "reason": null
+  },
+  "zone_class_accuracy": {
+    "value": null,
+    "unit": "ratio",
+    "numerator": 0,
+    "denominator": 0,
+    "reason": "no_eligible_cases"
+  },
+  "zone_share_mae": {
+    "value": null,
+    "unit": "percentage_point",
+    "numerator": null,
+    "denominator": 0,
+    "reason": "no_eligible_zone_shares"
+  },
+  "zone_share_max_absolute_error": {
+    "value": null,
+    "unit": "percentage_point",
+    "numerator": null,
+    "denominator": 0,
+    "reason": "no_eligible_zone_shares"
+  },
+  "risk_area_mae": {
+    "value": 50.0,
+    "unit": "square_metre",
+    "numerator": null,
+    "denominator": 2,
+    "reason": null
+  },
+  "risk_area_max_absolute_error": {
+    "value": 100.0,
+    "unit": "square_metre",
+    "numerator": null,
+    "denominator": 2,
+    "reason": null
+  },
+  "risk_share_mae": {
+    "value": 0.5,
+    "unit": "percentage_point",
+    "numerator": null,
+    "denominator": 2,
+    "reason": null
+  },
+  "binary_conditions": {
+    "flood_intersection": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": {
+        "value": 1.0,
+        "unit": "ratio",
+        "numerator": 1,
+        "denominator": 1,
+        "reason": null
+      },
+      "recall": {
+        "value": 1.0,
+        "unit": "ratio",
+        "numerator": 1,
+        "denominator": 1,
+        "reason": null
+      },
+      "f1": {
+        "value": 1.0,
+        "unit": "ratio",
+        "numerator": null,
+        "denominator": null,
+        "reason": null
+      }
+    },
+    "nature_intersection": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 0,
+      "precision": {
+        "value": 0.0,
+        "unit": "ratio",
+        "numerator": 0,
+        "denominator": 1,
+        "reason": null
+      },
+      "recall": {
+        "value": null,
+        "unit": "ratio",
+        "numerator": 0,
+        "denominator": 0,
+        "reason": "no_eligible_cases"
+      },
+      "f1": {
+        "value": null,
+        "unit": "ratio",
+        "numerator": null,
+        "denominator": null,
+        "reason": "precision_or_recall_undefined"
+      }
+    },
+    "ouz_presence": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": {
+        "value": null,
+        "unit": "ratio",
+        "numerator": 0,
+        "denominator": 0,
+        "reason": "no_eligible_cases"
+      },
+      "recall": {
+        "value": null,
+        "unit": "ratio",
+        "numerator": 0,
+        "denominator": 0,
+        "reason": "no_eligible_cases"
+      },
+      "f1": {
+        "value": null,
+        "unit": "ratio",
+        "numerator": null,
+        "denominator": null,
+        "reason": "precision_or_recall_undefined"
+      }
+    },
+    "aggregate": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "tn": 0,
+      "precision": {
+        "value": 0.5,
+        "unit": "ratio",
+        "numerator": 1,
+        "denominator": 2,
+        "reason": null
+      },
+      "recall": {
+        "value": 1.0,
+        "unit": "ratio",
+        "numerator": 1,
+        "denominator": 1,
+        "reason": null
+      },
+      "f1": {
+        "value": 0.6666666666666666,
+        "unit": "ratio",
+        "numerator": null,
+        "denominator": null,
+        "reason": null
+      }
+    }
+  },
+  "unknown_case_share": {
+    "value": 0.0,
+    "unit": "ratio",
+    "numerator": 0,
+    "denominator": 1,
+    "reason": null
+  },
+  "partial_case_share": {
+    "value": 1.0,
+    "unit": "ratio",
+    "numerator": 1,
+    "denominator": 1,
+    "reason": null
+  },
+  "manual_review_case_share": {
+    "value": 0.0,
+    "unit": "ratio",
+    "numerator": 0,
+    "denominator": 1,
+    "reason": null
+  },
+  "field_completeness": {
+    "value": 0.2222222222222222,
+    "unit": "ratio",
+    "numerator": 4,
+    "denominator": 18,
+    "reason": null
+  },
+  "duration_p50": {
+    "value": 0.0,
+    "unit": "millisecond",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  },
+  "duration_p95": {
+    "value": 0.0,
+    "unit": "millisecond",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  },
+  "cache_hits": {
+    "value": 0,
+    "unit": "case",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  },
+  "cache_misses": {
+    "value": 0,
+    "unit": "case",
+    "numerator": null,
+    "denominator": null,
+    "reason": null
+  }
+}

@@ -1,0 +1,53 @@
+# pytest -m 'not docker_cli' --cov=app --cov-fail-under=80 — kontener jak CI (REPO_ROOT=/repo, bez .env), 2026-09-29
+TOTAL                                                        15976   1262    92%
+Required test coverage of 80% reached. Total coverage: 92.10%
+========== 1739 passed, 3 deselected, 2 warnings in 102.78s (0:01:42) ==========
+
+## Pokrycie modułów zmienionych w BK-404–406
+app/core/pog_presentation.py                                   185     15    92%   103, 106, 108, 113, 183, 188, 190, 194-197, 203, 209, 252-253
+app/models/versioned.py                                        351      0   100%
+app/modules/imports/application/pog_import.py                  153     20    87%   97, 100-103, 120, 183, 195, 215-218, 223, 229, 234, 257-259, 261, 279
+app/modules/imports/domain/pog_aggregates.py                   105      0   100%
+app/modules/imports/infrastructure/pog_aggregates.py            83      1    99%   212
+app/modules/imports/infrastructure/repository.py               299     22    93%   89-92, 134-159, 1080, 1148-1151, 1197, 1200-1203, 1206-1207
+app/modules/planning/application/pog_release_queries.py         40      1    98%   74
+app/modules/planning/application/pog_tiles.py                   58      0   100%
+app/modules/planning/composition.py                             20      0   100%
+app/modules/planning/domain/pog_area_summary.py                 78      0   100%
+app/modules/planning/domain/pog_inspector.py                    85      1    99%   131
+app/modules/planning/domain/pog_tiles.py                       120      1    99%   145
+app/modules/planning/infrastructure/mvt.py                     101      0   100%
+app/modules/planning/infrastructure/pog_release_queries.py      35      0   100%
+app/routers/map_tiles.py                                       263      8    97%   90, 187-188, 196, 319-320, 588-589
+app/services/report_map.py                                     361     21    94%   140, 206-208, 275, 345, 356-358, 362, 379, 429-431, 437, 532, 535-537, 553, 608, 612
+app/services/report_map_basemap.py                             120     12    90%   138, 140-141, 217, 271-272, 276-278, 281, 311, 326
+
+## Testy BK-404–406
+tests/test_map_tiles.py::test_pog_feature_details_match_tile_and_analysis PASSED
+tests/test_map_tiles.py::test_pog_feature_details_keep_null_and_describe_overlays PASSED
+tests/test_map_tiles.py::test_pog_feature_details_errors PASSED
+tests/test_map_tiles.py::test_pog_release_metadata_describes_coverage_per_act PASSED
+tests/test_pog_aggregates.py::test_one_square_kilometre_split_sixty_forty_is_complete PASSED
+tests/test_pog_aggregates.py::test_gap_of_point_one_square_kilometre_is_incomplete_with_explicit_denominator PASSED
+tests/test_pog_aggregates.py::test_missing_denominator_gives_null_shares_not_hundred_percent PASSED
+tests/test_pog_aggregates.py::test_overlap_and_zones_outside_boundary_are_reported PASSED
+tests/test_pog_aggregates.py::test_share_sum_is_controlled_by_tolerance PASSED
+tests/test_pog_aggregates.py::test_empty_act_has_no_zones_reason PASSED
+tests/test_pog_aggregates.py::test_editions_and_priority_follow_tile_editions PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs0-dok\u0142adnie jeden] PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs1-dok\u0142adnie jeden] PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs2-wy\u0142\u0105cznie agregatu gminy] PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs3-za d\u0142ugi] PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs4-6 lub 7 cyfr] PASSED
+tests/test_pog_aggregates.py::test_summary_query_requires_exactly_one_scope[kwargs5-Nieznana edycja] PASSED
+tests/test_pog_aggregates.py::test_summary_query_normalizes_scope PASSED
+tests/test_pog_aggregates.py::test_service_distinguishes_missing_release_legacy_release_and_missing_scope PASSED
+tests/test_pog_aggregates.py::test_one_km2_act_split_sixty_forty_via_import_and_http PASSED
+tests/test_pog_aggregates.py::test_gap_of_point_one_km2_is_persisted_as_incomplete_with_denominator PASSED
+tests/test_pog_aggregates.py::test_act_without_source_boundary_has_null_denominator_not_hundred_percent PASSED
+tests/test_pog_aggregates.py::test_municipality_summary_does_not_double_count_overlapping_acts PASSED
+tests/test_pog_aggregates.py::test_http_reads_ready_aggregates_without_spatial_functions PASSED
+tests/test_pog_aggregates.py::test_release_switch_atomically_switches_aggregates PASSED
+tests/test_pog_aggregates.py::test_reimport_of_identical_artifact_recomputes_without_duplicates PASSED
+tests/test_pog_aggregates.py::test_null_denominator_cannot_be_stored_as_complete PASSED
+tests/test_pog_presentation_contract.py::test_project_style_differs_by_colour_pattern_and_text PASSED

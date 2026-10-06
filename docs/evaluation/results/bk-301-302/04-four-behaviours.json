@@ -1,0 +1,96 @@
+{
+  "no_coverage": {
+    "schema_version": "1.0",
+    "status": "no_coverage",
+    "reason_code": "NO_COVERAGE_SENTINEL",
+    "min_height_m": null,
+    "max_height_m": null,
+    "height_difference_m": null,
+    "grid_size_m": 4.0,
+    "sampled_points": 676,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "61bb4f72aaa342572cffc87f87a83721cc0a0dd4f0919c7c906afe2a97d6209f",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:24:54.750555Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    "warnings": [
+      "NMT nie ma danych wysokościowych dla obszaru działki — deniwelacja jest nieznana; brak pokrycia nie oznacza płaskiego terenu."
+    ],
+    "relief": null
+  },
+  "timeout": {
+    "schema_version": "1.0",
+    "status": "unavailable",
+    "reason_code": "SERVICE_TIMEOUT",
+    "min_height_m": null,
+    "max_height_m": null,
+    "height_difference_m": null,
+    "grid_size_m": null,
+    "sampled_points": null,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:24:54.799518Z",
+      "response_status": null,
+      "confidence": 0.0,
+      "manual_review_required": true
+    },
+    "warnings": [
+      "Usługa NMT jest tymczasowo niedostępna — dane tej sekcji mogą być niepełne."
+    ],
+    "relief": null
+  },
+  "flat": {
+    "schema_version": "1.0",
+    "status": "available",
+    "reason_code": null,
+    "min_height_m": 101.2,
+    "max_height_m": 101.2,
+    "height_difference_m": 0.0,
+    "grid_size_m": 4.0,
+    "sampled_points": 676,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "72475ec577302a75af4317232de9e8153e9caffba7030d425bd57e58d42b7273",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:24:54.860314Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    "warnings": [],
+    "relief": null
+  },
+  "legacy": {
+    "schema_version": "1.0",
+    "status": "unknown",
+    "reason_code": "LEGACY_SNAPSHOT",
+    "min_height_m": null,
+    "max_height_m": null,
+    "height_difference_m": null,
+    "grid_size_m": null,
+    "sampled_points": null,
+    "source": null,
+    "warnings": [
+      "Snapshot zapisano przed udostępnieniem sekcji rzeźby terenu (BK-301) — brak informacji o NMT; nie oznacza to płaskiego terenu."
+    ],
+    "relief": null
+  }
+}

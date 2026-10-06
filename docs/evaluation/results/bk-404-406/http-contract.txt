@@ -1,0 +1,313 @@
+# Kontrakt HTTP BK-404/405 na żywym backendzie (uvicorn :8001, baza dzialki_demo, wydanie #1)
+# 2026-09-29T14:50:27Z
+
+## GET /api/v1/map/pog/releases/1/features/PL.ZIPPZP.10011%2F226401-POG%2F1POG-100SU
+HTTP/1.1 200 OK
+etag: "pog-feature-5588a54163cb83b20bee250cc936de44"
+cache-control: public, max-age=3600
+content-type: application/json
+{
+    "schema": "pog-inspector/1",
+    "tile_schema": "pog-mvt/1",
+    "release": {
+        "release_id": 1,
+        "version_label": "pog-33b9f56a288c",
+        "published_at": "2026-09-28T00:00:00Z",
+        "is_active": true,
+        "artifact_sha256": "94c724c0ac313ca9c3aaabf24cd88c70ee3f346c315dfc32b93c51d0e94a5401"
+    },
+    "feature_pk": 1,
+    "feature_id": "PL.ZIPPZP.10011/226401-POG/1POG-100SU",
+    "feature_version": "20260819T010000",
+    "layer": "zones",
+    "feature_type": "planning_zone",
+    "symbol": "SU",
+    "label": "strefa us\u0142ugowa",
+    "zone_code": "SU",
+    "source_zone_type": "SU",
+    "parameters": {
+        "max_overground_floor_area_ratio": 0.9,
+        "max_building_height_m": 4.0,
+        "max_building_coverage_pct": 90.0,
+        "min_biologically_active_pct": 5.0
+    },
+    "parameters_informational": false,
+    "primary_profiles": [
+        {
+            "code": "KPT-MPZP-U",
+            "label": "teren us\u0142ug",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        },
+        {
+            "code": "KPT-MPZP-K",
+            "label": "teren komunikacji",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        },
+        {
+            "code": "KPT-MPZP-ZP",
+            "label": "teren zieleni urz\u0105dzonej",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        },
+        {
+            "code": "KPT-MPZP-ZD",
+            "label": "teren ogrod\u00f3w dzia\u0142kowych",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        },
+        {
+            "code": "KPT-MPZP-I",
+            "label": "teren infrastruktury technicznej",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        }
+    ],
+    "additional_profiles": [
+        {
+            "code": "KPT-MPZP-ZN",
+            "label": "teren zieleni naturalnej",
+            "dictionary_source": "https://www.gov.pl/static/zagospodarowanieprzestrzenne/ontology/KPT"
+        },
+        {
+
+## GET /api/v1/map/pog/releases/1/features/PL.ZIPPZP.99999%2F226401-POG%2F2POG-1SJ
+HTTP/1.1 200 OK
+etag: "pog-feature-11291e51b8a63d1bb684975fe4b613b1"
+cache-control: public, max-age=3600
+content-type: application/json
+{
+    "schema": "pog-inspector/1",
+    "tile_schema": "pog-mvt/1",
+    "release": {
+        "release_id": 1,
+        "version_label": "pog-33b9f56a288c",
+        "published_at": "2026-09-28T00:00:00Z",
+        "is_active": true,
+        "artifact_sha256": "94c724c0ac313ca9c3aaabf24cd88c70ee3f346c315dfc32b93c51d0e94a5401"
+    },
+    "feature_pk": 5,
+    "feature_id": "PL.ZIPPZP.99999/226401-POG/2POG-1SJ",
+    "feature_version": "20260901T000000",
+    "layer": "zones",
+    "feature_type": "planning_zone",
+    "symbol": "SJ",
+    "label": "strefa wielofunkcyjna z zabudow\u0105 mieszkaniow\u0105 jednorodzinn\u0105",
+    "zone_code": "SJ",
+    "source_zone_type": "SJ",
+    "parameters": {
+        "max_overground_floor_area_ratio": 0.6,
+        "max_building_height_m": null,
+        "max_building_coverage_pct": 0.0,
+        "min_biologically_active_pct": 50.0
+    },
+    "parameters_informational": false,
+    "primary_profiles": [],
+    "additional_profiles": [],
+    "act": {
+        "act_id": "PL.ZIPPZP.99999/226401-POG/2POG",
+        "act_version": "20260901T000000",
+        "name": "Projekt zmiany planu og\u00f3lnego Sopotu (syntetyczny, odbi\u00f3r BK-404\u2013406)",
+        "teryt": "226401",
+        "legal_status": "project",
+        "legal_status_code": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/adoption",
+        "resolution_number": null,
+        "resolution_date": null,
+        "legal_valid_from": null,
+        "legal_valid_to": null,
+        "publication_id": null,
+        "manual_review_required": true
+    },
+    "source_reference": null
+}
+
+## GET /api/v1/map/pog/releases/1/features/planning_feature:abc
+HTTP/1.1 422 Unprocessable Content
+content-type: application/json
+{
+    "detail": "Po prefiksie 'planning_feature:' wymagana jest dodatnia liczba."
+}
+
+## GET /api/v1/map/pog/releases/1/features/PL.ZIPPZP.0%2Fnie-istnieje
+HTTP/1.1 404 Not Found
+content-type: application/json
+{
+    "detail": "Obiekt 'PL.ZIPPZP.0/nie-istnieje' nie nale\u017cy do wydania 1."
+}
+
+## GET /api/v1/map/pog/releases/1/summary?act_id=PL.ZIPPZP.99998%2F999901-POG%2F1POG
+HTTP/1.1 200 OK
+etag: "pog-summary-a569dd0e2c494e2e13963281b6312016"
+cache-control: public, max-age=3600
+content-type: application/json
+{
+    "schema": "pog-area-summary/1",
+    "release_id": 1,
+    "release_label": "pog-33b9f56a288c",
+    "release_is_active": true,
+    "artifact_sha256": "94c724c0ac313ca9c3aaabf24cd88c70ee3f346c315dfc32b93c51d0e94a5401",
+    "scope": "act",
+    "act_id": "PL.ZIPPZP.99998/999901-POG/1POG",
+    "act_version": "20260901T000000",
+    "teryt": "999901",
+    "edition": null,
+    "legal_status": "binding",
+    "act_ids": [
+        "PL.ZIPPZP.99998/999901-POG/1POG"
+    ],
+    "act_count": 1,
+    "denominator_area_sqm": 1000000.0,
+    "denominator_area_sqkm": 1.0,
+    "denominator_source": "act_boundary",
+    "zones_area_sqm": 1000000.0,
+    "zones_area_sqkm": 1.0,
+    "missing_area_sqm": 0.0,
+    "missing_area_sqkm": 0.0,
+    "overlap_area_sqm": 0.0,
+    "outside_area_sqm": 0.0,
+    "deduplicated_area_sqm": null,
+    "share_sum_pct": 100.0,
+    "share_tolerance_pct": 0.1,
+    "area_tolerance_sqm": 500.0,
+    "zone_count": 2,
+    "is_complete": true,
+    "incomplete_reasons": [],
+    "zones": [
+        {
+            "zone_code": "SW",
+            "area_sqm": 600000.0,
+            "area_sqkm": 0.6,
+            "share_pct": 60.0,
+            "zone_count": 1
+        },
+        {
+            "zone_code": "SU",
+            "area_sqm": 400000.0,
+            "area_sqkm": 0.4,
+            "share_pct": 40.0,
+            "zone_count": 1
+        }
+    ],
+    "method_version": "pog-aggregates/1",
+    "computed_at": "2026-09-29T14:49:51.503787Z"
+}
+
+## GET /api/v1/map/pog/releases/1/summary?act_id=PL.ZIPPZP.10011%2F226401-POG%2F1POG
+HTTP/1.1 200 OK
+etag: "pog-summary-a3e41cac08b48d37aa23af637ed9e583"
+cache-control: public, max-age=3600
+content-type: application/json
+{
+    "schema": "pog-area-summary/1",
+    "release_id": 1,
+    "release_label": "pog-33b9f56a288c",
+    "release_is_active": true,
+    "artifact_sha256": "94c724c0ac313ca9c3aaabf24cd88c70ee3f346c315dfc32b93c51d0e94a5401",
+    "scope": "act",
+    "act_id": "PL.ZIPPZP.10011/226401-POG/1POG",
+    "act_version": "20260819T010000",
+    "teryt": "226401",
+    "edition": null,
+    "legal_status": "binding",
+    "act_ids": [
+        "PL.ZIPPZP.10011/226401-POG/1POG"
+    ],
+    "act_count": 1,
+    "denominator_area_sqm": 17327515.56800166,
+    "denominator_area_sqkm": 17.32751556800166,
+    "denominator_source": "act_boundary",
+    "zones_area_sqm": 4076.0114643347374,
+    "zones_area_sqkm": 0.004076011464334737,
+    "missing_area_sqm": 17323439.556537326,
+    "missing_area_sqkm": 17.323439556537327,
+    "overlap_area_sqm": 0.0,
+    "outside_area_sqm": 1.8189894035458565e-12,
+    "deduplicated_area_sqm": null,
+    "share_sum_pct": 0.02352334613891109,
+    "share_tolerance_pct": 0.1,
+    "area_tolerance_sqm": 8663.75778400083,
+    "zone_count": 1,
+    "is_complete": false,
+    "incomplete_reasons": [
+        "missing_area",
+        "share_sum_out_of_tolerance"
+    ],
+    "zones": [
+        {
+            "zone_code": "SU",
+            "area_sqm": 4076.0114643347374,
+            "area_sqkm": 0.004076011464334737,
+            "share_pct": 0.02352334613891109,
+            "zone_count": 1
+        }
+    ],
+    "method_version": "pog-aggregates/1",
+    "computed_at": "2026-09-29T14:49:51.503787Z"
+}
+
+## GET /api/v1/map/pog/releases/1/summary?teryt=226401&edition=project
+HTTP/1.1 200 OK
+etag: "pog-summary-4e921bc016d1b1427615bbce74a96490"
+cache-control: public, max-age=3600
+content-type: application/json
+{
+    "schema": "pog-area-summary/1",
+    "release_id": 1,
+    "release_label": "pog-33b9f56a288c",
+    "release_is_active": true,
+    "artifact_sha256": "94c724c0ac313ca9c3aaabf24cd88c70ee3f346c315dfc32b93c51d0e94a5401",
+    "scope": "municipality",
+    "act_id": null,
+    "act_version": null,
+    "teryt": "226401",
+    "edition": "project",
+    "legal_status": null,
+    "act_ids": [
+        "PL.ZIPPZP.99999/226401-POG/2POG"
+    ],
+    "act_count": 1,
+    "denominator_area_sqm": 6209.923649832668,
+    "denominator_area_sqkm": 0.006209923649832669,
+    "denominator_source": "act_boundaries_union",
+    "zones_area_sqm": 5524.0909958703505,
+    "zones_area_sqkm": 0.00552409099587035,
+    "missing_area_sqm": 685.8326539623176,
+    "missing_area_sqkm": 0.0006858326539623176,
+    "overlap_area_sqm": 0.0,
+    "outside_area_sqm": 0.0,
+    "deduplicated_area_sqm": null,
+    "share_sum_pct": 88.95586012590029,
+    "share_tolerance_pct": 0.1,
+    "area_tolerance_sqm": 3.104961824916334,
+    "zone_count": 1,
+    "is_complete": false,
+    "incomplete_reasons": [
+        "missing_area",
+        "share_sum_out_of_tolerance"
+    ],
+    "zones": [
+        {
+            "zone_code": "SJ",
+            "area_sqm": 5524.0909958703505,
+            "area_sqkm": 0.00552409099587035,
+            "share_pct": 88.95586012590029,
+            "zone_count": 1
+        }
+    ],
+    "method_version": "pog-aggregates/1",
+    "computed_at": "2026-09-29T14:49:51.503787Z"
+}
+
+## GET /api/v1/map/pog/releases/1/summary
+HTTP/1.1 422 Unprocessable Content
+content-type: application/json
+{
+    "detail": "Podaj dok\u0142adnie jeden zakres: act_id (akt) albo teryt (gmina)."
+}
+
+## GET /api/v1/map/pog/releases/999/summary?act_id=x
+HTTP/1.1 404 Not Found
+content-type: application/json
+{
+    "detail": "Wydanie 999 nie istnieje albo nie zawiera akt\u00f3w POG."
+}
+
+## GET summary z If-None-Match: "pog-summary-a569dd0e2c494e2e13963281b6312016"
+HTTP/1.1 304 Not Modified
+etag: "pog-summary-a569dd0e2c494e2e13963281b6312016"

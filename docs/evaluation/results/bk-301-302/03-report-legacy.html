@@ -1,0 +1,706 @@
+<!DOCTYPE html><html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>Raport analizy uwarunkowań przestrzennych działki</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm 14mm;
+    @top-left { content: string(parcel-id); font-size: 7.5pt; color: #667085; }
+    @top-right { content: string(section-title); font-size: 7.5pt; color: #667085; }
+    @bottom-center {
+      content: "System analizy uwarunkowań przestrzennych działki — strona " counter(page) " z " counter(pages);
+      font-size: 7.5pt; color: #667085;
+    }
+  }
+  @page :first { @top-left { content: none; } @top-right { content: none; } }
+  html { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; }
+  body { color: #1a2027; font-size: 9pt; line-height: 1.4; }
+  .parcel-id { string-set: parcel-id content(); }
+  h1 { font-size: 19pt; margin: 0 0 3mm 0; color: #0d5137; }
+  h2 { font-size: 13pt; margin: 0 0 2.5mm 0; padding-bottom: 1mm; color: #0d5137;
+       border-bottom: 1.2pt solid #0d5137; break-after: avoid; string-set: section-title content(); }
+  h3 { font-size: 10.5pt; margin: 4mm 0 1.5mm 0; color: #1a2027; break-after: avoid; }
+  h4 { font-size: 9.5pt; margin: 3mm 0 1mm 0; break-after: avoid; }
+  section.report-section { break-before: page; }
+  p { margin: 1mm 0; orphans: 3; widows: 3; }
+  .cover { padding-top: 18mm; }
+  .cover .subtitle { font-size: 11pt; color: #475467; }
+  .cover table.meta th { width: 38%; }
+  .toc { margin-top: 6mm; }
+  .toc ol { padding-left: 6mm; margin: 1mm 0; }
+  .toc li { margin: 0.8mm 0; }
+  .toc a { color: #1a2027; text-decoration: none; }
+  .toc a::after { content: leader(".") " " target-counter(attr(href), page); color: #475467; }
+  .status-badge { display: inline-block; padding: 0.4mm 2mm; border-radius: 2mm;
+                  background: #eef3f0; color: #0d5137; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 1.5mm 0 2.5mm 0; table-layout: fixed; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th, td { text-align: left; padding: 1.1mm 1.5mm; border-bottom: 0.6pt solid #d0d5dd;
+           vertical-align: top; overflow-wrap: anywhere; hyphens: auto; }
+  th { background: #f2f4f7; font-weight: bold; }
+  table.kv th { width: 36%; background: #f8f9fb; }
+  table.data th, table.data td { font-size: 7.8pt; }
+  table.data thead th { border-bottom: 1pt solid #98a2b3; }
+  td.num, th.num { text-align: right; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 6.8pt; overflow-wrap: anywhere; hyphens: manual; }
+  small { font-size: 7pt; color: #475467; }
+  .empty { color: #6b3a10; font-style: italic; background: #fff7ef; padding: 1.2mm 2mm;
+           border-left: 2pt solid #c96a1f; break-inside: avoid; }
+  .note { font-size: 8pt; color: #475467; }
+  .kind { display: inline-block; font-size: 6.5pt; padding: 0 1mm; border-radius: 1mm;
+          border: 0.5pt solid #98a2b3; color: #344054; }
+  .kind-source_fact { background: #eef4ff; }
+  .kind-computed { background: #ecfdf3; }
+  .kind-approximation { background: #fffaeb; }
+  .kind-manual { background: #fdeceb; }
+  .tag { display: inline-block; padding: 0 1.2mm; border-radius: 1mm; font-size: 6.8pt; }
+  .tag-info { background: #eef3f0; color: #0d5137; }
+  .tag-review { background: #fdeceb; color: #8f2525; }
+  .tag-project { background: #fef0c7; color: #7a2e0e; border: 0.5pt dashed #7a2e0e; }
+  .st { font-weight: bold; hyphens: none; }
+  .st-available { color: #0d5137; }
+  .st-partial, .st-awaiting_input { color: #9a4a00; }
+  .st-no_coverage { color: #1f4e79; }
+  .st-unknown, .st-unavailable, .st-error, .st-out_of_scope { color: #8f2525; }
+  .fr-fresh { color: #0d5137; }
+  .fr-stale { color: #8f2525; font-weight: bold; }
+  .fr-unknown { color: #555; }
+  .tag-stale { background: #fdeceb; color: #8f2525; }
+  figure.map { margin: 2mm 0 3mm 0; break-inside: avoid; }
+  figure.map img { width: 100%; border: 0.6pt solid #98a2b3; }
+  figure.map figcaption { font-size: 7.5pt; color: #344054; margin-top: 1mm; }
+  table.legend { margin: 1mm 0 0 0; }
+  table.legend td { font-size: 7.5pt; padding: 0.6mm 1mm; border-bottom: none; }
+  .swatch { display: inline-block; width: 6mm; height: 3.5mm; border: 1.2pt solid #475467;
+            vertical-align: middle; }
+  .swatch-dashed { border-style: dashed; }
+  .disclaimer { margin-top: 5mm; padding: 2.5mm; border: 1pt solid #c96a1f;
+                background: #fff7ef; color: #6b3a10; break-inside: avoid; }
+  .manual-banner { margin: 5mm 0 0; padding: 2.5mm; border: 1.5pt solid #c43d3d;
+                   background: #fdeceb; color: #8f2525; font-weight: bold; }
+  .informational { font-size: 8pt; color: #475467; font-style: italic; }
+  ul.plain { margin: 1mm 0; padding-left: 5mm; }
+  ul.plain li { margin: 0.6mm 0; }
+  .evidence-text { font-size: 7.2pt; color: #344054; }
+  svg.profile { width: 170mm; height: 42mm; }
+</style>
+</head>
+<body>
+
+
+<section class="cover">
+  <h1>Raport analizy uwarunkowań przestrzennych działki</h1>
+  <div class="subtitle">System analizy uwarunkowań przestrzennych działki — układ raportu report-v2/2026.09.29-1</div>
+  <table class="kv meta">
+    <tr><th>Działka</th><td><span class="parcel-id">BK301_302_E2E_legacy_e5444f</span></td></tr>
+    <tr><th>Identyfikator analizy</th><td>434</td></tr>
+    <tr><th>Data analizy (stan danych)</th><td>29.09.2026 21:24</td></tr>
+    <tr><th>Status analizy</th><td><span class="status-badge">partial</span> — analiza częściowa — część sekcji ma status inny niż „sprawdzono”</td></tr>
+    <tr><th>Raport wygenerowano</th><td>29.09.2026 21:24 — wyłącznie z zapisanego snapshotu analizy, bez ponownego pobierania źródeł; mapy renderowane lokalnie.</td></tr>
+  </table>
+  <div class="toc">
+    <h3>Spis treści</h3>
+    <ol>
+<li><a href="#sec-parcel">Identyfikacja i geometria działki</a></li><li><a href="#sec-summary">Podsumowanie wykrytych uwarunkowań</a></li><li><a href="#sec-mpzp">Miejscowy plan zagospodarowania przestrzennego (MPZP)</a></li><li><a href="#sec-pog">Plan ogólny gminy (POG) oraz OUZ, OZS i OSDIS</a></li><li><a href="#sec-environment">Środowisko: zagrożenie powodziowe i ochrona przyrody</a></li><li><a href="#sec-terrain">Teren (NMT)</a></li><li><a href="#sec-infrastructure">Infrastruktura i transport</a></li><li><a href="#sec-quality">Jakość i kompletność analizy</a></li><li><a href="#sec-sources">Źródła i provenance</a></li><li><a href="#sec-limitations">Ograniczenia interpretacyjne</a></li>      <li style="list-style: none"><a href="#appendix-mapping">Załącznik A. Mapowanie pól API na elementy raportu</a></li>
+    </ol>
+  </div>
+  <h3>Rodzaje ustaleń</h3>
+  <table class="kv">
+<tr><th><span class="kind kind-source_fact">fakt źródłowy</span></th><td>wartość przepisana z urzędowego źródła (atrybut rekordu, zapis uchwały, status aktu) bez przekształceń innych niż normalizacja jednostki</td></tr><tr><th><span class="kind kind-computed">wynik obliczenia</span></th><td>wynik deterministycznego obliczenia systemu na geometrii w EPSG:2180 (pole i udział przecięcia, deniwelacja, spadek)</td></tr><tr><th><span class="kind kind-approximation">przybliżenie</span></th><td>szacunek techniczny o jawnych założeniach (odsunięcie od granic, bufor sieci) — nie jest ustaleniem prawnym ani pomiarem</td></tr><tr><th><span class="kind kind-manual">dane ręczne</span></th><td>wartość wprowadzona lub wskazana przez użytkownika — wymaga weryfikacji w materiale źródłowym</td></tr>  </table>
+  <p class="note">Brak wartości jest zapisywany jako „nie określono” i nie jest równoznaczny z wartością 0. Status „sprawdzono” oznacza, że źródło odpowiedziało i wynik obliczono; brak danych nie jest dowodem braku ograniczenia.</p>
+</section>
+
+<section class="report-section" id="sec-parcel">
+  <h2>1. Identyfikacja i geometria działki</h2>
+  <h3>Tabela 1.1. Identyfikacja</h3>
+  <table class="kv">
+    <tr><th>Identyfikator działki</th><td>BK301_302_E2E_legacy_e5444f <span class="kind kind-source_fact">fakt źródłowy</span></td></tr>
+    <tr><th>Identyfikator i status analizy</th><td>#434 — partial (analiza częściowa — część sekcji ma status inny niż „sprawdzono”)</td></tr>
+    <tr><th>Data analizy</th><td>29.09.2026 21:24</td></tr>
+    <tr><th>Źródło geometrii</th><td>ULDK, pobrano 28.09.2026 10:00; pewność 95,0% (wysoka)</td></tr>
+  </table>
+  <h3>Tabela 1.2. Geometria (obliczenia w EPSG:2180)</h3>
+  <table class="kv">
+<tr><th>Pole powierzchni działki</th><td>10 000,00 m² <span class="kind kind-computed">wynik obliczenia</span></td></tr><tr><th>Pole powierzchni działki [ha]</th><td>1,0000 ha <span class="kind kind-computed">wynik obliczenia</span></td></tr><tr><th>Obwód</th><td>400,00 m <span class="kind kind-computed">wynik obliczenia</span></td></tr><tr><th>Geometria poprawna (OGC)</th><td>tak <span class="kind kind-computed">wynik obliczenia</span></td></tr><tr><th>Geometria naprawiana przed obliczeniami</th><td>nie <span class="kind kind-computed">wynik obliczenia</span></td></tr><tr><th>Szacowany obszar zabudowy po technicznym odsunięciu od granic</th><td>8 464,00 m² <span class="kind kind-approximation">przybliżenie</span></td></tr>  </table>
+  <p class="empty">Mapa niedostępna: Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.</p>
+
+</section>
+
+<section class="report-section" id="sec-summary">
+  <h2>2. Podsumowanie wykrytych uwarunkowań</h2>
+  <p class="informational">Zestawienie ustaleń z sekcji 3–7. Raport nie przelicza ustaleń na ocenę punktową ani „scoring inwestycyjny”; każdy wiersz wskazuje status sprawdzenia i rodzaj ustalenia.</p>
+<p class="empty">Status analizy: analiza częściowa — część sekcji ma status inny niż „sprawdzono”.</p>  <table class="data">
+    <colgroup><col style="width: 20%"><col style="width: 15%"><col style="width: 49%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Obszar (sekcja)</th><th>Status</th><th>Ustalenie</th><th>Rodzaj</th></tr></thead>
+    <tbody>
+      <tr><td>Działka i geometria <small>(§1)</small></td>
+          <td><span class="st st-available">sprawdzono</span></td>
+          <td>Pole 10 000,00 m², obwód 400,00 m.</td>
+          <td><span class="kind kind-computed">wynik obliczenia</span></td></tr>
+      <tr><td>MPZP <small>(§3)</small></td>
+          <td><span class="st st-unknown">nieustalone</span></td>
+          <td>Brak stref MPZP w wyniku.<br><small>nie znaleziono albo nie sprawdzono planu (nie dowodzi braku planu)</small></td>
+          <td>—</td></tr>
+      <tr><td>POG — strefy planistyczne <small>(§4)</small></td>
+          <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">weryfikacja</span></td>
+          <td>Status aktu: obowiązuje (potwierdzone urzędowym kodem statusu). Strefy: SJ (100,00%).<br><small>wynik POG wymaga ręcznej weryfikacji; źródło bez identyfikatora z katalogu</small></td>
+          <td><span class="kind kind-source_fact">fakt źródłowy</span></td></tr>
+      <tr><td>POG — OUZ, OZS, OSDIS <small>(§4)</small></td>
+          <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">weryfikacja</span></td>
+          <td>OUZ: brak obszaru przecinającego działkę; OZS: brak obszaru przecinającego działkę; OSDIS: brak obszaru przecinającego działkę.<br><small>wynik POG wymaga ręcznej weryfikacji; źródło bez identyfikatora z katalogu</small></td>
+          <td><span class="kind kind-computed">wynik obliczenia</span></td></tr>
+      <tr><td>Zagrożenie powodziowe (ISOK) <small>(§5)</small></td>
+          <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">weryfikacja</span></td>
+          <td>Brak obiektów przecinających działkę.<br><small>źródło oznaczyło wynik jako wymagający weryfikacji</small></td>
+          <td><span class="kind kind-computed">wynik obliczenia</span></td></tr>
+      <tr><td>Formy ochrony przyrody (GDOŚ) <small>(§5)</small></td>
+          <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">weryfikacja</span></td>
+          <td>Brak obiektów przecinających działkę.<br><small>źródło oznaczyło wynik jako wymagający weryfikacji</small></td>
+          <td><span class="kind kind-computed">wynik obliczenia</span></td></tr>
+      <tr><td>Teren (NMT) <small>(§6)</small></td>
+          <td><span class="st st-available">sprawdzono</span></td>
+          <td>Brak informacji w zapisanym wyniku — deniwelacja nieznana, nie oznacza to płaskiego terenu.</td>
+          <td>—</td></tr>
+      <tr><td>Uzbrojenie terenu (KIUT) <small>(§7)</small></td>
+          <td><span class="st st-partial">częściowo</span></td>
+          <td>Powiat publikuje dane GESUT w KIUT.<br><small>podgląd nie jest geometrią sieci — brak odległości i liczby sieci</small></td>
+          <td><span class="kind kind-source_fact">fakt źródłowy</span></td></tr>
+      <tr><td>Transport i dostęp do drogi <small>(§7)</small></td>
+          <td><span class="st st-out_of_scope">poza zakresem</span></td>
+          <td>Nie analizowano — brak potwierdzonego kontraktu źródła (BK-305).<br><small>brak potwierdzonego kontraktu źródła danych (BK-305)</small></td>
+          <td>—</td></tr>
+      <tr><td>Relacja MPZP–POG <small>(§4)</small></td>
+          <td><span class="st st-unknown">nieustalone</span><br><span class="tag tag-review">weryfikacja</span></td>
+          <td>Nieustalone — brak danych lub reguły — analiza informacyjna, nie opinia prawna.<br><small>POG obowiązuje, ale nie ustalono strefy MPZP (brak danych ≠ brak ograniczeń); relacja MPZP–POG wymaga weryfikacji; sekcja wyliczona z innych sekcji — bez własnego źródła</small></td>
+          <td><span class="kind kind-computed">wynik obliczenia</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="report-section" id="sec-mpzp">
+  <h2>3. Miejscowy plan zagospodarowania przestrzennego (MPZP)</h2>
+  <p class="empty">Nie znaleziono ani nie sprawdzono stref MPZP przecinających działkę — nie potwierdza to braku planu.</p>
+  <p class="empty">Mapa niedostępna: Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.</p>
+
+</section>
+
+<section class="report-section" id="sec-pog">
+  <h2>4. Plan ogólny gminy (POG) oraz OUZ, OZS i OSDIS</h2>
+  <h3>Tabela 4.1. Status aktu i zakres danych</h3>
+  <table class="kv">
+    <tr><th>Status prawny aktu</th><td>obowiązuje (potwierdzone urzędowym kodem statusu) <span class="kind kind-source_fact">fakt źródłowy</span></td></tr>
+    <tr><th>Zakres danych przestrzennych</th><td>dane przestrzenne dostępne dla działki</td></tr>
+    <tr><th>Aktualność źródła</th><td>sprawdzone w źródle przy tej analizie (potwierdzono 16.07.2026 12:00)</td></tr>
+<tr><th>Podstawa statusu</th><td>POG_GMINA_WMS (urzędowe) — kod http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce, 16.07.2026 12:00<br><span class="mono">https://pog.example.test/wms</span></td></tr>    <tr><th>Uchwała</th><td>X/42/2026 z 10.02.2026</td></tr>
+    <tr><th>Pewność i weryfikacja</th><td>90,0% (wysoka) <span class="tag tag-review">wynik POG wymaga ręcznej weryfikacji</span></td></tr>
+  </table>
+
+  <p class="empty">Mapa niedostępna: Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.</p>
+
+
+  <h3>Tabela 4.2. Strefy planistyczne przecinające działkę</h3>
+  <table class="data">
+    <colgroup><col style="width: 17%"><col style="width: 27%"><col style="width: 13%"><col style="width: 10%"><col style="width: 15%"><col style="width: 18%"></colgroup>
+    <thead><tr><th>ID / symbol</th><th>Rodzaj strefy</th><th class="num">Pole [m²]</th><th class="num">Udział [%]</th><th>Status aktu</th><th>Źródło obiektu</th></tr></thead>
+    <tbody>
+      <tr data-row="pog-zone">
+        <td><span class="swatch" style="background: #f0b067;"></span> <strong>SJ</strong><br><span class="mono">pog:SJ</span><br><span class="tag tag-info">największy udział</span></td>
+        <td>SJ</td>
+        <td class="num">10 000,00 m²</td><td class="num">100,00%</td>
+        <td>obowiązuje (potwierdzone urzędowym kodem statusu)</td>
+        <td><small>GML nie określono<br>POG_APP, pobrano 28.09.2026 10:00; pewność 90,0% (wysoka)</small></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Tabela 4.3. Parametry i profile stref (każda strefa osobno — bez średnich)</h3>
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 11%"><col style="width: 11%"><col style="width: 11%"><col style="width: 11%"><col style="width: 21%"><col style="width: 21%"></colgroup>
+    <thead><tr><th>Strefa</th><th class="num">Maks. intensywność [—]</th><th class="num">Maks. wysokość [m]</th><th class="num">Maks. zabudowa [%]</th><th class="num">Min. PBC [%]</th><th>Profil podstawowy</th><th>Profile dodatkowe</th></tr></thead>
+    <tbody>
+      <tr data-row="pog-parameters">
+        <td><strong>SJ</strong><br><span class="mono">pog:SJ</span></td>
+<td class="num">nie określono</td><td class="num">nie określono</td><td class="num">nie określono</td><td class="num">nie określono</td>        <td>nie określono</td>
+        <td>nie określono</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Parametry są faktami źródłowymi z rekordu APP strefy <span class="kind kind-source_fact">fakt źródłowy</span>; pole i udział są wynikiem obliczenia w EPSG:2180 <span class="kind kind-computed">wynik obliczenia</span>. Słownik profili: nie określono.</p>
+
+  <h3>Tabela 4.4. Obszar uzupełnienia zabudowy (OUZ)</h3>
+<p>Działka w OUZ (decyzja wg jawnych progów): <strong>nie</strong>; łącznie 0,00 m² (0,00%); styk z granicą: nie.</p>  <p class="empty">Snapshot nie zawiera listy obiektów (zapis sprzed kontraktu wszystkich obszarów) — powyżej wartości łączne.</p>
+  <h3>Tabela 4.5. Obszar zabudowy śródmiejskiej (OZS)</h3>
+<p>Działka w OZS: <strong>nie</strong>.</p>  <p class="empty">Sprawdzono — brak obszaru przecinającego działkę.</p>
+  <h3>Tabela 4.6. Obszar standardów dostępności infrastruktury społecznej (OSDIS)</h3>
+  <p class="empty">Sprawdzono — brak obszaru przecinającego działkę.</p>
+
+  <h3>Tabela 4.7. Źródła urzędowe aktu</h3>
+  <p class="empty">Brak zapisanego łańcucha provenance aktu (snapshot bez danych aktu).</p>
+
+
+  <h3>Tabela 4.9. Relacja MPZP–POG — analiza informacyjna</h3>
+  <p class="informational">Ustalenia MPZP (sekcja 3) i POG (tabele 4.1–4.8) są przedstawione osobno. Ta tabela nie jest opinią prawną i nie stwierdza prawnej możliwości zabudowy.</p>
+  <table class="kv">
+    <tr><th>Wynik oceny</th><td>nieustalone — brak danych lub reguły <span class="mono">(unknown, MPZP_ZONES_MISSING)</span> <span class="kind kind-computed">wynik obliczenia</span><br><span class="tag tag-review">wymaga weryfikacji</span></td></tr>
+    <tr><th>Stan prawny na dzień</th><td>16.07.2026</td></tr>
+    <tr><th>Zestaw reguł</th><td>mpzp-pog-function-table v1.0</td></tr>
+    <tr><th>Uzasadnienie</th><td>POG obowiązuje, ale analiza nie ustaliła strefy MPZP; brak danych MPZP nie oznacza braku ograniczeń.</td></tr>
+    <tr><th>Reguła agregacji</th><td><small>Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.</small></td></tr>
+  </table>
+  <table class="data">
+    <thead><tr><th>Źródło oceny</th><th>Odniesienie i wersja</th></tr></thead>
+    <tbody>
+      <tr><td>Tabela reguł funkcja MPZP × strefa POG <small>(rule_set)</small></td><td><small>Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.</small><br><span class="mono">wersja 1.0</span><br><small>stan na 16.07.2026</small></td></tr>
+      <tr><td>POG <small>(pog)</small></td><td><small>https://bip.example.test/pog.gml</small><br><small>stan na 16.07.2026</small></td></tr>
+    </tbody>
+  </table>
+  <p class="informational">Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.</p>
+
+</section>
+
+<section class="report-section" id="sec-environment">
+  <h2>5. Środowisko: zagrożenie powodziowe i ochrona przyrody</h2>
+  <p class="empty">Mapa niedostępna: Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.</p>
+
+  <h3>Tabela 5.1. Zagrożenie powodziowe (ISOK)</h3>
+  <table class="kv">
+    <tr><th>Status sekcji</th><td><span class="st st-complete">sprawdzono</span></td></tr>
+    <tr><th>Relacja z działką</th><td>brak obiektów przecinających działkę</td></tr>
+    <tr><th>Obiekty</th><td>0 (przecięcie: 0, styk granicy: 0)</td></tr>
+    <tr><th>Łączne pokrycie działki</th><td>0,00 m² (0,00%) <span class="kind kind-computed">wynik obliczenia</span><br><small>suma mnogościowa, bez podwójnego liczenia</small></td></tr>
+    <tr><th>Źródło</th><td>ISOK; pewność 0,0% (wymaga weryfikacji)</td></tr>
+  </table>
+  <p class="note">Sprawdzono — brak obiektów przecinających działkę ani stykających się z nią.</p>
+  <h3>Tabela 5.2. Formy ochrony przyrody (GDOŚ)</h3>
+  <table class="kv">
+    <tr><th>Status sekcji</th><td><span class="st st-complete">sprawdzono</span></td></tr>
+    <tr><th>Relacja z działką</th><td>brak obiektów przecinających działkę</td></tr>
+    <tr><th>Obiekty</th><td>0 (przecięcie: 0, styk granicy: 0)</td></tr>
+    <tr><th>Łączne pokrycie działki</th><td>0,00 m² (0,00%) <span class="kind kind-computed">wynik obliczenia</span><br><small>suma mnogościowa, bez podwójnego liczenia</small></td></tr>
+    <tr><th>Źródło</th><td>GDOS; pewność 0,0% (wymaga weryfikacji)</td></tr>
+  </table>
+  <p class="note">Sprawdzono — brak obiektów przecinających działkę ani stykających się z nią.</p>
+</section>
+
+<section class="report-section" id="sec-terrain">
+  <h2>6. Teren (NMT)</h2>
+  <h3>Tabela 6.1. Wysokości w obrysie działki</h3>
+  <table class="kv">
+    <tr><th>Status pomiaru</th><td>brak informacji w zapisanym wyniku <span class="mono">(LEGACY_SNAPSHOT)</span></td></tr>
+    <tr><th>Siatka próbkowania usługi</th><td>nie określono</td></tr>
+    <tr><th>Liczba punktów siatki</th><td>nie określono</td></tr>
+    <tr><th>Źródło</th><td>nie określono</td></tr>
+  </table>
+<p class="empty">Zapisany wynik pochodzi sprzed wprowadzenia sekcji rzeźby terenu i nie zawiera pomiaru NMT. Brak informacji nie oznacza płaskiego terenu.</p><p class="informational">Snapshot zapisano przed udostępnieniem sekcji rzeźby terenu (BK-301) — brak informacji o NMT; nie oznacza to płaskiego terenu.</p>
+  <h3>Tabela 6.2. Spadek, ekspozycja i profil (raster NMT)</h3>
+  <p class="empty">Nie liczono pochodnych rastra NMT dla tej analizy — brak statystyk nie oznacza płaskiego terenu.</p>
+</section>
+
+<section class="report-section" id="sec-infrastructure">
+  <h2>7. Infrastruktura i transport</h2>
+  <p class="informational">Sekcja obejmuje wyłącznie dane o potwierdzonym kontrakcie. Geometria KIUT/GESUT nie jest podstawą wniosków obliczeniowych (BK-306); bufory sieci są przybliżeniem technicznym.</p>
+  <h3>Tabela 7.1. Podgląd uzbrojenia terenu (KIUT)</h3>
+  <table class="kv">
+    <tr><th>Status pokrycia</th><td>powiat publikuje dane GESUT w KIUT <span class="kind kind-source_fact">fakt źródłowy</span></td></tr>
+    <tr><th>Powiat</th><td>Warszawa</td></tr>
+    <tr><th>Warstwa podglądowa potwierdzona</th><td>tak</td></tr>
+    <tr><th>Źródło</th><td>KIUT (GUGiK), pobrano 28.09.2026 10:00; pewność 90,0% (wysoka)</td></tr>
+  </table>
+  <p>Podgląd nie służy do odległości.</p>
+  <p><strong>Raport nie zawiera odległości ani liczby sieci wyliczonych z podglądu WMS.</strong>
+     <strong>Nie da się na podstawie podglądu WMS stwierdzić, czy konkretna sieć leży na działce.</strong>
+     Brak linii na obrazie nie oznacza braku sieci; PDF nie osadza rastra WMS.</p>
+  <h3>Tabela 7.2. Techniczne bufory sieci (przybliżenie)</h3>
+  <p class="empty">Dane niedostępne — nie wyznaczono buforów sieci (brak potwierdzonej geometrii sieci). Nie oznacza to braku sieci.</p>
+  <h3>Transport i dostęp do drogi</h3>
+  <p class="empty">Nie analizowano — brak potwierdzonego kontraktu źródła danych drogowych (BK-305). Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.</p>
+</section>
+
+<section class="report-section" id="sec-quality">
+  <h2>8. Jakość i kompletność analizy</h2>
+  <p>Status analizy: <span class="status-badge">partial</span> — analiza częściowa — część sekcji ma status inny niż „sprawdzono”.</p>
+  <p class="informational">Status kompletności i świeżość dotyczą <em>każdej sekcji osobno</em> — żaden zbiorczy status nie gwarantuje kompletności całego raportu. Ocena została wystawiona i zapisana razem z analizą (punkt odniesienia: 29.09.2026 21:24; polityka <span class="mono">quality-policy/1+2e0adf938c7b</span>). Brak pokrycia źródła, błąd źródła i stary pomiar są odrębnymi stanami; brak danych nie oznacza braku ograniczenia.</p>
+  <h3>Tabela 8.1. Macierz kompletności i świeżości sekcji (ocena historyczna)</h3>
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 14%"><col style="width: 14%"><col style="width: 11%"><col style="width: 9%"><col style="width: 16%"><col style="width: 22%"></colgroup>
+    <thead><tr><th>Sekcja (§)</th><th>Status</th><th>Źródło</th><th>Pobrano</th><th>Wydanie / wersja</th><th>Świeżość</th><th>Powód (kody)</th></tr></thead>
+    <tbody>
+      <tr data-row="quality" data-section="parcel"><td>Działka i geometria <small>(§1)</small></td>
+        <td><span class="st st-available">sprawdzono</span></td>
+        <td>ULDK<br><small class="mono">uldk</small></td>
+        <td>28.09.2026 10:00</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek 1 dzień; brak reguły wieku</small></td>
+        <td>—</td></tr>
+      <tr data-row="quality" data-section="mpzp"><td>MPZP <small>(§3)</small></td>
+        <td><span class="st st-unknown">nieustalone</span></td>
+        <td>brak źródła</td>
+        <td>nie określono</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek brak danych; brak reguły wieku; brak źródła danych dla sekcji</small></td>
+        <td>nie znaleziono albo nie sprawdzono planu (nie dowodzi braku planu) <small class="mono">[MPZP_NOT_DETERMINED]</small></td></tr>
+      <tr data-row="quality" data-section="pog"><td>POG — strefy planistyczne <small>(§4)</small></td>
+        <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">wymaga weryfikacji</span></td>
+        <td>POG_APP</td>
+        <td>28.09.2026 10:00</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek 1 dzień; brak reguły wieku</small></td>
+        <td>wynik POG wymaga ręcznej weryfikacji <small class="mono">[POG_REVIEW_REQUIRED]</small><br>źródło bez identyfikatora z katalogu <small class="mono">[SOURCE_ID_UNRESOLVED]</small></td></tr>
+      <tr data-row="quality" data-section="pog_overlays"><td>POG — OUZ, OZS, OSDIS <small>(§4)</small></td>
+        <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">wymaga weryfikacji</span></td>
+        <td>POG_APP</td>
+        <td>28.09.2026 10:00</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek 1 dzień; brak reguły wieku</small></td>
+        <td>wynik POG wymaga ręcznej weryfikacji <small class="mono">[POG_REVIEW_REQUIRED]</small><br>źródło bez identyfikatora z katalogu <small class="mono">[SOURCE_ID_UNRESOLVED]</small></td></tr>
+      <tr data-row="quality" data-section="flood"><td>Zagrożenie powodziowe (ISOK) <small>(§5)</small></td>
+        <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">wymaga weryfikacji</span></td>
+        <td>ISOK<br><small class="mono">isok</small></td>
+        <td>nie określono</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek brak danych; reguła źródła: 7 dni; brak czasu pobrania danych</small></td>
+        <td>źródło oznaczyło wynik jako wymagający weryfikacji <small class="mono">[SOURCE_REVIEW_REQUIRED]</small></td></tr>
+      <tr data-row="quality" data-section="nature"><td>Formy ochrony przyrody (GDOŚ) <small>(§5)</small></td>
+        <td><span class="st st-available">sprawdzono</span><br><span class="tag tag-review">wymaga weryfikacji</span></td>
+        <td>GDOS<br><small class="mono">gdos</small></td>
+        <td>nie określono</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek brak danych; reguła źródła: 7 dni; brak czasu pobrania danych</small></td>
+        <td>źródło oznaczyło wynik jako wymagający weryfikacji <small class="mono">[SOURCE_REVIEW_REQUIRED]</small></td></tr>
+      <tr data-row="quality" data-section="terrain"><td>Teren (NMT) <small>(§6)</small></td>
+        <td><span class="st st-available">sprawdzono</span></td>
+        <td>NMT<br><small class="mono">nmt</small></td>
+        <td>29.09.2026 21:24</td>
+        <td>—</td>
+        <td><span class="fr-fresh">aktualne wg reguły</span><br><small>wiek mniej niż 1 dzień; reguła źródła: 7 dni</small></td>
+        <td>—</td></tr>
+      <tr data-row="quality" data-section="utilities"><td>Uzbrojenie terenu (KIUT) <small>(§7)</small></td>
+        <td><span class="st st-partial">częściowo</span></td>
+        <td>KIUT (GUGiK)<br><small class="mono">kiut_wms</small></td>
+        <td>28.09.2026 10:00</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek 1 dzień; brak reguły wieku</small></td>
+        <td>podgląd nie jest geometrią sieci — brak odległości i liczby sieci <small class="mono">[KIUT_PREVIEW_ONLY]</small></td></tr>
+      <tr data-row="quality" data-section="transport"><td>Transport i dostęp do drogi <small>(§7)</small></td>
+        <td><span class="st st-out_of_scope">poza zakresem</span></td>
+        <td>brak źródła</td>
+        <td>nie określono</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek brak danych; brak reguły wieku; brak źródła danych dla sekcji</small></td>
+        <td>brak potwierdzonego kontraktu źródła danych (BK-305) <small class="mono">[NO_SOURCE_CONTRACT]</small></td></tr>
+      <tr data-row="quality" data-section="mpzp_pog_relation"><td>Relacja MPZP–POG <small>(§4)</small></td>
+        <td><span class="st st-unknown">nieustalone</span><br><span class="tag tag-review">wymaga weryfikacji</span></td>
+        <td>brak źródła</td>
+        <td>nie określono</td>
+        <td>—</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span><br><small>wiek brak danych; brak reguły wieku; brak źródła danych dla sekcji</small></td>
+        <td>POG obowiązuje, ale nie ustalono strefy MPZP (brak danych ≠ brak ograniczeń) <small class="mono">[MPZP_ZONES_MISSING]</small><br>relacja MPZP–POG wymaga weryfikacji <small class="mono">[COMPATIBILITY_REVIEW_REQUIRED]</small><br>sekcja wyliczona z innych sekcji — bez własnego źródła <small class="mono">[DERIVED_SECTION]</small></td></tr>
+    </tbody>
+  </table>
+  <p class="note">Suma kontrolna macierzy (SHA-256 treści oceny, bez chwili eksportu): <span class="mono">eb554294bc8cbef2ef283c714b0a3c379e758333ee195cc695f43328e6cc55e8</span>.</p>
+  <h3>Tabela 8.2. Legenda statusów i świeżości</h3>
+  <table class="data">
+    <colgroup><col style="width: 22%"><col style="width: 78%"></colgroup>
+    <thead><tr><th>Znacznik</th><th>Znaczenie</th></tr></thead>
+    <tbody>
+      <tr data-row="legend-status"><td><span class="st st-available">sprawdzono</span> <small>(w tej analizie)</small></td><td>źródło zwróciło wynik zgodny z kontraktem; pusty wynik oznacza sprawdzony brak obiektów, a nie brak ograniczeń poza zakresem źródła</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-partial">częściowo</span> <small>(w tej analizie)</small></td><td>wynik jest niepełny albo obniżonej pewności (np. strefa bez wektora, podgląd zamiast geometrii, sprzeczne parametry)</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-no_coverage">brak pokrycia źródła</span></td><td>źródło potwierdziło brak danych dla tego obszaru (np. poza zasięgiem NMT albo powiat nie publikuje GESUT) — to nie jest błąd źródła i nie dowodzi braku ograniczeń</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-unavailable">źródło niedostępne</span></td><td>próba pobrania nie powiodła się (limit czasu, błąd HTTP, odpowiedź niezgodna z kontraktem) — wynik nie jest znany</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-error">błąd sprawdzenia</span></td><td>nieoczekiwany błąd przetwarzania sekcji — wynik nie jest znany</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-unknown">nieustalone</span> <small>(w tej analizie)</small></td><td>brak zapisanego wyniku albo niemożliwe rozstrzygnięcie; brak danych nie oznacza braku ograniczenia ani braku planu</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-out_of_scope">poza zakresem</span> <small>(w tej analizie)</small></td><td>sekcja nie jest analizowana, bo brakuje potwierdzonego kontraktu źródła</td></tr>
+      <tr data-row="legend-status"><td><span class="st st-awaiting_input">oczekuje na dane użytkownika</span></td><td>analiza wstrzymana do czasu podania danych przez użytkownika</td></tr>
+      <tr data-row="legend-freshness"><td><span class="fr-fresh">aktualne wg reguły</span> <small>(w tej analizie)</small></td><td>wiek danych w punkcie odniesienia mieści się w regule wieku przypisanej do źródła</td></tr>
+      <tr data-row="legend-freshness"><td><span class="fr-stale">starsze niż reguła</span></td><td>wiek danych w punkcie odniesienia przekracza regułę wieku źródła — dane mogą nie odzwierciedlać bieżącego stanu źródła</td></tr>
+      <tr data-row="legend-freshness"><td><span class="fr-unknown">świeżość nieustalona</span> <small>(w tej analizie)</small></td><td>brak reguły wieku dla źródła, brak czasu pobrania albo czas nieprawidłowy — system nie zgaduje terminu ważności</td></tr>
+    </tbody>
+  </table>
+  <h3>Tabela 8.3. Wiek danych na dzień eksportu (ostrzeżenie dodatkowe)</h3>
+  <p class="note">Eksport: 29.09.2026 21:24. Tabela porównuje czas pobrania z dniem eksportu według reguły źródła zapisanej z oceną. Jest to osobne ostrzeżenie — <strong>nie zmienia oceny historycznej z tabeli 8.1</strong> ani sumy kontrolnej macierzy.</p>
+  <table class="data">
+    <colgroup><col style="width: 30%"><col style="width: 16%"><col style="width: 24%"><col style="width: 30%"></colgroup>
+    <thead><tr><th>Sekcja</th><th>Wiek na dzień eksportu</th><th>Ocena w dniu eksportu</th><th>Uwaga</th></tr></thead>
+    <tbody>
+      <tr data-row="export-age"><td>Działka i geometria</td><td>1 dzień</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak reguły wieku dla źródła — terminu ważności nie zgadujemy</small></td></tr>
+      <tr data-row="export-age"><td>MPZP</td><td>brak danych</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak czasu pobrania danych</small></td></tr>
+      <tr data-row="export-age"><td>POG — strefy planistyczne</td><td>1 dzień</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak reguły wieku dla źródła — terminu ważności nie zgadujemy</small></td></tr>
+      <tr data-row="export-age"><td>POG — OUZ, OZS, OSDIS</td><td>1 dzień</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak reguły wieku dla źródła — terminu ważności nie zgadujemy</small></td></tr>
+      <tr data-row="export-age"><td>Zagrożenie powodziowe (ISOK)</td><td>brak danych</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak czasu pobrania danych</small></td></tr>
+      <tr data-row="export-age"><td>Formy ochrony przyrody (GDOŚ)</td><td>brak danych</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak czasu pobrania danych</small></td></tr>
+      <tr data-row="export-age"><td>Teren (NMT)</td><td>mniej niż 1 dzień</td>
+        <td><span class="fr-fresh">aktualne wg reguły</span></td>
+        <td><small>w granicach reguły wieku źródła</small></td></tr>
+      <tr data-row="export-age"><td>Uzbrojenie terenu (KIUT)</td><td>1 dzień</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak reguły wieku dla źródła — terminu ważności nie zgadujemy</small></td></tr>
+      <tr data-row="export-age"><td>Transport i dostęp do drogi</td><td>brak danych</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak czasu pobrania danych</small></td></tr>
+      <tr data-row="export-age"><td>Relacja MPZP–POG</td><td>brak danych</td>
+        <td><span class="fr-unknown">świeżość nieustalona</span></td>
+        <td><small>brak czasu pobrania danych</small></td></tr>
+    </tbody>
+  </table>
+  <h3>Tabela 8.4. Ostrzeżenia zapisane w analizie</h3>
+  <table class="data">
+    <colgroup><col style="width: 14%"><col style="width: 22%"><col style="width: 16%"><col style="width: 48%"></colgroup>
+    <thead><tr><th>Poziom</th><th>Kod</th><th>Źródło</th><th>Treść</th></tr></thead>
+    <tbody>
+      <tr><td>błąd</td><td class="mono">OUZ_DATA_UNAVAILABLE</td><td>ouz</td><td>Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.</td></tr>
+      <tr><td>ostrzeżenie</td><td class="mono">MPZP_NOT_FOUND</td><td>mpzp</td><td>Nie znaleziono danych MPZP pozwalających przypisać strefę do działki.</td></tr>
+      <tr><td>ostrzeżenie</td><td class="mono">MPZP_POG_INPUT_INCOMPLETE</td><td>pog</td><td>Ocena relacji MPZP–POG wymaga ustalonych stref obu aktów na działce.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="report-section" id="sec-sources">
+  <h2>9. Źródła i provenance</h2>
+  <h3>Tabela 9.1. Rejestr źródeł danych</h3>
+  <table class="data">
+    <colgroup><col style="width: 26%"><col style="width: 17%"><col style="width: 13%"><col style="width: 8%"><col style="width: 20%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Źródło</th><th>Wersja / wydanie</th><th>Pobrano</th><th>HTTP</th><th>SHA-256 artefaktu</th><th>Pewność / weryfikacja</th></tr></thead>
+    <tbody>
+      <tr data-row="source">
+        <td>ULDK<br><span class="mono">https://uldk.example.test</span></td>
+        <td>—</td>
+        <td>28.09.2026 10:00</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>95,0% (wysoka)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>KIUT (GUGiK)<br><span class="mono">https://kiut.example.test/wms</span></td>
+        <td>—</td>
+        <td>28.09.2026 10:00</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>90,0% (wysoka)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>KIUT<br><span class="mono">https://kiut.example.test/wfs</span></td>
+        <td>—</td>
+        <td>28.09.2026 10:00</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>90,0% (wysoka)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>NMT <small>(nmt)</small><br><span class="mono">https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&amp;polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29</span></td>
+        <td>—</td>
+        <td>29.09.2026 21:24</td>
+        <td>200</td>
+        <td class="mono">72475ec577302a75af4317232de9e8153e9caffba7030d425bd57e58d42b7273</td>
+        <td>90,0% (wysoka)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>POG_GMINA_WMS<br><span class="mono">https://pog.example.test/wms</span></td>
+        <td>—</td>
+        <td>16.07.2026 12:00</td>
+        <td>200</td>
+        <td class="mono">—</td>
+        <td>65,0% (wymaga weryfikacji)<br><small>wymaga ręcznej weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>POG_APP<br><span class="mono">https://bip.example.test/pog.gml</span></td>
+        <td>—</td>
+        <td>28.09.2026 10:00</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>90,0% (wysoka)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>KIMPZP</td>
+        <td>—</td>
+        <td>28.09.2026 10:00</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>30,0% (wymaga weryfikacji)<br><small>wymaga ręcznej weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>ISOK <small>(isok)</small></td>
+        <td>—</td>
+        <td>brak danych</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>0,0% (wymaga weryfikacji)<br><small>wymaga ręcznej weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>GDOS <small>(gdos)</small></td>
+        <td>—</td>
+        <td>brak danych</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>0,0% (wymaga weryfikacji)<br><small>wymaga ręcznej weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>isok</td>
+        <td>—</td>
+        <td>brak danych</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>0,0% (niska)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+      <tr data-row="source">
+        <td>gdos</td>
+        <td>—</td>
+        <td>brak danych</td>
+        <td>brak danych</td>
+        <td class="mono">—</td>
+        <td>0,0% (niska)<br><small>nie wymaga weryfikacji</small></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Tabela 9.2. Wydania danych przypięte do analizy</h3>
+<p class="note">Analiza nie korzystała z lokalnych wydań danych (data_release) albo ich nie zapisano.</p>  <h3>Tabela 9.3. Wersje kontraktów snapshotu</h3>
+  <table class="kv">
+<tr><th>Kontrakt wyniku analizy</th><td class="mono">nie określono</td></tr><tr><th>Układ raportu</th><td class="mono">report-v2/2026.09.29-1</td></tr><tr><th>Wynik POG</th><td class="mono">2.4</td></tr><tr><th>Ocena relacji MPZP–POG</th><td class="mono">1.0</td></tr><tr><th>Sekcje ryzyka</th><td class="mono">1.0</td></tr><tr><th>Macierz jakości sekcji</th><td class="mono">1.0</td></tr><tr><th>Polityka jakości (wersja)</th><td class="mono">quality-policy/1+2e0adf938c7b</td></tr><tr><th>Teren (NMT)</th><td class="mono">1.0</td></tr><tr><th>Teren — raster</th><td class="mono">nie określono</td></tr>  </table>
+  <h3>Tabela 9.4. Provenance map raportu</h3>
+  <p class="empty">Mapy nie zostały wygenerowane — brak provenance map.</p>
+</section>
+
+<section class="report-section" id="sec-limitations">
+  <h2>10. Ograniczenia interpretacyjne</h2>
+  <ul class="plain">
+<li>Raport nie zawiera syntetycznej oceny (scoringu) atrakcyjności inwestycyjnej ani uśrednionych parametrów różnych stref — każda strefa jest opisana osobno.</li><li>Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.</li><li>Brak stref MPZP w wyniku — nie sprawdzono planu albo działka nie przecina wektorowych danych MPZP.</li><li>Wynik POG wymaga ręcznej weryfikacji.</li><li>Transport i dostęp do drogi publicznej nie są analizowane (brak potwierdzonego kontraktu źródła, BK-305); bliskość geometryczna nie potwierdza prawnego dostępu.</li><li>Ocena relacji MPZP–POG jest analizą informacyjną według jawnej tabeli reguł; nie stwierdza prawnej możliwości zabudowy.</li><li>Szacowany obszar zabudowy jest przybliżeniem technicznym (odsunięcie od granic), a nie ustaleniem prawnym.</li><li>Zapisany wynik nie zawiera pomiaru NMT — rzeźba terenu jest nieznana.</li>  </ul>
+  <h3>Znaczenie rodzajów ustaleń</h3>
+  <table class="kv">
+<tr><th>fakt źródłowy</th><td>wartość przepisana z urzędowego źródła (atrybut rekordu, zapis uchwały, status aktu) bez przekształceń innych niż normalizacja jednostki</td></tr><tr><th>wynik obliczenia</th><td>wynik deterministycznego obliczenia systemu na geometrii w EPSG:2180 (pole i udział przecięcia, deniwelacja, spadek)</td></tr><tr><th>przybliżenie</th><td>szacunek techniczny o jawnych założeniach (odsunięcie od granic, bufor sieci) — nie jest ustaleniem prawnym ani pomiarem</td></tr><tr><th>dane ręczne</th><td>wartość wprowadzona lub wskazana przez użytkownika — wymaga weryfikacji w materiale źródłowym</td></tr>  </table>
+  <div class="disclaimer">Raport ma charakter informacyjny i nie stanowi oficjalnego dokumentu urzędowego ani porady prawnej.</div>
+</section>
+
+<section class="report-section" id="appendix-mapping">
+  <h2>Załącznik A. Mapowanie pól API na elementy raportu</h2>
+  <p class="note">Każde pole kontraktu <span class="mono">AnalyzeResponse</span> ma odpowiednik w raporcie albo jawne uzasadnienie pominięcia (wzorce: <span class="mono">[]</span> — element listy, <span class="mono">*</span> — dowolny ciąg). Kolumna „Ta analiza” podaje liczbę wartości obecnych oraz null/pustych w snapshocie.</p>
+  <table class="data">
+    <colgroup><col style="width: 30%"><col style="width: 6%"><col style="width: 36%"><col style="width: 12%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Pole API (wzorzec)</th><th>§</th><th>Element raportu / uzasadnienie pominięcia</th><th>Rodzaj</th><th>Ta analiza</th></tr></thead>
+    <tbody>
+      <tr data-row="mapping"><td class="mono">analysis_id</td><td>1</td><td>Tabela 1.1 — identyfikator analizy</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">status</td><td>1</td><td>Tabela 1.1 — status analizy; macierz 8.1</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">analyzed_at</td><td>1</td><td>Tabela 1.1 — data analizy (stan danych)</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">parcel.parcel_identifier</td><td>1</td><td>Tabela 1.1 — identyfikator działki</td><td>fakt źródłowy</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">parcel.geometry_geojson</td><td>1</td><td>Mapa 1 — obrys działki zamrożony w EPSG:2180 (snapshot mapy)</td><td>fakt źródłowy</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">parcel.metrics.*</td><td>1</td><td>Tabela 1.2 — pole [m², ha], obwód [m], poprawność i naprawa geometrii</td><td>wynik obliczenia</td><td><small>5 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">parcel.buildable_area_geojson</td><td>1</td><td>Mapa 1 — obszar po technicznym odsunięciu od granic</td><td>przybliżenie</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">parcel.source.*</td><td>9</td><td>Tabela 1.1 — źródło geometrii; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>5 wart.; null/puste: 6</small></td></tr>
+      <tr data-row="mapping"><td class="mono">buildable_area_sqm</td><td>1</td><td>Tabela 1.2 — szacowany obszar zabudowy [m²]</td><td>przybliżenie</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].intersection_geojson</td><td>3</td><td>Mapa 3 — przecięcia stref MPZP (zamrożone w EPSG:2180)</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].intersection_area_sqm</td><td>3</td><td>Tabela 3.1 — pole przecięcia [m²]</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].intersection_pct</td><td>3</td><td>Tabela 3.1 — udział w działce [%]</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].touches_boundary</td><td>3</td><td>Tabela 3.1 — oznaczenie „tylko styk granicy”</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].is_dominant</td><td>3</td><td>Tabela 3.1 — oznaczenie „największy udział” (pole pomocnicze)</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].assignment_method</td><td>3</td><td>Tabela 3.1 — sposób przypisania strefy</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].manual_review_required</td><td>8</td><td>Tabela 3.1 — plakietka weryfikacji; macierz 8.1</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].manual_selection.*</td><td>3</td><td>Tabela 3.4 — decyzja użytkownika i przypięty dokument (tryb ręczny)</td><td>dane ręczne</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].parameters[].*</td><td>3</td><td>Tabela 3.3 — evidence parametrów (odsyłacze [E#]: strona, segment, SHA-256)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].source.*</td><td>9</td><td>Tabela 3.1 — kolumna „źródło”; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">mpzp_zones[].*</td><td>3</td><td>Tabela 3.1 (symbol, ID, akt, wersja, wydanie) i Tabela 3.2 (przeznaczenie, parametry z jednostkami)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_required</td><td>3</td><td>Tabela 3.4 — analiza wstrzymana do podania symbolu; macierz 8.1</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_context.document.preview_path</td><td>3</td><td><em>pominięte:</em> ścieżka endpointu podglądu dokumentu dla UI — w PDF nieaktywna; dokument opisuje SHA-256</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_context.raster_preview_source_key</td><td>3</td><td><em>pominięte:</em> klucz źródła podglądu rastrowego UI — WMS nie jest renderowany w PDF (BK-503)</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_context.symbol_max_length</td><td>3</td><td><em>pominięte:</em> reguła walidacji formularza UI</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_context.symbol_allowed_pattern</td><td>3</td><td><em>pominięte:</em> reguła walidacji formularza UI</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">manual_zone_context.*</td><td>3</td><td>Tabela 3.4 — plan, kandydaci, status i SHA-256 przypiętego dokumentu, komunikat</td><td>dane ręczne</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.schema_version</td><td>9</td><td>Tabela 9.3 — wersje kontraktów snapshotu</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.status</td><td>4</td><td><em>pominięte:</em> historyczny alias statusu (ADR-002) — raport pokazuje kanoniczne legal_status</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.raw_attributes</td><td>4</td><td><em>pominięte:</em> surowe atrybuty rekordu źródłowego bez normalizacji — nie są ustaleniem; dostępne w API, a w pakiecie audytowym (BK-505) tylko gdy katalog źródeł zezwala na redystrybucję surowych danych</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.legal_status_evidence.*</td><td>4</td><td>Tabela 4.1 — podstawa statusu prawnego</td><td>fakt źródłowy</td><td><small>5 wart.; null/puste: 1</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.coverage_evidence.*</td><td>4</td><td>Tabela 4.1 — podstawa zakresu danych</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.metadata.metadata_url_verified</td><td>4</td><td>Tabela 4.7 — decyduje o klikalności odnośnika (tylko zweryfikowany HTTPS)</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.metadata.references[]</td><td>4</td><td><em>pominięte:</em> lista technicznych odnośników rekordu CSW — pakiet audytowy (BK-505); raport pokazuje identyfikator i SHA-256 rekordu</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.metadata.*</td><td>4</td><td>Tabela 4.7 — rekord metadanych CSW (ID, daty, SHA-256)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.formal_documents[].link_verified</td><td>4</td><td>Tabela 4.8 — decyduje o klikalności odnośnika</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.formal_documents[].*</td><td>4</td><td>Tabela 4.8 — dokumenty formalne aktu</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.*_verified</td><td>4</td><td>Tabela 4.7 — decyduje o klikalności odnośnika</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.act.*</td><td>4</td><td>Tabela 4.7 — provenance aktu (ID, wersja, publikacja, wydanie, SHA-256)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].geometry_geojson</td><td>4</td><td>Mapa 4 — strefy w wybranym trybie tematycznym</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].area_sqm</td><td>4</td><td>Tabela 4.2 — pole przecięcia [m²]</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].area_pct</td><td>4</td><td>Tabela 4.2 — udział w działce [%]</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].source.*</td><td>9</td><td>Tabela 4.2 — kolumna „źródło”; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>5 wart.; null/puste: 6</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].gml_url_verified</td><td>4</td><td>Tabela 4.2 — decyduje o klikalności odnośnika GML</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].primary_profile[].*</td><td>4</td><td>Tabela 4.3 — profil podstawowy (kod, etykieta, słownik)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].additional_profiles[].*</td><td>4</td><td>Tabela 4.3 — profile dodatkowe</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].max_*</td><td>4</td><td>Tabela 4.3 — parametry z jednostkami (bez uśredniania stref)</td><td>fakt źródłowy</td><td><small>0 wart.; null/puste: 3</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].min_*</td><td>4</td><td>Tabela 4.3 — parametry z jednostkami (bez uśredniania stref)</td><td>fakt źródłowy</td><td><small>0 wart.; null/puste: 1</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zones[].*</td><td>4</td><td>Tabela 4.2 — strefa (ID, symbol, rodzaj, etykieta, wersja obiektu, GML)</td><td>fakt źródłowy</td><td><small>2 wart.; null/puste: 4</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.dominant_zone_id</td><td>4</td><td>Tabela 4.2 — oznaczenie „największy udział” (pole pomocnicze)</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz[].geometry_geojson</td><td>4</td><td>Mapa 4 — OUZ (wzór i obrys przerywany)</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz[].area_*</td><td>4</td><td>Tabela 4.4 — OUZ: pole [m²] i udział [%]</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz[].touches_boundary</td><td>4</td><td>Tabela 4.4 — OUZ: styk granicy</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz[].source.*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz[].*</td><td>4</td><td>Tabela 4.4 — OUZ: ID, symbol, etykieta, wersja obiektu</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.downtown_areas[].geometry_geojson</td><td>4</td><td>Mapa 4 — OZS (wzór i obrys kropkowany)</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.downtown_areas[].area_*</td><td>4</td><td>Tabela 4.5 — OZS: pole [m²] i udział [%]</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.downtown_areas[].touches_boundary</td><td>4</td><td>Tabela 4.5 — OZS: styk granicy</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.downtown_areas[].source.*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.downtown_areas[].*</td><td>4</td><td>Tabela 4.5 — OZS: ID, symbol, etykieta, wersja obiektu</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.social_infrastructure_standard_areas[].geometry_geojson</td><td>4</td><td>Mapa 4 — OSDIS (wzór i obrys kreska-kropka)</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.social_infrastructure_standard_areas[].area_*</td><td>4</td><td>Tabela 4.6 — OSDIS: pole [m²] i udział [%]</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.social_infrastructure_standard_areas[].touches_boundary</td><td>4</td><td>Tabela 4.6 — OSDIS: styk granicy</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.social_infrastructure_standard_areas[].source.*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.social_infrastructure_standard_areas[].*</td><td>4</td><td>Tabela 4.6 — OSDIS: ID, symbol, etykieta, wersja obiektu</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.in_ouz</td><td>4</td><td>Tabela 4.4 — decyzja „działka w OUZ” wg jawnych progów</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.ouz_intersection_*</td><td>4</td><td>Tabela 4.4 — łączne pole [m²] i udział [%] OUZ</td><td>wynik obliczenia</td><td><small>2 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.touches_ouz_boundary</td><td>4</td><td>Tabela 4.4 — styk z granicą OUZ</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.in_downtown_area</td><td>4</td><td>Tabela 4.5 — decyzja „działka w OZS”</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.area_ratio</td><td>4</td><td>Tabela 4.1 — udział strefy dominującej (pole zgodności v1)</td><td>wynik obliczenia</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.planning_zone</td><td>4</td><td>Tabela 4.1 — strefa dominująca (pole zgodności v1)</td><td>fakt źródłowy</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.zone_type</td><td>4</td><td>Tabela 4.1 — strefa dominująca (pole zgodności v1)</td><td>fakt źródłowy</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.manual_review_required</td><td>8</td><td>Tabela 4.1 — plakietka weryfikacji; macierz 8.1</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.compatibility_assessment.schema_version</td><td>9</td><td>Tabela 9.3 — wersje kontraktów</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.compatibility_assessment.*</td><td>4</td><td>Tabela 4.9 — relacja MPZP–POG: wynik, reguła, stan prawny, pary stref, źródła (analiza informacyjna)</td><td>wynik obliczenia</td><td><small>18 wart.; null/puste: 1</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.presentation_style.*</td><td>4</td><td>Mapa 4 — legenda i wersja stylu POG (zamrożone)</td><td>metadane</td><td><small>6 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.source.*</td><td>9</td><td>Tabela 4.1 — pewność; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>5 wart.; null/puste: 6</small></td></tr>
+      <tr data-row="mapping"><td class="mono">pog.*</td><td>4</td><td>Tabela 4.1 — status prawny, zakres danych, aktualność, uchwała</td><td>fakt źródłowy</td><td><small>6 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].geometry_geojson</td><td>5</td><td>Mapa 5 — obiekty ISOK/GDOŚ (zamrożone, przycięte do kadru)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].intersection_*</td><td>5</td><td>Tabele 5.1/5.2 — pole [m²] i udział [%] przecięcia</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].touches_boundary</td><td>5</td><td>Tabele 5.1/5.2 — styk granicy</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].description</td><td>5</td><td>Tabele 5.1/5.2 — opis prezentacyjny (pochodny z pól strukturalnych)</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].source.*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risks[].*</td><td>5</td><td>Tabele 5.1/5.2 — klasa, okres powtarzalności, poziom, forma ochrony, nazwa, ID, ostrzeżenia</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risk_sections[].schema_version</td><td>9</td><td>Tabela 9.3 — wersje kontraktów</td><td>metadane</td><td><small>2 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risk_sections[].source.*</td><td>9</td><td>Tabela 5.x — źródło sekcji; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>8 wart.; null/puste: 14</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risk_sections[].union_*</td><td>5</td><td>Tabela 5.x — łączne pokrycie (suma mnogościowa)</td><td>wynik obliczenia</td><td><small>4 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">risk_sections[].*</td><td>5</td><td>Tabela 5.x — status sekcji, relacja, liczność obiektów, powód, ostrzeżenia; macierz 8.1</td><td>wynik obliczenia</td><td><small>12 wart.; null/puste: 6</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.schema_version</td><td>9</td><td>Tabela 9.3 — wersje kontraktów</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.schema_version</td><td>9</td><td>Tabela 9.3 — wersje kontraktów</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.profile.line_geojson</td><td>6</td><td><em>pominięte:</em> linia profilu opisana współrzędnymi początku i końca w EPSG:2180 (Tabela 6.4)</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.source.*</td><td>9</td><td>Tabela 6.1 — źródło; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.source.*</td><td>9</td><td>Tabela 6.5 — źródło rastra; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.raster.*</td><td>6</td><td>Tabela 6.5 — okno rastra WCS, NoData, środowisko</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.profile.*</td><td>6</td><td>Tabela 6.4 i wykres — profil wysokościowy</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.relief.*</td><td>6</td><td>Tabele 6.2–6.3 — spadek, klasy nachylenia, ekspozycja</td><td>wynik obliczenia</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">terrain.*</td><td>6</td><td>Tabela 6.1 — Hmin, Hmax, deniwelacja, siatka, status</td><td>wynik obliczenia</td><td><small>3 wart.; null/puste: 5</small></td></tr>
+      <tr data-row="mapping"><td class="mono">utilities_preview.source.*</td><td>9</td><td>Tabela 7.1 — źródło; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>5 wart.; null/puste: 6</small></td></tr>
+      <tr data-row="mapping"><td class="mono">utilities_preview.*</td><td>7</td><td>Tabela 7.1 — pokrycie powiatu danymi GESUT w KIUT (bez geometrii sieci)</td><td>fakt źródłowy</td><td><small>4 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">infrastructure[].network_geometry_geojson</td><td>7</td><td>Mapa 1 — przebieg sieci (warstwa przybliżenia, bez wniosków obliczeniowych)</td><td>przybliżenie</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">infrastructure[].protection_zone_geojson</td><td>7</td><td>Mapa 1 — techniczna strefa bufora (przybliżenie)</td><td>przybliżenie</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">infrastructure[].source.*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">infrastructure[].*</td><td>7</td><td>Tabela 7.2 — bufor [m], pole [m²], podstawa i pewność reguły, wpływ na obszar zabudowy</td><td>przybliżenie</td><td><small>brak obiektu w snapshocie</small></td></tr>
+      <tr data-row="mapping"><td class="mono">section_quality.legend</td><td>8</td><td>Tabela 8.2 — legenda statusów, świeżości i kodów powodów</td><td>metadane</td><td><small>1 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">section_quality.sections[].*</td><td>8</td><td>Tabela 8.1 — macierz sekcji: status, źródło, pobranie, wydanie, weryfikacja, świeżość, powody; tabela 8.3 — wiek na dzień eksportu</td><td>metadane</td><td><small>115 wart.; null/puste: 55</small></td></tr>
+      <tr data-row="mapping"><td class="mono">section_quality.*</td><td>8</td><td>Tabele 8.1 i 9.3 — wersja polityki, punkt odniesienia, pochodzenie i suma kontrolna macierzy</td><td>metadane</td><td><small>5 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">warnings[].*</td><td>8</td><td>Tabela 8.4 — ostrzeżenia analizy (kod, poziom, źródło, treść)</td><td>metadane</td><td><small>12 wart.; null/puste: 0</small></td></tr>
+      <tr data-row="mapping"><td class="mono">sources[].*</td><td>9</td><td>Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie)</td><td>fakt źródłowy</td><td><small>52 wart.; null/puste: 69</small></td></tr>
+      <tr data-row="mapping"><td class="mono">access_token</td><td>9</td><td><em>pominięte:</em> sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF</td><td>metadane</td><td><small>brak obiektu w snapshocie</small></td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>

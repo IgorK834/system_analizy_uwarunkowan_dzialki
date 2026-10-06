@@ -1,0 +1,10 @@
+TYPECHECK_OK
+ ✓ components/TerrainCard.test.tsx (9 tests) 553ms
+ ✓ lib/terrain.test.ts (7 tests) 15ms
+ Test Files  24 passed (24)
+      Tests  225 passed (225)
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+All files          |   95.89 |    88.84 |    98.1 |   97.79 |                   
+  ResultPanel.tsx  |   90.85 |     85.2 |   97.67 |    92.9 | ...38-739,778-779 
+  TerrainCard.tsx  |     100 |    89.79 |     100 |     100 | ...81-184,206,244 
+  terrain.ts       |      98 |    88.63 |     100 |     100 | 65,75,103,164-172 

@@ -1,0 +1,145 @@
+{
+  "generated_at": "2026-09-28T10:24:58.009053+00:00",
+  "reference": "gdaldem slope/aspect -alg Horn (GDAL; odpowiednik QGIS gdal:slope/gdal:aspect)",
+  "gdal_version": "GDAL 3.10.3, released 2025/04/01",
+  "parcels": [
+    {
+      "slug": "zakopane_stok",
+      "parcel_identifier": "121701_1.0013.38",
+      "note": "stok — teren górski",
+      "geotiff_sha256": "1fbc031b84c830b9b61098a81f34ea0c788fbb8a42e66d0c2685c253b67ff4b3",
+      "resolution_m": 1.0,
+      "compared_pixels": 3192,
+      "parcel_pixels": 3192,
+      "max_abs_slope_diff_deg": 0.005849,
+      "compared_aspect_pixels": 3192,
+      "max_abs_aspect_diff_deg": 0.027503,
+      "ours": {
+        "mean_deg": 19.6082,
+        "median_deg": 19.5754,
+        "p90_deg": 24.0513,
+        "max_deg": 30.7538,
+        "classes_pct": {
+          "flat": 0.0,
+          "gentle": 0.0,
+          "moderate": 0.0,
+          "strong": 0.31,
+          "steep": 18.52,
+          "very_steep": 81.17
+        }
+      },
+      "reference_gdaldem": {
+        "mean_deg": 19.6082,
+        "median_deg": 19.5775,
+        "p90_deg": 24.0525,
+        "max_deg": 30.7513,
+        "classes_pct": {
+          "flat": 0.0,
+          "gentle": 0.0,
+          "moderate": 0.0,
+          "strong": 0.31,
+          "steep": 18.48,
+          "very_steep": 81.2
+        }
+      },
+      "aspect": {
+        "status": "defined",
+        "mean_azimuth_deg": 158.0713,
+        "dominant_direction": "S"
+      },
+      "profile_samples": 82
+    },
+    {
+      "slug": "krakow_zakrzowek",
+      "parcel_identifier": "126104_9.0009.191/13",
+      "note": "teren falisty",
+      "geotiff_sha256": "e2898f2fb11faec43e73eea17eda27e2104e8d1cdb3d206ad3905ae9dbfb3142",
+      "resolution_m": 1.0,
+      "compared_pixels": 92264,
+      "parcel_pixels": 92264,
+      "max_abs_slope_diff_deg": 0.001082,
+      "compared_aspect_pixels": 18377,
+      "max_abs_aspect_diff_deg": 0.039662,
+      "ours": {
+        "mean_deg": 5.2217,
+        "median_deg": 0.2267,
+        "p90_deg": 14.4392,
+        "max_deg": 83.7591,
+        "classes_pct": {
+          "flat": 80.08,
+          "gentle": 3.52,
+          "moderate": 1.78,
+          "strong": 1.69,
+          "steep": 3.7,
+          "very_steep": 9.23
+        }
+      },
+      "reference_gdaldem": {
+        "mean_deg": 5.2217,
+        "median_deg": 0.2267,
+        "p90_deg": 14.4388,
+        "max_deg": 83.7591,
+        "classes_pct": {
+          "flat": 80.09,
+          "gentle": 3.51,
+          "moderate": 1.78,
+          "strong": 1.69,
+          "steep": 3.7,
+          "very_steep": 9.23
+        }
+      },
+      "aspect": {
+        "status": "flat",
+        "mean_azimuth_deg": null,
+        "dominant_direction": null
+      },
+      "profile_samples": 401
+    },
+    {
+      "slug": "warszawa_plasko",
+      "parcel_identifier": "146518_8.0406.23",
+      "note": "teren płaski",
+      "geotiff_sha256": "e2c240bf9c8fbf0eacc04ae7142398e580f306ab0a83a771e17d3894e021c8cb",
+      "resolution_m": 1.0,
+      "compared_pixels": 1913,
+      "parcel_pixels": 1913,
+      "max_abs_slope_diff_deg": 0.00062,
+      "compared_aspect_pixels": 945,
+      "max_abs_aspect_diff_deg": 0.020533,
+      "ours": {
+        "mean_deg": 1.502,
+        "median_deg": 1.1187,
+        "p90_deg": 3.3739,
+        "max_deg": 7.7571,
+        "classes_pct": {
+          "flat": 50.6,
+          "gentle": 36.12,
+          "moderate": 12.13,
+          "strong": 1.15,
+          "steep": 0.0,
+          "very_steep": 0.0
+        }
+      },
+      "reference_gdaldem": {
+        "mean_deg": 1.502,
+        "median_deg": 1.1189,
+        "p90_deg": 3.374,
+        "max_deg": 7.7569,
+        "classes_pct": {
+          "flat": 50.55,
+          "gentle": 36.17,
+          "moderate": 12.13,
+          "strong": 1.15,
+          "steep": 0.0,
+          "very_steep": 0.0
+        }
+      },
+      "aspect": {
+        "status": "dispersed",
+        "mean_azimuth_deg": 235.5257,
+        "dominant_direction": null
+      },
+      "profile_samples": 83
+    }
+  ]
+}

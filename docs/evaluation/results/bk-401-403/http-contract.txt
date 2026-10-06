@@ -1,0 +1,28 @@
+## 200 kafel z danymi
+HTTP/1.1 200 OK
+etag: "117f32cacfcd70bd-b981a75a14c42ed8"
+cache-control: public, max-age=3600
+x-tile-cache: MISS
+x-pog-release: 1
+x-pog-edition: all
+x-pog-tile-schema: pog-mvt/1
+x-pog-tile-features: 5
+content-type: application/vnd.mapbox-vector-tile
+
+## If-None-Match -> 304
+HTTP/1.1 304 Not Modified
+etag: "117f32cacfcd70bd-b981a75a14c42ed8"
+x-tile-cache: HIT
+
+## pusty kafel
+HTTP/1.1 200 OK
+x-pog-tile-features: 0
+content-length: 0
+bytes=       0
+
+## niepoprawne z/x/y
+19/0/0 -> 422
+3/8/0 -> 422
+3/0/-1 -> 422
+3/0/0.mvt?edition=x -> 422
+nieznane wydanie -> 404

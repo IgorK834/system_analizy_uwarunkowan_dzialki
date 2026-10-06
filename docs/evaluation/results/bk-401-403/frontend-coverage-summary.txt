@@ -1,0 +1,58 @@
+ Test Files  33 passed (33)
+      Tests  284 passed (284)
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   96.85 |    90.27 |   98.73 |   98.16 |                   
+ components        |   95.31 |    89.09 |    97.9 |   97.36 |                   
+  ...smentCard.tsx |     100 |    88.88 |     100 |     100 | 44,77-81,106      
+  ...ilityNote.tsx |      80 |    71.42 |     100 |      80 | 54                
+  LayerToggle.tsx  |     100 |      100 |     100 |     100 |                   
+  ...ZonePanel.tsx |   98.11 |    93.22 |     100 |     100 | 45-50,125-129     
+  MapView.tsx      |   98.18 |       96 |     100 |     100 | 77                
+  ...iewLoader.tsx |   66.66 |      100 |      50 |      80 | 8                 
+  ...erPreview.tsx |   98.55 |    91.17 |     100 |     100 | 29,31,80          
+  MpzpZoneCard.tsx |     100 |    97.56 |     100 |     100 | 26-29             
+  PogLegend.tsx    |     100 |      100 |     100 |     100 |                   
+  PogMapPanel.tsx  |     100 |      100 |     100 |     100 |                   
+  ...alSources.tsx |     100 |    92.59 |     100 |     100 | 52,82,109,141     
+  ...eSelector.tsx |     100 |    81.81 |     100 |     100 | 20,54             
+  ...hareChart.tsx |     100 |      100 |     100 |     100 |                   
+  ...wOverlays.tsx |    95.7 |    87.85 |     100 |   98.55 | 274-275           
+  ...oadButton.tsx |   91.17 |       75 |     100 |     100 | 29-59             
+  ResultPanel.tsx  |   90.85 |     85.2 |   97.67 |    92.9 | ...40-741,780-781 
+  SearchPanel.tsx  |   94.94 |    82.43 |   94.73 |   95.87 | 153-157           
+  TerrainCard.tsx  |     100 |    89.79 |     100 |     100 | ...81-184,206,244 
+ hooks             |   98.19 |    86.04 |     100 |      99 |                   
+  ...lyzeParcel.ts |   97.14 |    76.92 |     100 |     100 | 34,39             
+  ...ileRelease.ts |     100 |      100 |     100 |     100 |                   
+  ...meAnalysis.ts |   97.43 |    83.33 |     100 |   97.29 | 47                
+ lib               |   99.12 |    93.98 |     100 |   99.27 |                   
+  api.ts           |   98.68 |    90.54 |     100 |   98.64 | 41                
+  compatibility.ts |     100 |      100 |     100 |     100 |                   
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  layerStyles.ts   |     100 |      100 |     100 |     100 |                   
+  mapStyle.ts      |     100 |      100 |     100 |     100 |                   
+  pogLayers.ts     |     100 |    91.17 |     100 |     100 | 119,192-213       
+  pogPatterns.ts   |     100 |      100 |     100 |     100 |                   
+  pogStatus.ts     |     100 |      100 |     100 |     100 |                   
+  pogThemes.ts     |   96.36 |    92.68 |     100 |   95.83 | 64,70             
+  pogZones.ts      |     100 |    97.43 |     100 |     100 | 129               
+  safeLink.ts      |     100 |      100 |     100 |     100 |                   
+  terrain.ts       |      98 |    88.63 |     100 |     100 | 65,75,103,164-172 
+  zoneSymbol.ts    |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------
+
+# Nowe/zmienione moduły (coverage-summary.json)
+total                                    lines  98.15  statements  96.85  functions  98.73  branches  90.27
+components/MapView.tsx                   lines    100  statements  98.18  functions    100  branches     96
+components/PogLegend.tsx                 lines    100  statements    100  functions    100  branches    100
+components/PogMapPanel.tsx               lines    100  statements    100  functions    100  branches    100
+components/PogOfficialSources.tsx        lines    100  statements    100  functions    100  branches  92.59
+components/PogThemeSelector.tsx          lines    100  statements    100  functions    100  branches  81.81
+components/PogZoneShareChart.tsx         lines    100  statements    100  functions    100  branches    100
+hooks/usePogTileRelease.ts               lines    100  statements    100  functions    100  branches    100
+lib/pogLayers.ts                         lines    100  statements    100  functions    100  branches  91.17
+lib/pogPatterns.ts                       lines    100  statements    100  functions    100  branches    100
+lib/pogStatus.ts                         lines    100  statements    100  functions    100  branches    100
+lib/pogThemes.ts                         lines  95.83  statements  96.36  functions    100  branches  92.68
+lib/pogZones.ts                          lines    100  statements    100  functions    100  branches  97.43
