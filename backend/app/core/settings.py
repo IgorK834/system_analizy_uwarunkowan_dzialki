@@ -199,6 +199,26 @@ class Settings(BaseSettings):
     # Kill switch (PV3-16): istnienie tego pliku natychmiast wyłącza ścieżkę modelu (bez restartu i bez
     # wdrożenia kodu); pusta wartość = brak przełącznika plikowego. ``MPZP_LLM_ENABLED=false`` też wyłącza.
     mpzp_llm_kill_switch_file: str = "/var/lib/dzialki/llm-disabled"
+    # Monitoring i przypięcie wersji (PV3-19, ADR-012 aneks PV3-18–20). ``mpzp_llm_prompt_version`` to
+    # deklaracja operatora: musi odpowiadać wersji promptu w kodzie i przypięciu (``model_pin.json``);
+    # rozbieżność wyłącza ścieżkę modelu (``pin_mismatch``), dopóki ``mpzp_llm_enforce_pin`` jest włączone.
+    mpzp_llm_prompt_version: str = Field(default="mpzp-extraction/1", pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,59}$")
+    mpzp_llm_enforce_pin: bool = True
+    # Progi alarmów (propozycja, nieskalibrowana na ruchu): odsetki w oknie czasowym i od minimalnej próby;
+    # próg kosztu dobowego jest poniżej twardego limitu (pusta wartość = bez alarmu kosztu).
+    mpzp_llm_alarm_window_seconds: float = Field(default=3_600.0, gt=0, le=86_400)
+    mpzp_llm_alarm_min_candidates: int = Field(default=20, ge=1)
+    mpzp_llm_alarm_min_analyses: int = Field(default=10, ge=1)
+    mpzp_llm_alarm_rejection_rate: float = Field(default=0.30, ge=0.0, le=1.0)
+    mpzp_llm_alarm_degradation_rate: float = Field(default=0.20, ge=0.0, le=1.0)
+    mpzp_llm_alarm_daily_cost_usd: float | None = Field(default=4.0, ge=0)
+    # Kontrola dryfu (``scripts/check_llm_drift.py``): próg odsetka rozbieżnych wartości, plik ze stanem
+    # ostatniej kontroli i wiek, po którym brak kontroli jest ostrzeżeniem.
+    mpzp_llm_drift_alarm_rate: float = Field(default=0.20, ge=0.0, le=1.0)
+    mpzp_llm_drift_state_file: str = "/var/lib/dzialki/llm-drift.json"
+    mpzp_llm_drift_max_age_days: int = Field(default=14, ge=1, le=365)
+    # Zużycie dobowe w odpowiedzi zdrowia jest czytane z rejestru z tym buforem (sekundy).
+    mpzp_llm_health_ledger_ttl_seconds: float = Field(default=30.0, ge=0, le=3_600)
     # Endpointy Rejestru Urbanistycznego są wersjonowanym kontraktem katalogu
     # docs/data_sources/catalog.yaml. Nie dublujemy ich w zmiennych runtime.
     # Oficjalne słowniki off-line GUGiK zasilają lokalny indeks autocomplete.
@@ -255,6 +275,7 @@ class Settings(BaseSettings):
         "mpzp_llm_daily_cost_limit_usd",
         "mpzp_llm_monthly_token_limit",
         "mpzp_llm_monthly_cost_limit_usd",
+        "mpzp_llm_alarm_daily_cost_usd",
         mode="before",
     )
     @classmethod

@@ -337,6 +337,8 @@ class LlmPipelineOutcome:
     input_tokens: int | None = None
     output_tokens: int | None = None
     cost_usd: float | None = None
+    # Opóźnienia udanych żądań do dostawcy [ms] (PV3-19); puste, gdy dostawca ich nie zgłosił.
+    latencies_ms: tuple[float, ...] = ()
 
     @property
     def available(self) -> bool:
@@ -352,6 +354,7 @@ class _Totals:
     input_tokens: int | None = None
     output_tokens: int | None = None
     cost_usd: float | None = None
+    latencies_ms: list[float] = field(default_factory=list)
 
     def add_usage(self, input_tokens: int | None, output_tokens: int | None, cost: float | None) -> None:
         if input_tokens is not None:
@@ -493,6 +496,7 @@ class MpzpLlmPipeline:
             input_tokens=totals.input_tokens,
             output_tokens=totals.output_tokens,
             cost_usd=totals.cost_usd,
+            latencies_ms=tuple(totals.latencies_ms),
         )
         self._publish(outcome)
         return outcome
@@ -536,6 +540,8 @@ class MpzpLlmPipeline:
             totals.calls += calls
             input_tokens, output_tokens = _usage(recording.results)
             totals.add_usage(input_tokens, output_tokens, self.pricing.estimate(input_tokens, output_tokens))
+            # Dostawca bez pomiaru zgłasza 0,0 ms — to „brak pomiaru”, nie opóźnienie zerowe.
+            totals.latencies_ms.extend(result.latency_ms for result in recording.results if result.latency_ms > 0)
             if recording.results or recording.errors:
                 source = SOURCE_MODEL
                 record_status, response_sha = self._save(key, block, document_sha256, extraction, recording, totals)
@@ -642,6 +648,8 @@ class MpzpLlmPipeline:
         registry.add_all({f"llm.verifier.code.{code}": count for code, count in outcome.report.rejection_codes.items()})
         for reason in outcome.unavailable_reasons:
             registry.increment(f"llm.unavailable.{reason}")
+        llm_metrics.observe_latencies(outcome.latencies_ms)
+        llm_metrics.record_run(outcome.available)
         registry.increment("llm.tokens.input", outcome.input_tokens or 0)
         registry.increment("llm.tokens.output", outcome.output_tokens or 0)
         # Koszt szacowany w mikro-USD (liczniki są całkowite).

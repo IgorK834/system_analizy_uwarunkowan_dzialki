@@ -64,6 +64,8 @@ class StructuredExtractionErrorCode(StrEnum):
     LOCAL_RATE_LIMIT = "local_rate_limit"
     DEADLINE_EXCEEDED = "deadline_exceeded"
     USAGE_LEDGER_UNAVAILABLE = "usage_ledger_unavailable"
+    # PV3-19: model, prompt albo schemat różnią się od przypiętej, ocenionej wersji (``model_pin.json``).
+    PIN_MISMATCH = "pin_mismatch"
 
 
 _SAFE_MESSAGES: dict[StructuredExtractionErrorCode, str] = {
@@ -96,6 +98,7 @@ _SAFE_MESSAGES: dict[StructuredExtractionErrorCode, str] = {
     StructuredExtractionErrorCode.LOCAL_RATE_LIMIT: "Przekroczono lokalny limit częstotliwości wywołań modelu.",
     StructuredExtractionErrorCode.DEADLINE_EXCEEDED: "Przekroczono budżet czasu analizy dla ścieżki modelu.",
     StructuredExtractionErrorCode.USAGE_LEDGER_UNAVAILABLE: "Rejestr zużycia modelu jest niedostępny; żądania nie wysłano.",
+    StructuredExtractionErrorCode.PIN_MISMATCH: "Model lub prompt różni się od przypiętej, ocenionej wersji; ścieżka modelu wstrzymana.",
 }
 
 # Dozwolone w opisie błędu wyłącznie krótkie, ustalone znaczniki (HTTP, status dostawcy, powód
