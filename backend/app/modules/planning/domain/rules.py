@@ -1,20 +1,20 @@
 """Deterministyczna ekstrakcja walidowalnych reguł planistycznych.
 
-Wartości liczbowe (wysokość, kondygnacje, udziały, odsunięcie, parkowanie, intensywność, kąt dachu,
-powierzchnia sprzedaży, minimalna działka) pochodzą z jednego silnika opartego na leksykonie
-(``quantity_engine``), tego samego co w parserach MPZP (PV3-07); tu zostaje mapowanie na kody
-reguł oraz zapis opisowy (przeznaczenie, zakazy, ograniczenia środowiskowe).
+Moduł NIE zawiera własnych wzorców ustaleń (PV3-21): wartości liczbowe (wysokość, kondygnacje,
+udziały, odsunięcie, parkowanie, intensywność, kąt dachu, powierzchnia sprzedaży, minimalna działka)
+pochodzą z silnika leksykonu ``quantity_engine`` (PV3-07), a zapisy opisowe (przeznaczenie, rodzaj
+dachu, zakazy, ograniczenia środowiskowe) z ``descriptive_engine`` — tych samych, których używa parser
+MPZP. Tu zostaje mapowanie ustaleń na kody i operatory reguł oraz walidacja.
 """
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, replace
 from typing import Any, Literal
 from uuid import NAMESPACE_URL, uuid5
 
+from app.modules.planning.domain import descriptive_engine as descriptive
 from app.modules.planning.domain.quantity_engine import QuantityMatch, find_quantities
-from app.modules.planning.domain.quantity_lexicon import ROOF_GEOMETRY_PATTERN
 from app.modules.planning.domain import evidence_confidence
 
 RuleOperator = Literal["eq", "lte", "gte", "range", "contains", "prohibits"]
@@ -45,20 +45,15 @@ _ROOF_PARAMETERS = frozenset({"roof_angle_min_deg", "roof_angle_max_deg"})
 # jest wyłącznie kandydatem do ręcznej weryfikacji: status ``ai_candidate``, nigdy ``verified``.
 EXTRACTION_METHOD_LLM_VERIFIED = "llm_verified"
 
-_PRIMARY_USE_PATTERN = re.compile(
-    r"przeznaczeni\w*\s+podstawow\w*\s*[:–-]\s*([^.;\n]+)",
-    re.IGNORECASE,
-)
-_SUPPLEMENTARY_USE_PATTERN = re.compile(
-    r"przeznaczeni\w*\s+(?:uzupełniając\w*|dopuszczaln\w*)\s*[:–-]\s*"
-    r"([^.;\n]+)",
-    re.IGNORECASE,
-)
-_PROHIBITION_PATTERN = re.compile(r"zakaz\s+[^.;\n]+", re.IGNORECASE)
-_ENVIRONMENT_PATTERN = re.compile(
-    r"(?:nakaz\s+ochrony|ograniczeni\w*\s+środowisk\w*)[^.;\n]*",
-    re.IGNORECASE,
-)
+# Ustalenie opisowe silnika → ``(kod reguły, operator)``. Dopuszczenia i opisowy nakaz parkowania nie
+# mają kodu reguły (nie są ograniczeniem do sprawdzenia), więc reguły ich nie zapisują.
+_TEXT_RULES: dict[str, tuple[str, RuleOperator]] = {
+    "primary_use": ("primary_use", "eq"),
+    "supplementary_use": ("supplementary_use", "contains"),
+    "roof_geometry": ("roof_geometry", "eq"),
+    "prohibition": ("prohibition", "prohibits"),
+    "environmental_restriction": ("environmental_restriction", "contains"),
+}
 _PERCENT_CODES = {
     "min_biologically_active",
     "max_building_coverage",
@@ -254,36 +249,27 @@ def extract_planning_rules(
     text = unit.source_text
     rules: list[PlanningRuleCandidate] = _numeric_rules_from_engine(unit, text, parser_version)
 
-    text_patterns: tuple[
-        tuple[str, RuleOperator, re.Pattern[str]], ...
-    ] = (
-        ("primary_use", "eq", _PRIMARY_USE_PATTERN),
-        ("supplementary_use", "contains", _SUPPLEMENTARY_USE_PATTERN),
-        ("roof_geometry", "eq", ROOF_GEOMETRY_PATTERN),
-        ("prohibition", "prohibits", _PROHIBITION_PATTERN),
-        ("environmental_restriction", "contains", _ENVIRONMENT_PATTERN),
-    )
-    for code, operator, pattern in text_patterns:
-        for match in pattern.finditer(text):
-            raw = " ".join(match.group(0).split())
-            if code == "roof_geometry":
-                text_value = " ".join(match.group("first").split())
-            else:
-                text_value = " ".join(
-                    (match.group(1) if match.lastindex else match.group(0)).split()
-                )
-            rules.append(
-                PlanningRuleCandidate(
-                    legal_unit_id=unit.legal_unit_id,
-                    code=code,
-                    operator=operator,
-                    text_value=text_value,
-                    raw_value=raw,
-                    source_text=raw,
-                    parser_version=parser_version,
-                    confidence=evidence_confidence.uncalibrated_text_confidence(),
-                )
+    findings = [
+        *descriptive.find_use_designations(text),
+        *descriptive.find_roof_geometries(text),
+        *descriptive.find_prohibitions(text),
+        # Jednostka prawna jest już wydzielonym zakresem, więc nagłówek „ochrony środowiska” nie jest wymagany.
+        *descriptive.find_environmental_restrictions(text, heading_required=False),
+    ]
+    for finding in findings:
+        code, operator = _TEXT_RULES[finding.code]
+        rules.append(
+            PlanningRuleCandidate(
+                legal_unit_id=unit.legal_unit_id,
+                code=code,
+                operator=operator,
+                text_value=finding.value,
+                raw_value=finding.quote,
+                source_text=finding.quote,
+                parser_version=parser_version,
+                confidence=evidence_confidence.uncalibrated_text_confidence(),
             )
+        )
 
     for rule in rules:
         validate_planning_rule(rule)

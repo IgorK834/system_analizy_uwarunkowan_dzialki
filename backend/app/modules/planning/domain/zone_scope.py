@@ -143,7 +143,6 @@ class _Key:
 class _Resolver:
     def __init__(self, view: DocumentStructureView) -> None:
         self.view = view
-        self._parents = {node.node_id: node for node in view.nodes}
 
     # --- węzły ----------------------------------------------------------------------------
 
@@ -435,20 +434,6 @@ class _Resolver:
         """Wiersz tabeli z literami i cyframi (nie linia podziału ani pusta komórka)."""
         text = self.view.text_of(row)
         return any(ch.isalpha() for ch in text) and any(ch.isdigit() for ch in text) and len(text.strip()) > 10
-
-    def other_intro_inside(self, container: StructureNodeView, excluded: StructureNodeView) -> bool:
-        """Czy w kontenerze, poza ``excluded``, jest wprowadzenie jakiejkolwiek (innej) strefy."""
-        for node in self.view.nodes:
-            if node.node_type == "fragment" or not self.contains_node(container, node) or self.contains_node(excluded, node):
-                continue
-            if node.node_id == container.node_id:
-                continue
-            start, lead = self.lead(node)
-            match = _INTRO_START.match(lead)
-            end = _INTRO_END.search(lead) if match else None
-            if match and end and any(self.symbol_like(t) for t in _SYMBOL_LIKE_RE.findall(lead[: end.start()])):
-                return True
-        return False
 
     def ancestor_ids(self, node: StructureNodeView) -> list[str]:
         chain: list[str] = []

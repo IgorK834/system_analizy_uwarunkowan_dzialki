@@ -121,9 +121,6 @@ NOUN_PREFIX_MAX: Final[re.Pattern[str]] = re.compile(r"maksymaln\w*|maksimum|mak
 NOUN_PREFIX_MIN: Final[re.Pattern[str]] = re.compile(r"minimaln\w*|minimum|minimalnie", re.IGNORECASE)
 NOUN_PREFIX_WINDOW: Final[int] = 36
 
-# Początek klauzuli, która jest zakresem ``od X do Y`` (dopuszcza ``w zakresie``/``w przedziale``).
-RANGE_LEAD_IN: Final[str] = r"(?:(?:w\s+)?(?:zakresie|przedziale)\s+)?od\s+"
-
 # --- wykluczenia i rzeczowniki neutralizujące -----------------------------------------
 
 # ``wysokość`` przy obiekcie spoza białej listy (parter, elewacja, mała architektura,

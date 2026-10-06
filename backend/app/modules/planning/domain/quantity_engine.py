@@ -72,9 +72,7 @@ from app.modules.planning.domain.quantity_lexicon import (
     RANK_POINT,
     RANK_SECTION,
     UNDERGROUND_FOLLOWING,
-    UNIT_AREA,
     UNIT_DEGREE,
-    UNIT_HECTARE,
     UNIT_METER,
     UNIT_NONE,
     UNIT_PERCENT,
@@ -102,7 +100,6 @@ STRATEGY_BARE: Final[str] = "bare"
 STRATEGY_FRAME_SETBACK: Final[str] = "frame_setback"
 STRATEGY_FRAME_PARKING: Final[str] = "frame_parking"
 STRATEGY_FRAME_VALUE_FIRST: Final[str] = "frame_value_first"
-STRATEGY_STOREY_WORD: Final[str] = "storey_word"
 
 _SCOPE_SYMBOL_CHARS: Final[re.Pattern[str]] = re.compile(r"^[0-9A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż._/\-+]+$")
 _QUALIFIER_CAP: Final[int] = 220
@@ -1143,7 +1140,6 @@ def _extract_clause(
         events.append((frame.start, "frame", frame))
     events.sort(key=lambda item: (item[0], {"noun": 0, "frame": 1, "atom": 2}[item[1]]))
 
-    first_atom = atoms[0].start if atoms else clause.end
     delta_context = DELTA_CONTEXT.search(masked, clause.start, _header_end(masked, clause, None)) is not None or any(
         DELTA_CONTEXT.search(masked, ancestor.start, _header_end(masked, ancestor, None)) is not None
         for ancestor in _ancestors(clauses, clause)

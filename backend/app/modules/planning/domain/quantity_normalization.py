@@ -32,14 +32,10 @@ from app.modules.planning.domain.quantity_lexicon import (
     FAMILY_SETBACK,
     FAMILY_STOREYS,
     FLAG_PENALTIES,
-    UNIT_AREA,
     UNIT_DEGREE,
     UNIT_HECTARE,
-    UNIT_METER,
     UNIT_NONE,
     UNIT_PERCENT,
-    UNIT_PLACE,
-    UNIT_STOREY,
 )
 from app.shared.numbers import parse_number_prefix, parse_number_word, parse_polish_number
 
@@ -242,10 +238,3 @@ def _degrees(number: float, unit_kind: str, degree_symbol: str | None) -> Normal
     if float(number).is_integer() and number % 10 == 0 and 0 < number / 10 <= _MAX_ANGLE_DEG:
         return NormalizedQuantity(number / 10.0, ("degree_artifact",))
     return None
-
-
-def accepted_unit_kinds() -> frozenset[str]:
-    """Rodzaje jednostek, które normalizacja zna (dla testów spójności z leksykonem)."""
-    return frozenset(
-        {UNIT_NONE, UNIT_PERCENT, UNIT_METER, UNIT_AREA, UNIT_HECTARE, UNIT_DEGREE, UNIT_STOREY, UNIT_PLACE}
-    )
