@@ -2,8 +2,10 @@
 
 - Status: **Zaakceptowany — decyzja właściciela GO z 2026-10-05** (pomiar na żywo 2026-10-02, wynik mechaniczny GO; patrz „Decyzja właściciela”)
 - Data: 2026-10-01
-- Zakres: PV3-01 (Task 20.1); blokuje Task 20.10 (adapter) i Task 20.11 (prompt, schemat)
-- Powiązane: ADR-001 (modularny monolit: port w `application`, adapter w `infrastructure`),
+- Zakres: PV3-01 (Task 20.1); blokuje Task 20.10 (adapter) i Task 20.11 (prompt, schemat). Aneksy: PV3-10–11, PV3-12–14,
+  PV3-15–17 oraz **PV3-18–20** (oznaczenie w UI/PDF, monitoring i przypięcie wersji, dokumentacja i runbook)
+- Powiązane: runbook [`docs/operations/mpzp-llm.md`](../operations/mpzp-llm.md), ADR-014 (dane i zagrożenia; w zadaniu
+  nazwany „ADR-013”), ADR-001 (modularny monolit: port w `application`, adapter w `infrastructure`),
   ADR-004 (parametry MPZP i dowód wartości), `docs/evaluation/bk-601-603-verification.md`
   (recall parsera 0,25), Task 20.2 (zbiór końcowy), Task 20.3 (ewaluator wielosilnikowy),
   Task 20.15 (budżet i degradacja), Task 20.17 (bramka jakości)
@@ -279,7 +281,7 @@ Bramka mierzy wartości przyjęte po weryfikacji, nie surowe odpowiedzi modelu.
 
 - Pomiar spike’u to 30 wywołań na 10 blokach z 9 gmin, jedna chwila i jedna sieć; nie jest
   gwarancją jakości, dostępności ani ceny. Dostawca może zmienić model pod tym samym
-  identyfikatorem, ceny i limity; Task 20.19 przypina wersję i monitoruje zmiany.
+  identyfikatorem, ceny i limity; przypięcie wersji i monitoring (PV3-19) opisuje aneks PV3-18–20 i runbook.
 - Bloki spike’u pochodzą z korpusu BK-603, którego anotacje sporządził asystent AI (przegląd
   człowieka oczekuje), a część dokumentów stała się rozwojowa. Spike nie ocenia jakości
   końcowej; to zadanie Task 20.17 na zbiorze z Task 20.2.
@@ -433,3 +435,150 @@ Szczegóły i mapowanie kryteriów: `docs/evaluation/pv3-15-17-verification.md`;
    5 USD, miesiąc 40 000 000 tokenów i 100 USD (koszt szacowany wg ceny od 2027-01-01, granice doby i
    miesiąca w UTC, twardy stop). Zmiana tych wartości wymaga nowego wpisu z datą. Limity wydatków w AI Studio
    (poziom projektu dostawcy) są niezależnym, dodatkowym zabezpieczeniem i nie zastępują tych limitów.
+
+## Aneks PV3-18, PV3-19 i PV3-20 (2026-10-05): oznaczenie w UI i PDF, monitoring, przypięcie, dokumentacja
+
+Wykonane 2026-10-05 (kod, testy offline, próba runbooka, ręczny odbiór UI na lokalnym stubie). **Nic nie zmierzono
+na żywo**: nie wykonano biegu `--live` na zbiorze złotym, więc para (`gemini-3.8-flash`, `mpzp-extraction/1`) nie ma
+zapisu ponownej ewaluacji. Mapowanie kryteriów i polecenia: `docs/evaluation/pv3-18-20-verification.md`.
+
+1. **Oznaczenie odczytu automatycznego (PV3-18).** Wartość jest odczytem modelu, gdy ma status `ai_candidate` albo
+   metodę `llm_verified` (jedno rozpoznanie dla API, PDF i pakietu: `app/shared/model_reading.py`; w UI
+   `frontend/lib/mpzpProvenance.ts`). Wartość deterministyczna **nigdy** nie jest tak oznaczana — nie decyduje o tym
+   pewność, flaga weryfikacji ani metoda OCR. Marker: „odczyt automatyczny (model językowy), zweryfikowany z cytatem —
+   wymaga potwierdzenia”; nota: „Odczyt automatyczny nie jest interpretacją prawną…”. Test backendu pilnuje, żeby
+   tekst w `mpzpProvenance.ts` i w raporcie był ten sam.
+   - **UI** (`MpzpZoneCard`): marker przy parametrze (z tekstem dla czytnika ekranu), cytat, strona, warunki wartości,
+     linia provenance (model, wersja instrukcji, skrót odpowiedzi), nota na poziomie strefy, filtr „Tylko do ręcznej
+     weryfikacji (N)” (`aria-pressed`, licznik jako komunikat `role="status"`), tabela jako nazwany, przewijalny region
+     dostępny z klawiatury. **Brak danych (`null`) to „brak danych”**, różny od `0` i od braku ograniczenia.
+   - **PDF**: nowy rodzaj ustaleń „odczyt automatyczny” (`model_reading`) w legendzie; tabela 3.2 pokazuje kandydata modelu
+     w osobnej, oznaczonej linii (obok wartości deterministycznej, nigdy zamiast niej; bez wartości deterministycznej
+     wiersz mówi „nie ustalono deterministycznie”); tabela evidence 3.3 ma marker, `model: <id>; wersja instrukcji: <wersja>`
+     i pełny SHA-256 odpowiedzi; ograniczenia i flagi weryfikacji zawierają zastrzeżenie o braku interpretacji prawnej.
+   - **Pakiet audytowy** (`audit-exporter/1.2.0`): blok `model_provenance` w `analysis.json` (model, wersja instrukcji, skrót
+     odpowiedzi, strona, skrót dokumentu, ostrzeżenia `MPZP_LLM_*` także dla niepełnego wyniku). **Z odpowiedzi modelu
+     pakiet niesie tylko skrót i zweryfikowany cytat**; treść odpowiedzi nie jest dołączana (`model_responses_included:
+     false`). Cytat jest dosłownym fragmentem uchwały, więc podlega polu `redistribution` źródła strefy: trafia do pakietu
+     tylko przy `allowed`; przy `derived_only`, `forbidden`, `unconfirmed` i źródle spoza katalogu `quote`,
+     `evidence_text`, `raw_value` i cytaty warunków są `null`, a zostaje skrót, powód i wpis w `redactions`.
+2. **Monitoring (PV3-19).** Liczniki procesu (`llm_metrics`): wywołania, opóźnienie (histogram skumulowany, suma,
+   maksimum), tokeny, koszt szacowany, odrzucenia per bramka G1–G8 i kod, trafienia/chybienia cache, analizy z modelem i
+   degradacje; sumy w oknie czasowym dają odsetki (odrzuceń G1–G7, degradacji, trafień cache) dopiero od minimalnej próby.
+   `GET /health` zawiera `components.llm` ∈ {`ok`, `degraded`, `disabled`} — **nigdy `failed`** — i nie zmienia `status`
+   usługi ani gotowości (`/health/ready` sprawdza tylko bazę); `GET /health/llm` (klucz administracyjny) podaje
+   szczegóły. Ocena nie wywołuje dostawcy i nie zgłasza wyjątków. Logi i odpowiedzi nie zawierają treści żądań ani klucza.
+   **Progi alarmów — propozycja, nieskalibrowana na ruchu (którego nie było):** odrzucenia ≥ 30% (≥ 20 kandydatów
+   w oknie 1 h), degradacja ≥ 20% (≥ 10 analiz), koszt doby ≥ 4 USD (80% limitu twardego 5 USD), dryf ≥ 0,20; zmiana
+   wymaga nowego wpisu z datą. Alarmy są **wskaźnikami w `/health`**, nie systemem powiadomień (projekt go nie ma).
+3. **Przypięcie wersji (PV3-19).** `model_pin.json` (`infrastructure/llm`) zapisuje model, wersję i skrót promptu, wersję i
+   skrót schematu oraz `thinking_level`; kontrola: w czasie działania (`MPZP_LLM_ENFORCE_PIN`, domyślnie włączone:
+   rozbieżność → `pin_mismatch`, adapter nie powstaje, analiza zostaje deterministyczna z ostrzeżeniem), w CI
+   (`tests/test_llm_pin.py` porównuje przypięcie z ustawieniami, kodem, Compose, `.env.example`, złotymi odpowiedziami
+   i dziennikiem poniżej) oraz skryptem `backend/scripts/check_llm_pin.py`. **Zmiana modelu, promptu albo schematu bez
+   zapisu ponownej ewaluacji jest wykrywana.** Ponowna ewaluacja = bieg `evaluate_mpzp_parser.py --engine hybrid --live
+   --model <id>` (ewaluator zapisuje w manifeście model, wersję i skrót promptu i schematu), potem
+   `check_llm_pin.py record-evaluation` i wiersz w dzienniku zmian niżej. Stan: ewaluacja **oczekuje**
+   (`check_llm_pin.py check --require-evaluation` kończy się kodem 1) — świadoma blokada włączenia produkcyjnego.
+4. **Kontrola dryfu (PV3-19).** `backend/scripts/check_llm_drift.py` przepuszcza 13 bloków kanarkowych przez ten sam potok z
+   zamrożonym odtworzeniem i z dostawcą na żywo i porównuje przyjęte wartości; alarm przy rozbieżności ≥ 0,20;
+   awaria dostawcy to „nierozstrzygnięte”, nie alarm. Ręcznie albo z harmonogramu, poza CI; stan trafia do `/health`
+   (`drift_alarm`). Zamrożone odtworzenie to złota odpowiedź z adnotacji (nie nagranie modelu).
+5. **Dokumentacja (PV3-20).** Runbook `docs/operations/mpzp-llm.md` (włączanie, wyłączanie, limity, alarmy, dryf, rotacja
+   klucza, zmiana modelu) z wynikiem próby: kontener (PostGIS, `docker compose up -d`) oraz proces z prawdziwą kompozycją
+   i adapterem (`scripts/rehearse_llm_runbook.py`, 14/14 kroków). **Numeracja:** zadanie nazywa dokument o danych
+   „ADR-013-llm-data-handling”, ale numer 013 zajął ADR silnika ilości, więc dokument to ADR-014 (nie przenumerowano
+   — odesłania w kodzie i dokumentach). Dostawcy nie dopisano do `catalog.yaml` (ADR-014, pkt 5: przetwarzający, nie źródło).
+6. **Ograniczenia.** Brak biegu `--live` na zbiorze złotym i brak ruchu produkcyjnego — progi alarmów i dryfu są
+   propozycją, a nie zmierzoną normą. Zbiór ewaluacyjny BK-603 ma anotacje asystenta AI (bez drugiego anotatora i
+   niezależnego przeglądu człowieka), podział rozwojowy/końcowy jest rozwojowy dla silnika, zbiór końcowy z Task 20.2 nie
+   istnieje; bramka z Task 20.17: `NOT_DECIDABLE`. Ręczny odbiór UI wykonano na lokalnym stubie API (nie na danych
+   rzeczywistych); automatyzacja w przeglądarce (axe, rzeczywisty czytnik ekranu) należy do BK-701.
+
+## Aneks PV3-21 (2026-10-05): jeden silnik, regresja, bramka przełączenia i wycofanie
+
+Mapowanie kryteriów i polecenia: `docs/evaluation/pv3-21-verification.md`.
+
+1. **Domyślny tryb NIE został przełączony.** Przesłanka zadania — decyzja `GO` z Task 20.17 i okres cienia bez
+   regresji — nie jest spełniona (bramka `NOT_DECIDABLE`, brak biegu `--live`, brak ruchu w `hybrid_shadow`). Zamiast
+   przełączenia wprowadzono **bramkę przełączenia**: zapis przesłanek `backend/app/core/mpzp_parser_rollout.json`
+   (decyzja bramki ze skrótem raportu, progi okresu cienia, raport cienia, decyzja właściciela, tryb wycofania,
+   zasada utrzymania `legacy`) oceniany przez `scripts/check_parser_default_switch.py`; test CI wymaga zgodności
+   rekordu z domyślnym trybem w ustawieniach i oceny `READY` dla każdego odejścia od `legacy`. Raport okresu cienia
+   liczy `scripts/mpzp_shadow_report.py` z logu `app.mpzp_llm` (liczniki procesu zerują się przy restarcie).
+2. **Progi okresu cienia — PROPOZYCJA do potwierdzenia przez właściciela** (status `proposed` w rekordzie; dopóki nie
+   ma potwierdzenia z datą, ocena jest `NOT_READY`): ≥ 14 dni, ≥ 200 porównań, rozbieżność model–rdzeń ≤ 0,05 (para
+   z wartością w obu silnikach; odpowiednik progu precision 0,95), błędy trybu cienia ≤ 0,05, degradacja ≤ 0,20,
+   odrzucenia ≤ 0,30 (progi alarmów z aneksu PV3-18–20), kontrola dryfu `ok` w oknie dla przypiętej pary, decyzja
+   właściciela po końcu okna. Wartości nie są skalibrowane na ruchu (którego nie było).
+3. **Jeden silnik ekstrakcji.** Wartości liczbowe pochodziły już z `quantity_engine` (PV3-07); zapisy opisowe miały
+   dwa zestawy wzorców (`services/mpzp_parser_descriptive.py` i `planning/domain/rules.py`). Teraz oba wejścia
+   wołają domenowy `planning/domain/descriptive_engine.py`; w modułach parsera i w `rules.py` nie ma wzorców ustaleń
+   (test `test_descriptive_engine.py` pilnuje tego na AST). Ujednolicenie zmieniło wynik — każdą różnicę sprawdzono
+   z tekstem uchwał: przeznaczenie z etykiety z listą podpunktów (Łódź: 2 podstawowe, 3 uzupełniające; wcześniej parser
+   nic, reguły „a)”), definicje ze słowniczka nie są już przeznaczeniem w regułach, zakaz przełamany w wierszu PDF
+   i liczba dziesiętna w zakazie („4,0 m” zamiast „4”), rodzaj dachu w regułach w formie kanonicznej słownika
+   (`dwuspadowy_lub_płaski` zamiast pierwszego słowa). Kompromis zachowany z parsera: przecinek kończy zakaz, więc
+   wyliczenie po przecinku daje krótszy zakaz. Wartości liczbowe — bez zmian (migawka trybów porównana).
+4. **Wersje i cache.** `mpzp-parser/3.1-det` (blokowy `3.1-det+scope.1`), `MPZP_RESULT_SCHEMA_VERSION` 2.5 → 2.6,
+   reguły `mpzp-rules/1.0` → `2.0`; sygnatura cache zawiera kontrakt i wersję parsera, więc zapisy sprzed zmiany nie
+   są trafieniem. Kalibrację pewności odtworzono (`calibrate_mpzp_confidence.py`; dane i progi bez zmian). Migawkę
+   trybów zamrożono ponownie (`freeze_mpzp_parser_modes.py`, opis zmian w skrypcie). Usunięto martwy kod
+   (nieużywane stałe i metody silnika, alias `_parse_polish_number`, nieużyte wywołanie `classify_document`).
+5. **Regresja opisuje stan faktyczny.** `test_mpzp_parser_regression.py` sprawdza każdy dokument w trybach `legacy`
+   i `v3`; luki zamknięte przez silnik dopisano jako oczekiwania (`expected_values` — dokładny zbiór), a
+   `expected_found: false` zostały tylko dwa prawdziwe braki wartości w uchwale (lista zamknięta testem). Różnice
+   między trybami są dozwolone wyłącznie dla ręcznej weryfikacji strefy (`mode_overrides` z przyczyną: w `legacy`
+   wieloznaczna sekcja, w `v3` blok rozstrzygnięty) — wartości parametrów obowiązują w obu trybach.
+6. **Wycofanie** opisane w runbooku (§10) i sprawdzone próbą (kroki 15–17): po powrocie do `legacy` wynik 10/10
+   dokumentów identyczny z migawką, 0 wartości modelu i 0 żądań, inna sygnatura cache. `legacy` zostaje przez jedno
+   wydanie po przełączeniu; potem usuwa się go (zakres w runbooku §10.4), a trybem wycofania staje się `v3`.
+7. **Poza zakresem (zgłoszone osobno):** `extract_planning_rules` kończy się wyjątkiem dla całej jednostki prawnej,
+   gdy uchwała podaje minimalną intensywność 0 (Raszków, Białystok) — błąd sprzed PV3-21; polityka „> 0” jest wspólna
+   z parserem i bramką G6, więc jej zmiana wymaga decyzji właściciela.
+
+## Artefakty pomiarowe i ich skróty (SHA-256)
+
+Skróty policzone 2026-10-05 poleceniem `shasum -a 256 <plik>` (ścieżki względem korzenia repozytorium). Zmiana pliku
+zmienia skrót; wyniki starsze od zmiany nie są wtedy dowodem. Katalogi `docs/evaluation` i `docs/adr` są w `.gitignore`
+— nowe pliki wymagają `git add -f`.
+
+| Artefakt | Zawartość | SHA-256 |
+|---|---|---|
+| `docs/evaluation/results/llm-spike/measurements.json` | surowe dane pomiaru PV3-01 (30 wywołań, 10 bloków) | `17857777cc41917e18b07c506aa6e6cb9975e34c7f227c0f37814da3f35b7dc0` |
+| `docs/evaluation/results/llm-spike/measurements.md` | tabela i kryteria decyzji spike’u | `517b6654ee30c238fbc724aaa8bd450602fabd8b8615b6dbca9f552e13398a7e` |
+| `docs/evaluation/results/llm-spike/inputs.json` | wejścia spike’u (bloki, skróty, prompt `spike-v0`) | `baba06d1948882fc419e510e4e1e8be14393e542311d311a3f83c5b35507c840` |
+| `docs/evaluation/results/llm-spike/models.json` | odpowiedź `models.list` (identyfikator, limity, metody) | `3b95669b9ecaed878a570380aa12e7a90492361477dd17b922ec1426d9bd11fa` |
+| `docs/evaluation/results/llm-spike/summary.json` | podsumowanie spike’u | `7b2a40bfd06bb8c60a1d0db3e9298efd1d2911f3496351466649e05bb18bd599` |
+| `backend/tests/fixtures/mpzp_evaluation/manifest.json` | korpus BK-603 (21 próbek; `corpus_sha256` w manifestach biegów); anotacje: `annotations_sha256` `1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244` | `ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0` |
+| `docs/evaluation/results/parser-v3/gate_report.json` | raport bramki 20.17 (`NOT_DECIDABLE`) | `aa9881fe1e80e7a4b4c791d05b1d691c1243de4fe0df7dbf563ac37c218f8b1f` |
+| `docs/evaluation/results/parser-v3/gate_report.md` | jw., wersja czytelna | `8a27800a145d42cb898e1b4b0f86fe441cf05e4f5a875b340313ec76cfab348c` |
+| `docs/evaluation/results/parser-v3/{legacy,v3}/run_manifest.json` | manifesty biegów offline (`manifest_sha256` w pliku) | `legacy` `3b944b3709c6f418d2d5ab57bc51d4dea1f93a5e6614a85e568715600e692755`, `v3` `498756aa2ab7a1834ec6b49ec10ade0a99f428fdcfa99b16f0fa2926ef33c2d9` (pole `manifest_sha256`) |
+| `backend/app/modules/planning/domain/prompts/mpzp_extraction_v1.md` | instrukcja `mpzp-extraction/1` (pełny skrót instrukcji z szablonem wiadomości: `model_pin.json`) | `9d49b86fd1e522cc2425d0c67788f2adb65196ed0b0e97de321060498561cc0f` |
+| `backend/tests/fixtures/mpzp_llm_latency/spike_latencies.json` | 30 opóźnień z PV3-01 użytych w teście p95 | `51689d45f49c0cdb2deb640649498447a15c19a59838dd46e63f0c4cf95701a2` |
+| `backend/app/core/mpzp_confidence_calibration.json` | artefakt kalibracji pewności (PV3-09; odtworzony w PV3-21 — zmieniła się tylko lista wersji parsera, dane i progi bez zmian) | `6928bbae3b66374d8ed6d9faf879d20bb38e72f9f37f17d7df818c43d47f1333` (wcześniej `101e59b627c4c0baf918f3c8d455a2e05501e6270a0e90ba047d66d4241236c1`) |
+| `backend/tests/fixtures/mpzp_prompt_injection/cases.json` | korpus 14 przypadków prompt injection (ADR-014) | `532dcd9421d7e4dc37517f2946e13aed1b28a5f344734d5ed5466cbba2903a8c` |
+
+Skróty z `model_pin.json` (stałe dla pary model + prompt): skrót instrukcji
+`126480c2f14155d5fd11324764ec4bc684d5e8d96f993ae7c95255ee31f84ceb`, skrót schematu
+`5286e624523a2d52c76e989ccf9629bb4a2f6317340bb24d56906c3e72bd7ca4`. Złote odpowiedzi
+(`backend/tests/fixtures/mpzp_evaluation/llm_replay/`, 13 plików) mają nazwę równą kluczowi odpowiedzi; `build_llm_replay_fixtures.py
+--check` potwierdza ich aktualność względem promptu, schematu i korpusu. Odtworzenie tabeli:
+
+```bash
+shasum -a 256 docs/evaluation/results/llm-spike/*.json docs/evaluation/results/llm-spike/measurements.md \
+  docs/evaluation/results/parser-v3/gate_report.* backend/tests/fixtures/mpzp_evaluation/manifest.json \
+  backend/app/modules/planning/domain/prompts/mpzp_extraction_v1.md backend/tests/fixtures/mpzp_llm_latency/spike_latencies.json \
+  backend/app/core/mpzp_confidence_calibration.json backend/tests/fixtures/mpzp_prompt_injection/cases.json
+python3 -c "import json;[print(e, json.load(open(f'docs/evaluation/results/parser-v3/{e}/run_manifest.json'))['manifest_sha256']) for e in ('legacy','v3')]"
+```
+
+## Dziennik zmian przypięcia modelu i promptu
+
+Tabela jest kontrolowana skryptem `backend/scripts/check_llm_pin.py` (patrz aneks PV3-18–20): każda para
+(`model_id`, `prompt_version`) z `model_pin.json` musi mieć tu wiersz ze skrótem promptu (12 znaków).
+Zmiana modelu albo promptu bez nowego wiersza i bez zapisu ponownej ewaluacji `--live` jest wykrywana.
+
+| Data | `model_id` | `prompt_version` | Skrót promptu (SHA-256, 12) | Ocena `--live` na zbiorze złotym | Uwagi |
+|---|---|---|---|---|---|
+| 2026-10-05 | `gemini-3.8-flash` | `mpzp-extraction/1` | `126480c2f141` | brak — oczekuje (wymaga zgody właściciela na wysyłkę tekstów publicznych i koszt) | pierwsze przypięcie; model potwierdzony `models.list` 2026-10-02, pomiar spike dotyczył promptu `spike-v0`, nie tego promptu |
