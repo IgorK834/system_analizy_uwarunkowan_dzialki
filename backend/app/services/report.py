@@ -72,6 +72,15 @@ from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.section_quality import build_section_quality
 from app.services.terrain import terrain_from_snapshot
+from app.shared.model_reading import (
+    EXTRACTION_METHOD_LLM_VERIFIED,
+    MODEL_READING_DISCLAIMER,
+    MODEL_READING_MARK,
+    MODEL_READING_SHORT,
+    NO_DATA_NOT_NO_RESTRICTION,
+    NULL_NOT_ZERO,
+    is_model_reading,
+)
 from app.shared.data_quality import (
     FRESHNESS_LABELS_PL,
     FRESHNESS_NO_POLICY,
@@ -571,12 +580,18 @@ def _compatibility_finding(pog: PogResult | None) -> tuple[str, str | None]:
     )
 
 
+def _has_model_reading(response: AnalyzeResponse) -> bool:
+    return any(is_model_reading(parameter) for zone in response.mpzp_zones for parameter in zone.parameters)
+
+
 def _manual_flags(response: AnalyzeResponse) -> list[str]:
     flags = []
     if response.status != "complete":
         flags.append(f"Status analizy: {_ANALYSIS_STATUS_LABELS.get(response.status, response.status)}.")
     if any(zone.assignment_method == "manual_user_input" for zone in response.mpzp_zones):
         flags.append("Symbol strefy MPZP podano ręcznie — parametry zależne wymagają weryfikacji.")
+    if _has_model_reading(response):
+        flags.append(f"Część parametrów MPZP to {MODEL_READING_SHORT} — wymaga potwierdzenia w uchwale.")
     if response.manual_zone_required:
         flags.append("Analiza oczekuje na ręczne podanie symbolu strefy MPZP.")
     return flags
@@ -591,7 +606,12 @@ _MPZP_ASSIGNMENT_LABELS: dict[str, str] = {
     "manual_user_input": "symbol podany ręcznie z mapy rastrowej",
     "legacy": "snapshot sprzed wersjonowania stref",
 }
-_EXTRACTION_LABELS: dict[str, str] = {"pdf_text": "tekst PDF", "html": "HTML", "ocr": "OCR"}
+_EXTRACTION_LABELS: dict[str, str] = {
+    "pdf_text": "tekst PDF",
+    "html": "HTML",
+    "ocr": "OCR",
+    EXTRACTION_METHOD_LLM_VERIFIED: MODEL_READING_SHORT,
+}
 # (pole API, etykieta, jednostka prezentacji). Wskaźnik intensywności jest
 # bezwymiarowy; kondygnacje są liczbą całkowitą.
 MPZP_PARAMETER_ROWS: tuple[tuple[str, str, str | None], ...] = (
@@ -670,6 +690,18 @@ class _EvidenceRegistry:
                 ],
                 "manual_review": parameter.manual_review_required,
                 "text": parameter.evidence_text,
+                # PV3-18: provenance odczytu modelu — tylko dla wartości z modelu (``ai_candidate``); wartość
+                # deterministyczna nie niesie tych pól i nie jest oznaczana jako odczyt modelu.
+                "model_reading": is_model_reading(parameter),
+                "model": (
+                    {
+                        "model_id": parameter.model_id,
+                        "prompt_version": parameter.prompt_version,
+                        "response_sha256": parameter.response_sha256,
+                    }
+                    if is_model_reading(parameter)
+                    else None
+                ),
             }
         )
         return ref
@@ -711,6 +743,14 @@ def _mpzp_section_context(response: AnalyzeResponse) -> dict[str, Any]:
             else None
         ),
         "shares_sum": _shares_sum([zone.intersection_pct for zone in response.mpzp_zones]),
+        # PV3-18: oznaczenie odczytu automatycznego i komunikaty o braku danych / null — stałe teksty z jednego miejsca.
+        "model_reading": {
+            "present": _has_model_reading(response),
+            "mark": MODEL_READING_MARK,
+            "short": MODEL_READING_SHORT,
+            "disclaimer": MODEL_READING_DISCLAIMER,
+        },
+        "no_data_note": f"{NO_DATA_NOT_NO_RESTRICTION} {NULL_NOT_ZERO}",
         "empty_reason": (
             None
             if response.mpzp_zones
@@ -762,22 +802,39 @@ def _mpzp_parameter_rows(zone: MpzpZoneResult, registry: _EvidenceRegistry) -> l
         candidates = by_field.get(field, [])
         refs = [registry.add(zone, item, label) for item in candidates]
         rows.append(_parameter_row(zone, label, value if value else None, None, refs, kind, "ok" if value else "null"))
+
+    def candidate_text(item: Any, ref: str, unit: str | None, with_condition: bool = False) -> str:
+        number = (
+            _format_trimmed(float(item.normalized_value), 3)
+            if isinstance(item.normalized_value, (int, float))
+            else item.normalized_value
+        )
+        suffix = f" — {_conditions_text(item)}" if with_condition and item.conditions else ""
+        return f"{number}{_unit_suffix(unit)}{suffix} [{ref}]"
+
+    def with_model_reading(row: dict[str, Any], model_pairs: list[tuple[Any, str]], unit: str | None) -> dict[str, Any]:
+        """Odczyt modelu (PV3-18) jest osobną linią wiersza z oznaczeniem; nie miesza się z wartością deterministyczną."""
+        text = "; ".join(
+            candidate_text(item, ref, unit, True) for item, ref in model_pairs if item.normalized_value is not None
+        )
+        if text:
+            row["model_candidates"] = text
+            if row["status"] == "null":
+                # Brak wartości deterministycznej, jest tylko kandydat modelu: wiersz ma własny rodzaj.
+                row.update(status="ai_candidate", kind="model_reading", kind_label=FINDING_KIND_LABELS["model_reading"])
+        return row
+
     for field, label, unit in MPZP_PARAMETER_ROWS:
         value = getattr(zone, field)
         candidates = by_field.get(field, [])
         refs = [registry.add(zone, item, label) for item in candidates]
-        pairs = list(zip(candidates, refs))
+        all_pairs = list(zip(candidates, refs, strict=True))
+        # Wartości z modelu językowego (``ai_candidate``) nigdy nie wchodzą do wartości deterministycznej, do
+        # warunkowych ani do sprzecznych — mają własną, oznaczoną linię wiersza.
+        model_pairs = [(item, ref) for item, ref in all_pairs if is_model_reading(item)]
+        pairs = [(item, ref) for item, ref in all_pairs if not is_model_reading(item)]
         conflicting = [(item, ref) for item, ref in pairs if item.value_kind == "conflict"]
         conditional = [(item, ref) for item, ref in pairs if item.value_kind == "conditional"]
-
-        def candidate_text(item: Any, ref: str, with_condition: bool = False) -> str:
-            number = (
-                _format_trimmed(float(item.normalized_value), 3)
-                if isinstance(item.normalized_value, (int, float))
-                else item.normalized_value
-            )
-            suffix = f" — {_conditions_text(item)}" if with_condition and item.conditions else ""
-            return f"{number}{_unit_suffix(unit)}{suffix} [{ref}]"
 
         base_text = (
             (str(int(value)) if field == "max_floors" else _format_trimmed(float(value), 3))
@@ -785,28 +842,35 @@ def _mpzp_parameter_rows(zone: MpzpZoneResult, registry: _EvidenceRegistry) -> l
             else None
         )
         conditional_text = "; ".join(
-            candidate_text(item, ref, True) for item, ref in conditional if item.normalized_value is not None
+            candidate_text(item, ref, unit, True) for item, ref in conditional if item.normalized_value is not None
         )
         if conflicting:
             options = "; ".join(
-                candidate_text(item, ref, True) for item, ref in conflicting if item.normalized_value is not None
+                candidate_text(item, ref, unit, True) for item, ref in conflicting if item.normalized_value is not None
             )
             text = f"wymaga weryfikacji — kandydaci: {options}"
             if conditional_text:
                 text += f"; warunkowo: {conditional_text}"
-            rows.append(_parameter_row(zone, label, text, None, refs, kind, "conflict"))
-            continue
-        if conditional_text:
+            row = _parameter_row(zone, label, text, None, refs, kind, "conflict")
+        elif conditional_text:
             head = f"{base_text}{_unit_suffix(unit)}" if base_text is not None else "brak jednej wartości dla całej strefy"
-            rows.append(
-                _parameter_row(zone, label, f"{head}; warunkowo: {conditional_text}", None, refs, kind, "conditional")
-            )
-            continue
-        rows.append(_parameter_row(zone, label, base_text, unit, refs, kind, "ok" if value is not None else "null"))
+            row = _parameter_row(zone, label, f"{head}; warunkowo: {conditional_text}", None, refs, kind, "conditional")
+        else:
+            row = _parameter_row(zone, label, base_text, unit, refs, kind, "ok" if value is not None else "null")
+        rows.append(with_model_reading(row, model_pairs, unit))
     for parameter in unmapped:
         label = f"Inny zapis uchwały: {parameter.name}"
         ref = registry.add(zone, parameter, label)
         value = parameter.normalized_value
+        if is_model_reading(parameter):
+            unit = _UNIT_LABELS.get(parameter.unit or "", parameter.unit)
+            if value is None:
+                rows.append(_parameter_row(zone, label, None, None, [ref], "model_reading", "null"))
+                continue
+            row = _parameter_row(zone, label, None, None, [ref], "model_reading", "ai_candidate")
+            row["model_candidates"] = candidate_text(parameter, ref, unit, True)
+            rows.append(row)
+            continue
         shown = _format_trimmed(float(value), 3) if isinstance(value, (int, float)) else value
         if shown is not None and parameter.conditions:
             shown = f"{shown}{_unit_suffix(_UNIT_LABELS.get(parameter.unit or '', parameter.unit))} — {_conditions_text(parameter)}"
@@ -848,6 +912,8 @@ def _parameter_row(
         "kind": kind,
         "kind_label": FINDING_KIND_LABELS[kind],
         "status": status,
+        # Linia odczytu modelu (PV3-18) z oznaczeniem; ``None`` dla wartości deterministycznych.
+        "model_candidates": None,
     }
 
 
@@ -1773,6 +1839,11 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
             "Część parametrów MPZP ma wartości zależne od warunków (np. rodzaj dachu, rodzaj zabudowy, "
             "podstrefa); płaskie pole strefy jest puste, gdy uchwała nie podaje jednej wartości dla całej "
             "strefy. Warunki i ich cytaty są w tabeli evidence."
+        )
+    if _has_model_reading(response):
+        limitations.append(
+            f"Wartości oznaczone jako {MODEL_READING_MARK} są kandydatami, nie ustaleniami. "
+            f"{MODEL_READING_DISCLAIMER} Tabela evidence podaje model, wersję instrukcji i skrót odpowiedzi modelu."
         )
     if any(
         zone.assignment_method == "manual_user_input"

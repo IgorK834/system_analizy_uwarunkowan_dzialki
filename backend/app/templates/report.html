@@ -59,10 +59,12 @@
   .kind-computed { background: #ecfdf3; }
   .kind-approximation { background: #fffaeb; }
   .kind-manual { background: #fdeceb; }
+  .kind-model_reading { background: #efe9fb; }
   .tag { display: inline-block; padding: 0 1.2mm; border-radius: 1mm; font-size: 6.8pt; }
   .tag-info { background: #eef3f0; color: #0d5137; }
   .tag-review { background: #fdeceb; color: #8f2525; }
   .tag-cond { background: #e8f1fb; color: #1f4f8b; }
+  .tag-ai { background: #efe9fb; color: #43228a; border: 0.4pt solid #43228a; }
   .tag-project { background: #fef0c7; color: #7a2e0e; border: 0.5pt dashed #7a2e0e; }
   .st { font-weight: bold; hyphens: none; }
   .st-available { color: #0d5137; }
@@ -95,7 +97,7 @@
 <body>
 
 {# ---------- Makra ---------- #}
-{% macro kind(k) %}{% if k %}<span class="kind kind-{{ k }}">{{ {"source_fact": "fakt źródłowy", "computed": "wynik obliczenia", "approximation": "przybliżenie", "manual": "dane ręczne"}[k] }}</span>{% endif %}{% endmacro %}
+{% macro kind(k) %}{% if k %}<span class="kind kind-{{ k }}">{{ {"source_fact": "fakt źródłowy", "computed": "wynik obliczenia", "approximation": "przybliżenie", "manual": "dane ręczne", "model_reading": "odczyt automatyczny"}[k] }}</span>{% endif %}{% endmacro %}
 {% macro na(value) %}{{ value if value is not none else not_specified }}{% endmacro %}
 {% macro source_line(src) %}{% if src %}{{ src.name }}{% if src.version %} ({{ src.version }}){% endif %}{% if src.fetched_at %}, pobrano {{ src.fetched_at }}{% endif %}{% if src.response_status %}, HTTP {{ src.response_status }}{% endif %}{% if src.release %}, wydanie #{{ src.release }}{% endif %}{% if src.confidence %}; pewność {{ src.confidence.pct }} ({{ src.confidence.label }}){% endif %}{% else %}{{ not_specified }}{% endif %}{% endmacro %}
 {% macro map_figure(map_id) %}
@@ -249,13 +251,17 @@
     {% for row in mpzp.parameters %}
       <tr data-row="mpzp-parameter">
         <td>{{ row.zone }}</td><td>{{ row.parameter }}</td>
-        <td>{% if row.status == "conflict" %}<span class="tag tag-review">sprzeczność</span> {{ row.value }}{% elif row.status == "conditional" %}<span class="tag tag-cond">warunkowe</span> {{ row.value }}{% elif row.status == "null" %}{{ not_specified }}{% else %}{{ row.display }}{% endif %}</td>
+        <td>{% if row.status == "conflict" %}<span class="tag tag-review">sprzeczność</span> {{ row.value }}{% elif row.status == "conditional" %}<span class="tag tag-cond">warunkowe</span> {{ row.value }}{% elif row.status == "null" %}{{ not_specified }}{% elif row.status == "ai_candidate" %}<em>nie ustalono deterministycznie</em>{% else %}{{ row.display }}{% endif %}{% if row.model_candidates %}<br><span class="tag tag-ai" data-tag="model-reading">{{ mpzp.model_reading.short }}</span> {{ row.model_candidates }}<br><small>wymaga potwierdzenia w uchwale; to nie jest interpretacja prawna</small>{% endif %}</td>
         <td>{% if row.refs %}[{{ row.refs|join("], [") }}]{% else %}—{% endif %}</td>
         <td>{{ kind(row.kind) }}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+  <p class="note" data-note="mpzp-no-data">{{ mpzp.no_data_note }}</p>
+  {% if mpzp.model_reading.present %}
+  <p class="note" data-note="model-reading"><span class="tag tag-ai">{{ mpzp.model_reading.mark }}</span> {{ mpzp.model_reading.disclaimer }}</p>
+  {% endif %}
 
   <h3>Tabela 3.3. Evidence parametrów z uchwały</h3>
   {% if mpzp.evidence %}
@@ -266,9 +272,9 @@
     {% for row in mpzp.evidence %}
       <tr data-row="mpzp-evidence">
         <td><strong>{{ row.ref }}</strong></td>
-        <td>{{ row.zone }} — {{ row.parameter }}{% if row.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% elif row.conditions %}<br><span class="tag tag-cond">warunkowa</span>{% endif %}{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}{% for condition in row.conditions %}<br><small>{{ condition.kind_label }}: {{ condition.label }}{% if condition.quote %} — „{{ condition.quote }}”{% endif %}</small>{% endfor %}</td>
+        <td>{{ row.zone }} — {{ row.parameter }}{% if row.model_reading %}<br><span class="tag tag-ai" data-tag="model-reading">{{ mpzp.model_reading.mark }}</span>{% endif %}{% if row.conflict %}<br><span class="tag tag-review">sprzeczna kandydatura</span>{% elif row.conditions %}<br><span class="tag tag-cond">warunkowa</span>{% endif %}{% if row.manual_review %}<br><span class="tag tag-review">weryfikacja</span>{% endif %}{% for condition in row.conditions %}<br><small>{{ condition.kind_label }}: {{ condition.label }}{% if condition.quote %} — „{{ condition.quote }}”{% endif %}</small>{% endfor %}</td>
         <td>{{ row.value }}{% if row.raw_value %}<br><small>dosłownie: „{{ row.raw_value }}”</small>{% endif %}</td>
-        <td>{% if row.document_ref %}dokument [{{ row.document_ref }}]{% else %}dokument {{ not_specified }}{% endif %}<br><small>{% if row.page is not none %}str. {{ row.page }}{% else %}strona {{ not_specified }}{% endif %}{% if row.segment %}, segment {{ row.segment }}{% endif %}{% if row.legal_unit is not none %}, jednostka #{{ row.legal_unit }}{% endif %}</small><br><small>{{ row.extraction or "metoda nieznana" }}{% if row.parser_version %}, {{ row.parser_version }}{% endif %}; pewność {{ row.confidence }}</small></td>
+        <td>{% if row.document_ref %}dokument [{{ row.document_ref }}]{% else %}dokument {{ not_specified }}{% endif %}<br><small>{% if row.page is not none %}str. {{ row.page }}{% else %}strona {{ not_specified }}{% endif %}{% if row.segment %}, segment {{ row.segment }}{% endif %}{% if row.legal_unit is not none %}, jednostka #{{ row.legal_unit }}{% endif %}</small><br><small>{{ row.extraction or "metoda nieznana" }}{% if row.parser_version %}, {{ row.parser_version }}{% endif %}; pewność {{ row.confidence }}</small>{% if row.model %}<br><small data-model-provenance>model: {{ row.model.model_id or not_specified }}; wersja instrukcji: {{ row.model.prompt_version or not_specified }}</small><br><small class="mono">SHA-256 odpowiedzi modelu: {{ row.model.response_sha256 or not_specified }}</small>{% endif %}</td>
         <td class="evidence-text">{% if row.text %}„{{ row.text }}”{% else %}<em>brak zapisanego fragmentu</em>{% endif %}</td>
       </tr>
     {% endfor %}

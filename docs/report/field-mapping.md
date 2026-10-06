@@ -43,6 +43,10 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `mpzp_zones[].assignment_method` | 3 | Tabela 3.1 — sposób przypisania strefy | metadane |
 | `mpzp_zones[].manual_review_required` | 8 | Tabela 3.1 — plakietka weryfikacji; macierz 8.1 | metadane |
 | `mpzp_zones[].manual_selection.*` | 3 | Tabela 3.4 — decyzja użytkownika i przypięty dokument (tryb ręczny) | dane ręczne |
+| `mpzp_zones[].parameters[].review_status` | 3 | Tabele 3.2 i 3.3 — znacznik odczytu automatycznego i status kandydata (tylko wartości z modelu) | odczyt automatyczny |
+| `mpzp_zones[].parameters[].model_id` | 3 | Tabela 3.3 — provenance odczytu automatycznego: model | odczyt automatyczny |
+| `mpzp_zones[].parameters[].prompt_version` | 3 | Tabela 3.3 — provenance odczytu automatycznego: wersja instrukcji | odczyt automatyczny |
+| `mpzp_zones[].parameters[].response_sha256` | 3 | Tabela 3.3 — provenance odczytu automatycznego: skrót (SHA-256) odpowiedzi modelu | odczyt automatyczny |
 | `mpzp_zones[].parameters[].*` | 3 | Tabela 3.3 — evidence parametrów (odsyłacze [E#]: strona, segment, SHA-256) | fakt źródłowy |
 | `mpzp_zones[].source.*` | 9 | Tabela 3.1 — kolumna „źródło”; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `mpzp_zones[].*` | 3 | Tabela 3.1 (symbol, ID, akt, wersja, wydanie) i Tabela 3.2 (przeznaczenie, parametry z jednostkami) | fakt źródłowy |

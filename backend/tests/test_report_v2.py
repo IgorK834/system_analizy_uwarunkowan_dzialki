@@ -310,6 +310,11 @@ def test_long_tables_keep_every_row_and_long_polish_text() -> None:
 @pytest.mark.parametrize("fixture", ["multizone", "project", "long_tables"])
 def test_pages_render_without_clipping_overlaps_or_lost_polish_letters(fixture: str) -> None:
     html, pdf = _render(fixture)
+    assert_clean_pages(html, pdf, pangram=fixture != "long_tables")
+
+
+def assert_clean_pages(html: str, pdf: bytes, *, pangram: bool = True) -> None:
+    """Brak obcięć, nakładania, pustych stron, obcych fontów i zgubionych polskich liter (też dla PV3-18)."""
     with _doc(pdf) as doc:
         for page in doc:
             width = page.rect.width
@@ -346,8 +351,10 @@ def test_pages_render_without_clipping_overlaps_or_lost_polish_letters(fixture: 
     assert "�" not in text
     visible = re.sub(r"<[^>]+>", " ", html)
     assert {char for char in visible if char in _POLISH} <= set(text)
-    if fixture != "long_tables":
+    if pangram:
         assert "zażółć gęślą jaźń" in re.sub(r"\s+", " ", text)
+
+
 
 
 def test_maps_are_embedded_with_legend_scale_and_release_metadata() -> None:
