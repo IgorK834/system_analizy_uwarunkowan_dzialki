@@ -8,6 +8,7 @@
     {
       "zone_symbol": "MN.1",
       "expected_manual_review_required": true,
+      "mode_overrides": {"v3": {"expected_manual_review_required": false, "reason": "W trybie legacy wiele kandydackich sekcji daje ZONE_SECTION_AMBIGUOUS i ręczną weryfikację; w v3 blok strefy MN.1 jest rozstrzygnięty jednoznacznie (bez ostrzeżenia zakresu), a wartość 9,5 m jest warunkowa (dach płaski), nie sprzeczna."}},
       "parameters": [
         {
           "name": "min_biologically_active_percent",

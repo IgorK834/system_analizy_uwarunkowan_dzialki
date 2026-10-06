@@ -24,6 +24,31 @@
           "allowed_values": null,
           "min_confidence": null,
           "reason_if_not_found": "Wartość 4,0 m z fragmentu „w odległości do 4,0 m od tej granicy” opisuje pas przy granicy działki, w którym obowiązuje inny limit wysokości (warunek położenia), a nie odsunięcie budynku — silnik leksykonu nie przypisuje jej do setback_m."
+        },
+        {
+          "name": "primary_use",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": null,
+          "expected_values": [
+            "tereny zabudowy mieszkaniowej wielorodzinnej",
+            "tereny zabudowy usługowej"
+          ],
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
+        },
+        {
+          "name": "supplementary_use",
+          "expected_found": true,
+          "normalized_value": null,
+          "allowed_values": null,
+          "expected_values": [
+            "garaże wielostanowiskowe",
+            "drogi wewnętrzne",
+            "infrastruktura techniczna"
+          ],
+          "min_confidence": 0.8,
+          "reason_if_not_found": null
         }
       ]
     }

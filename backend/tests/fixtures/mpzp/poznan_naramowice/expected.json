@@ -8,7 +8,7 @@
       "expected_manual_review_required": false,
       "parameters": [
         {"name": "primary_use", "expected_found": true, "normalized_value": "zabudowa usługowa", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
-        {"name": "supplementary_use", "expected_found": true, "normalized_value": "dopuszczenie funkcji zieleni urządzonej", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
+        {"name": "supplementary_use", "expected_found": true, "normalized_value": null, "allowed_values": null, "expected_values": ["dopuszczenie funkcji zieleni urządzonej", "zieleń urządzona"], "min_confidence": 0.8, "reason_if_not_found": null},
         {"name": "prohibition", "expected_found": true, "normalized_value": "zakaz lokalizacji składów otwartych", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null},
         {"name": "roof_geometry", "expected_found": true, "normalized_value": "płaski", "allowed_values": null, "min_confidence": 0.8, "reason_if_not_found": null}
       ]

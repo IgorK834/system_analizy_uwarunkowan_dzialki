@@ -90,3 +90,21 @@ w `legnica_szpital` i `lodz_mw_u`. Luki, które PV3-07 zamknął (np. wysokości
 zmieniono z `expected_found: false` na wartość oczekiwaną — snapshoty tekstu (`pages.json`) nie były
 ruszane.
 
+## Oba tryby i stan faktyczny (PV3-21)
+
+`test_mpzp_parser_regression.py` sprawdza każdy dokument w trybach `legacy` i `v3`. Oczekiwania opisują
+ground truth uchwały, a nie luki parsera:
+
+- `expected_values` — dokładny zbiór współistniejących ustaleń (np. dwa przeznaczenia uzupełniające),
+  bez duplikatów i bez wartości spoza zbioru;
+- `expected_found: false` zostało tylko dla wartości, których w uchwale dla strefy nie ma (Bielsko 230_ZP
+  wysokość, Łódź 6.8.MW/U odsunięcie) — lista jest zamknięta testem;
+- `mode_overrides` (z obowiązkową przyczyną) wolno użyć wyłącznie dla `expected_manual_review_required`,
+  bo zależy od rozstrzygania zakresu strefy (w `legacy` wieloznaczna sekcja → ręczna weryfikacja, w `v3`
+  rozstrzygnięty blok); wartości parametrów obowiązują w obu trybach.
+
+Luki zamknięte przez wspólny silnik opisowy dopisano jako oczekiwania: Łódź — przeznaczenie podstawowe
+i uzupełniające z listy podpunktów po etykiecie; Poznań — drugie przeznaczenie uzupełniające z etykiety.
+Snapshoty tekstu (`pages.json`) nie były ruszane. Po usunięciu trybu `legacy` (runbook §10.4) usuwa się też
+`mode_overrides`.
+

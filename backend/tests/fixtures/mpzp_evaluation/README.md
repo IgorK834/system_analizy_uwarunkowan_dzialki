@@ -81,7 +81,7 @@ python3 backend/scripts/evaluate_mpzp_parser.py --mode offline \
 python3 backend/scripts/evaluate_mpzp_parser.py --engine legacy v3 \
   --output-dir docs/evaluation/results/parser --repeat 2          # porównanie sparowane legacy → v3
 python3 backend/scripts/evaluate_mpzp_parser.py --engine legacy v3 hybrid \
-  --llm-replay backend/tests/fixtures/mpzp_evaluation/llm_replay   # z hybrid (gdy będzie istniał)
+  --llm-replay backend/tests/fixtures/mpzp_evaluation/llm_replay   # patrz „Silnik hybrid”: złote odpowiedzi nie pokrywają całego korpusu
 python3 backend/scripts/evaluate_mpzp_parser.py --validate-only [--profile final-v2]   # sama walidacja korpusu
 ```
 
@@ -98,8 +98,8 @@ dwa kolejne biegi tego samego silnika dają różne wyniki merytoryczne.
   te same metryki merytoryczne co `parser/legacy/` (sprawdzone wiersz po wierszu).
 - **Rejestr silników:** `legacy` (produkcyjny parser w trybie domyślnym) i `v3` (ten sam parser w trybie
   blokowym: drzewo struktury dokumentu → resolver zakresu strefy → wartości z własnego dopasowania; PV3-05/06)
-  działają; `hybrid` jest zarejestrowany, ale niedostępny do czasu Tasków 20.10–20.14 (wywołanie kończy się
-  kodem 2 z przyczyną). Silnik zwraca neutralny `EngineResult` (wartość, strona, cytat, opcjonalnie zakres
+  działają; `hybrid` (PV3-14) jest dostępny z odtwarzania (`--llm-replay`) albo na żywo (`--live`) — bez jednego z
+  nich kończy się kodem 2. Silnik zwraca neutralny `EngineResult` (wartość, strona, cytat, opcjonalnie zakres
   znaków, `review_status`, odrzucenia z nazwą bramki, bloki stref `ScopeBlock`, użycie tokenów, opóźnienia i
   kosztu).
 - **Nowe metryki w `metrics.json` → `detection`:** `source_consistent` (licznik/mianownik: poprawne
@@ -162,3 +162,38 @@ Obecny podział „końcowy” jest rozwojowy 2 w nowej wersji. Bieżący manife
 Zmiana anotacji wymaga nowej wersji korpusu (`corpus_id`), nowego skrótu w
 `freeze` i ponownej oceny wszystkich wyników; nie wolno jej robić po obejrzeniu
 wyników parsera.
+
+### Silnik `hybrid`, bieg `--live` i przypięcie (PV3-14–19)
+
+`hybrid` uruchamia produkcyjny tryb `hybrid` parsera: rdzeń `v3` + kandydaci modelu po bramkach G1–G8 (zawsze
+`ai_candidate`). Brak zapisanej odpowiedzi przerywa bieg zamiast po cichu zwrócić wynik deterministyczny.
+
+```bash
+cd backend
+# odtwarzanie (bez sieci): złote odpowiedzi to 13 bloków z 7 przypadków (NIE nagrania modelu; składa je
+# build_llm_replay_fixtures.py), więc bieg hybrydy na CAŁYM korpusie przerywa się komunikatem „N model response(s) missing
+# in the replay store” (kod 1) — pełny korpus wymaga nagrań z biegu --live; testy używają złotych odpowiedzi na tych 7 przypadkach
+python3 scripts/evaluate_mpzp_parser.py --engine legacy v3 hybrid --llm-replay tests/fixtures/mpzp_evaluation/llm_replay
+# bieg na żywo (RĘCZNIE, poza CI; wymaga zgody właściciela, GEMINI_API_KEY w środowisku, wysyła publiczny tekst, kosztuje)
+python3 scripts/evaluate_mpzp_parser.py --engine v3 hybrid --live --model gemini-3.8-flash \
+  --llm-replay <nowy katalog odpowiedzi> --output-dir ../docs/evaluation/results/<bieg>
+python3 scripts/check_llm_pin.py record-evaluation --run-manifest ../docs/evaluation/results/<bieg>/hybrid/run_manifest.json
+```
+
+`run_manifest.json` biegu hybrydy zapisuje w `llm` tryb (`replay`/`live`), liczbę odtworzonych i nagranych odpowiedzi oraz
+**model, wersję i skrót promptu i schematu** — na tej podstawie `check_llm_pin.py record-evaluation` zapisuje ewaluację
+w `model_pin.json` (tylko dla DOKŁADNIE przypiętej pary). Zmiana promptu, schematu, modelu lub wyznaczania bloków zmienia
+klucze odpowiedzi i unieważnia złote odpowiedzi (`build_llm_replay_fixtures.py --check`). Procedura zmiany modelu:
+`docs/operations/mpzp-llm.md` §8.
+
+### Ograniczenia zbioru ewaluacyjnego (nie traktować wyników jako gwarancji)
+
+- Anotacje sporządził asystent AI; **brak drugiego anotatora i przeglądu człowieka** (`independent_human_review: pending`).
+- Silnik `v3` (resolver zakresu, leksykon ilości) był rozwijany na tych samych 21 próbkach, więc jego liczby są **rozwojowe**;
+  podział „final” (14 próbek) nie jest niezależnym zbiorem końcowym z Task 20.2 (ten nie istnieje; profil `final-v2` zgłasza 89
+  problemów).
+- 21 próbek z 9 gmin: różnorodność formatów i gmin jest ograniczona; skany: 2 rzeczywiste i 2 symulowane.
+- Złote odpowiedzi modelu (`llm_replay/`) to „model idealny” złożony z anotacji — testują potok, nie jakość modelu.
+  Jakość modelu na tym zbiorze **nie została zmierzona na żywo** (jedyny pomiar to spike PV3-01 na 10 blokach z promptem
+  `spike-v0`: ADR-012).
+- Bramka z Task 20.17: `NOT_DECIDABLE` (`docs/evaluation/results/parser-v3/gate_report.md`).

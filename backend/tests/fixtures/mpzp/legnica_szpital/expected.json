@@ -55,6 +55,7 @@
     {
       "zone_symbol": "2UZ",
       "expected_manual_review_required": true,
+      "mode_overrides": {"v3": {"expected_manual_review_required": false, "reason": "W trybie legacy wiele kandydackich sekcji daje ZONE_SECTION_AMBIGUOUS i ręczną weryfikację; w v3 wiersz tabeli strefy 2UZ jest rozstrzygnięty jednoznacznie (bez ostrzeżenia zakresu)."}},
       "parameters": [
         {
           "name": "min_intensity",

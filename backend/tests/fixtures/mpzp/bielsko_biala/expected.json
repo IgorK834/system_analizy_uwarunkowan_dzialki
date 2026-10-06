@@ -10,6 +10,7 @@
     {
       "zone_symbol": "230_U",
       "expected_manual_review_required": true,
+      "mode_overrides": {"v3": {"expected_manual_review_required": false, "reason": "W trybie legacy wiele kandydackich sekcji daje ZONE_SECTION_AMBIGUOUS i ręczną weryfikację; w v3 blok strefy 230_U jest rozstrzygnięty jednoznacznie (bez ostrzeżenia zakresu), a wszystkie wartości mają pewność powyżej progu."}},
       "parameters": [
         {
           "name": "max_building_height_m",
