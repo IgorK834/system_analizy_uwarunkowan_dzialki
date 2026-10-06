@@ -147,6 +147,8 @@ def build_audit_input(
         quality=quality,
         computation_parcel_2180=parcel_geometry_2180,
         parcel_source_ids=parcel_ids,
+        # Źródło każdej strefy (po kolei jak ``result.mpzp_zones``): reguła redystrybucji cytatów z modelu.
+        zone_source_ids=tuple(resolve_source_id(zone.source, catalog)[0] for zone in response.mpzp_zones),
         extra_context={
             "result_contract_version": analysis.result_contract_version,
             "data_release_ids": list(analysis.data_release_ids or []),

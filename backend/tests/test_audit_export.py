@@ -763,6 +763,6 @@ def test_package_carries_value_conditions_and_documents_them() -> None:
     assert plain["value_kind"] == "unconditional" and plain["conditions"] == []
     readme = package.by_name("README.md").data.decode("utf-8")
     assert "wartości warunkowe i sprzeczności" in readme and "`value_kind`" in readme and "`conditions[]`" in readme
-    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.1.0" and AUDIT_EXPORTER_VERSION in readme
+    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.2.0" and AUDIT_EXPORTER_VERSION in readme
     manifest = json.loads(package.by_name("manifest.json").data)
     assert manifest["exporter_version"] == AUDIT_EXPORTER_VERSION
