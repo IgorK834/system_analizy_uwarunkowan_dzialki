@@ -1,0 +1,573 @@
+{
+  "analysis_id": 2257,
+  "status": "partial",
+  "analyzed_at": "2026-09-25T22:54:13.986502Z",
+  "parcel": {
+    "parcel_identifier": "BK204_205_E2E_1a681c",
+    "geometry_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                16.752079808061236,
+                54.759271167173296
+              ],
+              [
+                16.752074828342156,
+                54.75936099272128
+              ],
+              [
+                16.75052157815316,
+                54.75933218466345
+              ],
+              [
+                16.750526561306003,
+                54.75924235921074
+              ],
+              [
+                16.752079808061236,
+                54.759271167173296
+              ]
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_identifier": "BK204_205_E2E_1a681c",
+        "layer": "parcel"
+      }
+    },
+    "metrics": {
+      "area_sqm": 1000.0,
+      "area_ha": 0.1,
+      "perimeter_m": 220.0,
+      "is_valid": true,
+      "geometry_repaired": false
+    },
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    "buildable_area_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              16.75201568619882,
+              54.759305945454315
+            ],
+            [
+              16.750586697920372,
+              54.75927944209371
+            ],
+            [
+              16.750585701317274,
+              54.759297407185024
+            ],
+            [
+              16.752014690227536,
+              54.759323910563154
+            ],
+            [
+              16.75201568619882,
+              54.759305945454315
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "layer": "buildable_area",
+        "setback_m": 4.0,
+        "is_technical_approximation": true
+      }
+    }
+  },
+  "mpzp_zones": [
+    {
+      "zone_symbol": "1MN",
+      "primary_use": null,
+      "supplementary_use": null,
+      "max_building_height_m": 9.0,
+      "max_floors": null,
+      "min_biologically_active_pct": 40.0,
+      "max_floor_area_ratio": null,
+      "min_floor_area_ratio": null,
+      "max_building_coverage_pct": null,
+      "intersection_area_sqm": null,
+      "intersection_pct": null,
+      "is_dominant": false,
+      "zone_id": null,
+      "act_identifier": "MPZP/E2E/1",
+      "act_version": null,
+      "act_version_id": null,
+      "data_release_id": null,
+      "document_url": "https://bip.example.gov.pl/7ad74959.pdf",
+      "touches_boundary": false,
+      "assignment_method": "manual_user_input",
+      "intersection_geojson": null,
+      "parameters": [
+        {
+          "name": "max_building_height_m",
+          "normalized_value": 9.0,
+          "raw_value": "9 m",
+          "unit": "m",
+          "evidence_text": "a się: 1) maksymalna wysokość zabudowy: 9 m; 2) minimalny udział powierzchni biolog",
+          "page_number": 2,
+          "segment_id": "seg-0002",
+          "legal_unit_id": 3,
+          "document_sha256": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+          "document_version_id": 1,
+          "parser_version": "mpzp-parser/2.0",
+          "extraction_method": "pdf_text",
+          "confidence": 0.85,
+          "conflict_group_id": null,
+          "manual_review_required": true
+        },
+        {
+          "name": "min_biologically_active_percent",
+          "normalized_value": 40.0,
+          "raw_value": "40%",
+          "unit": "percent",
+          "evidence_text": "kość zabudowy: 9 m; 2) minimalny udział powierzchni biologicznie czynnej: 40%.",
+          "page_number": 2,
+          "segment_id": "seg-0002",
+          "legal_unit_id": 3,
+          "document_sha256": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+          "document_version_id": 1,
+          "parser_version": "mpzp-parser/2.0",
+          "extraction_method": "pdf_text",
+          "confidence": 0.85,
+          "conflict_group_id": null,
+          "manual_review_required": true
+        }
+      ],
+      "manual_review_required": true,
+      "manual_selection": {
+        "entered_symbol": "1MN",
+        "plan_id": "MPZP/E2E/1",
+        "candidate_zone_symbols": [
+          "1MN",
+          "2MN"
+        ],
+        "symbol_in_candidates": true,
+        "document_url": "https://bip.example.gov.pl/7ad74959.pdf",
+        "document_sha256": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+        "document_version_id": 1,
+        "document_fetched_at": "2026-09-25T08:00:00Z",
+        "document_pinned": true,
+        "selected_at": "2026-09-25T22:54:13.981339Z"
+      },
+      "source": {
+        "source_id": null,
+        "source_version": null,
+        "artifact_sha256": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "manual_user_input",
+        "source_url": "https://bip.example.gov.pl/7ad74959.pdf",
+        "fetched_at": "2026-09-25T08:00:00Z",
+        "response_status": 200,
+        "confidence": 0.5,
+        "manual_review_required": true
+      }
+    }
+  ],
+  "pog": {
+    "schema_version": "2.3",
+    "legal_status": "binding",
+    "coverage_status": "available",
+    "data_availability": "current",
+    "status_confirmed_at": "2026-07-16T12:00:00Z",
+    "legal_status_evidence": {
+      "source_name": "POG_GMINA_WMS",
+      "official": true,
+      "reference": "https://pog.example.test/wms",
+      "source_id": null,
+      "raw_value": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+      "confirmed_at": "2026-07-16T12:00:00Z"
+    },
+    "coverage_evidence": null,
+    "act": null,
+    "zones": [
+      {
+        "id": "pog:SJ",
+        "symbol": null,
+        "type": "SJ",
+        "label": null,
+        "area_sqm": 1000.0,
+        "area_pct": 100.0,
+        "max_overground_floor_area_ratio": null,
+        "max_building_height_m": null,
+        "max_building_coverage_pct": null,
+        "min_biologically_active_pct": null,
+        "primary_profile": [],
+        "additional_profiles": [],
+        "source": {
+          "source_id": null,
+          "source_version": null,
+          "artifact_sha256": null,
+          "data_release_id": null,
+          "act_version": null,
+          "source_name": "POG_APP",
+          "source_url": "https://bip.example.test/pog.gml",
+          "fetched_at": "2026-09-25T08:00:00Z",
+          "response_status": null,
+          "confidence": 0.9,
+          "manual_review_required": false
+        },
+        "feature_version": null,
+        "gml_url": null,
+        "gml_url_verified": false
+      }
+    ],
+    "dominant_zone_id": "pog:SJ",
+    "ouz": [],
+    "downtown_areas": [],
+    "social_infrastructure_standard_areas": [],
+    "status": "binding",
+    "planning_zone": "SJ",
+    "zone_type": "SJ",
+    "in_ouz": false,
+    "area_ratio": 1.0,
+    "in_downtown_area": false,
+    "uchwala_nr": "X/42/2026",
+    "uchwala_date": "2026-02-10",
+    "manual_review_required": true,
+    "compatibility_assessment": {
+      "schema_version": "1.0",
+      "status": "unknown",
+      "reason_code": "PAIRS_EVALUATED",
+      "as_of": "2026-07-16",
+      "rule_id": "mpzp-pog-function-table",
+      "rule_version": "1.0",
+      "aggregation": "Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.",
+      "sources": [
+        {
+          "kind": "rule_set",
+          "label": "Tabela reguł funkcja MPZP × strefa POG",
+          "reference": "Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.",
+          "version": "1.0",
+          "as_of": "2026-07-16"
+        },
+        {
+          "kind": "pog",
+          "label": "POG",
+          "reference": "https://bip.example.test/pog.gml",
+          "version": null,
+          "as_of": "2026-07-16"
+        },
+        {
+          "kind": "mpzp",
+          "label": "MPZP — MPZP/E2E/1 (manual_user_input)",
+          "reference": "https://bip.example.gov.pl/7ad74959.pdf",
+          "version": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+          "as_of": "2026-09-25"
+        }
+      ],
+      "rationale": "Oceniono 1 par(y) stref MPZP × POG, w tym 0 zidentyfikowanych przestrzennie w EPSG:2180. Pary: bez reguły lub danych — 1. Wynik całości (unknown) wynika z reguły agregacji najsłabszego ogniwa.",
+      "manual_review_required": true,
+      "zone_pairs": [
+        {
+          "mpzp_zone_symbol": "1MN",
+          "mpzp_zone_id": null,
+          "mpzp_assignment_method": "manual_user_input",
+          "mpzp_function": null,
+          "pog_zone_id": "pog:SJ",
+          "pog_zone_symbol": null,
+          "pog_zone_type": "SJ",
+          "spatially_identified": false,
+          "overlap_area_sqm": null,
+          "overlap_pct": null,
+          "status": "unknown",
+          "rule_result": null,
+          "rule_id": null,
+          "rule_version": null,
+          "source": null,
+          "as_of": "2026-07-16",
+          "rationale": "1MN × SJ: funkcja strefy MPZP nie jest znormalizowana do katalogu reguł, więc żadna reguła nie ma zastosowania.",
+          "manual_review_required": true
+        }
+      ],
+      "informational_notice": "Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.",
+      "legacy_evidence": null
+    },
+    "raw_attributes": {
+      "ouz": {
+        "in_ouz": false,
+        "status": "unknown",
+        "area_ratio_pct": 0.0,
+        "legal_disclaimer": "Wynik ma charakter informacyjny, zależy od aktualnego stanu prawnego i nie stanowi decyzji administracyjnej ani porady prawnej dotyczącej możliwości uzyskania decyzji o warunkach zabudowy.",
+        "touches_boundary": false,
+        "intersection_area_sqm": 0.0
+      },
+      "discovery": {
+        "links": [
+          "https://bip.example.test/pog.gml"
+        ],
+        "layers": {
+          "ouz": {
+            "status": "found",
+            "feature_count": 1,
+            "raw_legal_status": null,
+            "matched_wms_layer": null
+          },
+          "planning_act": {
+            "status": "found",
+            "feature_count": 1,
+            "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+            "matched_wms_layer": null
+          },
+          "downtown_area": {
+            "status": "empty",
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "matched_wms_layer": null
+          },
+          "planning_zones": {
+            "status": "found",
+            "feature_count": 1,
+            "raw_legal_status": null,
+            "matched_wms_layer": null
+          }
+        },
+        "uchwala_nr": "X/42/2026",
+        "legal_status": "binding",
+        "uchwala_date": "2026-02-10",
+        "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+        "source_responded": true,
+        "is_discovery_only": true
+      },
+      "app_metadata": {
+        "uchwala_nr": "X/42/2026"
+      },
+      "zone_intersections": [
+        {
+          "area_sqm": 1000.0,
+          "zone_type": "SJ",
+          "area_ratio": 1.0,
+          "parameters": {},
+          "source_zone_type": "SJ",
+          "parameters_informational": false
+        }
+      ]
+    },
+    "ouz_intersection_area_sqm": 0.0,
+    "ouz_intersection_pct": 0.0,
+    "touches_ouz_boundary": false,
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "infrastructure": [],
+  "utilities_preview": {
+    "coverage_status": "covered",
+    "county_name": "powiat testowy",
+    "layer_available": true,
+    "note": "Podgląd nie służy do odległości.",
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "risks": [],
+  "buildable_area_sqm": 184.0,
+  "manual_zone_required": false,
+  "manual_zone_context": null,
+  "warnings": [
+    {
+      "code": "MPZP_WARNING",
+      "message": "Gmina nie udostępnia wektorowych danych MPZP.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "OUZ_DATA_UNAVAILABLE",
+      "message": "Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.",
+      "severity": "error",
+      "source_name": "ouz"
+    },
+    {
+      "code": "MPZP_MANUAL_ZONE_FALLBACK",
+      "message": "Symbol strefy podano ręcznie na podstawie podglądu rastrowego, bez wektorowej granicy. Udział strefy w powierzchni działki pozostaje nieustalony, każdy parametr zależny od tego symbolu wymaga weryfikacji, a wynik pozostaje częściowy.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "MPZP_POG_PAIRS_NOT_SPATIAL",
+      "message": "Część par stref MPZP i POG nie jest zidentyfikowana przestrzennie (brak geometrii strefy); takich par nie rozstrzygnięto.",
+      "severity": "warning",
+      "source_name": "planning_compatibility"
+    },
+    {
+      "code": "MPZP_POG_COMPATIBILITY_UNKNOWN",
+      "message": "Nie można automatycznie ustalić relacji części par stref MPZP i POG; wynik wymaga ręcznej weryfikacji.",
+      "severity": "warning",
+      "source_name": "planning_compatibility"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT_GUGIK",
+      "source_url": "https://nmt.example.test",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.8,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_GMINA_WMS",
+      "source_url": "https://pog.example.test/wms",
+      "fetched_at": "2026-07-16T12:00:00Z",
+      "response_status": 200,
+      "confidence": 0.65,
+      "manual_review_required": true
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIMPZP",
+      "source_url": "https://kimpzp.example.test",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": null,
+      "confidence": 0.3,
+      "manual_review_required": true
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "kiut",
+      "source_url": null,
+      "fetched_at": null,
+      "response_status": null,
+      "confidence": 0.0,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "isok",
+      "source_url": null,
+      "fetched_at": null,
+      "response_status": null,
+      "confidence": 0.0,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "gdos",
+      "source_url": null,
+      "fetched_at": null,
+      "response_status": null,
+      "confidence": 0.0,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": "5954c6873425393ddf9fd7e6887d9488f5e24669acedc01d89b434901c0a4708",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "manual_user_input",
+      "source_url": "https://bip.example.gov.pl/7ad74959.pdf",
+      "fetched_at": "2026-09-25T08:00:00Z",
+      "response_status": 200,
+      "confidence": 0.5,
+      "manual_review_required": true
+    }
+  ]
+}
