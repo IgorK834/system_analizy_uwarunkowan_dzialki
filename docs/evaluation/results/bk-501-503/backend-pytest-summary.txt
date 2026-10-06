@@ -1,0 +1,18 @@
+TOTAL                                                        16623   1288    92%
+Required test coverage of 80% reached. Total coverage: 92.25%
+1 failed, 1787 passed, 3 deselected, 2 warnings in 141.37s (0:02:21)
+app/core/report_config.py                                      101      5    95%   61, 198-199, 318-319
+app/models/analysis.py                                          34      0   100%
+app/models/analysis_pending_document.py                         23      0   100%
+app/modules/reporting/domain/__init__.py                         0      0   100%
+app/modules/reporting/domain/field_mapping.py                   39      0   100%
+app/modules/reporting/domain/map_snapshot.py                    90      1    99%   76
+app/modules/reporting/domain/sections.py                        16      0   100%
+app/routers/report.py                                           22      0   100%
+app/services/analysis_resume.py                                164      1    99%   307
+app/services/persistence.py                                    268      7    97%   427-429, 825, 848, 1074-1075
+app/services/report.py                                         547     12    98%   435, 498, 922, 1491, 1720, 1810, 1834, 1841-1842, 1854, 1871, 1928
+app/services/report_fields.py                                   86      1    99%   97
+app/services/report_map.py                                     290     24    92%   234, 274, 277-280, 308, 312-314, 316, 320, 329-330, 332, 334-335, 347, 350-352, 362, 376, 378
+app/services/report_map_basemap.py                              82      2    98%   45, 110
+app/services/report_map_snapshot.py                            236      6    97%   473, 488, 498-503, 510-511

@@ -1,0 +1,1152 @@
+{
+  "no_coverage": {
+    "parcel": {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "mpzp": {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    "pog": {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "pog_overlays": {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "flood": {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": "2026-09-29T21:22:00.502120Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "nature": {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:22:00.502223Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "terrain": {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "no_coverage",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:20.530742Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_COVERAGE_SENTINEL"
+      ]
+    },
+    "utilities": {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    "transport": {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    "mpzp_pog_relation": {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.536784Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  },
+  "timeout": {
+    "parcel": {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "mpzp": {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    "pog": {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "pog_overlays": {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "flood": {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": "2026-09-29T21:22:00.568001Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "nature": {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:22:00.568122Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "terrain": {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "unavailable",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:20.584360Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "SERVICE_TIMEOUT"
+      ]
+    },
+    "utilities": {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    "transport": {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    "mpzp_pog_relation": {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.589287Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  },
+  "isok_unavailable": {
+    "parcel": {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "mpzp": {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    "pog": {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "pog_overlays": {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "flood": {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "unavailable",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_FETCH_TIME",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": null,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "SERVICE_TIMEOUT"
+      ]
+    },
+    "nature": {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:22:00.617535Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "terrain": {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "available",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:20.632428Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "utilities": {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    "transport": {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    "mpzp_pog_relation": {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.637055Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  },
+  "isok_error": {
+    "parcel": {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "mpzp": {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    "pog": {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "pog_overlays": {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "flood": {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "error",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_FETCH_TIME",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": null,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "UNEXPECTED_ERROR"
+      ]
+    },
+    "nature": {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:22:00.665437Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "terrain": {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "available",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:20.689391Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "utilities": {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    "transport": {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    "mpzp_pog_relation": {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.694280Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  },
+  "stale_measurement": {
+    "parcel": {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "mpzp": {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    "pog": {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "pog_overlays": {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    "flood": {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": "2026-09-09T21:22:00.488269Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "stale",
+        "reason_code": "FRESHNESS_OLDER_THAN_POLICY",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 1728020,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "FRESHNESS_OLDER_THAN_POLICY"
+      ]
+    },
+    "nature": {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:22:00.722121Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "terrain": {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "available",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:20.737685Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    "utilities": {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:50.487220Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    "transport": {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    "mpzp_pog_relation": {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:20.741598Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  }
+}

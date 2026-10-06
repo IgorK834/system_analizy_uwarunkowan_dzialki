@@ -1,0 +1,22 @@
+ Container bk601-db-1 Running 
+ Container bk601-db-1 Waiting 
+ Container bk601-db-1 Healthy 
+ Container bk601-backend-run-411660d844bf Creating 
+ Container bk601-backend-run-411660d844bf Created 
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+........................................................................ [ 54%]
+............................................................             [100%]
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.15-final-0 _______________
+
+Name                                       Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------
+scripts/compare_centroid_intersection.py     436     19    96%   54, 112-114, 260, 625, 627, 638, 640, 687, 829, 929-940, 1084-1085, 1104
+scripts/evaluate_mpzp_parser.py              604     25    96%   46, 241-243, 247, 258, 262, 290, 292, 297, 313, 329, 331, 336, 338, 340, 346-347, 352, 382, 582, 1055, 1191-1192, 1207
+scripts/evaluate_reference_corpus.py        1040     49    95%   32, 93, 99, 145, 182, 210, 273, 281, 321, 325, 352-360, 393-394, 410, 458, 520, 524, 533, 554, 564, 591, 674, 879, 890, 1188, 1326-1332, 1357, 1422, 1608-1609, 1951, 2058, 2123-2124, 2160-2161, 2350, 2353, 2363, 2515-2518, 2914
+scripts/freeze_pog_zone_layers.py            117     15    87%   33, 151, 215-219, 223-229, 233
+------------------------------------------------------------------------
+TOTAL                                       2197    108    95%
+132 passed in 8.80s
+exit=0

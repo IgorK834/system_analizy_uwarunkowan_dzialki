@@ -1,0 +1,12 @@
+ Test Files  37 passed (37)
+      Tests  354 passed (354)
+ [32m✓[39m components/ReportDownloadButton.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 331[2mms[22m[39m
+All files          |   97.15 |    90.69 |   98.82 |   98.49 |                   
+next build: exit=0
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content
+

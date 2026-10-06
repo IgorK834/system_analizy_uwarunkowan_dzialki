@@ -1,0 +1,42 @@
+# BK-504/BK-505 — frontend (Node 22, obraz --target test): npm run typecheck && npm run test:coverage && npm run build
+# 2026-09-29
+
+v22.23.3
+10.9.9
+ Test Files  39 passed (39)
+      Tests  386 passed (386)
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+ ✓ components/ReportDownloadButton.test.tsx (11 tests) 392ms
+ ✓ components/ResultPanel.test.tsx (20 tests) 1186ms
+ ✓ components/SectionQualityMatrix.test.tsx (8 tests) 517ms
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   97.21 |    91.02 |   98.89 |   98.58 |                   
+  ...oadButton.tsx |   90.56 |    82.92 |     100 |     100 | 69-82,85-104      
+  ResultPanel.tsx  |   90.85 |     85.2 |   97.67 |    92.9 | ...43-744,783-784 
+  ...ityMatrix.tsx |     100 |      100 |     100 |     100 |                   
+  api.ts           |   99.13 |    93.18 |     100 |   99.09 | 44                
+  quality.ts       |     100 |    94.28 |     100 |     100 | 81-89             
+-------------------|---------|----------|---------|---------|-------------------
+
+> next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+▲ Next.js 16.2.10 (Turbopack)
+  Creating an optimized production build ...
+✓ Compiled successfully in 1744ms
+  Running TypeScript ...
+  Finished TypeScript in 2.6s ...
+  Collecting page data using 4 workers ...
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 162ms
+  Finalizing page optimization ...
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+○  (Static)  prerendered as static content
+exit=0

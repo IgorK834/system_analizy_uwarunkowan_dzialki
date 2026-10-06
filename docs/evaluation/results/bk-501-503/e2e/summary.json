@@ -1,0 +1,24 @@
+{
+ "analysis_a": 166,
+ "release_a": 171,
+ "release_b": 172,
+ "semantic_a": "7888a761151b75c423b5beb131cafa6feaa677a3b88b19196105643531ee9774",
+ "semantic_b": "9bf729fef4546815de213aaaab9e6f0e2fc12d2a0e3649fba137c5aa7a884ef2",
+ "map_png_sha256_a": [
+  "880473efd9188b43857ae15c3410b6b81b6be050269302c202a2015b0910a699",
+  null,
+  "1a4bb715c4ec7dbb6dfe443f27a055e19f7c1637086ff3496ccb94c4d95bc142",
+  null
+ ],
+ "zone_a": {
+  "id": "PL.ZIPPZP.10011/226401-POG/1POG-100SU",
+  "area_sqm": 573.4215307735996,
+  "height_m": 4.0
+ },
+ "zone_b": {
+  "id": "PL.ZIPPZP.10011/226401-POG/1POG-100SU",
+  "area_sqm": 400.0983524156112,
+  "height_m": 33.0
+ },
+ "network_attempts": []
+}

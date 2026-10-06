@@ -1,0 +1,41 @@
+# BK-504/BK-505 — podsumowanie testów backendu (pytest -m 'not docker_cli' --cov=app --cov-report=term-missing --cov-fail-under=80)
+# Izolowany projekt Compose (PostGIS 16-3.4), repo bez .env pod /repo, kod z drzewa roboczego; 2026-09-29
+
+Name                                                         Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------------------------
+app/core/data_sources.py                                       261      9    97%   134, 140, 146, 155, 368, 373, 409, 447, 553
+app/core/settings.py                                            80      0   100%
+app/main.py                                                     38      0   100%
+app/models/analysis.py                                          35      0   100%
+app/modules/reporting/__init__.py                                0      0   100%
+app/modules/reporting/api/__init__.py                            0      0   100%
+app/modules/reporting/application/__init__.py                    0      0   100%
+app/modules/reporting/application/audit_export.py              192      3    98%   228-229, 247
+app/modules/reporting/domain/__init__.py                         0      0   100%
+app/modules/reporting/domain/audit_package.py                   96      0   100%
+app/modules/reporting/domain/field_mapping.py                   39      0   100%
+app/modules/reporting/domain/map_snapshot.py                    90      1    99%   76
+app/modules/reporting/domain/sections.py                        24      0   100%
+app/modules/reporting/infrastructure/__init__.py                 0      0   100%
+app/modules/reporting/infrastructure/archive.py                 54      3    94%   78-80
+app/routers/report.py                                           40      0   100%
+app/schemas/analyze.py                                         604      7    99%   601, 899, 1012, 1017, 1136, 1526, 1529
+app/schemas/source.py                                          127      0   100%
+app/services/analysis_orchestrator.py                          493     57    88%   530, 592-597, 674-684, 723, 730-731, 756, 765, 780-791, 794, 797, 840, 888, 900, 985-1018, 1174-1178, 1204, 1228, 1256-1275, 1278, 1293, 1352, 1357-1361, 1367, 1403, 1434, 1503, 1552, 1739-1743, 1768, 1777, 1808, 1812, 1814, 1817, 1827
+app/services/analysis_resume.py                                164      1    99%   307
+app/services/audit_package.py                                  172      0   100%
+app/services/cache.py                                           37      0   100%
+app/services/initiation.py                                      18      1    94%   68
+app/services/kiut_coverage.py                                  188     27    86%   76-77, 95-96, 129-136, 190, 242, 248, 250, 257, 269-272, 277, 295, 309, 319, 330-333, 339, 400-401
+app/services/mpzp.py                                           165      3    98%   291, 314, 341
+app/services/persistence.py                                    272      7    97%   437-439, 852, 875, 1101-1102
+app/services/pog.py                                            279     15    95%   237, 250, 254, 277-278, 496, 499, 511, 514, 551-552, 567-571, 713-714
+app/services/pog_fetch.py                                      336     54    84%   132, 148, 176-177, 290, 293, 298, 303, 308, 326, 328, 332, 351, 354, 357-358, 360, 363, 373-375, 383, 398, 402, 416, 434-444, 456, 459-460, 462-463, 476, 482-491, 535, 540-542, 550, 560, 563-569, 575-576, 583
+app/services/report.py                                         553     10    98%   960, 1529, 1763, 1853, 1877, 1884-1885, 1897, 1914, 1971
+app/services/section_quality.py                                186      0   100%
+app/services/uldk.py                                            89      1    99%   195
+app/shared/data_quality.py                                      83      0   100%
+------------------------------------------------------------------------------------------
+TOTAL                                                        17558   1275    93%
+Required test coverage of 80% reached. Total coverage: 92.74%
+========== 1966 passed, 3 deselected, 2 warnings in 239.52s (0:03:59) ==========

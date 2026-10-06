@@ -1,0 +1,1020 @@
+{
+  "analysis_id": 399,
+  "status": "partial",
+  "analyzed_at": "2026-09-29T21:22:06.545097Z",
+  "parcel": {
+    "parcel_identifier": "BK301_302_E2E_Q1_c080ad",
+    "geometry_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.007762265272753,
+              52.22296473472159
+            ],
+            [
+              21.007802817286382,
+              52.22386351357184
+            ],
+            [
+              21.00633931014163,
+              52.223888409248445
+            ],
+            [
+              21.006298787638407,
+              52.22298962959674
+            ],
+            [
+              21.007762265272753,
+              52.22296473472159
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_identifier": "BK301_302_E2E_Q1_c080ad",
+        "layer": "parcel"
+      }
+    },
+    "metrics": {
+      "area_sqm": 10000.0,
+      "area_ha": 1.0,
+      "perimeter_m": 400.0,
+      "is_valid": true,
+      "geometry_repaired": false
+    },
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    "buildable_area_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.007705348200698,
+              52.22300168202321
+            ],
+            [
+              21.006358947691133,
+              52.22302458533783
+            ],
+            [
+              21.00639622948009,
+              52.22385146258791
+            ],
+            [
+              21.007742654967256,
+              52.22382855859493
+            ],
+            [
+              21.007705348200698,
+              52.22300168202321
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "layer": "buildable_area",
+        "setback_m": 4.0,
+        "is_technical_approximation": true
+      }
+    }
+  },
+  "mpzp_zones": [],
+  "pog": {
+    "schema_version": "2.4",
+    "legal_status": "binding",
+    "coverage_status": "available",
+    "data_availability": "current",
+    "status_confirmed_at": "2026-07-16T12:00:00Z",
+    "legal_status_evidence": {
+      "source_name": "POG_GMINA_WMS",
+      "official": true,
+      "reference": "https://pog.example.test/wms",
+      "source_id": null,
+      "raw_value": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+      "confirmed_at": "2026-07-16T12:00:00Z"
+    },
+    "coverage_evidence": null,
+    "act": null,
+    "zones": [
+      {
+        "id": "pog:SJ",
+        "symbol": null,
+        "type": "SJ",
+        "label": null,
+        "area_sqm": 10000.0,
+        "area_pct": 100.0,
+        "max_overground_floor_area_ratio": null,
+        "max_building_height_m": null,
+        "max_building_coverage_pct": null,
+        "min_biologically_active_pct": null,
+        "primary_profile": [],
+        "additional_profiles": [],
+        "source": {
+          "source_id": null,
+          "source_version": null,
+          "artifact_sha256": null,
+          "data_release_id": null,
+          "act_version": null,
+          "source_name": "POG_APP",
+          "source_url": "https://bip.example.test/pog.gml",
+          "fetched_at": "2026-09-29T21:21:36.515833Z",
+          "response_status": null,
+          "confidence": 0.9,
+          "manual_review_required": false
+        },
+        "feature_version": null,
+        "gml_url": null,
+        "gml_url_verified": false,
+        "geometry_geojson": {
+          "type": "Feature",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  21.007762265272753,
+                  52.22296473472159
+                ],
+                [
+                  21.006298787638407,
+                  52.22298962959674
+                ],
+                [
+                  21.00633931014163,
+                  52.223888409248445
+                ],
+                [
+                  21.007802817286382,
+                  52.22386351357184
+                ],
+                [
+                  21.007762265272753,
+                  52.22296473472159
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "layer": "pog_zone",
+            "id": "pog:SJ",
+            "zone_code": "SJ"
+          }
+        }
+      }
+    ],
+    "dominant_zone_id": "pog:SJ",
+    "ouz": [],
+    "downtown_areas": [],
+    "social_infrastructure_standard_areas": [],
+    "status": "binding",
+    "planning_zone": "SJ",
+    "zone_type": "SJ",
+    "in_ouz": false,
+    "area_ratio": 1.0,
+    "in_downtown_area": false,
+    "uchwala_nr": "X/42/2026",
+    "uchwala_date": "2026-02-10",
+    "manual_review_required": true,
+    "compatibility_assessment": {
+      "schema_version": "1.0",
+      "status": "unknown",
+      "reason_code": "MPZP_ZONES_MISSING",
+      "as_of": "2026-07-16",
+      "rule_id": "mpzp-pog-function-table",
+      "rule_version": "1.0",
+      "aggregation": "Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.",
+      "sources": [
+        {
+          "kind": "rule_set",
+          "label": "Tabela reguł funkcja MPZP × strefa POG",
+          "reference": "Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.",
+          "version": "1.0",
+          "as_of": "2026-07-16"
+        },
+        {
+          "kind": "pog",
+          "label": "POG",
+          "reference": "https://bip.example.test/pog.gml",
+          "version": null,
+          "as_of": "2026-07-16"
+        }
+      ],
+      "rationale": "POG obowiązuje, ale analiza nie ustaliła strefy MPZP; brak danych MPZP nie oznacza braku ograniczeń.",
+      "manual_review_required": true,
+      "zone_pairs": [],
+      "informational_notice": "Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.",
+      "legacy_evidence": null
+    },
+    "raw_attributes": {
+      "discovery": {
+        "legal_status": "binding",
+        "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+        "source_responded": true,
+        "uchwala_nr": "X/42/2026",
+        "uchwala_date": "2026-02-10",
+        "links": [
+          "https://bip.example.test/pog.gml"
+        ],
+        "is_discovery_only": true,
+        "layers": {
+          "planning_act": {
+            "status": "found",
+            "raw_legal_status": "http://inspire.ec.europa.eu/codelist/ProcessStepGeneralValue/legalForce",
+            "matched_wms_layer": null,
+            "feature_count": 1
+          },
+          "downtown_area": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          },
+          "ouz": {
+            "status": "found",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 1
+          },
+          "planning_zones": {
+            "status": "found",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 1
+          }
+        }
+      },
+      "app_metadata": {
+        "uchwala_nr": "X/42/2026"
+      },
+      "zone_intersections": [
+        {
+          "zone_type": "SJ",
+          "source_zone_type": "SJ",
+          "area_sqm": 10000.0,
+          "area_ratio": 1.0,
+          "parameters": {},
+          "parameters_informational": false
+        }
+      ],
+      "ouz": {
+        "status": "unknown",
+        "in_ouz": false,
+        "intersection_area_sqm": 0.0,
+        "area_ratio_pct": 0.0,
+        "touches_boundary": false,
+        "legal_disclaimer": "Wynik ma charakter informacyjny, zależy od aktualnego stanu prawnego i nie stanowi decyzji administracyjnej ani porady prawnej dotyczącej możliwości uzyskania decyzji o warunkach zabudowy."
+      }
+    },
+    "ouz_intersection_area_sqm": 0.0,
+    "ouz_intersection_pct": 0.0,
+    "touches_ouz_boundary": false,
+    "presentation_style": {
+      "style_version": "2026.09.29-1",
+      "style_sha256": "a2b1199aa033620b7fe51d9e72e2ff8d86bc016cba004bb13ff7483705245fc2",
+      "zones": {
+        "SW": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną",
+          "fill": "#b5523b",
+          "outline": "#6e2f20"
+        },
+        "SJ": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną",
+          "fill": "#f0b067",
+          "outline": "#9a6425"
+        },
+        "SZ": {
+          "label": "strefa wielofunkcyjna z zabudową zagrodową",
+          "fill": "#dcc873",
+          "outline": "#8a7a2e"
+        },
+        "SU": {
+          "label": "strefa usługowa",
+          "fill": "#d4445f",
+          "outline": "#851f33"
+        },
+        "SH": {
+          "label": "strefa handlu wielkopowierzchniowego",
+          "fill": "#9c3a7a",
+          "outline": "#5b1f47"
+        },
+        "SP": {
+          "label": "strefa gospodarcza",
+          "fill": "#7b6c9c",
+          "outline": "#453a5e"
+        },
+        "SR": {
+          "label": "strefa produkcji rolniczej",
+          "fill": "#c2cf8f",
+          "outline": "#6d7a3a"
+        },
+        "SI": {
+          "label": "strefa infrastrukturalna",
+          "fill": "#6f93a8",
+          "outline": "#3a5566"
+        },
+        "SN": {
+          "label": "strefa zieleni i rekreacji",
+          "fill": "#4e9a61",
+          "outline": "#2a5e37"
+        },
+        "SC": {
+          "label": "strefa cmentarzy",
+          "fill": "#56645a",
+          "outline": "#2c352f"
+        },
+        "SG": {
+          "label": "strefa górnictwa",
+          "fill": "#8d6a48",
+          "outline": "#4f3a26"
+        },
+        "SO": {
+          "label": "strefa otwarta",
+          "fill": "#d3e6c4",
+          "outline": "#7f9a6d"
+        },
+        "SK": {
+          "label": "strefa komunikacyjna",
+          "fill": "#bdbdbd",
+          "outline": "#6b6b6b"
+        }
+      },
+      "unknown_zone": {
+        "code": "unknown",
+        "label": "strefa nierozpoznana (kod spoza słownika)",
+        "fill": "#ffffff",
+        "outline": "#5c5c5c",
+        "pattern": "cross-hatch",
+        "description": "Białe tło z kratką — kod strefy nie występuje w słowniku RodzajStrefyPlanistycznejKod."
+      },
+      "null_style": {
+        "code": null,
+        "label": "brak wartości w danych",
+        "fill": "#f2f2f2",
+        "outline": "#7a7a7a",
+        "pattern": "diagonal-hatch",
+        "description": "Jasnoszare tło z ukośnym kreskowaniem — parametr nie został określony (to nie jest wartość 0)."
+      },
+      "overlays": {
+        "ouz": {
+          "short_label": "OUZ",
+          "label": "obszar uzupełnienia zabudowy",
+          "outline": "#1f4e79",
+          "line_width": 2.0,
+          "line_dasharray": [
+            4.0,
+            2.0
+          ],
+          "pattern": "diagonal-lines",
+          "description": "Granatowy obrys przerywany i ukośne kreskowanie (OUZ)."
+        },
+        "downtown": {
+          "short_label": "OZS",
+          "label": "obszar zabudowy śródmiejskiej",
+          "outline": "#6a1b4d",
+          "line_width": 2.0,
+          "line_dasharray": [
+            1.0,
+            1.5
+          ],
+          "pattern": "dots",
+          "description": "Śliwkowy obrys kropkowany i wypełnienie z kropek (OZS)."
+        },
+        "social_infrastructure_standard": {
+          "short_label": "OSDIS",
+          "label": "obszar standardów dostępności infrastruktury społecznej",
+          "outline": "#0b6e4f",
+          "line_width": 2.0,
+          "line_dasharray": [
+            6.0,
+            2.0,
+            1.0,
+            2.0
+          ],
+          "pattern": "cross-lines",
+          "description": "Zielony obrys kreska-kropka i kratka pionowo-pozioma (OSDIS)."
+        },
+        "act_boundary": {
+          "short_label": "Granica aktu",
+          "label": "granica obszaru objętego planem ogólnym",
+          "outline": "#202020",
+          "line_width": 2.5,
+          "line_dasharray": null,
+          "pattern": null,
+          "description": "Ciągła, ciemna linia granicy aktu."
+        }
+      }
+    },
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "infrastructure": [],
+  "utilities_preview": {
+    "coverage_status": "covered",
+    "county_name": "Warszawa",
+    "layer_available": true,
+    "note": "Podgląd nie służy do odległości.",
+    "source": {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "risks": [],
+  "risk_sections": [
+    {
+      "schema_version": "1.0",
+      "section": "flood",
+      "status": "available",
+      "reason_code": null,
+      "relation": "no_match",
+      "feature_count": 0,
+      "intersecting_feature_count": 0,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 0.0,
+      "union_intersection_pct": 0.0,
+      "feature_ids": [],
+      "source": {
+        "source_id": "isok",
+        "source_version": null,
+        "artifact_sha256": null,
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "ISOK",
+        "source_url": "https://isok.example.test/wfs",
+        "fetched_at": "2026-09-29T21:21:46.526666Z",
+        "response_status": 200,
+        "confidence": 0.95,
+        "manual_review_required": false
+      },
+      "warnings": []
+    },
+    {
+      "schema_version": "1.0",
+      "section": "nature",
+      "status": "available",
+      "reason_code": null,
+      "relation": "no_match",
+      "feature_count": 0,
+      "intersecting_feature_count": 0,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 0.0,
+      "union_intersection_pct": 0.0,
+      "feature_ids": [],
+      "source": {
+        "source_id": "gdos",
+        "source_version": null,
+        "artifact_sha256": null,
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "GDOS",
+        "source_url": "https://gdos.example.test/wfs",
+        "fetched_at": "2026-09-29T21:21:46.526766Z",
+        "response_status": 200,
+        "confidence": 0.95,
+        "manual_review_required": false
+      },
+      "warnings": []
+    }
+  ],
+  "terrain": {
+    "schema_version": "1.0",
+    "status": "available",
+    "reason_code": null,
+    "min_height_m": 112.3,
+    "max_height_m": 115.7,
+    "height_difference_m": 3.4,
+    "grid_size_m": 4.0,
+    "sampled_points": 676,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "912ed836be23cb99ed3899129b8b9fd5f6e8b2f99cbb5e4aa04ea97f509043ec",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:22:06.541601Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    "warnings": [],
+    "relief": null
+  },
+  "section_quality": {
+    "schema_version": "1.0",
+    "policy_version": "quality-policy/1+2e0adf938c7b",
+    "reference_at": "2026-09-29T21:22:06.545097Z",
+    "origin": "stored",
+    "sections": [
+      {
+        "section": "parcel",
+        "report_section": "parcel",
+        "status": "available",
+        "source_id": "uldk",
+        "source_name": "ULDK",
+        "fetched_at": "2026-09-29T21:21:36.515833Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 30,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "mpzp",
+        "report_section": "mpzp",
+        "status": "unknown",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "MPZP_NOT_DETERMINED"
+        ]
+      },
+      {
+        "section": "pog",
+        "report_section": "pog",
+        "status": "available",
+        "source_id": null,
+        "source_name": "POG_APP",
+        "fetched_at": "2026-09-29T21:21:36.515833Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 30,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_REVIEW_REQUIRED",
+          "SOURCE_ID_UNRESOLVED"
+        ]
+      },
+      {
+        "section": "pog_overlays",
+        "report_section": "pog",
+        "status": "available",
+        "source_id": null,
+        "source_name": "POG_APP",
+        "fetched_at": "2026-09-29T21:21:36.515833Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 30,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_REVIEW_REQUIRED",
+          "SOURCE_ID_UNRESOLVED"
+        ]
+      },
+      {
+        "section": "flood",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "isok",
+        "source_name": "ISOK",
+        "fetched_at": "2026-09-29T21:21:46.526666Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 20,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "nature",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "gdos",
+        "source_name": "GDOS",
+        "fetched_at": "2026-09-29T21:21:46.526766Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 20,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "terrain",
+        "report_section": "terrain",
+        "status": "available",
+        "source_id": "nmt",
+        "source_name": "NMT",
+        "fetched_at": "2026-09-29T21:22:06.541601Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 0,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "utilities",
+        "report_section": "infrastructure",
+        "status": "partial",
+        "source_id": "kiut_wms",
+        "source_name": "KIUT (GUGiK)",
+        "fetched_at": "2026-09-29T21:21:36.515833Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": 30,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "KIUT_PREVIEW_ONLY"
+        ]
+      },
+      {
+        "section": "transport",
+        "report_section": "infrastructure",
+        "status": "out_of_scope",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "NO_SOURCE_CONTRACT"
+        ]
+      },
+      {
+        "section": "mpzp_pog_relation",
+        "report_section": "pog",
+        "status": "unknown",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-09-29T21:22:06.545097Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "MPZP_ZONES_MISSING",
+          "COMPATIBILITY_REVIEW_REQUIRED",
+          "DERIVED_SECTION"
+        ]
+      }
+    ],
+    "matrix_sha256": "48e7f961ce513fe0c7150a1172d56807b5982de363022d370857ca11eb5c8731",
+    "legend": {
+      "statuses": [
+        {
+          "id": "available",
+          "label": "sprawdzono",
+          "description": "źródło zwróciło wynik zgodny z kontraktem; pusty wynik oznacza sprawdzony brak obiektów, a nie brak ograniczeń poza zakresem źródła"
+        },
+        {
+          "id": "partial",
+          "label": "częściowo",
+          "description": "wynik jest niepełny albo obniżonej pewności (np. strefa bez wektora, podgląd zamiast geometrii, sprzeczne parametry)"
+        },
+        {
+          "id": "no_coverage",
+          "label": "brak pokrycia źródła",
+          "description": "źródło potwierdziło brak danych dla tego obszaru (np. poza zasięgiem NMT albo powiat nie publikuje GESUT) — to nie jest błąd źródła i nie dowodzi braku ograniczeń"
+        },
+        {
+          "id": "unavailable",
+          "label": "źródło niedostępne",
+          "description": "próba pobrania nie powiodła się (limit czasu, błąd HTTP, odpowiedź niezgodna z kontraktem) — wynik nie jest znany"
+        },
+        {
+          "id": "error",
+          "label": "błąd sprawdzenia",
+          "description": "nieoczekiwany błąd przetwarzania sekcji — wynik nie jest znany"
+        },
+        {
+          "id": "unknown",
+          "label": "nieustalone",
+          "description": "brak zapisanego wyniku albo niemożliwe rozstrzygnięcie; brak danych nie oznacza braku ograniczenia ani braku planu"
+        },
+        {
+          "id": "out_of_scope",
+          "label": "poza zakresem",
+          "description": "sekcja nie jest analizowana, bo brakuje potwierdzonego kontraktu źródła"
+        },
+        {
+          "id": "awaiting_input",
+          "label": "oczekuje na dane użytkownika",
+          "description": "analiza wstrzymana do czasu podania danych przez użytkownika"
+        }
+      ],
+      "freshness": [
+        {
+          "id": "fresh",
+          "label": "aktualne wg reguły",
+          "description": "wiek danych w punkcie odniesienia mieści się w regule wieku przypisanej do źródła"
+        },
+        {
+          "id": "stale",
+          "label": "starsze niż reguła",
+          "description": "wiek danych w punkcie odniesienia przekracza regułę wieku źródła — dane mogą nie odzwierciedlać bieżącego stanu źródła"
+        },
+        {
+          "id": "unknown",
+          "label": "świeżość nieustalona",
+          "description": "brak reguły wieku dla źródła, brak czasu pobrania albo czas nieprawidłowy — system nie zgaduje terminu ważności"
+        }
+      ],
+      "reasons": [
+        {
+          "code": "FRESHNESS_NO_POLICY",
+          "label": "brak reguły wieku dla źródła — terminu ważności nie zgadujemy"
+        },
+        {
+          "code": "MPZP_NOT_DETERMINED",
+          "label": "nie znaleziono albo nie sprawdzono planu (nie dowodzi braku planu)"
+        },
+        {
+          "code": "FRESHNESS_NO_SOURCE",
+          "label": "brak źródła danych dla sekcji"
+        },
+        {
+          "code": "POG_REVIEW_REQUIRED",
+          "label": "wynik POG wymaga ręcznej weryfikacji"
+        },
+        {
+          "code": "SOURCE_ID_UNRESOLVED",
+          "label": "źródło bez identyfikatora z katalogu"
+        },
+        {
+          "code": "KIUT_PREVIEW_ONLY",
+          "label": "podgląd nie jest geometrią sieci — brak odległości i liczby sieci"
+        },
+        {
+          "code": "NO_SOURCE_CONTRACT",
+          "label": "brak potwierdzonego kontraktu źródła danych (BK-305)"
+        },
+        {
+          "code": "MPZP_ZONES_MISSING",
+          "label": "POG obowiązuje, ale nie ustalono strefy MPZP (brak danych ≠ brak ograniczeń)"
+        },
+        {
+          "code": "COMPATIBILITY_REVIEW_REQUIRED",
+          "label": "relacja MPZP–POG wymaga weryfikacji"
+        },
+        {
+          "code": "DERIVED_SECTION",
+          "label": "sekcja wyliczona z innych sekcji — bez własnego źródła"
+        }
+      ]
+    }
+  },
+  "buildable_area_sqm": 8464.0,
+  "manual_zone_required": false,
+  "manual_zone_context": null,
+  "warnings": [
+    {
+      "code": "OUZ_DATA_UNAVAILABLE",
+      "message": "Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.",
+      "severity": "error",
+      "source_name": "ouz"
+    },
+    {
+      "code": "MPZP_NOT_FOUND",
+      "message": "Nie znaleziono danych MPZP pozwalających przypisać strefę do działki.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "MPZP_POG_INPUT_INCOMPLETE",
+      "message": "Ocena relacji MPZP–POG wymaga ustalonych stref obu aktów na działce.",
+      "severity": "warning",
+      "source_name": "pog"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT",
+      "source_url": "https://kiut.example.test/wfs",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "isok",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ISOK",
+      "source_url": "https://isok.example.test/wfs",
+      "fetched_at": "2026-09-29T21:21:46.526666Z",
+      "response_status": 200,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "gdos",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "GDOS",
+      "source_url": "https://gdos.example.test/wfs",
+      "fetched_at": "2026-09-29T21:21:46.526766Z",
+      "response_status": 200,
+      "confidence": 0.95,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "912ed836be23cb99ed3899129b8b9fd5f6e8b2f99cbb5e4aa04ea97f509043ec",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "fetched_at": "2026-09-29T21:22:06.541601Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_GMINA_WMS",
+      "source_url": "https://pog.example.test/wms",
+      "fetched_at": "2026-07-16T12:00:00Z",
+      "response_status": 200,
+      "confidence": 0.65,
+      "manual_review_required": true
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "POG_APP",
+      "source_url": "https://bip.example.test/pog.gml",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": null,
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIMPZP",
+      "source_url": null,
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "response_status": null,
+      "confidence": 0.3,
+      "manual_review_required": true
+    }
+  ],
+  "access_token": "zGl6kG9zXPHs3YqFJMwalTPjfI5-cfOutZwjKez0NM8"
+}

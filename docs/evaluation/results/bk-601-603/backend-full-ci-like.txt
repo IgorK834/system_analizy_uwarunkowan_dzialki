@@ -1,0 +1,278 @@
+ Container bk601-db-1 Running 
+ Container bk601-db-1 Waiting 
+ Container bk601-db-1 Healthy 
+ Container bk601-backend-run-757b161d57aa Creating 
+ Container bk601-backend-run-757b161d57aa Created 
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 59%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+..................................                                       [100%]
+=============================== warnings summary ===============================
+../usr/local/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_manual_zone_compatibility_e2e.py::test_bk204_waiting_preview_resume_partial_and_pdf
+  /usr/local/lib/python3.13/site-packages/weasyprint/text/ffi.py:528: DeprecationWarning: HarfBuzz-Subset will be required by future versions of WeasyPrint. Please install this library with your package manager.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.15-final-0 _______________
+
+Name                                                         Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------------------------
+app/__init__.py                                                  0      0   100%
+app/core/__init__.py                                             0      0   100%
+app/core/access_control.py                                      49      0   100%
+app/core/architecture.py                                       127      2    98%   160, 167
+app/core/data_sources.py                                       261      9    97%   134, 140, 146, 155, 368, 373, 409, 447, 553
+app/core/logging.py                                             15      0   100%
+app/core/network_rules.py                                       67     12    82%   59, 61, 65, 67, 71, 75, 80, 85, 108, 111-112, 114
+app/core/planning_compatibility.py                              76      2    97%   280-281
+app/core/pog_presentation.py                                   185     15    92%   103, 106, 108, 113, 183, 188, 190, 194-197, 203, 209, 252-253
+app/core/rate_limit.py                                          70      3    96%   33, 46, 61
+app/core/report_config.py                                      101      5    95%   61, 198-199, 318-319
+app/core/ru_contracts.py                                       280     41    85%   134-135, 140, 154, 173, 179, 210, 230, 237, 248, 258-259, 261, 269, 273, 277, 279, 281, 366-367, 414, 428-429, 444-469, 493
+app/core/settings.py                                            80      0   100%
+app/db/__init__.py                                               0      0   100%
+app/db/base.py                                                   3      0   100%
+app/db/session.py                                               11      0   100%
+app/main.py                                                     38      0   100%
+app/models/__init__.py                                          12      0   100%
+app/models/analysis.py                                          35      0   100%
+app/models/analysis_pending_document.py                         23      0   100%
+app/models/infrastructure.py                                    25      0   100%
+app/models/mpzp_parameter.py                                    25      0   100%
+app/models/mpzp_zone.py                                         31      0   100%
+app/models/parcel.py                                            17      0   100%
+app/models/pog_data.py                                          40      0   100%
+app/models/risk.py                                              30      0   100%
+app/models/source_record.py                                     25      0   100%
+app/models/versioned.py                                        351      0   100%
+app/modules/__init__.py                                          0      0   100%
+app/modules/analysis/__init__.py                                 0      0   100%
+app/modules/analysis/api/__init__.py                             0      0   100%
+app/modules/analysis/application/__init__.py                     0      0   100%
+app/modules/analysis/application/ports.py                        5      0   100%
+app/modules/analysis/application/roads.py                       68     68     0%   17-232
+app/modules/analysis/application/terrain.py                    105      0   100%
+app/modules/analysis/composition.py                             49      1    98%   91
+app/modules/analysis/domain/__init__.py                          0      0   100%
+app/modules/analysis/domain/roads.py                            65     65     0%   9-131
+app/modules/analysis/domain/terrain.py                         262      0   100%
+app/modules/analysis/infrastructure/__init__.py                  0      0   100%
+app/modules/analysis/infrastructure/terrain_raster.py          212     10    95%   277, 364, 377, 389, 396, 404-405, 447, 474, 481
+app/modules/documents/__init__.py                                0      0   100%
+app/modules/documents/api/__init__.py                            0      0   100%
+app/modules/documents/api/router.py                             32      1    97%   33
+app/modules/documents/api/schemas.py                            30      0   100%
+app/modules/documents/application/__init__.py                    0      0   100%
+app/modules/documents/application/parser.py                     56      0   100%
+app/modules/documents/application/ports.py                      10      0   100%
+app/modules/documents/application/service.py                    19      0   100%
+app/modules/documents/composition.py                            44      0   100%
+app/modules/documents/domain/__init__.py                         0      0   100%
+app/modules/documents/domain/legal_structure.py                 44      0   100%
+app/modules/documents/domain/models.py                          79      0   100%
+app/modules/documents/domain/parser_models.py                   28      0   100%
+app/modules/documents/infrastructure/__init__.py                 0      0   100%
+app/modules/documents/infrastructure/ocr_tesseract.py           58      0   100%
+app/modules/documents/infrastructure/parser_adapter.py          28      0   100%
+app/modules/documents/infrastructure/repository.py              93      1    99%   34
+app/modules/documents/infrastructure/worker.py                  50      1    98%   88
+app/modules/identity/__init__.py                                 0      0   100%
+app/modules/identity/api/__init__.py                             0      0   100%
+app/modules/identity/application/__init__.py                     0      0   100%
+app/modules/identity/domain/__init__.py                          0      0   100%
+app/modules/identity/infrastructure/__init__.py                  0      0   100%
+app/modules/imports/__init__.py                                  0      0   100%
+app/modules/imports/__main__.py                                 24     24     0%   3-99
+app/modules/imports/api/__init__.py                              0      0   100%
+app/modules/imports/api/cli.py                                  67      1    99%   145
+app/modules/imports/application/__init__.py                      0      0   100%
+app/modules/imports/application/common.py                       39      0   100%
+app/modules/imports/application/mpzp_import.py                 129      3    98%   69, 73, 207
+app/modules/imports/application/parcels_import.py               83      6    93%   101-103, 123, 134, 136
+app/modules/imports/application/pog_import.py                  153     20    87%   97, 100-103, 120, 183, 195, 215-218, 223, 229, 234, 257-259, 261, 279
+app/modules/imports/application/raster_import.py                82     38    54%   137-147, 163-242, 264, 281, 298-310, 319
+app/modules/imports/composition.py                             159     11    93%   117, 147-159, 229-234, 350, 352, 396, 479, 502
+app/modules/imports/domain/__init__.py                           0      0   100%
+app/modules/imports/domain/mpzp.py                              79      4    95%   55, 59, 61, 121
+app/modules/imports/domain/parcels.py                           76      1    99%   72
+app/modules/imports/domain/pog.py                              289     16    94%   89, 143, 154, 164, 166, 168, 182, 186, 191, 234, 238, 306, 308, 376, 387, 428
+app/modules/imports/domain/pog_aggregates.py                   105      0   100%
+app/modules/imports/domain/raster.py                            90     51    43%   61, 68, 82, 88-110, 116-125, 135-164, 182-193, 204-205
+app/modules/imports/infrastructure/__init__.py                   0      0   100%
+app/modules/imports/infrastructure/artifacts.py                 27      1    96%   47
+app/modules/imports/infrastructure/mpzp/__init__.py              0      0   100%
+app/modules/imports/infrastructure/mpzp/reader.py              109     18    83%   78-102, 142, 226, 229-234
+app/modules/imports/infrastructure/ogc_client.py               432     49    89%   114, 127, 129, 190-191, 253, 314, 333-334, 342, 350-359, 405, 429-432, 476, 488-489, 497, 506-514, 533, 544, 585-586, 594, 648, 654, 783, 851, 886, 894, 935, 964, 990, 1022, 1026, 1041-1042, 1049, 1058-1059, 1096, 1108, 1234, 1238-1248
+app/modules/imports/infrastructure/parcels/__init__.py           0      0   100%
+app/modules/imports/infrastructure/parcels/reader.py            56     13    77%   82-84, 87-100, 121, 124-125
+app/modules/imports/infrastructure/pog/__init__.py               0      0   100%
+app/modules/imports/infrastructure/pog/csw_metadata.py         104      4    96%   222, 245, 248-249
+app/modules/imports/infrastructure/pog/reader.py               348     39    89%   114-122, 238-244, 252, 258, 296, 319-336, 375-377, 399-400, 417, 432, 447, 453, 510, 512, 567, 588, 611, 623-624, 647-648, 717-718, 724, 727-728
+app/modules/imports/infrastructure/pog_aggregates.py            83      1    99%   212
+app/modules/imports/infrastructure/raster/__init__.py            0      0   100%
+app/modules/imports/infrastructure/raster/gdal.py              200      1    99%   305
+app/modules/imports/infrastructure/raster/repository.py         58     35    40%   46-73, 90-116, 121-122, 132-147, 152-168, 177-184
+app/modules/imports/infrastructure/repository.py               299     22    93%   89-92, 134-159, 1080, 1148-1151, 1197, 1200-1203, 1206-1207
+app/modules/imports/infrastructure/vector.py                    60     12    80%   48-49, 54, 66, 82, 92, 97-98, 101-104
+app/modules/imports/infrastructure/wfs.py                       48      3    94%   57, 80-81
+app/modules/location/__init__.py                                 0      0   100%
+app/modules/location/api/__init__.py                             0      0   100%
+app/modules/location/api/router.py                              72      7    90%   62, 74, 171-179
+app/modules/location/api/schemas.py                             43      0   100%
+app/modules/location/application/__init__.py                     0      0   100%
+app/modules/location/application/ports.py                        5      0   100%
+app/modules/location/application/service.py                     12      0   100%
+app/modules/location/composition.py                             22      5    77%   28-33, 44, 52-54
+app/modules/location/domain/__init__.py                          0      0   100%
+app/modules/location/domain/models.py                           79      3    96%   83, 85, 88
+app/modules/location/domain/normalization.py                    40      2    95%   83, 89
+app/modules/location/domain/ranking.py                          46      0   100%
+app/modules/location/infrastructure/__init__.py                  0      0   100%
+app/modules/location/infrastructure/cache.py                    34      1    97%   43
+app/modules/location/infrastructure/dictionary_import.py       432    151    65%   119-120, 122, 128, 137-138, 159, 164, 168, 196-197, 205, 245, 248-249, 251, 254, 264-265, 282, 333-334, 349, 365, 373, 491, 510-524, 527-546, 549-569, 592-593, 602-612, 625-717, 727-743, 760-765, 791-793, 798-799, 803, 876-903, 906-914, 920, 947, 955-968, 972-987, 991-1003, 1007
+app/modules/location/infrastructure/local_index.py             109     11    90%   56, 59, 83-84, 88, 96-97, 231-233, 286
+app/modules/location/infrastructure/models.py                   33      0   100%
+app/modules/location/infrastructure/uug_adapter.py             119     19    84%   99-104, 142-144, 152, 169, 173-174, 188-189, 214-216, 226-228
+app/modules/parcels/__init__.py                                  0      0   100%
+app/modules/parcels/api/__init__.py                              0      0   100%
+app/modules/parcels/application/__init__.py                      0      0   100%
+app/modules/parcels/application/ports.py                         4      0   100%
+app/modules/parcels/domain/__init__.py                           0      0   100%
+app/modules/parcels/domain/models.py                            17      0   100%
+app/modules/parcels/infrastructure/__init__.py                   0      0   100%
+app/modules/planning/__init__.py                                 0      0   100%
+app/modules/planning/api/__init__.py                             0      0   100%
+app/modules/planning/application/__init__.py                     0      0   100%
+app/modules/planning/application/pog_release_queries.py         40      1    98%   74
+app/modules/planning/application/pog_tiles.py                   58      0   100%
+app/modules/planning/application/ports.py                        5      0   100%
+app/modules/planning/application/service.py                     11      0   100%
+app/modules/planning/composition.py                             20      0   100%
+app/modules/planning/domain/__init__.py                          0      0   100%
+app/modules/planning/domain/pog_area_summary.py                 78      0   100%
+app/modules/planning/domain/pog_features.py                     99      2    98%   183, 218
+app/modules/planning/domain/pog_inspector.py                    85      1    99%   131
+app/modules/planning/domain/pog_tiles.py                       120      1    99%   145
+app/modules/planning/domain/rules.py                           107      0   100%
+app/modules/planning/infrastructure/__init__.py                  0      0   100%
+app/modules/planning/infrastructure/mvt.py                     101      0   100%
+app/modules/planning/infrastructure/pog_release_queries.py      35      0   100%
+app/modules/planning/infrastructure/repository.py               17      0   100%
+app/modules/provenance/__init__.py                               0      0   100%
+app/modules/provenance/api/__init__.py                           0      0   100%
+app/modules/provenance/application/__init__.py                   0      0   100%
+app/modules/provenance/domain/__init__.py                        0      0   100%
+app/modules/provenance/infrastructure/__init__.py                0      0   100%
+app/modules/reporting/__init__.py                                0      0   100%
+app/modules/reporting/api/__init__.py                            0      0   100%
+app/modules/reporting/application/__init__.py                    0      0   100%
+app/modules/reporting/application/audit_export.py              192      3    98%   228-229, 247
+app/modules/reporting/domain/__init__.py                         0      0   100%
+app/modules/reporting/domain/audit_package.py                   96      0   100%
+app/modules/reporting/domain/field_mapping.py                   39      0   100%
+app/modules/reporting/domain/map_snapshot.py                    90      1    99%   76
+app/modules/reporting/domain/sections.py                        24      0   100%
+app/modules/reporting/infrastructure/__init__.py                 0      0   100%
+app/modules/reporting/infrastructure/archive.py                 54      3    94%   78-80
+app/routers/__init__.py                                          0      0   100%
+app/routers/analyze.py                                          58      0   100%
+app/routers/geocode.py                                          13      0   100%
+app/routers/health.py                                           25      0   100%
+app/routers/map_tiles.py                                       263      8    97%   90, 187-188, 196, 319-320, 588-589
+app/routers/raster_admin.py                                     59     17    71%   63, 74-77, 111-113, 138-151
+app/routers/report.py                                           40      0   100%
+app/schemas/__init__.py                                          4      0   100%
+app/schemas/analyze.py                                         604      7    99%   601, 899, 1012, 1017, 1136, 1526, 1529
+app/schemas/geocode.py                                          12      0   100%
+app/schemas/mpzp.py                                             65      0   100%
+app/schemas/source.py                                          127      0   100%
+app/services/__init__.py                                         0      0   100%
+app/services/analysis_orchestrator.py                          493     57    88%   530, 592-597, 674-684, 723, 730-731, 756, 765, 780-791, 794, 797, 840, 888, 900, 985-1018, 1174-1178, 1204, 1228, 1256-1275, 1278, 1293, 1352, 1357-1361, 1367, 1403, 1434, 1503, 1552, 1739-1743, 1768, 1777, 1808, 1812, 1814, 1817, 1827
+app/services/analysis_resume.py                                164      1    99%   307
+app/services/audit_package.py                                  172      0   100%
+app/services/cache.py                                           37      0   100%
+app/services/context.py                                         90      0   100%
+app/services/gdos.py                                           166      2    99%   239, 293
+app/services/geocoding.py                                       61      2    97%   105, 108
+app/services/geojson.py                                         34      1    97%   115
+app/services/geometry.py                                       134      2    99%   146, 346
+app/services/gml.py                                            153     11    93%   171, 222, 225, 259, 271-272, 280, 291, 314, 352-353
+app/services/initiation.py                                      18      1    94%   68
+app/services/isok.py                                           156      2    99%   389-390
+app/services/kiut.py                                           232     33    86%   241, 337, 359-360, 362, 365, 370, 374, 387-391, 408, 421, 425, 436-439, 444, 492-499, 511-512, 514, 517
+app/services/kiut_coverage.py                                  188     27    86%   76-77, 95-96, 129-136, 190, 242, 248, 250, 257, 269-272, 277, 295, 309, 319, 330-333, 339, 400-401
+app/services/mpzp.py                                           165      3    98%   291, 314, 341
+app/services/mpzp_fetch.py                                     201      9    96%   174, 250, 300, 343, 354, 374, 412, 418, 422
+app/services/mpzp_parser.py                                     95      2    98%   227, 261
+app/services/mpzp_parser_descriptive.py                        133      2    98%   156, 164
+app/services/mpzp_parser_extract.py                            113      5    96%   204-206, 244, 290
+app/services/mpzp_parser_numeric.py                            187     23    88%   192-197, 224-225, 246-247, 273-275, 300-305, 331, 334-336, 352-354, 370-372
+app/services/mpzp_parser_segment.py                            127      2    98%   270, 281
+app/services/mpzp_parser_validate.py                            89      0   100%
+app/services/mpzp_zones.py                                     236      9    96%   246, 306, 334, 339, 342-343, 348, 351-352
+app/services/nmt.py                                            120      1    99%   338
+app/services/ouz.py                                             59      7    88%   69, 94, 145-149
+app/services/persistence.py                                    272      7    97%   437-439, 852, 875, 1101-1102
+app/services/pog.py                                            279     15    95%   237, 250, 254, 277-278, 496, 499, 511, 514, 551-552, 567-571, 713-714
+app/services/pog_analyzer.py                                   178     11    94%   138, 144, 426, 457, 485-489, 554-555
+app/services/pog_fetch.py                                      336     54    84%   132, 148, 176-177, 290, 293, 298, 303, 308, 326, 328, 332, 351, 354, 357-358, 360, 363, 373-375, 383, 398, 402, 416, 434-444, 456, 459-460, 462-463, 476, 482-491, 535, 540-542, 550, 560, 563-569, 575-576, 583
+app/services/pog_provenance.py                                  39      0   100%
+app/services/pog_scenarios.py                                  164      0   100%
+app/services/raster_assets.py                                   18     11    39%   34-47, 52-63
+app/services/report.py                                         553     10    98%   960, 1529, 1763, 1853, 1877, 1884-1885, 1897, 1914, 1971
+app/services/report_fields.py                                   86      1    99%   97
+app/services/report_map.py                                     290     24    92%   234, 274, 277-280, 308, 312-314, 316, 320, 329-330, 332, 334-335, 347, 350-352, 362, 376, 378
+app/services/report_map_basemap.py                              82      2    98%   45, 110
+app/services/report_map_snapshot.py                            236      6    97%   473, 488, 498-503, 510-511
+app/services/risks.py                                           74      0   100%
+app/services/section_quality.py                                186      0   100%
+app/services/terrain.py                                         80      2    98%   242, 261
+app/services/uldk.py                                            89      1    99%   195
+app/services/versioned_repository.py                            18      0   100%
+app/services/wms_tiles.py                                      363     52    86%   79, 81, 83, 87, 89, 93, 95, 99, 101, 126, 139-140, 151-152, 156, 158, 165, 268, 349-353, 357-358, 361-365, 367-368, 410, 423-430, 434-436, 477, 524, 538-539, 547, 577, 584-585, 587-588, 594-599, 656-657
+app/shared/__init__.py                                           4      0   100%
+app/shared/crs.py                                                7      0   100%
+app/shared/data_quality.py                                      83      0   100%
+app/shared/geometry.py                                          18      0   100%
+app/shared/numbers.py                                           26      1    96%   31
+app/shared/planning_compatibility_text.py                        5      0   100%
+app/shared/planning_status.py                                  154      1    99%   181
+app/shared/provenance.py                                        88      7    92%   62, 66-67, 72, 74, 76, 81
+app/shared/safe_archive.py                                      86      5    94%   95, 127, 199, 228-229
+------------------------------------------------------------------------------------------
+TOTAL                                                        17558   1264    93%
+Required test coverage of 80% reached. Total coverage: 92.80%
+2050 passed, 3 deselected, 2 warnings in 221.75s (0:03:41)
+exit=0

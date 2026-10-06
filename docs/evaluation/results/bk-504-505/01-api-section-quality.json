@@ -1,0 +1,338 @@
+{
+  "schema_version": "1.0",
+  "policy_version": "quality-policy/1+2e0adf938c7b",
+  "reference_at": "2026-09-29T21:22:06.545097Z",
+  "origin": "stored",
+  "sections": [
+    {
+      "section": "parcel",
+      "report_section": "parcel",
+      "status": "available",
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    {
+      "section": "mpzp",
+      "report_section": "mpzp",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_NOT_DETERMINED"
+      ]
+    },
+    {
+      "section": "pog",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    {
+      "section": "pog_overlays",
+      "report_section": "pog",
+      "status": "available",
+      "source_id": null,
+      "source_name": "POG_APP",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "POG_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    },
+    {
+      "section": "flood",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "fetched_at": "2026-09-29T21:21:46.526666Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    {
+      "section": "nature",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "fetched_at": "2026-09-29T21:21:46.526766Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 20,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    {
+      "section": "terrain",
+      "report_section": "terrain",
+      "status": "available",
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "fetched_at": "2026-09-29T21:22:06.541601Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 0,
+        "max_age_days": 7,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": []
+    },
+    {
+      "section": "utilities",
+      "report_section": "infrastructure",
+      "status": "partial",
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "fetched_at": "2026-09-29T21:21:36.515833Z",
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_POLICY",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": 30,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "KIUT_PREVIEW_ONLY"
+      ]
+    },
+    {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "out_of_scope",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": false,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "NO_SOURCE_CONTRACT"
+      ]
+    },
+    {
+      "section": "mpzp_pog_relation",
+      "report_section": "pog",
+      "status": "unknown",
+      "source_id": null,
+      "source_name": null,
+      "fetched_at": null,
+      "data_release_id": null,
+      "source_version": null,
+      "manual_review_required": true,
+      "freshness": {
+        "state": "unknown",
+        "reason_code": "FRESHNESS_NO_SOURCE",
+        "reference_at": "2026-09-29T21:22:06.545097Z",
+        "age_seconds": null,
+        "max_age_days": null,
+        "basis": null
+      },
+      "policy_version": "quality-policy/1+2e0adf938c7b",
+      "reason_codes": [
+        "MPZP_ZONES_MISSING",
+        "COMPATIBILITY_REVIEW_REQUIRED",
+        "DERIVED_SECTION"
+      ]
+    }
+  ],
+  "matrix_sha256": "48e7f961ce513fe0c7150a1172d56807b5982de363022d370857ca11eb5c8731",
+  "legend": {
+    "statuses": [
+      {
+        "id": "available",
+        "label": "sprawdzono",
+        "description": "źródło zwróciło wynik zgodny z kontraktem; pusty wynik oznacza sprawdzony brak obiektów, a nie brak ograniczeń poza zakresem źródła"
+      },
+      {
+        "id": "partial",
+        "label": "częściowo",
+        "description": "wynik jest niepełny albo obniżonej pewności (np. strefa bez wektora, podgląd zamiast geometrii, sprzeczne parametry)"
+      },
+      {
+        "id": "no_coverage",
+        "label": "brak pokrycia źródła",
+        "description": "źródło potwierdziło brak danych dla tego obszaru (np. poza zasięgiem NMT albo powiat nie publikuje GESUT) — to nie jest błąd źródła i nie dowodzi braku ograniczeń"
+      },
+      {
+        "id": "unavailable",
+        "label": "źródło niedostępne",
+        "description": "próba pobrania nie powiodła się (limit czasu, błąd HTTP, odpowiedź niezgodna z kontraktem) — wynik nie jest znany"
+      },
+      {
+        "id": "error",
+        "label": "błąd sprawdzenia",
+        "description": "nieoczekiwany błąd przetwarzania sekcji — wynik nie jest znany"
+      },
+      {
+        "id": "unknown",
+        "label": "nieustalone",
+        "description": "brak zapisanego wyniku albo niemożliwe rozstrzygnięcie; brak danych nie oznacza braku ograniczenia ani braku planu"
+      },
+      {
+        "id": "out_of_scope",
+        "label": "poza zakresem",
+        "description": "sekcja nie jest analizowana, bo brakuje potwierdzonego kontraktu źródła"
+      },
+      {
+        "id": "awaiting_input",
+        "label": "oczekuje na dane użytkownika",
+        "description": "analiza wstrzymana do czasu podania danych przez użytkownika"
+      }
+    ],
+    "freshness": [
+      {
+        "id": "fresh",
+        "label": "aktualne wg reguły",
+        "description": "wiek danych w punkcie odniesienia mieści się w regule wieku przypisanej do źródła"
+      },
+      {
+        "id": "stale",
+        "label": "starsze niż reguła",
+        "description": "wiek danych w punkcie odniesienia przekracza regułę wieku źródła — dane mogą nie odzwierciedlać bieżącego stanu źródła"
+      },
+      {
+        "id": "unknown",
+        "label": "świeżość nieustalona",
+        "description": "brak reguły wieku dla źródła, brak czasu pobrania albo czas nieprawidłowy — system nie zgaduje terminu ważności"
+      }
+    ],
+    "reasons": [
+      {
+        "code": "FRESHNESS_NO_POLICY",
+        "label": "brak reguły wieku dla źródła — terminu ważności nie zgadujemy"
+      },
+      {
+        "code": "MPZP_NOT_DETERMINED",
+        "label": "nie znaleziono albo nie sprawdzono planu (nie dowodzi braku planu)"
+      },
+      {
+        "code": "FRESHNESS_NO_SOURCE",
+        "label": "brak źródła danych dla sekcji"
+      },
+      {
+        "code": "POG_REVIEW_REQUIRED",
+        "label": "wynik POG wymaga ręcznej weryfikacji"
+      },
+      {
+        "code": "SOURCE_ID_UNRESOLVED",
+        "label": "źródło bez identyfikatora z katalogu"
+      },
+      {
+        "code": "KIUT_PREVIEW_ONLY",
+        "label": "podgląd nie jest geometrią sieci — brak odległości i liczby sieci"
+      },
+      {
+        "code": "NO_SOURCE_CONTRACT",
+        "label": "brak potwierdzonego kontraktu źródła danych (BK-305)"
+      },
+      {
+        "code": "MPZP_ZONES_MISSING",
+        "label": "POG obowiązuje, ale nie ustalono strefy MPZP (brak danych ≠ brak ograniczeń)"
+      },
+      {
+        "code": "COMPATIBILITY_REVIEW_REQUIRED",
+        "label": "relacja MPZP–POG wymaga weryfikacji"
+      },
+      {
+        "code": "DERIVED_SECTION",
+        "label": "sekcja wyliczona z innych sekcji — bez własnego źródła"
+      }
+    ]
+  }
+}

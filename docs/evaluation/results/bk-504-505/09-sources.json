@@ -1,0 +1,300 @@
+{
+  "analysis_id": 362,
+  "note": "Rejestr źródeł jest kompletny niezależnie od redystrybucji: dla źródeł, których treści nie dołączono, zachowano identyfikator, adres, czas pobrania i SHA-256.",
+  "schema_version": "audit-sources/1",
+  "sources": [
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": null,
+      "confidence": 0.65,
+      "data_release_id": null,
+      "fetched_at": "2026-07-16T12:00:00Z",
+      "manual_review_required": true,
+      "package_content": {
+        "derived_layers": false,
+        "raw_data": false
+      },
+      "redistribution": "unconfirmed",
+      "redistribution_label": "niepotwierdzona — traktowana jak zakaz",
+      "release": null,
+      "resolution_notes": [
+        "SOURCE_ID_UNRESOLVED"
+      ],
+      "response_status": 200,
+      "source_id": null,
+      "source_name": "POG_GMINA_WMS",
+      "source_url": "https://pog.example.test/wms",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wfs",
+        "attribution": "Źródło: Generalna Dyrekcja Ochrony Środowiska (GDOŚ), usługa WFS sdi.gdos.gov.pl.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": {
+          "basis": "project_decision",
+          "max_age_days": 7,
+          "rationale": "Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia quality_policy_version."
+        },
+        "license": "Usługa pobierania WFS udostępniana publicznie przez GDOŚ. Bieżące GetCapabilities deklaruje wprost Fees \"brak\" oraz AccessConstraints \"brak\", czyli brak opłat i brak ograniczeń w dostępie.",
+        "name": "Formy ochrony przyrody (GDOŚ)",
+        "owner": "Generalna Dyrekcja Ochrony Środowiska (GDOŚ)",
+        "status": "production"
+      },
+      "confidence": 0.95,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:21:01.474743Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": true,
+        "raw_data": false
+      },
+      "redistribution": "derived_only",
+      "redistribution_label": "tylko dane pochodne (bez surowych zbiorów)",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": 200,
+      "source_id": "gdos",
+      "source_name": "GDOS",
+      "source_url": "https://gdos.example.test/wfs",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wfs",
+        "attribution": "Źródło: Mapy Zagrożenia Powodziowego (MZP), PGW Wody Polskie / ISOK.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": {
+          "basis": "project_decision",
+          "max_age_days": 7,
+          "rationale": "Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia quality_policy_version."
+        },
+        "license": "Usługa pobierania INSPIRE udostępniana publicznie przez PGW Wody Polskie. Bieżące GetCapabilities deklaruje Fees \"Brak warunków dostępu i użytkowania\" oraz AccessConstraints \"Brak ograniczeń w publicznym dostępie\".",
+        "name": "Zagrożenie powodziowe (ISOK / MZP INSPIRE)",
+        "owner": "Państwowe Gospodarstwo Wodne Wody Polskie",
+        "status": "production"
+      },
+      "confidence": 0.95,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:21:01.474616Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": true,
+        "raw_data": true
+      },
+      "redistribution": "allowed",
+      "redistribution_label": "dozwolona (dane surowe i pochodne)",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": 200,
+      "source_id": "isok",
+      "source_name": "ISOK",
+      "source_url": "https://isok.example.test/wfs",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wms",
+        "attribution": "Źródło: Krajowa Integracja MPZP (KIMPZP), GUGiK / Geoportal.gov.pl.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": null,
+        "license": "Usługa przeglądania WMS udostępniana nieodpłatnie przez GUGiK; wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.",
+        "name": "Krajowa Integracja Miejscowych Planów Zagospodarowania Przestrzennego (WMS)",
+        "owner": "Główny Urząd Geodezji i Kartografii (GUGiK)",
+        "status": "production"
+      },
+      "confidence": 0.3,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:20:51.461050Z",
+      "manual_review_required": true,
+      "package_content": {
+        "derived_layers": false,
+        "raw_data": false
+      },
+      "redistribution": "unconfirmed",
+      "redistribution_label": "niepotwierdzona — traktowana jak zakaz",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": null,
+      "source_id": "kimpzp",
+      "source_name": "KIMPZP",
+      "source_url": null,
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wfs",
+        "attribution": "Źródło: GESUT / KIUT, właściwe starostwo powiatowe.",
+        "expected_update_interval": "unknown",
+        "freshness_policy": null,
+        "license": "Dane GESUT o sieciach uzbrojenia terenu mają dostęp reglamentowany; udostępnienie i redystrybucja wymagają umowy z organem prowadzącym zasób.",
+        "name": "Krajowa Integracja Uzbrojenia Terenu / GESUT",
+        "owner": "Starostwa powiatowe / GUGiK (GESUT)",
+        "status": "contract_required"
+      },
+      "confidence": 0.9,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:20:51.461050Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": false,
+        "raw_data": false
+      },
+      "redistribution": "unconfirmed",
+      "redistribution_label": "niepotwierdzona — traktowana jak zakaz",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": null,
+      "source_id": "kiut_gesut",
+      "source_name": "KIUT",
+      "source_url": "https://kiut.example.test/wfs",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wms",
+        "attribution": "Źródło: Krajowa Integracja Uzbrojenia Terenu (KIUT), GUGiK / właściwy powiat.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": null,
+        "license": "GetCapabilities deklaruje Brak opłat / none oraz AccessConstraints NONE; wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.",
+        "name": "Krajowa Integracja Uzbrojenia Terenu (WMS)",
+        "owner": "Główny Urząd Geodezji i Kartografii (GUGiK) / właściwe powiaty",
+        "status": "production"
+      },
+      "confidence": 0.9,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:20:51.461050Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": false,
+        "raw_data": false
+      },
+      "redistribution": "unconfirmed",
+      "redistribution_label": "niepotwierdzona — traktowana jak zakaz",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": null,
+      "source_id": "kiut_wms",
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://kiut.example.test/wms",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": "912ed836be23cb99ed3899129b8b9fd5f6e8b2f99cbb5e4aa04ea97f509043ec",
+      "catalog": {
+        "access_type": "rest",
+        "attribution": "Źródło: Numeryczny Model Terenu (NMT), GUGiK.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": {
+          "basis": "project_decision",
+          "max_age_days": 7,
+          "rationale": "Decyzja projektowa, nie deklaracja właściciela danych (częstotliwość aktualizacji nie jest publikowana). Wynik zapytania do usługi na żywo jest zamrażany w snapshocie; 7 dni to domyślny limit wieku takiego wyniku w cache analiz (ANALYSIS_CACHE_MAX_AGE_DAYS, BK-101). Zmiana wartości zmienia quality_policy_version."
+        },
+        "license": "Publiczna usługa wysokościowa GUGiK dostępna bez autoryzacji; dane NMT są danymi otwartymi, wykorzystanie zgodnie z regulaminem Geoportal.gov.pl.",
+        "name": "Numeryczny Model Terenu (NMT) — usługa wysokościowa GUGiK",
+        "owner": "Główny Urząd Geodezji i Kartografii (GUGiK)",
+        "status": "production"
+      },
+      "confidence": 0.9,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:21:21.490619Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": true,
+        "raw_data": true
+      },
+      "redistribution": "allowed",
+      "redistribution_label": "dozwolona (dane surowe i pochodne)",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": 200,
+      "source_id": "nmt",
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon=POLYGON+%28%28637100+486000%2C+637100+486100%2C+637000+486100%2C+637000+486000%2C+637100+486000%29%29",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "wfs",
+        "attribution": "Źródło: Rejestr Urbanistyczny, Ministerstwo Rozwoju i Technologii.",
+        "expected_update_interval": "ciągły; kontrakt sprawdzany ręcznie przed aktualizacją fixtur",
+        "freshness_policy": null,
+        "license": "Oficjalne GetCapabilities WMS/WFS/CSW z 2026-09-23 deklarują Fees „Brak ograniczeń w publicznym dostępie” oraz AccessConstraints „Brak warunków dostępu i użytkowania”. Jest to podstawa bezpośredniego odczytu usług; nie stanowi osobnej zgody na redystrybucję surowych zbiorów.",
+        "name": "Plan Ogólny Gminy / Akt Planowania Przestrzennego (APP)",
+        "owner": "Gminy / Ministerstwo Rozwoju i Technologii (Rejestr Urbanistyczny)",
+        "status": "production"
+      },
+      "confidence": 0.75,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:20:51.461050Z",
+      "manual_review_required": true,
+      "package_content": {
+        "derived_layers": true,
+        "raw_data": false
+      },
+      "redistribution": "derived_only",
+      "redistribution_label": "tylko dane pochodne (bez surowych zbiorów)",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": 200,
+      "source_id": "pog_app",
+      "source_name": "POG_APP_VECTOR",
+      "source_url": "https://bip.example.test/pog.gml",
+      "source_version": null
+    },
+    {
+      "act_version": null,
+      "artifact": null,
+      "artifact_sha256": null,
+      "catalog": {
+        "access_type": "rest",
+        "attribution": "Źródło: Usługa Lokalizacji Działek Katastralnych (ULDK), GUGiK.",
+        "expected_update_interval": "not_published",
+        "freshness_policy": null,
+        "license": "Dane ewidencyjne udostępniane nieodpłatnie przez GUGiK w usłudze ULDK; wykorzystanie zgodnie z regulaminem serwisu Geoportal.gov.pl.",
+        "name": "Usługa Lokalizacji Działek Katastralnych (ULDK)",
+        "owner": "Główny Urząd Geodezji i Kartografii (GUGiK)",
+        "status": "production"
+      },
+      "confidence": 0.95,
+      "data_release_id": null,
+      "fetched_at": "2026-09-29T21:20:51.461050Z",
+      "manual_review_required": false,
+      "package_content": {
+        "derived_layers": true,
+        "raw_data": false
+      },
+      "redistribution": "derived_only",
+      "redistribution_label": "tylko dane pochodne (bez surowych zbiorów)",
+      "release": null,
+      "resolution_notes": [],
+      "response_status": null,
+      "source_id": "uldk",
+      "source_name": "ULDK",
+      "source_url": "https://uldk.example.test",
+      "source_version": null
+    }
+  ]
+}

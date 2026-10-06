@@ -1,0 +1,74 @@
+{
+  "analysis_id": 362,
+  "analyzed_at": "2026-09-29T21:21:21.494846Z",
+  "crs": {
+    "computation": "EPSG:2180",
+    "geojson_files": "EPSG:4326"
+  },
+  "exporter_version": "audit-exporter/1.0.0",
+  "files": [
+    {
+      "bytes": 6852,
+      "media_type": "text/markdown; charset=utf-8",
+      "name": "README.md",
+      "sha256": "da5f840c90872380bdcbd955ae5c80a6a628612ca62d939e9dc32839cf2a0c0b"
+    },
+    {
+      "bytes": 24673,
+      "media_type": "application/json",
+      "name": "analysis.json",
+      "sha256": "f0393959315861e1f633325b17160704f6c4b926e0fd36698771f4f43b33e23b"
+    },
+    {
+      "bytes": 1432,
+      "media_type": "application/geo+json",
+      "name": "layers/buildable_area.geojson",
+      "sha256": "17003c024f4e5b5ffbdac321bcd02f38037222ddaaf99f09dc1dc4596f379c12"
+    },
+    {
+      "bytes": 1478,
+      "media_type": "application/geo+json",
+      "name": "layers/pog_zones.geojson",
+      "sha256": "709a5247337aaa1e0b2975e57c41d1f7a89040a4816a9ce842aa36940ce38c86"
+    },
+    {
+      "bytes": 1417,
+      "media_type": "application/geo+json",
+      "name": "parcel.geojson",
+      "sha256": "f688d1bf98f8f05600e22277b98fbb808e642476115aab2846afbfaf5daf03d4"
+    },
+    {
+      "bytes": 12783,
+      "media_type": "application/json",
+      "name": "sources.json",
+      "sha256": "858b6606beb29b29a3fab0d07f9205f4cb7c75182e568e652915c114ad64e91a"
+    }
+  ],
+  "hash_algorithm": "SHA-256",
+  "limits": {
+    "max_file_bytes": 33554432,
+    "max_files": 200,
+    "max_total_bytes": 67108864
+  },
+  "omitted_artifacts": [
+    {
+      "bytes": 1281,
+      "kind": "raw_attributes",
+      "name": "analysis.json#/result/pog/raw_attributes",
+      "reason": "raw_redistribution_not_allowed",
+      "reason_label": "katalog źródeł dopuszcza wyłącznie dane pochodne — surowych danych źródła nie kopiujemy",
+      "redistribution": {
+        "pog_app": "derived_only"
+      },
+      "sha256": "cfc29ab06b37991daecd4c36f3158b5cf76d97b1d35280a7c7295e49953eb602",
+      "source_ids": [
+        "pog_app"
+      ]
+    }
+  ],
+  "package_hash_note": "Hash całej paczki ZIP nie znajduje się w archiwum; jest podawany poza nim (nagłówek odpowiedzi X-Audit-Package-SHA256).",
+  "parcel_identifier": "BK301_302_E2E_A_bcb6bc",
+  "quality_matrix_sha256": "ce63b5d9d489df280a2951f5e115cb3efb0d9d34b7e00f84263bea1bb660ec39",
+  "quality_policy_version": "quality-policy/1+2e0adf938c7b",
+  "schema_version": "audit-package/1"
+}
