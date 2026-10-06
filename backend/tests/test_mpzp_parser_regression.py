@@ -1,3 +1,13 @@
+"""Regresja parsera MPZP na zamrożonych dokumentach (``tests/fixtures/mpzp``).
+
+Od PV3-21 każdy fixture jest sprawdzany w OBU trybach deterministycznych: ``legacy`` (domyślny do decyzji
+z Task 20.17) i ``v3`` (rdzeń trybów ``hybrid_shadow``/``hybrid``). Oczekiwania opisują stan faktyczny
+(ground truth uchwały), a nie udokumentowane luki: ``expected_found: false`` zostaje wyłącznie dla
+wartości, których w tekście NIE MA dla tej strefy (z przyczyną), a ``expected_values`` wymaga dokładnie
+podanego zbioru wartości. Różnica między trybami jest dozwolona tylko jako jawny wpis ``mode_overrides``
+z uzasadnieniem i tylko dla oczekiwań zależnych od rozstrzygania zakresu strefy.
+"""
+
 import json
 from pathlib import Path
 from typing import Any
@@ -27,6 +37,12 @@ FIXTURE_DIRS = sorted(
     for path in FIXTURE_ROOT.iterdir()
     if path.is_dir() and (path / "expected.json").is_file()
 )
+# Tryby deterministyczne parsera; tryby z modelem dokładają do wyniku ``v3`` wyłącznie kandydatów
+# ``ai_candidate`` (test_mpzp_parser_modes), więc ich rdzeń jest sprawdzany tutaj jako ``v3``.
+REGRESSION_MODES = ("legacy", "v3")
+# Oczekiwania strefy, które zależą od rozstrzygania zakresu (sklejanie segmentów vs bloki strefy), więc
+# mogą się różnić między trybami. Wartości parametrów NIE są na tej liście: obowiązują w każdym trybie.
+_MODE_OVERRIDABLE = frozenset({"expected_manual_review_required"})
 
 _OCR_WARNING = (
     "Dokument PDF ma bardzo mało tekstu na stronę — prawdopodobnie skan "
@@ -138,6 +154,7 @@ def _assert_parameter_matches(
 
     assert actual, f"Strefa {zone.zone_symbol}: nie znaleziono parametru {name}"
     allowed_values = parameter_expected["allowed_values"]
+    expected_values = parameter_expected.get("expected_values")
     min_confidence = parameter_expected["min_confidence"]
     expected_conditions = parameter_expected.get("expected_conditions")
     if expected_conditions is not None:
@@ -158,6 +175,14 @@ def _assert_parameter_matches(
             and parameter.conflict_group_id is None
             for parameter in actual
         ), f"Strefa {zone.zone_symbol}: wartości warunkowe {name} nie są sprzecznością"
+    elif expected_values is not None:
+        # Kilka współistniejących ustaleń (np. dwa przeznaczenia uzupełniające): dokładnie ten zbiór, bez
+        # duplikatów i bez wartości spoza niego — nie „co najmniej” ani „co najwyżej”.
+        assert allowed_values is None and parameter_expected.get("normalized_value") is None
+        actual_values = [parameter.normalized_value for parameter in actual]
+        assert sorted(map(str, actual_values)) == sorted(map(str, expected_values)), (
+            f"Strefa {zone.zone_symbol}: {name}={actual_values}, oczekiwano dokładnie {expected_values}"
+        )
     elif allowed_values is not None:
         actual_values = {parameter.normalized_value for parameter in actual}
         assert actual_values <= set(allowed_values), (
@@ -190,10 +215,25 @@ def _assert_parameter_matches(
         )
 
 
+def _zone_expectations(zone_expected: dict[str, Any], mode: str | None) -> dict[str, Any]:
+    """Oczekiwania strefy dla trybu: wspólne + jawne nadpisanie trybu (tylko klucze zakresu, z przyczyną)."""
+    overrides = zone_expected.get("mode_overrides") or {}
+    assert set(overrides) <= set(REGRESSION_MODES), f"Nieznany tryb w mode_overrides: {sorted(overrides)}"
+    override = overrides.get(mode) if mode is not None else None
+    if not override:
+        return zone_expected
+    reason = override.get("reason")
+    assert isinstance(reason, str) and reason.strip(), "Nadpisanie trybu musi mieć udokumentowaną przyczynę"
+    keys = set(override) - {"reason"}
+    assert keys and keys <= _MODE_OVERRIDABLE, f"Tryb może nadpisać tylko {sorted(_MODE_OVERRIDABLE)}, nie {sorted(keys)}"
+    return {**zone_expected, **{key: override[key] for key in keys}}
+
+
 def _assert_matches_expected(
     result: MpzpParseResult,
     expected: dict[str, Any],
     extraction: TextExtractionResult,
+    mode: str | None = None,
 ) -> None:
     structural = expected.get("structural_expectations")
     if structural is not None:
@@ -215,7 +255,7 @@ def _assert_matches_expected(
         )
 
     zones_by_symbol = {zone.zone_symbol: zone for zone in result.zones}
-    for zone_expected in expected["expectations"]:
+    for zone_expected in (_zone_expectations(item, mode) for item in expected["expectations"]):
         zone_symbol = zone_expected["zone_symbol"]
         assert zone_symbol in zones_by_symbol
         zone = zones_by_symbol[zone_symbol]
@@ -230,12 +270,13 @@ def _assert_matches_expected(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("mode", REGRESSION_MODES)
 @pytest.mark.parametrize(
     "fixture_dir",
     FIXTURE_DIRS,
     ids=[path.name for path in FIXTURE_DIRS],
 )
-async def test_mpzp_parser_regression_fixture(fixture_dir: Path) -> None:
+async def test_mpzp_parser_regression_fixture(fixture_dir: Path, mode: str) -> None:
     expected = _load_json(fixture_dir / "expected.json")
     extraction, source = _build_extraction(fixture_dir)
     document_blob = _build_document_blob(source)
@@ -264,10 +305,59 @@ async def test_mpzp_parser_regression_fixture(fixture_dir: Path) -> None:
         result = await parse_mpzp_document(
             document_blob,
             expected["zone_symbols_to_test"],
+            mode=mode,  # type: ignore[arg-type]
         )
 
     extract_mock.assert_awaited_once_with(document_blob)
-    _assert_matches_expected(result, expected, extraction)
+    _assert_matches_expected(result, expected, extraction, mode)
+
+
+def test_negative_expectations_are_only_true_absences_with_a_reason() -> None:
+    """``expected_found: false`` to brak wartości w uchwale (z przyczyną), a nie znana luka parsera.
+
+    Lista jest zamknięta: nowy wpis wymaga świadomej zmiany tego testu (PV3-21 usunął „oczekiwane braki”,
+    które silnik zamknął). Oba wpisy są sprawdzane w każdym trybie przez test regresji.
+    """
+    negatives = sorted(
+        (fixture_dir.name, zone["zone_symbol"], parameter["name"])
+        for fixture_dir in FIXTURE_DIRS
+        for zone in _load_json(fixture_dir / "expected.json")["expectations"]
+        for parameter in zone["parameters"]
+        if not parameter["expected_found"]
+    )
+    assert negatives == [
+        ("bielsko_biala", "230_ZP", "max_building_height_m"),  # 5 m dotyczy urządzeń sportu, nie zabudowy
+        ("lodz_mw_u", "6.8.MW/U", "setback_m"),  # 4,0 m to pas przy granicy z innym limitem wysokości
+    ]
+
+
+def test_mode_overrides_are_limited_to_scope_dependent_expectations_with_a_reason() -> None:
+    zone = {"zone_symbol": "Z", "expected_manual_review_required": True, "parameters": []}
+    assert _zone_expectations({**zone, "mode_overrides": {"v3": {"expected_manual_review_required": False,
+                                                                  "reason": "blok strefy rozstrzygnięty"}}},
+                              "v3")["expected_manual_review_required"] is False
+    assert _zone_expectations(zone, "v3") == zone
+    with pytest.raises(AssertionError):  # bez przyczyny
+        _zone_expectations({**zone, "mode_overrides": {"v3": {"expected_manual_review_required": False}}}, "v3")
+    with pytest.raises(AssertionError):  # wartości parametrów nie wolno nadpisywać per tryb
+        _zone_expectations({**zone, "mode_overrides": {"v3": {"parameters": [], "reason": "x"}}}, "v3")
+    with pytest.raises(AssertionError):  # nieznany tryb
+        _zone_expectations({**zone, "mode_overrides": {"hybrid": {"reason": "x"}}}, "v3")
+
+
+def test_expected_values_require_exactly_the_listed_set() -> None:
+    def zone_with(*values: str) -> MpzpZoneResult:
+        return MpzpZoneResult(zone_symbol="2U", parameters=[
+            MpzpParameter(name="supplementary_use", normalized_value=v, confidence=0.9, manual_review_required=False)
+            for v in values
+        ])
+
+    expectation = {"name": "supplementary_use", "expected_found": True, "normalized_value": None, "allowed_values": None,
+                   "expected_values": ["a", "b"], "min_confidence": 0.8, "reason_if_not_found": None}
+    _assert_parameter_matches(zone_with("b", "a"), expectation)
+    for values in (("a",), ("a", "b", "c"), ("a", "a", "b")):
+        with pytest.raises(AssertionError):
+            _assert_parameter_matches(zone_with(*values), expectation)
 
 
 def test_assert_matches_expected_detects_changed_parameter_value() -> None:

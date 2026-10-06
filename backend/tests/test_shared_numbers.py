@@ -17,7 +17,9 @@ from app.shared.numbers import (
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
-    [("1 234,50", 1234.5), ("1 234,5", 1234.5), ("0,01", 0.01), ("12.5", 12.5), ("1.234,5", 1234.5), ("2000", 2000.0)],
+    [("1 234,50", 1234.5), ("1 234,5", 1234.5), ("0,01", 0.01), ("12.5", 12.5), ("1.234,5", 1234.5), ("2000", 2000.0),
+     # przypadki przeniesione z testu aliasu ``mpzp_parser_numeric._parse_polish_number`` (usunięty w PV3-21)
+     ("0,1", 0.1), ("2,0", 2.0), ("3.5", 3.5)],
 )
 def test_parse_polish_number(raw: str, expected: float) -> None:
     assert parse_polish_number(raw) == pytest.approx(expected)

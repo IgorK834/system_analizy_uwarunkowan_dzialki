@@ -13,10 +13,7 @@ from pathlib import Path
 import pytest
 
 from app.services.mpzp_parser_extract import TextExtractionResult
-from app.services.mpzp_parser_numeric import (
-    _parse_polish_number,
-    extract_numeric_parameters,
-)
+from app.services.mpzp_parser_numeric import extract_numeric_parameters
 from app.services.mpzp_parser_segment import (
     DocumentSegment,
     ZoneSectionCandidate,
@@ -44,22 +41,6 @@ def _zone_result(zone_symbol: str, segments: list[DocumentSegment]) -> ZoneSecti
 
 def _params_by_name(params, name: str):
     return [p for p in params if p.name == name]
-
-
-# --- _parse_polish_number -----------------------------------------------
-
-
-def test_parse_polish_number_converts_comma_decimal() -> None:
-    assert _parse_polish_number("0,1") == 0.1
-    assert _parse_polish_number("2,0") == 2.0
-
-
-def test_parse_polish_number_handles_plain_dot() -> None:
-    assert _parse_polish_number("3.5") == 3.5
-
-
-def test_parse_polish_number_strips_whitespace_thousands_separator() -> None:
-    assert _parse_polish_number("1 234,5") == 1234.5
 
 
 # --- max_building_height_m (realny fixture) -----------------------------

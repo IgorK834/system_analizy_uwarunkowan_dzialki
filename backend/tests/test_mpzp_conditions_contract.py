@@ -125,7 +125,7 @@ def test_whole_zone_snapshot_without_the_new_fields_still_validates() -> None:
     zone["parameters"] = [old_evidence(), old_evidence(normalized_value=12.0, conflict_group_id="g")]
     restored = analyze_schemas.MpzpZoneResult.model_validate(zone)
     assert [p.value_kind for p in restored.parameters] == ["unconditional", "conflict"]
-    assert analyze_schemas.MPZP_RESULT_SCHEMA_VERSION == "2.5"
+    assert analyze_schemas.MPZP_RESULT_SCHEMA_VERSION == "2.6"
 
 
 def test_unknown_condition_kind_is_rejected() -> None:

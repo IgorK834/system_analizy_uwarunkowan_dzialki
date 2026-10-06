@@ -78,7 +78,7 @@ def test_snapshot_before_the_calibration_has_no_band() -> None:
 def test_the_contract_version_changed_so_old_confidence_is_not_served_from_cache() -> None:
     from app.services import cache
 
-    assert analyze_schemas.MPZP_RESULT_SCHEMA_VERSION == "2.5" and "mpzp-v2.5" in cache.RESULT_CONTRACT_VERSION
+    assert analyze_schemas.MPZP_RESULT_SCHEMA_VERSION == "2.6" and "mpzp-v2.6" in cache.RESULT_CONTRACT_VERSION
 
 
 def test_values_from_a_language_model_are_never_verified_or_high_band() -> None:

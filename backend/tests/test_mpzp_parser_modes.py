@@ -420,7 +420,7 @@ def _context() -> hybrid.BlocksContext:
     view = structure_view(tree)
     return hybrid.BlocksContext(tree=tree, view=view, resolution=resolve_zone_scope(view, ["1MN"]), symbols=("1MN",),
                                 extraction_method="pdf_text", quality_score=1.0, document_sha256="d" * 64,
-                                parser_version="mpzp-parser/3.0-det+scope.1")
+                                parser_version="mpzp-parser/3.1-det+scope.1")
 
 
 def _accepted(raw: str, value: float, quote: str, parameter: str = "max_building_height_m") -> cv.AcceptedCandidate:
@@ -508,7 +508,7 @@ def test_model_modes_report_why_the_model_is_unavailable(tmp_path: Path) -> None
 
 def test_the_cache_signature_contains_mode_parser_version_prompt_version_and_model(monkeypatch: pytest.MonkeyPatch) -> None:
     legacy = analysis_cache.mpzp_parser_signature(Settings(_env_file=None))  # type: ignore[call-arg]
-    assert legacy == {"mode": "legacy", "parser_version": "mpzp-parser/3.0-det", "prompt_version": None,
+    assert legacy == {"mode": "legacy", "parser_version": "mpzp-parser/3.1-det", "prompt_version": None,
                       "schema_version": None, "model_id": None, "llm_enabled": None}
     v3 = analysis_cache.mpzp_parser_signature(Settings(_env_file=None, mpzp_parser_mode="v3"))  # type: ignore[call-arg]
     hybrid_signature = analysis_cache.mpzp_parser_signature(
@@ -516,7 +516,7 @@ def test_the_cache_signature_contains_mode_parser_version_prompt_version_and_mod
     other_model = analysis_cache.mpzp_parser_signature(
         Settings(_env_file=None, mpzp_parser_mode="hybrid", mpzp_llm_enabled=True, mpzp_llm_model="gemini-3.7-flash"))  # type: ignore[call-arg]
     shadow = analysis_cache.mpzp_parser_signature(Settings(_env_file=None, mpzp_parser_mode="hybrid_shadow"))  # type: ignore[call-arg]
-    assert v3["parser_version"] == "mpzp-parser/3.0-det+scope.1" and v3["model_id"] is None
+    assert v3["parser_version"] == "mpzp-parser/3.1-det+scope.1" and v3["model_id"] is None
     assert hybrid_signature["prompt_version"] == contract.PROMPT_VERSION and hybrid_signature["model_id"] == MODEL
     assert len({json.dumps(item, sort_keys=True) for item in (legacy, v3, hybrid_signature, other_model, shadow)}) == 5
     monkeypatch.setattr(analysis_cache, "PROMPT_VERSION", "mpzp-extraction/2")

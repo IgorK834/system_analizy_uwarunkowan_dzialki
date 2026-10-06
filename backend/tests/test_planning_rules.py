@@ -278,7 +278,40 @@ def test_new_numeric_codes_are_validated_like_the_old_ones() -> None:
         validate_planning_rule(_candidate(code="min_building_coverage", value=120.0))
 
 
-def test_roof_geometry_rule_keeps_the_word_from_the_text() -> None:
+def test_roof_geometry_rule_has_the_canonical_lexicon_form_and_the_literal_quote() -> None:
+    # PV3-21: reguła i parser MPZP czytają dach tym samym silnikiem — wartość to forma kanoniczna słownika
+    # (obie alternatywy), a dosłowny zapis zostaje w ``raw_value``/``source_text``.
     rules = extract_planning_rules(LegalTextUnit(1, "Dachy dwuspadowe lub płaskie."), parser_version="t")
     (roof,) = [r for r in rules if r.code == "roof_geometry"]
-    assert roof.text_value == "dwuspadowe" and roof.raw_value.lower().startswith("dachy dwuspadowe lub płaskie")
+    assert roof.text_value == "dwuspadowy_lub_płaski"
+    assert roof.raw_value == roof.source_text == "Dachy dwuspadowe lub płaskie"
+
+
+def test_definitions_from_the_glossary_are_not_use_designations() -> None:
+    text = (
+        "1) przeznaczenie podstawowe - przeznaczenie, które przeważa na danej działce,\n"
+        "2) przeznaczeniu uzupełniającym – należy przez to rozumieć przeznaczenie inne niż podstawowe;"
+    )
+    assert not [r for r in extract_planning_rules(LegalTextUnit(1, text), parser_version="t")
+                if r.code in {"primary_use", "supplementary_use"}]
+
+
+def test_rules_and_the_mpzp_parser_read_descriptive_findings_with_the_same_engine() -> None:
+    """Jeden silnik (PV3-21): ten sam tekst daje te same ustalenia opisowe w regule i w parserze MPZP."""
+    from app.services.mpzp_parser_descriptive import extract_descriptive_parameters
+    from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionCandidate, ZoneSectionResult
+
+    text = json.loads(
+        (Path(__file__).parent / "fixtures" / "mpzp" / "lodz_mw_u" / "pages.json").read_text(encoding="utf-8")
+    )["pages"][0]
+    rules = extract_planning_rules(LegalTextUnit(1, text), parser_version="t")
+    segment = DocumentSegment(segment_id="s1", text=text, page_number=1, heading=None, source="paragraph")
+    zone = ZoneSectionResult(zone_symbol="Z", candidates=[ZoneSectionCandidate("Z", "s1", text[:200], 1, 1.0, "test")])
+    parameters = extract_descriptive_parameters("Z", zone, [segment])
+    for code in ("primary_use", "supplementary_use", "prohibition"):
+        assert sorted(r.text_value for r in rules if r.code == code) == sorted(
+            p.normalized_value for p in parameters if p.name == code
+        ), code
+    assert {r.text_value for r in rules if r.code == "primary_use"} == {
+        "tereny zabudowy mieszkaniowej wielorodzinnej", "tereny zabudowy usługowej",
+    }
