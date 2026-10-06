@@ -1,0 +1,37 @@
+{
+  "schema": "mpzp-parser-rollout/1",
+  "default_mode": "legacy",
+  "target_mode": "hybrid",
+  "rollback_mode": "legacy",
+  "gate": {
+    "decision": "NOT_DECIDABLE",
+    "evaluated_at": "2026-10-05T09:36:51.971643Z",
+    "report": "docs/evaluation/results/parser-v3/gate_report.json",
+    "report_sha256": "aa9881fe1e80e7a4b4c791d05b1d691c1243de4fe0df7dbf563ac37c218f8b1f"
+  },
+  "owner_decision": null,
+  "shadow_requirements": {
+    "status": "proposed",
+    "confirmed_by_owner_on": null,
+    "min_days": 14,
+    "min_shadow_runs": 200,
+    "max_disagree_rate": 0.05,
+    "max_shadow_error_rate": 0.05,
+    "max_degradation_rate": 0.2,
+    "max_rejection_rate": 0.3,
+    "drift_check_required": true
+  },
+  "shadow_observation": null,
+  "legacy_retention": {
+    "policy": "Po przełączeniu tryb legacy zostaje przez jedno wydanie jako tryb wycofania; usuwa się go w następnym wydaniu, jeśli w tym czasie nie użyto wycofania.",
+    "switched_in_release": null,
+    "remove_in_release": null
+  },
+  "history": [
+    {
+      "date": "2026-10-05",
+      "default_mode": "legacy",
+      "note": "PV3-21: bramka Task 20.17 NOT_DECIDABLE, brak okresu cienia i decyzji właściciela o włączeniu — domyślny tryb bez zmian."
+    }
+  ]
+}
