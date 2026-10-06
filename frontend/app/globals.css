@@ -1459,3 +1459,80 @@ input:disabled {
 .audit-package-button {
   margin-top: 8px;
 }
+
+/* PV3-18: oznaczenie odczytu automatycznego (model językowy) i filtr „do ręcznej weryfikacji”.
+   Kolory spełniają kontrast WCAG AA (test: components/MpzpZoneCard.a11y.test.tsx); znaczenie nie
+   zależy od koloru — oznaczenie ma pełny tekst, a stan filtra jest w aria-pressed i w napisie. */
+:root {
+  --model-ink: #3b1f7a;
+  --model-bg: #f1ecfb;
+  --model-border: #5b3aa8;
+  --focus-ring: #1b4fb3;
+}
+
+.model-reading-tag,
+.model-reading-note {
+  color: var(--model-ink);
+  background: var(--model-bg);
+  border: 1px solid var(--model-border);
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.model-reading-tag {
+  display: block;
+  margin-top: 4px;
+  padding: 3px 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.model-reading-note {
+  margin: 0 0 12px;
+  padding: 9px 10px;
+  font-size: 0.82rem;
+}
+
+.model-provenance {
+  display: block;
+  margin-top: 6px;
+}
+
+.value-null {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.review-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0;
+}
+
+.review-filter-bar .field-hint {
+  margin-top: 0;
+}
+
+.review-filter {
+  padding: 7px 12px;
+  color: var(--ink);
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.review-filter[aria-pressed="true"] {
+  color: #ffffff;
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
+.review-filter:focus-visible,
+.result-table-scroll:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}

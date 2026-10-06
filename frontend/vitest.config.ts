@@ -24,6 +24,7 @@ export default defineConfig({
         "lib/safeLink.ts",
         "lib/zoneSymbol.ts",
         "lib/mpzpConditions.ts",
+        "lib/mpzpProvenance.ts",
         "lib/compatibility.ts",
         "lib/terrain.ts",
         "lib/quality.ts",

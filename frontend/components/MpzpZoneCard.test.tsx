@@ -1,8 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { ResultPanel } from "@/components/ResultPanel";
+import { MODEL_READING_DISCLAIMER, MODEL_READING_MARK, NO_DATA_NOT_NO_RESTRICTION, NULL_NOT_ZERO } from "@/lib/mpzpProvenance";
 import { buildAnalyzeResponse } from "@/test/fixtures";
 import type { MpzpParameterEvidence, MpzpZoneResult } from "@/lib/types";
 
@@ -178,7 +180,8 @@ describe("MpzpZoneCard", () => {
     );
     expect(screen.getByText("Sposób przypisania: kandydat z discovery/dokumentu (bez wektora)")).toBeVisible();
     expect(screen.getByText("Przypisanie lub parametry wymagają weryfikacji.")).toBeVisible();
-    expect(screen.getByText("—")).toBeVisible();
+    // PV3-18: brak wartości to jawny „brak danych” (nie zero i nie brak ograniczenia), a nie samo „—”.
+    expect(screen.getByText(/^brak danych/)).toBeVisible();
     expect(screen.getByText(/metoda nieznana/)).toBeVisible();
     expect(screen.getByText("Pewność przypisania: 50%")).toBeVisible();
 
@@ -320,5 +323,220 @@ describe("MpzpZoneCard — symbol podany ręcznie (BK-204)", () => {
       expect(rows.map((row) => row.getAttribute("data-value-kind"))).toEqual(["conflict", "unconditional"]);
       expect(screen.queryByTestId("conditional-values-note")).not.toBeInTheDocument();
     });
+  });
+});
+
+const RESPONSE_SHA = "c0ffee" + "d".repeat(58);
+
+function modelParameter(overrides: Partial<MpzpParameterEvidence> = {}): MpzpParameterEvidence {
+  return parameter({
+    name: "max_storeys",
+    normalized_value: 3,
+    unit: null,
+    raw_value: "3 kondygnacje",
+    evidence_text: "zabudowa nie wyższa aniżeli 3 kondygnacje nadziemne",
+    page_number: 13,
+    segment_id: "zb-1",
+    legal_unit_id: null,
+    extraction_method: "llm_verified",
+    review_status: "ai_candidate",
+    manual_review_required: true,
+    confidence: 0.62,
+    model_id: "gemini-3.8-flash",
+    prompt_version: "mpzp-extraction/1",
+    response_sha256: RESPONSE_SHA,
+    ...overrides,
+  });
+}
+
+describe("MpzpZoneCard — odczyt automatyczny modelem (PV3-18)", () => {
+  it("oznacza wartość z modelu, pokazuje cytat, stronę i provenance, a nie przedstawia jej jako interpretacji prawnej", () => {
+    render(<ul><MpzpZoneCard zone={zone({ parameters: [modelParameter()] })} /></ul>);
+    const row = screen.getByRole("row", { name: /max_storeys/ });
+    expect(row).toHaveAttribute("data-model-reading", "true");
+    expect(within(row).getByTestId("model-reading-tag")).toHaveTextContent(MODEL_READING_MARK);
+    expect(within(row).getByText("„zabudowa nie wyższa aniżeli 3 kondygnacje nadziemne”")).toBeVisible();
+    expect(within(row).getByText(/str\. 13, segment zb-1/)).toBeVisible();
+    expect(within(row).getByText(/dosłownie: „3 kondygnacje”/)).toBeVisible();
+    const provenance = within(row).getByTestId("model-provenance");
+    expect(provenance).toHaveTextContent("Model: gemini-3.8-flash · instrukcja: mpzp-extraction/1 · SHA-256 odpowiedzi: c0ffeeddddd");
+    expect(within(provenance).getByText(/^c0ffeeddddd/)).toHaveAttribute("title", RESPONSE_SHA);
+    expect(within(row).getByText(/odczyt automatyczny \(model językowy\) · SHA-256 dddddddddddd…/)).toBeVisible();
+    const note = screen.getByTestId("model-reading-note");
+    expect(note).toHaveTextContent("1 wartość to odczyt automatyczny (model językowy).");
+    expect(note).toHaveTextContent(MODEL_READING_DISCLAIMER);
+    expect(screen.queryByText(/verified/i)).toBeNull(); // nigdy status „verified”
+  });
+
+  it("nie oznacza wartości deterministycznych jako odczytu modelu", () => {
+    render(
+      <ul>
+        <MpzpZoneCard zone={zone({ parameters: [parameter(), modelParameter(), parameter({ normalized_value: 12, raw_value: "12 m" })] })} />
+      </ul>,
+    );
+    const rows = screen.getAllByRole("row").filter((row) => row.hasAttribute("data-value-kind"));
+    expect(rows.map((row) => row.getAttribute("data-model-reading"))).toEqual([null, "true", null]);
+    expect(screen.getAllByTestId("model-reading-tag")).toHaveLength(1);
+    expect(within(rows[0]).queryByTestId("model-reading-tag")).toBeNull();
+    expect(within(rows[0]).queryByTestId("model-provenance")).toBeNull();
+    expect(within(rows[0]).getByText(/tekst PDF/)).toBeVisible();
+  });
+
+  it("wartość deterministyczna z niską pewnością albo flagą weryfikacji nadal nie jest odczytem modelu", () => {
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={zone({ parameters: [parameter({ confidence: 0.1, manual_review_required: true, extraction_method: "ocr" })] })}
+        />
+      </ul>,
+    );
+    expect(screen.queryByTestId("model-reading-tag")).toBeNull();
+    expect(screen.queryByTestId("model-reading-note")).toBeNull();
+    expect(screen.getByTestId("parameter-review")).toBeVisible();
+  });
+
+  it("pokazuje warunki wartości z modelu razem z ich cytatem", () => {
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={zone({
+            parameters: [
+              modelParameter({
+                name: "max_building_height_m",
+                normalized_value: 8,
+                unit: "m",
+                raw_value: "8 m",
+                value_kind: "conditional",
+                conditions: [{ kind: "roof_type", label: "dach płaski", quote: "dachem płaskim" }],
+              }),
+            ],
+          })}
+        />
+      </ul>,
+    );
+    const row = screen.getByRole("row", { name: /max_building_height_m/ });
+    expect(within(row).getByText(/rodzaj dachu: dach płaski — „dachem płaskim”/)).toBeVisible();
+    expect(within(row).getByTestId("conditional-tag")).toBeVisible();
+    expect(within(row).getByTestId("model-reading-tag")).toBeVisible();
+  });
+
+  it("licznik w nocie zgadza się z liczbą wartości z modelu", () => {
+    render(<ul><MpzpZoneCard zone={zone({ parameters: [modelParameter(), modelParameter({ name: "max_intensity", normalized_value: 0.8 })] })} /></ul>);
+    expect(screen.getByTestId("model-reading-note")).toHaveTextContent("2 wartości to odczyt automatyczny");
+    expect(screen.getAllByTestId("model-reading-tag")).toHaveLength(2);
+  });
+
+  it("filtr „do ręcznej weryfikacji” zawęża tabelę, pokazuje licznik i wraca do pełnej listy", async () => {
+    const user = userEvent.setup();
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={zone({
+            parameters: [
+              parameter({ name: "max_building_height_m" }),
+              modelParameter(),
+              parameter({ name: "setback_m", manual_review_required: true, normalized_value: 4, raw_value: "4 m" }),
+              parameter({ name: "max_intensity", normalized_value: 0.8, raw_value: "0,8" }),
+            ],
+          })}
+        />
+      </ul>,
+    );
+    const filter = screen.getByRole("button", { name: "Tylko do ręcznej weryfikacji (2)" });
+    expect(filter).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("status")).toHaveTextContent("Widoczne parametry: 4 z 4.");
+    expect(screen.getAllByRole("row")).toHaveLength(5);
+
+    await user.click(filter);
+    expect(filter).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("Widoczne parametry: 2 z 4.");
+    const rows = screen.getAllByRole("row").filter((row) => row.hasAttribute("data-value-kind"));
+    const headers = rows.map((row) => within(row).getByRole("rowheader").textContent ?? "");
+    expect(headers).toHaveLength(2);
+    expect(headers[0]).toMatch(/^max_storeys/);
+    expect(headers[1]).toMatch(/^setback_m/);
+    expect(rows.every((row) => row.getAttribute("data-needs-review") === "true")).toBe(true);
+
+    await user.click(filter);
+    expect(filter).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getAllByRole("row")).toHaveLength(5);
+  });
+
+  it("nie pokazuje filtra, gdy żaden parametr nie wymaga ręcznej weryfikacji", () => {
+    render(<ul><MpzpZoneCard zone={zone()} /></ul>);
+    expect(screen.queryByTestId("manual-review-filter")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("sprzeczność też trafia do filtra ręcznej weryfikacji", async () => {
+    const user = userEvent.setup();
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={zone({
+            parameters: [
+              parameter({ conflict_group_id: "g", value_kind: "conflict" }),
+              parameter({ normalized_value: 12, conflict_group_id: "g", value_kind: "conflict" }),
+              parameter({ name: "max_intensity", normalized_value: 0.8 }),
+            ],
+          })}
+        />
+      </ul>,
+    );
+    await user.click(screen.getByRole("button", { name: /Tylko do ręcznej weryfikacji \(2\)/ }));
+    expect(screen.getAllByRole("row").filter((row) => row.hasAttribute("data-value-kind"))).toHaveLength(2);
+  });
+
+  it("brak danych (null) jest różny od zera i od braku ograniczenia", () => {
+    render(
+      <ul>
+        <MpzpZoneCard
+          zone={zone({
+            parameters: [
+              parameter({ name: "min_biologically_active_percent", normalized_value: null, raw_value: null, unit: null }),
+              parameter({ name: "max_building_coverage_percent", normalized_value: 0, raw_value: "0%", unit: "%" }),
+              parameter({ name: "max_building_height_m" }),
+            ],
+          })}
+        />
+      </ul>,
+    );
+    const states = screen.getAllByRole("row").filter((row) => row.hasAttribute("data-value-kind"))
+      .map((row) => within(row).getByText((_, node) => node?.hasAttribute("data-value-state") ?? false).getAttribute("data-value-state"));
+    expect(states).toEqual(["null", "zero", "value"]);
+    const zeroRow = screen.getByRole("row", { name: /max_building_coverage_percent/ });
+    expect(within(zeroRow).getByText("0 %")).toBeVisible();
+    const nullRow = screen.getByRole("row", { name: /min_biologically_active_percent/ });
+    expect(within(nullRow).getByText(/^brak danych/)).toBeVisible();
+    expect(within(nullRow).queryByText("0 %")).toBeNull();
+    expect(within(nullRow).getByText(/to nie jest zero ani brak ograniczenia/)).toHaveClass("visually-hidden");
+    expect(screen.getByTestId("no-data-note")).toHaveTextContent(NO_DATA_NOT_NO_RESTRICTION);
+    expect(screen.getByTestId("no-data-note")).toHaveTextContent(NULL_NOT_ZERO);
+  });
+
+  it("w panelu wyniku odczyt modelu jest oznaczony tak samo jak w samej karcie", () => {
+    render(
+      <ResultPanel
+        result={buildAnalyzeResponse({ mpzp_zones: [zone({ parameters: [modelParameter()] })] })}
+        map={null}
+      />,
+    );
+    expect(screen.getByTestId("model-reading-tag")).toHaveTextContent(MODEL_READING_MARK);
+    expect(screen.getByTestId("model-reading-note")).toBeVisible();
+  });
+
+  it("odpowiedź sprzed PV3-18 (bez pól provenance) renderuje się bez oznaczenia modelu", () => {
+    const legacy = parameter();
+    for (const key of ["review_status", "model_id", "prompt_version", "response_sha256"] as const) {
+      expect(legacy[key]).toBeUndefined();
+    }
+    render(<ul><MpzpZoneCard zone={zone({ parameters: [legacy] })} /></ul>);
+    expect(screen.queryByTestId("model-reading-tag")).toBeNull();
+    expect(screen.queryByTestId("model-provenance")).toBeNull();
+  });
+
+  it("brakujące pola provenance wartości z modelu są jawne, nie puste", () => {
+    render(<ul><MpzpZoneCard zone={zone({ parameters: [modelParameter({ model_id: undefined, prompt_version: undefined, response_sha256: undefined })] })} /></ul>);
+    expect(screen.getByTestId("model-provenance")).toHaveTextContent("Model: nieznany · instrukcja: nieznana · SHA-256 odpowiedzi: —");
   });
 });
