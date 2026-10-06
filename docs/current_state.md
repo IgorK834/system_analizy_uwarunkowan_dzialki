@@ -32,7 +32,7 @@ FastAPI i PostgreSQL 16/PostGIS 3.4. Backend zachowuje starszą ścieżkę
 (`location`, `documents`, `imports`, `planning` itd.). Granice nowych modułów
 opisuje i sprawdza [ADR-001](adr/ADR-001-modular-monolith.md); obecność
 szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
-`001`–`026`. Importy przestrzenne mają model źródeł, artefaktów i aktywnego
+`001`–`030` (027–030: symbol strefy, warunki wartości, cache i rejestr zużycia modelu językowego). Importy przestrzenne mają model źródeł, artefaktów i aktywnego
 `data_release`, lecz utworzenie tabel nie dowodzi, że baza jest zasilona.
 
 1. `POST /analyze` przyjmuje `map`, `address` z wybraną sugestią albo
@@ -288,3 +288,53 @@ switch plikowy; korpus ujawnił i naprawiono kwadratowy koszt rdzenia dla długi
 **zablokowane**: brak zbioru końcowego (Task 20.2), biegu hybrydy na żywo i przeglądu ręcznego przez
 człowieka; narzędzie bramki i bieg `legacy`/`v3` są w `evaluation/results/parser-v3/` (decyzja
 `NOT_DECIDABLE`). Stan i ograniczenia: [odbiór PV3-15–17](evaluation/pv3-15-17-verification.md).
+
+## Parser MPZP v3 — oznaczenie, monitoring i dokumentacja (PV3-18–20, 2026-10-05)
+
+Wykonane lokalnie, **niezacommitowane**: **PV3-18** — wartość z modelu językowego jest w UI, PDF i pakiecie audytowym zawsze
+oznaczona („odczyt automatyczny (model językowy), zweryfikowany z cytatem — wymaga potwierdzenia”) wraz z cytatem, stroną,
+warunkami i provenance (model, wersja instrukcji, skrót odpowiedzi); wartość deterministyczna nigdy nie jest tak oznaczana;
+UI ma filtr „do ręcznej weryfikacji”, a brak danych (`null`) jest różny od 0 i od braku ograniczenia; odczyt nie jest
+przedstawiany jako interpretacja prawna. Pakiet audytowy `audit-exporter/1.2.0` niesie blok `model_provenance` — z odpowiedzi
+modelu tylko skrót i zweryfikowany cytat, a cytat zgodnie z polem `redistribution` źródła. **PV3-19** — metryki ścieżki
+(opóźnienie, tokeny, koszt szacowany, odrzucenia per bramka, cache, degradacje), komponent `components.llm` w `GET /health`
+(`ok`/`degraded`/`disabled`, nigdy „failed”, bez wpływu na gotowość), przypięcie modelu i promptu (`model_pin.json`,
+kontrola w czasie działania, w CI i skryptem) oraz skrypt kontroli dryfu. **PV3-20** — [runbook](operations/mpzp-llm.md) z
+próbą (kontener i proces), ADR-012/ADR-014 z tabelami artefaktów i skrótów. **Nie ma** biegu `--live` na zbiorze złotym,
+więc przypięta para (`gemini-3.8-flash`, `mpzp-extraction/1`) jest nieoceniona; progi alarmów to propozycja bez kalibracji na
+ruchu; bramka z Task 20.17 pozostaje `NOT_DECIDABLE`, a domyślny stan to `legacy` i `mpzp_llm_enabled=false`.
+Zbiór ewaluacyjny BK-603 ma anotacje asystenta AI bez niezależnego przeglądu człowieka i jest rozwojowy dla silnika v3.
+Stan i ograniczenia: [odbiór PV3-18–20](evaluation/pv3-18-20-verification.md).
+
+## Parser MPZP v3 — jeden silnik, regresja, bramka przełączenia (PV3-21, 2026-10-05)
+
+Wykonane lokalnie, **niezacommitowane**, **częściowo**: domyślny tryb **nie** został przełączony, bo bramka z Task 20.17 jest
+`NOT_DECIDABLE` i nie było okresu cienia — zamiast tego przełączenie blokuje zapis przesłanek
+`backend/app/core/mpzp_parser_rollout.json` oceniany przez `scripts/check_parser_default_switch.py` (test CI). W repozytorium
+jest jeden silnik ekstrakcji: liczby z `quantity_engine`, zapisy opisowe z nowego `planning/domain/descriptive_engine.py` —
+parser MPZP i reguły planistyczne nie mają już własnych wzorców. Wersje: `mpzp-parser/3.1-det`, kontrakt 2.6, `mpzp-rules/2.0`.
+Regresja parsera działa w trybach `legacy` i `v3`, opisuje stan faktyczny (dopisane luki zamknięte przez silnik; zostały tylko
+dwa prawdziwe braki wartości). Wycofanie do `legacy` opisane w [runbooku §10](operations/mpzp-llm.md) i sprawdzone próbą
+(17/17 kroków). Progi okresu cienia to propozycja do potwierdzenia przez właściciela. Stan i ograniczenia:
+[odbiór PV3-21](evaluation/pv3-21-verification.md).
+
+### Kontrakt wyniku MPZP, cache i migracje po PV3 (opis zbiorczy, stan 2026-10-05)
+
+- **Wersja kontraktu:** `MPZP_RESULT_SCHEMA_VERSION` = **2.6** (2.2 symbol strefy, 2.3 silnik ilości, 2.4 warunki, 2.5 skalibrowana
+  pewność, 2.6 jeden silnik zapisów opisowych — PV3-21); zapisy starsze nie są trafieniem cache. PV3-18–20 **nie zmieniły**
+  wersji ani pól API; PV3-21 nie zmienił pól API.
+- **`conditions` i `value_kind` (PV3-08):** każda wartość parametru niesie warunki (`kind`, `label`, `quote`) i rodzaj
+  `unconditional` / `conditional` / `conflict`; pole płaskie strefy jest `null`, gdy nie ma jednej wartości bezwarunkowej
+  (brak wartości ≠ 0). Migracja `028` (JSONB `conditions`, `value_kind`).
+- **Provenance modelu (PV3-13/14):** wartość z modelu ma `review_status = ai_candidate`, `extraction_method = llm_verified`,
+  `model_id`, `prompt_version`, `response_sha256` (pola emitowane **wyłącznie** dla wartości z modelu; wartość deterministyczna
+  ich nie ma), nigdy nie wypełnia pól płaskich i zawsze wymaga ręcznej weryfikacji; więzy bazy `ck_mpzp_parameters_llm_candidate`.
+- **Ostrzeżenia i status:** niedostępność modelu / limit / termin / błąd potoku → wynik deterministyczny, `MPZP_LLM_UNAVAILABLE`
+  z kodem przyczyny i status `partial`; odrzucenia bramek G1–G8 → `MPZP_LLM_CANDIDATES_REJECTED` z licznikami per bramka i `partial`;
+  provenance jest zapisane także dla wyniku niepełnego (snapshot, pakiet audytowy: `model_provenance.warnings`).
+- **Cache i rejestr:** tabela `mpzp_llm_extractions` = migracja **029** (zadanie nazywało ją „027”, ale 027/028 zajęły PV3-04/08);
+  klucz bloku = SHA-256 (dokument, blok, wersja promptu, wersja schematu, model, parametry), tylko `ok` w retencji
+  (`MPZP_LLM_CACHE_RETENTION_DAYS`, 180 dni) jest trafieniem; zapis zawiera wyjście modelu i skróty wejścia, nigdy treść żądania.
+  Rejestr zużycia `mpzp_llm_usage` = migracja **030**. Sygnatura cache analizy zawiera tryb parsera, wersję parsera oraz — w trybach
+  z modelem — wersje promptu i schematu, model i stan flagi. Head migracji: `030_mpzp_llm_usage`.
+- **Zdrowie i pakiet (PV3-18/19):** `GET /health` → `components.llm`; pakiet audytowy `audit-exporter/1.2.0` (`model_provenance`).

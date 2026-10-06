@@ -358,6 +358,33 @@ współbieżność, częstotliwość i budżet czasu; dostawca modelu jest **prz
 `python3 backend/scripts/secret_scan.py .`. Szczegóły: [ADR-014](docs/adr/ADR-014-llm-data-handling.md),
 [odbiór PV3-15–17](docs/evaluation/pv3-15-17-verification.md).
 
+Oznaczenie, monitoring i obsługa (PV3-18–20): wartość z modelu językowego jest w UI, raporcie PDF i pakiecie audytowym
+(`audit-exporter/1.2.0`, blok `model_provenance`) **zawsze oznaczona** — „odczyt automatyczny (model językowy),
+zweryfikowany z cytatem — wymaga potwierdzenia” — z cytatem, stroną, warunkami, modelem, wersją instrukcji i skrótem
+odpowiedzi; wartość deterministyczna nigdy nie jest tak oznaczana, a odczyt nie jest interpretacją prawną. Z odpowiedzi
+modelu pakiet audytowy niesie tylko skrót i zweryfikowany cytat (cytat zgodnie z `redistribution` źródła). `GET /health`
+raportuje komponent `llm` (`ok`/`degraded`/`disabled`, nigdy „failed”, bez wpływu na gotowość), a model i prompt są
+przypięte (`model_pin.json`): zmiana bez ponownej ewaluacji `--live` i wpisu w ADR jest wykrywana. Runbook (włączanie,
+wyłączanie, limity, alarmy, kontrola dryfu, rotacja klucza, zmiana modelu) z wynikiem próby:
+[`docs/operations/mpzp-llm.md`](docs/operations/mpzp-llm.md). Stan i ograniczenia: [odbiór PV3-18–20](docs/evaluation/pv3-18-20-verification.md).
+
+```bash
+curl -s http://localhost:8000/health                                  # components.llm: ok | degraded | disabled
+python3 backend/scripts/check_llm_pin.py check                        # przypięcie vs ustawienia, kod, Compose, .env.example, ADR
+python3 backend/scripts/check_llm_pin.py check --require-evaluation   # bramka wdrożeniowa (dziś kod 1: brak ewaluacji --live)
+python3 backend/scripts/rehearse_llm_runbook.py                       # próba runbooka offline (14 kroków)
+# RĘCZNIE, poza CI — wysyłają publiczny tekst aktów do dostawcy, kosztują, wymagają zgody i GEMINI_API_KEY:
+python3 backend/scripts/check_llm_drift.py --confirm-public-text     # dryf: bieżące wyjścia vs zamrożone odtworzenie
+python3 backend/scripts/evaluate_mpzp_parser.py --engine v3 hybrid --live --model gemini-3.8-flash \
+  --llm-replay <katalog odpowiedzi> --output-dir docs/evaluation/results/<bieg>   # ponowna ewaluacja pary (model, prompt)
+```
+
+**Ograniczenia (stan 2026-10-05):** ścieżka modelu jest wyłączona domyślnie, a decyzja o włączeniu produkcyjnym nie została
+podjęta (bramka jakości `NOT_DECIDABLE`); przypięta para `gemini-3.8-flash` + `mpzp-extraction/1` **nie ma ponownej
+ewaluacji na zbiorze złotym**; progi alarmów to propozycja bez kalibracji na ruchu; zbiór ewaluacyjny BK-603 (21 próbek, 9
+gmin) ma anotacje asystenta AI bez przeglądu człowieka, a silnik v3 był na nim rozwijany — wyniki są rozwojowe i nie są
+gwarancją jakości.
+
 Geometrie stref POG dla dokładnej części BK-602 zamraża ręcznie (z siecią, poza CI)
 `backend/scripts/freeze_pog_zone_layers.py`.
 
