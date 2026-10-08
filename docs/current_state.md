@@ -54,7 +54,7 @@ szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
    ograniczeniem stanu bazowego wobec docelowej zasady „WMS tylko podgląd”.
    Przy braku wektora wynik jest zapisywany jako `waiting_for_user_input`
    (`waiting_for_zone_symbol` w bazie) razem z przypiętą kopią uchwały, planem i
-   kandydatami (`manual_zone_context`). `POST /analyze/resume` przyjmuje ręczny
+   kandydatami (`manual_zone_context`). `POST /analyze/resume` (od AU-005 wymaga tokenu dostępu analizy) przyjmuje ręczny
    symbol, parsuje wyłącznie przypiętą kopię (bez ponownego pobrania) i zapisuje
    wynik `partial` z nieustalonym udziałem strefy oraz flagami weryfikacji
    (BK-204, ADR-005). Symbol (do 40 znaków, także ze spacją, przecinkiem i
@@ -210,7 +210,7 @@ wynik mechaniczny GO); **decyzja właściciela GO z 2026-10-05 wpisana w ADR-012
 
 ## Parser MPZP v3 — fundament (PV3-04–06, 2026-10-02)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-04** — wspólna reguła symbolu strefy (forma kanoniczna
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-04** — wspólna reguła symbolu strefy (forma kanoniczna
 NFKC + przycięcie + zwinięcie odstępów, ≤ 40 znaków, jeden plik przypadków dla backendu i UI),
 tolerancyjne na odstępy dopasowanie symbolu w tekście bez scalania `MN` z `MN.1`, migracja `027`
 (`analyses.resolved_zone_symbol` 20 → 50), `MPZP_RESULT_SCHEMA_VERSION` 2.2. **PV3-05** — drzewo
@@ -225,7 +225,7 @@ na bloki to Task 20.14 (z podniesieniem wersji kontraktu). Stan i polecenia:
 
 ## Parser MPZP v3 — silnik wartości, warunki, pewność (PV3-07–09, 2026-10-03)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-07** — jeden deterministyczny silnik wartości liczbowych
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-07** — jeden deterministyczny silnik wartości liczbowych
 oparty o leksykon (`quantity_engine`/`quantity_lexicon`/`quantity_normalization`), współdzielony przez
 aplikację i ewaluator (ewaluator nie ma już własnej normalizacji); wersja parsera `mpzp-parser/3.0-det`.
 Na korpusie BK-603 (anotacje AI, wynik rozwojowy): silnik `v3` precision 1,000 (248/248), recall 0,992
@@ -244,7 +244,7 @@ pozostaje `legacy` (Task 20.14). Stan, liczby i ograniczenia:
 
 ## Parser MPZP v3 — ścieżka modelu językowego (PV3-10/11, 2026-10-03/05)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-10** — port `StructuredExtractionProvider` w warstwie
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-10** — port `StructuredExtractionProvider` w warstwie
 `application` i adapter Gemini (REST, `httpx`) w `infrastructure/llm`: stały host, HTTPS, bez przekierowań,
 limity rozmiaru i czasu, ponowienia z `Retry-After`, wyłącznik awaryjny, wykrywanie innego modelu niż
 skonfigurowany, brak klucza i treści żądania w logach i wyjątkach; **wyłączony domyślnie**
@@ -260,7 +260,7 @@ ograniczenia: [odbiór PV3-10/11](evaluation/pv3-10-11-verification.md), aneks w
 
 ## Parser MPZP v3 — bramki, cache i tryby parsera (PV3-12–14, 2026-10-05)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-12** — weryfikator kandydatów modelu
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-12** — weryfikator kandydatów modelu
 (`planning/domain/candidate_verifier.py`) z bramkami G1–G8 względem tekstu bloku strefy; jedyna droga
 wartości z modelu do wyniku; przyjęty kandydat ma status `ai_candidate` (nigdy `verified`) i
 `extraction_method=llm_verified`, strona i zakres znaków pochodzą z dopasowania w bloku. **PV3-13** — tabela
@@ -277,7 +277,7 @@ ograniczenia: [odbiór PV3-12–14](evaluation/pv3-12-14-verification.md), aneks
 
 ## Parser MPZP v3 — limity, dane, bramka jakości (PV3-15–17, 2026-10-05)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-15** — limity ścieżki modelu w analizie (żądania, tokeny na
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-15** — limity ścieżki modelu w analizie (żądania, tokeny na
 analizę/dokument/żądanie, termin propagowany od startu analizy) i między analizami (adapter
 `infrastructure/llm/budget.py`: częstotliwość, współbieżność, twarde limity doby i miesiąca w rejestrze
 `mpzp_llm_usage`, migracja **030**), wspólny wyłącznik awaryjny, 10 scenariuszy wstrzykiwania błędów przez
@@ -291,7 +291,7 @@ człowieka; narzędzie bramki i bieg `legacy`/`v3` są w `evaluation/results/par
 
 ## Parser MPZP v3 — oznaczenie, monitoring i dokumentacja (PV3-18–20, 2026-10-05)
 
-Wykonane lokalnie, **niezacommitowane**: **PV3-18** — wartość z modelu językowego jest w UI, PDF i pakiecie audytowym zawsze
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08): **PV3-18** — wartość z modelu językowego jest w UI, PDF i pakiecie audytowym zawsze
 oznaczona („odczyt automatyczny (model językowy), zweryfikowany z cytatem — wymaga potwierdzenia”) wraz z cytatem, stroną,
 warunkami i provenance (model, wersja instrukcji, skrót odpowiedzi); wartość deterministyczna nigdy nie jest tak oznaczana;
 UI ma filtr „do ręcznej weryfikacji”, a brak danych (`null`) jest różny od 0 i od braku ograniczenia; odczyt nie jest
@@ -308,7 +308,7 @@ Stan i ograniczenia: [odbiór PV3-18–20](evaluation/pv3-18-20-verification.md)
 
 ## Parser MPZP v3 — jeden silnik, regresja, bramka przełączenia (PV3-21, 2026-10-05)
 
-Wykonane lokalnie, **niezacommitowane**, **częściowo**: domyślny tryb **nie** został przełączony, bo bramka z Task 20.17 jest
+Zacommitowane w `main` (stan zweryfikowany w AU-009, 2026-10-08), **częściowo**: domyślny tryb **nie** został przełączony, bo bramka z Task 20.17 jest
 `NOT_DECIDABLE` i nie było okresu cienia — zamiast tego przełączenie blokuje zapis przesłanek
 `backend/app/core/mpzp_parser_rollout.json` oceniany przez `scripts/check_parser_default_switch.py` (test CI). W repozytorium
 jest jeden silnik ekstrakcji: liczby z `quantity_engine`, zapisy opisowe z nowego `planning/domain/descriptive_engine.py` —
@@ -336,5 +336,165 @@ dwa prawdziwe braki wartości). Wycofanie do `legacy` opisane w [runbooku §10](
   klucz bloku = SHA-256 (dokument, blok, wersja promptu, wersja schematu, model, parametry), tylko `ok` w retencji
   (`MPZP_LLM_CACHE_RETENTION_DAYS`, 180 dni) jest trafieniem; zapis zawiera wyjście modelu i skróty wejścia, nigdy treść żądania.
   Rejestr zużycia `mpzp_llm_usage` = migracja **030**. Sygnatura cache analizy zawiera tryb parsera, wersję parsera oraz — w trybach
-  z modelem — wersje promptu i schematu, model i stan flagi. Head migracji: `030_mpzp_llm_usage`.
+  z modelem — wersje promptu i schematu, model i stan flagi. Head migracji po PV3: `030_mpzp_llm_usage` (po AU-001: `031_source_url_text`, niżej).
 - **Zdrowie i pakiet (PV3-18/19):** `GET /health` → `components.llm`; pakiet audytowy `audit-exporter/1.2.0` (`model_provenance`).
+
+## Stan repozytorium po audycie 2026-10-05 (AU-009, 2026-10-08)
+
+- **Punkt odniesienia audytu:** tag `audit-2026-10-05` wskazuje commit `178f70b` (2026-10-05, ostatni commit przed audytem).
+- **Dokumenty w historii git:** `docs/adr`, `docs/evaluation` (≈ 28 MB), `docs/progress` (≈ 16 MB) i `backlog.md` są śledzone;
+  `.gitignore` nie wyklucza już żadnego z nich (wcześniej 43 pliki pod `docs/` były ignorowane, a README i ten dokument linkowały do
+  nich martwymi odnośnikami po `git clone`). Prywatne pozostają wyłącznie `context.md` i `ANALIZA_ARCHITEKTURY_I_PLAN.md`.
+  `git status --ignored --short docs` nie wymienia żadnych ignorowanych plików.
+- **Status PV3:** prace PV3-04…21 są w historii `main` (wcześniejsze sekcje tego dokumentu opisywały je jako „niezacommitowane”;
+  etykiety poprawiono). Domyślny tryb parsera nadal `legacy` — bramka przełączenia (Task 20.17) pozostaje zablokowana.
+- **Rozmiar artefaktów:** żaden plik w `docs/evaluation/results/**` nie przekracza 5 MB, więc Git LFS nie jest używany (`git lfs`
+  nie jest zainstalowany); `.gitattributes` oznacza dokumenty binarne i zawiera regułę LFS do włączenia, gdy pojawi się większy
+  artefakt; `test_large_binary_artifacts_are_tracked_by_lfs_or_stay_under_the_limit` pilnuje progu.
+- **Odnośniki:** `backend/tests/test_readme_links.py` sprawdza, że każdy lokalny link w `README.md` i tym dokumencie wskazuje plik
+  śledzony przez git (`git ls-files`); działa w CI i w świeżym `git clone`.
+- **Sprzątanie:** usunięto roboczy skrypt `backend/_imp.py` i przypadkowy `docs/progress/.DS_Store` (`.DS_Store` jest w `.gitignore`).
+- **Praca po audycie (AU-001–AU-010):** AU-001–004 (zapis, ULDK, błędy API, KIMPZP), AU-005–007 (token resume, limiter,
+  single-flight), AU-008 (lista podpowiedzi adresowych), AU-010 (podatności, lockfile, lint) opisano w kolejnych sekcjach.
+  Zadania bez numeru w tym wykazie (AU-101 i dalsze) są poza zakresem.
+
+## Audyt 2026-10-05 — naprawy P0: zapis, ULDK, błędy API (AU-001–AU-003, 2026-10-06)
+
+Zacommitowane w `main` (AU-009, 2026-10-08). Decyzje: [ADR-015](adr/ADR-015-api-errors-request-id-and-text-column-policy.md); odbiór:
+[AU-001–003](evaluation/au-001-003-verification.md). Dokumenty wskazane w zadaniach (`docs/audit/2026-10-05-raport-audytu.md`,
+`docs/audit/2026-10-06-backlog-po-audycie.md`) **nie istnieją w repozytorium** — źródłem były treści zadań.
+
+- **AU-001 (zapis analizy):** adres zapytania NMT zawierał cały wielokąt działki, a `source_records.source_url` było `VARCHAR(1000)`
+  → `StringDataRightTruncation` i HTTP 500 po 10–36 s pracy. Dokładnie 8 z 30 działek korpusu przekracza 1000 znaków przy starym
+  adresie (Warszawa 1, Kraków 2, Legnica 3, Pisz 2 — zgodnie z audytem). Teraz `terrain.source.source_url` =
+  adres bazowy + `polygon_sha256` + `vertex_count` (ok. 157 znaków), pełny adres tylko w logu `DEBUG`. Migracja
+  **`031_source_url_text`** (head) zmienia 18 kolumn adresów i odnośników na `TEXT`; rollback przycina do poprzedniego limitu ze
+  znacznikiem `…`. Pozostałe kolumny `String(n)` mają jawną decyzję w `tests/column_length_policy.py` (174 kolumny: 18 `text`, 40
+  `clipped` = `ClippedString(n)` przycina z `…`, 116 `strict` = nadmiar to jawny błąd, nie cicha zmiana skrótu/klucza). Błąd
+  `DataError`/`IntegrityError` przy zapisie to `PersistenceError` → **503 `PERSISTENCE_FAILED`** z pełnym kontekstem w logu
+  (bez parametrów instrukcji). Znaleziona przy okazji ta sama klasa błędu: identyfikator aktu `mpzp-document:<url>` (klucz
+  unikalny `VARCHAR(200)`) — `bounded_act_identifier` skraca go skrótem SHA-256 (wartości ≤ 200 znaków bez zmian).
+- **AU-002 (ULDK):** kod statusu to pierwszy token pierwszej linii. `-1 brak wyników` ponawiane raz po 300 ms, drugie `-1` →
+  **404 `PARCEL_NOT_FOUND`** z komunikatem „ULDK nie zwróciło działki dla tej lokalizacji (brak działki albo chwilowy błąd
+  źródła)”; inne `-1 …` → 503; pusta odpowiedź, brak kodu i nieznany kod → **502 `UPSTREAM_INVALID_RESPONSE`**; błędy transportu
+  (połączenie, DNS) → 503 zamiast surowego wyjątku `httpx`. Liczniki per kod odpowiedzi: `GET /health/upstream` (`X-Admin-Key`).
+  Zamrożone, rzeczywiste odpowiedzi ULDK: `tests/fixtures/source_contracts/uldk/` (jedyny plik skonstruowany ręcznie jest opisany
+  w README katalogu).
+- **AU-003 (błędy z `request_id`):** `X-Request-ID` (przyjmuje poprawny, inaczej UUID4) w każdej odpowiedzi i w logu (`[request_id]`);
+  każdy błąd ma ciało `ErrorResponse` (`error`, `detail`, `request_id`) — `detail` bez zmian dla dotychczasowych klientów;
+  nieobsłużony wyjątek → JSON `INTERNAL_ERROR` **z nagłówkami CORS** (handler `Exception` działa poza `CORSMiddleware`), bez stack
+  trace. Mapowanie wyjątków domenowych na kody jest w jednym miejscu (`app/routers/error_handlers.py`). Frontend: osobne komunikaty
+  dla 422, 429 (z odliczaniem z `Retry-After`), 5xx („Błąd po stronie serwera. Kod zgłoszenia: …”, bez zachęty do ponawiania),
+  502/503 i 0 (tylko prawdziwy brak sieci).
+- **Kontrakt wyniku:** pola `AnalyzeResponse` **bez zmian** — `*_SCHEMA_VERSION`, `RESULT_CONTRACT_VERSION` i
+  `docs/report/field-mapping.md` nie wymagały aktualizacji. Zmieniła się wartość `terrain.source.source_url`; zapisy sprzed zmiany
+  mają dawny, pełny adres.
+- **Obserwacja z danych rzeczywistych (nie naprawiana tutaj):** NMT `GetMinMaxByPolygon` odrzuca poligony > 100 000 m² błędem w
+  treści ze statusem HTTP 200 — sekcja terenu działki 23,7 ha (`281603_4.0001.431/66`) jest `unavailable` (`SERVICE_REPORTED_ERROR`),
+  analiza kończy się 200.
+- **Weryfikacja:** kontener jak w CI: **3784 passed**, pokrycie **94,35%**; frontend: 513 testów, pokrycie 97,39%, `typecheck` i `next build` zielone. Test na żywych
+  usługach: 8/8 działek z audytu → HTTP 200, brak `StringDataRightTruncation` w logu; wymuszony błąd (baza wyłączona) → JSON z `request_id` i nagłówkami
+  CORS; w przeglądarce 404 / 429 z odliczaniem / 5xx z kodem zgłoszenia (nie „brak sieci”). Szczegóły i ograniczenia: [odbiór AU-001–003](evaluation/au-001-003-verification.md).
+
+
+## Audyt 2026-10-05 — parser KIMPZP: akty w punkcie, zmiany, „brak serwisu” (AU-004, 2026-10-06)
+
+Zacommitowane w `main` (AU-009, 2026-10-08). Decyzje: [ADR-016](adr/ADR-016-kimpzp-discovery-acts-and-source-status.md); odbiór:
+[AU-004](evaluation/au-004-verification.md).
+
+- **Stan zastany:** dla `141801_4.0701.23/8` (Góra Kalwaria, raport OnGeo) parser zakładał pary `<th>`/`<td>`, a gmina zwraca
+  `<td><b>Klucz</b></td><td>…</td>`; rekordem zostawała tabela „Zmiany tekstowe” → `plan_id='LIV/467/2021'`, `uchwala_url=None`,
+  ostrzeżenie `MPZP_DOCUMENT_OR_SYMBOL_MISSING` bez planu. Błędy usług gminnych z HTTP 200 (Warszawa `<oms_error>`,
+  Bielsko-Biała `ServiceExceptionReport`) i „brak serwisu dla wskazanego obszaru” kończyły się „nie znaleziono MPZP”.
+- **Teraz:** port `KimpzpFeatureInfoParser` (`modules/planning/application`), adapter BeautifulSoup
+  `modules/planning/infrastructure/kimpzp_feature_info.py`, typy i agregacja w `modules/planning/domain/kimpzp_discovery.py`.
+  Wynik punktu to lista aktów (numer uchwały, data, nazwa, „obowiązuje od”, „utracił moc”, status, linki tekstu/legendy/rysunku/
+  BIP/WWW, dziennik, symbole, zmiany) malejąco wg „obowiązuje od”; tabele zmian są wyłącznie `amendments`. Statusy rozłączne
+  `available|no_match|no_coverage|unavailable|unknown`; „brak serwisu” → `no_coverage` + `KIMPZP_NO_SERVICE_FOR_AREA`; błąd usługi →
+  `MPZP_DISCOVERY_UNAVAILABLE` (`error`). Kilka aktów → `MPZP_MULTIPLE_ACTS_AT_POINT` (różne akty w punktach →
+  `MPZP_MULTIPLE_ACTS_ON_PARCEL`), bez wyboru dokumentu i bez parsowania (rozstrzygnięcie: AU-101 / Task 22.1).
+- **Kontrakt:** nowe pole `AnalyzeResponse.mpzp_discovery` (`MpzpDiscoverySection` 1.0); `MPZP_RESULT_SCHEMA_VERSION` **2.7**
+  (wyniki 2.6 nie są serwowane z cache); snapshot `analyses.mpzp_discovery` — migracja **`032_mpzp_discovery`** (head, kolumna
+  nullable bez uzupełniania wstecz). Macierz jakości: MPZP bez stref z rozpoznanym aktem → `partial` (`MPZP_ACT_WITHOUT_ZONE`),
+  `no_coverage`/`unavailable` z discovery. Raport PDF: Tabela 3.5; `docs/report/field-mapping.md` odświeżony. UI: karta
+  „Akty wskazane przez KIMPZP” w sekcji MPZP (klikalne tylko linki HTTPS).
+- **Fixtures:** 10 nieprzetworzonych odpowiedzi KIMPZP z manifestem SHA-256 w `backend/tests/fixtures/source_contracts/kimpzp/`
+  (skrypt odświeżania `backend/scripts/capture_kimpzp_fixtures.py`); test własności (tabela zagnieżdżona) i fuzz (600 mutacji).
+- **Skutek uboczny:** literał `NULL` nie jest już symbolem strefy (defekt RC-01 badania korpusu usunięty w kodzie; sonda badania
+  zwraca `None`).
+- **Weryfikacja:** kontener jak w CI: **3902 passed**, pokrycie **94,50%**; frontend 522 testy, pokrycie 97,43%, `typecheck` i
+  `next build` zielone. Żywe usługi: działka z audytu zwraca `IV/30/2024` (`…/uch/IV_30_2024.pdf`) i `576/XLVII/2010`,
+  `LIV/467/2021` tylko jako zmiana; smoke korpusu 31/31 HTTP 200, 0 × 5xx (Warszawa i Bielsko-Biała: `unavailable`, nie „brak planu”).
+
+## Audyt 2026-10-05 — dostęp i obciążenie: token resume, limiter, single-flight (AU-005–AU-007, 2026-10-08)
+
+Zacommitowane w `main` (AU-009, 2026-10-08). Decyzje: [ADR-017](adr/ADR-017-resume-token-rate-limit-and-single-flight.md); odbiór:
+[AU-005–007](evaluation/au-005-007-verification.md). Dokumenty `docs/audit/…` wskazane w zadaniach nadal **nie istnieją** w repozytorium.
+Pola `AnalyzeResponse` **bez zmian** — `*_SCHEMA_VERSION`, `RESULT_CONTRACT_VERSION` i `docs/report/field-mapping.md` nie wymagały
+aktualizacji; brak nowej migracji (head nadal `032_mpzp_discovery`).
+
+- **AU-005 (token resume):** `POST /analyze/resume` przyjmuje `access_token` (pole body) albo nagłówek `X-Analysis-Token`. Zależność
+  `authorized_resume_request` działa przed `get_db`, więc brak/zły/cudzy token to `403` o identycznej treści dla analizy istniejącej i
+  nieistniejącej, bez odczytu bazy; `404`/`409` tylko po poprawnym tokenie. Wspólna `ensure_analysis_access` (też raport i dokument).
+  Frontend (`useResumeAnalysis`, `resumeAnalysis`, `app/page.tsx`) wysyła token z wyniku i nie wysyła żądania, gdy wynik go nie ma;
+  osobny komunikat dla 403.
+- **AU-006 (jeden limiter):** `client_key()` ignoruje `X-Forwarded-For`, dopóki `RATE_LIMIT_TRUST_FORWARDED_FOR=true` **i** adres połączenia
+  nie jest w `RATE_LIMIT_TRUSTED_PROXIES`; wtedy klientem jest wpis liczony od końca o `TRUSTED_PROXY_COUNT`. Domyślnie `false`
+  (`.env.example`, Compose, `Settings`; lokalny `.env` poprawiony). Usunięto limiter i `_client_key()` z `modules/location/api/router.py`.
+  Każda trasa publiczna ma limiter (progi: kafle WMS/MVT 1200, geokodowanie 60, wyszukiwarka adresów 30, pozostałe odczyty i sondy 300
+  na minutę na klienta) i zwraca 429 z `Retry-After`; pokrycie tras pilnuje test oparty na OpenAPI. Pomiar z audytu (50 żądań,
+  limit 5/min, rotowany `X-Forwarded-For`) przepuszcza 5, także przy `TRUST=true` bez zaufanego peera. Limiter nadal działa w procesie
+  (N workerów = N × limit); port 8000 w Compose nadal jest publikowany na wszystkich interfejsach.
+- **AU-007 (single-flight):** `app/services/singleflight.py` — rejestr lotów w procesie + sesyjna blokada doradcza PostgreSQL
+  (`pg_try_advisory_lock(hashtextextended(parcel_identifier, 0))`, osobne połączenie `NullPool`/`AUTOCOMMIT`, limit oczekiwania 90 s).
+  `run_analysis`: trafienie w cache bez blokady; chybienie i `force_refresh` przez blokadę, lider po jej zdobyciu ponownie sprawdza cache;
+  `force_refresh` przyjmuje wynik nie starszy niż jego żądanie. Identyfikacja ULDK jest współdzielona przez identyczne żądania. Awaria
+  lidera → jeden czekający przejmuje rolę (po drugiej awarii błąd jest propagowany); timeout → `503 ANALYSIS_IN_PROGRESS` +
+  `Retry-After`. Metryki: `analysis_singleflight_waiters` i liczniki w `GET /health/upstream`, log `singleflight=leader|wait`.
+  Wyłącznik `ANALYSIS_SINGLEFLIGHT_ENABLED`. Przy okazji: `get_or_create_parcel` znosi wyścig pierwszego zapisu tej samej działki
+  (savepoint + ponowny odczyt) — wcześniej drugi zapis kończył się 503 `PERSISTENCE_FAILED`.
+- **Weryfikacja:** kontener jak w CI: **4057 passed**, pokrycie **94,59%** (`rate_limit.py` 100%, `access_control.py` 100%, `singleflight.py` 94%);
+  frontend: 524 testy, pokrycie 97,49%, `typecheck` i `next build` zielone. Żywy stos (prawdziwe usługi): 50 żądań z rotowanym
+  `X-Forwarded-For` przeszło 5 (reszta 429); 6 równoległych `POST /analyze` → 1 analiza, 1 wiersz, 1 lider i 5 czekających; UI
+  wznawia analizę tokenem z wyniku (200), ponowne wznowienie → 409. `live_smoke_corpus.py` (Task 21.11) nadal nie istnieje. Szczegóły i
+  decyzje do potwierdzenia: [odbiór AU-005–007](evaluation/au-005-007-verification.md).
+
+## Audyt 2026-10-05 — lista podpowiedzi adresowych (AU-008, 2026-10-08)
+
+Zacommitowane w `main` (AU-009, 2026-10-08). Odbiór: [AU-008](evaluation/au-008-verification.md); nowy ADR nie był potrzebny (zmiana
+lokalna: CSS i jeden komponent).
+
+- **Stan zastany:** `ul.suggestions` był elementem przepływu w `.search-panel` (`z-index: 5`), a `.map-controls` (`z-index: 6`) leży
+  nad nim — przy 1440×900 lista (y 339–599) była pod panelem POG (od y 358), `document.elementFromPoint` w środku każdej z 5
+  pozycji zwracał panel POG (przy 375×812 — 3 z 5).
+- **Teraz:** lista to popover (`position: absolute` pod polem w `.address-field`), więc nie przesuwa panelu POG; panel z otwartą
+  listą dostaje `search-panel-suggesting` (`z-index: 8`, nad `.map-controls` i `.result-stack`); lista przewija się
+  (`max-height: clamp(8rem, calc(100dvh - 20rem), 24rem)`, `overflow-y: auto`). Klawiatura i `aria-activedescendant` bez zmian;
+  doszedł Escape i zamykanie klikiem poza panelem.
+- **Weryfikacja:** pomiar `elementFromPoint` w przeglądarce: 5/5 pozycji w liście przy 1440×900 i 375×812 (przed zmianą 0/5 i 2/5),
+  panel POG nieprzesunięty, przewijanie przy 1440×520, prawdziwe kliknięcie 5. pozycji uruchamia analizę tej pozycji; testy:
+  SearchPanel (6 nowych) i kontrakt CSS (4 nowe).
+
+## Audyt 2026-10-05 — podatności, lockfile, lint i typy w CI (AU-010, 2026-10-08)
+
+Zacommitowane w `main` (AU-009, 2026-10-08). Decyzje: [ADR-018](adr/ADR-018-dependency-lockfiles-multistage-images-and-ci-gates.md);
+odbiór: [AU-010](evaluation/au-010-verification.md).
+
+- **Stan zastany:** `npm audit --omit=dev` — 7 podatności (2 krytyczne: `next 16.2.10`, `maplibre-gl 5.24.0`; wysokie: `nanoid`, `sharp`,
+  `source-map-js`); `backend/requirements.txt` z samymi dolnymi granicami, bez lockfile'a, z `pytest`/`respx`/`pytest-cov` w
+  zależnościach produkcyjnych; obraz produkcyjny kopiował `tests/` i `scripts/`; CI bez `ruff`, `mypy`, `eslint`; obrazy bazowe na ruchomych tagach.
+- **Frontend:** `next 16.3.8`, `maplibre-gl 6.13.0` (migracja major: tylko nazwane eksporty oraz jawny adres workera w `lib/maplibreWorker.ts` — bez niego mapa po `next build` nie ładuje kafli; wykryte ręcznie w przeglądarce, nie przez testy jednostkowe), poprawione `postcss`, `nanoid`, `sharp`,
+  `source-map-js`, `vitest 4.1.11`, `undici`; `npm audit` (także pełny) = 0 podatności. Nowy `npm run lint` (ESLint 9, flat config
+  bez `eslint-config-next`, z powodu podatnego `braces` bez poprawki).
+- **Backend:** `requirements.in` + `requirements.lock` (58 pakietów z SHA-256) i `requirements-dev.txt` (47, `ruff`, `mypy`, `pip-audit`,
+  `pytest`…); `Dockerfile` wieloetapowy — `runtime` (domyślny) bez `pytest`, `tests/`, `scripts/`, `test` z narzędziami; Compose: `backend-test`
+  (profil `test`); obrazy bazowe przypięte digestem; `ruff` (`E4,E7,E9,F`; naprawiono 33 zgłoszenia), `mypy app/modules` z bazą 19 znanych
+  zgłoszeń (`mypy-baseline.txt`, bramka na NOWE); `pip-audit` czysty. Dwa buildy `--no-cache` dają identyczną listę pakietów.
+- **CI:** zadania `backend` (build `runtime`+`test`, kontrola zawartości runtime, `ruff`, `mypy`, `pip-audit`, testy z `--cov-fail-under=80`),
+  `backend-reproducible`, `frontend` (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy, build); `.github/dependabot.yml`.
+  Zgodnie z testem negatywnym bramki zwracają kod 1 dla podatnego `next`, podatnego pakietu Pythona i nieużywanego importu; przebieg na
+  GitHub Actions nie został wykonany (wymaga push gałęzi).
+- **Zmiana poleceń:** testy backendu uruchamia się w usłudze `backend-test` (`docker compose --profile test run --rm backend-test pytest …`),
+  a nie w `backend` (obraz produkcyjny nie zawiera `pytest`); skrypty operacyjne z README działają z hosta (`python3 backend/scripts/…`).
+- **Weryfikacja:** backend w kontenerze `backend-test` jak w CI: **4088 passed**, pokrycie **94,59%**; frontend: `npm audit` 0, ESLint, `tsc`, **537 testów**,
+  pokrycie 97,72%, `next build` zielone; przebieg w przeglądarce na buildzie produkcyjnym (mapa z kaflami, worker, popover AU-008 5/5).

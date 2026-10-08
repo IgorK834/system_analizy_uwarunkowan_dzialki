@@ -191,3 +191,7 @@ jedną regułą dla backendu, API i UI. Dotyczy to wyłącznie ręcznego symbolu
     działa bez zmian. Zmiany parsera z PV3-05/06 nie zmieniają wyników
     produkcyjnych, dopóki domyślnym trybem pozostaje `legacy` (przełączenie —
     Task 20.14 — wymaga kolejnego podniesienia wersji kontraktu).
+
+> **Aktualizacja (AU-005, 2026-10-08):** `POST /analyze/resume` wymaga teraz tokenu dostępu analizy (`access_token` w body albo
+> nagłówek `X-Analysis-Token`); bez poprawnego tokenu odpowiada `403` niezależnie od istnienia analizy, a `404`/`409`
+> dopiero po nim. Zob. [ADR-017](ADR-017-resume-token-rate-limit-and-single-flight.md).

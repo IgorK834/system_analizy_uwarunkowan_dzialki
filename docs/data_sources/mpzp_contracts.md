@@ -53,6 +53,16 @@ integracyjnych GUGiK tylko do końca okresu przejściowego we wrześniu 2026 r.
 Dlatego konfiguracja KIMPZP jest kontraktem dynamicznym i musi zostać
 sprawdzona bezpośrednio przed każdym wdrożeniem.
 
+Odpowiedź GetFeatureInfo warstwy `plany_granice` to sklejone odpowiedzi usług
+gminnych (separator `<hr/>`) w kilku formatach: bloki „Obowiązujące MPZP” z
+tabelami zmian, tabele atrybutów Esri/GeoServer, pary `<th>`/`<td>`, warstwy
+QGIS Server oraz komunikaty „brak serwisu dla wskazanego obszaru” (gmina poza
+KIMPZP → `no_coverage`) i „<gmina>: brak wyniku…” (`no_match`). Błędy usług
+gminnych (`<oms_error>`, `ServiceExceptionReport`) mają HTTP 200 i są
+`unavailable`, nie „brakiem planu”. Wynik to lista aktów w punkcie z ich
+zmianami; przy kilku aktach system nie wybiera dokumentu (ADR-016, AU-004).
+Zamrożone odpowiedzi 10 gmin: `backend/tests/fixtures/source_contracts/kimpzp/`.
+
 ### Kraków MSIP
 
 WFS 2.0.0 zawiera granice obowiązujących planów i trzy warstwy przeznaczeń w

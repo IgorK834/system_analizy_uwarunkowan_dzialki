@@ -1,0 +1,113 @@
+{
+  "captured": "2026-10-08",
+  "method": "Wbudowana przeglądarka (resize_window), produkcyjny build frontendu (next build) wobec stubu API zwracającego 5 podpowiedzi; zakładka „Adres”, wpisane „Warszawa”; dla każdej z 5 pozycji środek getBoundingClientRect() → document.elementFromPoint().",
+  "before_HEAD": {
+    "1440x900": {
+      "list": {
+        "position": "static",
+        "zIndex": "auto",
+        "top": 339,
+        "bottom": 599
+      },
+      "searchPanelZIndex": 5,
+      "mapControlsZIndex": 6,
+      "mapControlsTop": 358,
+      "centersOnListItems": "0/5",
+      "hits": [
+        "pog-map-panel",
+        "pog-layer-status-title",
+        "SUMMARY",
+        "pog-theme-unit",
+        "pog-theme-option"
+      ]
+    },
+    "375x812": {
+      "list": {
+        "position": "static",
+        "zIndex": "auto",
+        "top": 316,
+        "bottom": 576
+      },
+      "searchPanelZIndex": 5,
+      "mapControlsZIndex": 6,
+      "mapControlsTop": 437,
+      "centersOnListItems": "2/5",
+      "hits": [
+        "SPAN",
+        "SPAN",
+        "pog-map-panel-title",
+        "pog-layer-status-title",
+        "pog-map-panel"
+      ]
+    }
+  },
+  "after": {
+    "1440x900": {
+      "list": {
+        "position": "absolute",
+        "zIndex": "1",
+        "maxHeight": "384px",
+        "top": 289,
+        "bottom": 571,
+        "scrollHeight": 281,
+        "clientHeight": 281
+      },
+      "searchPanelZIndex": 8,
+      "mapControlsZIndex": 6,
+      "mapControlsRect": {
+        "top": 358,
+        "bottom": 880
+      },
+      "centersOnListItems": "5/5",
+      "pogPanelMovedByPopover": false,
+      "noHorizontalScroll": true,
+      "clickFifthItem": "POST /analyze {method: address, query: 'Warszawa, Marszałkowska 5', selected_result_id: hash:stub5}, lista zamknięta"
+    },
+    "375x812": {
+      "list": {
+        "position": "absolute",
+        "zIndex": "1",
+        "maxHeight": "384px",
+        "top": 266,
+        "bottom": 548,
+        "scrollHeight": 281,
+        "clientHeight": 281
+      },
+      "searchPanelZIndex": 8,
+      "mapControlsZIndex": 6,
+      "mapControlsRect": {
+        "top": 437,
+        "bottom": 802
+      },
+      "centersOnListItems": "5/5",
+      "pogPanelMovedByPopover": false,
+      "noHorizontalScroll": true
+    },
+    "1440x520": {
+      "list": {
+        "maxHeight": "200px",
+        "clientHeight": 198,
+        "scrollHeight": 281,
+        "bottom": 489
+      },
+      "scrollable": true,
+      "fitsViewport": true,
+      "lastItemReachableByScrolling": true
+    }
+  },
+  "after_final_build_AU010": {
+    "note": "Ponowny pomiar na ostatecznym buildzie (Next 16.3.8 + MapLibre 6.13.0 + jawny adres workera)",
+    "1440x900": {
+      "centersOnListItems": "5/5",
+      "pogPanelMovedByPopover": false
+    },
+    "375x812": {
+      "centersOnListItems": "5/5",
+      "pogPanelMovedByPopover": false
+    },
+    "1024x768": {
+      "centersOnListItems": "5/5",
+      "pogPanelMovedByPopover": false
+    }
+  }
+}

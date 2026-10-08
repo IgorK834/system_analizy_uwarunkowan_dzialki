@@ -1,0 +1,837 @@
+[
+  {
+    "parcel": "141801_4.0701.23/8",
+    "http": 200,
+    "seconds": 0.4,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [
+      "MPZP_MULTIPLE_ACTS_AT_POINT"
+    ],
+    "acts": [
+      "IV/30/2024",
+      "576/XLVII/2010"
+    ],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_MULTIPLE_ACTS_AT_POINT",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "MPZP_MULTIPLE_ACTS_AT_POINT",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "146510_8.0502.1/3",
+    "http": 200,
+    "seconds": 10.4,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "146510_8.0310.82/2",
+    "http": 200,
+    "seconds": 10.8,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "146510_8.0504.1",
+    "http": 200,
+    "seconds": 23.8,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "146510_8.0309.1/4",
+    "http": 200,
+    "seconds": 23.4,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "126105_9.0001.580/4",
+    "http": 200,
+    "seconds": 35.3,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XII/131/11"
+    ],
+    "selected": "XII/131/11",
+    "symbols": [
+      "KP.1"
+    ],
+    "zones": [
+      "KP.1"
+    ],
+    "mpzp_warnings": [
+      "MPZP_VECTOR_UNAVAILABLE",
+      "MPZP_WARNING",
+      "ZONE_SECTION_NOT_FOUND"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_DOCUMENT_CANDIDATE",
+        "MPZP_SHARE_UNDETERMINED",
+        "SOURCE_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    ]
+  },
+  {
+    "parcel": "126105_9.0001.49/2",
+    "http": 200,
+    "seconds": 30.0,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XII/131/11"
+    ],
+    "selected": "XII/131/11",
+    "symbols": [
+      "MW/U.4"
+    ],
+    "zones": [
+      "MW/U.4"
+    ],
+    "mpzp_warnings": [
+      "MPZP_VECTOR_UNAVAILABLE",
+      "MPZP_WARNING",
+      "ZONE_SECTION_NOT_FOUND"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_DOCUMENT_CANDIDATE",
+        "MPZP_SHARE_UNDETERMINED",
+        "SOURCE_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    ]
+  },
+  {
+    "parcel": "126105_9.0001.540/15",
+    "http": 200,
+    "seconds": 11.5,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XII/131/11"
+    ],
+    "selected": "XII/131/11",
+    "symbols": [
+      "ZP.4",
+      "U.9"
+    ],
+    "zones": [
+      "ZP.4",
+      "U.9"
+    ],
+    "mpzp_warnings": [
+      "MPZP_VECTOR_UNAVAILABLE",
+      "MPZP_WARNING",
+      "ZONE_SECTION_NOT_FOUND"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_DOCUMENT_CANDIDATE",
+        "MPZP_SHARE_UNDETERMINED",
+        "SOURCE_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    ]
+  },
+  {
+    "parcel": "126105_9.0119.181/10",
+    "http": 200,
+    "seconds": 11.6,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "LIII/1464/21"
+    ],
+    "selected": "LIII/1464/21",
+    "symbols": [
+      "ZPb.9"
+    ],
+    "zones": [
+      "ZPb.9"
+    ],
+    "mpzp_warnings": [
+      "MPZP_VECTOR_UNAVAILABLE",
+      "MPZP_WARNING",
+      "ZONE_SECTION_NOT_FOUND"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_DOCUMENT_CANDIDATE",
+        "MPZP_SHARE_UNDETERMINED",
+        "SOURCE_REVIEW_REQUIRED",
+        "SOURCE_ID_UNRESOLVED"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0056.155/3",
+    "http": 200,
+    "seconds": 23.4,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0055.68/13",
+    "http": 200,
+    "seconds": 23.5,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0081.7",
+    "http": 200,
+    "seconds": 7.6,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0056.110/1",
+    "http": 200,
+    "seconds": 4.3,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "026201_1.0009.1319/4",
+    "http": 200,
+    "seconds": 11.8,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXVI/277/04"
+    ],
+    "selected": "XXVI/277/04",
+    "symbols": [
+      "7 UC,U,M",
+      "22 KD G1/2(Z1/4)"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "026201_1.0010.410/1",
+    "http": 200,
+    "seconds": 10.9,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XLI/366/09"
+    ],
+    "selected": "XLI/366/09",
+    "symbols": [
+      "MU9.9"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "026201_1.0015.530",
+    "http": 200,
+    "seconds": 23.8,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XVI/164/99"
+    ],
+    "selected": "XVI/164/99",
+    "symbols": [
+      "KL 1/2"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "026201_1.0009.579/9",
+    "http": 200,
+    "seconds": 14.9,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XV/151/11"
+    ],
+    "selected": "XV/151/11",
+    "symbols": [
+      "13MWU"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281603_4.0001.496/5",
+    "http": 200,
+    "seconds": 15.5,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXI/232/20"
+    ],
+    "selected": "XXI/232/20",
+    "symbols": [
+      "7MW",
+      "2KDZ"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281603_4.0001.358",
+    "http": 200,
+    "seconds": 28.5,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXI/232/20"
+    ],
+    "selected": "XXI/232/20",
+    "symbols": [
+      "3MNu"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281603_4.0001.740",
+    "http": 200,
+    "seconds": 9.9,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXI/232/20"
+    ],
+    "selected": "XXI/232/20",
+    "symbols": [
+      "5MWU"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281603_4.0002.130",
+    "http": 200,
+    "seconds": 3.6,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [
+      "KIMPZP_PARTIAL_SERVICE_ERROR"
+    ],
+    "acts": [
+      "XLVII/602/10"
+    ],
+    "selected": "XLVII/602/10",
+    "symbols": [
+      "B-18UT"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "KIMPZP_PARTIAL_SERVICE_ERROR",
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "022104_2.0002.352",
+    "http": 200,
+    "seconds": 32.2,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXVIII/139/2026"
+    ],
+    "selected": "XXVIII/139/2026",
+    "symbols": [
+      "1.13MN-MW-U"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "022104_2.0002.288/20",
+    "http": 200,
+    "seconds": 6.1,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXVIII/139/2026"
+    ],
+    "selected": "XXVIII/139/2026",
+    "symbols": [
+      "2KDZ"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "022104_2.0002.776",
+    "http": 200,
+    "seconds": 6.2,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXVIII/139/2026"
+    ],
+    "selected": "XXVIII/139/2026",
+    "symbols": [
+      "1.13MN"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "022104_2.0002.230/2",
+    "http": 200,
+    "seconds": 5.5,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XXVIII/139/2026"
+    ],
+    "selected": "XXVIII/139/2026",
+    "symbols": [
+      "1.7MN-U-RZM",
+      "1.13RN"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281603_4.0001.431/66",
+    "http": 200,
+    "seconds": 5.3,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [
+      "KIMPZP_PARTIAL_SERVICE_ERROR"
+    ],
+    "acts": [
+      "XVI/139/15"
+    ],
+    "selected": "XVI/139/15",
+    "symbols": [
+      "16.U/US",
+      "15.U"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "KIMPZP_PARTIAL_SERVICE_ERROR",
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  },
+  {
+    "parcel": "281604_5.0011.107",
+    "http": 200,
+    "seconds": 10.8,
+    "status": "partial",
+    "discovery": "no_match",
+    "reasons": [
+      "KIMPZP_NO_RESULT_FOR_AREA"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_NOT_FOUND",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unknown",
+      [
+        "MPZP_NOT_DETERMINED"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0001.1043",
+    "http": 200,
+    "seconds": 4.5,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0004.737/26",
+    "http": 200,
+    "seconds": 4.4,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "246101_1.0004.741/132",
+    "http": 200,
+    "seconds": 23.4,
+    "status": "partial",
+    "discovery": "unavailable",
+    "reasons": [
+      "KIMPZP_SERVICE_ERROR"
+    ],
+    "acts": [],
+    "selected": null,
+    "symbols": [],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DISCOVERY_UNAVAILABLE",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "unavailable",
+      [
+        "MPZP_DISCOVERY_UNAVAILABLE"
+      ]
+    ]
+  },
+  {
+    "parcel": "026201_1.0009.578/2",
+    "http": 200,
+    "seconds": 14.2,
+    "status": "partial",
+    "discovery": "available",
+    "reasons": [],
+    "acts": [
+      "XV/151/11"
+    ],
+    "selected": "XV/151/11",
+    "symbols": [
+      "6KD L"
+    ],
+    "zones": [],
+    "mpzp_warnings": [
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+      "MPZP_WARNING"
+    ],
+    "quality": [
+      "partial",
+      [
+        "MPZP_ACT_WITHOUT_ZONE",
+        "SOURCE_REVIEW_REQUIRED"
+      ]
+    ]
+  }
+]
