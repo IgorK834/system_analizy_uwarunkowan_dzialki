@@ -123,7 +123,7 @@ klauzul nadal nie są wydobywane (0/12 w obu silnikach) — to praca kolejnych t
 1. **Wynik jest rozwojowy.** Resolver rozwijano iteracyjnie na 21 próbkach, na których mierzy się wynik;
    1,0 w układach 1–6 oznacza „pokrywa przypadki, które widział”, nie „uogólnia”. Niezależna ocena wymaga
    zbioru końcowego (PV3-02), którego nie zbudowano.
-2. **Etykiety układów** (`scope_strategies.json`) nadał asystent AI (`claude-sonnet-5-5`); są poza
+2. **Etykiety układów** (`scope_strategies.json`) nadano z lektury tekstu; są poza
    zamrożonymi anotacjami i czekają na przegląd człowieka. Układ „5” obejmuje klauzule ogólne
    (`applicability = general_clause`).
 3. **Pojedyncze literówki źródłowe** (np. `6.8MW/U` zamiast `6.8.MW/U` w Łodzi) obsługuje dopasowanie

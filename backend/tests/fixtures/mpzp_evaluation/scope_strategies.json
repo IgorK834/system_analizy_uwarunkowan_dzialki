@@ -1,5 +1,5 @@
 {
-  "description": "Etykiety układu strefy (strategie zakresu 1–6, Task 20.6) dla próbek korpusu BK-603: opisowe metadane do rozbicia wyników, NIE ground truth i poza zamrożonymi anotacjami (annotations_sha256). Układ klauzul ogólnych (applicability general_clause) liczony jest jako 5. Etykiety nadał asystent AI (claude-sonnet-5-5) z lektury tekstu; przegląd człowieka oczekuje. Korpus nowej wersji niesie etykiety w polu scope_strategy strefy.",
+  "description": "Etykiety układu strefy (strategie zakresu 1–6, Task 20.6) dla próbek korpusu BK-603: opisowe metadane do rozbicia wyników, NIE ground truth i poza zamrożonymi anotacjami (annotations_sha256). Układ klauzul ogólnych (applicability general_clause) liczony jest jako 5. Etykiety nadano z lektury tekstu; przegląd człowieka oczekuje. Korpus nowej wersji niesie etykiety w polu scope_strategy strefy.",
   "strategies": {
     "1": "osobny § (ustęp) na strefę",
     "2": "wspólny § dla listy lub zakresu symboli",
@@ -9,7 +9,6 @@
     "6": "tabela",
     "0": "skan OCR bez struktury (zapas)"
   },
-  "labeled_by": "claude-sonnet-5-5 (asystent AI)",
   "labeled_at": "2026-10-02",
   "labels": {
     "D01-krakow-mn-multi": 3,

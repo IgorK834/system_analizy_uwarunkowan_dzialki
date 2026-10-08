@@ -267,7 +267,7 @@ Zależności zmienia się w `requirements.in` / `requirements-dev.in`, a lock ge
 `pip-compile --generate-hashes --allow-unsafe --strip-extras --no-header --annotation-style=line requirements.in -o requirements.lock`
 (polecenie dla pliku dev jest w nagłówku `requirements-dev.txt`). `mypy` obejmuje `app/modules/*`; znane zgłoszenia są w
 `backend/mypy-baseline.txt`, a bramka odrzuca tylko NOWE (`python scripts/check_mypy_baseline.py --update` po świadomej zmianie).
-Obrazy bazowe (`python`, `node`, `postgis`) są przypięte digestem; aktualizacje proponuje Dependabot (`.github/dependabot.yml`).
+Obrazy bazowe (`python`, `node`, `postgis`) są przypięte digestem; aktualizacje przypięć wykonuje się ręcznie (podatne wersje wykrywają `npm audit` i `pip-audit` w CI).
 
 **Frontend** (Vitest, React Testing Library, ESLint, `npm audit`) — bez lokalnego Node.js, w obrazie testowym:
 

@@ -10,9 +10,9 @@ Plik jest generowany z `parameter_results.json`; nie jest edytowany ręcznie.
 | `run_mode` | `offline` |
 | `commit_sha` | `0d78dbf626e786357c721fc6fddc62836a9c25c3` |
 | `manifest_sha256` | `7cd212acb70e59d28a132d6b2ad864e40c98cb910e1eb593b218e4a6f0922ea6` |
-| `corpus_sha256` | `ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0` |
-| `annotations_sha256` | `1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244` |
-| `freeze` | `{"annotations_sha256":"1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244","frozen_at":"2026-09-30","parser_run_on_final_split_before_freeze":false,"parser_version_at_freeze":"mpzp-parser/2.0","statement":"Anotacje zbioru końcowego powstały z lektury tekstu źródłowego, zanim parser został uruchomiony na dokumentach zbioru końcowego. Zbiór rozwojowy składa się z dokumentów użytych wcześniej do rozwoju i regresji parsera. Po zamrożeniu anotacji nie wolno zmieniać bez nowego skrótu i nowego numeru wersji korpusu; parser nie jest stroiony w tym badaniu."}` |
+| `corpus_sha256` | `d32dd895374bdef98e65ba01a9eb890243124f708a686ad9e64db9b460ccd186` |
+| `annotations_sha256` | `19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff` |
+| `freeze` | `{"annotations_sha256":"19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff","frozen_at":"2026-09-30","parser_run_on_final_split_before_freeze":false,"parser_version_at_freeze":"mpzp-parser/2.0","statement":"Anotacje zbioru końcowego powstały z lektury tekstu źródłowego, zanim parser został uruchomiony na dokumentach zbioru końcowego. Zbiór rozwojowy składa się z dokumentów użytych wcześniej do rozwoju i regresji parsera. Po zamrożeniu anotacji nie wolno zmieniać bez nowego skrótu i nowego numeru wersji korpusu; parser nie jest stroiony w tym badaniu."}` |
 
 ## Korpus
 

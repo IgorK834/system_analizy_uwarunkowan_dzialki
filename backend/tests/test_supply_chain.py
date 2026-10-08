@@ -187,16 +187,11 @@ def test_ci_checks_that_the_runtime_image_has_no_tests_and_that_the_build_is_rep
     assert "--no-cache" in reproducible and "diff freeze-1.txt freeze-2.txt" in reproducible
 
 
-def test_dependabot_covers_every_ecosystem_in_the_repository(repo: Path) -> None:
-    updates = yaml.safe_load((repo / ".github" / "dependabot.yml").read_text(encoding="utf-8"))["updates"]
-
-    assert {item["package-ecosystem"] for item in updates} == {
-        "npm",
-        "pip",
-        "docker",
-        "docker-compose",
-        "github-actions",
-    }
+def test_no_automatic_dependency_update_bot_is_configured(repo: Path) -> None:
+    """Aktualizacje są ręczne: konfiguracja botów otwierających PR-y nie wraca bez uzgodnienia."""
+    assert not (repo / ".github" / "dependabot.yml").exists()
+    assert not (repo / ".github" / "dependabot.yaml").exists()
+    assert not (repo / "renovate.json").exists()
 
 
 # --- Frontend ---------------------------------------------------------------------------------------------

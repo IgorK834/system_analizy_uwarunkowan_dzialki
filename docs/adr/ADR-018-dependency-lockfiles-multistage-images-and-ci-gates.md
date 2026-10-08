@@ -69,15 +69,15 @@ Trzy zadania: `backend` (build `runtime` i `test`, kontrola, że runtime nie ma 
 `backend-reproducible` (dwa buildy `--no-cache` dają identyczną listę pakietów i zawierają wszystko z locka) oraz `frontend`
 (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy z pokryciem, build). `mypy` obejmuje `app/modules/*` (19 znanych
 zgłoszeń w `mypy-baseline.txt`; bramka `scripts/check_mypy_baseline.py` odrzuca tylko NOWE, liczone bez numerów linii). `ruff`:
-`E4,E7,E9,F` (błędy, nie styl; szersze reguły dałyby setki zgłoszeń stylistycznych). Dependabot (`npm`, `pip`, `docker`,
-`docker-compose`, `github-actions`) proponuje aktualizacje; lock Pythona odnawia się ręcznie poleceniem z nagłówka pliku.
+`E4,E7,E9,F` (błędy, nie styl; szersze reguły dałyby setki zgłoszeń stylistycznych). Aktualizacje zależności i przypięć obrazów są ręczne (brak automatu
+z PR-ami); lock Pythona odnawia się poleceniem z nagłówka pliku, a podatne wersje wykrywają `npm audit` i `pip-audit` w CI.
 
 ## Konsekwencje i ograniczenia
 
 - Lock Pythona generowany na Linuksie (kontener) — hashe obejmują wszystkie pliki wersji, ale zależności warunkowe (np. `uvloop`)
   są rozstrzygnięte dla Linuksa; lokalna instalacja na Windows nie jest wspierana poza obrazem.
-- Dependabot nie przelicza `requirements.lock` (nie jest to jego format) — podniesienie wersji wymaga ręcznego `pip-compile`;
-  `pip-audit` w CI wykrywa podatną wersję niezależnie.
+- Podniesienie wersji pakietu wymaga ręcznego `pip-compile` (brak automatycznych PR-ów z aktualizacjami); `pip-audit` w CI wykrywa
+  podatną wersję niezależnie.
 - Reguły kompilatora React (`set-state-in-effect` i pokrewne) oraz reguły Next nie są egzekwowane; lista „poza zakresem” w README.
 - `mypy` poza `app/modules/*` (m.in. `app/routers`, `app/services`) ma 13 dodatkowych zgłoszeń i nie jest bramką.
 - Bramki CI zweryfikowano na GitHub Actions: przebieg pozytywny na `main` (3 zadania zielone) i negatywny na jednorazowej gałęzi z

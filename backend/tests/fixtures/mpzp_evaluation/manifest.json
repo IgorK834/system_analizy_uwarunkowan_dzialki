@@ -901,7 +901,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -1096,7 +1095,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -1313,7 +1311,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -1493,7 +1490,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -2006,7 +2002,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -2295,7 +2290,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -2342,7 +2336,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -2748,7 +2741,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -2864,7 +2856,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -3300,7 +3291,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -3542,7 +3532,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -3996,7 +3985,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -4154,7 +4142,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -4615,7 +4602,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -4842,7 +4828,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -4957,7 +4942,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5072,7 +5056,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5193,7 +5176,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5213,7 +5195,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5541,7 +5522,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5810,7 +5790,6 @@
         }
       ],
       "annotator": {
-        "name": "claude-sonnet-5-5",
         "kind": "ai_assisted_manual_reading",
         "independent_human_review": "pending"
       },
@@ -5819,7 +5798,7 @@
     }
   ],
   "freeze": {
-    "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+    "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
     "frozen_at": "2026-09-30",
     "parser_version_at_freeze": "mpzp-parser/2.0",
     "statement": "Anotacje zbioru końcowego powstały z lektury tekstu źródłowego, zanim parser został uruchomiony na dokumentach zbioru końcowego. Zbiór rozwojowy składa się z dokumentów użytych wcześniej do rozwoju i regresji parsera. Po zamrożeniu anotacji nie wolno zmieniać bez nowego skrótu i nowego numeru wersji korpusu; parser nie jest stroiony w tym badaniu.",

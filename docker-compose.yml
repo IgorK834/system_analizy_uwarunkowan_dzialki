@@ -59,7 +59,7 @@ x-backend-environment: &backend-environment
 
 services:
   db:
-    # AU-010: obraz przypięty digestem (indeks wieloplatformowy); aktualizację proponuje Dependabot.
+    # AU-010: obraz przypięty digestem (indeks wieloplatformowy); aktualizacja przypięcia jest ręczna.
     image: postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-dzialki}

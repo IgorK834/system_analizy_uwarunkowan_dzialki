@@ -169,7 +169,7 @@ def test_the_key_is_a_secret_in_every_rendering_of_the_settings() -> None:
 @pytest.mark.parametrize(
     "values",
     [
-        {"mpzp_llm_temperature": 0.5}, {"mpzp_llm_model": "../etc"}, {"mpzp_llm_model": "a b"}, {"mpzp_llm_provider": "openai"},
+        {"mpzp_llm_temperature": 0.5}, {"mpzp_llm_model": "../etc"}, {"mpzp_llm_model": "a b"}, {"mpzp_llm_provider": "inny-dostawca"},
         {"mpzp_llm_thinking_level": "minimal"}, {"mpzp_llm_timeout_seconds": 0}, {"mpzp_llm_max_output_tokens": 10},
         {"mpzp_llm_max_retries": 99}, {"mpzp_llm_block_char_limit": 10}, {"mpzp_llm_max_chunks_per_block": 0},
     ],

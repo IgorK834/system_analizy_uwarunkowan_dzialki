@@ -1,15 +1,15 @@
 {
-  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
   "commit_sha": "cbefc0a22ba65bbcdfd205132ebd8070c34120db",
   "corpus_id": "BK-603-mpzp-parser-evaluation-2026-09-30",
-  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "corpus_sha256": "d32dd895374bdef98e65ba01a9eb890243124f708a686ad9e64db9b460ccd186",
   "environment": {
     "platform": "Darwin arm64",
     "python": "3.13.3"
   },
   "evaluator_sha256": "22ef5759d985a2b2574a4c51bfe9f98df31e030e7e5af5c17757e2dc5b0b8e17",
   "freeze": {
-    "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+    "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
     "frozen_at": "2026-09-30",
     "parser_run_on_final_split_before_freeze": false,
     "parser_version_at_freeze": "mpzp-parser/2.0",

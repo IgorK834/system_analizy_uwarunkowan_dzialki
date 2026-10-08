@@ -17,7 +17,7 @@
 | Obraz `runtime` nie zawiera `pytest` ani katalogu `tests/` | **spełnione** | `/app`: `alembic alembic.ini app pyproject.toml requirements.lock shared`; `pytest`, `respx`, `pytest_cov`, `ruff`, `mypy` nieobecne; `scripts/` też nieobecne (w obrazie `test`: są) |
 | Lockfile backendu z hashami, instalacja `--require-hashes` | **spełnione** | `requirements.lock` (58 pakietów) i `requirements-dev.txt` (47) — każdy wpis `==` z ≥ 1 skrótem SHA-256 (`tests/test_supply_chain.py`); `RUN pip install --require-hashes --no-deps` w obu etapach |
 | Lint i typy w CI | **spełnione** | `ruff check .` (zestaw `E4,E7,E9,F`: 33 zgłoszenia naprawione — 24× E402 w orkiestratorze, 8× F401, 1× E741 — plus wyłączone `tests/fixtures`); `mypy app/modules` z bazą 19 znanych zgłoszeń (bramka tylko na NOWE); `eslint` + `tsc` w zadaniu `frontend` |
-| Dependabot | **spełnione** | `.github/dependabot.yml`: `npm`, `pip`, `docker` (backend, frontend), `docker-compose`, `github-actions` |
+| Automatyczne aktualizacje (Dependabot/Renovate) | **nie wdrożone — wycofane** | zadanie dopuszczało Dependabot/Renovate; konfiguracja Dependabota została dodana, ale wygenerowała PR-y bez uzgodnienia, więc ją usunięto. Podatne wersje wykrywają `npm audit` i `pip-audit` w CI; aktualizacje są ręczne |
 | Obrazy bazowe przypięte digestem | **spełnione** | `python:3.13-slim@sha256:bf44cdfc…`, `node:22-slim@sha256:c3de60bf…` (oba etapy), `postgis/postgis:16-3.4@sha256:44126d87…`; test `test_base_images_are_pinned_by_digest` |
 | Dokumentacja: `docs/current_state.md` i ADR | **spełnione** | sekcja AU-010 w `current_state.md`, ADR-018, README (sekcja „Testy, jakość i łańcuch dostaw”) |
 | ≥ 80% pokrycia | **spełnione** | wyniki poniżej |
@@ -49,7 +49,7 @@
 ## Ograniczenia i decyzje do potwierdzenia
 
 1. **Przebiegi na GitHub Actions:** pozytywny na `main` — przebieg Actions z 2026-10-08 (przebieg usunięty z historii Actions w ramach porządkowania repozytorium), wszystkie 3 zadania zielone (backend z testami i pokryciem, powtarzalność buildu, frontend); negatywny — patrz tabela. Pierwszy przebieg wykazał błąd samego kroku powtarzalności (nazwa `pdfminer.six` vs `pdfminer-six` — brak normalizacji PEP 503), poprawiony commitem `2c0b43d`; backend i frontend były już wtedy zielone.
-2. **Lock Pythona generowany ręcznie** (Dependabot nie przelicza `requirements.lock`); `pymupdf` (AGPL) pozostaje — decyzja AU-407.
+2. **Lock Pythona generowany ręcznie** (brak automatu aktualizującego `requirements.lock`); `pymupdf` (AGPL) pozostaje — decyzja AU-407.
 3. **ESLint bez `eslint-config-next`** (podatność `braces` bez poprawki) i bez reguł kompilatora React — ADR-018 §2.
 4. **`mypy` ma 19 znanych zgłoszeń** w `app/modules/*` i dodatkowe 13 poza zakresem — jawna baza, nie naprawa.
 5. **Regresja wizualna MapLibre 6** — nie istnieje automatyczny test wizualny (Task 24.10); sprawdzono ręcznie w przeglądarce bez danych POG

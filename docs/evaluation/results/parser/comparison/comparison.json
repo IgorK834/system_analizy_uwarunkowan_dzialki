@@ -1,12 +1,12 @@
 {
-  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
   "baseline": "legacy",
   "bootstrap": {
     "method": "cluster (sample) percentile",
     "resamples": 2000,
     "seed": 603
   },
-  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "corpus_sha256": "d32dd895374bdef98e65ba01a9eb890243124f708a686ad9e64db9b460ccd186",
   "engine_manifest_sha256": {
     "legacy": "fb20dd25f907463c6ad86e861890508143e28491feb7f15e848d26b2f1781896",
     "v3": "b1e46622b6f12f9aa0f0609bb7804430ec4135736a9f58cf9ff03d94b5018835"

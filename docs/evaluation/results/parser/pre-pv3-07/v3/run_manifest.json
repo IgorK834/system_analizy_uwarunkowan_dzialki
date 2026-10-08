@@ -1,8 +1,8 @@
 {
-  "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+  "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
   "commit_sha": "0d78dbf626e786357c721fc6fddc62836a9c25c3",
   "corpus_id": "BK-603-mpzp-parser-evaluation-2026-09-30",
-  "corpus_sha256": "ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0",
+  "corpus_sha256": "d32dd895374bdef98e65ba01a9eb890243124f708a686ad9e64db9b460ccd186",
   "engine": "v3",
   "engine_version": "mpzp-parser/3.0-scope.1",
   "environment": {
@@ -11,7 +11,7 @@
   },
   "evaluator_sha256": "5a868d138d7650c9e0ffce32bd64fe28b77ef285e76a5eb27927aa5ac9fdbf00",
   "freeze": {
-    "annotations_sha256": "1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244",
+    "annotations_sha256": "19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff",
     "frozen_at": "2026-09-30",
     "parser_run_on_final_split_before_freeze": false,
     "parser_version_at_freeze": "mpzp-parser/2.0",

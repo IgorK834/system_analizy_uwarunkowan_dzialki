@@ -491,7 +491,7 @@ odbiór: [AU-010](evaluation/au-010-verification.md).
   (profil `test`); obrazy bazowe przypięte digestem; `ruff` (`E4,E7,E9,F`; naprawiono 33 zgłoszenia), `mypy app/modules` z bazą 19 znanych
   zgłoszeń (`mypy-baseline.txt`, bramka na NOWE); `pip-audit` czysty. Dwa buildy `--no-cache` dają identyczną listę pakietów.
 - **CI:** zadania `backend` (build `runtime`+`test`, kontrola zawartości runtime, `ruff`, `mypy`, `pip-audit`, testy z `--cov-fail-under=80`),
-  `backend-reproducible`, `frontend` (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy, build); `.github/dependabot.yml`.
+  `backend-reproducible`, `frontend` (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy, build).
   Przebieg na `main` w GitHub Actions: wszystkie 3 zadania zielone; test negatywny na jednorazowej gałęzi z podatnym `next` — zadanie Frontend
   czerwone na `npm audit` (PR #369 zamknięty bez scalenia).
 - **Zmiana poleceń:** testy backendu uruchamia się w usłudze `backend-test` (`docker compose --profile test run --rm backend-test pytest …`),

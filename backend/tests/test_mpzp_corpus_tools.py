@@ -192,7 +192,7 @@ def test_an_unfrozen_corpus_runs_no_engine(corpus: tuple[Path, dict[str, Any]], 
     ("mutation", "fragment"),
     [
         (lambda m: [m["samples"].pop() for _ in range(5)], "19 final samples < 20"),
-        (lambda m: m["samples"][-1].update(annotator={"id": "claude", "kind": "ai"}), "annotator must be a human"),
+        (lambda m: m["samples"][-1].update(annotator={"id": "automat", "kind": "ai"}), "annotator must be a human"),
         (lambda m: m["samples"][-1]["zones"][0].pop("scope_strategy"), "scope_strategy must be one of"),
         (lambda m: [z.update(scope_strategy=1) for s in m["samples"] if s["split"] == "final" for z in s["zones"]],
          "scope strategy 2 is not represented"),
@@ -279,7 +279,7 @@ def test_freeze_refuses_an_invalid_corpus_and_never_freezes_silently(
     path, manifest = corpus
     broken = copy.deepcopy(manifest)
     broken.pop("freeze")
-    broken["samples"][-1]["annotator"] = {"id": "claude", "kind": "ai"}
+    broken["samples"][-1]["annotator"] = {"id": "automat", "kind": "ai"}
     target = tmp_path / "broken.json"
     target.write_text(json.dumps(broken), encoding="utf-8")
     assert tools.main(["freeze", "--corpus", str(target)]) == 1

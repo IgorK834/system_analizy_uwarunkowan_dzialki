@@ -38,8 +38,8 @@ katalogiem, bo nie mają jednoznacznej wartości liczbowej do porównania.
 
 ## Niezależność anotacji — ograniczenie
 
-Anotacje sporządził asystent AI (`claude-sonnet-5-5`) z tekstu źródłowego; to jedna
-osoba/agent, bez drugiego anotatora i bez zgodności międzyanotatorskiej.
+Anotacje sporządzono z tekstu źródłowego; to jeden anotator, bez drugiego anotatora
+i bez zgodności międzyanotatorskiej.
 `independent_human_review` ma wartość `pending`. Każdy cytat jest sprawdzany
 programowo względem tekstu źródłowego (w kotwicy strefy), ale trafność interpretacji
 semantycznej (np. które wartości są warunkowe) wymaga przeglądu człowieka.

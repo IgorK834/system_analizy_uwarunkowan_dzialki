@@ -3,7 +3,7 @@
 Plik jest generowany z wyników silników; nie jest edytowany ręcznie. Porównanie jest sparowane: każdy silnik oceniono na tych samych parach (próbka, strefa, parametr) tego samego manifestu.
 
 - silnik odniesienia: `legacy`; silniki: `legacy`, `v3`;
-- `annotations_sha256`: `1408aee8787834219103448e5ebbc4773951d3f65d252a05d381c91087be7244`; `corpus_sha256`: `ca5a005efeff440fc59aeca9f9909f5ee8313d7f9dd314baab4bf31c15a8fdd0`;
+- `annotations_sha256`: `19f1faf273e4a6d1f063c518cf84f9fde6ef4014975860e73db0c9a3046751ff`; `corpus_sha256`: `d32dd895374bdef98e65ba01a9eb890243124f708a686ad9e64db9b460ccd186`;
 - przedziały: bootstrap po próbkach (klastrach), 2000 losowań, ziarno 603; test McNemara dokładny, dwustronny; przy mniej niż 5 próbkach w wycinku przedział nie jest podawany.
 
 ## Metryki każdego silnika

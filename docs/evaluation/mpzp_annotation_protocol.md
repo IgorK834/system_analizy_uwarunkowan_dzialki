@@ -9,8 +9,8 @@ po stronie ludzi.
 
 ## 1. Zasady, których nie wolno łamić
 
-1. **Anotują ludzie.** Pierwszy i drugi anotator to osoby; asystent AI nie jest anotatorem
-   zbioru końcowego. Anotacje BK-603 (`claude-sonnet-5-5`, `independent_human_review: pending`)
+1. **Anotują ludzie.** Pierwszy i drugi anotator to osoby; zbioru końcowego nie anotuje
+   automat. Anotacje BK-603 (`independent_human_review: pending`)
    pozostają w korpusie jako **zbiór rozwojowy**.
 2. **Żaden silnik nie widzi zbioru końcowego przed zamrożeniem.** Dotyczy parsera `legacy`, `v3`,
    `hybrid` i modelu językowego, także w trybie „na próbę”. Ewaluator odmawia pracy na korpusie bez
