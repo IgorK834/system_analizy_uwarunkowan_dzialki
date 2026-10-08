@@ -56,3 +56,14 @@ def test_context_failure_log_does_not_emit_exception_contents(caplog) -> None:
     assert "IsokServiceUnavailableError" in caplog.text
     assert "sekret" not in caplog.text
     assert "%PDF" not in caplog.text
+
+
+def test_redaction_covers_the_whole_access_token_secrets_list() -> None:
+    from app.core.logging import REDACTED, redact_secrets
+
+    text = "ACCESS_TOKEN_SECRETS=k2:tajne-nowe,k1:tajne-stare|2026-12-01 start"
+
+    redacted = redact_secrets(text)
+
+    assert "tajne" not in redacted
+    assert redacted == f"ACCESS_TOKEN_SECRETS={REDACTED} start"

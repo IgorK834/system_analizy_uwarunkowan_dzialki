@@ -6,6 +6,7 @@ import logging
 import re
 from logging.config import dictConfig
 from typing import Final
+from urllib.parse import unquote_plus
 
 from app.core.request_id import RequestIdLogFilter, get_request_id
 
@@ -43,6 +44,8 @@ _SECRET_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}"),
     re.compile(r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"),
     re.compile(r"(?i)([?&](?:key|api_key|apikey|token|access_token|signature)=)[^&\s\"']+"),
+    # Lista kluczy ``kid:sekret,kid2:sekret2`` — przecinek należy do wartości (AU-012).
+    re.compile(r"(?i)(access_token_secrets[\"']?\s*[:=]\s*[\"']?)[^\s\"';}]+"),
     re.compile(r"(?i)((?:gemini_api_key|api_key|access_token_secret|admin_api_keys)[\"']?\s*[:=]\s*[\"']?)[^\s\"',;}]+"),
 )
 
@@ -74,6 +77,54 @@ class SecretRedactionFilter(logging.Filter):
         return True
 
 
+# AU-012: dziennik dostępu uvicorna (``uvicorn.access``) zapisuje pełną ścieżkę żądania wraz z query-stringiem,
+# czyli ``GET /report/1?access_token=…``. Uvicorn ma własny handler (``propagate=False``), więc filtr
+# handlera aplikacji go nie obejmuje — maskujemy wartość filtrem samego loggera, jako ``access_token=***``.
+ACCESS_TOKEN_MASK: Final[str] = "***"
+UVICORN_ACCESS_LOGGER_NAME: Final[str] = "uvicorn.access"
+# Para ``?nazwa=wartość`` / ``&nazwa=wartość``; nazwę rozkodowujemy, bo serwer też ją rozkoduje
+# (``access%5Ftoken=…`` uwierzytelnia tak samo jak ``access_token=…``).
+_QUERY_PAIR: Final[re.Pattern[str]] = re.compile(r"([?&;])([^=&;\s\"'#]+)=([^&;\s\"'#]*)")
+
+
+def mask_access_tokens(text: str) -> str:
+    """Zastępuje wartość parametru ``access_token`` w adresie znacznikiem ``***``."""
+
+    def mask(match: re.Match[str]) -> str:
+        separator, name, value = match.groups()
+        if unquote_plus(name).strip().lower() != "access_token":
+            return match.group(0)
+        return f"{separator}{name}={ACCESS_TOKEN_MASK}"
+
+    return _QUERY_PAIR.sub(mask, text)
+
+
+class AccessTokenMaskFilter(logging.Filter):
+    """Filtr loggera: maskuje ``access_token=…`` w komunikacie i argumentach (ścieżka żądania)."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            record.msg = mask_access_tokens(record.msg)
+        args = record.args
+        if isinstance(args, tuple):
+            record.args = tuple(
+                mask_access_tokens(arg) if isinstance(arg, str) else arg for arg in args
+            )
+        elif isinstance(args, dict):
+            record.args = {
+                key: mask_access_tokens(value) if isinstance(value, str) else value
+                for key, value in args.items()
+            }
+        return True
+
+
+def install_access_log_mask() -> None:
+    """Dodaje filtr maskujący do ``uvicorn.access`` (idempotentnie, bez ruszania handlerów uvicorna)."""
+    access_logger = logging.getLogger(UVICORN_ACCESS_LOGGER_NAME)
+    if not any(isinstance(item, AccessTokenMaskFilter) for item in access_logger.filters):
+        access_logger.addFilter(AccessTokenMaskFilter())
+
+
 def configure_logging() -> None:
     """Konfiguruje wspólny format bez wyłączania loggerów bibliotek/aplikacji; redaguje sekrety."""
     dictConfig(
@@ -101,6 +152,7 @@ def configure_logging() -> None:
             "root": {"level": "INFO", "handlers": ["console"]},
         }
     )
+    install_access_log_mask()
 
 
 def log_analysis_event(event: str, **fields: object) -> None:
