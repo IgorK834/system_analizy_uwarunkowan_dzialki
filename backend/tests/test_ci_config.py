@@ -83,17 +83,19 @@ def test_ci_has_checkout_step() -> None:
 
 def test_ci_runs_docker_compose_config() -> None:
     commands = _collect_step_commands(_load_ci_workflow(find_repo_root()))
-    assert "docker compose config" in commands
+    assert "docker compose --profile test config" in commands
 
 
 def test_ci_builds_backend_image() -> None:
     commands = _collect_step_commands(_load_ci_workflow(find_repo_root()))
-    assert "docker compose build backend" in commands
+    # AU-010: obraz produkcyjny (`runtime`) i testowy (`test`) budowane razem.
+    assert "docker compose --profile test build backend backend-test" in commands
 
 
 def test_ci_runs_pytest_inside_container() -> None:
     commands = _collect_step_commands(_load_ci_workflow(find_repo_root()))
-    assert "docker compose run" in commands
+    assert "docker compose --profile test run" in commands
+    assert "backend-test" in commands
     assert "pytest" in commands
 
 
@@ -112,7 +114,7 @@ def test_ci_uses_env_example() -> None:
 
 def test_ci_has_cleanup_step() -> None:
     commands = _collect_step_commands(_load_ci_workflow(find_repo_root()))
-    assert "docker compose down" in commands
+    assert "docker compose --profile test down" in commands
 
 
 def test_ci_does_not_contain_hardcoded_password() -> None:

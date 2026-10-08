@@ -198,7 +198,7 @@ def test_compose_passes_the_key_through_without_a_value() -> None:
     assert environment["MPZP_LLM_ENABLED"] == "${MPZP_LLM_ENABLED:-false}"
     assert environment["MPZP_LLM_MODEL"] == "${MPZP_LLM_MODEL:-gemini-3.8-flash}"
     for service, body in compose["services"].items():
-        if service != "backend":
+        if service not in {"backend", "backend-test"}:  # backend-test dzieli środowisko z backendem (AU-010)
             assert "GEMINI_API_KEY" not in (body.get("environment") or {})  # klucz tylko dla backendu
 
 

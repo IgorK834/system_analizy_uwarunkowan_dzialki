@@ -8,9 +8,12 @@ name: CI
     branches:
       - main
 
+# AU-010: trzy niezależne zadania. Każde zawodzi na znanej podatności, błędzie lintu/typów albo
+# niepowtarzalnym buildzie; progi: npm audit i pip-audit — brak podatności (wysokich i krytycznych
+# dla npm; wszystkich dla pip-audit), ruff — brak zgłoszeń, mypy — brak NOWYCH zgłoszeń względem bazy.
 jobs:
   backend:
-    name: Backend — build i testy
+    name: Backend — build, jakość i testy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,31 +28,96 @@ jobs:
         run: cp .env.example .env
 
       - name: Zweryfikuj konfigurację Compose
-        run: docker compose config
+        run: docker compose --profile test config
 
-      - name: Zbuduj obraz backendu
-        run: docker compose build backend
+      # Obraz produkcyjny (`runtime`) i testowy (`test`) — zależności instalowane z `--require-hashes`.
+      - name: Zbuduj obrazy backendu (runtime i test)
+        run: docker compose --profile test build backend backend-test
 
       - name: Zbuduj obraz frontendu
         run: docker compose build frontend
 
-      - name: Testy frontendu i coverage wewnątrz kontenera
+      - name: Obraz runtime nie zawiera narzędzi testowych, tests/ ani scripts/
         run: |
-          docker build --build-context shared=./shared --target test -t dzialki-frontend-test ./frontend
-          docker run --rm \
-            -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
-            dzialki-frontend-test \
-            npm run test:coverage
+          docker run --rm --entrypoint python dzialki-backend-runtime -c \
+            "import importlib.util as u, sys; p = [m for m in ('pytest', 'respx', 'pytest_cov', 'ruff', 'mypy') if u.find_spec(m)]; sys.exit(f'narzędzia testowe w obrazie runtime: {p}' if p else 0)"
+          docker run --rm --entrypoint sh dzialki-backend-runtime -c 'test ! -d /app/tests && test ! -d /app/scripts'
+
+      # `ruff`, `mypy` i `pip-audit` pochodzą z `requirements-dev.txt` (wersje i skróty z lockfile).
+      - name: Lint i typy (ruff, mypy z bazą znanych zgłoszeń)
+        run: |
+          docker compose --profile test run --rm --no-deps --entrypoint sh backend-test -c \
+            'ruff check . && python scripts/check_mypy_baseline.py'
+
+      - name: Audyt zależności Pythona (pip-audit)
+        run: |
+          docker compose --profile test run --rm --no-deps --entrypoint sh backend-test -c \
+            'pip-audit --require-hashes --disable-pip -r requirements.lock && pip-audit --require-hashes --disable-pip -r requirements-dev.txt'
 
       - name: Testy backendu wewnątrz kontenera
         run: |
           rm -f .env
-          docker compose run --rm \
+          docker compose --profile test run --rm \
             -v "${{ github.workspace }}:/repo:ro" \
             -e REPO_ROOT=/repo \
-            backend \
+            backend-test \
             pytest -m 'not docker_cli' --cov=app --cov-report=term-missing --cov-fail-under=80 -v
 
       - name: Zatrzymaj kontenery i usuń volumeny
         if: always()
-        run: docker compose down -v
+        run: docker compose --profile test down -v
+
+  backend-reproducible:
+    name: Backend — powtarzalność buildu (ta sama lista pakietów)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Dwukrotny build bez cache daje identyczną listę pakietów
+        run: |
+          for run in 1 2; do
+            docker build --no-cache --build-context shared=./shared --target runtime -t backend-runtime-$run ./backend
+            docker run --rm --entrypoint pip backend-runtime-$run freeze --all > "freeze-$run.txt"
+          done
+          diff freeze-1.txt freeze-2.txt
+          # Lista pakietów w obrazie to dokładnie lock (plus pip/setuptools z obrazu bazowego).
+          python3 - <<'PY'
+          import re
+          locked = {m.group(1).lower().replace("_", "-") for m in re.finditer(r"^([A-Za-z0-9_.-]+)==", open("backend/requirements.lock").read(), re.M)}
+          frozen = {line.split("==")[0].lower().replace("_", "-") for line in open("freeze-1.txt") if "==" in line}
+          missing = locked - frozen
+          assert not missing, f"w obrazie brakuje pakietów z locka: {sorted(missing)}"
+          PY
+
+  frontend:
+    name: Frontend — audyt, lint, typy, testy i build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Zbuduj obraz testowy frontendu
+        run: docker build --build-context shared=./shared --target test -t dzialki-frontend-test ./frontend
+
+      # Zależności produkcyjne: brak podatności wysokich i krytycznych; pełny audyt (z narzędziami
+      # deweloperskimi) jest informacyjny, ale na dzień wprowadzenia również czysty.
+      - name: Audyt zależności produkcyjnych (npm audit)
+        run: docker run --rm dzialki-frontend-test npm audit --omit=dev --audit-level=high
+
+      - name: ESLint
+        run: docker run --rm dzialki-frontend-test npm run lint
+
+      - name: Typy (tsc) i testy z pokryciem
+        run: |
+          docker run --rm \
+            -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
+            dzialki-frontend-test \
+            sh -c 'npm run typecheck && npm run test:coverage'
+
+      - name: Build produkcyjny
+        run: |
+          docker run --rm \
+            -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
+            dzialki-frontend-test \
+            npm run build

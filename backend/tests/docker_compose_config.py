@@ -42,9 +42,16 @@ REQUIRED_PYTHON_PACKAGES: tuple[str, ...] = (
     "beautifulsoup4",
     "weasyprint",
     "alembic",
+)
+
+# AU-010: narzędzia testowe są poza zależnościami produkcyjnymi (requirements-dev.in).
+REQUIRED_DEV_PACKAGES: tuple[str, ...] = (
     "pytest",
+    "pytest-asyncio",
     "respx",
     "pytest-cov",
+    "ruff",
+    "mypy",
 )
 
 REQUIRED_ENV_EXAMPLE_VARS: tuple[str, ...] = (
@@ -101,7 +108,8 @@ def validate_db_service(compose: dict[str, Any]) -> list[str]:
     except (KeyError, ValueError) as exc:
         return [str(exc)]
 
-    if db.get("image") != DB_IMAGE:
+    # AU-010: obraz przypięty digestem (`<tag>@sha256:<64 znaki>`).
+    if not re.fullmatch(re.escape(DB_IMAGE) + r"@sha256:[0-9a-f]{64}", str(db.get("image"))):
         errors.append(f"Oczekiwano obrazu {DB_IMAGE!r}, jest {db.get('image')!r}")
 
     environment = db.get("environment", {})
@@ -216,15 +224,15 @@ def validate_dockerfile(content: str) -> list[str]:
         if package not in content:
             errors.append(f"Brak pakietu systemowego w Dockerfile: {package}")
 
-    if "COPY requirements.txt" not in content:
-        errors.append("Dockerfile powinien kopiować requirements.txt")
+    if "COPY requirements.lock" not in content:
+        errors.append("Dockerfile powinien kopiować requirements.lock")
     if "COPY app/" not in content:
         errors.append("Dockerfile powinien kopiować katalog app/")
 
-    copy_req_pos = content.find("COPY requirements.txt")
+    copy_req_pos = content.find("COPY requirements.lock")
     copy_app_pos = content.find("COPY app/")
     if copy_req_pos == -1 or copy_app_pos == -1 or copy_req_pos > copy_app_pos:
-        errors.append("COPY requirements.txt musi występować przed COPY app/")
+        errors.append("COPY requirements.lock musi występować przed COPY app/")
 
     if not re.search(r'CMD\s*\[.*uvicorn.*app\.main:app', content, re.IGNORECASE):
         errors.append("CMD powinien uruchamiać uvicorn app.main:app")
@@ -236,14 +244,14 @@ def validate_dockerfile(content: str) -> list[str]:
 
 
 def parse_requirement_names(requirements_path: Path) -> set[str]:
-    """Wyciąga nazwy pakietów z requirements.txt (bez wersji i extras)."""
+    """Wyciąga nazwy pakietów z pliku wymagań (bez wersji, extras, skrótów i opcji pip)."""
     if not requirements_path.is_file():
-        raise FileNotFoundError("Brak pliku backend/requirements.txt")
+        raise FileNotFoundError(f"Brak pliku {requirements_path.name}")
 
     names: set[str] = set()
     for raw_line in requirements_path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.startswith(("#", "-", "--")):
             continue
         package = re.split(r"[<>=!~\[]", line, maxsplit=1)[0].strip()
         names.add(package.lower())
@@ -251,10 +259,9 @@ def parse_requirement_names(requirements_path: Path) -> set[str]:
 
 
 def missing_requirements(repo_root: Path) -> list[str]:
-    """Zwraca brakujące wymagane pakiety w requirements.txt."""
-    names = parse_requirement_names(repo_root / "backend" / "requirements.txt")
-    missing: list[str] = []
-    for package in REQUIRED_PYTHON_PACKAGES:
-        if package.lower() not in names:
-            missing.append(package)
+    """Zwraca brakujące wymagane pakiety (produkcyjne w requirements.in, testowe w requirements-dev.in)."""
+    runtime = parse_requirement_names(repo_root / "backend" / "requirements.in")
+    dev = parse_requirement_names(repo_root / "backend" / "requirements-dev.in")
+    missing = [package for package in REQUIRED_PYTHON_PACKAGES if package.lower() not in runtime]
+    missing += [package for package in REQUIRED_DEV_PACKAGES if package.lower() not in dev]
     return missing

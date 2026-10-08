@@ -6,7 +6,6 @@ import asyncio
 import json
 from typing import Any
 
-import pytest
 
 from app.schemas.mpzp import MpzpParameter, MpzpParserWarning, MpzpParseResult, MpzpZoneResult
 from app.services.mpzp_parser import MPZP_PARSER_VERSION, parse_mpzp_document

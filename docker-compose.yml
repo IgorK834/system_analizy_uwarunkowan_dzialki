@@ -1,6 +1,66 @@
+# Wspólna konfiguracja backendu dla usług `backend` i `backend-test`.
+x-backend-environment: &backend-environment
+    DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://app:app@db:5432/dzialki}
+    BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
+    KIMPZP_WMS_BASE_URL: ${KIMPZP_WMS_BASE_URL:-https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego}
+    KIMPZP_WMS_LAYERS: ${KIMPZP_WMS_LAYERS:-plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,wektor-pow,wektor-pkt,granice}
+    ANALYSIS_CACHE_MAX_AGE_DAYS: ${ANALYSIS_CACHE_MAX_AGE_DAYS:-7}
+    ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-}
+    ADMIN_API_KEYS: ${ADMIN_API_KEYS:-}
+    MPZP_LLM_ENABLED: ${MPZP_LLM_ENABLED:-false}
+    MPZP_PARSER_MODE: ${MPZP_PARSER_MODE:-legacy}
+    MPZP_LLM_KILL_SWITCH_FILE: ${MPZP_LLM_KILL_SWITCH_FILE:-/var/lib/dzialki/llm-disabled}
+    MPZP_LLM_PROVIDER: ${MPZP_LLM_PROVIDER:-gemini}
+    MPZP_LLM_MODEL: ${MPZP_LLM_MODEL:-gemini-3.8-flash}
+    MPZP_LLM_PROMPT_VERSION: ${MPZP_LLM_PROMPT_VERSION:-mpzp-extraction/1}
+    MPZP_LLM_ENFORCE_PIN: ${MPZP_LLM_ENFORCE_PIN:-true}
+    MPZP_LLM_ALARM_WINDOW_SECONDS: ${MPZP_LLM_ALARM_WINDOW_SECONDS:-3600}
+    MPZP_LLM_ALARM_REJECTION_RATE: ${MPZP_LLM_ALARM_REJECTION_RATE:-0.30}
+    MPZP_LLM_ALARM_DEGRADATION_RATE: ${MPZP_LLM_ALARM_DEGRADATION_RATE:-0.20}
+    MPZP_LLM_ALARM_DAILY_COST_USD: ${MPZP_LLM_ALARM_DAILY_COST_USD:-4}
+    MPZP_LLM_DRIFT_ALARM_RATE: ${MPZP_LLM_DRIFT_ALARM_RATE:-0.20}
+    MPZP_LLM_DRIFT_STATE_FILE: ${MPZP_LLM_DRIFT_STATE_FILE:-/var/lib/dzialki/llm-drift.json}
+    GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+    RATE_LIMIT_ANALYZE_PER_MINUTE: ${RATE_LIMIT_ANALYZE_PER_MINUTE:-20}
+    RATE_LIMIT_REFRESH_PER_MINUTE: ${RATE_LIMIT_REFRESH_PER_MINUTE:-5}
+    RATE_LIMIT_REPORT_PER_MINUTE: ${RATE_LIMIT_REPORT_PER_MINUTE:-30}
+    RATE_LIMIT_COVERAGE_PER_MINUTE: ${RATE_LIMIT_COVERAGE_PER_MINUTE:-60}
+    RATE_LIMIT_TILES_PER_MINUTE: ${RATE_LIMIT_TILES_PER_MINUTE:-1200}
+    RATE_LIMIT_GEOCODE_PER_MINUTE: ${RATE_LIMIT_GEOCODE_PER_MINUTE:-60}
+    RATE_LIMIT_ADDRESS_SEARCH_PER_MINUTE: ${RATE_LIMIT_ADDRESS_SEARCH_PER_MINUTE:-30}
+    RATE_LIMIT_DATA_PER_MINUTE: ${RATE_LIMIT_DATA_PER_MINUTE:-300}
+    # Domyślnie false: backend jest publikowany bez proxy, więc X-Forwarded-For podaje klient (AU-006).
+    RATE_LIMIT_TRUST_FORWARDED_FOR: ${RATE_LIMIT_TRUST_FORWARDED_FOR:-false}
+    RATE_LIMIT_TRUSTED_PROXIES: ${RATE_LIMIT_TRUSTED_PROXIES:-}
+    TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
+    ANALYSIS_SINGLEFLIGHT_ENABLED: ${ANALYSIS_SINGLEFLIGHT_ENABLED:-true}
+    ANALYSIS_SINGLEFLIGHT_WAIT_SECONDS: ${ANALYSIS_SINGLEFLIGHT_WAIT_SECONDS:-90}
+    ANALYSIS_SINGLEFLIGHT_CROSS_PROCESS: ${ANALYSIS_SINGLEFLIGHT_CROSS_PROCESS:-true}
+    MAP_TILE_CACHE_DIR: /var/cache/dzialki/map-tiles
+    MAP_TILE_CACHE_TTL_SECONDS: ${MAP_TILE_CACHE_TTL_SECONDS:-86400}
+    MAP_TILE_STALE_TTL_SECONDS: ${MAP_TILE_STALE_TTL_SECONDS:-604800}
+    MAP_TILE_BROWSER_TTL_SECONDS: ${MAP_TILE_BROWSER_TTL_SECONDS:-3600}
+    MAP_TILE_CACHE_MAX_BYTES: ${MAP_TILE_CACHE_MAX_BYTES:-5368709120}
+    MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS:-2}
+    MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS:-8}
+    MAP_TILE_UPSTREAM_MAX_CONCURRENCY: ${MAP_TILE_UPSTREAM_MAX_CONCURRENCY:-8}
+    MAP_TILE_MIN_ZOOM: ${MAP_TILE_MIN_ZOOM:-11}
+    MAP_TILE_MAX_ZOOM: ${MAP_TILE_MAX_ZOOM:-18}
+    ADDRESS_DICTIONARY_SOAP_URL: ${ADDRESS_DICTIONARY_SOAP_URL:-https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline}
+    ADDRESS_INDEX_TERYT_SCOPES: ${ADDRESS_INDEX_TERYT_SCOPES:-02,04,06,08,10,12,14,16,18,20,22,24,26,28,30,32}
+    ADDRESS_INDEX_CONNECT_TIMEOUT_SECONDS: ${ADDRESS_INDEX_CONNECT_TIMEOUT_SECONDS:-5}
+    ADDRESS_INDEX_READ_TIMEOUT_SECONDS: ${ADDRESS_INDEX_READ_TIMEOUT_SECONDS:-60}
+    ADDRESS_INDEX_MAX_PACKAGE_BYTES: ${ADDRESS_INDEX_MAX_PACKAGE_BYTES:-536870912}
+    ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES: ${ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES:-2147483648}
+    ADDRESS_INDEX_IMPORT_BATCH_SIZE: ${ADDRESS_INDEX_IMPORT_BATCH_SIZE:-5000}
+    ADDRESS_INDEX_UUG_FALLBACK_ENABLED: ${ADDRESS_INDEX_UUG_FALLBACK_ENABLED:-true}
+    IMPORT_ARTIFACT_STORAGE_DIR: /var/lib/dzialki/import-artifacts
+
 services:
   db:
-    image: postgis/postgis:16-3.4
+    # AU-010: obraz przypięty digestem (indeks wieloplatformowy); aktualizację proponuje Dependabot.
+    image: postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-dzialki}
       POSTGRES_USER: ${POSTGRES_USER:-app}
@@ -18,58 +78,16 @@ services:
       retries: 10
 
   backend:
+    image: dzialki-backend-runtime
     build:
       context: ./backend
+      # AU-010: obraz produkcyjny — bez pytest, tests/ i scripts/ (testy: usługa backend-test).
+      target: runtime
       # Wspólny artefakt prezentacji POG (BK-403) spoza kontekstu backendu —
       # ten sam plik trafia do obrazu frontendu.
       additional_contexts:
         shared: ./shared
-    environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://app:app@db:5432/dzialki}
-      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
-      KIMPZP_WMS_BASE_URL: ${KIMPZP_WMS_BASE_URL:-https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego}
-      KIMPZP_WMS_LAYERS: ${KIMPZP_WMS_LAYERS:-plany_granice,raster,wektor-str,wektor-lzb,wektor-lin,wektor-pow,wektor-pkt,granice}
-      ANALYSIS_CACHE_MAX_AGE_DAYS: ${ANALYSIS_CACHE_MAX_AGE_DAYS:-7}
-      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-}
-      ADMIN_API_KEYS: ${ADMIN_API_KEYS:-}
-      MPZP_LLM_ENABLED: ${MPZP_LLM_ENABLED:-false}
-      MPZP_PARSER_MODE: ${MPZP_PARSER_MODE:-legacy}
-      MPZP_LLM_KILL_SWITCH_FILE: ${MPZP_LLM_KILL_SWITCH_FILE:-/var/lib/dzialki/llm-disabled}
-      MPZP_LLM_PROVIDER: ${MPZP_LLM_PROVIDER:-gemini}
-      MPZP_LLM_MODEL: ${MPZP_LLM_MODEL:-gemini-3.8-flash}
-      MPZP_LLM_PROMPT_VERSION: ${MPZP_LLM_PROMPT_VERSION:-mpzp-extraction/1}
-      MPZP_LLM_ENFORCE_PIN: ${MPZP_LLM_ENFORCE_PIN:-true}
-      MPZP_LLM_ALARM_WINDOW_SECONDS: ${MPZP_LLM_ALARM_WINDOW_SECONDS:-3600}
-      MPZP_LLM_ALARM_REJECTION_RATE: ${MPZP_LLM_ALARM_REJECTION_RATE:-0.30}
-      MPZP_LLM_ALARM_DEGRADATION_RATE: ${MPZP_LLM_ALARM_DEGRADATION_RATE:-0.20}
-      MPZP_LLM_ALARM_DAILY_COST_USD: ${MPZP_LLM_ALARM_DAILY_COST_USD:-4}
-      MPZP_LLM_DRIFT_ALARM_RATE: ${MPZP_LLM_DRIFT_ALARM_RATE:-0.20}
-      MPZP_LLM_DRIFT_STATE_FILE: ${MPZP_LLM_DRIFT_STATE_FILE:-/var/lib/dzialki/llm-drift.json}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
-      RATE_LIMIT_ANALYZE_PER_MINUTE: ${RATE_LIMIT_ANALYZE_PER_MINUTE:-20}
-      RATE_LIMIT_REFRESH_PER_MINUTE: ${RATE_LIMIT_REFRESH_PER_MINUTE:-5}
-      RATE_LIMIT_REPORT_PER_MINUTE: ${RATE_LIMIT_REPORT_PER_MINUTE:-30}
-      RATE_LIMIT_TRUST_FORWARDED_FOR: ${RATE_LIMIT_TRUST_FORWARDED_FOR:-false}
-      MAP_TILE_CACHE_DIR: /var/cache/dzialki/map-tiles
-      MAP_TILE_CACHE_TTL_SECONDS: ${MAP_TILE_CACHE_TTL_SECONDS:-86400}
-      MAP_TILE_STALE_TTL_SECONDS: ${MAP_TILE_STALE_TTL_SECONDS:-604800}
-      MAP_TILE_BROWSER_TTL_SECONDS: ${MAP_TILE_BROWSER_TTL_SECONDS:-3600}
-      MAP_TILE_CACHE_MAX_BYTES: ${MAP_TILE_CACHE_MAX_BYTES:-5368709120}
-      MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_CONNECT_TIMEOUT_SECONDS:-2}
-      MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS: ${MAP_TILE_UPSTREAM_READ_TIMEOUT_SECONDS:-8}
-      MAP_TILE_UPSTREAM_MAX_CONCURRENCY: ${MAP_TILE_UPSTREAM_MAX_CONCURRENCY:-8}
-      MAP_TILE_MIN_ZOOM: ${MAP_TILE_MIN_ZOOM:-11}
-      MAP_TILE_MAX_ZOOM: ${MAP_TILE_MAX_ZOOM:-18}
-      ADDRESS_DICTIONARY_SOAP_URL: ${ADDRESS_DICTIONARY_SOAP_URL:-https://mapy.geoportal.gov.pl/wss/service/SLNOFF/guest/slowniki-offline}
-      ADDRESS_INDEX_TERYT_SCOPES: ${ADDRESS_INDEX_TERYT_SCOPES:-02,04,06,08,10,12,14,16,18,20,22,24,26,28,30,32}
-      ADDRESS_INDEX_CONNECT_TIMEOUT_SECONDS: ${ADDRESS_INDEX_CONNECT_TIMEOUT_SECONDS:-5}
-      ADDRESS_INDEX_READ_TIMEOUT_SECONDS: ${ADDRESS_INDEX_READ_TIMEOUT_SECONDS:-60}
-      ADDRESS_INDEX_MAX_PACKAGE_BYTES: ${ADDRESS_INDEX_MAX_PACKAGE_BYTES:-536870912}
-      ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES: ${ADDRESS_INDEX_MAX_UNCOMPRESSED_BYTES:-2147483648}
-      ADDRESS_INDEX_IMPORT_BATCH_SIZE: ${ADDRESS_INDEX_IMPORT_BATCH_SIZE:-5000}
-      ADDRESS_INDEX_UUG_FALLBACK_ENABLED: ${ADDRESS_INDEX_UUG_FALLBACK_ENABLED:-true}
-      IMPORT_ARTIFACT_STORAGE_DIR: /var/lib/dzialki/import-artifacts
+    environment: *backend-environment
     depends_on:
       db:
         condition: service_healthy
@@ -95,10 +113,30 @@ services:
       retries: 5
       start_period: 10s
 
+  # AU-010: obraz testowy (pytest, ruff, mypy, pip-audit, tests/, scripts/) — poza domyślnym `up`.
+  # CI i lokalne testy: `docker compose run --rm backend-test pytest -m 'not docker_cli' …`.
+  backend-test:
+    profiles: ["test"]
+    image: dzialki-backend-test
+    build:
+      context: ./backend
+      target: test
+      additional_contexts:
+        shared: ./shared
+    environment: *backend-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - map_tile_cache:/var/cache/dzialki/map-tiles
+      - import_artifacts:/var/lib/dzialki/import-artifacts
+      - ./docs:/app/docs:ro
+
   address-index-sync:
     profiles: ["maintenance"]
     build:
       context: ./backend
+      target: runtime
       additional_contexts:
         shared: ./shared
     environment:

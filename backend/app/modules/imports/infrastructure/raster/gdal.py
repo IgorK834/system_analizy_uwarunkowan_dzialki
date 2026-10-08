@@ -2,7 +2,7 @@
 
 DECYZJA (gap_5): do budowy i walidacji COG shellujemy do narzędzi ``gdal_translate``,
 ``gdalwarp`` i ``gdalinfo`` już obecnych w obrazie (``gdal-bin``), zamiast dodawać
-``rasterio``/bindings GDAL do ``requirements.txt``. Powody:
+``rasterio``/bindings GDAL do ``requirements.in``. Powody:
 
 * obraz backendu ma już systemowy GDAL (Dockerfile: ``gdal-bin``), a projekt
   świadomie unika kruchych bindings GDAL na ``python:3.13-slim``;
