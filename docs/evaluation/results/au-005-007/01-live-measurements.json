@@ -1,0 +1,28 @@
+{
+  "captured": "2026-10-08",
+  "stack": "docker compose -p au567live (PostGIS + backend z kodem z drzewa roboczego, żywe ULDK/KIUT/ISOK/GDOŚ/NMT/POG; discovery MPZP podmienione na gminę bez wektorów, bo żadna działka korpusu nie wchodzi w tryb ręcznego symbolu)",
+  "au006_rotating_x_forwarded_for": {
+    "request": "POST /analyze?force_refresh=true, body {} , 50 żądań, X-Forwarded-For: 203.0.113.1..50, limit 5/min, RATE_LIMIT_TRUST_FORWARDED_FOR=false",
+    "status_counts": {"422 (przeszło limiter)": 5, "429": 45},
+    "audit_baseline": "50/50 przeszło (TRUST=true, bez proxy)",
+    "retry_after_header": "60"
+  },
+  "au007_six_parallel_requests": {
+    "request": "6 × POST /analyze {method: parcel_id, parcel_identifier: 141801_4.0701.23/8}",
+    "http_statuses": [200, 200, 200, 200, 200, 200],
+    "wall_time_s": 24,
+    "distinct_analysis_ids": 1,
+    "rows_in_analyses_for_parcel": 1,
+    "roles_in_log": {"leader": 1, "wait": 5},
+    "audit_baseline": "6 analiz (id 43–48), 6 wierszy, 6× pełne odpytanie usług po 14–26 s"
+  },
+  "au005_resume_live": {
+    "no_token_existing_analysis": "403 FORBIDDEN 'Brak dostępu do tej analizy.'",
+    "no_token_missing_analysis": "403 FORBIDDEN 'Brak dostępu do tej analizy.'",
+    "wrong_token": "403",
+    "valid_token_missing_analysis": "404",
+    "valid_token_header_invalid_symbol": "422",
+    "ui_resume_with_result_token": "200 (żądanie z access_token z wyniku, patrz 04-ui-manual-zone-resume.jpg)",
+    "valid_token_not_waiting": "409"
+  }
+}

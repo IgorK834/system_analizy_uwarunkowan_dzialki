@@ -1,0 +1,1620 @@
+{
+  "analysis_id": 1,
+  "status": "partial",
+  "analyzed_at": "2026-10-06T17:25:07.975365Z",
+  "parcel": {
+    "parcel_identifier": "141801_4.0701.23/8",
+    "geometry_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.216280034518803,
+              51.98894446152102
+            ],
+            [
+              21.216695225836222,
+              51.98900266026534
+            ],
+            [
+              21.21673505180096,
+              51.98904977443528
+            ],
+            [
+              21.216526854226533,
+              51.98934874157537
+            ],
+            [
+              21.216150990980253,
+              51.98929541352937
+            ],
+            [
+              21.216280034518803,
+              51.98894446152102
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_identifier": "141801_4.0701.23/8",
+        "layer": "parcel"
+      }
+    },
+    "metrics": {
+      "area_sqm": 1199.0106690403386,
+      "area_ha": 0.11990106690403386,
+      "perimeter_m": 137.84840600628885,
+      "is_valid": true,
+      "geometry_repaired": false
+    },
+    "source": {
+      "source_id": "uldk",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.gugik.gov.pl/",
+      "fetched_at": "2026-10-06T17:24:56.308090Z",
+      "response_status": null,
+      "confidence": 1.0,
+      "manual_review_required": false
+    },
+    "buildable_area_geojson": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              21.216323945672322,
+              51.988987496567304
+            ],
+            [
+              21.21622066035106,
+              51.98926839646032
+            ],
+            [
+              21.216492534431968,
+              51.98930697035556
+            ],
+            [
+              21.21667060432108,
+              51.98905126627841
+            ],
+            [
+              21.21665605020111,
+              51.989034048711595
+            ],
+            [
+              21.216323945672322,
+              51.988987496567304
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "layer": "buildable_area",
+        "setback_m": 4.0,
+        "is_technical_approximation": true
+      }
+    }
+  },
+  "mpzp_zones": [],
+  "pog": {
+    "schema_version": "2.4",
+    "legal_status": "unknown",
+    "coverage_status": "unknown",
+    "data_availability": "current",
+    "status_confirmed_at": "2026-10-06T17:25:05.439601Z",
+    "legal_status_evidence": null,
+    "coverage_evidence": null,
+    "act": null,
+    "zones": [],
+    "dominant_zone_id": null,
+    "ouz": [],
+    "downtown_areas": [],
+    "social_infrastructure_standard_areas": [],
+    "status": "unknown",
+    "planning_zone": null,
+    "zone_type": null,
+    "in_ouz": false,
+    "area_ratio": null,
+    "in_downtown_area": false,
+    "uchwala_nr": null,
+    "uchwala_date": null,
+    "manual_review_required": true,
+    "compatibility_assessment": {
+      "schema_version": "1.0",
+      "status": "unknown",
+      "reason_code": "POG_STATUS_UNKNOWN",
+      "as_of": "2026-10-06",
+      "rule_id": "mpzp-pog-function-table",
+      "rule_version": "1.0",
+      "aggregation": "Najsłabsze ogniwo, bez uśredniania: incompatible, jeżeli którakolwiek para stref jest rozbieżna; w przeciwnym razie unknown, jeżeli którakolwiek para nie ma reguły lub danych; następnie uncertain; compatible wyłącznie wtedy, gdy wszystkie pary są compatible, są zidentyfikowane przestrzennie i razem pokrywają całą działkę. Parametry różnych stref nie są łączone.",
+      "sources": [
+        {
+          "kind": "rule_set",
+          "label": "Tabela reguł funkcja MPZP × strefa POG",
+          "reference": "Jawna tabela reguł informacyjnych systemu (app/core/planning_compatibility.py, zestaw mpzp-pog-function-table v1.0): funkcja MPZP × typ strefy planistycznej POG. Tabela nie jest wykładnią prawa.",
+          "version": "1.0",
+          "as_of": "2026-10-06"
+        },
+        {
+          "kind": "pog",
+          "label": "POG",
+          "reference": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms",
+          "version": null,
+          "as_of": "2026-10-06"
+        }
+      ],
+      "rationale": "Nie udało się potwierdzić statusu prawnego POG w źródle urzędowym. Brak geometrii lub pusta odpowiedź usługi nie oznacza braku planu.",
+      "manual_review_required": true,
+      "zone_pairs": [],
+      "informational_notice": "Ocena relacji MPZP–POG jest analizą informacyjną opartą na jawnej tabeli reguł systemu. Nie jest opinią prawną i nie przesądza o prawnej możliwości zabudowy działki — o niej rozstrzygają ustalenia obowiązujących aktów i właściwy organ.",
+      "legacy_evidence": null
+    },
+    "raw_attributes": {
+      "discovery": {
+        "legal_status": "unknown",
+        "raw_legal_status": null,
+        "source_responded": true,
+        "uchwala_nr": null,
+        "uchwala_date": null,
+        "links": [],
+        "is_discovery_only": true,
+        "layers": {
+          "planning_act": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          },
+          "downtown_area": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          },
+          "ouz": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          },
+          "planning_zones": {
+            "status": "empty",
+            "raw_legal_status": null,
+            "matched_wms_layer": null,
+            "feature_count": 0
+          }
+        }
+      }
+    },
+    "ouz_intersection_area_sqm": null,
+    "ouz_intersection_pct": null,
+    "touches_ouz_boundary": false,
+    "presentation_style": {
+      "style_version": "2026.09.29-1",
+      "style_sha256": "a2b1199aa033620b7fe51d9e72e2ff8d86bc016cba004bb13ff7483705245fc2",
+      "zones": {
+        "SW": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną",
+          "fill": "#b5523b",
+          "outline": "#6e2f20"
+        },
+        "SJ": {
+          "label": "strefa wielofunkcyjna z zabudową mieszkaniową jednorodzinną",
+          "fill": "#f0b067",
+          "outline": "#9a6425"
+        },
+        "SZ": {
+          "label": "strefa wielofunkcyjna z zabudową zagrodową",
+          "fill": "#dcc873",
+          "outline": "#8a7a2e"
+        },
+        "SU": {
+          "label": "strefa usługowa",
+          "fill": "#d4445f",
+          "outline": "#851f33"
+        },
+        "SH": {
+          "label": "strefa handlu wielkopowierzchniowego",
+          "fill": "#9c3a7a",
+          "outline": "#5b1f47"
+        },
+        "SP": {
+          "label": "strefa gospodarcza",
+          "fill": "#7b6c9c",
+          "outline": "#453a5e"
+        },
+        "SR": {
+          "label": "strefa produkcji rolniczej",
+          "fill": "#c2cf8f",
+          "outline": "#6d7a3a"
+        },
+        "SI": {
+          "label": "strefa infrastrukturalna",
+          "fill": "#6f93a8",
+          "outline": "#3a5566"
+        },
+        "SN": {
+          "label": "strefa zieleni i rekreacji",
+          "fill": "#4e9a61",
+          "outline": "#2a5e37"
+        },
+        "SC": {
+          "label": "strefa cmentarzy",
+          "fill": "#56645a",
+          "outline": "#2c352f"
+        },
+        "SG": {
+          "label": "strefa górnictwa",
+          "fill": "#8d6a48",
+          "outline": "#4f3a26"
+        },
+        "SO": {
+          "label": "strefa otwarta",
+          "fill": "#d3e6c4",
+          "outline": "#7f9a6d"
+        },
+        "SK": {
+          "label": "strefa komunikacyjna",
+          "fill": "#bdbdbd",
+          "outline": "#6b6b6b"
+        }
+      },
+      "unknown_zone": {
+        "code": "unknown",
+        "label": "strefa nierozpoznana (kod spoza słownika)",
+        "fill": "#ffffff",
+        "outline": "#5c5c5c",
+        "pattern": "cross-hatch",
+        "description": "Białe tło z kratką — kod strefy nie występuje w słowniku RodzajStrefyPlanistycznejKod."
+      },
+      "null_style": {
+        "code": null,
+        "label": "brak wartości w danych",
+        "fill": "#f2f2f2",
+        "outline": "#7a7a7a",
+        "pattern": "diagonal-hatch",
+        "description": "Jasnoszare tło z ukośnym kreskowaniem — parametr nie został określony (to nie jest wartość 0)."
+      },
+      "overlays": {
+        "ouz": {
+          "short_label": "OUZ",
+          "label": "obszar uzupełnienia zabudowy",
+          "outline": "#1f4e79",
+          "line_width": 2.0,
+          "line_dasharray": [
+            4.0,
+            2.0
+          ],
+          "pattern": "diagonal-lines",
+          "description": "Granatowy obrys przerywany i ukośne kreskowanie (OUZ)."
+        },
+        "downtown": {
+          "short_label": "OZS",
+          "label": "obszar zabudowy śródmiejskiej",
+          "outline": "#6a1b4d",
+          "line_width": 2.0,
+          "line_dasharray": [
+            1.0,
+            1.5
+          ],
+          "pattern": "dots",
+          "description": "Śliwkowy obrys kropkowany i wypełnienie z kropek (OZS)."
+        },
+        "social_infrastructure_standard": {
+          "short_label": "OSDIS",
+          "label": "obszar standardów dostępności infrastruktury społecznej",
+          "outline": "#0b6e4f",
+          "line_width": 2.0,
+          "line_dasharray": [
+            6.0,
+            2.0,
+            1.0,
+            2.0
+          ],
+          "pattern": "cross-lines",
+          "description": "Zielony obrys kreska-kropka i kratka pionowo-pozioma (OSDIS)."
+        },
+        "act_boundary": {
+          "short_label": "Granica aktu",
+          "label": "granica obszaru objętego planem ogólnym",
+          "outline": "#202020",
+          "line_width": 2.5,
+          "line_dasharray": null,
+          "pattern": null,
+          "description": "Ciągła, ciemna linia granicy aktu."
+        }
+      }
+    },
+    "source": {
+      "source_id": "pog_app",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "REJESTR_URBANISTYCZNY_WMS",
+      "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms",
+      "fetched_at": "2026-10-06T17:25:05.439601Z",
+      "response_status": null,
+      "confidence": 0.3,
+      "manual_review_required": true
+    }
+  },
+  "infrastructure": [],
+  "utilities_preview": {
+    "coverage_status": "covered",
+    "county_name": null,
+    "layer_available": true,
+    "note": "Powiat publikuje dane GESUT w KIUT. Brak obiektów na podglądzie może nadal oznaczać brak sieci albo brak danych cyfrowych dla tego fragmentu. Podgląd nie służy do obliczania odległości.",
+    "source": {
+      "source_id": "kiut_wms",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu",
+      "fetched_at": "2026-10-06T17:24:56.433666Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  },
+  "risks": [
+    {
+      "risk_type": "obszar_chronionego_krajobrazu",
+      "section": "nature",
+      "feature_id": "ObszaryChronionegoKrajobrazu.fid--1de26f_1a111e45d3b_7bd0",
+      "severity": "high",
+      "probability_class": null,
+      "return_period_years": null,
+      "protection_type": "obszar_chronionego_krajobrazu",
+      "name": "Warszawski",
+      "intersection_area_sqm": 1199.011,
+      "intersection_pct": 100.0,
+      "touches_boundary": false,
+      "description": "Forma ochrony przyrody: obszar chronionego krajobrazu; „Warszawski”; poziom wysoki; przecięcie 1199,01 m² (100,00% działki).",
+      "geometry_geojson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                21.216150990980253,
+                51.98929541352937
+              ],
+              [
+                21.216526854226533,
+                51.98934874157537
+              ],
+              [
+                21.21673505180096,
+                51.98904977443528
+              ],
+              [
+                21.216695225836222,
+                51.98900266026534
+              ],
+              [
+                21.216280034518803,
+                51.98894446152102
+              ],
+              [
+                21.216150990980253,
+                51.98929541352937
+              ]
+            ]
+          ]
+        },
+        "properties": {
+          "layer": "risk",
+          "risk_type": "obszar_chronionego_krajobrazu",
+          "severity": "high",
+          "name": "Warszawski",
+          "feature_id": "ObszaryChronionegoKrajobrazu.fid--1de26f_1a111e45d3b_7bd0"
+        }
+      },
+      "warnings": [],
+      "source": {
+        "source_id": "gdos",
+        "source_version": null,
+        "artifact_sha256": null,
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "GDOS",
+        "source_url": "https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS%3AObszaryChronionegoKrajobrazu&bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+        "fetched_at": "2026-10-06T17:24:56.491103Z",
+        "response_status": null,
+        "confidence": 0.85,
+        "manual_review_required": false
+      }
+    }
+  ],
+  "risk_sections": [
+    {
+      "schema_version": "1.0",
+      "section": "flood",
+      "status": "available",
+      "reason_code": null,
+      "relation": "no_match",
+      "feature_count": 0,
+      "intersecting_feature_count": 0,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 0.0,
+      "union_intersection_pct": 0.0,
+      "feature_ids": [],
+      "source": {
+        "source_id": "isok",
+        "source_version": "WFS 2.0.0 nz-core:HazardArea",
+        "artifact_sha256": "48bea6077a19e8c4096e49b715c90633d0f996b892cd934fd36b419377f5adbe",
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "ISOK",
+        "source_url": "https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS?service=WFS&version=2.0.0&request=GetFeature&typeNames=nz-core%3AHazardArea&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+        "fetched_at": "2026-10-06T17:25:03.020058Z",
+        "response_status": 200,
+        "confidence": 0.85,
+        "manual_review_required": false
+      },
+      "warnings": []
+    },
+    {
+      "schema_version": "1.0",
+      "section": "nature",
+      "status": "available",
+      "reason_code": null,
+      "relation": "intersection",
+      "feature_count": 1,
+      "intersecting_feature_count": 1,
+      "boundary_feature_count": 0,
+      "union_intersection_area_sqm": 1199.011,
+      "union_intersection_pct": 100.0,
+      "feature_ids": [
+        "ObszaryChronionegoKrajobrazu.fid--1de26f_1a111e45d3b_7bd0"
+      ],
+      "source": {
+        "source_id": "gdos",
+        "source_version": "WFS 2.0.0; 10 warstw GDOS:*",
+        "artifact_sha256": "81debfd57e0084abc99739fd966432cd04cd70078aedb7c3235fda05153dcc85",
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "GDOS",
+        "source_url": "https://sdi.gdos.gov.pl/wfs?bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+        "fetched_at": "2026-10-06T17:24:56.491103Z",
+        "response_status": 200,
+        "confidence": 0.85,
+        "manual_review_required": false
+      },
+      "warnings": []
+    }
+  ],
+  "terrain": {
+    "schema_version": "1.0",
+    "status": "available",
+    "reason_code": null,
+    "min_height_m": 117.9,
+    "max_height_m": 118.5,
+    "height_difference_m": 0.6,
+    "grid_size_m": 2.0,
+    "sampled_points": 300,
+    "source": {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "3032576a356695460bfdb492f7efafc95146d27684241646be0aa5471314692b",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=4ea023eeccd5f427b246fe3822fb42cd0cdb7ed7d430047091f36a1a5ec73cea&vertex_count=6",
+      "fetched_at": "2026-10-06T17:24:57.079573Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    "warnings": [],
+    "relief": {
+      "schema_version": "1.0",
+      "algorithm_version": "horn1981-3x3-v1",
+      "slope_classes_version": "slope-classes-pl-v1",
+      "status": "available",
+      "reason_code": null,
+      "resolution_m": 1.0,
+      "parcel_pixel_count": 1199,
+      "valid_pixel_count": 1199,
+      "nodata_pixel_count": 0,
+      "valid_area_share_pct": 100.0,
+      "min_height_m": 118.269,
+      "max_height_m": 118.959,
+      "mean_height_m": 118.608,
+      "slope": {
+        "mean_deg": 1.5202,
+        "median_deg": 1.1322,
+        "p90_deg": 2.7177,
+        "max_deg": 10.3631,
+        "mean_pct": 2.6576,
+        "median_pct": 1.9764,
+        "p90_pct": 4.7468,
+        "max_pct": 18.2868
+      },
+      "slope_classes": [
+        {
+          "class_id": "flat",
+          "label": "płaski (< 2%)",
+          "min_pct": 0.0,
+          "max_pct": 2.0,
+          "pixel_count": 615,
+          "area_sqm": 615.0,
+          "share_pct": 51.29
+        },
+        {
+          "class_id": "gentle",
+          "label": "łagodny (2–5%)",
+          "min_pct": 2.0,
+          "max_pct": 5.0,
+          "pixel_count": 479,
+          "area_sqm": 479.0,
+          "share_pct": 39.95
+        },
+        {
+          "class_id": "moderate",
+          "label": "umiarkowany (5–10%)",
+          "min_pct": 5.0,
+          "max_pct": 10.0,
+          "pixel_count": 60,
+          "area_sqm": 60.0,
+          "share_pct": 5.0
+        },
+        {
+          "class_id": "strong",
+          "label": "znaczny (10–15%)",
+          "min_pct": 10.0,
+          "max_pct": 15.0,
+          "pixel_count": 34,
+          "area_sqm": 34.0,
+          "share_pct": 2.84
+        },
+        {
+          "class_id": "steep",
+          "label": "stromy (15–30%)",
+          "min_pct": 15.0,
+          "max_pct": 30.0,
+          "pixel_count": 11,
+          "area_sqm": 11.0,
+          "share_pct": 0.92
+        },
+        {
+          "class_id": "very_steep",
+          "label": "bardzo stromy (≥ 30%)",
+          "min_pct": 30.0,
+          "max_pct": null,
+          "pixel_count": 0,
+          "area_sqm": 0.0,
+          "share_pct": 0.0
+        }
+      ],
+      "aspect": {
+        "status": "defined",
+        "mean_azimuth_deg": 340.4388,
+        "resultant_length": 0.49,
+        "dominant_direction": "N",
+        "sector_shares_pct": {
+          "N": 45.21,
+          "NE": 9.59,
+          "E": 2.57,
+          "SE": 3.25,
+          "S": 7.36,
+          "SW": 6.85,
+          "W": 12.33,
+          "NW": 12.84
+        },
+        "non_flat_share_pct": 48.71,
+        "flat_threshold_pct": 2.0
+      },
+      "profile": {
+        "method": "parcel_long_axis_through_rectangle_center",
+        "crs": "EPSG:2180",
+        "start": [
+          652137.442,
+          460441.635
+        ],
+        "end": [
+          652147.501,
+          460402.848
+        ],
+        "length_m": 40.07,
+        "step_m": 1.0,
+        "interpolation": "bilinear",
+        "samples": [
+          {
+            "distance_m": 0.0,
+            "x": 652137.442,
+            "y": 460441.635,
+            "height_m": 118.384,
+            "inside_parcel": false
+          },
+          {
+            "distance_m": 1.0,
+            "x": 652137.693,
+            "y": 460440.667,
+            "height_m": 118.313,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 2.0,
+            "x": 652137.944,
+            "y": 460439.699,
+            "height_m": 118.328,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 3.0,
+            "x": 652138.195,
+            "y": 460438.731,
+            "height_m": 118.382,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 4.0,
+            "x": 652138.446,
+            "y": 460437.763,
+            "height_m": 118.4,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 5.0,
+            "x": 652138.697,
+            "y": 460436.795,
+            "height_m": 118.408,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 6.0,
+            "x": 652138.948,
+            "y": 460435.827,
+            "height_m": 118.415,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 7.0,
+            "x": 652139.199,
+            "y": 460434.859,
+            "height_m": 118.411,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 8.0,
+            "x": 652139.45,
+            "y": 460433.891,
+            "height_m": 118.445,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 9.0,
+            "x": 652139.701,
+            "y": 460432.923,
+            "height_m": 118.424,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 10.0,
+            "x": 652139.952,
+            "y": 460431.955,
+            "height_m": 118.458,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 11.0,
+            "x": 652140.203,
+            "y": 460430.987,
+            "height_m": 118.451,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 12.0,
+            "x": 652140.454,
+            "y": 460430.019,
+            "height_m": 118.475,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 13.0,
+            "x": 652140.705,
+            "y": 460429.051,
+            "height_m": 118.444,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 14.0,
+            "x": 652140.956,
+            "y": 460428.083,
+            "height_m": 118.502,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 15.0,
+            "x": 652141.208,
+            "y": 460427.115,
+            "height_m": 118.521,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 16.0,
+            "x": 652141.459,
+            "y": 460426.147,
+            "height_m": 118.587,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 17.0,
+            "x": 652141.71,
+            "y": 460425.179,
+            "height_m": 118.565,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 18.0,
+            "x": 652141.961,
+            "y": 460424.211,
+            "height_m": 118.568,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 19.0,
+            "x": 652142.212,
+            "y": 460423.243,
+            "height_m": 118.573,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 20.0,
+            "x": 652142.463,
+            "y": 460422.275,
+            "height_m": 118.613,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 21.0,
+            "x": 652142.714,
+            "y": 460421.307,
+            "height_m": 118.648,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 22.0,
+            "x": 652142.965,
+            "y": 460420.339,
+            "height_m": 118.617,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 23.0,
+            "x": 652143.216,
+            "y": 460419.372,
+            "height_m": 118.596,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 24.0,
+            "x": 652143.467,
+            "y": 460418.404,
+            "height_m": 118.618,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 25.0,
+            "x": 652143.718,
+            "y": 460417.436,
+            "height_m": 118.651,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 26.0,
+            "x": 652143.969,
+            "y": 460416.468,
+            "height_m": 118.647,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 27.0,
+            "x": 652144.22,
+            "y": 460415.5,
+            "height_m": 118.667,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 28.0,
+            "x": 652144.471,
+            "y": 460414.532,
+            "height_m": 118.684,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 29.0,
+            "x": 652144.722,
+            "y": 460413.564,
+            "height_m": 118.707,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 30.0,
+            "x": 652144.973,
+            "y": 460412.596,
+            "height_m": 118.714,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 31.0,
+            "x": 652145.224,
+            "y": 460411.628,
+            "height_m": 118.704,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 32.0,
+            "x": 652145.475,
+            "y": 460410.66,
+            "height_m": 118.708,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 33.0,
+            "x": 652145.726,
+            "y": 460409.692,
+            "height_m": 118.728,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 34.0,
+            "x": 652145.977,
+            "y": 460408.724,
+            "height_m": 118.745,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 35.0,
+            "x": 652146.228,
+            "y": 460407.756,
+            "height_m": 118.749,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 36.0,
+            "x": 652146.479,
+            "y": 460406.788,
+            "height_m": 118.74,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 37.0,
+            "x": 652146.73,
+            "y": 460405.82,
+            "height_m": 118.741,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 38.0,
+            "x": 652146.981,
+            "y": 460404.852,
+            "height_m": 118.786,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 39.0,
+            "x": 652147.232,
+            "y": 460403.884,
+            "height_m": 118.772,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 40.0,
+            "x": 652147.483,
+            "y": 460402.916,
+            "height_m": 118.752,
+            "inside_parcel": true
+          },
+          {
+            "distance_m": 40.07,
+            "x": 652147.501,
+            "y": 460402.848,
+            "height_m": 118.756,
+            "inside_parcel": false
+          }
+        ],
+        "line_geojson": {
+          "type": "Feature",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                21.2163855997327,
+                51.98932870182125
+              ],
+              [
+                21.216514806052643,
+                51.98897736872237
+              ]
+            ]
+          },
+          "properties": {
+            "layer": "terrain_profile",
+            "length_m": 40.07,
+            "step_m": 1.0
+          }
+        }
+      },
+      "raster": {
+        "coverage_id": "DTM_PL-KRON86-NH_TIFF",
+        "crs": "EPSG:2180",
+        "resolution_m": 1.0,
+        "width_px": 46,
+        "height_px": 50,
+        "bbox": [
+          652119.343266,
+          460396.66941,
+          652165.343266,
+          460446.66941
+        ],
+        "buffer_m": 2.0,
+        "size_bytes": 9663,
+        "nodata_value": null,
+        "nodata_policy": "GDAL_NODATA (jeśli zadeklarowane), NaN oraz niezadeklarowane 0.0 poza zasięgiem danych (kontrakt WCS NMT potwierdzony 2026-09-28)",
+        "vertical_datum": "PL-KRON86-NH",
+        "gdal_version": "GDAL 3.10.3, released 2025/04/01"
+      },
+      "source": {
+        "source_id": "nmt_wcs",
+        "source_version": "DTM_PL-KRON86-NH_TIFF (WCS 2.0.1)",
+        "artifact_sha256": "a1ba925af24b3efd770ec222c94e521a65a9e192a3dff1c1a09166124d8f156f",
+        "data_release_id": null,
+        "act_version": null,
+        "source_name": "NMT_WCS",
+        "source_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?service=WCS&version=2.0.1&request=GetCoverage&coverageId=DTM_PL-KRON86-NH_TIFF&format=image%2Ftiff&subset=x%28652119.343266%2C652165.343266%29&subset=y%28460396.66941%2C460446.66941%29",
+        "fetched_at": "2026-10-06T17:24:57.177296Z",
+        "response_status": 200,
+        "confidence": 0.9,
+        "manual_review_required": false
+      },
+      "warnings": []
+    }
+  },
+  "section_quality": {
+    "schema_version": "1.0",
+    "policy_version": "quality-policy/1+2e0adf938c7b",
+    "reference_at": "2026-10-06T17:25:07.975365Z",
+    "origin": "stored",
+    "sections": [
+      {
+        "section": "parcel",
+        "report_section": "parcel",
+        "status": "available",
+        "source_id": "uldk",
+        "source_name": "ULDK",
+        "fetched_at": "2026-10-06T17:24:56.308090Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 11,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "mpzp",
+        "report_section": "mpzp",
+        "status": "partial",
+        "source_id": "kimpzp",
+        "source_name": "KIMPZP",
+        "fetched_at": "2026-10-06T17:25:04.972482Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 3,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "MPZP_ACT_WITHOUT_ZONE",
+          "MPZP_MULTIPLE_ACTS_AT_POINT",
+          "SOURCE_REVIEW_REQUIRED"
+        ]
+      },
+      {
+        "section": "pog",
+        "report_section": "pog",
+        "status": "unknown",
+        "source_id": "pog_app",
+        "source_name": "REJESTR_URBANISTYCZNY_WMS",
+        "fetched_at": "2026-10-06T17:25:05.439601Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 2,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_COVERAGE_UNKNOWN",
+          "POG_REVIEW_REQUIRED"
+        ]
+      },
+      {
+        "section": "pog_overlays",
+        "report_section": "pog",
+        "status": "unknown",
+        "source_id": "pog_app",
+        "source_name": "REJESTR_URBANISTYCZNY_WMS",
+        "fetched_at": "2026-10-06T17:25:05.439601Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 2,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_COVERAGE_UNKNOWN",
+          "POG_REVIEW_REQUIRED"
+        ]
+      },
+      {
+        "section": "flood",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "isok",
+        "source_name": "ISOK",
+        "fetched_at": "2026-10-06T17:25:03.020058Z",
+        "data_release_id": null,
+        "source_version": "WFS 2.0.0 nz-core:HazardArea",
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 4,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "nature",
+        "report_section": "environment",
+        "status": "available",
+        "source_id": "gdos",
+        "source_name": "GDOS",
+        "fetched_at": "2026-10-06T17:24:56.491103Z",
+        "data_release_id": null,
+        "source_version": "WFS 2.0.0; 10 warstw GDOS:*",
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 11,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "terrain",
+        "report_section": "terrain",
+        "status": "available",
+        "source_id": "nmt",
+        "source_name": "NMT",
+        "fetched_at": "2026-10-06T17:24:57.079573Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "fresh",
+          "reason_code": null,
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 10,
+          "max_age_days": 7,
+          "basis": "project_decision"
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": []
+      },
+      {
+        "section": "utilities",
+        "report_section": "infrastructure",
+        "status": "partial",
+        "source_id": "kiut_wms",
+        "source_name": "KIUT (GUGiK)",
+        "fetched_at": "2026-10-06T17:24:56.433666Z",
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_POLICY",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": 11,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "KIUT_PREVIEW_ONLY"
+        ]
+      },
+      {
+        "section": "transport",
+        "report_section": "infrastructure",
+        "status": "out_of_scope",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": false,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "NO_SOURCE_CONTRACT"
+        ]
+      },
+      {
+        "section": "mpzp_pog_relation",
+        "report_section": "pog",
+        "status": "unknown",
+        "source_id": null,
+        "source_name": null,
+        "fetched_at": null,
+        "data_release_id": null,
+        "source_version": null,
+        "manual_review_required": true,
+        "freshness": {
+          "state": "unknown",
+          "reason_code": "FRESHNESS_NO_SOURCE",
+          "reference_at": "2026-10-06T17:25:07.975365Z",
+          "age_seconds": null,
+          "max_age_days": null,
+          "basis": null
+        },
+        "policy_version": "quality-policy/1+2e0adf938c7b",
+        "reason_codes": [
+          "POG_STATUS_UNKNOWN",
+          "COMPATIBILITY_REVIEW_REQUIRED",
+          "DERIVED_SECTION"
+        ]
+      }
+    ],
+    "matrix_sha256": "acb98f81a9ea92122621172b55ee4efe579326fd7d2e80e1776a7f733bad53da",
+    "legend": {
+      "statuses": [
+        {
+          "id": "available",
+          "label": "sprawdzono",
+          "description": "źródło zwróciło wynik zgodny z kontraktem; pusty wynik oznacza sprawdzony brak obiektów, a nie brak ograniczeń poza zakresem źródła"
+        },
+        {
+          "id": "partial",
+          "label": "częściowo",
+          "description": "wynik jest niepełny albo obniżonej pewności (np. strefa bez wektora, podgląd zamiast geometrii, sprzeczne parametry)"
+        },
+        {
+          "id": "no_coverage",
+          "label": "brak pokrycia źródła",
+          "description": "źródło potwierdziło brak danych dla tego obszaru (np. poza zasięgiem NMT albo powiat nie publikuje GESUT) — to nie jest błąd źródła i nie dowodzi braku ograniczeń"
+        },
+        {
+          "id": "unavailable",
+          "label": "źródło niedostępne",
+          "description": "próba pobrania nie powiodła się (limit czasu, błąd HTTP, odpowiedź niezgodna z kontraktem) — wynik nie jest znany"
+        },
+        {
+          "id": "error",
+          "label": "błąd sprawdzenia",
+          "description": "nieoczekiwany błąd przetwarzania sekcji — wynik nie jest znany"
+        },
+        {
+          "id": "unknown",
+          "label": "nieustalone",
+          "description": "brak zapisanego wyniku albo niemożliwe rozstrzygnięcie; brak danych nie oznacza braku ograniczenia ani braku planu"
+        },
+        {
+          "id": "out_of_scope",
+          "label": "poza zakresem",
+          "description": "sekcja nie jest analizowana, bo brakuje potwierdzonego kontraktu źródła"
+        },
+        {
+          "id": "awaiting_input",
+          "label": "oczekuje na dane użytkownika",
+          "description": "analiza wstrzymana do czasu podania danych przez użytkownika"
+        }
+      ],
+      "freshness": [
+        {
+          "id": "fresh",
+          "label": "aktualne wg reguły",
+          "description": "wiek danych w punkcie odniesienia mieści się w regule wieku przypisanej do źródła"
+        },
+        {
+          "id": "stale",
+          "label": "starsze niż reguła",
+          "description": "wiek danych w punkcie odniesienia przekracza regułę wieku źródła — dane mogą nie odzwierciedlać bieżącego stanu źródła"
+        },
+        {
+          "id": "unknown",
+          "label": "świeżość nieustalona",
+          "description": "brak reguły wieku dla źródła, brak czasu pobrania albo czas nieprawidłowy — system nie zgaduje terminu ważności"
+        }
+      ],
+      "reasons": [
+        {
+          "code": "FRESHNESS_NO_POLICY",
+          "label": "brak reguły wieku dla źródła — terminu ważności nie zgadujemy"
+        },
+        {
+          "code": "MPZP_ACT_WITHOUT_ZONE",
+          "label": "KIMPZP wskazało akt planu, ale nie ustalono strefy ani parametrów"
+        },
+        {
+          "code": "MPZP_MULTIPLE_ACTS_AT_POINT",
+          "label": "w punkcie działki obowiązuje kilka aktów — aktu nie wybrano automatycznie"
+        },
+        {
+          "code": "SOURCE_REVIEW_REQUIRED",
+          "label": "źródło oznaczyło wynik jako wymagający weryfikacji"
+        },
+        {
+          "code": "POG_COVERAGE_UNKNOWN",
+          "label": "pokrycie danymi POG nieustalone"
+        },
+        {
+          "code": "POG_REVIEW_REQUIRED",
+          "label": "wynik POG wymaga ręcznej weryfikacji"
+        },
+        {
+          "code": "KIUT_PREVIEW_ONLY",
+          "label": "podgląd nie jest geometrią sieci — brak odległości i liczby sieci"
+        },
+        {
+          "code": "NO_SOURCE_CONTRACT",
+          "label": "brak potwierdzonego kontraktu źródła danych (BK-305)"
+        },
+        {
+          "code": "FRESHNESS_NO_SOURCE",
+          "label": "brak źródła danych dla sekcji"
+        },
+        {
+          "code": "POG_STATUS_UNKNOWN",
+          "label": "nie potwierdzono statusu prawnego POG w źródle urzędowym"
+        },
+        {
+          "code": "COMPATIBILITY_REVIEW_REQUIRED",
+          "label": "relacja MPZP–POG wymaga weryfikacji"
+        },
+        {
+          "code": "DERIVED_SECTION",
+          "label": "sekcja wyliczona z innych sekcji — bez własnego źródła"
+        }
+      ]
+    }
+  },
+  "buildable_area_sqm": 707.9269046332179,
+  "manual_zone_required": false,
+  "mpzp_discovery": {
+    "schema_version": "1.0",
+    "status": "available",
+    "reason_codes": [
+      "MPZP_MULTIPLE_ACTS_AT_POINT"
+    ],
+    "acts": [
+      {
+        "resolution_number": "IV/30/2024",
+        "resolution_date": "2024-06-05",
+        "name": "Miejscowy plany zagospodarowania przestrzennego dla fragmentu miasta Góra Kalwaria - rejon ul. Lipkowskiej cz. I",
+        "valid_from": "2024-06-26",
+        "repealed_on": null,
+        "legal_status": "binding",
+        "text_url": "http://mpzp.gorakalwaria.pl/portal/mpzp/uch/IV_30_2024.pdf",
+        "legend_url": "http://mpzp.gorakalwaria.pl/portal/mpzp/leg/IV_30_2024_leg.pdf",
+        "drawing_url": null,
+        "bip_url": "https://bip.gorakalwaria.pl/wiadomosci/14246/wiadomosc/757992",
+        "www_url": null,
+        "journal": "Dz. Urz. Woj. Maz. 2024 poz. 6032 z 11.06.2024r.",
+        "informatization": "unknown",
+        "zone_symbols": [],
+        "amendments": [],
+        "source_format": "plan_block",
+        "verified_links": [
+          "bip_url"
+        ]
+      },
+      {
+        "resolution_number": "576/XLVII/2010",
+        "resolution_date": "2010-04-28",
+        "name": "Miejscowy plan zagospodarowania przestrzennego dla fragmentu miasta Góra Kalwaria oraz dla fragmentu wsi Moczydłów - rejon ul. Lipkowskiej",
+        "valid_from": "2010-08-24",
+        "repealed_on": null,
+        "legal_status": "binding",
+        "text_url": "http://mpzp.gorakalwaria.pl/portal/mpzp/uch/576_XLVII_2010.pdf",
+        "legend_url": "http://mpzp.gorakalwaria.pl/portal/mpzp/leg/576_XLVII_2010_leg.pdf",
+        "drawing_url": null,
+        "bip_url": "https://bip.gorakalwaria.pl/wiadomosci/14246/wiadomosc/554058",
+        "www_url": null,
+        "journal": "Dz. Urz. Woj. Maz. Nr 142, poz. 3400",
+        "informatization": "unknown",
+        "zone_symbols": [],
+        "amendments": [
+          {
+            "kind": "note",
+            "resolution_number": null,
+            "name": null,
+            "adopted_on": null,
+            "valid_from": null,
+            "document_url": null,
+            "bip_url": null,
+            "raw_text": "text planu zmieniony uchwałą XXXIX/366/2017 (patrz poz. 122); Wyrok Sądu IV SA/Wa 1818/18\" z dnia 13 listopada 2018 r. dla działki 13 z obrębu 7-01; fragment planu zmieniony uchwałą LIV/467/2021 (patrz poz. 154); text planu zmieniony uchwałą LIV/467/2021 (patrz poz. 176);",
+            "document_url_verified": false,
+            "bip_url_verified": false
+          },
+          {
+            "kind": "text_change",
+            "resolution_number": "LIV/467/2021",
+            "name": "Zmiana miejscowego planu zagospodarowania przestrzennego dla fragmentu wsi Moczydłów – rejon ul. Lipkowskiej – ETAP I",
+            "adopted_on": "2021-06-23",
+            "valid_from": "2021-07-17",
+            "document_url": "https://bip-v1-files.idcom-jst.pl/sites/47313/wiadomosci/582692/files/liv_467_2021.pdf",
+            "bip_url": "https://bip.gorakalwaria.pl/wiadomosci/14246/wiadomosc/582692",
+            "raw_text": null,
+            "document_url_verified": true,
+            "bip_url_verified": true
+          },
+          {
+            "kind": "text_change",
+            "resolution_number": "XXXIX/366/2017",
+            "name": "Miejscowy plan zagospodarowania przestrzennego dla fragmentu miasta Góra Kalwaria oraz dla fragmentu wsi Moczydłów – rejon ul. Lipkowskiej",
+            "adopted_on": "2017-01-25",
+            "valid_from": "2017-03-16",
+            "document_url": "https://bip-v1-files.idcom-jst.pl/sites/47313/wiadomosci/554352/files/xxxix_366_2017.pdf",
+            "bip_url": "https://bip.gorakalwaria.pl/wiadomosci/14246/wiadomosc/554352",
+            "raw_text": null,
+            "document_url_verified": true,
+            "bip_url_verified": true
+          }
+        ],
+        "source_format": "plan_block",
+        "verified_links": [
+          "bip_url"
+        ]
+      }
+    ],
+    "selected_act": null,
+    "multiple_acts_at_point": true,
+    "multiple_acts_on_parcel": true,
+    "candidate_zone_symbols": [],
+    "sampled_points": 2,
+    "failed_points": 0,
+    "is_discovery_only": true,
+    "source": {
+      "source_id": "kimpzp",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIMPZP",
+      "source_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego",
+      "fetched_at": "2026-10-06T17:25:04.972482Z",
+      "response_status": null,
+      "confidence": 0.6,
+      "manual_review_required": true
+    }
+  },
+  "manual_zone_context": null,
+  "warnings": [
+    {
+      "code": "KIUT_WARNING",
+      "message": "Wektorowe dane sieci uzbrojenia KIUT/GESUT nie są dostępne (brak potwierdzonego kontraktu źródła) — brak danych nie oznacza braku sieci.",
+      "severity": "warning",
+      "source_name": "kiut"
+    },
+    {
+      "code": "MPZP_MULTIPLE_ACTS_AT_POINT",
+      "message": "KIMPZP wskazuje w punkcie działki 2 akty MPZP: IV/30/2024 (obowiązuje od 2024-06-26); 576/XLVII/2010 (obowiązuje od 2010-08-24). System nie wybiera aktu automatycznie — ustal w uchwałach, który akt rozstrzyga o przeznaczeniu.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "MPZP_WARNING",
+      "message": "To jest wstępne rozpoznanie (discovery) na próbce punktów, nie finalne przecięcie geometrii wektorowej działki ze strefami MPZP.",
+      "severity": "warning",
+      "source_name": "mpzp"
+    },
+    {
+      "code": "POG_RU_CATALOG_SOURCE",
+      "message": "Discovery użyło potwierdzonego endpointu WMS z katalogu źródeł.",
+      "severity": "info",
+      "source_name": "Rejestr Urbanistyczny"
+    },
+    {
+      "code": "POG_NOT_FOUND_IN_SOURCE",
+      "message": "Usługa WMS odpowiedziała, ale nie zwróciła obiektów POG dla próbkowanych punktów. Pusta odpowiedź nie oznacza braku planu.",
+      "severity": "warning",
+      "source_name": "pog"
+    },
+    {
+      "code": "POG_DISCOVERY_ONLY",
+      "message": "WMS/BIP służy tylko do rozpoznania POG; obliczenia wymagają danych wektorowych APP/GML.",
+      "severity": "info",
+      "source_name": "pog"
+    },
+    {
+      "code": "OUZ_DATA_UNAVAILABLE",
+      "message": "Brak danych geometrycznych OUZ nie potwierdza położenia działki poza OUZ.",
+      "severity": "error",
+      "source_name": "ouz"
+    },
+    {
+      "code": "POG_EMPTY_RESPONSE_NOT_ABSENCE",
+      "message": "Źródło nie zwróciło obiektów POG. Pusta odpowiedź nie jest urzędowym potwierdzeniem braku planu.",
+      "severity": "warning",
+      "source_name": "pog"
+    },
+    {
+      "code": "POG_SCENARIO_UNKNOWN",
+      "message": "Brak potwierdzonego, obowiązującego POG wymaga ręcznej weryfikacji w Rejestrze Urbanistycznym.",
+      "severity": "error",
+      "source_name": "pog"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "uldk",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ULDK",
+      "source_url": "https://uldk.gugik.gov.pl/",
+      "fetched_at": "2026-10-06T17:24:56.308090Z",
+      "response_status": null,
+      "confidence": 1.0,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "kiut_wms",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIUT (GUGiK)",
+      "source_url": "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu",
+      "fetched_at": "2026-10-06T17:24:56.433666Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "isok",
+      "source_version": "WFS 2.0.0 nz-core:HazardArea",
+      "artifact_sha256": "48bea6077a19e8c4096e49b715c90633d0f996b892cd934fd36b419377f5adbe",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "ISOK",
+      "source_url": "https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS?service=WFS&version=2.0.0&request=GetFeature&typeNames=nz-core%3AHazardArea&srsName=urn%3Aogc%3Adef%3Acrs%3AEPSG%3A%3A2180&bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+      "fetched_at": "2026-10-06T17:25:03.020058Z",
+      "response_status": 200,
+      "confidence": 0.85,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "gdos",
+      "source_version": "WFS 2.0.0; 10 warstw GDOS:*",
+      "artifact_sha256": "81debfd57e0084abc99739fd966432cd04cd70078aedb7c3235fda05153dcc85",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "GDOS",
+      "source_url": "https://sdi.gdos.gov.pl/wfs?bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+      "fetched_at": "2026-10-06T17:24:56.491103Z",
+      "response_status": 200,
+      "confidence": 0.85,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "nmt",
+      "source_version": null,
+      "artifact_sha256": "3032576a356695460bfdb492f7efafc95146d27684241646be0aa5471314692b",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT",
+      "source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=4ea023eeccd5f427b246fe3822fb42cd0cdb7ed7d430047091f36a1a5ec73cea&vertex_count=6",
+      "fetched_at": "2026-10-06T17:24:57.079573Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "gdos",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "GDOS",
+      "source_url": "https://sdi.gdos.gov.pl/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=GDOS%3AObszaryChronionegoKrajobrazu&bbox=652121.452724%2C460398.698376%2C652162.371949%2C460444.158444%2CEPSG%3A2180",
+      "fetched_at": "2026-10-06T17:24:56.491103Z",
+      "response_status": null,
+      "confidence": 0.85,
+      "manual_review_required": false
+    },
+    {
+      "source_id": "pog_app",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "REJESTR_URBANISTYCZNY_WMS",
+      "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms",
+      "fetched_at": "2026-10-06T17:25:05.439601Z",
+      "response_status": null,
+      "confidence": 0.3,
+      "manual_review_required": true
+    },
+    {
+      "source_id": "kimpzp",
+      "source_version": null,
+      "artifact_sha256": null,
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "KIMPZP",
+      "source_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego",
+      "fetched_at": "2026-10-06T17:25:04.972482Z",
+      "response_status": null,
+      "confidence": 0.6,
+      "manual_review_required": true
+    },
+    {
+      "source_id": "nmt_wcs",
+      "source_version": "DTM_PL-KRON86-NH_TIFF (WCS 2.0.1)",
+      "artifact_sha256": "a1ba925af24b3efd770ec222c94e521a65a9e192a3dff1c1a09166124d8f156f",
+      "data_release_id": null,
+      "act_version": null,
+      "source_name": "NMT_WCS",
+      "source_url": "https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModelFormatTIFF?service=WCS&version=2.0.1&request=GetCoverage&coverageId=DTM_PL-KRON86-NH_TIFF&format=image%2Ftiff&subset=x%28652119.343266%2C652165.343266%29&subset=y%28460396.66941%2C460446.66941%29",
+      "fetched_at": "2026-10-06T17:24:57.177296Z",
+      "response_status": 200,
+      "confidence": 0.9,
+      "manual_review_required": false
+    }
+  ]
+}

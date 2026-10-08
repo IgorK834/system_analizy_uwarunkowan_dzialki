@@ -56,6 +56,11 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `manual_zone_context.symbol_max_length` | 3 | *pominięte:* reguła walidacji formularza UI | metadane |
 | `manual_zone_context.symbol_allowed_pattern` | 3 | *pominięte:* reguła walidacji formularza UI | metadane |
 | `manual_zone_context.*` | 3 | Tabela 3.4 — plan, kandydaci, status i SHA-256 przypiętego dokumentu, komunikat | dane ręczne |
+| `mpzp_discovery.schema_version` | 9 | Tabela 9.3 — wersje kontraktów snapshotu | metadane |
+| `mpzp_discovery.source.*` | 9 | Tabela 3.5 — wiersz „Źródło”; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
+| `mpzp_discovery.acts[].amendments[].*` | 3 | Tabela 3.5 — kolumna „Dokumenty i zmiany” (rodzaj, numer, daty, nazwa, opis, linki zmiany) | fakt źródłowy |
+| `mpzp_discovery.acts[].*` | 3 | Tabela 3.5 — akty wskazane przez KIMPZP: uchwała, nazwa, status, daty, linki tekstu/legendy/BIP, format odpowiedzi gminnej | fakt źródłowy |
+| `mpzp_discovery.*` | 3 | Tabela 3.5 — status źródła z kodami, akt użyty w analizie albo flaga wielu aktów, punkty próbki i kandydaci symboli; charakter discovery opisuje nota pod tabelą | metadane |
 | `pog.schema_version` | 9 | Tabela 9.3 — wersje kontraktów snapshotu | metadane |
 | `pog.status` | 4 | *pominięte:* historyczny alias statusu (ADR-002) — raport pokazuje kanoniczne legal_status | metadane |
 | `pog.raw_attributes` | 4 | *pominięte:* surowe atrybuty rekordu źródłowego bez normalizacji — nie są ustaleniem; dostępne w API, a w pakiecie audytowym (BK-505) tylko gdy katalog źródeł zezwala na redystrybucję surowych danych | metadane |
@@ -139,4 +144,4 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 554.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 601.

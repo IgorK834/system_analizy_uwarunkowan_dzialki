@@ -248,18 +248,38 @@ publikowane atomowo po kontroli jakości; w czasie importu API nadal czyta
 poprzednie. Dopóki nie istnieje pierwsze wydanie, działa ograniczony fallback
 UUG, który nie zapewnia pełnych sugestii dla krótkich prefiksów.
 
-### Testy frontendu
+### Testy, jakość i łańcuch dostaw (AU-010)
 
-Frontend używa Vitest i React Testing Library. Testy z wymaganym pokryciem można
-uruchomić bez lokalnego Node.js, w obrazie testowym:
+**Backend.** `docker compose up` buduje obraz produkcyjny (`runtime`): zależności z `backend/requirements.lock`
+(dokładne wersje i skróty SHA-256, instalacja z `--require-hashes`), bez `pytest`, `tests/` i `scripts/`.
+Narzędzia testowe (`pytest`, `respx`, `pytest-cov`, `ruff`, `mypy`, `pip-audit`) są w `backend/requirements-dev.txt`
+i trafiają wyłącznie do obrazu `test` (usługa `backend-test`, profil `test`):
+
+```bash
+docker compose --profile test run --rm backend-test pytest -m 'not docker_cli' --cov=app --cov-fail-under=80
+docker compose --profile test run --rm --no-deps --entrypoint sh backend-test -c \
+  'ruff check . && python scripts/check_mypy_baseline.py'
+docker compose --profile test run --rm --no-deps --entrypoint sh backend-test -c \
+  'pip-audit --require-hashes --disable-pip -r requirements.lock && pip-audit --require-hashes --disable-pip -r requirements-dev.txt'
+```
+
+Zależności zmienia się w `requirements.in` / `requirements-dev.in`, a lock generuje (kontener `python:3.13-slim`, `pip-tools >= 7`):
+`pip-compile --generate-hashes --allow-unsafe --strip-extras --no-header --annotation-style=line requirements.in -o requirements.lock`
+(polecenie dla pliku dev jest w nagłówku `requirements-dev.txt`). `mypy` obejmuje `app/modules/*`; znane zgłoszenia są w
+`backend/mypy-baseline.txt`, a bramka odrzuca tylko NOWE (`python scripts/check_mypy_baseline.py --update` po świadomej zmianie).
+Obrazy bazowe (`python`, `node`, `postgis`) są przypięte digestem; aktualizacje proponuje Dependabot (`.github/dependabot.yml`).
+
+**Frontend** (Vitest, React Testing Library, ESLint, `npm audit`) — bez lokalnego Node.js, w obrazie testowym:
 
 ```bash
 docker build --build-context shared=./shared --target test -t dzialki-frontend-test ./frontend
-docker run --rm \
-  -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
-  dzialki-frontend-test \
-  npm run test:coverage
+docker run --rm -e NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 dzialki-frontend-test \
+  sh -c 'npm audit --omit=dev --audit-level=high && npm run lint && npm run typecheck && npm run test:coverage && npm run build'
 ```
+
+CI (`.github/workflows/ci.yml`) uruchamia te same bramki w trzech zadaniach: backend (build `runtime` i `test`, kontrola, że obraz
+produkcyjny nie zawiera narzędzi testowych, `ruff`, `mypy`, `pip-audit`, testy z `--cov-fail-under=80`), powtarzalność buildu (dwa
+buildy bez cache dają identyczną listę pakietów) i frontend (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy, build).
 
 ### Punkt odniesienia BK-001
 
@@ -434,21 +454,62 @@ docker compose run --rm --user root --entrypoint chown backend \
 
 ### Dostęp, limity i status analizy
 
-- **Raport PDF i dokument uchwały** (`GET /report/{id}`,
-  `GET /analyze/{id}/pending-document`) wymagają parametru `access_token`. Token
-  (pole `access_token` odpowiedzi analizy) to HMAC identyfikatora analizy — samo
-  zgadywanie kolejnych ID nie wystarcza. Ustaw stały `ACCESS_TOKEN_SECRET`
-  (`openssl rand -hex 32`); bez niego tokeny ważą do restartu backendu.
+- **Raport PDF, dokument uchwały i wznowienie analizy** (`GET /report/{id}`,
+  `GET /analyze/{id}/pending-document`, `POST /analyze/resume`) wymagają tokenu
+  dostępu. Token (pole `access_token` odpowiedzi analizy) to HMAC identyfikatora
+  analizy — samo zgadywanie kolejnych ID nie wystarcza. Raport i dokument przyjmują
+  go w parametrze `access_token`; `POST /analyze/resume` w polu `access_token` body
+  albo w nagłówku `X-Analysis-Token` (interfejs wysyła token z wyniku). Brak lub zły
+  token to zawsze `403` o tej samej treści, niezależnie od tego, czy analiza
+  istnieje; `404`/`409` pojawiają się dopiero po poprawnym tokenie. Ustaw stały
+  `ACCESS_TOKEN_SECRET` (`openssl rand -hex 32`); bez niego tokeny ważą do restartu
+  backendu.
 - **Akceptacja/odrzucenie rastrów** (`POST /api/v1/raster-assets/{id}/accept|reject`)
   wymaga nagłówka `X-Admin-Key`. Klucze konfiguruje `ADMIN_API_KEYS`
   (`operator:klucz,...`); operator w audycie pochodzi z klucza. Bez kluczy
   endpointy są wyłączone.
-- **Limity zapytań** (429 + `Retry-After`): `POST /analyze` (20/min), z
-  `force_refresh=true` (5/min), raport i dokument (30/min), pokrycie KIUT
-  (60/min) — na klienta, w oknie 60 s. Limiter działa w procesie, więc przy N
-  workerach efektywny limit rośnie N razy. Za zaufanym reverse proxy ustaw
-  `RATE_LIMIT_TRUST_FORWARDED_FOR=true` (używany jest ostatni wpis
-  `X-Forwarded-For`).
+- **Limity zapytań** (429 + `Retry-After`): jeden limiter i jeden klucz klienta dla
+  wszystkich endpointów publicznych, okno 60 s, osobny licznik na politykę.
+  Domyślne progi (żądań/min na klienta): `POST /analyze` 20, z `force_refresh=true`
+  5, raport i dokument 30, pokrycie KIUT 60, **kafle WMS i MVT 1200**
+  (`RATE_LIMIT_TILES_PER_MINUTE`), `/geocode/suggest` 60, `/api/v1/search/addresses`
+  30, pozostałe odczyty (metadane map, wydania POG, dokumenty aktów, sondy zdrowia,
+  endpointy z kluczem administracyjnym) 300 (`RATE_LIMIT_DATA_PER_MINUTE`). Test
+  `tests/test_rate_limit_coverage.py` pilnuje, że każda trasa z OpenAPI ma limiter i
+  zwraca 429 z `Retry-After`. Limiter działa w procesie, więc przy N workerach
+  efektywny limit rośnie N razy.
+  **Kiedy włączać `X-Forwarded-For`:** domyślnie nagłówek jest ignorowany, a klientem
+  jest adres połączenia — `docker-compose.yml` publikuje backend na `0.0.0.0:8000`
+  bez proxy, więc nagłówek podaje sam klient i dałoby się nim obejść limit (pomiar z
+  audytu: limit 5/min, rotacja nagłówka → 50/50 żądań przeszło; teraz co najwyżej 5).
+  Włączaj go tylko za własnym reverse proxy, które dopisuje adres klienta, i tylko
+  razem: `RATE_LIMIT_TRUST_FORWARDED_FOR=true`,
+  `RATE_LIMIT_TRUSTED_PROXIES=<adres/sieć proxy widziana przez backend>` (CSV, np.
+  `172.18.0.0/16`) i `TRUSTED_PROXY_COUNT=<liczba proxy przed backendem>`.
+  Klientem jest wpis `X-Forwarded-For` liczony od końca o `TRUSTED_PROXY_COUNT`
+  (wcześniejsze wpisy podaje klient), a gdy adres połączenia nie jest na liście
+  zaufanych — nagłówek jest ignorowany. Klienci IPv6 są liczeni po prefiksie /64.
+- **Jedna analiza na działkę (single-flight):** równoległe `POST /analyze` dla tej
+  samej działki dają jedną analizę — pierwsze żądanie liczy, pozostałe czekają i
+  dostają jej wynik (to samo `analysis_id`), również z `force_refresh=true`.
+  Między workerami działa sesyjna blokada doradcza PostgreSQL. Gdy trwająca analiza
+  tej samej działki nie skończy się w `ANALYSIS_SINGLEFLIGHT_WAIT_SECONDS` (90 s),
+  oczekujące żądanie dostaje `503 ANALYSIS_IN_PROGRESS` z `Retry-After` — ponowienie
+  trafia już w cache. Kolejka (`analysis_singleflight_waiters`) i liczniki
+  (`analysis_singleflight.leader|wait|takeover|timeout`) są w `GET /health/upstream`
+  (`X-Admin-Key`); log ma wpisy `singleflight=leader|wait`. Wyłącznik:
+  `ANALYSIS_SINGLEFLIGHT_ENABLED=false`. Decyzje:
+  [ADR-017](docs/adr/ADR-017-resume-token-rate-limit-and-single-flight.md).
+- **Błędy API i `X-Request-ID`**: każda odpowiedź ma nagłówek `X-Request-ID`
+  (poprawny identyfikator z żądania jest zachowany, inaczej UUID4), a błąd ma
+  ciało `ErrorResponse` (`error`, `detail`, `request_id`) — także `500
+  INTERNAL_ERROR`, który ma nagłówki CORS i nie zawiera stack trace. Ten sam
+  `request_id` jest w logu serwera (`[request_id]` w każdym wpisie), więc kod
+  zgłoszenia z interfejsu wystarcza do znalezienia przyczyny. Kody domenowe:
+  `PARCEL_NOT_FOUND` (404), `UPSTREAM_UNAVAILABLE` (503),
+  `UPSTREAM_INVALID_RESPONSE` (502), `PERSISTENCE_FAILED` (503, zapis wyniku
+  odrzucony przez bazę). Liczniki odpowiedzi ULDK: `GET /health/upstream`
+  (`X-Admin-Key`). Decyzje: [ADR-015](docs/adr/ADR-015-api-errors-request-id-and-text-column-policy.md).
 - **Status `complete`**: niedostępność ISOK/GDOŚ lub awaria KIUT obniża status do
   `partial`. Znana luka „brak potwierdzonego kontraktu KIUT/GESUT” jest tylko
   ostrzeżeniem i nie blokuje `complete`.

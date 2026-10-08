@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-06",
+  "backend": "kod z drzewa roboczego (migracja 031), PostGIS 16-3.4, usługi zewnętrzne na żywo (ULDK, NMT, KIMPZP, ISOK, GDOŚ, RU)",
+  "note": "Pierwszy bieg użył ?force_refresh=true (limit 5/min): ostatnie 3 żądania dostały 429 RATE_LIMITED z ErrorResponse; powtórzono je bez force_refresh.",
+  "rate_limited_in_first_run": [
+    {
+      "parcel": "026201_1.0009.578/2",
+      "http": 429,
+      "error": "RATE_LIMITED"
+    },
+    {
+      "parcel": "281603_4.0001.496/5",
+      "http": 429,
+      "error": "RATE_LIMITED"
+    },
+    {
+      "parcel": "281603_4.0001.431/66",
+      "http": 429,
+      "error": "RATE_LIMITED"
+    }
+  ],
+  "results": [
+    {
+      "city": "Warszawa",
+      "parcel": "146510_8.0502.1/3",
+      "http": 200,
+      "seconds": 5.9,
+      "request_id": "d9418786-8bbe-48fb-9362-d48eb1a1268c",
+      "status": "partial",
+      "analysis_id": 1,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 109.1,
+      "hmax": 113.7,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=22554d2b4f993158080a1c3113c36849e03ef8c8978d868efc0dcc063e945fe9&vertex_count=76"
+    },
+    {
+      "city": "Kraków",
+      "parcel": "126105_9.0001.580/4",
+      "http": 200,
+      "seconds": 16.1,
+      "request_id": "cda39413-9fec-4011-8a74-fb4491eac14b",
+      "status": "partial",
+      "analysis_id": 2,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 209.4,
+      "hmax": 212.0,
+      "nmt_source_url_len": 158,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=dcc8889c11c52eee0de4ccccf81e44584e0851008f6f7954d1b0f57a5c4b4249&vertex_count=134"
+    },
+    {
+      "city": "Kraków",
+      "parcel": "126105_9.0001.540/15",
+      "http": 200,
+      "seconds": 15.0,
+      "request_id": "da98fc1e-6fba-4596-b069-869a5512fadd",
+      "status": "partial",
+      "analysis_id": 3,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 203.6,
+      "hmax": 210.8,
+      "nmt_source_url_len": 158,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=83b284f70e82262208f3b5d52390a493090aec6e7fe130c4159cbdf46759ae28&vertex_count=164"
+    },
+    {
+      "city": "Legnica",
+      "parcel": "026201_1.0009.1319/4",
+      "http": 200,
+      "seconds": 16.0,
+      "request_id": "303157fe-dce3-4996-b604-6fcab9b0f4ef",
+      "status": "partial",
+      "analysis_id": 4,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 121.0,
+      "hmax": 121.7,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=433a4c74b843e800fc37c7187529961488b48acb17a7356543587fe0f6444d3f&vertex_count=35"
+    },
+    {
+      "city": "Legnica",
+      "parcel": "026201_1.0010.410/1",
+      "http": 200,
+      "seconds": 5.8,
+      "request_id": "d5432fb7-b6e4-4e8e-998e-467c4aa54609",
+      "status": "partial",
+      "analysis_id": 5,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 118.8,
+      "hmax": 120.8,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=93b0dd5d11bbfa71ce68f250e909dcfbe04b88f7af81d4de5afbc6ddc7dbe025&vertex_count=28"
+    },
+    {
+      "city": "Legnica",
+      "parcel": "026201_1.0009.578/2",
+      "http": 200,
+      "seconds": 8.0,
+      "request_id": "22790023-91c6-4073-800a-d4b52368f435",
+      "status": "partial",
+      "analysis_id": 6,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 118.5,
+      "hmax": 121.0,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=6fe38e93810ed97c362c71fcde4e7d250f0f5a6aa6488b5dd14a330eaccedfc2&vertex_count=35"
+    },
+    {
+      "city": "Pisz",
+      "parcel": "281603_4.0001.496/5",
+      "http": 200,
+      "seconds": 6.9,
+      "request_id": "747e16ee-8bf5-44e2-abef-d9db3c03806b",
+      "status": "partial",
+      "analysis_id": 7,
+      "terrain": "available",
+      "terrain_reason": null,
+      "hmin": 117.2,
+      "hmax": 118.3,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=3fa1001f239390b48bec7b88d36191557df95edea81a630abaa1aaf189d26abf&vertex_count=87"
+    },
+    {
+      "city": "Pisz",
+      "parcel": "281603_4.0001.431/66",
+      "http": 200,
+      "seconds": 6.3,
+      "request_id": "76dc900a-d2b3-4632-8fd8-bfe6813829f4",
+      "status": "partial",
+      "analysis_id": 8,
+      "terrain": "unavailable",
+      "terrain_reason": "SERVICE_REPORTED_ERROR",
+      "hmin": null,
+      "hmax": null,
+      "nmt_source_url_len": 157,
+      "nmt_source_url": "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon_sha256=e40117ed52723fdb401f3b9b101c75548d1efce2511cd1695249a5631ca8de49&vertex_count=98"
+    }
+  ]
+}
