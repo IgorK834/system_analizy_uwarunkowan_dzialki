@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeParcel,
   ApiError,
+  ANALYSIS_TOKEN_HEADER,
+  createAnalysisLinks,
   getAddressSuggestions,
   getActivePogTileRelease,
   getAnalysisAuditPackage,
@@ -217,14 +219,50 @@ describe("klient API", () => {
     expect(new TextDecoder().decode(await report.slice(0, 4).arrayBuffer())).toBe(
       "%PDF",
     );
+    // AU-012: token idzie nagłówkiem, nie w adresie (logi dostępu, Referer).
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/report/42?access_token=tok%2Fen%2B1",
+      "https://api.example.test/report/42",
       expect.objectContaining({
         method: "GET",
-        headers: { Accept: "application/pdf" },
+        headers: { Accept: "application/pdf", "X-Analysis-Token": "tok/en+1" },
         signal: controller.signal,
       }),
     );
+  });
+
+  it("wydaje krótkotrwałe linki do raportu i pakietu z tokenem w nagłówku", async () => {
+    const links = {
+      analysis_id: 42,
+      purpose: "download",
+      access_token: "v2.1900000000.k1.sig",
+      expires_at: "2030-03-17T17:46:40Z",
+      expires_in_seconds: 900,
+      report_url: "/report/42?access_token=v2.1900000000.k1.sig",
+      audit_package_url: "/report/42/audit.zip?access_token=v2.1900000000.k1.sig",
+    };
+    fetchMock.mockImplementation(async () => jsonResponse(links));
+
+    await expect(createAnalysisLinks(42, "tok-42")).resolves.toEqual(links);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/analyze/42/links",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json", [ANALYSIS_TOKEN_HEADER]: "tok-42" },
+        body: JSON.stringify({ purpose: "download" }),
+      }),
+    );
+
+    await createAnalysisLinks(42, "tok-42", { purpose: "share" });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/analyze/42/links",
+      expect.objectContaining({ body: JSON.stringify({ purpose: "share" }) }),
+    );
+  });
+
+  it("zgłasza błąd wydania linku, gdy token wygasł (403)", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ detail: "Brak dostępu do tej analizy." }, 403));
+
+    await expect(createAnalysisLinks(42, "stary")).rejects.toMatchObject({ status: 403 });
   });
 
   it("pobiera raport bez tokenu, gdy analiza go nie zwróciła", async () => {
@@ -240,7 +278,7 @@ describe("klient API", () => {
 
   it("mapuje 403 i 429 raportu na czytelne komunikaty", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "x" }, 403));
-    await expect(getAnalysisReport(42)).rejects.toThrow("Brak dostępu");
+    await expect(getAnalysisReport(42)).rejects.toThrow("wygasł lub jest nieprawidłowy");
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "x" }, 429));
     await expect(getAnalysisReport(42)).rejects.toThrow("Zbyt wiele żądań");
@@ -657,10 +695,10 @@ describe("klient API", () => {
       expect(download.sha256).toBe(ZIP_SHA);
       expect(download.exporterVersion).toBe("audit-exporter/1.0.0");
       expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.example.test/report/42/audit.zip?access_token=tok%2Fen%2B1",
+        "https://api.example.test/report/42/audit.zip",
         expect.objectContaining({
           method: "GET",
-          headers: { Accept: "application/zip" },
+          headers: { Accept: "application/zip", "X-Analysis-Token": "tok/en+1" },
           signal: controller.signal,
         }),
       );
@@ -698,7 +736,7 @@ describe("klient API", () => {
 
     it("mapuje błędy HTTP na czytelne komunikaty", async () => {
       const cases: Array<[number, RegExp]> = [
-        [403, /Brak dostępu do pakietu audytowego/],
+        [403, /Dostęp do pakietu audytowego .* wygasł/],
         [404, /Nie znaleziono zapisanej analizy/],
         [413, /przekracza dopuszczalny rozmiar/],
         [429, /Zbyt wiele żądań pakietu/],
