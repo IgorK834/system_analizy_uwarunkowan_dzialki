@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # ADR-014 (PV3-16): skanowanie sekretów bez zewnętrznej akcji — skrypt z repozytorium, sama biblioteka
       # standardowa; uruchamiany PRZED utworzeniem .env, na plikach objętych repozytorium.
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Dwukrotny build bez cache daje identyczną listę pakietów
         run: |
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Zbuduj obraz testowy frontendu
         run: docker build --build-context shared=./shared --target test -t dzialki-frontend-test ./frontend
