@@ -1,0 +1,13 @@
+# AU-009: dokumenty binarne w repozytorium (raporty PDF, zrzuty ekranu) — bez normalizacji końców linii
+# i bez próby „diffowania” jako tekst.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.zip binary
+
+# Git LFS: żaden artefakt w docs/evaluation/results/** nie przekracza dziś 5 MB (pilnuje tego
+# `test_large_binary_artifacts_are_tracked_by_lfs_or_stay_under_the_limit`), więc LFS nie jest używany.
+# Gdy pojawi się większy plik, zainstaluj git-lfs, odkomentuj regułę i dodaj plik przez `git lfs track`:
+# docs/evaluation/results/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+# docs/evaluation/results/**/*.zip filter=lfs diff=lfs merge=lfs -text

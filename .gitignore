@@ -11,7 +11,9 @@ backend/.env.*
 !backend/.env.example
 frontend/.env.local
 frontend/.env.*.local
-backlog.md
+
+# Pliki systemowe macOS
+.DS_Store
 
 # Python
 .venv
