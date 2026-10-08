@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -5,7 +6,8 @@ from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import delete, select
 
-from app.core.access_control import make_analysis_token
+from app.core.access_control import check_analysis_token, make_analysis_token
+from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.analysis import Analysis
@@ -234,11 +236,16 @@ def test_analyze_returns_manual_zone_required_when_no_vectors() -> None:
     assert context["candidate_zone_symbols"] == ["230_U"]
     assert context["document_status"] == "pinned"
     assert context["document"]["sha256"] == sha256(b"%PDF-mock").hexdigest()
-    assert context["document"]["preview_path"] == (
-        f"/analyze/{body['analysis_id']}/pending-document"
-        f"?access_token={make_analysis_token(body['analysis_id'])}"
-    )
-    assert body["access_token"] == make_analysis_token(body["analysis_id"])
+    analysis_id = body["analysis_id"]
+    preview_path, _, preview_query = context["document"]["preview_path"].partition("?access_token=")
+    assert preview_path == f"/analyze/{analysis_id}/pending-document"
+    # AU-012: ``href`` dostaje krótkotrwały token pobrania (15 min), a pole ``access_token`` — token 30-dniowy.
+    preview_verdict = check_analysis_token(analysis_id, preview_query)
+    assert preview_verdict.valid
+    assert 0 < preview_verdict.expires_at - time.time() <= settings.access_token_download_ttl_seconds
+    response_verdict = check_analysis_token(analysis_id, body["access_token"])
+    assert response_verdict.valid
+    assert response_verdict.expires_at - time.time() > 29 * 24 * 3600
     assert context["document"]["requested_url_verified"] is True
     assert context["raster_preview_source_key"] == "mpzp"
     assert context["symbol_max_length"] == 40
