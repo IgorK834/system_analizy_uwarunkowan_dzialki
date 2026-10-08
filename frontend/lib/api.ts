@@ -21,13 +21,29 @@ type RequestOptions = RequestInit & {
   signal?: AbortSignal;
 };
 
+/** Metadane błędu HTTP przekazywane z odpowiedzi serwera (kontrakt `ErrorResponse`, AU-003). */
+export type ApiErrorDetails = {
+  /** Kod błędu API, np. `INTERNAL_ERROR`, `PERSISTENCE_FAILED`, `RATE_LIMITED`. */
+  code?: string | null;
+  /** Identyfikator żądania (`request_id`/`X-Request-ID`) do zgłoszenia operatorowi. */
+  requestId?: string | null;
+  /** Czas oczekiwania z nagłówka `Retry-After` (429), w sekundach. */
+  retryAfterSeconds?: number | null;
+};
+
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
+  readonly requestId: string | null;
+  readonly retryAfterSeconds: number | null;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, details: ApiErrorDetails = {}) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = details.code ?? null;
+    this.requestId = details.requestId ?? null;
+    this.retryAfterSeconds = details.retryAfterSeconds ?? null;
   }
 }
 
@@ -56,20 +72,109 @@ function extractDetail(value: unknown): string | null {
   return null;
 }
 
-function messageForStatus(status: number, detail: string | null): string {
-  const suffix = detail ? ` ${detail}` : "";
+const REQUEST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$/;
 
+function extractString(body: unknown, key: string): string | null {
+  if (body && typeof body === "object" && !Array.isArray(body)) {
+    const value = (body as Record<string, unknown>)[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+/** Identyfikator żądania z ciała `ErrorResponse` albo nagłówka `X-Request-ID` (odrzuca śmieci). */
+function extractRequestId(body: unknown, response: Response): string | null {
+  for (const candidate of [
+    extractString(body, "request_id"),
+    response.headers.get("x-request-id"),
+  ]) {
+    if (candidate && REQUEST_ID_PATTERN.test(candidate.trim())) return candidate.trim();
+  }
+  return null;
+}
+
+/** `Retry-After` jako liczba sekund albo data HTTP; `null`, gdy brak lub nieczytelny. */
+export function parseRetryAfter(value: string | null, now: number = Date.now()): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number.parseInt(trimmed, 10);
+  // Data HTTP zawiera nazwy dni i miesięcy; liczby z innymi znakami (np. „-5”) nie są poprawnym czasem.
+  if (!/[A-Za-z]/.test(trimmed)) return null;
+  const date = Date.parse(trimmed);
+  if (Number.isNaN(date)) return null;
+  return Math.max(0, Math.ceil((date - now) / 1000));
+}
+
+/** Komunikat 429 z odliczaniem; używany przez `api.ts` i hook (aktualizacja co sekundę). */
+export function rateLimitMessage(retryAfterSeconds: number | null): string {
+  if (retryAfterSeconds === null) {
+    return "Zbyt wiele żądań. Spróbuj ponownie za chwilę.";
+  }
+  return retryAfterSeconds > 0
+    ? `Zbyt wiele żądań. Spróbuj ponownie za ${retryAfterSeconds} s.`
+    : "Limit żądań został odnowiony — możesz ponowić próbę.";
+}
+
+/**
+ * Dopisuje kod zgłoszenia do komunikatu błędu serwera. Komunikaty 5xx nie zachęcają do ponawiania:
+ * żądanie zwykle padnie ponownie i zużyje limit.
+ */
+function withRequestId(message: string, requestId: string | null): string {
+  return requestId ? `${message} Kod zgłoszenia: ${requestId}.` : message;
+}
+
+function messageForStatus(
+  status: number,
+  detail: string | null,
+  meta: ApiErrorDetails = {},
+): string {
+  const suffix = detail ? ` ${detail}` : "";
+  const requestId = meta.requestId ?? null;
+
+  if (status === 0) {
+    return "Nie udało się połączyć z usługą. Sprawdź połączenie i spróbuj ponownie.";
+  }
   if (status === 422) {
     return `Nieprawidłowe dane wejściowe.${suffix}`;
-  }
-  if (status === 503) {
-    return `Usługa analizy jest chwilowo niedostępna.${suffix}`;
   }
   if (status === 404) {
     return `Nie znaleziono działki lub adresu.${suffix}`;
   }
+  if (status === 429) {
+    return rateLimitMessage(meta.retryAfterSeconds ?? null);
+  }
+  if (meta.code === "PERSISTENCE_FAILED") {
+    return withRequestId("Nie udało się zapisać wyniku analizy.", requestId);
+  }
+  if (status === 502) {
+    return withRequestId(
+      "Zewnętrzne źródło danych zwróciło odpowiedź, której nie da się odczytać.",
+      requestId,
+    );
+  }
+  if (status === 503 || status === 504) {
+    return withRequestId(`Usługa analizy jest chwilowo niedostępna.${suffix}`, requestId);
+  }
+  if (status >= 500) {
+    // Treść błędu serwera jest ogólna i dla użytkownika bezużyteczna — liczy się kod zgłoszenia.
+    return withRequestId("Błąd po stronie serwera.", requestId);
+  }
 
   return `Nie udało się wykonać żądania.${suffix}`;
+}
+
+function buildHttpError(response: Response, body: unknown): ApiError {
+  const details: ApiErrorDetails = {
+    code: extractString(body, "error"),
+    requestId: extractRequestId(body, response),
+    retryAfterSeconds:
+      response.status === 429 ? parseRetryAfter(response.headers.get("retry-after")) : null,
+  };
+  return new ApiError(
+    response.status,
+    messageForStatus(response.status, extractDetail(body), details),
+    details,
+  );
 }
 
 async function requestJson<T>(url: string, options: RequestOptions): Promise<T> {
@@ -81,10 +186,8 @@ async function requestJson<T>(url: string, options: RequestOptions): Promise<T> 
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error;
     }
-    throw new ApiError(
-      0,
-      "Nie udało się połączyć z usługą. Sprawdź połączenie i spróbuj ponownie.",
-    );
+    // Odpowiedzi 5xx mają nagłówki CORS (AU-003), więc odrzucony `fetch` oznacza naprawdę brak sieci.
+    throw new ApiError(0, messageForStatus(0, null));
   }
 
   let body: unknown = null;
@@ -100,10 +203,7 @@ async function requestJson<T>(url: string, options: RequestOptions): Promise<T> 
   }
 
   if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      messageForStatus(response.status, extractDetail(body)),
-    );
+    throw buildHttpError(response, body);
   }
 
   return body as T;
@@ -247,6 +347,7 @@ export async function getAnalysisReport(
       // Błąd HTTP bez JSON nadal mapujemy na bezpieczny komunikat poniżej.
     }
     const detail = extractDetail(body);
+    const failure = buildHttpError(response, body);
     const message =
       response.status === 404
         ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
@@ -254,8 +355,10 @@ export async function getAnalysisReport(
           ? "Brak dostępu do raportu tej analizy. Uruchom analizę ponownie."
           : response.status === 429
             ? "Zbyt wiele żądań raportu. Spróbuj ponownie za chwilę."
-            : `Nie udało się wygenerować raportu PDF.${detail ? ` ${detail}` : ""}`;
-    throw new ApiError(response.status, message);
+            : response.status >= 500
+              ? withRequestId("Nie udało się wygenerować raportu PDF.", failure.requestId)
+              : `Nie udało się wygenerować raportu PDF.${detail ? ` ${detail}` : ""}`;
+    throw new ApiError(response.status, message, failure);
   }
 
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
@@ -337,6 +440,7 @@ export async function getAnalysisAuditPackage(
       // Błąd HTTP bez JSON nadal mapujemy na bezpieczny komunikat poniżej.
     }
     const detail = extractDetail(body);
+    const failure = buildHttpError(response, body);
     const message =
       response.status === 404
         ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
@@ -346,8 +450,10 @@ export async function getAnalysisAuditPackage(
             ? "Pakiet audytowy tej analizy przekracza dopuszczalny rozmiar."
             : response.status === 429
               ? "Zbyt wiele żądań pakietu. Spróbuj ponownie za chwilę."
-              : `Nie udało się przygotować pakietu audytowego.${detail ? ` ${detail}` : ""}`;
-    throw new ApiError(response.status, message);
+              : response.status >= 500
+                ? withRequestId("Nie udało się przygotować pakietu audytowego.", failure.requestId)
+                : `Nie udało się przygotować pakietu audytowego.${detail ? ` ${detail}` : ""}`;
+    throw new ApiError(response.status, message, failure);
   }
 
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";

@@ -28,6 +28,8 @@ export type AnalyzeRequest =
 
 export type AnalyzeResumeRequest = {
   analysis_id: number;
+  /** Token dostępu z pola `access_token` wyniku analizy (AU-005); bez niego backend zwraca 403. */
+  access_token: string;
   /** Symbol strefy MPZP odczytany przez użytkownika z mapy rastrowej (surowy wpis do 200 znaków; serwer sprowadza go do formy kanonicznej ≤ 40 znaków). */
   zone_symbol: string;
 };
@@ -1010,6 +1012,63 @@ export type SectionQualityMatrix = {
   legend: SectionQualityLegend;
 };
 
+/** Status źródła discovery MPZP (AU-004); statusy są rozłączne. */
+export type MpzpDiscoveryStatus = "available" | "no_match" | "no_coverage" | "unavailable" | "unknown";
+
+/** Zmiana planu wymieniona przy akcie w KIMPZP — nigdy osobny akt. */
+export type MpzpDiscoveryAmendment = {
+  kind: "text_change" | "change" | "note";
+  resolution_number: string | null;
+  name: string | null;
+  adopted_on: string | null;
+  valid_from: string | null;
+  document_url: string | null;
+  bip_url: string | null;
+  raw_text: string | null;
+  document_url_verified: boolean;
+  bip_url_verified: boolean;
+};
+
+export type MpzpDiscoveryLinkField = "text_url" | "legend_url" | "drawing_url" | "bip_url" | "www_url";
+
+/** Akt MPZP obecny w punkcie działki według KIMPZP (discovery, nie przecięcie wektorowe). */
+export type MpzpDiscoveryAct = {
+  resolution_number: string | null;
+  resolution_date: string | null;
+  name: string | null;
+  valid_from: string | null;
+  repealed_on: string | null;
+  legal_status: "binding" | "not_binding" | "unknown";
+  text_url: string | null;
+  legend_url: string | null;
+  drawing_url: string | null;
+  bip_url: string | null;
+  www_url: string | null;
+  journal: string | null;
+  informatization: "vector" | "raster" | "unknown";
+  zone_symbols: string[];
+  amendments: MpzpDiscoveryAmendment[];
+  source_format: string;
+  /** Linki zweryfikowane przez backend jako HTTPS — tylko one są klikalne. */
+  verified_links: MpzpDiscoveryLinkField[];
+};
+
+export type MpzpDiscoverySection = {
+  schema_version: string;
+  status: MpzpDiscoveryStatus;
+  reason_codes: string[];
+  acts: MpzpDiscoveryAct[];
+  /** Numer uchwały użytej dalej; null przy kilku aktach albo braku aktu. */
+  selected_act: string | null;
+  multiple_acts_at_point: boolean;
+  multiple_acts_on_parcel: boolean;
+  candidate_zone_symbols: string[];
+  sampled_points: number;
+  failed_points: number;
+  is_discovery_only: boolean;
+  source: SourceMetadata | null;
+};
+
 export type AnalyzeResponse = {
   analysis_id: number | null;
   /** Token dostępu do raportu PDF i dokumentu analizy; null dla wyniku niezapisanego. */
@@ -1018,6 +1077,8 @@ export type AnalyzeResponse = {
   analyzed_at: string;
   parcel: ParcelGeometryResponse | null;
   mpzp_zones: MpzpZoneResult[];
+  /** Akty wskazane przez KIMPZP i status źródła; brak pola = odpowiedź sprzed AU-004. */
+  mpzp_discovery?: MpzpDiscoverySection | null;
   pog: PogResult | null;
   infrastructure: InfrastructureResult[];
   utilities_preview: UtilitiesPreviewResult | null;

@@ -89,7 +89,8 @@ vi.mock("maplibre-gl", () => {
     fitBounds = vi.fn();
     flyTo = vi.fn();
   }
-  return { default: { Map: MapMock, NavigationControl: class {} } };
+  // MapLibre 6 eksportuje wyłącznie nazwane symbole (bez eksportu domyślnego).
+  return { Map: MapMock, NavigationControl: class {}, setWorkerUrl: vi.fn() };
 });
 
 vi.mock("@/components/MapViewLoader", () => ({

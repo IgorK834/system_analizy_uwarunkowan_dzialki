@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
 import { usePogTileActivity } from "@/hooks/usePogTileActivity";

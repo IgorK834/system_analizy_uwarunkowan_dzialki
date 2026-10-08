@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { ApiError, searchAddresses } from "@/lib/api";
 import type { AddressSearchResult, AnalyzeRequest } from "@/lib/types";
@@ -42,6 +42,22 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
   const [parcelError, setParcelError] = useState<string | null>(null);
   const committedAddressRef = useRef<string | null>(null);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
+  const suggestionsOpen = activeTab === "address" && suggestions.length > 0;
+
+  // Lista jest popoverem (AU-008): zamykamy ją kliknięciem poza panelem, żeby nie zasłaniała
+  // kontrolek mapy, gdy użytkownik przestał z niej korzystać.
+  useEffect(() => {
+    if (!suggestionsOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+        setActiveSuggestion(-1);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [suggestionsOpen]);
 
   useEffect(() => {
     const query = addressQuery.trim();
@@ -141,6 +157,13 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
   };
 
   const handleAddressKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape" && suggestions.length) {
+      event.preventDefault();
+      setSuggestions([]);
+      setActiveSuggestion(-1);
+      return;
+    }
+
     if (event.key === "ArrowDown" && suggestions.length) {
       event.preventDefault();
       setActiveSuggestion((current) =>
@@ -177,7 +200,11 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
   };
 
   return (
-    <section className="search-panel" aria-label="Wybór działki do analizy">
+    <section
+      ref={panelRef}
+      className={suggestionsOpen ? "search-panel search-panel-suggesting" : "search-panel"}
+      aria-label="Wybór działki do analizy"
+    >
       <h2>Znajdź działkę</h2>
       <div className="tabs" role="tablist" aria-label="Metoda wyszukiwania">
         {TABS.map((tab) => (
@@ -207,24 +234,56 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
       {activeTab === "address" && (
         <div id="search-address" role="tabpanel" className="panel-content">
           <label htmlFor="address-query">Adres</label>
-          <input
-            ref={addressInputRef}
-            id="address-query"
-            type="search"
-            autoComplete="off"
-            value={addressQuery}
-            disabled={loading}
-            aria-autocomplete="list"
-            aria-controls="address-suggestions"
-            aria-activedescendant={
-              activeSuggestion >= 0
-                ? `address-suggestion-${activeSuggestion}`
-                : undefined
-            }
-            placeholder="Np. Warszawa, Marszałkowska 1"
-            onChange={(event) => setAddressQuery(event.target.value)}
-            onKeyDown={handleAddressKeyDown}
-          />
+          <div className="address-field">
+            <input
+              ref={addressInputRef}
+              id="address-query"
+              type="search"
+              autoComplete="off"
+              value={addressQuery}
+              disabled={loading}
+              aria-autocomplete="list"
+              aria-controls="address-suggestions"
+              aria-activedescendant={
+                activeSuggestion >= 0
+                  ? `address-suggestion-${activeSuggestion}`
+                  : undefined
+              }
+              placeholder="Np. Warszawa, Marszałkowska 1"
+              onChange={(event) => setAddressQuery(event.target.value)}
+              onKeyDown={handleAddressKeyDown}
+            />
+            {suggestions.length > 0 && (
+              <ul id="address-suggestions" className="suggestions" role="listbox">
+                {suggestions.map((suggestion, index) => (
+                  <li key={suggestion.id}>
+                    <button
+                      id={`address-suggestion-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={activeSuggestion === index}
+                      className={
+                        activeSuggestion === index
+                          ? "suggestion suggestion-active"
+                          : "suggestion"
+                      }
+                      onMouseEnter={() => setActiveSuggestion(index)}
+                      onFocus={() => setActiveSuggestion(index)}
+                      onClick={() => chooseSuggestion(suggestion)}
+                    >
+                      <span>{suggestion.label}</span>
+                      <small>
+                        {RESULT_TYPE_LABELS[suggestion.result_type] ?? "Lokalizacja"}
+                        {suggestion.address_parts.voivodeship
+                          ? ` · ${suggestion.address_parts.voivodeship}`
+                          : ""}
+                      </small>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <p className="field-hint">
             Wybierz konkretną sugestię — samo wpisywanie nie uruchamia analizy.
           </p>
@@ -239,36 +298,6 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
                 zawęzić wyszukiwanie.
               </p>
             )}
-          {suggestions.length > 0 && (
-            <ul id="address-suggestions" className="suggestions" role="listbox">
-              {suggestions.map((suggestion, index) => (
-                <li key={suggestion.id}>
-                  <button
-                    id={`address-suggestion-${index}`}
-                    type="button"
-                    role="option"
-                    aria-selected={activeSuggestion === index}
-                    className={
-                      activeSuggestion === index
-                        ? "suggestion suggestion-active"
-                        : "suggestion"
-                    }
-                    onMouseEnter={() => setActiveSuggestion(index)}
-                    onFocus={() => setActiveSuggestion(index)}
-                    onClick={() => chooseSuggestion(suggestion)}
-                  >
-                    <span>{suggestion.label}</span>
-                    <small>
-                      {RESULT_TYPE_LABELS[suggestion.result_type] ?? "Lokalizacja"}
-                      {suggestion.address_parts.voivodeship
-                        ? ` · ${suggestion.address_parts.voivodeship}`
-                        : ""}
-                    </small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
 

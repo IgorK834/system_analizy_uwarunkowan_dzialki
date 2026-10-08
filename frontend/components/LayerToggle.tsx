@@ -48,7 +48,6 @@ export function LayerToggle({
               type="button"
               role="switch"
               aria-checked={item.checked}
-              aria-pressed={item.checked}
               disabled={item.disabled}
               title={item.disabled ? item.disabledReason : undefined}
               className={

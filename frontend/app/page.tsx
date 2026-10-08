@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { ManualZonePanel } from "@/components/ManualZonePanel";
 import { MapViewLoader } from "@/components/MapViewLoader";
@@ -58,9 +58,11 @@ export default function HomePage() {
 
   const handleResumeSubmit = useCallback(
     async (zoneSymbol: string): Promise<boolean> => {
-      if (!result?.analysis_id) return false;
+      // Bez tokenu z wyniku backend odpowie 403, więc nie wysyłamy żądania.
+      if (!result?.analysis_id || !result.access_token) return false;
       const updated = await resumeAnalysis.run({
         analysis_id: result.analysis_id,
+        access_token: result.access_token,
         zone_symbol: zoneSymbol,
       });
       if (updated) setResult(updated);

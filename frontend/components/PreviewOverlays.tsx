@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { LayerAvailabilityNote } from "@/components/LayerAvailabilityNote";
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
@@ -303,7 +303,7 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
 
   useEffect(() => {
     if (!map) return;
-    const onError = (event: { sourceId?: string }) => {
+    const onError = (event: maplibregl.ErrorEvent & { sourceId?: string }) => {
       const sourceKey = (Object.keys(SOURCE_LAYER_IDS) as PreviewSourceKey[]).find(
         (key) => SOURCE_LAYER_IDS[key].sourceId === event.sourceId,
       );
@@ -334,6 +334,9 @@ export function PreviewOverlays({ result, map }: PreviewOverlaysProps) {
         removeRasterLayer(map, sourceKey);
       }
     };
+  // `preferences` to tylko stan początkowy widoczności; późniejsze przełączenia obsługuje kolejny
+  // efekt, a dodanie ich tu odmontowywałoby i dodawało warstwy przy każdym przełączniku.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, preferencesReady, sourcesByKey]);
 
   useEffect(() => {

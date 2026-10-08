@@ -229,6 +229,8 @@ export function MpzpZoneCard({ zone }: { zone: MpzpZoneResult }) {
             className="result-table-scroll"
             role="region"
             aria-label={`Parametry strefy ${zone.zone_symbol} (przewijana tabela)`}
+            // Przewijana tabela musi być dostępna z klawiatury (WCAG 2.1.1).
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
           >
             <table className="result-table">

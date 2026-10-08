@@ -173,7 +173,7 @@ describe("strona główna", () => {
 
     await waitFor(() =>
       expect(resumeAnalysisMock).toHaveBeenCalledWith(
-        { analysis_id: 77, zone_symbol: "230_U" },
+        { analysis_id: 77, access_token: "token-42", zone_symbol: "230_U" },
         expect.objectContaining({ signal: expect.any(AbortSignal) }),
       ),
     );
@@ -181,6 +181,23 @@ describe("strona główna", () => {
     expect(screen.getByTestId("manual-zone-result-note")).toBeVisible();
     expect(screen.getByText(/Udział w powierzchni działki: nieustalony/)).toBeVisible();
     expect(screen.queryByRole("form", { name: "Ręczne podanie symbolu strefy MPZP" })).toBeNull();
+  });
+
+  it("nie wznawia analizy, gdy wynik nie niesie tokenu dostępu (AU-005)", async () => {
+    const { waitingResponse } = await import("@/test/manualZoneFixtures");
+    const user = userEvent.setup();
+    analyzeParcelMock.mockResolvedValue(waitingResponse({ access_token: null }));
+    render(<HomePage />);
+
+    await user.click(screen.getByRole("button", { name: "Testowy punkt mapy" }));
+    await user.click(await screen.findByRole("button", { name: "Analizuj działkę w tym punkcie" }));
+    const form = await screen.findByRole("form", { name: "Ręczne podanie symbolu strefy MPZP" });
+    await user.click(await within(form).findByRole("button", { name: "230_U" }));
+    await user.click(within(form).getByRole("checkbox"));
+    await user.click(within(form).getByRole("button", { name: "Wznów analizę" }));
+
+    expect(resumeAnalysisMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("form", { name: "Ręczne podanie symbolu strefy MPZP" })).toBeVisible();
   });
 
   it("inspektor zamyka się Escape bez uruchamiania analizy", async () => {

@@ -38,8 +38,13 @@ const mapState = vi.hoisted(() => {
     setPaintProperty: vi.fn(),
     setFilter: vi.fn(),
     queryRenderedFeatures: vi.fn(() => [] as unknown[]),
+    configureWorker: vi.fn(),
+    setWorkerUrl: vi.fn(),
   };
 });
+
+// MapLibre 6: adres workera ustawia osobny moduł (AU-010); tu sprawdzamy tylko kolejność wywołań.
+vi.mock("@/lib/maplibreWorker", () => ({ configureMapLibreWorker: mapState.configureWorker }));
 
 vi.mock("maplibre-gl", () => {
   class MapMock {
@@ -66,11 +71,11 @@ vi.mock("maplibre-gl", () => {
 
   class NavigationControlMock {}
 
+  // MapLibre 6 eksportuje wyłącznie nazwane symbole (bez eksportu domyślnego).
   return {
-    default: {
-      Map: MapMock,
-      NavigationControl: NavigationControlMock,
-    },
+    Map: MapMock,
+    NavigationControl: NavigationControlMock,
+    setWorkerUrl: mapState.setWorkerUrl,
   };
 });
 
@@ -117,6 +122,15 @@ describe("MapView", () => {
     unmount();
     expect(mapState.off).toHaveBeenCalledWith("click", clickHandler);
     expect(mapState.remove).toHaveBeenCalledOnce();
+  });
+
+  it("ustawia adres workera MapLibre 6 przed utworzeniem mapy (AU-010)", () => {
+    render(<MapView />);
+
+    expect(mapState.configureWorker).toHaveBeenCalledOnce();
+    expect(mapState.configureWorker.mock.invocationCallOrder[0]).toBeLessThan(
+      mapState.constructor.mock.invocationCallOrder[0],
+    );
   });
 
   it("aktualizuje callback bez ponownego tworzenia mapy", () => {

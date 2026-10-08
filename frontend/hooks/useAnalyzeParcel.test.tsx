@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, analyzeParcel } from "@/lib/api";
 import { useAnalyzeParcel } from "@/hooks/useAnalyzeParcel";
@@ -149,5 +149,127 @@ describe("useAnalyzeParcel", () => {
 
     expect(signal?.aborted).toBe(true);
     await runPromise;
+  });
+
+  describe("odliczanie po 429 i błędy 5xx (AU-003)", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const payload = { method: "parcel_id", parcel_identifier: "12345" } as const;
+
+    it("odlicza czas z Retry-After co sekundę i kończy komunikatem o odnowieniu limitu", async () => {
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(429, "Zbyt wiele żądań. Spróbuj ponownie za 3 s.", {
+          code: "RATE_LIMITED",
+          retryAfterSeconds: 3,
+        }),
+      );
+      const { result } = renderHook(() => useAnalyzeParcel());
+
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      expect(result.current.error).toBe("Zbyt wiele żądań. Spróbuj ponownie za 3 s.");
+      expect(result.current.retryAfterSeconds).toBe(3);
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(result.current.error).toBe("Zbyt wiele żądań. Spróbuj ponownie za 2 s.");
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(result.current.retryAfterSeconds).toBe(0);
+      expect(result.current.error).toBe("Limit żądań został odnowiony — możesz ponowić próbę.");
+
+      // Odliczanie się zatrzymuje: kolejne sekundy niczego nie zmieniają.
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(result.current.retryAfterSeconds).toBe(0);
+    });
+
+    it("429 bez Retry-After zostawia statyczny komunikat bez odliczania", async () => {
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(429, "Zbyt wiele żądań. Spróbuj ponownie za chwilę."),
+      );
+      const { result } = renderHook(() => useAnalyzeParcel());
+
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+
+      expect(result.current.error).toBe("Zbyt wiele żądań. Spróbuj ponownie za chwilę.");
+      expect(result.current.retryAfterSeconds).toBeNull();
+    });
+
+    it("kolejne uruchomienie i reset kasują odliczanie", async () => {
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(429, "x", { retryAfterSeconds: 30 }),
+      );
+      const { result } = renderHook(() => useAnalyzeParcel());
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      expect(result.current.retryAfterSeconds).toBe(30);
+
+      analyzeParcelMock.mockResolvedValueOnce(buildAnalyzeResponse());
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      expect(result.current).toMatchObject({ error: null, retryAfterSeconds: null });
+
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(429, "x", { retryAfterSeconds: 30 }),
+      );
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      act(() => result.current.reset());
+      expect(result.current).toMatchObject({ error: null, retryAfterSeconds: null });
+    });
+
+    it("błąd 5xx pokazuje komunikat z kodem zgłoszenia bez odliczania i bez zachęty do ponowienia", async () => {
+      const message = "Błąd po stronie serwera. Kod zgłoszenia: 5d0c2f3e-6f0e-4b61-9d57-0c5c1f4a1b3e.";
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(500, message, {
+          code: "INTERNAL_ERROR",
+          requestId: "5d0c2f3e-6f0e-4b61-9d57-0c5c1f4a1b3e",
+        }),
+      );
+      const { result } = renderHook(() => useAnalyzeParcel());
+
+      await act(async () => {
+        await result.current.run(payload);
+      });
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+
+      expect(result.current.error).toBe(message);
+      expect(result.current.retryAfterSeconds).toBeNull();
+    });
+
+    it("komunikat błędu sieci (status 0) pozostaje komunikatem sieci", async () => {
+      analyzeParcelMock.mockRejectedValueOnce(
+        new ApiError(0, "Nie udało się połączyć z usługą. Sprawdź połączenie i spróbuj ponownie."),
+      );
+      const { result } = renderHook(() => useAnalyzeParcel());
+
+      await act(async () => {
+        await result.current.run(payload);
+      });
+
+      expect(result.current.error).toContain("Sprawdź połączenie");
+    });
   });
 });

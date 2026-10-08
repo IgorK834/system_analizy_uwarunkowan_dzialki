@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { CompatibilityAssessmentCard } from "@/components/CompatibilityAssessmentCard";
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
+import { MpzpDiscoveryCard } from "@/components/MpzpDiscoveryCard";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { PogZoneShareChart } from "@/components/PogZoneShareChart";
@@ -59,6 +60,7 @@ import { verifiedHttpsHref } from "@/lib/safeLink";
 import type {
   AnalyzeResponse,
   InfrastructureResult,
+  MpzpDiscoverySection,
   MpzpZoneResult,
   RiskResult,
   SourceMetadata,
@@ -198,7 +200,6 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       });
       layersReadyRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     map,
     parcelGeojson,
@@ -350,7 +351,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <LayerToggle items={toggleItems} onChange={handleToggleChange} legendLabel="Warstwy na mapie" />
 
       <GeometrySection result={result} />
-      <MpzpSection zones={result.mpzp_zones} />
+      <MpzpSection zones={result.mpzp_zones} discovery={result.mpzp_discovery ?? null} />
       <PogSection result={result} />
       {result.pog && (
         <CompatibilityAssessmentCard assessment={result.pog.compatibility_assessment} />
@@ -415,13 +416,21 @@ function GeometrySection({ result }: { result: AnalyzeResponse }) {
   );
 }
 
-function MpzpSection({ zones }: { zones: MpzpZoneResult[] }) {
+function MpzpSection({
+  zones,
+  discovery,
+}: {
+  zones: MpzpZoneResult[];
+  discovery: MpzpDiscoverySection | null;
+}) {
   return (
     <section className="result-section" aria-label="Strefy MPZP">
       <h3>MPZP</h3>
       {zones.length === 0 && (
         <p className="section-empty">
-          Nie sprawdzono albo nie znaleziono stref MPZP przecinających działkę.
+          {discovery && discovery.acts.length > 0
+            ? "Nie ustalono stref MPZP przecinających działkę — poniżej akty wskazane przez KIMPZP."
+            : "Nie sprawdzono albo nie znaleziono stref MPZP przecinających działkę."}
         </p>
       )}
       {zones.length > 0 && (
@@ -431,6 +440,7 @@ function MpzpSection({ zones }: { zones: MpzpZoneResult[] }) {
           ))}
         </ul>
       )}
+      {discovery && <MpzpDiscoveryCard discovery={discovery} />}
     </section>
   );
 }

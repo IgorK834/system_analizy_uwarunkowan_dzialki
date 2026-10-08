@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import maplibregl, { type MapMouseEvent } from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import type { MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { configureMapLibreWorker } from "@/lib/maplibreWorker";
 import {
   OSM_RASTER_STYLE,
   POLAND_CENTER,
@@ -81,6 +83,7 @@ export function MapView({
     if (!containerRef.current) return;
 
     mapRemovedRef.current = false;
+    configureMapLibreWorker();
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: OSM_RASTER_STYLE,
