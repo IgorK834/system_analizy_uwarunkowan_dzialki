@@ -39,14 +39,20 @@ def test_invalid_token_is_rejected(token: str | None) -> None:
 def test_token_depends_on_configured_secret(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.core import access_control
 
-    monkeypatch.setattr(settings, "access_token_secret", "sekret-a")
-    access_control._signing_key.cache_clear()
-    first = make_analysis_token(1)
-    monkeypatch.setattr(settings, "access_token_secret", "sekret-b")
-    access_control._signing_key.cache_clear()
-    second = make_analysis_token(1)
-    monkeypatch.setattr(settings, "access_token_secret", "")
-    access_control._signing_key.cache_clear()
+    monkeypatch.setattr(access_control, "_now", lambda: 1_800_000_000.0)
+    try:
+        monkeypatch.setattr(settings, "access_token_secret", "sekret-a")
+        access_control.reset_key_cache()
+        first = make_analysis_token(1)
+        monkeypatch.setattr(settings, "access_token_secret", "sekret-b")
+        access_control.reset_key_cache()
+        second = make_analysis_token(1)
+        # Token podpisany sekretem A nie przechodzi weryfikacji z sekretem B (ten sam ``kid``).
+        assert verify_analysis_token(1, first) is False
+        assert verify_analysis_token(1, second) is True
+    finally:
+        monkeypatch.undo()
+        access_control.reset_key_cache()
 
     assert first != second
 
