@@ -1,5 +1,6 @@
 """Cienka warstwa HTTP dla uruchamiania i ręcznego wznawiania analizy."""
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, Query, Response
@@ -9,15 +10,20 @@ from sqlalchemy.orm import Session
 from app.core.access_control import (
     ANALYSIS_TOKEN_HEADER,
     ensure_analysis_access,
+    issue_link_token,
     require_analysis_token,
+    seconds_until,
 )
 from app.core.rate_limit import rate_limit, rate_limit_refresh
 from app.core.settings import settings
 from app.db.session import get_db
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
+from app.core.response_headers import SENSITIVE_RESPONSE_HEADERS
 from app.schemas.analyze import (
     AddressAnalyzeRequest,
+    AnalysisLinksRequest,
+    AnalysisLinksResponse,
     AnalyzeResponse,
     AnalyzeResumeRequest,
     ErrorResponse,
@@ -160,14 +166,58 @@ async def analyze_resume(
         ) from exc
 
 
+@router.post(
+    "/{analysis_id}/links",
+    response_model=AnalysisLinksResponse,
+    responses={
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+    },
+    dependencies=[Depends(_document_limit)],
+    description=(
+        "Wydaje krótkotrwały link do raportu PDF i pakietu audytowego ZIP zapisanej analizy "
+        "(AU-012). Wymaga ważnego tokenu dostępu (nagłówek ``X-Analysis-Token`` albo "
+        "``access_token``): bez niego 403 — niezależnie od tego, czy analiza istnieje; 404 "
+        "dopiero po poprawnym tokenie. ``purpose=download`` (domyślnie) daje token na 15 min, "
+        "``purpose=share`` na 30 dni; termin nigdy nie przekracza ważności tokenu użytego do "
+        "wydania. Odpowiedź ma ``Cache-Control: private, no-store``."
+    ),
+)
+def create_analysis_links(
+    analysis_id: Annotated[int, Path(gt=0)],
+    presented_expires_at: Annotated[int, Depends(require_analysis_token)],
+    request: Annotated[AnalysisLinksRequest | None, Body()] = None,
+    db: Session = Depends(get_db),
+) -> AnalysisLinksResponse:
+    if db.get(Analysis, analysis_id) is None:
+        raise HTTPException(
+            status_code=404, detail="Analiza o podanym identyfikatorze nie istnieje."
+        )
+    purpose = (request or AnalysisLinksRequest()).purpose
+    token, expires_at = issue_link_token(
+        analysis_id, purpose, presented_expires_at=presented_expires_at
+    )
+    query = f"?access_token={token}"
+    return AnalysisLinksResponse(
+        analysis_id=analysis_id,
+        purpose=purpose,
+        access_token=token,
+        expires_at=datetime.fromtimestamp(expires_at, tz=UTC),
+        expires_in_seconds=seconds_until(expires_at),
+        report_url=f"/report/{analysis_id}{query}",
+        audit_package_url=f"/report/{analysis_id}/audit.zip{query}",
+    )
+
+
 # Serwowana kopia pochodzi z niezaufanego źródła: bez zgadywania typu, bez
 # referera, a HTML wyłącznie jako załącznik z CSP ``sandbox`` (nie renderuje się
 # w origin aplikacji). PDF nie dostaje ``sandbox``, bo blokuje on wbudowane
 # przeglądarki PDF.
 _PENDING_DOCUMENT_HEADERS = {
     "X-Content-Type-Options": "nosniff",
-    "Cache-Control": "private, max-age=300",
-    "Referrer-Policy": "no-referrer",
+    # AU-012: ``Referrer-Policy: no-referrer`` i ``Cache-Control: private, no-store`` (adres niesie token).
+    **SENSITIVE_RESPONSE_HEADERS,
 }
 _UNTRUSTED_HTML_CSP = "sandbox; default-src 'none'"
 
