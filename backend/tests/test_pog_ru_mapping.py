@@ -1,6 +1,5 @@
 """Kontrakt pełnego mapowania sześciu typów POG z oficjalnych fixtur RU."""
 
-from dataclasses import replace
 from pathlib import Path
 
 import pytest

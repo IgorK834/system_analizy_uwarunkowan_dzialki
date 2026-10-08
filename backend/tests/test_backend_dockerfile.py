@@ -47,7 +47,7 @@ def test_dockerfile_installs_required_system_packages(dockerfile_content: str) -
 
 
 def test_dockerfile_copies_requirements_before_app(dockerfile_content: str) -> None:
-    assert dockerfile_content.find("COPY requirements.txt") < dockerfile_content.find(
+    assert dockerfile_content.find("COPY requirements.lock") < dockerfile_content.find(
         "COPY app/"
     )
 

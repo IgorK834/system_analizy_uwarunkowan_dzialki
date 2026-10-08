@@ -19,3 +19,23 @@ source = ["app"]
 python_version = "3.13"
 # shapely, pyproj i inne biblioteki GIS nie publikują stubów typów.
 ignore_missing_imports = true
+# Bazowy zakres: moduły ``app/modules/*`` (modularny monolit, ADR-001). Zapisana lista znanych
+# zgłoszeń (``mypy-baseline.txt``) pozwala wymagać „brak NOWYCH błędów”; sprawdza to
+# ``scripts/check_mypy_baseline.py``. Wzmacnianie: usuwaj wpisy z bazy wraz z poprawkami.
+files = ["app/modules"]
+
+# --- Jakość kodu w CI (AU-010) -------------------------------------------------------------------
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+extend-exclude = [
+    # Celowo „złe” przykłady architektury (testy architektury je analizują, nie importują).
+    "tests/fixtures",
+    # `./docs` jest montowany do kontenera tylko do odczytu jako dane (skrypty dowodowe w wynikach ewaluacji).
+    "docs",
+]
+
+[tool.ruff.lint]
+# Zestaw „błędy, nie styl”: składnia (E9), importy (E4), instrukcje (E7) i pyflakes (F). Szersze
+# reguły (B, I, UP, RUF…) dają setki zgłoszeń czysto stylistycznych i wejdą osobnym zadaniem.
+select = ["E4", "E7", "E9", "F"]

@@ -35,7 +35,7 @@ def read_vector_features(
         from pyogrio.raw import read
     except ImportError as exc:  # pragma: no cover - błąd obrazu/deploymentu
         raise VectorReadError(
-            "Brak pyogrio. Zbuduj ponownie obraz backendu z requirements.txt."
+            "Brak pyogrio. Zbuduj ponownie obraz backendu (zależności: requirements.lock)."
         ) from exc
 
     try:
