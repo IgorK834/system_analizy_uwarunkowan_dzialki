@@ -108,6 +108,19 @@ FIELD_MAPPINGS: Final[tuple[FieldMapping, ...]] = (
     _omit("manual_zone_context.symbol_allowed_pattern", "mpzp", "reguła walidacji formularza UI"),
     _m("manual_zone_context.*", "mpzp",
        "Tabela 3.4 — plan, kandydaci, status i SHA-256 przypiętego dokumentu, komunikat", "manual"),
+    _m("mpzp_discovery.schema_version", "sources", "Tabela 9.3 — wersje kontraktów snapshotu", "metadata"),
+    _m("mpzp_discovery.source.*", "sources", f"Tabela 3.5 — wiersz „Źródło”; {_SOURCES_TABLE}", "source_fact"),
+    _m("mpzp_discovery.acts[].amendments[].*", "mpzp",
+       "Tabela 3.5 — kolumna „Dokumenty i zmiany” (rodzaj, numer, daty, nazwa, opis, linki zmiany)",
+       "source_fact"),
+    _m("mpzp_discovery.acts[].*", "mpzp",
+       "Tabela 3.5 — akty wskazane przez KIMPZP: uchwała, nazwa, status, daty, linki tekstu/legendy/BIP, "
+       "format odpowiedzi gminnej",
+       "source_fact"),
+    _m("mpzp_discovery.*", "mpzp",
+       "Tabela 3.5 — status źródła z kodami, akt użyty w analizie albo flaga wielu aktów, punkty "
+       "próbki i kandydaci symboli; charakter discovery opisuje nota pod tabelą",
+       "metadata"),
     # --- 4. POG + OUZ/OZS/OSDIS ---------------------------------------------
     _m("pog.schema_version", "sources", "Tabela 9.3 — wersje kontraktów snapshotu", "metadata"),
     _omit("pog.status", "pog",

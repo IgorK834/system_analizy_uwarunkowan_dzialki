@@ -13,11 +13,13 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     String,
+    Text,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.types import ClippedString
 
 if TYPE_CHECKING:
     from app.models.analysis import Analysis
@@ -49,10 +51,10 @@ class AnalysisPendingDocument(Base):
         nullable=False,
         unique=True,
     )
-    requested_url: Mapped[str] = mapped_column(String(1000), nullable=False)
-    final_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    media_type: Mapped[str] = mapped_column(String(120), nullable=False)
-    filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    requested_url: Mapped[str] = mapped_column(Text, nullable=False)
+    final_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    media_type: Mapped[str] = mapped_column(ClippedString(120), nullable=False)
+    filename: Mapped[str | None] = mapped_column(ClippedString(500), nullable=True)
     content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     content_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)

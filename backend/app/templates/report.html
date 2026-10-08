@@ -304,6 +304,32 @@
   <p class="empty">{{ mpzp.empty_reason }}</p>
   {{ map_figure("mpzp") }}
   {% endif %}
+  {% if mpzp.discovery %}
+  <h3>Tabela 3.5. Akty MPZP wskazane przez KIMPZP w punktach działki (discovery)</h3>
+  <table class="kv" data-table="mpzp-discovery">
+    <tr><th>Status źródła</th><td data-discovery-status="{{ mpzp.discovery.status }}">{{ mpzp.discovery.status_label }}{% if mpzp.discovery.reason_codes %}<br><small class="mono">{{ mpzp.discovery.reason_codes }}</small>{% endif %}</td></tr>
+    <tr><th>Akt użyty w analizie</th><td>{% if mpzp.discovery.selected_act %}{{ mpzp.discovery.selected_act }}{% elif mpzp.discovery.multiple_acts %}<span class="tag tag-review">kilka aktów{% if mpzp.discovery.multiple_at_point %} w jednym punkcie{% endif %}</span> nie wybrano automatycznie — wymaga rozstrzygnięcia w uchwałach{% else %}{{ not_specified }}{% endif %}</td></tr>
+    <tr><th>Punkty próbki</th><td>{{ mpzp.discovery.points }}; kandydaci symboli: {{ mpzp.discovery.candidates or "brak (warstwa granic planów nie podaje stref)" }}</td></tr>
+    {% if mpzp.discovery.source %}<tr><th>Źródło</th><td><small>{{ source_line(mpzp.discovery.source) }}</small></td></tr>{% endif %}
+  </table>
+  {% if mpzp.discovery.acts %}
+  <table class="data">
+    <colgroup><col style="width: 16%"><col style="width: 30%"><col style="width: 16%"><col style="width: 38%"></colgroup>
+    <thead><tr><th>Uchwała</th><th>Nazwa i status</th><th>Daty</th><th>Dokumenty i zmiany</th></tr></thead>
+    <tbody>
+    {% for act in mpzp.discovery.acts %}
+      <tr data-row="mpzp-discovery-act">
+        <td><strong>{{ na(act.number) }}</strong>{% if act.zone_symbols %}<br><small>strefy: {{ act.zone_symbols }}</small>{% endif %}</td>
+        <td>{{ na(act.name) }}<br><small>{{ act.legal_status }}{% if act.informatization %}, {{ act.informatization }}{% endif %}{% if act.journal %}; {{ act.journal }}{% endif %}<br>format odpowiedzi: <span class="mono">{{ act.source_format }}</span></small></td>
+        <td><small>uchwalono: {{ na(act.resolution_date) }}<br>obowiązuje od: {{ na(act.valid_from) }}{% if act.repealed_on %}<br>utracił moc: {{ act.repealed_on }}{% endif %}</small></td>
+        <td><small>{% if act.text_url %}tekst: <span class="mono">{{ act.text_url }}</span><br>{% endif %}{% if act.legend_url %}legenda: <span class="mono">{{ act.legend_url }}</span><br>{% endif %}{% if act.drawing_url %}rysunek: <span class="mono">{{ act.drawing_url }}</span><br>{% endif %}{% if act.bip_url %}BIP: <span class="mono">{{ act.bip_url }}</span><br>{% endif %}{% if act.www_url %}WWW: <span class="mono">{{ act.www_url }}</span><br>{% endif %}{% for amendment in act.amendments %}{{ amendment.kind }}{% if amendment.number %} {{ amendment.number }}{% endif %}{% if amendment.adopted_on %}, uchwalono {{ amendment.adopted_on }}{% endif %}{% if amendment.valid_from %}, obowiązuje od {{ amendment.valid_from }}{% endif %}{% if amendment.name %} — {{ amendment.name }}{% endif %}{% if amendment.text %}: „{{ amendment.text }}”{% endif %}{% if amendment.url %}<br>tekst zmiany: <span class="mono">{{ amendment.url }}</span>{% endif %}{% if amendment.bip_url %}<br>BIP zmiany: <span class="mono">{{ amendment.bip_url }}</span>{% endif %}<br>{% endfor %}</small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <p class="note" data-note="mpzp-discovery">Discovery to odczyt warstwy granic planów w punktach działki, a nie przecięcie wektorowe stref; zmiany planu są wymienione przy akcie zmienianym, nie jako osobne akty.</p>
+  {% endif %}
 </section>
 
 {# ---------- 4. POG ---------- #}

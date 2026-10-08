@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.access_control import AdminOperator
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.db.session import get_db
 from app.models.versioned import RasterAsset
 from app.modules.imports.application.raster_import import (
@@ -28,7 +30,14 @@ from app.modules.imports.infrastructure.raster.repository import (
 )
 from app.services.raster_assets import list_servable_rasters
 
-router = APIRouter(prefix="/api/v1/raster-assets", tags=["raster-assets"])
+# Limit działa przed sprawdzeniem klucza administracyjnego, więc ogranicza też zgadywanie klucza.
+_raster_limit = rate_limit(settings.rate_limit_data_per_minute)
+
+router = APIRouter(
+    prefix="/api/v1/raster-assets",
+    tags=["raster-assets"],
+    dependencies=[Depends(_raster_limit)],
+)
 
 
 class RasterReviewRequest(BaseModel):

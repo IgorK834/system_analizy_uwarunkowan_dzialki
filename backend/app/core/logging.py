@@ -7,6 +7,8 @@ import re
 from logging.config import dictConfig
 from typing import Final
 
+from app.core.request_id import RequestIdLogFilter, get_request_id
+
 ANALYSIS_LOGGER_NAME: Final[str] = "app.analysis"
 
 _ALLOWED_ANALYSIS_FIELDS: Final[frozenset[str]] = frozenset(
@@ -20,6 +22,11 @@ _ALLOWED_ANALYSIS_FIELDS: Final[frozenset[str]] = frozenset(
         "section",
         "parser_status",
         "warning_code",
+        "request_id",
+        # AU-007: rola żądania w single-flight (``leader`` | ``wait``), czas oczekiwania i zakres blokady.
+        "singleflight",
+        "waited_ms",
+        "scope",
     }
 )
 
@@ -73,10 +80,14 @@ def configure_logging() -> None:
         {
             "version": 1,
             "disable_existing_loggers": False,
-            "filters": {"redact_secrets": {"()": SecretRedactionFilter}},
+            "filters": {
+                "redact_secrets": {"()": SecretRedactionFilter},
+                "request_id": {"()": RequestIdLogFilter},
+            },
             "formatters": {
                 "default": {
-                    "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+                    # AU-003: ``request_id`` łączy wpis logu z odpowiedzią błędu widzianą przez klienta.
+                    "format": "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s",
                 }
             },
             "handlers": {
@@ -84,7 +95,7 @@ def configure_logging() -> None:
                     "class": "logging.StreamHandler",
                     "formatter": "default",
                     "stream": "ext://sys.stdout",
-                    "filters": ["redact_secrets"],
+                    "filters": ["request_id", "redact_secrets"],
                 }
             },
             "root": {"level": "INFO", "handlers": ["console"]},
@@ -107,6 +118,10 @@ def log_analysis_event(event: str, **fields: object) -> None:
         for key, value in fields.items()
         if key in _ALLOWED_ANALYSIS_FIELDS and value is not None
     }
+    # AU-003: zdarzenie analizy niesie identyfikator żądania, który użytkownik widzi w błędzie.
+    request_id = get_request_id()
+    if request_id is not None:
+        safe_fields.setdefault("request_id", request_id)
     details = " ".join(
         f"{key}={value}" for key, value in sorted(safe_fields.items())
     )

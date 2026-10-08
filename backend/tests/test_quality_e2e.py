@@ -373,7 +373,7 @@ def test_manual_zone_resume_issues_the_matrix_again() -> None:
     assert before["reason_codes"] == ["MPZP_MANUAL_ZONE_REQUIRED"]
     assert _stored_column(waiting["analysis_id"]) == _without_legend(waiting["section_quality"])
 
-    resumed = client.post("/analyze/resume", json={"analysis_id": waiting["analysis_id"], "zone_symbol": "1MN"})
+    resumed = client.post("/analyze/resume", json={"analysis_id": waiting["analysis_id"], "access_token": make_analysis_token(waiting["analysis_id"]), "zone_symbol": "1MN"})
 
     assert resumed.status_code == 200
     body = resumed.json()

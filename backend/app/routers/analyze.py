@@ -2,11 +2,15 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.access_control import require_analysis_token
+from app.core.access_control import (
+    ANALYSIS_TOKEN_HEADER,
+    ensure_analysis_access,
+    require_analysis_token,
+)
 from app.core.rate_limit import rate_limit, rate_limit_refresh
 from app.core.settings import settings
 from app.db.session import get_db
@@ -26,20 +30,9 @@ from app.services.analysis_resume import (
     AnalysisResumeStateError,
     resume_analysis_with_zone,
 )
-from app.services.geocoding import GeocodingServiceUnavailableError
 from app.services.analysis_orchestrator import run_analysis
-from app.services.geometry import (
-    CoordinatesOutsidePolandError,
-    InvalidParcelGeometryError,
-)
-from app.services.initiation import AddressNotFoundError
 from app.services.mpzp_zones import (
     InvalidZoneSymbolError,
-)
-from app.services.uldk import (
-    InvalidParcelIdentifierError,
-    ParcelNotFoundError,
-    UldkServiceUnavailableError,
 )
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
@@ -51,17 +44,49 @@ _refresh_limit = rate_limit_refresh(settings.rate_limit_refresh_per_minute)
 _document_limit = rate_limit(settings.rate_limit_report_per_minute)
 
 
+def authorized_resume_request(
+    request: AnalyzeResumeRequest,
+    x_analysis_token: Annotated[
+        str | None,
+        Header(
+            alias=ANALYSIS_TOKEN_HEADER,
+            description="Token dostępu z odpowiedzi analizy (alternatywa dla pola ``access_token``).",
+        ),
+    ] = None,
+) -> AnalyzeResumeRequest:
+    """Zależność: 403, gdy brak poprawnego tokenu analizy (AU-005).
+
+    Wykonuje się przed ``get_db`` i przed jakimkolwiek odczytem bazy, więc 403 jest
+    identyczne dla analizy istniejącej i nieistniejącej; 404/409 zwracamy dopiero
+    po poprawnym tokenie. Token przyjmujemy w body albo w nagłówku.
+    """
+    ensure_analysis_access(request.analysis_id, request.access_token, x_analysis_token)
+    return request
+
+
 @router.post(
     "",
     response_model=AnalyzeResponse,
-    responses={501: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
+    responses={
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+        501: {"model": ErrorResponse},
+        502: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
     dependencies=[Depends(_analyze_limit), Depends(_refresh_limit)],
     description=(
         "Uruchamia analizę uwarunkowań przestrzennych działki. Obsługuje trzy "
         "metody wejścia: kliknięcie w mapę, adres lub identyfikator działki ULDK. "
         "Jeżeli gmina nie udostępnia wektorowych danych MPZP, analiza jest "
         "zapisywana ze statusem oczekującym i wymaga wznowienia przez "
-        "POST /analyze/resume z symbolem strefy odczytanym z mapy rastrowej."
+        "POST /analyze/resume z symbolem strefy odczytanym z mapy rastrowej. "
+        "Błędy domenowe (brak działki 404, błędne dane wejściowe 422, usługa "
+        "zewnętrzna 502/503, odrzucony zapis 503 PERSISTENCE_FAILED) mają ciało "
+        "ErrorResponse z kodem i request_id; mapowanie wyjątków na kody jest "
+        "w app/routers/error_handlers.py."
     ),
 )
 async def analyze(
@@ -75,22 +100,14 @@ async def analyze(
     ),
     db: Session = Depends(get_db),
 ) -> AnalyzeResponse:
-    try:
-        return await run_analysis(request, db, force_refresh=force_refresh)
-    except (CoordinatesOutsidePolandError, InvalidParcelGeometryError) as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except (AddressNotFoundError, ParcelNotFoundError) as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except InvalidParcelIdentifierError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except (UldkServiceUnavailableError, GeocodingServiceUnavailableError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return await run_analysis(request, db, force_refresh=force_refresh)
 
 
 @router.post(
     "/resume",
     response_model=AnalyzeResponse,
     responses={
+        403: {"model": ErrorResponse},
         404: {"model": ErrorResponse},
         409: {"model": ErrorResponse},
         422: {"model": ErrorResponse},
@@ -99,6 +116,9 @@ async def analyze(
     },
     dependencies=[Depends(_analyze_limit)],
     description=(
+        "Wymaga tokenu dostępu analizy (``access_token`` w body albo nagłówek "
+        "``X-Analysis-Token``): bez niego 403 — niezależnie od tego, czy analiza "
+        "istnieje; 404/409 tylko po poprawnym tokenie. "
         "Wznawia analizę oczekującą na ręczne podanie symbolu strefy MPZP, "
         "odczytanego przez użytkownika z podglądu rastrowego, gdy gmina nie "
         "udostępnia wektorowych danych MPZP. Parametry są odczytywane wyłącznie "
@@ -108,7 +128,7 @@ async def analyze(
     ),
 )
 async def analyze_resume(
-    request: AnalyzeResumeRequest,
+    request: Annotated[AnalyzeResumeRequest, Depends(authorized_resume_request)],
     db: Session = Depends(get_db),
 ) -> AnalyzeResponse:
     try:

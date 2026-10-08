@@ -1,11 +1,15 @@
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
+import respx
 from shapely.geometry import LineString, box
 from sqlalchemy import delete, select
 
+from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.models.analysis import Analysis
 from app.models.infrastructure import Infrastructure
@@ -150,7 +154,7 @@ def _found_discovery() -> MpzpDiscoveryResult:
         candidate_zone_symbols=["MN"],
         uchwala_url="https://bip.example.test/uchwala.pdf",
         brak_wektorow=False,
-        status="found",
+        status="available",
         is_discovery_only=True,
         source_metadata=_source(
             "KIMPZP",
@@ -168,7 +172,7 @@ def _no_mpzp_discovery() -> MpzpDiscoveryResult:
         candidate_zone_symbols=[],
         uchwala_url=None,
         brak_wektorow=False,
-        status="no_mpzp",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=_source(
             "KIMPZP",
@@ -186,7 +190,7 @@ def _raster_discovery() -> MpzpDiscoveryResult:
         candidate_zone_symbols=["230_U"],
         uchwala_url="https://bip.example.test/raster.pdf",
         brak_wektorow=True,
-        status="raster_only",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=_source(
             "KIMPZP",
@@ -937,3 +941,130 @@ async def test_the_orchestrator_passes_one_model_budget_for_the_whole_analysis()
     ):
         await run_analysis(ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier=identifier), db)
     assert len(received) == 1 and isinstance(received[0], BudgetTracker)
+
+
+# --- AU-004: rzeczywiste odpowiedzi KIMPZP przez cały przepływ analizy --------------------
+
+_KIMPZP_FIXTURES = Path(__file__).parent / "fixtures" / "source_contracts" / "kimpzp"
+# Geometria działki 141801_4.0701.23/8 z ULDK (2026-10-06), EPSG:2180.
+_GORA_KALWARIA_WKT = (
+    "POLYGON((652131.49914 460398.698376,652159.798258 460406.037279,"
+    "652162.371949 460411.358288,652147.068906 460444.158444,"
+    "652121.452724 460437.443381,652131.49914 460398.698376))"
+)
+
+
+async def _run_with_kimpzp_fixture(identifier: str, fixture: str, wkt: str = _WKT):
+    lookup = _lookup(identifier)
+    lookup = ParcelLookupResult(
+        parcel_identifier=lookup.parcel_identifier,
+        wkt=wkt,
+        teryt=lookup.teryt,
+        source_metadata=lookup.source_metadata,
+    )
+    fetch = AsyncMock(side_effect=AssertionError("dokument nie może być pobrany"))
+    body = (_KIMPZP_FIXTURES / fixture).read_text(encoding="utf-8")
+    with (
+        respx.mock(assert_all_called=True) as router,
+        patch(
+            "app.services.analysis_orchestrator.resolve_parcel",
+            new=AsyncMock(return_value=lookup),
+        ),
+        patch(
+            "app.services.analysis_orchestrator.analyze_context",
+            new=AsyncMock(return_value=_empty_context()),
+        ),
+        patch("app.services.analysis_orchestrator.fetch_mpzp_document", new=fetch),
+        SessionLocal() as db,
+    ):
+        router.get(settings.kimpzp_wms_base_url).mock(
+            return_value=httpx.Response(200, text=body)
+        )
+        response = await run_analysis(
+            ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier=identifier), db
+        )
+    return response, fetch
+
+
+def _quality(response, section: str):
+    assert response.section_quality is not None
+    return next(item for item in response.section_quality.sections if item.section == section)
+
+
+@pytest.mark.asyncio
+async def test_gora_kalwaria_acts_reach_the_api_response_and_the_saved_snapshot() -> None:
+    """Regresja audytu B4/R3: zamiast MPZP_DOCUMENT_OR_SYMBOL_MISSING wynik podaje plany."""
+    identifier = f"{_PREFIX}GORA_KALWARIA"
+
+    response, fetch = await _run_with_kimpzp_fixture(
+        identifier, "gora_kalwaria_141801_4.0701.23_8.html", _GORA_KALWARIA_WKT
+    )
+
+    discovery = response.mpzp_discovery
+    assert discovery is not None and discovery.status == "available"
+    acts = {act.resolution_number: act for act in discovery.acts}
+    assert list(acts) == ["IV/30/2024", "576/XLVII/2010"]
+    assert acts["IV/30/2024"].text_url == "http://mpzp.gorakalwaria.pl/portal/mpzp/uch/IV_30_2024.pdf"
+    assert [a.resolution_number for a in acts["576/XLVII/2010"].amendments][1:] == [
+        "LIV/467/2021",
+        "XXXIX/366/2017",
+    ]
+    assert discovery.selected_act is None and discovery.multiple_acts_at_point is True
+    codes = [warning.code for warning in response.warnings]
+    assert "MPZP_MULTIPLE_ACTS_AT_POINT" in codes
+    assert "MPZP_DOCUMENT_OR_SYMBOL_MISSING" not in codes
+    assert "MPZP_NOT_FOUND" not in codes
+    fetch.assert_not_called()  # bez cichego wyboru dokumentu jednego z aktów
+    assert response.mpzp_zones == []
+    assert response.status == "partial"
+    mpzp_quality = _quality(response, "mpzp")
+    assert mpzp_quality.status == "partial"
+    assert mpzp_quality.reason_codes[:2] == ["MPZP_ACT_WITHOUT_ZONE", "MPZP_MULTIPLE_ACTS_AT_POINT"]
+
+    with SessionLocal() as db:
+        analysis = db.get(Analysis, response.analysis_id)
+        assert analysis.mpzp_discovery["acts"][0]["resolution_number"] == "IV/30/2024"
+        restored = build_analyze_response_from_analysis(analysis, db)
+    assert restored.mpzp_discovery == discovery
+
+
+@pytest.mark.asyncio
+async def test_no_service_for_area_is_no_coverage_not_mpzp_not_found() -> None:
+    response, _ = await _run_with_kimpzp_fixture(
+        f"{_PREFIX}NO_SERVICE", "dygowo_321606_2.0029.362.html"
+    )
+
+    assert response.mpzp_discovery is not None
+    assert response.mpzp_discovery.status == "no_coverage"
+    codes = [warning.code for warning in response.warnings]
+    assert "KIMPZP_NO_SERVICE_FOR_AREA" in codes
+    assert "MPZP_NOT_FOUND" not in codes
+    assert _quality(response, "mpzp").status == "no_coverage"
+
+
+@pytest.mark.asyncio
+async def test_municipal_service_error_is_unavailable_not_mpzp_not_found() -> None:
+    response, _ = await _run_with_kimpzp_fixture(
+        f"{_PREFIX}SERVICE_ERROR", "warszawa_146510_8.0502.1_3.html"
+    )
+
+    assert response.mpzp_discovery is not None
+    assert response.mpzp_discovery.status == "unavailable"
+    warning = next(w for w in response.warnings if w.code == "MPZP_DISCOVERY_UNAVAILABLE")
+    assert warning.severity == "error"
+    assert "MPZP_NOT_FOUND" not in [w.code for w in response.warnings]
+    assert _quality(response, "mpzp").status == "unavailable"
+
+
+@pytest.mark.asyncio
+async def test_single_act_without_zone_symbol_names_the_plan_in_the_warning() -> None:
+    response, fetch = await _run_with_kimpzp_fixture(
+        f"{_PREFIX}SINGLE_ACT", "inowroclaw_punkt_450000_550000.html"
+    )
+
+    assert response.mpzp_discovery is not None
+    assert response.mpzp_discovery.selected_act == "XXIII/322/2012"
+    warning = next(w for w in response.warnings if w.code == "MPZP_DOCUMENT_OR_SYMBOL_MISSING")
+    assert "XXIII/322/2012" in warning.message
+    fetch.assert_not_called()
+    assert _quality(response, "mpzp").reason_codes[0] == "MPZP_ACT_WITHOUT_ZONE"

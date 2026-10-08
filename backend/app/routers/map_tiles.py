@@ -71,6 +71,11 @@ router = APIRouter(prefix="/api/v1/map", tags=["map-tiles"])
 PreviewSourceKey = Literal["mpzp", "pog", "kiut"]
 
 _coverage_limit = rate_limit(settings.rate_limit_coverage_per_minute)
+# Kafle (WMS PNG i MVT) mapa pobiera seriami — osobny, wyższy próg (AU-006); metadane
+# i odczyty wydań POG mają próg ogólny. Wszystkie liczone per klient wspólnym kluczem.
+_tiles_limit = rate_limit(settings.rate_limit_tiles_per_minute)
+_pog_tiles_limit = rate_limit(settings.rate_limit_tiles_per_minute)
+_map_data_limit = rate_limit(settings.rate_limit_data_per_minute)
 
 
 class PreviewSourceResponse(BaseModel):
@@ -120,7 +125,11 @@ async def _load_tile_until_disconnect(
     return None
 
 
-@router.get("/preview-sources", response_model=list[PreviewSourceResponse])
+@router.get(
+    "/preview-sources",
+    response_model=list[PreviewSourceResponse],
+    dependencies=[Depends(_map_data_limit)],
+)
 async def get_preview_sources(
     registry: Annotated[WmsTilePreviewRegistry, Depends(get_wms_tile_registry)],
 ) -> list[PreviewSourceResponse]:
@@ -163,7 +172,9 @@ async def get_kiut_coverage(
 
 @router.get(
     "/tiles/{source}/{z}/{x}/{y}.png",
+    dependencies=[Depends(_tiles_limit)],
     responses={
+        429: {"description": "Przekroczono limit zapytań o kafle (Retry-After)."},
         200: {"content": {"image/png": {}}},
         304: {"description": "Kafelek nie zmienił się od podanego ETag."},
         422: {"description": "Nieprawidłowe współrzędne kafelka."},
@@ -307,6 +318,7 @@ def _release_response(info: PogReleaseInfo, service: PogTileService) -> PogTileR
 
 @router.get(
     "/pog/releases/active",
+    dependencies=[Depends(_map_data_limit)],
     response_model=PogTileReleaseResponse,
     responses={404: {"description": "Brak aktywnego lokalnego wydania POG."}},
     description="Metadane aktywnego wydania POG i URL kafli MVT przypięty do niego.",
@@ -322,6 +334,7 @@ def get_active_pog_release(
 
 @router.get(
     "/pog/releases/{release_id}",
+    dependencies=[Depends(_map_data_limit)],
     response_model=PogTileReleaseResponse,
     responses={404: {"description": "Wydanie nie istnieje albo nie zawiera aktów POG."}},
     description="Metadane konkretnego (także historycznego) wydania POG.",
@@ -560,6 +573,7 @@ def _cached_json(request: Request, kind: str, model: BaseModel) -> Response:
 
 @router.get(
     "/pog/releases/{release_id}/features/{feature_id:path}",
+    dependencies=[Depends(_map_data_limit)],
     response_model=PogFeatureDetailsResponse,
     responses={
         304: {"description": "Szczegóły nie zmieniły się od podanego ETag."},
@@ -592,6 +606,7 @@ def get_pog_feature_details(
 
 @router.get(
     "/pog/releases/{release_id}/summary",
+    dependencies=[Depends(_map_data_limit)],
     response_model=PogAreaSummaryResponse,
     responses={
         304: {"description": "Agregat nie zmienił się od podanego ETag."},
@@ -625,7 +640,9 @@ def get_pog_area_summary(
 
 @router.get(
     "/pog/releases/{release_id}/{z}/{x}/{y}.mvt",
+    dependencies=[Depends(_pog_tiles_limit)],
     responses={
+        429: {"description": "Przekroczono limit zapytań o kafle (Retry-After)."},
         200: {
             "content": {POG_TILE_MEDIA_TYPE: {}},
             "description": "Kafel MVT; pusty kafel to poprawny, pusty protobuf.",

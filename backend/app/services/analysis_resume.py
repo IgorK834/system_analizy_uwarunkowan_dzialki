@@ -18,6 +18,7 @@ from hashlib import sha256
 from typing import Any, Literal
 
 from sqlalchemy import delete, select
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.analysis import Analysis
@@ -37,6 +38,7 @@ from app.schemas.source import SourceMetadata
 from app.services.mpzp_parser import parse_mpzp_document
 from app.services.mpzp_parser_options import build_mpzp_parser_options
 from app.modules.planning.composition import new_analysis_llm_budget
+from app.shared.act_identifier import bounded_act_identifier
 from app.shared.zone_symbol import same_zone_symbol
 from app.services.mpzp_zones import (
     MANUAL_ZONE_SYMBOL_CONFIDENCE,
@@ -52,6 +54,7 @@ from app.services.persistence import (
     add_mpzp_zone_snapshot,
     build_analyze_response_from_analysis,
     pending_document_blob,
+    persistence_error_from,
     pog_result_from_record,
     refresh_report_map_snapshot,
 )
@@ -200,7 +203,7 @@ def _apply_resume(
         snapshot = None
         if document is not None and parse_result is not None:
             snapshot, persistence_warning = _persist_audit_safely(
-                db, plan_id or f"mpzp-document:{document_url}", document, parse_result
+                db, bounded_act_identifier(plan_id, document_url), document, parse_result
             )
             if persistence_warning is not None:
                 # Rollback zapisu audytu zwolnił blokadę — pobieramy ją ponownie.
@@ -302,6 +305,12 @@ def _apply_resume(
         refresh_report_map_snapshot(analysis, db)
         db.commit()
         db.refresh(analysis)
+    except (DataError, IntegrityError) as exc:
+        # AU-001: jak w ``save_analysis`` — kontrolowany błąd zapisu zamiast surowego 500.
+        db.rollback()
+        raise persistence_error_from(
+            exc, operation="resume_analysis", analysis_id=analysis_id
+        ) from exc
     except Exception:
         db.rollback()
         raise

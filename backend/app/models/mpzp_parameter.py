@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.types import ClippedString
 
 if TYPE_CHECKING:
     from app.models.mpzp_zone import MpzpZone
@@ -32,9 +33,9 @@ class MpzpParameter(Base):
         nullable=False,
         index=True,
     )
-    parameter_name: Mapped[str] = mapped_column(String(120), nullable=False)
-    normalized_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    unit: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    parameter_name: Mapped[str] = mapped_column(ClippedString(120), nullable=False)
+    normalized_value: Mapped[str | None] = mapped_column(ClippedString(255), nullable=True)
+    unit: Mapped[str | None] = mapped_column(ClippedString(30), nullable=True)
     source_fragment: Mapped[str | None] = mapped_column(Text, nullable=True)
     page_number: Mapped[int | None] = mapped_column(nullable=True)
     confidence: Mapped[float | None] = mapped_column(nullable=True)

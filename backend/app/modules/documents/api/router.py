@@ -7,6 +7,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.db.session import get_db
 from app.modules.documents.api.schemas import (
     DocumentVersionResponse,
@@ -19,7 +21,12 @@ from app.modules.documents.application.service import (
 from app.modules.documents.composition import build_document_service
 from app.modules.documents.domain.models import LegalUnitNode
 
-router = APIRouter(prefix="/api/v1", tags=["planning-documents"])
+# Publiczne odczyty dokumentów (AU-006): limit per klient, ten sam klucz co w całej aplikacji.
+_documents_limit = rate_limit(settings.rate_limit_data_per_minute)
+
+router = APIRouter(
+    prefix="/api/v1", tags=["planning-documents"], dependencies=[Depends(_documents_limit)]
+)
 
 
 def get_document_service(

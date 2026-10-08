@@ -58,7 +58,7 @@ def _raster_only_discovery() -> MpzpDiscoveryResult:
         candidate_zone_symbols=["230_U"],
         uchwala_url="https://bip.example.test/uchwala.pdf",
         brak_wektorow=True,
-        status="raster_only",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=SourceMetadata(
             source_name="KIMPZP",
@@ -77,7 +77,7 @@ def _found_discovery() -> MpzpDiscoveryResult:
         candidate_zone_symbols=["MN"],
         uchwala_url="https://bip.example.test/uchwala.pdf",
         brak_wektorow=False,
-        status="found",
+        status="available",
         is_discovery_only=True,
         source_metadata=SourceMetadata(
             source_name="KIMPZP",
@@ -556,14 +556,14 @@ def _resume(analysis_id: int, symbol: str = "230_U", parser_result=None):
     with patch("app.services.analysis_resume.parse_mpzp_document", new=parse):
         response = client.post(
             "/analyze/resume",
-            json={"analysis_id": analysis_id, "zone_symbol": symbol},
+            json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": symbol},
         )
     return response, parse
 
 
 def test_resume_returns_404_for_unknown_analysis() -> None:
     response = client.post(
-        "/analyze/resume", json={"analysis_id": 999999999, "zone_symbol": "230_U"}
+        "/analyze/resume", json={"analysis_id": 999999999, "access_token": make_analysis_token(999999999), "zone_symbol": "230_U"}
     )
 
     assert response.status_code == 404
@@ -585,7 +585,7 @@ def test_resume_returns_409_when_analysis_not_waiting() -> None:
 
     response = client.post(
         "/analyze/resume",
-        json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+        json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"},
     )
 
     assert response.status_code == 409
@@ -632,7 +632,7 @@ def test_resume_returns_503_when_pinned_document_cannot_be_parsed() -> None:
     ):
         response = client.post(
             "/analyze/resume",
-            json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+            json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"},
         )
 
     assert response.status_code == 503
@@ -774,7 +774,7 @@ def test_resume_rechecks_status_under_row_lock() -> None:
     ):
         response = client.post(
             "/analyze/resume",
-            json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+            json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"},
         )
 
     assert response.status_code == 409
@@ -1171,7 +1171,7 @@ def test_resume_runs_the_same_hybrid_pipeline_on_the_pinned_copy_without_fetchin
         patch("app.services.mpzp_parser.extract_document_text", new=read_text),
         patch("app.services.analysis_resume.build_mpzp_parser_options", new=lambda **_kwargs: options),
     ):
-        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "230_U"})
+        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"})
 
     assert response.status_code == 200, response.text
     fetch.assert_not_awaited()
@@ -1191,9 +1191,150 @@ def test_resume_in_hybrid_mode_without_the_model_keeps_the_deterministic_result_
         patch("app.services.mpzp_parser.extract_document_text", new=AsyncMock(return_value=modes_extraction(_RESUME_TEXT))),
         patch("app.services.analysis_resume.build_mpzp_parser_options", new=lambda **_kwargs: options),
     ):
-        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "230_U"})
+        response = client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"})
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["status"] == "partial"
     assert "MPZP_LLM_UNAVAILABLE" in {warning["code"] for warning in body["warnings"]}
     assert body["mpzp_zones"][0]["max_building_height_m"] == 12.0
+
+
+# --- AU-005: token dostępu dla POST /analyze/resume ------------------------
+
+_FORBIDDEN_BODY = {"error": "FORBIDDEN", "detail": "Brak dostępu do tej analizy."}
+
+
+def _forbidden_payload(response) -> dict:
+    body = response.json()
+    return {"error": body["error"], "detail": body["detail"]}
+
+
+def _resume_request(analysis_id: int, *, token: str | None = None, headers: dict | None = None):
+    payload: dict = {"analysis_id": analysis_id, "zone_symbol": "230_U"}
+    if token is not None:
+        payload["access_token"] = token
+    return client.post("/analyze/resume", json=payload, headers=headers or {})
+
+
+def test_resume_without_token_is_403_with_identical_body_for_existing_and_missing_analysis() -> None:
+    existing = _create_waiting_analysis("122101_1.0001.9031")
+
+    for_existing = _resume_request(existing)
+    for_missing = _resume_request(999_999_999)
+
+    assert for_existing.status_code == for_missing.status_code == 403
+    assert _forbidden_payload(for_existing) == _forbidden_payload(for_missing) == _FORBIDDEN_BODY
+    _assert_snapshot_untouched(existing)
+
+
+@pytest.mark.parametrize("token", ["zły-token", "A" * 43, "ą" * 5])
+def test_resume_with_wrong_token_is_403_for_existing_and_missing_analysis(token: str) -> None:
+    existing = _create_waiting_analysis("122101_1.0001.9032")
+
+    for_existing = _resume_request(existing, token=token)
+    for_missing = _resume_request(999_999_999, token=token)
+
+    assert for_existing.status_code == for_missing.status_code == 403
+    assert _forbidden_payload(for_existing) == _forbidden_payload(for_missing)
+    _assert_snapshot_untouched(existing)
+
+
+def test_resume_with_token_of_another_analysis_is_403_and_does_not_resume() -> None:
+    victim = _create_waiting_analysis("122101_1.0001.9033")
+    attacker_token = make_analysis_token(victim + 1)
+
+    response = _resume_request(victim, token=attacker_token)
+
+    assert response.status_code == 403
+    assert _zone_count(victim) == 0
+    _assert_snapshot_untouched(victim)
+
+
+def test_resume_403_is_decided_before_any_database_access() -> None:
+    from app.db.session import get_db
+
+    def database_must_not_be_used():
+        raise AssertionError("403 nie może sięgać do bazy")
+        yield  # pragma: no cover
+
+    app.dependency_overrides[get_db] = database_must_not_be_used
+    try:
+        response = _resume_request(5)
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert response.status_code == 403
+
+
+def test_resume_404_and_409_are_returned_only_after_a_valid_token() -> None:
+    unknown = 999_999_999
+    with SessionLocal() as db:
+        parcel = Parcel(
+            parcel_identifier="122101_1.0001.9034",
+            geometry="SRID=2180;MULTIPOLYGON(((0 0,10 0,10 10,0 10,0 0)))",
+            area_sqm=100.0,
+        )
+        db.add(parcel)
+        db.flush()
+        analysis = Analysis(parcel_id=parcel.id, status="partial")
+        db.add(analysis)
+        db.commit()
+        not_waiting = analysis.id
+
+    assert _resume_request(unknown).status_code == 403
+    assert _resume_request(not_waiting).status_code == 403
+    assert _resume_request(unknown, token=make_analysis_token(unknown)).status_code == 404
+    assert _resume_request(not_waiting, token=make_analysis_token(not_waiting)).status_code == 409
+
+
+def test_resume_accepts_the_token_in_the_x_analysis_token_header() -> None:
+    analysis_id = _create_waiting_analysis("122101_1.0001.9035")
+    parse = AsyncMock(return_value=_parser_result())
+
+    with patch("app.services.analysis_resume.parse_mpzp_document", new=parse):
+        wrong = _resume_request(analysis_id, headers={"X-Analysis-Token": "zly-token"})
+        accepted = _resume_request(
+            analysis_id, headers={"X-Analysis-Token": make_analysis_token(analysis_id)}
+        )
+
+    assert wrong.status_code == 403
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["analysis_id"] == analysis_id
+
+
+def test_resume_non_ascii_header_bytes_are_403_not_500() -> None:
+    response = _resume_request(5, headers={"X-Analysis-Token": "zły".encode("utf-8")})
+
+    assert response.status_code == 403
+
+
+def test_resume_accepts_a_valid_body_token_even_if_the_header_is_wrong() -> None:
+    analysis_id = _create_waiting_analysis("122101_1.0001.9036")
+    parse = AsyncMock(return_value=_parser_result())
+
+    with patch("app.services.analysis_resume.parse_mpzp_document", new=parse):
+        response = _resume_request(
+            analysis_id,
+            token=make_analysis_token(analysis_id),
+            headers={"X-Analysis-Token": "zly-token"},
+        )
+
+    assert response.status_code == 200, response.text
+
+
+def test_resume_response_carries_the_token_for_the_follow_up_resources() -> None:
+    analysis_id = _create_waiting_analysis("122101_1.0001.9037")
+
+    response, _ = _resume(analysis_id)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["access_token"] == make_analysis_token(analysis_id)
+
+
+def test_resume_openapi_documents_token_and_403() -> None:
+    schema = app.openapi()
+    operation = schema["paths"]["/analyze/resume"]["post"]
+
+    assert "403" in operation["responses"]
+    assert "access_token" in schema["components"]["schemas"]["AnalyzeResumeRequest"]["properties"]
+    assert any(p["name"] == "X-Analysis-Token" for p in operation["parameters"])

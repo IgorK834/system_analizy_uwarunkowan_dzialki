@@ -236,7 +236,7 @@ def _discovery_without_document() -> MpzpDiscoveryResult:
         candidate_zone_symbols=[],
         uchwala_url=None,
         brak_wektorow=False,
-        status="no_mpzp",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=SourceMetadata(source_name="KIMPZP", confidence=0.3, manual_review_required=True),
     )

@@ -254,6 +254,11 @@ QUALITY_REASON_LABELS_PL: Final[dict[str, str]] = {
     "MPZP_PARAMETER_CONFLICT": "sprzeczne wartości parametrów w uchwale",
     "MPZP_SHARE_UNDETERMINED": "udział strefy w działce nieustalony",
     "MPZP_REVIEW_REQUIRED": "parametry lub przypisanie wymagają weryfikacji",
+    "MPZP_ACT_WITHOUT_ZONE": "KIMPZP wskazało akt planu, ale nie ustalono strefy ani parametrów",
+    "MPZP_MULTIPLE_ACTS_AT_POINT": "w punkcie działki obowiązuje kilka aktów — aktu nie wybrano automatycznie",
+    "MPZP_MULTIPLE_ACTS_ON_PARCEL": "punkty działki wskazują różne akty — działka może leżeć w kilku planach",
+    "KIMPZP_NO_SERVICE_FOR_AREA": "KIMPZP nie ma usługi gminnej dla obszaru (brak danych ≠ brak planu)",
+    "MPZP_DISCOVERY_UNAVAILABLE": "usługa MPZP gminy zwróciła błąd — nie ustalono, czy obowiązuje plan",
     # POG
     "POG_RESULT_MISSING": "snapshot nie zawiera wyniku POG (nie dowodzi braku planu)",
     "POG_SOURCE_UNAVAILABLE": "źródło POG niedostępne",

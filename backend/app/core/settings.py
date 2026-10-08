@@ -1,3 +1,4 @@
+import ipaddress
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
@@ -254,10 +255,30 @@ class Settings(BaseSettings):
     rate_limit_refresh_per_minute: int = Field(default=5, ge=1)
     rate_limit_report_per_minute: int = Field(default=30, ge=1)
     rate_limit_coverage_per_minute: int = Field(default=60, ge=1)
-    # Za reverse proxy ``request.client`` to adres proxy. Włącz tylko, gdy przed
-    # aplikacją stoi zaufany proxy dopisujący ``X-Forwarded-For`` — używany jest
-    # ostatni wpis (dodany przez ten proxy), bo wcześniejsze poda sam klient.
+    # Kafle (WMS PNG i wektorowe MVT) mapa pobiera seriami, więc mają osobny,
+    # wyższy próg niż pozostałe endpointy.
+    rate_limit_tiles_per_minute: int = Field(default=1200, ge=1)
+    # Geokodowanie i wyszukiwarka adresów przekazują zapytanie do usług zewnętrznych.
+    rate_limit_geocode_per_minute: int = Field(default=60, ge=1)
+    rate_limit_address_search_per_minute: int = Field(default=30, ge=1)
+    # Pozostałe publiczne odczyty (metadane map, wydania POG, dokumenty aktów,
+    # status) oraz endpointy z kluczem administracyjnego (ochrona przed zgadywaniem).
+    rate_limit_data_per_minute: int = Field(default=300, ge=1)
+    # ``X-Forwarded-For`` jest brany pod uwagę tylko za zaufanym reverse proxy:
+    # włącz ``rate_limit_trust_forwarded_for`` i wypisz adresy/sieci proxy w
+    # ``rate_limit_trusted_proxies`` (CSV, np. ``172.18.0.0/16``). Klientem jest wpis
+    # liczony od końca o ``trusted_proxy_count`` (liczba proxy przed aplikacją).
+    # Gdy adres połączenia nie jest na liście, nagłówek jest ignorowany.
     rate_limit_trust_forwarded_for: bool = False
+    rate_limit_trusted_proxies: str = ""
+    trusted_proxy_count: int = Field(default=1, ge=1, le=10)
+    # Single-flight analiz per działka (AU-007): równoległe identyczne żądania dzielą jedną analizę.
+    # ``wait_seconds`` to maksymalne oczekiwanie na analizę tej samej działki (po nim 503 +
+    # Retry-After); ``cross_process`` dodaje sesyjną blokadę doradczą PostgreSQL dla wielu workerów.
+    analysis_singleflight_enabled: bool = True
+    analysis_singleflight_wait_seconds: float = Field(default=90.0, gt=0)
+    analysis_singleflight_poll_seconds: float = Field(default=0.25, gt=0)
+    analysis_singleflight_cross_process: bool = True
     import_artifact_storage_dir: str = "/tmp/dzialki-import-artifacts"
     import_area_tolerance_ratio: float = 0.02
     import_overlap_tolerance_sqm: float = 0.01
@@ -282,6 +303,21 @@ class Settings(BaseSettings):
     def empty_limit_means_unlimited(cls, value: Any) -> Any:
         # ``MPZP_LLM_DAILY_TOKEN_LIMIT=`` (pusty) znaczy „bez limitu”, a nie 0.
         return None if isinstance(value, str) and not value.strip() else value
+
+    @field_validator("rate_limit_trusted_proxies")
+    @classmethod
+    def validate_trusted_proxies(cls, value: str) -> str:
+        # Błędny wpis zatrzymuje start: ciche pominięcie zmieniłoby, komu ufamy.
+        for entry in value.split(","):
+            item = entry.strip()
+            if item:
+                try:
+                    ipaddress.ip_network(item, strict=False)
+                except ValueError as exc:
+                    raise ValueError(
+                        f"RATE_LIMIT_TRUSTED_PROXIES: {item!r} nie jest adresem IP ani siecią CIDR."
+                    ) from exc
+        return value
 
     @field_validator("backend_cors_origins", mode="before")
     @classmethod

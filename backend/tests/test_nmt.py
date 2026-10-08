@@ -7,11 +7,15 @@ transportu — każde z provenance zapytania i bez „naprawiania” do zera.
 
 from __future__ import annotations
 
+import hashlib
+import logging
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
 import respx
+import shapely
 from shapely.geometry import Polygon
 
 from app.core.settings import settings
@@ -220,3 +224,125 @@ async def test_shared_client_is_used_when_provided() -> None:
         result = await fetch_terrain_extremes(WARSAW, client=client)
 
     assert isinstance(result, TerrainExtremes)
+
+
+# --- AU-001: provenance nie przenosi wielokąta działki ----------------------------------------
+
+LONG_GEOMETRY = Path(__file__).parent / "fixtures" / "parcels" / "long_geometry"
+REAL_PARCELS = [
+    pytest.param(
+        "real-001-146510-8-0502-1-3", 76, (109.1, 113.7), id="146510_8.0502.1/3-76-vertices"
+    ),
+    pytest.param(
+        "real-005-126105-9-0001-580-4", 134, (209.4, 212.0), id="126105_9.0001.580/4-134-vertices"
+    ),
+]
+
+
+def _real_parcel(case: str):
+    wkt = (LONG_GEOMETRY / f"{case}.wkt").read_text(encoding="utf-8").strip()
+    return shapely.from_wkt(wkt), wkt
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("case", "vertices", "heights"), REAL_PARCELS)
+@respx.mock
+async def test_real_long_parcel_provenance_url_is_short_and_carries_polygon_hash_and_vertex_count(
+    case: str, vertices: int, heights: tuple[float, float]
+) -> None:
+    geometry, wkt = _real_parcel(case)
+    nmt_text = (LONG_GEOMETRY / f"{case}.nmt.txt").read_text(encoding="utf-8")
+    route = respx.get(settings.nmt_base_url).mock(
+        return_value=httpx.Response(200, text=nmt_text)
+    )
+
+    result = await fetch_terrain_extremes(geometry)
+
+    assert isinstance(result, TerrainExtremes)
+    # Usługa nadal dostaje pełny wielokąt — zmieniło się wyłącznie to, co zapisujemy jako źródło.
+    sent_url = route.calls.last.request.url
+    assert sent_url.params["polygon"] == wkt
+    assert len(str(sent_url)) > 2500
+
+    source_url = result.source_metadata.source_url
+    assert source_url is not None and len(source_url) < 300
+    assert source_url.startswith(settings.nmt_base_url + "?")
+    assert "polygon=" not in source_url and "POLYGON" not in source_url
+    parts = urlsplit(source_url)
+    query = parse_qs(parts.query)
+    assert query == {
+        "request": ["GetMinMaxByPolygon"],
+        "polygon_sha256": [hashlib.sha256(wkt.encode("utf-8")).hexdigest()],
+        "vertex_count": [str(vertices)],
+    }
+    # Skrócenie adresu źródła nie zmienia pomiaru: wysokości pochodzą z odpowiedzi usługi.
+    assert (result.min_height_m, result.max_height_m) == heights
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        httpx.ReadTimeout("slow"),
+        httpx.ConnectError("dns"),
+        httpx.Response(503),
+    ],
+    ids=["timeout", "transport", "http_503"],
+)
+@respx.mock
+async def test_failed_attempt_provenance_url_is_short_too(outcome) -> None:
+    geometry, _ = _real_parcel("real-005-126105-9-0001-580-4")
+    route = respx.get(settings.nmt_base_url)
+    if isinstance(outcome, Exception):
+        route.mock(side_effect=outcome)
+    else:
+        route.mock(return_value=outcome)
+
+    with pytest.raises(NmtServiceUnavailableError) as raised:
+        await fetch_terrain_extremes(geometry)
+
+    source = raised.value.source_metadata
+    assert source is not None and source.source_url is not None
+    assert len(source.source_url) < 300
+    assert "vertex_count=134" in source.source_url
+    # Komunikat błędu też nie przenosi wielokąta (komunikat httpx zawiera pełny adres).
+    assert len(str(raised.value)) < 200
+    assert "polygon" not in str(raised.value).lower()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_provenance_hash_is_deterministic_and_geometry_specific() -> None:
+    respx.get(settings.nmt_base_url).mock(
+        return_value=httpx.Response(200, text=_response_text("112.3", "115.7"))
+    )
+    other = Polygon.from_bounds(637000, 486000, 637100, 486101)
+
+    first = await fetch_terrain_extremes(WARSAW)
+    again = await fetch_terrain_extremes(WARSAW)
+    different = await fetch_terrain_extremes(other)
+
+    assert first.source_metadata.source_url == again.source_metadata.source_url
+    assert first.source_metadata.source_url != different.source_metadata.source_url
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_full_request_url_is_logged_only_at_debug_level(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    geometry, wkt = _real_parcel("real-001-146510-8-0502-1-3")
+    respx.get(settings.nmt_base_url).mock(
+        return_value=httpx.Response(200, text=_response_text("112.3", "115.7", area="15893"))
+    )
+
+    with caplog.at_level(logging.INFO, logger="app.services.nmt"):
+        await fetch_terrain_extremes(geometry)
+    assert "GetMinMaxByPolygon pełny adres" not in caplog.text
+    assert wkt.split("((")[1][:20] not in caplog.text
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="app.services.nmt"):
+        await fetch_terrain_extremes(geometry)
+    assert "GetMinMaxByPolygon pełny adres zapytania" in caplog.text
+    assert "polygon=POLYGON" in caplog.text

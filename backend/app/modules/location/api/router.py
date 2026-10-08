@@ -7,10 +7,11 @@ stack trace i szczegółów kontraktu dostawcy.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from app.core.rate_limit import FixedWindowRateLimiter
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.modules.location.api.schemas import (
     AddressIndexStatusResponse,
     AddressSearchResponse,
@@ -32,19 +33,16 @@ from app.schemas.analyze import ErrorResponse
 
 router = APIRouter(prefix="/api/v1/search", tags=["search"])
 
-# Limit zapytań wyszukiwania adresów (in-process, ograniczona kardynalność).
-_RATE_LIMIT = 30
-_RATE_WINDOW_SECONDS = 60.0
-_address_rate_limiter = FixedWindowRateLimiter(
-    limit=_RATE_LIMIT, window_seconds=_RATE_WINDOW_SECONDS
-)
+# Wspólny limiter (AU-006): ten sam klucz klienta i odpowiedź 429 z ``Retry-After``
+# co w pozostałych routerach; progi z ``settings``.
+_address_search_limit = rate_limit(settings.rate_limit_address_search_per_minute)
+_address_status_limit = rate_limit(settings.rate_limit_data_per_minute)
 
 
-def _error(status_code: int, code: str, detail: str, headers: dict | None = None) -> JSONResponse:
+def _error(status_code: int, code: str, detail: str) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
         content=ErrorResponse(error=code, detail=detail, section="search").model_dump(),
-        headers=headers,
     )
 
 
@@ -78,14 +76,10 @@ def _parse_types(raw: str | None) -> frozenset[ResultType]:
     return frozenset(selected)
 
 
-def _client_key(request: Request) -> str:
-    client = request.client
-    return client.host if client is not None else "unknown"
-
-
 @router.get(
     "/addresses",
     response_model=AddressSearchResponse,
+    dependencies=[Depends(_address_search_limit)],
     responses={
         422: {"model": ErrorResponse},
         429: {"model": ErrorResponse},
@@ -98,7 +92,6 @@ def _client_key(request: Request) -> str:
     ),
 )
 async def search_addresses(
-    request: Request,
     q: str = Query(min_length=3, max_length=200, description="Zapytanie adresowe."),
     limit: int = Query(10, ge=1, le=20, description="Maksymalna liczba wyników 1-20."),
     bias_lon: float | None = Query(None, ge=-180.0, le=180.0),
@@ -114,15 +107,6 @@ async def search_addresses(
         ),
     ),
 ) -> JSONResponse | AddressSearchResponse:
-    decision = _address_rate_limiter.check(_client_key(request))
-    if not decision.allowed:
-        return _error(
-            429,
-            "RATE_LIMITED",
-            "Przekroczono limit zapytań. Spróbuj ponownie za chwilę.",
-            headers={"Retry-After": str(decision.retry_after_seconds)},
-        )
-
     try:
         parsed_bbox = _parse_bbox(bbox)
         parsed_types = _parse_types(types)
@@ -164,7 +148,8 @@ async def search_addresses(
 @router.get(
     "/addresses/status",
     response_model=AddressIndexStatusResponse,
-    responses={503: {"model": ErrorResponse}},
+    dependencies=[Depends(_address_status_limit)],
+    responses={429: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
     description="Gotowość i wersja lokalnego indeksu adresowego GUGiK.",
 )
 async def address_index_status() -> JSONResponse | AddressIndexStatusResponse:

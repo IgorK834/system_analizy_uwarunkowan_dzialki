@@ -56,7 +56,10 @@ def test_health_ready_returns_503_without_leaking_driver_error() -> None:
         response = client.get("/health/ready")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "Baza danych jest niedostępna."}
+    body = response.json()
+    # AU-003: błąd ma kontrakt ErrorResponse (kod, request_id), a ``detail`` zachowuje dotychczasowy tekst.
+    assert (body["detail"], body["error"]) == ("Baza danych jest niedostępna.", "SERVICE_UNAVAILABLE")
+    assert body["request_id"] == response.headers["x-request-id"]
     assert "sekret" not in response.text
 
 

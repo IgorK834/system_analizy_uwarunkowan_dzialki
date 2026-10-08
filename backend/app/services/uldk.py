@@ -3,17 +3,32 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 import re
 from typing import Final
 
 import httpx
 
+from app.core.metrics import upstream_metrics
 from app.schemas.analyze import SourceMetadata
+
+logger = logging.getLogger(__name__)
 
 ULDK_BASE_URL: Final[str] = "https://uldk.gugik.gov.pl/"
 ULDK_TIMEOUT_S: Final[float] = 10.0
 ULDK_MAX_RETRIES: Final[int] = 2
 ULDK_BACKOFF_S: Final[float] = 1.0
+# ULDK odpowiada ``-1 brak wyników`` zarówno dla lokalizacji bez działki (Bałtyk, nieistniejący numer),
+# jak i dla przejściowego błędu usługi powiatowej za ULDK (zaobserwowano dla istniejącej działki
+# ``022104_2.0002.352``). Tych przypadków nie da się odróżnić po odpowiedzi, więc zapytanie jest
+# ponawiane raz po krótkiej przerwie; dopiero drugie ``-1`` oznacza brak działki.
+ULDK_NO_RESULTS_RETRIES: Final[int] = 1
+ULDK_NO_RESULTS_RETRY_DELAY_S: Final[float] = 0.3
+ULDK_NO_RESULTS_MARKER: Final[str] = "brak wyników"
+ULDK_NOT_FOUND_MESSAGE: Final[str] = (
+    "ULDK nie zwróciło działki dla tej lokalizacji "
+    "(brak działki albo chwilowy błąd źródła)"
+)
 
 # Format ULDK jest walidowany przed zapytaniem sieciowym, żeby nie obciążać
 # publicznej usługi oczywiście błędnymi identyfikatorami.
@@ -28,8 +43,16 @@ class ParcelNotFoundError(Exception):
     """Działka o podanym identyfikatorze nie istnieje w rejestrze ULDK."""
 
 
+class UldkNoResultsError(ParcelNotFoundError):
+    """ULDK odpowiedziało ``-1 brak wyników`` — brak działki albo przejściowy błąd źródła.
+
+    Wyjątek jest rozpoznawany wyłącznie wewnątrz modułu, żeby zapytanie mogło zostać ponowione raz;
+    po drugim takim wyniku ``_fetch_parcel`` zgłasza zwykły ``ParcelNotFoundError`` (HTTP 404).
+    """
+
+
 class UldkServiceUnavailableError(Exception):
-    """Usługa ULDK jest niedostępna lub zwróciła błąd statusu -1."""
+    """Usługa ULDK jest niedostępna lub zwróciła błąd statusu -1 inny niż brak wyników."""
 
 
 class InvalidUldkResponseError(Exception):
@@ -63,8 +86,9 @@ async def get_parcel_by_id(parcel_identifier: str) -> UldkParcelResult:
     wysłaniem zapytania HTTP. Wynik zawiera WKT geometrii w EPSG:2180, czyli w
     układzie wymaganym przez dalsze obliczenia metryczne. Funkcja może rzucić:
     InvalidParcelIdentifierError dla błędnego formatu, ParcelNotFoundError dla
-    pustego wyniku, UldkServiceUnavailableError dla timeoutu, błędu HTTP albo
-    statusu -1 z ULDK oraz InvalidUldkResponseError dla nieoczekiwanego formatu.
+    pustego wyniku albo ``-1 brak wyników`` potwierdzonego drugim zapytaniem,
+    UldkServiceUnavailableError dla błędu transportu, HTTP albo innego statusu
+    -1 z ULDK oraz InvalidUldkResponseError dla nieoczekiwanego formatu.
     """
     _validate_parcel_identifier(parcel_identifier)
 
@@ -73,8 +97,8 @@ async def get_parcel_by_id(parcel_identifier: str) -> UldkParcelResult:
         "id": parcel_identifier,
         "result": "id,geom_wkt,teryt",
     }
-    response = await _request_with_retry(params)
-    return _parse_uldk_response(response.text, parcel_identifier)
+    result, _ = await _fetch_parcel(params, parcel_identifier)
+    return result
 
 
 async def get_parcel_by_xy(x: float, y: float) -> ParcelLookupResult:
@@ -94,8 +118,7 @@ async def get_parcel_by_xy(x: float, y: float) -> ParcelLookupResult:
         "result": "id,geom_wkt,teryt",
     }
     fetched_at = datetime.now(timezone.utc)
-    response = await _request_with_retry(params)
-    raw = _parse_uldk_response(response.text, f"punkt ({x}, {y})")
+    raw, response = await _fetch_parcel(params, f"punkt ({x}, {y})")
     source = SourceMetadata(
         source_id="uldk",
         source_name="ULDK",
@@ -119,18 +142,56 @@ def _validate_parcel_identifier(identifier: str) -> None:
         )
 
 
+async def _fetch_parcel(
+    params: dict[str, str], location_hint: str
+) -> tuple[UldkParcelResult, httpx.Response]:
+    """Pobiera i parsuje odpowiedź ULDK; ``-1 brak wyników`` ponawia raz po ~300 ms."""
+    attempt = 0
+    while True:
+        response = await _request_with_retry(params)
+        try:
+            result = _parse_uldk_response(response.text, location_hint)
+        except UldkNoResultsError as exc:
+            if attempt >= ULDK_NO_RESULTS_RETRIES:
+                upstream_metrics.increment("uldk.no_results.confirmed")
+                raise ParcelNotFoundError(ULDK_NOT_FOUND_MESSAGE) from exc
+            attempt += 1
+            upstream_metrics.increment("uldk.no_results.retry")
+            await asyncio.sleep(ULDK_NO_RESULTS_RETRY_DELAY_S)
+            continue
+        if attempt:
+            # Drugie zapytanie zwróciło działkę: pierwsze ``-1`` było przejściowym błędem źródła.
+            upstream_metrics.increment("uldk.no_results.recovered")
+            logger.warning("uldk_no_results_recovered attempts=%d", attempt + 1)
+        return result, response
+
+
+def _count_response_code(code: str) -> None:
+    # Etykieta ma ograniczoną kardynalność: kod z odpowiedzi to dowolny tekst.
+    label = code if re.fullmatch(r"-?\d{1,3}", code) else "other"
+    upstream_metrics.increment(f"uldk.response.{label}")
+
+
 def _parse_uldk_response(text: str, location_hint: str) -> UldkParcelResult:
-    lines = text.strip().splitlines()
+    lines = text.lstrip("\ufeff").strip().splitlines()
     if not lines:
+        upstream_metrics.increment("uldk.response.empty")
         raise InvalidUldkResponseError("Usługa ULDK zwróciła pustą odpowiedź.")
 
-    status = lines[0].strip()
-    if status == "-1":
-        detail = lines[1].strip() if len(lines) > 1 else "Brak szczegółów błędu ULDK."
+    # Kod statusu to pierwszy token pierwszej linii, reszta linii to komunikat: ULDK zwraca
+    # ``-1 brak wyników`` w jednej linii (starsza forma: ``-1`` i komunikat w drugiej linii).
+    code, _, message = lines[0].strip().partition(" ")
+    message = message.strip() or (lines[1].strip() if len(lines) > 1 else "")
+    _count_response_code(code)
+
+    if code == "-1":
+        if ULDK_NO_RESULTS_MARKER in message.casefold():
+            raise UldkNoResultsError(ULDK_NOT_FOUND_MESSAGE)
+        detail = message or "Brak szczegółów błędu ULDK."
         raise UldkServiceUnavailableError(f"Usługa ULDK zwróciła błąd: {detail}")
 
-    if status != "0":
-        raise InvalidUldkResponseError(f"Nieoczekiwany kod statusu: {status!r}")
+    if code != "0":
+        raise InvalidUldkResponseError(f"Nieoczekiwany kod statusu: {code!r}")
 
     data_line = lines[1].strip() if len(lines) > 1 else ""
     if not data_line:
@@ -170,7 +231,7 @@ def _strip_srid_prefix(geometry_wkt: str) -> str:
 
 async def _request_with_retry(params: dict[str, str]) -> httpx.Response:
     """
-    Wykonuje GET do ULDK z retry dla timeoutów i błędów HTTP 5xx.
+    Wykonuje GET do ULDK z retry dla błędów transportu (timeout, połączenie) i HTTP 5xx.
 
     Między próbami stosuje łagodny backoff liniowy, żeby nie przeciążać publicznej
     usługi GUGiK. Dla błędów HTTP 4xx nie ponawia, bo wskazują na błędne żądanie.
@@ -182,16 +243,21 @@ async def _request_with_retry(params: dict[str, str]) -> httpx.Response:
                 response = await client.get(ULDK_BASE_URL, params=params)
                 response.raise_for_status()
                 return response
-        except httpx.TimeoutException as exc:
+        except httpx.TransportError as exc:
+            # Timeout, odmowa połączenia, DNS, zerwane połączenie: dla wywołującego to ta sama
+            # „usługa niedostępna”, a nie surowy wyjątek biblioteki HTTP.
             last_exc = exc
+            upstream_metrics.increment("uldk.transport_error")
             if attempt < ULDK_MAX_RETRIES:
                 await asyncio.sleep(ULDK_BACKOFF_S * (attempt + 1))
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code >= 500:
                 last_exc = exc
+                upstream_metrics.increment("uldk.http_5xx")
                 if attempt < ULDK_MAX_RETRIES:
                     await asyncio.sleep(ULDK_BACKOFF_S * (attempt + 1))
             else:
+                upstream_metrics.increment("uldk.http_4xx")
                 raise UldkServiceUnavailableError(
                     f"Usługa ULDK zwróciła błąd HTTP {exc.response.status_code}."
                 ) from exc

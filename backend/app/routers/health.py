@@ -1,15 +1,19 @@
 import logging
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from app.core.access_control import AdminOperator
+from app.core.metrics import upstream_metrics
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.modules.planning import composition as planning_composition
 from app.modules.planning.application import llm_metrics
 from app.modules.planning.application.llm_monitoring import HealthStatus, LlmHealth
+from app.services.singleflight import analysis_single_flight, lookup_single_flight
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +49,24 @@ class LlmHealthDetails(BaseModel):
     window_counters: dict[str, int]
 
 
-router = APIRouter(prefix="", tags=["health"])
+class UpstreamMetricsResponse(BaseModel):
+    counters: dict[str, int] = Field(
+        description="Liczniki odpowiedzi usług zewnętrznych w procesie, np. uldk.response.-1."
+    )
+    gauges: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Wartości chwilowe w procesie, np. analysis_singleflight_waiters — liczba żądań czekających "
+            "na wynik trwającej analizy tej samej działki (AU-007)."
+        ),
+    )
+
+
+# Sondy zdrowia mają szeroki limit (jedna sonda co kilka sekund mieści się z zapasem);
+# limit chroni też `/health/llm` i `/health/upstream` przed zgadywaniem klucza `X-Admin-Key`.
+_health_limit = rate_limit(settings.rate_limit_data_per_minute)
+
+router = APIRouter(prefix="", tags=["health"], dependencies=[Depends(_health_limit)])
 
 
 def _llm_health() -> LlmHealth:
@@ -93,6 +114,28 @@ def health_llm(operator: AdminOperator) -> LlmHealthDetails:
         counters=llm_metrics.metrics.snapshot(),
         gauges=llm_metrics.metrics.gauges(),
         window_counters=llm_metrics.metrics.window_totals(thresholds.window_seconds),
+    )
+
+
+@router.get(
+    "/health/upstream",
+    response_model=UpstreamMetricsResponse,
+    responses={401: {"description": "Brak klucza administracyjnego."}, 403: {"description": "Klucz niepoprawny."}},
+    description=(
+        "Liczniki odpowiedzi usług zewnętrznych dla operatora (klucz `X-Admin-Key`): odpowiedzi ULDK per "
+        "kod statusu (`uldk.response.0`, `uldk.response.-1`, ...), ponowienia po `-1 brak wyników`, "
+        "błędy transportu oraz single-flight analiz (`analysis_singleflight.leader|wait|takeover|timeout`, "
+        "gauge `analysis_singleflight_waiters`). Wartości są lokalne dla procesu i zerują się po restarcie."
+    ),
+)
+def health_upstream(operator: AdminOperator) -> UpstreamMetricsResponse:
+    del operator  # klucz uwierzytelnia; operator nie jest tu potrzebny
+    return UpstreamMetricsResponse(
+        counters=upstream_metrics.snapshot(),
+        gauges={
+            analysis_single_flight.gauge_name: analysis_single_flight.waiters(),
+            lookup_single_flight.gauge_name: lookup_single_flight.waiters(),
+        },
     )
 
 

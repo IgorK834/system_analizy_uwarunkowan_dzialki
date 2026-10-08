@@ -597,7 +597,9 @@ def test_study_reports_known_defects_not_hidden_by_headline_metrics(corpus_path:
         for evidence in item["evidence"]
         if evidence["type"] == "code_probe"
     )
-    assert probe["result"]["zone_symbol_from_payload_NULL"] == {"html": "NULL", "json": "NULL"}
+    # Sonda uruchamia bieżący parser: od AU-004 literał NULL nie jest symbolem strefy (RC-01 usunięty
+    # w kodzie), a rejestr nadal opisuje defekt zamrożonych artefaktów korpusu.
+    assert probe["result"]["zone_symbol_from_payload_NULL"] == {"html": None, "json": None}
     # Nagłówkowa metryka klas stref = 1,0, a porównanie pól widzi rozbieżności.
     assert payload["metrics"]["zone_class_accuracy"]["value"] == 1.0
     assert payload["study_metrics"]["field_agreement"]["value"] < 1.0

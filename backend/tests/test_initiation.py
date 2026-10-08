@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
+import respx
 
 from app.schemas.analyze import (
     AddressAnalyzeRequest,
@@ -16,6 +19,7 @@ from app.services.uldk import (
     ParcelLookupResult,
     ParcelNotFoundError,
     ULDK_BASE_URL,
+    ULDK_NOT_FOUND_MESSAGE,
     UldkParcelResult,
     UldkServiceUnavailableError,
 )
@@ -265,3 +269,55 @@ async def test_resolve_parcel_returns_parcel_lookup_result_for_all_methods(
     assert isinstance(map_result, ParcelLookupResult)
     assert isinstance(address_result, ParcelLookupResult)
     assert isinstance(parcel_id_result, ParcelLookupResult)
+
+
+# --- AU-002: „-1 brak wyników” z ULDK to 404 z uczciwym komunikatem, nie wyjątek nieobsłużony ----
+
+_FROZEN_ULDK = Path(__file__).parent / "fixtures" / "source_contracts" / "uldk"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        MapAnalyzeRequest(method="map", lon=18.5, lat=54.9),  # kliknięcie w Bałtyk
+        AddressAnalyzeRequest(
+            method="address", query="Bałtyk", selected_lon=18.5, selected_lat=54.9
+        ),
+        ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier="141801_4.0701.9999/9"),
+    ],
+    ids=["map", "address", "parcel_id"],
+)
+@respx.mock
+async def test_resolve_parcel_turns_uldk_no_results_into_parcel_not_found(payload) -> None:
+    route = respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(
+            200, text=(_FROZEN_ULDK / "brak_wynikow_baltyk.txt").read_text(encoding="utf-8")
+        )
+    )
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        with pytest.raises(ParcelNotFoundError) as raised:
+            await resolve_parcel(payload)
+
+    assert str(raised.value) == ULDK_NOT_FOUND_MESSAGE
+    assert route.call_count == 2  # jedno ponowienie przed uznaniem braku działki
+
+
+@respx.mock
+async def test_resolve_parcel_survives_a_transient_no_results_on_an_existing_parcel() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.Response(200, text="-1 brak wyników\n"),
+            httpx.Response(
+                200, text=f"0\n122101_1.0001.1234|SRID=2180;{MOCK_WKT}|122101\n"
+            ),
+        ]
+    )
+
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock):
+        result = await resolve_parcel(
+            ParcelIdAnalyzeRequest(method="parcel_id", parcel_identifier="122101_1.0001.1234")
+        )
+
+    assert result.parcel_identifier == "122101_1.0001.1234"
+    assert result.source_metadata.source_url == ULDK_BASE_URL

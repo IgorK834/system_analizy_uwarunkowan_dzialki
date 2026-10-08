@@ -1601,8 +1601,9 @@ def probe_null_symbol() -> dict[str, object]:
     try:
         from app.services import mpzp
 
+        # AU-004: wynik punktu niesie listę symboli (``zone_symbols``); brak symbolu → ``None``.
         results = {
-            name: mpzp._parse_get_feature_info_response(payload).zone_symbol
+            name: next(iter(mpzp._parse_get_feature_info_response(payload).zone_symbols), None)
             for name, payload in (("html", html_payload), ("json", json_payload))
         }
     except Exception as exc:  # brak importu nie może zatrzymać badania

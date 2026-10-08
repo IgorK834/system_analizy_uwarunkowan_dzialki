@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.types import ClippedString
 
 if TYPE_CHECKING:
     from app.models.analysis_pending_document import AnalysisPendingDocument
@@ -46,6 +47,9 @@ class Analysis(Base):
     # Status i provenance sekcji ryzyka flood/nature (BK-303). NULL oznacza
     # zapis sprzed migracji 023 i jest odczytywany jako status ``unknown``.
     risk_sections: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    # Akty MPZP wskazane przez KIMPZP i status źródła (AU-004, migracja 032).
+    # NULL = zapis sprzed AU-004 — odczyt zwraca brak sekcji, nie „brak planu”.
+    mpzp_discovery: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     # Zamrożona specyfikacja map raportu (BK-503, ADR-010): geometrie EPSG:2180,
     # kadr, tryb, kolejność warstw, style, font, wydania i hash semantyczny.
     # NULL = zapis sprzed migracji 025; raport odtwarza wtedy mapy z danych
@@ -65,9 +69,9 @@ class Analysis(Base):
     # przypinane w chwili wstrzymania (``AnalysisPendingDocument``, BK-204);
     # URL służy wyłącznie do prezentacji, resume nie pobiera go ponownie.
     pending_uchwala_url: Mapped[str | None] = mapped_column(
-        String(1000), nullable=True
+        Text, nullable=True
     )
-    pending_plan_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    pending_plan_id: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
     pending_zone_symbol_candidates: Mapped[list | None] = mapped_column(
         JSONB, nullable=True
     )

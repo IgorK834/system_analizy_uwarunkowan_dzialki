@@ -11,6 +11,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
+from app.modules.planning.domain.kimpzp_discovery import KimpzpPointResult
 from app.modules.planning.domain.rules import PlanningRuleCandidate
 
 
@@ -250,3 +251,18 @@ class LlmExtractionCache(Protocol):
 
     def purge(self, *, older_than: datetime) -> int:
         """Usuwa zapisy starsze niż ``older_than``; zwraca liczbę usuniętych."""
+
+
+# --- punktowe rozpoznanie aktów MPZP w KIMPZP (AU-004) -------------------------------------
+
+
+@runtime_checkable
+class KimpzpFeatureInfoParser(Protocol):
+    """Zamienia surową odpowiedź GetFeatureInfo KIMPZP na wynik domenowy punktu.
+
+    Implementacja (``infrastructure/kimpzp_feature_info.py``) nie podnosi wyjątków dla
+    żadnego wejścia tekstowego: nierozpoznana odpowiedź ma status ``unknown``.
+    """
+
+    def __call__(self, text: str) -> KimpzpPointResult:
+        """Wynik jednego punktu: status źródła, akty obecne w punkcie i ich zmiany."""
