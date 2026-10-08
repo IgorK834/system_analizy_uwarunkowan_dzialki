@@ -13,6 +13,9 @@ cp .env.example .env
 docker compose up --build
 ```
 
+W `.env` ustaw stałe `ACCESS_TOKEN_SECRETS=local1:<wynik polecenia openssl rand -hex 32>` — bez niego tokeny dostępu do
+raportów przestają działać po każdym restarcie backendu (zob. „Dostęp, limity i status analizy”).
+
 Tylko baza danych (bez backendu):
 
 ```bash
@@ -29,6 +32,69 @@ curl http://localhost:8000/health
 
 Po uruchomieniu całego zestawu frontend jest dostępny pod adresem
 `http://localhost:3000`, a API pod `http://localhost:8000`.
+
+### Stan po pierwszym uruchomieniu
+
+Po `docker compose up --build` baza zawiera tylko schemat (migracje uruchamia entrypoint backendu): **nie ma żadnych
+zaimportowanych danych**. Aplikacja działa, ale w stanie ograniczonym. Pomiar na czystych wolumenach i żywych usługach
+(2026-10-08, kontener `backend` z kodem z drzewa roboczego):
+
+| Obszar | Co zobaczysz po starcie | Dlaczego i co z tym zrobić |
+|---|---|---|
+| **Warstwa POG** | Pusta. Panel mapy: „Warstwa POG niedostępna: brak lokalnego wydania danych.”; `GET /api/v1/map/pog/releases/active` → `404`. W analizie `pog` nie ma stref, a ostrzeżenia mówią `POG_DISCOVERY_ONLY` i `POG_NOT_FOUND_IN_SOURCE`. | Strefy POG pochodzą wyłącznie z lokalnego, wersjonowanego wydania importowanego z Rejestru Urbanistycznego; obraz niczego nie zawiera. 404 to „brak wydania”, nie „brak planu”. → [import POG](#import-pog). |
+| **Wyszukiwanie adresów** | Działa ograniczony fallback UUG. Z 6 typowych zapisów pełnego adresu działa **1**: „Miasto, Ulica N” (także „Miasto, ul. Ulica N” i samo „Miasto”). **0 wyników** dla „Ulica N, Miasto”, „Miasto Ulica N”, „Ulica N Miasto”, „Ulica N” i „kod, Miasto, Ulica N”. | Lokalny indeks adresów jest pusty (`GET /api/v1/search/addresses/status` → `ready: false`). → [indeks adresów](#lokalny-indeks-podpowiedzi-adresowych). Identyfikator działki (`122101_1.0001.1234/2`) i kliknięcie mapy działają od razu. |
+| **Status analizy** | Praktycznie zawsze `partial` — wszystkie 30 działek korpusu referencyjnego dało `200 partial`, `complete` = 0 ([wynik live smoke](docs/evaluation/results/live-smoke/2026-10-08.md)). | `complete` wymaga jednocześnie: stref MPZP z przecięciem wektorowym, wiążącego i bieżącego POG ze statusem pokrycia `available`, dostępnych sekcji krytycznych (ISOK i GDOŚ oraz KIUT, o ile jego kontrakt jest potwierdzony) i braku ręcznej weryfikacji. Bez importu POG nigdy nie zajdzie; po imporcie nadal wymaga wektorowego MPZP, którego wiele gmin nie publikuje. `partial` nie jest błędem — to uczciwy stan niepełnej wiedzy. |
+| **Czas analizy** | Pierwsza analiza działki: p50 ≈ 16 s, p95 ≈ 42 s (30 działek, równoległość 3, żywe usługi); powtórzenie z cache jest natychmiastowe. | Odpytywane są żywe usługi (ULDK, KIMPZP, KIUT, ISOK, GDOŚ, NMT). |
+
+Wynik `partial` jest zapisywany w cache na **15 minut**, a `complete` na `ANALYSIS_CACHE_MAX_AGE_DAYS` dni (domyślnie 7);
+`force_refresh=true` omija cache (limit 5/min).
+
+#### Kroki wymagane do pełnego obrazu
+
+<a id="import-pog"></a>
+**1. Import POG** (jedna gmina, wymaga sieci; `--dry-run` sprawdza źródło bez publikacji):
+
+```bash
+docker compose exec backend python -m app.modules.imports pog --source pog_app --act-id 246101-POG --teryt 246101
+```
+
+`--act-id` to etykieta aktu nadawana przy imporcie, `--teryt` — TERYT gminy (tu Bielsko-Biała). Pomiar: **539 s (≈ 9 min)**,
+1 akt, 1168 stref, 213 obszarów OUZ i 16 śródmiejskich, wydanie opublikowane i aktywne (`releases/active` → `200`).
+Czas zależy od Rejestru Urbanistycznego, a nie od komputera. Po imporcie analiza działki `246101_1.0056.155/3` ma 3 strefy POG
+(`binding`, pokrycie `available`), ale nadal `partial` (brak wektorowego MPZP dla tej działki). Polecenie i kontrakt usług:
+[`docs/data_sources/ru_contracts.md`](docs/data_sources/ru_contracts.md).
+
+**2. Indeks adresów (`address-index-sync`)** — zob. [Lokalny indeks podpowiedzi adresowych](#lokalny-indeks-podpowiedzi-adresowych)
+(czas i rozmiar zależą od zakresu).
+
+**3. Dane demonstracyjne.** Jednopoleceniowy skrypt demo (Task 21.14, AU-014) **jeszcze nie istnieje**. Do czasu jego
+powstania „demo” to krok 1 (import POG jednej gminy) i analiza działki z tej gminy.
+
+#### Przewodnik dla recenzenta (5 kroków)
+
+1. **Uruchom** (pierwszy build trwa kilka minut): `cp .env.example .env && docker compose up --build -d`
+2. **Zaimportuj dane** (≈ 9 min, krok 1 wyżej):
+   `docker compose exec backend python -m app.modules.imports pog --source pog_app --act-id 246101-POG --teryt 246101`
+3. **Otwórz** `http://localhost:3000`, zakładka „Identyfikator działki”, wpisz `246101_1.0056.155/3` → „Analizuj działkę”
+   (po ≈ 30 s: strefy POG z importu, status `partial` i lista ostrzeżeń).
+4. **Pobierz PDF**: przycisk „Pobierz raport PDF” (plik `raport_analizy_<id>.pdf`) oraz „Pobierz pakiet audytowy (ZIP)” —
+   interfejs pokazuje sumę SHA-256 paczki.
+5. **Zweryfikuj ZIP** (tylko Python 3, bez zależności):
+   `python3 backend/scripts/verify_audit_package.py analiza_<id>_pakiet_audytowy.zip --package-sha256 <suma z interfejsu>`
+   → `OK: 8 plików zgodnych z manifest.json.`
+
+To samo bez przeglądarki (token dostępu idzie nagłówkiem, nie w adresie):
+
+```bash
+curl -s -X POST http://localhost:8000/analyze -H 'Content-Type: application/json' \
+  -d '{"method":"parcel_id","parcel_identifier":"246101_1.0056.155/3"}' -o analiza.json
+ID=$(python3 -c "import json;print(json.load(open('analiza.json'))['analysis_id'])")
+TOKEN=$(python3 -c "import json;print(json.load(open('analiza.json'))['access_token'])")
+curl -s -H "X-Analysis-Token: $TOKEN" -o raport.pdf http://localhost:8000/report/$ID
+curl -s -D naglowki.txt -H "X-Analysis-Token: $TOKEN" -o paczka.zip http://localhost:8000/report/$ID/audit.zip
+python3 backend/scripts/verify_audit_package.py paczka.zip \
+  --package-sha256 "$(grep -i x-audit-package-sha256 naglowki.txt | awk '{print $2}' | tr -d '\r')"
+```
 
 ### Warstwy podglądowe WMS
 
@@ -113,7 +179,7 @@ Decyzje: `docs/adr/ADR-009-pog-inspector-area-summaries-layer-state.md`.
 
 ### Raport PDF v2 i deterministyczne mapy (BK-501–503)
 
-`GET /report/{analysis_id}?access_token=…` (bez zmian kontraktu: `application/pdf`,
+`GET /report/{analysis_id}` (token dostępu: nagłówek `X-Analysis-Token` albo `?access_token=…`; bez zmian kontraktu: `application/pdf`,
 `Content-Disposition: attachment; filename="raport_analizy_{id}.pdf"`, `404`
 dla nieistniejącej analizy, `500` bez szczegółów WeasyPrint) buduje raport
 **wyłącznie** z zapisanego snapshotu analizy i zamrożonego snapshotu map — nie
@@ -177,8 +243,8 @@ się z upływem czasu ani po zmianie polityki.
   z cache sprzed zmiany nie są serwowane). Adaptery ULDK, KIMPZP, KIUT WMS i POG
   podają teraz `source_id` z katalogu.
 
-**Pakiet audytowy.** `GET /report/{analysis_id}/audit.zip?access_token=…`
-(dostęp i limit zapytań jak dla raportu PDF; `404` brak analizy, `413` limit
+**Pakiet audytowy.** `GET /report/{analysis_id}/audit.zip`
+(token jak dla raportu PDF — nagłówek `X-Analysis-Token` albo `?access_token=…`; limit zapytań jak dla raportu PDF; `404` brak analizy, `413` limit
 rozmiaru, `500` bez szczegółów) strumieniuje ZIP zbudowany wyłącznie z zapisanego
 snapshotu: `analysis.json`, `sources.json`, `parcel.geojson`, dozwolone
 `layers/*.geojson`, `README.md` (CRS, data analizy, znaczenie statusów) i
@@ -303,8 +369,7 @@ konfiguracji `.env.example`; nie kopiuje lokalnego `.env` ani zmian roboczych.
 oddzielony od syntetycznych fixtures i można go sprawdzić bez sieci:
 
 ```bash
-cd backend
-pytest tests/test_reference_corpus.py -q
+docker compose --profile test run --rm backend-test pytest tests/test_reference_corpus.py -q
 ```
 
 ### Ground truth i ewaluacja BK-003/BK-004
@@ -321,6 +386,39 @@ python3 backend/scripts/evaluate_reference_corpus.py \
   --mode offline \
   --fail-on-regression
 ```
+
+### Live smoke i ewaluacja na żywych usługach (AU-011)
+
+Testy offline (zamrożone odpowiedzi) nie wykrywają awarii widocznych dopiero na żywo — audyt 2026-10-05 znalazł 27% korpusu
+z HTTP 500 mimo zielonego CI. Dlatego ten sam korpus 30 działek jest regularnie mierzony na działającym backendzie.
+
+```bash
+# Live smoke: POST /analyze dla całego korpusu (równoległość 3, Retry-After, limit 20/min); wymaga tylko `pip install httpx`
+python3 backend/scripts/live_smoke_corpus.py --base-url http://localhost:8000 \
+  --manifest backend/tests/fixtures/reference_corpus/manifest.json --concurrency 3 \
+  --output docs/evaluation/results/live-smoke/$(date +%F).md
+
+# Metryki pól względem ground truth na wynikach live, obok trybu offline (uruchamiaj w kontenerze: wymaga shapely i kodu aplikacji)
+docker compose --profile test run --rm backend-test python scripts/evaluate_reference_corpus.py \
+  --mode live --base-url http://backend:8000 --output-dir /tmp/reference-corpus-live
+```
+
+- **Raport** (`<data>.md` i `<data>.json`): histogram statusów HTTP i `status` analizy, kody błędów (`ErrorResponse.error`),
+  czasy p50/p95, liczba stref MPZP i POG (brak sekcji to `—`, nie 0), liczba `complete`, tabela wszystkich 30 działek
+  i sekcja **„Zmiany względem poprzedniego przebiegu”** (nowe regresje i naprawy względem najnowszego raportu JSON z tego samego
+  katalogu albo wskazanego `--previous`; `--previous none` wyłącza porównanie). W raporcie nie ma tokenów dostępu.
+- **Kod wyjścia:** `0` — brak odpowiedzi 5xx; `1` — jakakolwiek odpowiedź 5xx albo brak odpowiedzi (próg: 0); `2` — błąd
+  użycia. `--fail-on-regression` dodaje `1` dla nowych regresji. HTTP 429 jest ponawiane po `Retry-After`, a 5xx — nigdy.
+- **Tryb `--mode live` ewaluatora** oblicza te same metryki co tryb offline (identyfikacja działki, klasa i udział strefy,
+  przecięcia ISOK/GDOŚ, kompletność pól, czasy), ale z odpowiedzi API, i zapisuje `offline-vs-live.{md,json}` — różnicę metryk
+  i statusów sekcji per działka. Przypadek z HTTP ≠ 200 jest widoczny jako `failed`, a nie pomijany.
+- **Cotygodniowy przebieg:** [`.github/workflows/live-smoke.yml`](.github/workflows/live-smoke.yml) (`workflow_dispatch` +
+  poniedziałek 03:17 UTC; nie blokuje PR). Uruchamia stos w Actions, oba polecenia powyżej i zapisuje wynik jako artefakt
+  przebiegu oraz podsumowanie zadania; niczego nie commituje — raport do śledzenia kopiujesz do
+  `docs/evaluation/results/live-smoke/`.
+- **Wynik z 2026-10-08:** [live-smoke/2026-10-08.md](docs/evaluation/results/live-smoke/2026-10-08.md) — 30/30 HTTP 200,
+  0 odpowiedzi 5xx (audyt: 27% HTTP 500), wszystkie `partial`, strefy MPZP dla 4 działek, POG dla 0 (pusty import).
+  Odbiór: [AU-011–013](docs/evaluation/au-011-013-verification.md).
 
 ### Badania ilościowe BK-601–BK-603
 
@@ -454,16 +552,24 @@ docker compose run --rm --user root --entrypoint chown backend \
 
 ### Dostęp, limity i status analizy
 
-- **Raport PDF, dokument uchwały i wznowienie analizy** (`GET /report/{id}`,
-  `GET /analyze/{id}/pending-document`, `POST /analyze/resume`) wymagają tokenu
-  dostępu. Token (pole `access_token` odpowiedzi analizy) to HMAC identyfikatora
-  analizy — samo zgadywanie kolejnych ID nie wystarcza. Raport i dokument przyjmują
-  go w parametrze `access_token`; `POST /analyze/resume` w polu `access_token` body
-  albo w nagłówku `X-Analysis-Token` (interfejs wysyła token z wyniku). Brak lub zły
-  token to zawsze `403` o tej samej treści, niezależnie od tego, czy analiza
-  istnieje; `404`/`409` pojawiają się dopiero po poprawnym tokenie. Ustaw stały
-  `ACCESS_TOKEN_SECRET` (`openssl rand -hex 32`); bez niego tokeny ważą do restartu
-  backendu.
+- **Raport PDF, pakiet audytowy, dokument uchwały i wznowienie analizy** (`GET /report/{id}`,
+  `GET /report/{id}/audit.zip`, `GET /analyze/{id}/pending-document`, `POST /analyze/{id}/links`,
+  `POST /analyze/resume`) wymagają tokenu dostępu (AU-012, [ADR-019](docs/adr/ADR-019-expiring-access-tokens-and-key-rotation.md)).
+  Token (pole `access_token` odpowiedzi analizy, generowane przy każdej odpowiedzi — także z cache) ma postać
+  `v2.<exp>.<kid>.<sig>`: HMAC-SHA256 po `analysis_id|exp`, **wygasa** (domyślnie po 30 dniach,
+  `ACCESS_TOKEN_TTL_SECONDS`) i jest związany z jedną analizą. Zalecany nośnik to nagłówek `X-Analysis-Token` (interfejs
+  wysyła go tak; nie trafia do logów ani `Referer`); raport, pakiet i dokument przyjmują też parametr `access_token`,
+  `POST /analyze/resume` — pole `access_token` body. Brak, zły, cudzy lub **wygasły** token to zawsze `403` o tej samej
+  treści, niezależnie od tego, czy analiza istnieje; `404`/`409` pojawiają się dopiero po poprawnym tokenie.
+  `POST /analyze/{id}/links` (token w nagłówku; ciało opcjonalne `{"purpose": "download" | "share"}`) wydaje link do PDF i
+  ZIP: `download` ważny 15 min (`ACCESS_TOKEN_DOWNLOAD_TTL_SECONDS`), `share` jak token analizy (30 dni); link nigdy nie
+  przeżywa tokenu, z którego powstał. Odpowiedzi raportów i tokenów mają `Referrer-Policy: no-referrer` oraz
+  `Cache-Control: private, no-store`, a w dzienniku dostępu uvicorna wartość to `access_token=***`. Tokeny w wersji
+  sprzed AU-012 (bez terminu) nie są już akceptowane — wystarczy ponowić analizę.
+  **Klucze:** `ACCESS_TOKEN_SECRETS=kid:sekret,kid2:sekret2|RRRR-MM-DD` (`openssl rand -hex 32`); pierwszy wpis
+  podpisuje, kolejne tylko weryfikują — rotacja bez unieważniania linków: dopisz nowy klucz na początku, stary zostaw do
+  końca okresu przejściowego (data po `|`), potem usuń. Pojedynczy `ACCESS_TOKEN_SECRET` działa jak klucz `default`; bez
+  żadnego sekretu tokeny ważą do restartu backendu (a przy wielu workerach nie działają między nimi).
 - **Akceptacja/odrzucenie rastrów** (`POST /api/v1/raster-assets/{id}/accept|reject`)
   wymaga nagłówka `X-Admin-Key`. Klucze konfiguruje `ADMIN_API_KEYS`
   (`operator:klucz,...`); operator w audycie pochodzi z klucza. Bez kluczy
@@ -510,13 +616,15 @@ docker compose run --rm --user root --entrypoint chown backend \
   `UPSTREAM_INVALID_RESPONSE` (502), `PERSISTENCE_FAILED` (503, zapis wyniku
   odrzucony przez bazę). Liczniki odpowiedzi ULDK: `GET /health/upstream`
   (`X-Admin-Key`). Decyzje: [ADR-015](docs/adr/ADR-015-api-errors-request-id-and-text-column-policy.md).
-- **Status `complete`**: niedostępność ISOK/GDOŚ lub awaria KIUT obniża status do
-  `partial`. Znana luka „brak potwierdzonego kontraktu KIUT/GESUT” jest tylko
-  ostrzeżeniem i nie blokuje `complete`.
+- **Status analizy**: `complete` tylko wtedy, gdy są jednocześnie strefy MPZP z przecięciem wektorowym (bez trybu
+  ręcznego i discovery), wiążący, bieżący POG z pokryciem `available`, dostępne sekcje ISOK i GDOŚ (oraz KIUT, o ile jego
+  kontrakt jest potwierdzony) i żadne źródło nie wymaga ręcznej weryfikacji — w przeciwnym razie `partial`. Brak MPZP albo
+  POG zawsze daje `partial`, więc na świeżej instalacji `partial` jest normą (zob. „Stan po pierwszym uruchomieniu”).
+  Znana luka „brak potwierdzonego kontraktu KIUT/GESUT” jest tylko ostrzeżeniem i nie blokuje `complete`.
 
-Wynik analizy `complete` jest serwowany z cache przez `ANALYSIS_CACHE_MAX_AGE_DAYS`
-dni (domyślnie 7). Podpis cache obejmuje wersje danych z katalogu, ale nie dane
-z usług na żywo (ISOK, GDOŚ, NMT), więc dłuższy TTL oznacza starsze dane o ryzyku.
+Cache analiz obejmuje oba statusy: `complete` jest serwowany przez `ANALYSIS_CACHE_MAX_AGE_DAYS` dni (domyślnie 7), a
+`partial` przez **15 minut**; `waiting_for_user_input` nie jest cache'owany. Podpis cache obejmuje wersje danych z katalogu, ale
+nie dane z usług na żywo (ISOK, GDOŚ, NMT), więc dłuższy TTL oznacza starsze dane o ryzyku.
 
 ### Reset bazy danych
 
@@ -584,7 +692,8 @@ backend/    — API FastAPI, serwisy domenowe, modele, testy
 frontend/   — aplikacja Next.js z mapą i panelem wyników
 shared/     — artefakty wspólne dla obu obrazów (styl i legenda POG)
 docs/       — dokumentacja techniczna
-scripts/    — skrypty pomocnicze (migracje, import danych itp.)
+scripts/    — pomiar punktu odniesienia (capture_baseline.sh); skrypty operacyjne backendu: backend/scripts/
+.github/    — CI (ci.yml) oraz cotygodniowy live smoke (live-smoke.yml)
 ```
 
 ## Uwaga prawna
