@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.access_control import require_analysis_token
+from app.core.response_headers import SENSITIVE_RESPONSE_HEADERS
 from app.core.rate_limit import rate_limit
 from app.core.settings import settings
 from app.db.session import get_db
@@ -50,7 +51,9 @@ _report_limit = rate_limit(settings.rate_limit_report_per_minute)
         "Generuje raport PDF dla zapisanej analizy. Raport jest budowany "
         "wyłącznie z zapisanego snapshotu — nie uruchamia ponownie analizy "
         "ani nie odpytuje usług zewnętrznych. Zwraca 404, gdy analiza o podanym "
-        "identyfikatorze nie istnieje. Wymaga tokenu ``access_token`` z odpowiedzi analizy."
+        "identyfikatorze nie istnieje. Wymaga tokenu dostępu: nagłówek ``X-Analysis-Token`` albo "
+        "parametr ``access_token`` (token wygasa — 403 po terminie). Odpowiedź ma "
+        "``Referrer-Policy: no-referrer`` i ``Cache-Control: private, no-store``."
     ),
 )
 def get_analysis_report(
@@ -81,7 +84,10 @@ def get_analysis_report(
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            **SENSITIVE_RESPONSE_HEADERS,
+        },
     )
 
 
@@ -118,8 +124,8 @@ def get_analysis_report(
     description=(
         "Udostępnia samowystarczalny pakiet audytowy zapisanej analizy, budowany "
         "wyłącznie z zapisanego snapshotu (bez ponownej analizy i bez odpytywania "
-        "źródeł). Dostęp jak do raportu PDF: wymaga tokenu ``access_token`` z "
-        "odpowiedzi analizy. Zwraca 404, gdy analiza nie istnieje, i 413, gdy pakiet "
+        "źródeł). Dostęp jak do raportu PDF: wymaga ważnego tokenu dostępu (nagłówek "
+        "``X-Analysis-Token`` albo parametr ``access_token``). Zwraca 404, gdy analiza nie istnieje, i 413, gdy pakiet "
         "przekroczyłby limity rozmiaru. Warstwy i dane źródeł, dla których katalog "
         "nie zezwala na redystrybucję, nie są kopiowane — w manifeście zostaje "
         "referencja, SHA-256 i powód pominięcia."
@@ -161,6 +167,6 @@ def get_analysis_audit_package(
             "Content-Length": str(archive.size),
             "X-Audit-Package-SHA256": archive.sha256,
             "X-Audit-Exporter-Version": AUDIT_EXPORTER_VERSION,
-            "Cache-Control": "private, no-store",
+            **SENSITIVE_RESPONSE_HEADERS,
         },
     )
