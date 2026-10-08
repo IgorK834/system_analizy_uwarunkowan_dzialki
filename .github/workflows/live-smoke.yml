@@ -1,0 +1,124 @@
+name: Live smoke
+
+# AU-011: ten sam korpus 30 działek przepuszczany przez `POST /analyze` na ŻYWYCH usługach (ULDK, KIMPZP,
+# KIUT, ISOK, GDOŚ, NMT). Testy offline mierzą zamrożone obserwacje i nie wykrywają awarii widocznych dopiero
+# na żywo — ten przebieg mierzy system. NIE blokuje PR-ów: brak wyzwalaczy `push`/`pull_request`, tylko
+# ręczne uruchomienie i harmonogram tygodniowy. Przebieg kończy się niepowodzeniem przy jakiejkolwiek
+# odpowiedzi 5xx (próg: 0), ale to czerwony wynik tego workflow, a nie bramka scalania.
+#
+# Wynik (Markdown + JSON, z sekcją „Zmiany względem poprzedniego przebiegu”) trafia do artefaktu przebiegu
+# i do podsumowania zadania. Workflow niczego nie zapisuje w repozytorium: żeby śledzić wynik, pobierz
+# artefakt i zacommituj pliki do `docs/evaluation/results/live-smoke/<data>.{md,json}` — kolejny przebieg
+# porówna się z najnowszym zacommitowanym raportem JSON z tego katalogu.
+'on':
+  workflow_dispatch:
+    inputs:
+      concurrency:
+        description: Liczba równoległych żądań (limit API to 20 analiz na minutę)
+        required: false
+        default: '3'
+      force_refresh:
+        description: Pomiń cache analiz (force_refresh=true; limit 5/min — przebieg wyraźnie dłuższy)
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    # Poniedziałek 03:17 UTC — poza godzinami szczytu źródeł urzędowych.
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-smoke
+  cancel-in-progress: false
+
+jobs:
+  live-smoke:
+    name: Korpus 30 działek na żywych usługach
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      RESULTS_DIR: docs/evaluation/results/live-smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Przygotuj zmienne środowiskowe i katalog wyników
+        run: |
+          cp .env.example .env
+          echo "RUN_DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+          mkdir -p "$RESULTS_DIR"
+          # Kontener uruchamia się jako użytkownik `app`, więc musi móc pisać w zamontowanym katalogu.
+          chmod -R a+rwX "$RESULTS_DIR"
+
+      - name: Zbuduj obrazy (runtime i test)
+        run: docker compose --profile test build backend backend-test
+
+      # `--wait` czeka na healthcheck backendu (`/health/ready`), czyli na migracje i działającą bazę.
+      - name: Uruchom backend z bazą
+        run: docker compose up -d --wait db backend
+
+      - name: Live smoke korpusu (POST /analyze, równoległość i Retry-After)
+        id: smoke
+        # Dane wejściowe workflow_dispatch trafiają do skryptu przez zmienne środowiska, nie przez
+        # interpolację w poleceniu.
+        env:
+          CONCURRENCY: ${{ inputs.concurrency || '3' }}
+          FORCE_REFRESH: ${{ inputs.force_refresh && 'true' || 'false' }}
+        run: |
+          extra=""
+          if [ "$FORCE_REFRESH" = "true" ]; then extra="--force-refresh"; fi
+          docker compose --profile test run --rm --no-deps \
+            -e GITHUB_SHA="${{ github.sha }}" \
+            -v "${{ github.workspace }}/${RESULTS_DIR}:/results" \
+            backend-test \
+            python scripts/live_smoke_corpus.py \
+              --base-url http://backend:8000 \
+              --manifest tests/fixtures/reference_corpus/manifest.json \
+              --concurrency "$CONCURRENCY" \
+              $extra \
+              --output "/results/${RUN_DATE}.md"
+
+      # Metryki pól względem ground truth na wynikach live, obok trybu offline (różnica offline vs live).
+      - name: Ewaluacja korpusu w trybie live (offline vs live)
+        if: always() && steps.smoke.conclusion != 'skipped'
+        run: |
+          docker compose --profile test run --rm --no-deps \
+            -v "${{ github.workspace }}/${RESULTS_DIR}:/results" \
+            backend-test \
+            python scripts/evaluate_reference_corpus.py \
+              --mode live \
+              --base-url http://backend:8000 \
+              --corpus tests/fixtures/reference_corpus/manifest.json \
+              --output-dir /results/reference-corpus-live
+
+      - name: Podsumowanie przebiegu
+        if: always()
+        run: |
+          if [ -f "${RESULTS_DIR}/${RUN_DATE}.md" ]; then
+            cat "${RESULTS_DIR}/${RUN_DATE}.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Brak raportu live smoke — przebieg przerwany przed zapisem wyniku." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Zapisz log backendu
+        if: always()
+        run: docker compose logs --no-color backend > backend.log 2>&1 || true
+
+      - name: Artefakt wyniku
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-smoke-${{ env.RUN_DATE }}-${{ github.run_id }}
+          path: |
+            docs/evaluation/results/live-smoke/${{ env.RUN_DATE }}.md
+            docs/evaluation/results/live-smoke/${{ env.RUN_DATE }}.json
+            docs/evaluation/results/live-smoke/reference-corpus-live/
+            backend.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Zatrzymaj kontenery i usuń volumeny
+        if: always()
+        run: docker compose --profile test down -v
