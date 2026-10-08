@@ -11,12 +11,14 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     String,
+    Text,
     false,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.types import ClippedString
 from app.shared.planning_status import (
     COVERAGE_STATUS_VALUES,
     DATA_AVAILABILITY_VALUES,
@@ -70,8 +72,8 @@ class PogData(Base):
     )
     # Wartość ``status`` sprzed migracji 016 zachowana dla audytu i downgrade.
     legacy_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
-    planning_zone: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    zone_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    planning_zone: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
+    zone_type: Mapped[str | None] = mapped_column(ClippedString(30), nullable=True)
     ouz_intersection_area_sqm: Mapped[float | None] = mapped_column(nullable=True)
     touches_ouz_boundary: Mapped[bool] = mapped_column(nullable=False, default=False)
     in_ouz: Mapped[bool] = mapped_column(
@@ -89,7 +91,7 @@ class PogData(Base):
         default=False,
         server_default=false(),
     )
-    uchwala_nr: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    uchwala_nr: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
     uchwala_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     manual_review_required: Mapped[bool] = mapped_column(
         Boolean,
@@ -101,7 +103,7 @@ class PogData(Base):
     # ``conflict_with_mpzp`` — historyczna wartość jest w ``legacy_evidence``.
     compatibility_assessment: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     raw_attributes: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     confidence: Mapped[float | None] = mapped_column(nullable=True)
     schema_version: Mapped[str] = mapped_column(

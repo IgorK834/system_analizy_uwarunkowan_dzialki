@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
 
 import pytest
 
@@ -78,7 +77,9 @@ def test_snapshot_before_the_calibration_has_no_band() -> None:
 def test_the_contract_version_changed_so_old_confidence_is_not_served_from_cache() -> None:
     from app.services import cache
 
-    assert analyze_schemas.MPZP_RESULT_SCHEMA_VERSION == "2.6" and "mpzp-v2.6" in cache.RESULT_CONTRACT_VERSION
+    # Co najmniej 2.6 (PV3-21); 2.7 (AU-004) nadal wyklucza wyniki 2.4 i starsze z cache.
+    version = analyze_schemas.MPZP_RESULT_SCHEMA_VERSION
+    assert tuple(map(int, version.split("."))) >= (2, 6) and f"mpzp-v{version}" in cache.RESULT_CONTRACT_VERSION
 
 
 def test_values_from_a_language_model_are_never_verified_or_high_band() -> None:

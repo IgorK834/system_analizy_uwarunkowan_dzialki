@@ -162,7 +162,7 @@ def _raster_discovery(document_url: str) -> MpzpDiscoveryResult:
         candidate_zone_symbols=["1MN", "2MN"],
         uchwala_url=document_url,
         brak_wektorow=True,
-        status="raster_only",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=_source("KIMPZP", "https://kimpzp.example.test", confidence=0.3, manual=True),
         warnings=["Gmina nie udostępnia wektorowych danych MPZP."],
@@ -242,14 +242,14 @@ def test_bk204_waiting_preview_resume_partial_and_pdf() -> None:
 
     # 4. Błędny symbol (niedozwolony znak; spacja wewnętrzna jest od PV3-04 poprawna) i
     # nieznana analiza nie zmieniają snapshotu.
-    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "1 MN!"}).status_code == 422
-    assert client.post("/analyze/resume", json={"analysis_id": 999_999_999, "zone_symbol": "1MN"}).status_code == 404
+    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "1 MN!"}).status_code == 422
+    assert client.post("/analyze/resume", json={"analysis_id": 999_999_999, "access_token": make_analysis_token(999_999_999), "zone_symbol": "1MN"}).status_code == 404
     with SessionLocal() as db:
         assert db.get(Analysis, analysis_id).status == "waiting_for_zone_symbol"
         assert db.scalars(select(MpzpZone).where(MpzpZone.analysis_id == analysis_id)).all() == []
 
     # 5. Resume z realnym parserem przypiętego PDF.
-    resumed = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "1MN"})
+    resumed = client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "1MN"})
     fetch.assert_awaited_once_with(document_url)  # tylko przy wstrzymaniu
     assert resumed.status_code == 200
     result = resumed.json()
@@ -278,7 +278,7 @@ def test_bk204_waiting_preview_resume_partial_and_pdf() -> None:
     _write_evidence("bk-204/02-resumed.json", result)
 
     # 6. Ponowne resume: 409 i brak dublowania stref.
-    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "1MN"}).status_code == 409
+    assert client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "1MN"}).status_code == 409
     with SessionLocal() as db:
         assert len(db.scalars(select(MpzpZone).where(MpzpZone.analysis_id == analysis_id)).all()) == 1
 
@@ -313,7 +313,7 @@ async def test_bk205_spatial_pairs_api_db_ui_pdf(tmp_path: Path) -> None:
     left, right = box(x, y, x + 60, y + 10), box(x + 60, y, x + 100, y + 10)
     no_document = MpzpDiscoveryResult(
         plan_id=None, candidate_zone_symbols=[], uchwala_url=None, brak_wektorow=False,
-        status="no_mpzp", is_discovery_only=True,
+        status="no_match", is_discovery_only=True,
         source_metadata=_source("KIMPZP", confidence=0.3, manual=True),
     )
     with (

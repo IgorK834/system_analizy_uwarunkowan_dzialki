@@ -24,6 +24,7 @@ from app.modules.planning.application.llm_monitoring import (
 )
 from app.modules.planning.application.llm_pipeline import BudgetTracker, LlmBudget, LlmPricing, MpzpLlmPipeline
 from app.modules.planning.application.ports import (
+    KimpzpFeatureInfoParser,
     StructuredExtractionError,
     StructuredExtractionErrorCode,
     StructuredExtractionProvider,
@@ -49,6 +50,7 @@ from app.modules.planning.infrastructure.llm import pin as model_pin
 from app.modules.planning.infrastructure.llm.resilience import CircuitBreaker, RetryPolicy
 from app.modules.planning.domain import extraction_contract as contract
 from app.modules.planning.domain.candidate_verifier import VerifierPolicy
+from app.modules.planning.infrastructure.kimpzp_feature_info import parse_kimpzp_feature_info
 from app.modules.planning.infrastructure.mvt import (
     InMemoryPogTileCache,
     SqlAlchemyPogTileRepository,
@@ -64,6 +66,11 @@ from app.modules.planning.infrastructure.repository import (
 PARSER_VERSION = "mpzp-rules/2.0"
 
 logger = logging.getLogger(__name__)
+
+
+def kimpzp_feature_info_parser() -> KimpzpFeatureInfoParser:
+    """Adapter odpowiedzi GetFeatureInfo KIMPZP (AU-004) za portem ``KimpzpFeatureInfoParser``."""
+    return parse_kimpzp_feature_info
 
 
 def build_planning_rule_service(session: Session) -> PlanningRuleService:

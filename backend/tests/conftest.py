@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
@@ -33,6 +34,18 @@ def terrain_relief_offline(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def enable_app_loggers() -> None:
+    """``alembic/env.py`` woła ``fileConfig``, które domyślnie wyłącza istniejące loggery.
+
+    Testy migracji wykonują ``alembic upgrade`` w procesie pytest, więc bez tego loggery ``app.*``
+    byłyby wyłączone dla testów uruchamianych po nich i ``caplog`` nie widziałby ich wpisów.
+    """
+    for name, logger in list(logging.root.manager.loggerDict.items()):
+        if name.startswith("app.") and isinstance(logger, logging.Logger):
+            logger.disabled = False
+
+
+@pytest.fixture(autouse=True)
 def reset_rate_limiters() -> None:
     """Liczniki limitów są globalne w procesie — testy nie mogą się nimi dzielić."""
     reset_all_rate_limiters()
@@ -59,6 +72,7 @@ _MIGRATION_TEST_MODULES = frozenset(
         "test_migration_026",
         "test_migration_029",
         "test_migration_030",
+        "test_migration_031",
         "test_versioned_model",
     }
 )

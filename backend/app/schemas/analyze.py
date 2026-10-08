@@ -15,6 +15,7 @@ from pydantic import (
 from app.schemas.mpzp import LLM_PROVENANCE_FIELDS
 
 from app.core.access_control import make_analysis_token
+from app.core.request_id import get_request_id
 
 from app.schemas.source import (
     CatalogMetadataSource,
@@ -137,6 +138,16 @@ class AnalyzeResumeRequest(BaseModel):
             "(status='waiting_for_zone_symbol')."
         ),
         json_schema_extra={"example": 123},
+    )
+    access_token: str | None = Field(
+        default=None,
+        max_length=512,
+        description=(
+            "Token dostępu z pola ``access_token`` odpowiedzi analizy (AU-005). "
+            "Alternatywnie nagłówek ``X-Analysis-Token``. Bez poprawnego tokenu "
+            "endpoint zwraca 403 — niezależnie od tego, czy analiza istnieje."
+        ),
+        json_schema_extra={"example": "wartość z odpowiedzi POST /analyze"},
     )
     zone_symbol: str = Field(
         min_length=1,
@@ -262,7 +273,118 @@ MpzpAssignmentMethod = Literal[
 # 2.6 (PV3-21): zapisy opisowe (przeznaczenie, zakazy, ochrona środowiska, dachy) z jednego silnika
 # domenowego wspólnego z regułami planistycznymi (``mpzp-parser/3.1-det``): przeznaczenie także z etykiety
 # i listy podpunktów, zakazy przełamane w wierszu, liczby dziesiętne w zakazie; zapisy 2.5 nie są trafieniem.
-MPZP_RESULT_SCHEMA_VERSION = "2.6"
+# 2.7 (AU-004): odpowiedź niesie sekcję ``mpzp_discovery`` — listę aktów wskazanych przez KIMPZP w punktach
+# działki (numer uchwały, daty, linki tekstu/legendy/BIP, zmiany) i rozłączny status źródła; przy kilku aktach
+# ``plan_id``/dokument nie są wybierane. Zapisy 2.6 nie mają sekcji i nie są serwowane z cache jako trafienie.
+MPZP_RESULT_SCHEMA_VERSION = "2.7"
+MPZP_DISCOVERY_SCHEMA_VERSION = "1.0"
+
+MpzpDiscoveryStatus = Literal["available", "no_match", "no_coverage", "unavailable", "unknown"]
+
+
+class MpzpDiscoveryAmendment(BaseModel):
+    """Zmiana planu wymieniona przy akcie w KIMPZP — nigdy osobny akt w punkcie."""
+
+    kind: Literal["text_change", "change", "note"] = Field(
+        description=(
+            "text_change — wiersz tabeli „Zmiany tekstowe”; change — wiersz tabeli „Zmiany”; "
+            "note — opis zmian z pola „Zmiany” bez struktury."
+        )
+    )
+    resolution_number: str | None = Field(default=None, description="Numer uchwały zmieniającej.")
+    name: str | None = None
+    adopted_on: date | None = Field(default=None, description="Data uchwalenia zmiany.")
+    valid_from: date | None = Field(default=None, description="Data, od której zmiana obowiązuje.")
+    document_url: str | None = Field(default=None, description="Link do tekstu uchwały zmieniającej.")
+    bip_url: str | None = None
+    raw_text: str | None = Field(default=None, description="Dosłowny opis zmian (tylko kind=note).")
+
+    @computed_field(description="Czy document_url może być klikalnym linkiem HTTPS.")  # type: ignore[prop-decorator]
+    @property
+    def document_url_verified(self) -> bool:
+        return is_verified_https_url(self.document_url)
+
+    @computed_field(description="Czy bip_url może być klikalnym linkiem HTTPS.")  # type: ignore[prop-decorator]
+    @property
+    def bip_url_verified(self) -> bool:
+        return is_verified_https_url(self.bip_url)
+
+
+class MpzpDiscoveryAct(BaseModel):
+    """Akt MPZP obecny w punkcie działki według KIMPZP (discovery, nie przecięcie wektorowe)."""
+
+    resolution_number: str | None = Field(
+        description="Numer uchwały (np. IV/30/2024); null, gdy usługa nie podała poprawnego numeru.",
+        json_schema_extra={"example": "IV/30/2024"},
+    )
+    resolution_date: date | None = Field(default=None, description="Data uchwały.")
+    name: str | None = Field(default=None, description="Nazwa planu.")
+    valid_from: date | None = Field(default=None, description="„Obowiązuje od”.")
+    repealed_on: date | None = Field(default=None, description="„Utracił moc”.")
+    legal_status: Literal["binding", "not_binding", "unknown"] = Field(
+        default="unknown",
+        description="Status z nagłówka bloku („Obowiązujące MPZP”) albo pola status usługi gminnej.",
+    )
+    text_url: str | None = Field(default=None, description="Link „Tekst uchwały”.")
+    legend_url: str | None = Field(default=None, description="Link do legendy rysunku planu.")
+    drawing_url: str | None = Field(default=None, description="Link do rysunku planu.")
+    bip_url: str | None = Field(default=None, description="Strona aktu w BIP.")
+    www_url: str | None = Field(default=None, description="Ogólny link WWW aktu podany przez gminę.")
+    journal: str | None = Field(default=None, description="Publikacja w dzienniku urzędowym.")
+    informatization: Literal["vector", "raster", "unknown"] = "unknown"
+    zone_symbols: list[str] = Field(
+        default_factory=list, description="Symbole stref podane przy akcie (kandydaci discovery)."
+    )
+    amendments: list[MpzpDiscoveryAmendment] = Field(default_factory=list)
+    source_format: str = Field(
+        default="unknown",
+        description="Format odpowiedzi gminnej: plan_block, attribute_table, key_value, json.",
+    )
+
+    @computed_field(  # type: ignore[prop-decorator]
+        description=(
+            "Linki aktu, które mogą być klikalne (wyłącznie HTTPS po weryfikacji składniowej); "
+            "pozostałe UI pokazuje jako tekst."
+        )
+    )
+    @property
+    def verified_links(self) -> list[str]:
+        return [
+            name
+            for name in ("text_url", "legend_url", "drawing_url", "bip_url", "www_url")
+            if is_verified_https_url(getattr(self, name))
+        ]
+
+
+class MpzpDiscoverySection(BaseModel):
+    """Wynik punktowego rozpoznania aktów MPZP w KIMPZP (AU-004).
+
+    Status jest rozłączny: ``no_coverage`` (KIMPZP nie ma usługi gminnej dla
+    obszaru) i ``unavailable`` (błąd usługi) nie są „brakiem planu”
+    (``no_match``). Przy kilku obowiązujących aktach ``selected_act`` jest null.
+    """
+
+    schema_version: str = Field(default=MPZP_DISCOVERY_SCHEMA_VERSION)
+    status: MpzpDiscoveryStatus
+    reason_codes: list[str] = Field(default_factory=list)
+    acts: list[MpzpDiscoveryAct] = Field(
+        default_factory=list,
+        description="Akty wskazane w punktach próbki, malejąco wg „obowiązuje od”.",
+    )
+    selected_act: str | None = Field(
+        default=None,
+        description=(
+            "Numer uchwały aktu użytego dalej przez analizę; tylko przy dokładnie jednym "
+            "obowiązującym akcie. Przy kilku aktach null (MPZP_MULTIPLE_ACTS_AT_POINT)."
+        ),
+    )
+    multiple_acts_at_point: bool = False
+    multiple_acts_on_parcel: bool = False
+    candidate_zone_symbols: list[str] = Field(default_factory=list)
+    sampled_points: int = Field(default=0, ge=0)
+    failed_points: int = Field(default=0, ge=0)
+    is_discovery_only: bool = True
+    source: SourceMetadata | None = None
 
 
 class ManualZoneSelection(BaseModel):
@@ -1837,6 +1959,14 @@ class AnalyzeResponse(BaseModel):
         ),
         json_schema_extra={"example": False},
     )
+    mpzp_discovery: MpzpDiscoverySection | None = Field(
+        default=None,
+        description=(
+            "Akty MPZP wskazane przez KIMPZP w punktach działki (numer uchwały, daty, "
+            "linki, zmiany) i status źródła. null — snapshot sprzed AU-004 albo "
+            "discovery się nie wykonało."
+        ),
+    )
     manual_zone_context: ManualZoneContext | None = Field(
         default=None,
         description=(
@@ -1881,4 +2011,12 @@ class ErrorResponse(BaseModel):
         default=None,
         description="Sekcja analizy, której dotyczy błąd.",
         json_schema_extra={"example": "parcel"},
+    )
+    request_id: str | None = Field(
+        default_factory=get_request_id,
+        description=(
+            "Identyfikator żądania (nagłówek X-Request-ID). Wpis w logu serwera ma ten sam "
+            "identyfikator, więc podanie go operatorowi wystarcza do znalezienia przyczyny błędu."
+        ),
+        json_schema_extra={"example": "5d0c2f3e-6f0e-4b61-9d57-0c5c1f4a1b3e"},
     )

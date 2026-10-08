@@ -299,7 +299,7 @@ def _mpzp(response: AnalyzeResponse) -> _Draft:
     if response.manual_zone_required:
         return _Draft("awaiting_input", None, True, ["MPZP_MANUAL_ZONE_REQUIRED"])
     if not zones:
-        return _Draft("unknown", None, False, ["MPZP_NOT_DETERMINED"])
+        return _mpzp_without_zones(response)
     partial_codes: list[str] = []
     if any(zone.assignment_method == "manual_user_input" for zone in zones):
         partial_codes.append("MPZP_MANUAL_ZONE")
@@ -319,6 +319,30 @@ def _mpzp(response: AnalyzeResponse) -> _Draft:
     # Źródło sekcji to źródło pierwszej strefy; strefy jednej analizy pochodzą z
     # jednego przypiętego wydania (``mpzp_as_of``).
     return _Draft(status, zones[0].source, review, codes)
+
+
+def _mpzp_without_zones(response: AnalyzeResponse) -> _Draft:
+    """Sekcja MPZP bez stref: status źródła z discovery KIMPZP (AU-004).
+
+    Brak usługi gminnej i błąd źródła mają własne statusy, a akt wskazany bez
+    strefy daje wynik częściowy — żaden z tych przypadków nie jest „brakiem planu”.
+    Zapis sprzed AU-004 (bez sekcji) pozostaje ``unknown``.
+    """
+    discovery = response.mpzp_discovery
+    if discovery is None:
+        return _Draft("unknown", None, False, ["MPZP_NOT_DETERMINED"])
+    if discovery.status == "no_coverage":
+        return _Draft("no_coverage", discovery.source, False, ["KIMPZP_NO_SERVICE_FOR_AREA"])
+    if discovery.status == "unavailable":
+        return _Draft("unavailable", None, False, ["MPZP_DISCOVERY_UNAVAILABLE"])
+    if discovery.status == "available" and discovery.acts:
+        codes = ["MPZP_ACT_WITHOUT_ZONE"]
+        if discovery.multiple_acts_at_point:
+            codes.append("MPZP_MULTIPLE_ACTS_AT_POINT")
+        elif discovery.multiple_acts_on_parcel:
+            codes.append("MPZP_MULTIPLE_ACTS_ON_PARCEL")
+        return _Draft("partial", discovery.source, True, codes)
+    return _Draft("unknown", None, False, ["MPZP_NOT_DETERMINED"])
 
 
 def _pog_status(pog: PogResult | None) -> tuple[SectionQualityStatus, list[str]]:

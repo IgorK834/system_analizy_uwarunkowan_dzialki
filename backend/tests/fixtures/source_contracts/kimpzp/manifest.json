@@ -1,0 +1,154 @@
+{
+  "files": {
+    "bielsko_biala_246101_1.0056.155_3.html": {
+      "municipality": "Bielsko-Biała",
+      "parcel_identifier": "246101_1.0056.155/3",
+      "point_epsg2180": [
+        503234.199,
+        217246.616
+      ],
+      "description": "ServiceExceptionReport (LayerNotDefined) z HTTP 200 — błąd usługi gminnej",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=503233.699%2C217246.116%2C503234.699%2C217247.116&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:45+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 421,
+      "sha256": "732bb228d6888d0c9c06f6f542102e76822bfa4cfb376c621f09575141bb5824"
+    },
+    "dygowo_321606_2.0029.362.html": {
+      "municipality": "Dygowo",
+      "parcel_identifier": "321606_2.0029.362",
+      "point_epsg2180": [
+        280455.886,
+        658555.627
+      ],
+      "description": "„brak serwisu dla wskazanego obszaru” — gmina poza KIMPZP",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=280455.386%2C658555.127%2C280456.386%2C658556.127&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:46+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 40,
+      "sha256": "b5cde1c66649d4134d08c40e53b428c6088097d1d7879cb534a8e821dacbe23c"
+    },
+    "gora_kalwaria_141801_4.0701.23_8.html": {
+      "municipality": "Góra Kalwaria",
+      "parcel_identifier": "141801_4.0701.23/8",
+      "point_epsg2180": [
+        652140.561,
+        460424.401
+      ],
+      "description": "dwa bloki „Obowiązujące MPZP” z linkami i tabelą „Zmiany tekstowe” (raport OnGeo)",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=652140.061%2C460423.901%2C652141.061%2C460424.901&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:43+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 7226,
+      "sha256": "0e370adc0bd9de0185efbef9e61b9e52a360fb5977f5f85e47fe2393c43375d7"
+    },
+    "inowroclaw_punkt_450000_550000.html": {
+      "municipality": "Inowrocław",
+      "parcel_identifier": null,
+      "point_epsg2180": [
+        450000.0,
+        550000.0
+      ],
+      "description": "GeoServer APP: numer uchwały wyłącznie w opisie dokumentuchwalajacy, data w formacie USA",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=449999.5%2C549999.5%2C450000.5%2C550000.5&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:47+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 3754,
+      "sha256": "d413b27276c6f6979ffc9994ff333f4297ae2523e5048357ef1b92cd24845797"
+    },
+    "kalety_punkt_500000_300000.html": {
+      "municipality": "Kalety",
+      "parcel_identifier": null,
+      "point_epsg2180": [
+        500000.0,
+        300000.0
+      ],
+      "description": "iGeoMap: dwa akty rastrowe w punkcie + segment „brak wyniku” drugiej usługi",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=499999.5%2C299999.5%2C500000.5%2C300000.5&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:47+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 4637,
+      "sha256": "c2a32958d1e58584c51397760ae3a5afcfb9df9f7813ab75af0ee7f659d22648"
+    },
+    "krakow_126105_9.0001.580_4.html": {
+      "municipality": "Kraków",
+      "parcel_identifier": "126105_9.0001.580/4",
+      "point_epsg2180": [
+        567007.596,
+        244240.787
+      ],
+      "description": "trzy tabele atrybutów Esri (th + wiersze) z tym samym aktem i symbolem strefy",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=567007.096%2C244240.287%2C567008.096%2C244241.287&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:44+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 3296,
+      "sha256": "75a4a7d9609c8e906f1094c511532e182238630a3f10bd07a852bdcebc061f0e"
+    },
+    "legnica_026201_1.0009.1319_4.html": {
+      "municipality": "Legnica",
+      "parcel_identifier": "026201_1.0009.1319/4",
+      "point_epsg2180": [
+        301314.058,
+        374985.747
+      ],
+      "description": "pionowe pary th/td (numer, symbol, przeznaczenie)",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=301313.558%2C374985.247%2C301314.558%2C374986.247&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:46+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 1119,
+      "sha256": "d1568526b9dbcf46e1a4030e611dca0de8e973bf7abc590d3c9dd3f0770ac402"
+    },
+    "pisz_281603_4.0001.496_5.html": {
+      "municipality": "Pisz",
+      "parcel_identifier": "281603_4.0001.496/5",
+      "point_epsg2180": [
+        685940.105,
+        643720.853
+      ],
+      "description": "QGIS Server: warstwy mpzp_meta, dod_info_*, mpzp z zagnieżdżonymi tabelami obiektów",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=685939.605%2C643720.353%2C685940.605%2C643721.353&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:45+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 3106,
+      "sha256": "c2acbf3b09456b6c0982532a85e98b6750b4a9d958d489238b6f43cedabc9b6a"
+    },
+    "ruciane_nida_281604_5.0011.107.html": {
+      "municipality": "Ruciane-Nida",
+      "parcel_identifier": "281604_5.0011.107",
+      "point_epsg2180": [
+        674213.772,
+        639801.345
+      ],
+      "description": "„<gmina>: brak wyniku dla wskazanego obszaru” — usługa bez wyniku",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=674213.272%2C639800.845%2C674214.272%2C639801.845&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:47+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 53,
+      "sha256": "3d63d0320c892c8a56ed0ad48474db3b3ac6c527fd7f6f2797829aa4e5211355"
+    },
+    "warszawa_146510_8.0502.1_3.html": {
+      "municipality": "Warszawa",
+      "parcel_identifier": "146510_8.0502.1/3",
+      "point_epsg2180": [
+        637639.122,
+        486867.68
+      ],
+      "description": "<oms_error> z HTTP 200 — błąd usługi gminnej",
+      "request_url": "https://mapy.geoportal.gov.pl/wss/ext/KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=plany_granice&query_layers=plany_granice&srs=EPSG%3A2180&bbox=637638.622%2C486867.18%2C637639.622%2C486868.18&width=2&height=2&x=1&y=1&info_format=text%2Fhtml&feature_count=5",
+      "fetched_at": "2026-10-06T16:18:46+00:00",
+      "http_status": 200,
+      "content_type": "text/html",
+      "size_bytes": 125,
+      "sha256": "886e62a9233b637425bb5f60feb7761e64291678fc876d018e82039574b11f3b"
+    }
+  }
+}

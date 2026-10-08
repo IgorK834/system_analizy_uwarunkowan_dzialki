@@ -164,7 +164,7 @@ def _no_mpzp() -> MpzpDiscoveryResult:
         candidate_zone_symbols=[],
         uchwala_url=None,
         brak_wektorow=False,
-        status="no_mpzp",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=_source("KIMPZP", confidence=0.3, manual=True),
     )
@@ -176,7 +176,7 @@ def _raster_mpzp(document_url: str) -> MpzpDiscoveryResult:
         candidate_zone_symbols=["1MN"],
         uchwala_url=document_url,
         brak_wektorow=True,
-        status="raster_only",
+        status="no_match",
         is_discovery_only=True,
         source_metadata=_source("KIMPZP", confidence=0.3, manual=True),
         warnings=["Gmina nie udostępnia wektorowych danych MPZP."],
@@ -443,7 +443,7 @@ def test_manual_zone_resume_keeps_terrain_snapshot(relief_enabled: FakeWcsClient
     assert terrain["height_difference_m"] == 3.4
     assert terrain["relief"]["status"] == "available"
 
-    resumed = client.post("/analyze/resume", json={"analysis_id": body["analysis_id"], "zone_symbol": "1MN"})
+    resumed = client.post("/analyze/resume", json={"analysis_id": body["analysis_id"], "access_token": make_analysis_token(body["analysis_id"]), "zone_symbol": "1MN"})
 
     assert resumed.status_code == 200
     result = resumed.json()

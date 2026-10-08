@@ -14,6 +14,7 @@ wersjonowanego modelu provenance opisanego w
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
@@ -23,9 +24,11 @@ from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy import select
+from sqlalchemy.exc import DataError, DBAPIError, IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.access_control import make_analysis_token
+from app.core.request_id import get_request_id
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
@@ -41,6 +44,7 @@ from app.schemas.analyze import (
     InfrastructureResult,
     ManualZoneContext,
     ManualZoneSourceDocument,
+    MpzpDiscoverySection,
     MpzpZoneResult,
     ParcelGeometryResponse,
     PogResult,
@@ -60,6 +64,7 @@ from app.services.mpzp_fetch import DocumentBlob
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX_LENGTH
+from app.shared.act_identifier import bounded_act_identifier
 from app.shared.zone_symbol import ZONE_SYMBOL_RULES_VERSION
 from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.section_quality import (
@@ -82,6 +87,71 @@ MANUAL_ZONE_NOTICE_NO_DOCUMENT = (
     " Dokumentu uchwały nie udało się przypiąć przy wstrzymaniu analizy — "
     "parametry strefy nie zostaną odczytane automatycznie."
 )
+
+
+PERSISTENCE_FAILED_MESSAGE = (
+    "Nie udało się zapisać wyniku analizy. Podaj kod zgłoszenia operatorowi."
+)
+_STATEMENT_TARGET = re.compile(r"^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+\"?(\w+)\"?", re.IGNORECASE)
+
+
+class PersistenceError(Exception):
+    """Baza odrzuciła zapis wyniku analizy (błąd danych albo naruszone ograniczenie).
+
+    Odpowiada za to dane lub schemat, a nie żądanie klienta ani zewnętrzne źródło, więc
+    warstwa HTTP zamienia go na ``503`` z kodem ``PERSISTENCE_FAILED`` — nigdy na surowe ``500``.
+    Wyjątek niesie wyłącznie bezpieczny kontekst (typ błędu sterownika, kod SQLSTATE, tabelę),
+    bez wartości parametrów, które mogą zawierać geometrię działki.
+    """
+
+    def __init__(
+        self,
+        message: str = PERSISTENCE_FAILED_MESSAGE,
+        *,
+        operation: str = "save_analysis",
+        error_type: str = "unknown",
+        sqlstate: str | None = None,
+        table: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.operation = operation
+        self.error_type = error_type
+        self.sqlstate = sqlstate
+        self.table = table
+
+
+def persistence_error_from(
+    exc: DBAPIError, *, operation: str, **context: object
+) -> PersistenceError:
+    """Loguje pełny kontekst błędu zapisu (z ``request_id``) i zwraca ``PersistenceError``.
+
+    Do logu trafiają: operacja, typ wyjątku SQLAlchemy i sterownika (np. ``DataError`` /
+    ``StringDataRightTruncation``), SQLSTATE, komunikat sterownika (np. ``value too long for
+    type character varying(1000)``) i tabela z instrukcji SQL. Nie logujemy parametrów
+    instrukcji ani śladu stosu z ``str(exc)`` — zawierają one wartości zapisywanych pól.
+    """
+    orig = exc.orig
+    diagnostics = getattr(orig, "diag", None)
+    sqlstate = getattr(orig, "pgcode", None)
+    driver_message = getattr(diagnostics, "message_primary", None) or ""
+    match = _STATEMENT_TARGET.match(exc.statement or "")
+    table = match.group(1) if match else None
+    error_type = type(orig).__name__ if orig is not None else type(exc).__name__
+    logger.error(
+        "persistence_failed request_id=%s operation=%s error=%s driver_error=%s sqlstate=%s "
+        "table=%s driver_message=%r %s",
+        get_request_id() or "-",
+        operation,
+        type(exc).__name__,
+        error_type,
+        sqlstate,
+        table,
+        driver_message,
+        " ".join(f"{key}={value}" for key, value in sorted(context.items())),
+    )
+    return PersistenceError(
+        operation=operation, error_type=error_type, sqlstate=sqlstate, table=table
+    )
 
 
 @dataclass(frozen=True)
@@ -138,8 +208,20 @@ def get_or_create_parcel(
         geometry=from_shape(multi_geometry, srid=2180),
         area_sqm=geometry.area,
     )
-    db.add(parcel)
-    db.flush()
+    try:
+        # Savepoint: równoległy zapis tej samej nowej działki (inny worker, wyłączony single-flight,
+        # przekroczony limit blokady) łamie unikalność ``parcel_identifier`` — wtedy używamy wiersza
+        # zwycięzcy zamiast kończyć całą analizę błędem zapisu.
+        with db.begin_nested():
+            db.add(parcel)
+            db.flush()
+    except IntegrityError:
+        concurrent = db.execute(
+            select(Parcel).where(Parcel.parcel_identifier == parcel_identifier)
+        ).scalar_one_or_none()
+        if concurrent is None:
+            raise
+        return concurrent
     return parcel
 
 
@@ -239,7 +321,9 @@ def save_analysis(
     transakcji — resume parsuje wyłącznie ten artefakt.
 
     Jakikolwiek błąd sekcji wycofuje całą transakcję i jest propagowany do
-    wywołującego, który odpowiada za mapowanie go na odpowiedź HTTP.
+    wywołującego, który odpowiada za mapowanie go na odpowiedź HTTP. Błędy danych i
+    ograniczeń bazy (``DataError``/``IntegrityError``) są zamieniane na ``PersistenceError``
+    z pełnym kontekstem w logu (``request_id``), który warstwa HTTP mapuje na 503.
     """
     try:
         parcel = get_or_create_parcel(db, parcel_identifier, parcel_geometry)
@@ -272,6 +356,11 @@ def save_analysis(
                 [section.model_dump(mode="json") for section in result.risk_sections]
                 or None
             ),
+            mpzp_discovery=(
+                result.mpzp_discovery.model_dump(mode="json")
+                if result.mpzp_discovery is not None
+                else None
+            ),
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
@@ -289,8 +378,8 @@ def save_analysis(
                 analysis.id,
                 pending_document,
                 requested_url=pending_uchwala_url,
-                planning_act_identifier=(
-                    pending_plan_id or f"mpzp-document:{pending_uchwala_url}"
+                planning_act_identifier=bounded_act_identifier(
+                    pending_plan_id, pending_uchwala_url
                 ),
             )
 
@@ -421,6 +510,16 @@ def save_analysis(
         db.commit()
         db.refresh(analysis)
         return analysis
+    except (DataError, IntegrityError) as exc:
+        # AU-001: błąd danych (np. za długa wartość) albo naruszone ograniczenie nie jest błędem
+        # serwera — wycofujemy transakcję i zgłaszamy kontrolowany błąd zapisu (HTTP 503).
+        db.rollback()
+        raise persistence_error_from(
+            exc,
+            operation="save_analysis",
+            parcel_identifier=parcel_identifier,
+            analysis_status=database_status or result.status,
+        ) from exc
     except Exception:
         db.rollback()
         raise
@@ -587,8 +686,9 @@ def add_mpzp_zone_snapshot(
                 MpzpParameter(
                     mpzp_zone_id=zone_record.id,
                     parameter_name=parameter.name,
+                    # Kolumna ``ClippedString(255)`` przycina za długą wartość przy zapisie.
                     normalized_value=(
-                        str(parameter.normalized_value)[:255]
+                        str(parameter.normalized_value)
                         if parameter.normalized_value is not None
                         else None
                     ),
@@ -759,6 +859,7 @@ def build_analyze_response_from_analysis(
         analyzed_at=loaded.analyzed_at,
         parcel=parcel_response,
         mpzp_zones=zones,
+        mpzp_discovery=mpzp_discovery_from_snapshot(loaded.mpzp_discovery),
         pog=pog,
         infrastructure=infrastructure,
         utilities_preview=(
@@ -784,6 +885,13 @@ def build_analyze_response_from_analysis(
             )
         }
     )
+
+
+def mpzp_discovery_from_snapshot(snapshot: dict | None) -> MpzpDiscoverySection | None:
+    """Sekcja discovery MPZP z zapisu; ``NULL`` (zapis sprzed AU-004) → brak sekcji."""
+    if snapshot is None:
+        return None
+    return MpzpDiscoverySection.model_validate(snapshot)
 
 
 def _source_record_data(

@@ -1,0 +1,1 @@
+error:	Powierzchnia poligonu (237428.842506199) większa niż 100000 m2

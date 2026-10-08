@@ -63,6 +63,25 @@ def verify_analysis_token(analysis_id: int, token: str | None) -> bool:
     )
 
 
+ANALYSIS_ACCESS_DENIED_DETAIL = "Brak dostępu do tej analizy."
+"""Jedyna treść odpowiedzi 403: identyczna dla analizy istniejącej i nieistniejącej."""
+
+ANALYSIS_TOKEN_HEADER = "X-Analysis-Token"
+
+
+def ensure_analysis_access(analysis_id: int, *presented: str | None) -> None:
+    """403, gdy żaden z przedstawionych tokenów nie pasuje do identyfikatora analizy.
+
+    Wszystkie kandydaty są weryfikowane bez wcześniejszego wyjścia, a treść błędu
+    jest stała — brak tokenu, token błędny i token innej analizy wyglądają tak samo.
+    """
+    accepted = False
+    for token in presented:
+        accepted = verify_analysis_token(analysis_id, token) or accepted
+    if not accepted:
+        raise HTTPException(status_code=403, detail=ANALYSIS_ACCESS_DENIED_DETAIL)
+
+
 def require_analysis_token(
     analysis_id: Annotated[int, Path(gt=0)],
     access_token: Annotated[
@@ -75,8 +94,7 @@ def require_analysis_token(
     Sprawdzenie poprzedza odczyt bazy, więc odpowiedź nie zdradza, czy analiza o
     danym identyfikatorze istnieje.
     """
-    if not verify_analysis_token(analysis_id, access_token):
-        raise HTTPException(status_code=403, detail="Brak dostępu do tej analizy.")
+    ensure_analysis_access(analysis_id, access_token)
 
 
 def _admin_keys() -> dict[str, str]:

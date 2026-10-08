@@ -26,6 +26,12 @@ Kontrakt usługi potwierdzono realnymi zapytaniami 2026-07-30 (fixtures
 Zapytanie ``GetMinMaxByPolygon`` przyjmuje pełny, wielowierzchołkowy WKT działki
 (sprawdzone na realnej działce o 1,5 kB WKT) oraz ``MULTIPOLYGON``, więc
 geometrii nie trzeba upraszczać.
+
+Adres rzeczywistego zapytania zawiera cały wielokąt (dla 76 wierzchołków ok. 2,9 kB, dla
+134 wierzchołków ok. 4,9 kB), więc nie nadaje się na ``SourceMetadata.source_url``: trafia
+do bazy, raportu i pakietu audytowego. Provenance zapisuje adres bazowy usługi i skróconą
+informację o zapytaniu (``polygon_sha256``, ``vertex_count``) — wystarcza do ustalenia, o jaką
+geometrię pytano, bez przenoszenia jej. Pełny adres jest tylko w logu na poziomie DEBUG.
 """
 
 from __future__ import annotations
@@ -37,6 +43,7 @@ from datetime import datetime, timezone
 from typing import Final
 
 import httpx
+import shapely
 from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
@@ -140,17 +147,23 @@ async def fetch_terrain_extremes(
     wyjątku. Timeout, błąd HTTP, błąd zgłoszony przez usługę w polu ``error``
     oraz odpowiedź bez wysokości podnoszą ``NmtServiceUnavailableError``.
     """
+    polygon_wkt = parcel_geometry.wkt
     params = {
         "request": "GetMinMaxByPolygon",
-        "polygon": parcel_geometry.wkt,
+        "polygon": polygon_wkt,
     }
+    source_url = _provenance_url(parcel_geometry, polygon_wkt)
+    logger.debug(
+        "NMT GetMinMaxByPolygon pełny adres zapytania: %s",
+        httpx.URL(settings.nmt_base_url, params=params),
+    )
 
     if client is not None:
-        response_text, source_url = await _fetch_nmt_response_text(client, params)
+        response_text = await _fetch_nmt_response_text(client, params, source_url)
     else:
         async with httpx.AsyncClient() as owned_client:
-            response_text, source_url = await _fetch_nmt_response_text(
-                owned_client, params
+            response_text = await _fetch_nmt_response_text(
+                owned_client, params, source_url
             )
 
     fetched_at = datetime.now(timezone.utc)
@@ -159,11 +172,30 @@ async def fetch_terrain_extremes(
     )
 
 
+def _provenance_url(parcel_geometry: BaseGeometry, polygon_wkt: str) -> str:
+    """Adres bazowy usługi ze skróconą informacją o zapytaniu zamiast pełnego wielokąta.
+
+    ``polygon_sha256`` to skrót WKT wysłanego do usługi, a ``vertex_count`` liczba jego
+    współrzędnych (z powtórzonym punktem zamykającym pierścień) — długość adresu nie zależy
+    od złożoności geometrii.
+    """
+    return str(
+        httpx.URL(
+            settings.nmt_base_url,
+            params={
+                "request": "GetMinMaxByPolygon",
+                "polygon_sha256": hashlib.sha256(polygon_wkt.encode("utf-8")).hexdigest(),
+                "vertex_count": str(shapely.get_num_coordinates(parcel_geometry)),
+            },
+        )
+    )
+
+
 async def _fetch_nmt_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
-) -> tuple[str, str]:
-    request_url = str(httpx.URL(settings.nmt_base_url, params=params))
+    request_url: str,
+) -> str:
     attempted_at = datetime.now(timezone.utc)
     try:
         response = await client.get(
@@ -179,8 +211,9 @@ async def _fetch_nmt_response_text(
             source_metadata=_failure_source(request_url, attempted_at, None),
         ) from exc
     except httpx.HTTPStatusError as exc:
+        # Komunikat wyjątku httpx zawiera pełny adres z wielokątem działki — nie przenosimy go dalej.
         raise NmtServiceUnavailableError(
-            f"Usługa NMT zwróciła błąd: {exc}",
+            f"Usługa NMT zwróciła błąd HTTP {exc.response.status_code}.",
             reason_code=REASON_HTTP_ERROR,
             source_metadata=_failure_source(
                 request_url, attempted_at, exc.response.status_code
@@ -188,12 +221,12 @@ async def _fetch_nmt_response_text(
         ) from exc
     except httpx.HTTPError as exc:
         raise NmtServiceUnavailableError(
-            f"Usługa NMT zwróciła błąd: {exc}",
+            f"Usługa NMT zwróciła błąd transportu ({type(exc).__name__}).",
             reason_code=REASON_HTTP_ERROR,
             source_metadata=_failure_source(request_url, attempted_at, None),
         ) from exc
 
-    return response.text, str(response.url)
+    return response.text
 
 
 def _failure_source(

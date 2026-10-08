@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.rate_limit import rate_limit
+from app.core.settings import settings
+
+from app.schemas.analyze import ErrorResponse
 from app.schemas.geocode import GeocodeResponse, GeocodeSuggestionResponse
 from app.services.geocoding import (
     GeocodingServiceUnavailableError,
@@ -10,10 +14,15 @@ from app.services.geocoding import (
 
 router = APIRouter(prefix="/geocode", tags=["geocode"])
 
+# Każda sugestia odpytuje zewnętrzną usługę geokodowania (AU-006).
+_geocode_limit = rate_limit(settings.rate_limit_geocode_per_minute)
+
 
 @router.get(
     "/suggest",
     response_model=GeocodeResponse,
+    responses={429: {"model": ErrorResponse}},
+    dependencies=[Depends(_geocode_limit)],
     description=(
         "Zwraca listę sugestii adresowych z punktami w EPSG:2180. Sugestie mogą "
         "być użyte jako wejście do analizy działki. Pusty wynik zwraca status "

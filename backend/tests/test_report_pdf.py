@@ -539,7 +539,7 @@ def test_report_after_real_resume_contains_manual_wms_and_parser_warnings() -> N
     ) as parse_mock:
         resume_response = client.post(
             "/analyze/resume",
-            json={"analysis_id": analysis_id, "zone_symbol": "230_U"},
+            json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "230_U"},
         )
 
     assert resume_response.status_code == 200
@@ -728,7 +728,7 @@ def test_resume_refreshes_frozen_map_snapshot() -> None:
         new_callable=AsyncMock,
         return_value=None,
     ):
-        resumed = client.post("/analyze/resume", json={"analysis_id": analysis_id, "zone_symbol": "7MN"})
+        resumed = client.post("/analyze/resume", json={"analysis_id": analysis_id, "access_token": make_analysis_token(analysis_id), "zone_symbol": "7MN"})
     assert resumed.status_code == 200, resumed.text
     after = _stored_snapshot(analysis_id)
     mpzp_before = next(item for item in before["maps"] if item["id"] == "mpzp")

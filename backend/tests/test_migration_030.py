@@ -25,7 +25,9 @@ def test_migration_follows_head_029_and_is_additive() -> None:
     assert 'down_revision: Union[str, None] = "029_mpzp_llm_extractions"' in migration
     assert "UPDATE" not in migration.split("def upgrade()", 1)[1].split("def downgrade()", 1)[0].upper()
     script = ScriptDirectory.from_config(Config(str(VERSIONS.parents[1] / "alembic.ini")))
-    assert script.get_heads() == ["030_mpzp_llm_usage"]
+    # Kolejne migracje dołączają się po 030 (031: AU-001) — test pilnuje łańcucha, nie bieżącego head.
+    chain = [revision.revision for revision in script.walk_revisions("base", "heads")]
+    assert chain[chain.index("030_mpzp_llm_usage") :][:2] == ["030_mpzp_llm_usage", "029_mpzp_llm_extractions"]
     assert all("mpzp_llm_usage" not in path.read_text(encoding="utf-8")
                for path in VERSIONS.glob("0*.py") if path.name < "030")
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, timezone
 from unittest.mock import patch
 
@@ -5,8 +6,10 @@ import pytest
 from shapely.geometry import box
 from sqlalchemy import delete, func, select, text
 
+from app.core.request_id import request_id_var
 from app.db.session import SessionLocal
 from app.models.analysis import Analysis
+from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
 from app.models.mpzp_parameter import MpzpParameter
 from app.models.mpzp_zone import MpzpZone
@@ -31,7 +34,13 @@ from app.schemas.analyze import (
 )
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextResult, ContextSectionResult
-from app.services.persistence import build_analyze_response_from_analysis, save_analysis
+from app.services.persistence import (
+    PersistenceError,
+    build_analyze_response_from_analysis,
+    save_analysis,
+)
+from app.shared.act_identifier import bounded_act_identifier
+from tests.mpzp_fixtures import document_blob
 from app.services.report import (
     _build_report_context,
     _render_report_html,
@@ -671,3 +680,246 @@ def test_save_analysis_rolls_back_every_table_when_risk_insert_fails(
             )
 
     assert _table_counts() == before
+
+
+# --- AU-001: długie adresy źródeł, przycinanie etykiet i kontrolowany błąd zapisu -------------
+
+_NMT_PREFIX = "https://services.gugik.gov.pl/nmt/?request=GetMinMaxByPolygon&polygon="
+
+
+def _url_of_length(length: int, prefix: str = _NMT_PREFIX) -> str:
+    return prefix + "6" * (length - len(prefix))
+
+
+def test_long_source_urls_are_stored_in_full_and_read_back_unchanged() -> None:
+    """Adres 2874 i 4901 znaków (jak NMT dla 76 i ~130 wierzchołków) przechodzi zapis i odczyt."""
+    nmt_url, mpzp_url = _url_of_length(2874), _url_of_length(4901, "https://wfs.example.test/?filter=")
+    response = _rich_response()
+    response = response.model_copy(
+        update={
+            "mpzp_zones": [
+                response.mpzp_zones[0].model_copy(
+                    update={"source": _source("MPZP_BIP", mpzp_url, confidence=0.7)}
+                )
+            ],
+            "risks": [
+                response.risks[0].model_copy(update={"source": _source("ISOK", nmt_url)})
+            ],
+            "pog": response.pog.model_copy(update={"source": _source("POG", mpzp_url)}),
+            "infrastructure": [
+                response.infrastructure[0].model_copy(update={"source": _source("KIUT", nmt_url)})
+            ],
+            "sources": [*response.sources, _source("NMT", nmt_url)],
+        }
+    )
+
+    with SessionLocal() as db:
+        analysis_id = save_analysis(
+            response, f"{_PARCEL_PREFIX}RICH", box(500000, 200000, 500100, 200100), db
+        ).id
+
+    with SessionLocal() as db:
+        stored = {
+            record.source_name: record.source_url
+            for record in db.scalars(select(SourceRecord).where(SourceRecord.analysis_id == analysis_id))
+        }
+        assert stored["NMT"] == nmt_url and len(stored["NMT"]) == 2874
+        assert db.scalar(select(MpzpZone.source_url).where(MpzpZone.analysis_id == analysis_id)) == mpzp_url
+        assert db.scalar(select(Risk.source_url).where(Risk.analysis_id == analysis_id)) == nmt_url
+        assert db.scalar(select(PogData.source_url).where(PogData.analysis_id == analysis_id)) == mpzp_url
+        assert (
+            db.scalar(select(Infrastructure.source_url).where(Infrastructure.analysis_id == analysis_id))
+            == nmt_url
+        )
+        reread = build_analyze_response_from_analysis(db.get(Analysis, analysis_id), db)
+    assert {source.source_url for source in reread.sources if source.source_name == "NMT"} == {nmt_url}
+    assert reread.mpzp_zones[0].source.source_url == mpzp_url
+    assert reread.risks[0].source.source_url == nmt_url
+
+
+def test_external_labels_are_clipped_to_the_column_instead_of_failing_the_save(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    long_name, long_number = "Źródło " * 40, "XLII/" * 100
+    response = _rich_response()
+    response = response.model_copy(
+        update={
+            "pog": response.pog.model_copy(update={"uchwala_nr": long_number}),
+            "sources": [*response.sources, _source(long_name, "https://example.test/x")],
+        }
+    )
+
+    with caplog.at_level(logging.WARNING, logger="app.models.types"):
+        with SessionLocal() as db:
+            analysis_id = save_analysis(
+                response, f"{_PARCEL_PREFIX}RICH", box(500000, 200000, 500100, 200100), db
+            ).id
+
+    with SessionLocal() as db:
+        number = db.scalar(select(PogData.uchwala_nr).where(PogData.analysis_id == analysis_id))
+        names = set(db.scalars(select(SourceRecord.source_name).where(SourceRecord.analysis_id == analysis_id)))
+    assert number == long_number[:119] + "…" and len(number) == 120
+    assert long_name[:119] + "…" in names
+    assert "text_clipped max_len=120" in caplog.text
+    assert "Źródło" not in caplog.text  # w logu tylko długości, nigdy wartość
+
+
+def test_pending_document_keeps_long_urls_and_clips_headers_from_the_remote_server() -> None:
+    from app.models.versioned import PlanningAct
+    url = _url_of_length(3500, "https://bip.example.gov.pl/dokument?plan=")
+    blob = document_blob(b"%PDF-1.7 test", url)
+    blob = blob.__class__(
+        content=blob.content,
+        media_type="application/pdf; " + "x" * 200,
+        filename="uchwała " + "y" * 600,
+        source_metadata=blob.source_metadata,
+    )
+
+    with SessionLocal() as db:
+        analysis_id = save_analysis(
+            _minimal_response(),
+            f"{_PARCEL_PREFIX}PENDING",
+            box(500000, 200000, 500100, 200100),
+            db,
+            database_status="waiting_for_zone_symbol",
+            pending_uchwala_url=url,
+            pending_plan_id="AU001_PLAN_" + "p" * 300,
+            pending_document=blob,
+        ).id
+
+    with SessionLocal() as db:
+        analysis = db.get(Analysis, analysis_id)
+        pending = db.scalar(
+            select(AnalysisPendingDocument).where(AnalysisPendingDocument.analysis_id == analysis_id)
+        )
+        assert analysis.pending_uchwala_url == url
+        assert len(analysis.pending_plan_id) == 120 and analysis.pending_plan_id.endswith("…")
+        assert pending.requested_url == url and pending.final_url == url
+        assert len(pending.media_type) == 120 and len(pending.filename) == 500
+        # Identyfikator aktu z długiego planu jest skracany deterministycznie (klucz unikalny, bez przycinania).
+        act_identifier = bounded_act_identifier("AU001_PLAN_" + "p" * 300, url)
+        assert len(act_identifier) <= 200 and "#" in act_identifier
+        assert db.scalar(select(PlanningAct.id).where(PlanningAct.act_identifier == act_identifier)) is not None
+
+
+@pytest.fixture
+def request_id():
+    token = request_id_var.set("req-au001-1234")
+    yield "req-au001-1234"
+    request_id_var.reset(token)
+
+
+def test_data_error_becomes_persistence_error_with_full_context_in_the_log(
+    request_id: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    bad_status = "s" * 31  # analyses.status to VARCHAR(30): wartość nadawana przez aplikację
+
+    with caplog.at_level(logging.ERROR, logger="app.services.persistence"):
+        with SessionLocal() as db:
+            with pytest.raises(PersistenceError) as raised:
+                save_analysis(
+                    _rich_response(),
+                    f"{_PARCEL_PREFIX}DATAERR",
+                    box(500000, 200000, 500100, 200100),
+                    db,
+                    database_status=bad_status,
+                )
+            # Transakcja została wycofana, a sesja nadaje się do dalszego użycia.
+            assert db.scalar(text("SELECT 1")) == 1
+            assert (
+                db.scalar(select(func.count()).select_from(Parcel).where(
+                    Parcel.parcel_identifier == f"{_PARCEL_PREFIX}DATAERR"))
+                == 0
+            )
+
+    error = raised.value
+    assert (error.operation, error.error_type, error.sqlstate, error.table) == (
+        "save_analysis", "StringDataRightTruncation", "22001", "analyses",
+    )
+    log = caplog.text
+    assert "persistence_failed" in log and f"request_id={request_id}" in log
+    assert "driver_error=StringDataRightTruncation" in log and "sqlstate=22001" in log
+    assert "table=analyses" in log and "value too long for type character varying(30)" in log
+    assert f"parcel_identifier={_PARCEL_PREFIX}DATAERR" in log
+    # Parametry nieudanej instrukcji (ostrzeżenia, snapshoty, adresy źródeł) nie trafiają do logu.
+    for value in ("Wynik ISOK wymaga sprawdzenia.", "uldk.example.test", "zabudowa mieszkaniowa"):
+        assert value not in log
+
+
+def test_integrity_error_becomes_persistence_error_too(request_id: str, caplog) -> None:
+    def add_invalid_zone(db, analysis_id, zone):
+        db.add(MpzpZone(analysis_id=analysis_id, zone_symbol="X", assignment_method="nieznana"))
+        db.flush()
+
+    response = _rich_response()
+    with caplog.at_level(logging.ERROR, logger="app.services.persistence"):
+        with patch("app.services.persistence.add_mpzp_zone_snapshot", side_effect=add_invalid_zone):
+            with SessionLocal() as db:
+                with pytest.raises(PersistenceError) as raised:
+                    save_analysis(response, f"{_PARCEL_PREFIX}INTEGRITY", box(500000, 200000, 500100, 200100), db)
+
+    assert (raised.value.error_type, raised.value.sqlstate, raised.value.table) == (
+        "CheckViolation", "23514", "mpzp_zones",
+    )
+    assert f"request_id={request_id}" in caplog.text
+
+
+def test_unrelated_exceptions_are_not_swallowed_into_persistence_error() -> None:
+    with patch("app.services.persistence.add_mpzp_zone_snapshot", side_effect=RuntimeError("bug")):
+        with SessionLocal() as db:
+            with pytest.raises(RuntimeError, match="bug"):
+                save_analysis(
+                    _rich_response(), f"{_PARCEL_PREFIX}BUG", box(500000, 200000, 500100, 200100), db
+                )
+            assert db.scalar(text("SELECT 1")) == 1  # rollback także tutaj
+
+
+# --- AU-007: równoległy pierwszy zapis tej samej działki --------------------------------------
+
+
+def test_get_or_create_parcel_uses_the_row_of_a_concurrent_writer() -> None:
+    """Dwie sesje tworzą tę samą nową działkę: przegrana dostaje wiersz zwycięzcy, nie IntegrityError."""
+    import threading
+
+    from shapely.geometry import box
+    from sqlalchemy import delete, select
+
+    from app.db.session import SessionLocal
+    from app.models.parcel import Parcel
+    from app.services.persistence import get_or_create_parcel
+
+    identifier = "AU007_RACE_146510_8.0502.1/3"
+    geometry = box(500000, 200000, 500100, 200100)
+    result: dict[str, int] = {}
+
+    def cleanup() -> None:
+        with SessionLocal() as db:
+            db.execute(delete(Parcel).where(Parcel.parcel_identifier == identifier))
+            db.commit()
+
+    cleanup()
+    try:
+        winner_db = SessionLocal()
+        winner = get_or_create_parcel(winner_db, identifier, geometry)  # flush bez commit: wiersz „w locie”
+        winner_id = winner.id
+
+        def loser() -> None:
+            with SessionLocal() as db:
+                parcel = get_or_create_parcel(db, identifier, geometry)  # czeka na unikalny indeks
+                result["id"] = parcel.id
+                db.commit()
+
+        thread = threading.Thread(target=loser)
+        thread.start()
+        thread.join(timeout=0.5)
+        assert thread.is_alive()  # zablokowany przez niezatwierdzony wiersz zwycięzcy
+        winner_db.commit()
+        winner_db.close()
+        thread.join(timeout=10)
+
+        assert not thread.is_alive()
+        assert result["id"] == winner_id
+        with SessionLocal() as db:
+            assert len(db.scalars(select(Parcel).where(Parcel.parcel_identifier == identifier)).all()) == 1
+    finally:
+        cleanup()

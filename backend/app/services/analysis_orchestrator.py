@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 from app.core.logging import log_analysis_event
 from app.core.network_rules import load_network_rules
 from app.core.settings import settings
+from app.models.analysis import Analysis
 from app.schemas.analyze import (
     AddressAnalyzeRequest,
     AnalyzeResponse,
@@ -41,7 +42,11 @@ from app.schemas.analyze import (
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata, warnings_from_domain_messages
-from app.services.cache import get_cached_analysis, should_refresh_analysis
+from app.services.cache import (
+    get_analysis_completed_since,
+    get_cached_analysis,
+    should_refresh_analysis,
+)
 from app.services.context import (
     ContextResult,
     ContextSectionResult,
@@ -64,13 +69,13 @@ from app.services.kiut_coverage import (
     check_kiut_coverage_for_geometry,
     unknown_kiut_coverage_result,
 )
-from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp
+from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp, discovery_section
+from app.services.singleflight import analysis_single_flight, lookup_single_flight
+from app.services.uldk import ParcelLookupResult
 from app.services.mpzp_fetch import DocumentBlob, fetch_mpzp_document
 from app.schemas.mpzp import MpzpParseResult
 from app.services.mpzp_parser import parse_mpzp_document
 from app.services.mpzp_parser_hybrid import WARNING_LLM_CANDIDATES_REJECTED, WARNING_LLM_UNAVAILABLE
-
-_LLM_DEGRADATION_CODES = frozenset({WARNING_LLM_UNAVAILABLE, WARNING_LLM_CANDIDATES_REJECTED})
 from app.services.mpzp_parser_options import build_mpzp_parser_options
 from app.modules.planning.application.llm_pipeline import BudgetTracker
 from app.modules.planning.composition import new_analysis_llm_budget
@@ -130,6 +135,7 @@ from app.modules.imports.infrastructure.repository import (
     load_pog_act_provenance,
     load_pog_release_features,
 )
+from app.shared.act_identifier import bounded_act_identifier
 from app.shared.geometry import GeometryPayload
 from app.shared.provenance import Provenance
 from app.shared.planning_status import (
@@ -141,6 +147,9 @@ from app.shared.planning_status import (
     is_official_status_code,
     resolve_pog_status,
 )
+
+
+_LLM_DEGRADATION_CODES = frozenset({WARNING_LLM_UNAVAILABLE, WARNING_LLM_CANDIDATES_REJECTED})
 
 
 async def run_analysis(
@@ -155,37 +164,93 @@ async def run_analysis(
     ``waiting_for_user_input`` jest kontraktem API, ale w bazie pozostaje
     ``waiting_for_zone_symbol``, ponieważ na nim opiera się istniejący endpoint
     ``POST /analyze/resume``.
+
+    Single-flight (AU-007): trafienie w cache wraca od razu, bez blokady. Chybienie albo
+    ``force_refresh`` wchodzi do blokady per ``parcel_identifier`` — równoległe żądania tej samej
+    działki dostają wynik jednego lidera (``force_refresh`` też, o ile wynik powstał po jego
+    żądaniu), a inny worker, który czekał na blokadę, najpierw ponownie sprawdza cache.
     """
     started = time.monotonic()
+    requested_at = datetime.now(timezone.utc)
     log_analysis_event("start", method=request.method)
 
-    lookup = await resolve_parcel(request)
+    lookup = await _resolve_parcel_shared(request)
     parcel_identifier = lookup.parcel_identifier
     # Sesja SQLAlchemy jest synchroniczna, więc każde jej użycie biegnie w wątku
     # roboczym (sekwencyjnie, nigdy równolegle) i nie blokuje pętli zdarzeń.
     cached = await asyncio.to_thread(get_cached_analysis, parcel_identifier, db)
     if not should_refresh_analysis(force_refresh, cached):
         assert cached is not None
-        response = await asyncio.to_thread(
-            build_analyze_response_from_analysis, cached, db
-        )
-        elapsed_ms = _elapsed_ms(started)
-        log_analysis_event(
-            "cache_hit",
-            cache="hit",
-            parcel_identifier=parcel_identifier,
-            analysis_id=response.analysis_id,
-            elapsed_ms=elapsed_ms,
-        )
-        log_analysis_event(
-            "complete",
-            parcel_identifier=parcel_identifier,
-            analysis_id=response.analysis_id,
-            status=response.status,
-            elapsed_ms=elapsed_ms,
-        )
-        return response
+        return await _cached_response(cached, db, parcel_identifier, started)
 
+    if not settings.analysis_singleflight_enabled:
+        return await _analyze_uncached(lookup, db, started)
+
+    async def reuse() -> AnalyzeResponse | None:
+        # Po zdjęciu blokady (także tej między workerami) wynik mógł już zostać zapisany.
+        if force_refresh:
+            row = await asyncio.to_thread(
+                get_analysis_completed_since, parcel_identifier, db, requested_at
+            )
+        else:
+            row = await asyncio.to_thread(get_cached_analysis, parcel_identifier, db)
+        if row is None:
+            return None
+        return await _cached_response(row, db, parcel_identifier, started)
+
+    def accept(shared: AnalyzeResponse) -> bool:
+        # ``force_refresh`` nie może dostać wyniku starszego niż jego żądanie (np. trafienia w cache lidera).
+        return not force_refresh or shared.analyzed_at >= requested_at
+
+    return await analysis_single_flight.run(
+        parcel_identifier,
+        lambda: _analyze_uncached(lookup, db, started),
+        reuse=reuse,
+        accept=accept,
+    )
+
+
+async def _resolve_parcel_shared(
+    request: MapAnalyzeRequest | AddressAnalyzeRequest | ParcelIdAnalyzeRequest,
+) -> ParcelLookupResult:
+    """Identyfikacja działki; identyczne równoległe żądania dzielą jedno zapytanie do ULDK."""
+    if not settings.analysis_singleflight_enabled:
+        return await resolve_parcel(request)
+    return await lookup_single_flight.run(
+        request.model_dump_json(),
+        lambda: resolve_parcel(request),
+        share_errors=True,
+        lock_across_processes=False,
+    )
+
+
+async def _cached_response(
+    cached: Analysis, db: Session, parcel_identifier: str, started: float
+) -> AnalyzeResponse:
+    response = await asyncio.to_thread(build_analyze_response_from_analysis, cached, db)
+    elapsed_ms = _elapsed_ms(started)
+    log_analysis_event(
+        "cache_hit",
+        cache="hit",
+        parcel_identifier=parcel_identifier,
+        analysis_id=response.analysis_id,
+        elapsed_ms=elapsed_ms,
+    )
+    log_analysis_event(
+        "complete",
+        parcel_identifier=parcel_identifier,
+        analysis_id=response.analysis_id,
+        status=response.status,
+        elapsed_ms=elapsed_ms,
+    )
+    return response
+
+
+async def _analyze_uncached(
+    lookup: ParcelLookupResult, db: Session, started: float
+) -> AnalyzeResponse:
+    """Pełna analiza po chybieniu cache: GIS, kontekst, MPZP, POG, ocena jakości i zapis."""
+    parcel_identifier = lookup.parcel_identifier
     log_analysis_event(
         "cache_miss",
         cache="miss",
@@ -263,6 +328,7 @@ async def run_analysis(
     warnings.extend(vector_warnings)
     discovery, discovery_warnings = await _discover_mpzp_safely(parcel_geometry)
     warnings.extend(discovery_warnings)
+    mpzp_discovery = discovery_section(discovery)
     pog, ouz_status, pog_warnings, pog_sources = await _analyze_pog_best_effort(
         parcel_geometry,
         lookup.teryt,
@@ -306,6 +372,7 @@ async def run_analysis(
             analyzed_at=datetime.now(timezone.utc),
             parcel=parcel_response,
             mpzp_zones=[],
+            mpzp_discovery=mpzp_discovery,
             pog=pog,
             infrastructure=infrastructure,
             utilities_preview=utilities_preview,
@@ -411,6 +478,7 @@ async def run_analysis(
         analyzed_at=datetime.now(timezone.utc),
         parcel=parcel_response,
         mpzp_zones=mpzp_zones,
+        mpzp_discovery=mpzp_discovery,
         pog=pog,
         infrastructure=infrastructure,
         utilities_preview=utilities_preview,
@@ -585,7 +653,16 @@ async def _discover_mpzp_safely(
                 source_name="mpzp",
             )
         ]
-    return discovery, warnings_from_domain_messages("mpzp", discovery.warnings)
+    coded = [
+        WarningMessage(
+            code=issue.code,
+            message=issue.message,
+            severity=issue.severity,
+            source_name="mpzp",
+        )
+        for issue in discovery.issues
+    ]
+    return discovery, [*coded, *warnings_from_domain_messages("mpzp", discovery.warnings)]
 
 
 def _assess_mpzp_vectors_safely(
@@ -842,7 +919,7 @@ async def _analyze_mpzp_best_effort(
     list[SourceMetadata],
     str | None,
 ]:
-    if discovery is None or discovery.status == "no_mpzp":
+    if discovery is None or discovery.status == "no_match":
         return [], [
             WarningMessage(
                 code="MPZP_NOT_FOUND",
@@ -854,13 +931,29 @@ async def _analyze_mpzp_best_effort(
                 source_name="mpzp",
             )
         ], [], None
+    if discovery.status in {"no_coverage", "unavailable", "unknown"}:
+        # Brak usługi, błąd źródła i nierozpoznana odpowiedź mają własne kody
+        # z discovery — to nie jest „nie znaleziono planu”.
+        return [], [], [], None
+    if discovery.multiple_acts_at_point or discovery.multiple_acts_on_parcel:
+        # AU-004: kilka aktów w punkcie/na działce — bez cichego wyboru dokumentu;
+        # rozstrzygnięcie należy do AU-101. Akty są w ``mpzp_discovery``.
+        return [], [], [], None
     if not discovery.uchwala_url or not discovery.candidate_zone_symbols:
+        plan = f"plan {discovery.plan_id}" if discovery.plan_id else "plan bez numeru uchwały"
+        missing = (
+            "linku do tekstu uchwały ani symbolu strefy"
+            if not discovery.uchwala_url and not discovery.candidate_zone_symbols
+            else "linku do tekstu uchwały"
+            if not discovery.uchwala_url
+            else "symbolu strefy (warstwa granic planów nie zawiera stref)"
+        )
         return [], [
             WarningMessage(
                 code="MPZP_DOCUMENT_OR_SYMBOL_MISSING",
                 message=(
-                    "Discovery MPZP nie zwróciło dokumentu i kandydatów symboli "
-                    "potrzebnych do analizy best-effort."
+                    f"KIMPZP wskazało {plan}, ale nie podało {missing}. Parametry "
+                    "strefy nie zostały ustalone — sprawdź rysunek i tekst planu."
                 ),
                 severity="warning",
                 source_name="mpzp",
@@ -870,8 +963,8 @@ async def _analyze_mpzp_best_effort(
     parsed, document_source, evidence, warnings = await _parse_document_with_audit(
         discovery.uchwala_url,
         discovery.candidate_zone_symbols,
-        planning_act_identifier=(
-            discovery.plan_id or f"mpzp-document:{discovery.uchwala_url}"
+        planning_act_identifier=bounded_act_identifier(
+            discovery.plan_id, discovery.uchwala_url
         ),
         act_version=None,
         parcel_identifier=parcel_identifier,

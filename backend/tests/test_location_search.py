@@ -161,10 +161,8 @@ async def test_service_unique_ids_and_deterministic_order() -> None:
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    router_module._address_rate_limiter.reset()
     with TestClient(app) as test_client:
         yield test_client
-    router_module._address_rate_limiter.reset()
 
 
 def _install_fake(monkeypatch, candidates: list[RawAddressCandidate]) -> _FakeProvider:
@@ -373,8 +371,9 @@ def test_composition_source_info_from_catalog() -> None:
 
 def test_api_rate_limit_returns_429_with_retry_after(client, monkeypatch) -> None:
     _install_fake(monkeypatch, [])
-    monkeypatch.setattr(router_module._address_rate_limiter, "_limit", 1)
-    router_module._address_rate_limiter.reset()
+    limiter = router_module._address_search_limit.limiter
+    monkeypatch.setattr(limiter, "_limit", 1)
+    limiter.reset()
 
     first = client.get("/api/v1/search/addresses", params={"q": "marki"})
     second = client.get("/api/v1/search/addresses", params={"q": "marki"})

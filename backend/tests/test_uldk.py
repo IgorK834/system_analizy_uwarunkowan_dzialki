@@ -1,10 +1,12 @@
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
 import respx
 
+from app.core.metrics import upstream_metrics
 from app.services.uldk import (
     InvalidParcelIdentifierError,
     InvalidUldkResponseError,
@@ -12,8 +14,12 @@ from app.services.uldk import (
     ParcelNotFoundError,
     ULDK_BASE_URL,
     ULDK_MAX_RETRIES,
+    ULDK_NO_RESULTS_RETRY_DELAY_S,
+    ULDK_NOT_FOUND_MESSAGE,
+    UldkNoResultsError,
     UldkParcelResult,
     UldkServiceUnavailableError,
+    _parse_uldk_response,
     get_parcel_by_id,
     get_parcel_by_xy,
 )
@@ -376,3 +382,239 @@ async def test_get_parcel_by_id_retries_on_timeout_then_succeeds() -> None:
 
     assert route.call_count == 2
     assert result.parcel_identifier == VALID_ID
+
+
+# --- AU-002: klasyfikacja kodu statusu, ponowienie po „-1 brak wyników”, metryki ----------------
+
+FROZEN = Path(__file__).parent / "fixtures" / "source_contracts" / "uldk"
+NO_RESULTS = "-1 brak wyników\nbłędny format odpowiedzi XML\n"
+
+
+def _frozen(name: str) -> str:
+    return (FROZEN / name).read_text(encoding="utf-8")
+
+
+@pytest.fixture(autouse=True)
+def _fresh_metrics() -> None:
+    upstream_metrics.reset()
+
+
+@pytest.fixture
+def sleep_mock():
+    with patch("app.services.uldk.asyncio.sleep", new_callable=AsyncMock) as mock:
+        yield mock
+
+
+_ENTRY_POINTS = [
+    pytest.param(lambda: get_parcel_by_id("141801_4.0701.9999/9"), id="by_id"),
+    pytest.param(lambda: get_parcel_by_xy(467946.0, 781952.0), id="by_xy"),
+]
+
+
+@pytest.mark.parametrize("call", _ENTRY_POINTS)
+@pytest.mark.parametrize(
+    ("fixture", "expected", "calls"),
+    [
+        ("brak_wynikow_baltyk.txt", ParcelNotFoundError, 2),
+        ("brak_wynikow_nieistniejaca_dzialka.txt", ParcelNotFoundError, 2),
+        ("zero_bez_danych.txt", ParcelNotFoundError, 1),
+        ("odpowiedz_pusta.txt", InvalidUldkResponseError, 1),
+        ("niepoprawny_parametr.txt", InvalidUldkResponseError, 1),
+        ("blad_z_komunikatem.txt", UldkServiceUnavailableError, 1),
+    ],
+)
+@respx.mock
+async def test_frozen_uldk_responses_are_classified(
+    call, fixture: str, expected: type[Exception], calls: int, sleep_mock
+) -> None:
+    """Rzeczywiste odpowiedzi ULDK (patrz fixtures/source_contracts/uldk/README.md)."""
+    route = respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=_frozen(fixture))
+    )
+
+    with pytest.raises(expected) as raised:
+        await call()
+
+    assert type(raised.value) is not UldkNoResultsError  # ``-1`` wychodzi jako zwykłe 404
+    assert route.call_count == calls
+    if fixture.startswith("brak_wynikow"):
+        # Jedno ponowienie po ~300 ms: brak działki nie da się odróżnić od przejściowego błędu.
+        sleep_mock.assert_awaited_once_with(ULDK_NO_RESULTS_RETRY_DELAY_S)
+        assert str(raised.value) == ULDK_NOT_FOUND_MESSAGE
+    else:
+        sleep_mock.assert_not_awaited()
+
+
+@respx.mock
+async def test_frozen_valid_response_returns_the_parcel() -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text=_frozen("poprawna_146510_8.0502.1_3.txt"))
+    )
+
+    result = await get_parcel_by_id("146510_8.0502.1/3")
+
+    assert result.parcel_identifier == "146510_8.0502.1/3"
+    assert result.geometry_wkt.startswith("POLYGON((")
+
+
+def test_not_found_message_is_honest_about_a_possible_transient_source_error() -> None:
+    assert "brak działki" in ULDK_NOT_FOUND_MESSAGE
+    assert "chwilowy błąd źródła" in ULDK_NOT_FOUND_MESSAGE
+
+
+@respx.mock
+async def test_transient_no_results_is_recovered_by_the_single_retry(sleep_mock) -> None:
+    """Zaobserwowane dla istniejącej działki ``022104_2.0002.352``: pierwsze ``-1``, drugie poprawne."""
+    route = respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.Response(200, text=_frozen("brak_wynikow_nieistniejaca_dzialka.txt")),
+            httpx.Response(200, text=SAMPLE_RESPONSE),
+        ]
+    )
+
+    result = await get_parcel_by_id(VALID_ID)
+
+    assert result.parcel_identifier == VALID_ID
+    assert route.call_count == 2
+    sleep_mock.assert_awaited_once_with(ULDK_NO_RESULTS_RETRY_DELAY_S)
+    counters = upstream_metrics.snapshot()
+    assert counters["uldk.no_results.retry"] == 1
+    assert counters["uldk.no_results.recovered"] == 1
+    assert "uldk.no_results.confirmed" not in counters
+
+
+@respx.mock
+async def test_no_results_is_retried_only_once(sleep_mock) -> None:
+    route = respx.get(ULDK_BASE_URL).mock(return_value=httpx.Response(200, text=NO_RESULTS))
+
+    with pytest.raises(ParcelNotFoundError):
+        await get_parcel_by_id(VALID_ID)
+
+    assert route.call_count == 2
+    assert sleep_mock.await_count == 1
+
+
+@respx.mock
+async def test_other_minus_one_error_on_the_retry_is_service_unavailable_not_not_found(
+    sleep_mock,
+) -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.Response(200, text=NO_RESULTS),
+            httpx.Response(200, text=_frozen("blad_z_komunikatem.txt")),
+        ]
+    )
+
+    with pytest.raises(UldkServiceUnavailableError) as raised:
+        await get_parcel_by_id(VALID_ID)
+
+    assert "błąd wewnętrzny usługi powiatowej" in str(raised.value)
+
+
+@respx.mock
+async def test_other_minus_one_error_is_not_retried(sleep_mock) -> None:
+    route = respx.get(ULDK_BASE_URL).mock(
+        return_value=httpx.Response(200, text="-1 przekroczono limit zapytań\n")
+    )
+
+    with pytest.raises(UldkServiceUnavailableError):
+        await get_parcel_by_id(VALID_ID)
+
+    assert route.call_count == 1
+    sleep_mock.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "-1 brak wyników",
+        "-1 brak wyników\nkomunikat usługi",
+        "-1   BRAK WYNIKÓW  \n",
+        "\ufeff-1 brak wyników\n",
+        "-1\nbrak wyników\n",  # starsza forma: kod i komunikat w osobnych liniach
+    ],
+)
+def test_no_results_is_recognised_in_every_known_shape(text: str) -> None:
+    with pytest.raises(UldkNoResultsError) as raised:
+        _parse_uldk_response(text, "punkt")
+
+    assert isinstance(raised.value, ParcelNotFoundError)
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("0\n122101_1.0001.1234|POINT(1 2)|122101\n", InvalidUldkResponseError),
+        ("-2 coś nowego\n", InvalidUldkResponseError),
+        ("<!DOCTYPE html>\n<html>", InvalidUldkResponseError),
+        ("", InvalidUldkResponseError),
+        ("   \n\n", InvalidUldkResponseError),
+        ("-1\n", UldkServiceUnavailableError),
+    ],
+)
+def test_parser_classifies_malformed_and_unknown_codes(text: str, expected: type) -> None:
+    with pytest.raises(expected):
+        _parse_uldk_response(text, "punkt")
+
+
+@respx.mock
+async def test_metrics_count_responses_per_uldk_status_code(sleep_mock) -> None:
+    respx.get(ULDK_BASE_URL).mock(
+        side_effect=[
+            httpx.Response(200, text=SAMPLE_RESPONSE),
+            httpx.Response(200, text=NO_RESULTS),
+            httpx.Response(200, text=NO_RESULTS),
+            httpx.Response(200, text=_frozen("niepoprawny_parametr.txt")),
+            httpx.Response(200, text=""),
+        ]
+    )
+
+    await get_parcel_by_id(VALID_ID)
+    with pytest.raises(ParcelNotFoundError):
+        await get_parcel_by_id(VALID_ID)
+    with pytest.raises(InvalidUldkResponseError):
+        await get_parcel_by_id(VALID_ID)
+    with pytest.raises(InvalidUldkResponseError):
+        await get_parcel_by_id(VALID_ID)
+
+    counters = upstream_metrics.snapshot()
+    assert counters["uldk.response.0"] == 1
+    assert counters["uldk.response.-1"] == 2
+    # Tekst zamiast kodu nie może tworzyć nowej etykiety (ograniczona kardynalność).
+    assert counters["uldk.response.other"] == 1
+    assert counters["uldk.response.empty"] == 1
+    assert counters["uldk.no_results.retry"] == 1
+    assert counters["uldk.no_results.confirmed"] == 1
+    assert all(name.startswith("uldk.") for name in counters)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        httpx.ConnectError("odmowa połączenia"),
+        httpx.ReadError("zerwane połączenie"),
+        httpx.RemoteProtocolError("niepoprawna odpowiedź"),
+    ],
+)
+@respx.mock
+async def test_transport_errors_are_service_unavailable_not_a_raw_httpx_exception(
+    error: Exception, sleep_mock
+) -> None:
+    route = respx.get(ULDK_BASE_URL).mock(side_effect=error)
+
+    with pytest.raises(UldkServiceUnavailableError):
+        await get_parcel_by_xy(SAMPLE_X, SAMPLE_Y)
+
+    assert route.call_count == ULDK_MAX_RETRIES + 1
+    assert upstream_metrics.snapshot()["uldk.transport_error"] == ULDK_MAX_RETRIES + 1
+
+
+@respx.mock
+async def test_http_4xx_is_not_retried(sleep_mock) -> None:
+    route = respx.get(ULDK_BASE_URL).mock(return_value=httpx.Response(400))
+
+    with pytest.raises(UldkServiceUnavailableError):
+        await get_parcel_by_id(VALID_ID)
+
+    assert route.call_count == 1
+    assert upstream_metrics.snapshot() == {"uldk.http_4xx": 1}

@@ -41,6 +41,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.models.types import ClippedString
 
 # Dozwolone statusy weryfikacji (Human in the Loop). Trzymane w jednym miejscu i
 # wymuszane check constraintem na każdej tabeli wersji.
@@ -154,11 +155,11 @@ class SourceArtifact(Base):
     data_source_id: Mapped[int] = mapped_column(
         ForeignKey("data_sources.id"), nullable=False, index=True
     )
-    uri: Mapped[str] = mapped_column(String(1000), nullable=False)
-    media_type: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    uri: Mapped[str] = mapped_column(Text, nullable=False)
+    media_type: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
     # SHA-256 oryginalnej odpowiedzi/pliku — podstawa idempotencji importu.
     content_hash: Mapped[str] = mapped_column(String(128), nullable=False)
-    etag: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    etag: Mapped[str | None] = mapped_column(ClippedString(255), nullable=True)
     size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     fetched_at: Mapped[datetime] = _timestamp_column()
     created_at: Mapped[datetime] = _created_at()
@@ -180,7 +181,7 @@ class DataRelease(Base):
     data_source_id: Mapped[int] = mapped_column(
         ForeignKey("data_sources.id"), nullable=False, index=True
     )
-    version_label: Mapped[str] = mapped_column(String(120), nullable=False)
+    version_label: Mapped[str] = mapped_column(ClippedString(120), nullable=False)
     published_at: Mapped[datetime] = _timestamp_column()
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=sql_text("false")
@@ -302,19 +303,19 @@ class PlanningActVersion(Base, _VersionMixin):
     legacy_legal_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     # Provenance publikacji APP (BK-107): gml:identifier wersji, początek wersji
     # obiektu, okres obowiązywania z APP i URL usługi, z której ją pobrano.
-    publication_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    publication_id: Mapped[str | None] = mapped_column(ClippedString(500), nullable=True)
     version_started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     legal_valid_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     legal_valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
-    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Dokument uchwały wskazany przez źródło wersji aktu MPZP (BK-202/203).
-    document_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    object_version_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    version_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    document_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    object_version_id: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
+    version_label: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
     resolution_number: Mapped[str | None] = mapped_column(
-        String(200), nullable=True
+        ClippedString(200), nullable=True
     )
     resolution_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     name: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -363,7 +364,7 @@ class PlanningSymbol(Base):
         ForeignKey("planning_act_versions.id"), nullable=False, index=True
     )
     local_symbol: Mapped[str] = mapped_column(String(60), nullable=False)
-    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    name: Mapped[str | None] = mapped_column(ClippedString(255), nullable=True)
     normalized_category: Mapped[str | None] = mapped_column(String(120), nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
@@ -386,7 +387,7 @@ class LandUseArea(Base):
     planning_symbol_id: Mapped[int | None] = mapped_column(
         ForeignKey("planning_symbols.id"), nullable=True, index=True
     )
-    symbol: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    symbol: Mapped[str | None] = mapped_column(ClippedString(60), nullable=True)
     # Stabilne ID wydzielenia publikowane w wyniku analizy (BK-202).
     zone_identifier: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
     raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
@@ -417,12 +418,12 @@ class PlanningFeature(Base):
         ForeignKey("planning_act_versions.id"), nullable=False, index=True
     )
     feature_type: Mapped[str] = mapped_column(String(80), nullable=False)
-    feature_identifier: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    feature_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    act_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    feature_identifier: Mapped[str | None] = mapped_column(ClippedString(500), nullable=True)
+    feature_version: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
+    act_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_legal_status: Mapped[str | None] = mapped_column(Text, nullable=True)
-    symbol: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    symbol: Mapped[str | None] = mapped_column(ClippedString(80), nullable=True)
     label: Mapped[str | None] = mapped_column(Text, nullable=True)
     parameters: Mapped[Any] = mapped_column(JSONB, nullable=True)
     primary_profiles: Mapped[Any] = mapped_column(JSONB, nullable=True)
@@ -463,14 +464,14 @@ class PogFormalDocument(Base):
     )
     document_identifier: Mapped[str] = mapped_column(String(500), nullable=False)
     document_version: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    act_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    act_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
-    link: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    source_reference: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    link: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_attributes: Mapped[Any] = mapped_column(JSONB, nullable=True)
-    publication_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    publication_id: Mapped[str | None] = mapped_column(ClippedString(500), nullable=True)
     short_name: Mapped[str | None] = mapped_column(Text, nullable=True)
-    identification_number: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    identification_number: Mapped[str | None] = mapped_column(ClippedString(200), nullable=True)
     relation: Mapped[str | None] = mapped_column(String(40), nullable=True)
     document_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -512,14 +513,14 @@ class PogActMetadataRecord(Base):
     planning_act_version_id: Mapped[int] = mapped_column(
         ForeignKey("planning_act_versions.id"), nullable=False, index=True
     )
-    record_id: Mapped[str] = mapped_column(String(200), nullable=False)
-    resource_identifier: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    record_id: Mapped[str] = mapped_column(ClippedString(200), nullable=False)
+    resource_identifier: Mapped[str | None] = mapped_column(Text, nullable=True)
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
     publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     revision_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     creation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     date_stamp: Mapped[date | None] = mapped_column(Date, nullable=True)
-    metadata_url: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    metadata_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     reference_urls: Mapped[Any] = mapped_column(JSONB, nullable=True)
     record_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     response_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -740,7 +741,7 @@ class SourceDocument(Base):
     data_source_id: Mapped[int | None] = mapped_column(
         ForeignKey("data_sources.id"), nullable=True, index=True
     )
-    title: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    title: Mapped[str | None] = mapped_column(ClippedString(500), nullable=True)
     document_type: Mapped[str | None] = mapped_column(String(60), nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
@@ -765,7 +766,7 @@ class DocumentVersion(Base, _VersionMixin):
     data_release_id: Mapped[int] = mapped_column(
         ForeignKey("data_releases.id"), nullable=False, index=True
     )
-    media_type: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    media_type: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
     extraction_method: Mapped[str | None] = mapped_column(
         String(40), nullable=True
     )
@@ -816,7 +817,7 @@ class LegalUnit(Base):
         ForeignKey("document_versions.id"), nullable=False, index=True
     )
     unit_type: Mapped[str] = mapped_column(String(30), nullable=False)
-    number: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    number: Mapped[str | None] = mapped_column(ClippedString(60), nullable=True)
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("legal_units.id", ondelete="CASCADE"), nullable=True, index=True
     )

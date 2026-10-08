@@ -21,7 +21,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from geoalchemy2.shape import to_shape
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
@@ -742,6 +742,7 @@ def _mpzp_section_context(response: AnalyzeResponse) -> dict[str, Any]:
             if response.manual_zone_required and context is not None
             else None
         ),
+        "discovery": _mpzp_discovery_context(response),
         "shares_sum": _shares_sum([zone.intersection_pct for zone in response.mpzp_zones]),
         # PV3-18: oznaczenie odczytu automatycznego i komunikaty o braku danych / null — stałe teksty z jednego miejsca.
         "model_reading": {
@@ -759,6 +760,81 @@ def _mpzp_section_context(response: AnalyzeResponse) -> dict[str, Any]:
             else "Nie znaleziono ani nie sprawdzono stref MPZP przecinających działkę — "
             "nie potwierdza to braku planu."
         ),
+    }
+
+
+_DISCOVERY_STATUS_LABELS: Final[dict[str, str]] = {
+    "available": "KIMPZP wskazało akty w punktach działki",
+    "no_match": "usługa gminna nie zwróciła planu w punktach działki (nie dowodzi braku planu)",
+    "no_coverage": "KIMPZP nie ma usługi gminnej dla obszaru — brak danych, nie brak planu",
+    "unavailable": "usługa MPZP gminy zwróciła błąd — nie ustalono, czy obowiązuje plan",
+    "unknown": "nie ustalono (nierozpoznana odpowiedź albo discovery nie zostało wykonane)",
+}
+_ACT_LEGAL_STATUS_LABELS: Final[dict[str, str]] = {
+    "binding": "obowiązujący",
+    "not_binding": "nieobowiązujący",
+    "unknown": "status nieustalony",
+}
+_INFORMATIZATION_LABELS: Final[dict[str, str | None]] = {
+    "vector": "plan wektorowy",
+    "raster": "plan rastrowy",
+    "unknown": None,
+}
+_AMENDMENT_KIND_LABELS: Final[dict[str, str]] = {
+    "text_change": "zmiana tekstowa",
+    "change": "zmiana",
+    "note": "opis zmian",
+}
+
+
+def _mpzp_discovery_context(response: AnalyzeResponse) -> dict[str, Any] | None:
+    """Tabela 3.5 — akty wskazane przez KIMPZP (AU-004); ``None`` dla zapisu sprzed AU-004."""
+    discovery = response.mpzp_discovery
+    if discovery is None:
+        return None
+    return {
+        "status": discovery.status,
+        "status_label": _DISCOVERY_STATUS_LABELS.get(discovery.status, discovery.status),
+        "reason_codes": ", ".join(discovery.reason_codes) or None,
+        "multiple_acts": discovery.multiple_acts_at_point or discovery.multiple_acts_on_parcel,
+        "multiple_at_point": discovery.multiple_acts_at_point,
+        "selected_act": discovery.selected_act,
+        "points": f"{discovery.sampled_points} (nieudane: {discovery.failed_points})",
+        "candidates": ", ".join(discovery.candidate_zone_symbols) or None,
+        "source": _source_brief(discovery.source) if discovery.source else None,
+        "acts": [
+            {
+                "number": act.resolution_number,
+                "name": act.name,
+                "resolution_date": _format_date(act.resolution_date),
+                "valid_from": _format_date(act.valid_from),
+                "repealed_on": _format_date(act.repealed_on),
+                "legal_status": _ACT_LEGAL_STATUS_LABELS.get(act.legal_status, act.legal_status),
+                "text_url": act.text_url,
+                "legend_url": act.legend_url,
+                "drawing_url": act.drawing_url,
+                "bip_url": act.bip_url,
+                "www_url": act.www_url,
+                "journal": act.journal,
+                "zone_symbols": ", ".join(act.zone_symbols) or None,
+                "informatization": _INFORMATIZATION_LABELS.get(act.informatization),
+                "source_format": act.source_format,
+                "amendments": [
+                    {
+                        "kind": _AMENDMENT_KIND_LABELS.get(amendment.kind, amendment.kind),
+                        "number": amendment.resolution_number,
+                        "valid_from": _format_date(amendment.valid_from),
+                        "adopted_on": _format_date(amendment.adopted_on),
+                        "text": amendment.raw_text,
+                        "name": amendment.name,
+                        "url": amendment.document_url,
+                        "bip_url": amendment.bip_url,
+                    }
+                    for amendment in act.amendments
+                ],
+            }
+            for act in discovery.acts
+        ],
     }
 
 
@@ -1676,6 +1752,10 @@ def _provenance_context(
         ("Macierz jakości sekcji", quality.schema_version if quality else None),
         ("Polityka jakości (wersja)", quality.policy_version if quality else None),
         ("Teren (NMT)", response.terrain.schema_version if response.terrain else None),
+        (
+            "Discovery MPZP (KIMPZP)",
+            response.mpzp_discovery.schema_version if response.mpzp_discovery else None,
+        ),
         (
             "Teren — raster",
             response.terrain.relief.schema_version

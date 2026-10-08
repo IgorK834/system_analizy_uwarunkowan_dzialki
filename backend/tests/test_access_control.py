@@ -7,7 +7,14 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.access_control import make_analysis_token, verify_analysis_token
+from fastapi import HTTPException
+
+from app.core.access_control import (
+    ANALYSIS_ACCESS_DENIED_DETAIL,
+    ensure_analysis_access,
+    make_analysis_token,
+    verify_analysis_token,
+)
 from app.core.settings import settings
 from app.main import app
 
@@ -62,7 +69,34 @@ def test_forbidden_response_does_not_reveal_whether_analysis_exists() -> None:
     missing_style = client.get("/report/999999999")
 
     assert existing_style.status_code == missing_style.status_code == 403
-    assert existing_style.json() == missing_style.json()
+    # ``request_id`` jest unikalny dla każdego żądania (AU-003) — odpowiedzi są identyczne poza nim.
+    def comparable(response) -> dict:
+        return {key: value for key, value in response.json().items() if key != "request_id"}
+
+    assert comparable(existing_style) == comparable(missing_style)
+    assert existing_style.json()["request_id"] != missing_style.json()["request_id"]
+
+
+def test_ensure_analysis_access_accepts_any_valid_candidate() -> None:
+    valid = make_analysis_token(7)
+
+    ensure_analysis_access(7, None, valid)
+    ensure_analysis_access(7, valid, "zły")
+    ensure_analysis_access(7, valid)
+
+
+@pytest.mark.parametrize("candidates", [(), (None,), (None, None), ("zły",), ("zły", ""), ("\ud800",)])
+def test_ensure_analysis_access_denies_with_a_constant_detail(candidates: tuple) -> None:
+    with pytest.raises(HTTPException) as caught:
+        ensure_analysis_access(7, *candidates)
+
+    assert caught.value.status_code == 403
+    assert caught.value.detail == ANALYSIS_ACCESS_DENIED_DETAIL
+
+
+def test_ensure_analysis_access_rejects_the_token_of_another_analysis() -> None:
+    with pytest.raises(HTTPException):
+        ensure_analysis_access(7, make_analysis_token(8))
 
 
 # --- Klucze administracyjne --------------------------------------------------

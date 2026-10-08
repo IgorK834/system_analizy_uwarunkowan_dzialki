@@ -143,6 +143,34 @@ def get_cached_analysis(
     return cached
 
 
+def get_analysis_completed_since(
+    parcel_identifier: str,
+    db: Session,
+    since: datetime,
+) -> Analysis | None:
+    """Zwraca najnowszą analizę ``complete``/``partial`` tej działki zapisaną nie wcześniej niż ``since``.
+
+    Używana po single-flight (AU-007) przez żądanie z ``force_refresh``: jeśli w czasie jego
+    oczekiwania inny lider (także w innym workerze) policzył i zapisał świeży wynik, to jest on
+    tak aktualny, jak żądał użytkownik, więc nie liczymy drugi raz. Obowiązuje ta sama sygnatura
+    cache (kontrakt, tryb parsera, aktywne wydania danych) co w ``get_cached_analysis``.
+    """
+    signature, _release_ids = current_cache_signature(db)
+    statement = (
+        select(Analysis)
+        .join(Parcel, Analysis.parcel_id == Parcel.id)
+        .where(
+            Parcel.parcel_identifier == parcel_identifier,
+            Analysis.status.in_(_CACHEABLE_STATUSES),
+            Analysis.cache_signature == signature,
+            Analysis.analyzed_at >= since,
+        )
+        .order_by(Analysis.analyzed_at.desc())
+        .limit(1)
+    )
+    return db.execute(statement).scalar_one_or_none()
+
+
 def should_refresh_analysis(
     force_refresh: bool,
     cached: Analysis | None,

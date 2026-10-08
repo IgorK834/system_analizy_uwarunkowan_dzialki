@@ -433,7 +433,7 @@ class MpzpLlmPipeline:
         self.policy = policy or verifier.VerifierPolicy()
         self.pricing = pricing or LlmPricing()
         self.params = dict(params or {})
-        self._service_factory = service_factory or (lambda p, l: LlmExtractionService(p, l))
+        self._service_factory = service_factory or (lambda provider, limits_: LlmExtractionService(provider, limits_))
         # Wspólny licznik budżetu analizy (kilka dokumentów jednej analizy); bez niego — budżet per ``run``.
         self.tracker = tracker
 
