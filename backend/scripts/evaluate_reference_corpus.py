@@ -902,8 +902,9 @@ def _markdown(metadata: Mapping[str, Any], metrics: Mapping[str, Any], records: 
         "| Pole | Wartość |",
         "|---|---|",
     ]
-    for key in ("schema_version", "commit_sha", "corpus_sha256", "seed"):
-        lines.append(f"| `{key}` | `{metadata[key]}` |")
+    for key in ("schema_version", "commit_sha", "corpus_sha256", "seed", "mode", "base_url"):
+        if key in metadata:
+            lines.append(f"| `{key}` | `{metadata[key]}` |")
     lines.append(f"| `source_release_ids` | `{json.dumps(metadata['source_release_ids'], sort_keys=True)}` |")
     lines.append(f"| `timestamps` | `{json.dumps(metadata['timestamps'], sort_keys=True)}` |")
     lines.extend(["", "## Metryki", "", "| Metryka | Wartość | Jednostka | Mianownik |", "|---|---:|---|---:|"])
@@ -2837,11 +2838,386 @@ def write_study_outputs(
         )
 
 
+# --------------------------------------------------------------------------
+# AU-011 — tryb live
+#
+# Ten sam korpus 30 działek i te same metryki, ale odpowiedź pochodzi z działającego backendu
+# (POST /analyze na żywych usługach), a nie z zamrożonych obserwacji. Zamrożony ground truth
+# trafia wyłącznie do warstwy porównującej — do API idzie sam identyfikator działki. Wynik
+# live jest porównywany z trybem offline (metryki i statusy sekcji per działka): różnica
+# „offline vs live” to wynik pracy, nie szum.
+# --------------------------------------------------------------------------
+
+DEFAULT_LIVE_OUTPUT_DIR = REPO_ROOT / "docs" / "evaluation" / "results" / "reference-corpus-live"
+DEFAULT_BASE_URL = "http://localhost:8000"
+LIVE_TIMEOUT_SECONDS = 180.0
+LIVE_MAX_RETRIES = 5
+LIVE_MAX_WAIT_SECONDS = 120.0
+# Ground truth używa słownika „legal_force”, API — statusów prawnych POG (ADR-002).
+_LEGAL_STATUS_TO_GROUND_TRUTH = {"binding": "legal_force"}
+_POG_SECTION_KEYS = ("legal_status", "zone_count", "zones")
+_OUZ_SECTION_KEYS = ("intersection_area", "relation", "share")
+_MPZP_SECTION_KEYS = ("document_url", "mode", "plan_id", "zone_count", "zones")
+_BOUNDARY_AREA_SQM = 1.0
+
+
+def _number(value: object) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _live_geometry_section(payload: Mapping[str, Any]) -> dict[str, object]:
+    parcel = payload.get("parcel")
+    metrics = parcel.get("metrics") if isinstance(parcel, Mapping) else None
+    area = _number(metrics.get("area_sqm")) if isinstance(metrics, Mapping) else None
+    perimeter = _number(metrics.get("perimeter_m")) if isinstance(metrics, Mapping) else None
+    if area is None or perimeter is None:
+        return _unknown_section(("area", "perimeter"))
+    return {"status": "available", "values": {"area": area, "perimeter": perimeter}}
+
+
+def _live_pog_section(pog: object) -> dict[str, object]:
+    """Sekcja POG z odpowiedzi API; status inny niż ``available`` to brak wiedzy, nie „brak stref”."""
+    if not isinstance(pog, Mapping):
+        return _unknown_section(_POG_SECTION_KEYS)
+    coverage = pog.get("coverage_status")
+    if coverage not in {"available", "partial"}:
+        return _unknown_section(_POG_SECTION_KEYS)
+    legal = pog.get("legal_status")
+    zones = [
+        {
+            "area": _number(zone.get("area_sqm")),
+            "local_id": zone.get("id"),
+            "share": _number(zone.get("area_pct")),
+            "symbol": zone.get("symbol"),
+        }
+        for zone in pog.get("zones", [])
+        if isinstance(zone, Mapping)
+    ]
+    return {
+        "status": "available" if coverage == "available" else "manual_review",
+        "values": {
+            "legal_status": _LEGAL_STATUS_TO_GROUND_TRUTH.get(str(legal), legal) if legal else None,
+            "zone_count": len(zones),
+            "zones": zones,
+        },
+    }
+
+
+def _live_ouz_section(pog: object) -> dict[str, object]:
+    if not isinstance(pog, Mapping) or pog.get("coverage_status") not in {"available", "partial"}:
+        return _unknown_section(_OUZ_SECTION_KEYS)
+    area = _number(pog.get("ouz_intersection_area_sqm"))
+    share = _number(pog.get("ouz_intersection_pct"))
+    if area is None or share is None:
+        return _unknown_section(_OUZ_SECTION_KEYS)
+    return _ouz_section({"ouz_area_sqm": area, "ouz_share_pct": share})
+
+
+def _live_mpzp_section(payload: Mapping[str, Any]) -> dict[str, object]:
+    zones_raw = [zone for zone in payload.get("mpzp_zones") or [] if isinstance(zone, Mapping)]
+    discovery = payload.get("mpzp_discovery")
+    discovery = discovery if isinstance(discovery, Mapping) else {}
+    context = payload.get("manual_zone_context")
+    context = context if isinstance(context, Mapping) else {}
+    if zones_raw:
+        zones = []
+        for zone in zones_raw:
+            area = _number(zone.get("intersection_area_sqm"))
+            if zone.get("touches_boundary") is True or (area is not None and area < _BOUNDARY_AREA_SQM):
+                continue
+            zones.append(
+                {"area": area, "share": _number(zone.get("intersection_pct")), "symbol": zone.get("zone_symbol")}
+            )
+        plan_id = next((zone.get("act_identifier") for zone in zones_raw if zone.get("act_identifier")), None)
+        document_url = next((zone.get("document_url") for zone in zones_raw if zone.get("document_url")), None)
+        return {
+            "status": "available",
+            "values": {
+                "document_url": document_url,
+                "mode": "vector",
+                "plan_id": plan_id or discovery.get("selected_act"),
+                "zone_count": len(zones),
+                "zones": zones,
+            },
+        }
+    symbols = context.get("candidate_zone_symbols") or discovery.get("candidate_zone_symbols") or []
+    symbols = symbols if isinstance(symbols, list) else []
+    if payload.get("manual_zone_required") is True or (discovery.get("status") == "available" and discovery.get("acts")):
+        document = context.get("document")
+        document = document if isinstance(document, Mapping) else {}
+        return {
+            "status": "manual_review",
+            "values": {
+                "document_url": document.get("requested_url"),
+                "mode": "raster_manual" if payload.get("manual_zone_required") is True else "vector_discovery",
+                "plan_id": context.get("plan_id") or discovery.get("selected_act"),
+                "zone_count": len(symbols) or None,
+                "zones": [{"area": None, "share": None, "symbol": symbol} for symbol in symbols],
+            },
+        }
+    return _unknown_section(_MPZP_SECTION_KEYS)
+
+
+def _live_terrain_section(terrain: object) -> dict[str, object]:
+    if not isinstance(terrain, Mapping) or terrain.get("status") != "available":
+        return _terrain_section(None)
+    return _terrain_section(
+        {
+            "status": "available",
+            "min_elevation_m": terrain.get("min_height_m"),
+            "max_elevation_m": terrain.get("max_height_m"),
+            "relief_m": terrain.get("height_difference_m"),
+        }
+    )
+
+
+def sections_from_live_response(payload: Mapping[str, Any]) -> dict[str, dict[str, object]]:
+    """Sekcje ewaluatora z odpowiedzi ``POST /analyze`` (te same nazwy i słownik co tryb offline)."""
+    pog = payload.get("pog")
+    return {
+        "geometry": _live_geometry_section(payload),
+        "pog": _live_pog_section(pog),
+        "ouz": _live_ouz_section(pog),
+        "mpzp": _live_mpzp_section(payload),
+        **sections_from_analyze_response(payload),
+        "terrain": _live_terrain_section(payload.get("terrain")),
+    }
+
+
+class LiveApiAnalysisRunner:
+    """Adapter portu ``AnalysisCaseRunner`` oparty o ``POST /analyze`` działającego backendu.
+
+    Do API trafia wyłącznie identyfikator działki. Odpowiedź ≠ 2xx kończy przypadek jako
+    ``failed`` (widoczny w raporcie), a HTTP 429 jest ponawiany po ``Retry-After``.
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        *,
+        timeout: float = LIVE_TIMEOUT_SECONDS,
+        max_retries: int = LIVE_MAX_RETRIES,
+        max_wait: float = LIVE_MAX_WAIT_SECONDS,
+        transport: Any = None,
+        sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.perf_counter,
+    ) -> None:
+        import httpx
+
+        self._httpx = httpx
+        self._client = httpx.Client(base_url=base_url.rstrip("/"), timeout=timeout, transport=transport)
+        self._max_retries = max_retries
+        self._max_wait = max_wait
+        self._sleep = sleep
+        self._clock = clock
+
+    def close(self) -> None:
+        self._client.close()
+
+    def analyze(self, case_input: Mapping[str, object]) -> Mapping[str, object]:
+        from scripts.live_smoke_corpus import FALLBACK_RETRY_AFTER_SECONDS, parse_retry_after
+
+        identifier = str(case_input["parcel_identifier"])
+        payload = {"method": "parcel_id", "parcel_identifier": identifier}
+        attempts = 0
+        while True:
+            attempts += 1
+            started = self._clock()
+            try:
+                response = self._client.post("/analyze", json=payload)
+            except self._httpx.HTTPError as exc:
+                raise EvaluationError(f"{identifier}: brak odpowiedzi API ({type(exc).__name__})") from exc
+            elapsed_ms = max(0.0, (self._clock() - started) * 1000.0)
+            if response.status_code == 429 and attempts <= self._max_retries:
+                wait = parse_retry_after(response.headers.get("retry-after"))
+                self._sleep(min(FALLBACK_RETRY_AFTER_SECONDS if wait is None else wait, self._max_wait))
+                continue
+            break
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        if response.status_code != 200 or not isinstance(body, Mapping):
+            code = body.get("error") if isinstance(body, Mapping) else None
+            request_id = response.headers.get("x-request-id", "-")
+            raise EvaluationError(f"{identifier}: HTTP {response.status_code} {code or 'bez ciała JSON'} (request_id={request_id})")
+        sections = sections_from_live_response(body)
+        parcel = body.get("parcel")
+        return {
+            "parcel_identifier": parcel.get("parcel_identifier") if isinstance(parcel, Mapping) else None,
+            "status": str(body.get("status", "partial")),
+            "manual_review_required": any(section["status"] == "manual_review" for section in sections.values()),
+            # API nie ujawnia, czy wynik pochodzi z cache; „unknown” nie liczy się ani jako hit, ani miss.
+            "cache_status": "unknown",
+            "duration_ms": elapsed_ms,
+            "sections": sections,
+        }
+
+
+def _numeric_delta(offline: object, live: object) -> float | None:
+    if isinstance(offline, (int, float)) and isinstance(live, (int, float)):
+        return float(live) - float(offline)
+    return None
+
+
+def compare_offline_live(
+    offline_metrics: Mapping[str, Any],
+    live_metrics: Mapping[str, Any],
+    offline_records: Sequence[Mapping[str, Any]],
+    live_records: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Różnica „offline vs live”: metryki oraz statusy sekcji per działka."""
+    metric_rows = []
+    for name, offline_metric in offline_metrics.items():
+        live_metric = live_metrics.get(name)
+        if name == "binary_conditions" or not isinstance(offline_metric, Mapping) or not isinstance(live_metric, Mapping):
+            continue
+        metric_rows.append(
+            {
+                "metric": name,
+                "unit": offline_metric.get("unit"),
+                "offline": offline_metric.get("value"),
+                "live": live_metric.get("value"),
+                "delta": _numeric_delta(offline_metric.get("value"), live_metric.get("value")),
+            }
+        )
+    aggregate_offline = offline_metrics["binary_conditions"]["aggregate"]
+    aggregate_live = live_metrics["binary_conditions"]["aggregate"]
+    for key in ("precision", "recall", "f1"):
+        metric_rows.append(
+            {
+                "metric": f"binary_conditions.aggregate.{key}",
+                "unit": "ratio",
+                "offline": aggregate_offline[key]["value"],
+                "live": aggregate_live[key]["value"],
+                "delta": _numeric_delta(aggregate_offline[key]["value"], aggregate_live[key]["value"]),
+            }
+        )
+    live_by_case = {record["case_id"]: record for record in live_records}
+    case_rows = []
+    for record in offline_records:
+        live = live_by_case.get(record["case_id"])
+        if live is None:
+            continue
+        sections = []
+        for name in sorted(set(record["actual_sections"]) | set(live["actual_sections"])):
+            offline_status = (record["actual_sections"].get(name) or {}).get("status")
+            live_status = (live["actual_sections"].get(name) or {}).get("status")
+            if offline_status != live_status:
+                sections.append({"section": name, "offline": offline_status, "live": live_status})
+        case_rows.append(
+            {
+                "case_id": record["case_id"],
+                "offline_status": record["status"],
+                "live_status": live["status"],
+                "live_error": live.get("error"),
+                "section_differences": sections,
+            }
+        )
+    differing = [row for row in case_rows if row["section_differences"] or row["live_status"] != row["offline_status"]]
+    return {"metrics": metric_rows, "cases": case_rows, "cases_with_differences": len(differing)}
+
+
+def render_offline_vs_live(metadata: Mapping[str, Any], comparison: Mapping[str, Any]) -> str:
+    def cell(value: object) -> str:
+        if value is None:
+            return "null"
+        return f"{value:.6f}" if isinstance(value, float) else str(value)
+
+    lines = [
+        "# Offline vs live — korpus referencyjny",
+        "",
+        f"Adres API: `{metadata.get('base_url')}`, commit `{metadata.get('commit_sha')}`, "
+        f"korpus `sha256:{str(metadata.get('corpus_sha256'))[:16]}…`. Tryb offline czyta zamrożone obserwacje źródeł; "
+        "tryb live czyta odpowiedź działającego `POST /analyze`. `null` oznacza brak wartości (np. brak mianownika), nie zero.",
+        "",
+        "## Metryki",
+        "",
+        "| Metryka | Jednostka | Offline | Live | Różnica (live − offline) |",
+        "|---|---|---:|---:|---:|",
+    ]
+    for row in comparison["metrics"]:
+        lines.append(
+            f"| `{row['metric']}` | {row['unit'] or ''} | {cell(row['offline'])} | {cell(row['live'])} | {cell(row['delta'])} |"
+        )
+    lines += [
+        "",
+        f"## Statusy sekcji per działka (różnice: {comparison['cases_with_differences']} z {len(comparison['cases'])})",
+        "",
+        "| case_id | status offline | status live | sekcje o innym statusie (offline → live) | błąd live |",
+        "|---|---|---|---|---|",
+    ]
+    for row in comparison["cases"]:
+        if not row["section_differences"] and row["live_status"] == row["offline_status"]:
+            continue
+        sections = ", ".join(f"{item['section']}: {item['offline']} → {item['live']}" for item in row["section_differences"])
+        error = str(row.get("live_error") or "").replace("|", "\\|")
+        lines.append(f"| `{row['case_id']}` | {row['offline_status']} | {row['live_status']} | {sections or '—'} | {error} |")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _main_live(args: argparse.Namespace) -> int:
+    started_at = _timestamp()
+    runner = LiveApiAnalysisRunner(args.base_url)
+    try:
+        manifest, corpus_sha256 = load_corpus(args.corpus.resolve())
+        corpus_dir = args.corpus.resolve().parent
+        live_records, live_metrics = evaluate(manifest, corpus_dir, runner)
+        offline_records, offline_metrics = evaluate(manifest, corpus_dir)
+        finished_at = _timestamp()
+        metadata = {
+            **build_metadata(manifest, corpus_sha256, started_at, finished_at),
+            "mode": "live",
+            "base_url": args.base_url,
+        }
+        regressions = _threshold_failures(live_metrics, manifest.get("evaluation_thresholds", {}))
+        output_dir = args.output_dir.resolve()
+        write_outputs(output_dir, metadata, live_metrics, live_records, regressions)
+        comparison = compare_offline_live(offline_metrics, live_metrics, offline_records, live_records)
+        (output_dir / "offline-vs-live.json").write_text(
+            json.dumps({"metadata": metadata, **comparison}, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        (output_dir / "offline-vs-live.md").write_text(render_offline_vs_live(metadata, comparison), encoding="utf-8")
+    except (EvaluationError, ReferenceCorpusError, OSError, ValueError) as exc:
+        print(f"evaluation failed: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        runner.close()
+
+    failed_cases = live_metrics["failed_cases"]["value"]
+    print(
+        f"live evaluation: {len(live_records)} cases, {failed_cases} failed, "
+        f"{comparison['cases_with_differences']} differ from offline -> {output_dir}"
+    )
+    if failed_cases:
+        print(f"evaluation failed: {failed_cases} case(s) failed on the live API", file=sys.stderr)
+        return 1
+    if args.fail_on_regression and regressions:
+        print("evaluation regression: " + "; ".join(regressions), file=sys.stderr)
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Evaluate the frozen reference corpus offline.")
+    parser = argparse.ArgumentParser(
+        description="Evaluate the reference corpus: offline (frozen observations) or live (running backend)."
+    )
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--mode", choices=("offline",), default="offline")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR.name} for offline, {DEFAULT_LIVE_OUTPUT_DIR.name} for live).",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("offline", "live"),
+        default="offline",
+        help="live: POST /analyze on --base-url, metrics against the same ground truth, compared with offline (AU-011).",
+    )
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Backend address for --mode live.")
     parser.add_argument("--fail-on-regression", action="store_true")
     parser.add_argument(
         "--study",
@@ -2858,6 +3234,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.study:
         return _main_study(args)
+    if args.output_dir is None:
+        args.output_dir = DEFAULT_LIVE_OUTPUT_DIR if args.mode == "live" else DEFAULT_OUTPUT_DIR
+    if args.mode == "live":
+        return _main_live(args)
     started_at = _timestamp()
     try:
         manifest, corpus_sha256 = load_corpus(args.corpus.resolve())
