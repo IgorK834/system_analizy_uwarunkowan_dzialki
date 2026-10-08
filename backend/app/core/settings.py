@@ -5,6 +5,8 @@ from typing import Annotated, Any, Literal
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from app.core.access_keys import parse_token_secrets
+
 
 class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://app:app@db:5432/dzialki"
@@ -241,9 +243,18 @@ class Settings(BaseSettings):
     # dane z usług na żywo (ISOK, GDOŚ, NMT). Dlatego wynik ``complete`` ma
     # ograniczony TTL, a nie wieczny: po tym czasie analiza pobiera je ponownie.
     analysis_cache_max_age_days: int = Field(default=7, ge=1)
-    # Sekret HMAC tokenów dostępu do raportów/dokumentów analiz. Ustaw stałą,
-    # losową wartość (np. ``openssl rand -hex 32``); pusta = losowy klucz procesu.
+    # Klucze HMAC tokenów dostępu do raportów/dokumentów analiz (AU-012): lista
+    # ``kid:sekret,kid2:sekret2|RRRR-MM-DD`` — pierwszy wpis podpisuje nowe tokeny, kolejne tylko
+    # weryfikują (do daty końca okresu przejściowego albo do usunięcia z listy). Sekrety: stałe,
+    # losowe wartości (np. ``openssl rand -hex 32``). Format: ``app/core/access_keys.py``.
+    access_token_secrets: str = ""
+    # Zgodność wstecz: pojedynczy sekret jest traktowany jak lista z jednym kluczem ``default``.
+    # Pusta lista i pusty sekret = losowy klucz procesu (tokeny znikają po restarcie).
     access_token_secret: str = ""
+    # Okres ważności tokenu z pola ``access_token`` odpowiedzi analizy i linków „Udostępnij” oraz
+    # bezpośrednich pobrań z ``POST /analyze/{id}/links`` (sekundy). Token po ``exp`` daje 403.
+    access_token_ttl_seconds: int = Field(default=30 * 24 * 3600, ge=60)
+    access_token_download_ttl_seconds: int = Field(default=15 * 60, ge=30)
     # Klucze operatorów endpointów administracyjnych: ``operator:klucz,...``.
     # Puste = endpointy administracyjne wyłączone.
     admin_api_keys: str = ""
@@ -289,6 +300,9 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        # Błąd walidacji nie powtarza wartości wejściowej: inaczej zła lista ``ACCESS_TOKEN_SECRETS``
+        # (albo ``GEMINI_API_KEY``) trafiłaby z sekretami do logu startu kontenera.
+        hide_input_in_errors=True,
     )
 
     @field_validator(
@@ -303,6 +317,13 @@ class Settings(BaseSettings):
     def empty_limit_means_unlimited(cls, value: Any) -> Any:
         # ``MPZP_LLM_DAILY_TOKEN_LIMIT=`` (pusty) znaczy „bez limitu”, a nie 0.
         return None if isinstance(value, str) and not value.strip() else value
+
+    @field_validator("access_token_secrets")
+    @classmethod
+    def validate_access_token_secrets(cls, value: str) -> str:
+        # Błędna lista kluczy zatrzymuje start: ciche pominięcie wpisu unieważniłoby tokeny.
+        parse_token_secrets(value)
+        return value
 
     @field_validator("rate_limit_trusted_proxies")
     @classmethod
