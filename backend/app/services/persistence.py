@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.access_control import make_analysis_token
 from app.core.request_id import get_request_id
+from app.core.settings import settings
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
 from app.models.infrastructure import Infrastructure
@@ -626,7 +627,8 @@ def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
             document_version_id=pinned.document_version_id,
             preview_path=(
                 f"/analyze/{analysis.id}/pending-document"
-                f"?access_token={make_analysis_token(analysis.id)}"
+                # Link w atrybucie ``href`` (nie da się dołączyć nagłówka), więc krótki token pobrania.
+                f"?access_token={make_analysis_token(analysis.id, ttl_seconds=settings.access_token_download_ttl_seconds)}"
             ),
         )
     else:
