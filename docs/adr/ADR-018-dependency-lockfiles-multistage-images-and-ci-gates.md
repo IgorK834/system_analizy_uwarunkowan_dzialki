@@ -80,5 +80,5 @@ zgłoszeń w `mypy-baseline.txt`; bramka `scripts/check_mypy_baseline.py` odrzuc
   `pip-audit` w CI wykrywa podatną wersję niezależnie.
 - Reguły kompilatora React (`set-state-in-effect` i pokrewne) oraz reguły Next nie są egzekwowane; lista „poza zakresem” w README.
 - `mypy` poza `app/modules/*` (m.in. `app/routers`, `app/services`) ma 13 dodatkowych zgłoszeń i nie jest bramką.
-- Reguły CI (`.github/workflows/ci.yml`) zostały uruchomione lokalnie komendami z kroków; zielony przebieg na GitHub Actions wymaga
-  wypchnięcia gałęzi i nie został wykonany w tym zadaniu.
+- Bramki CI zweryfikowano na GitHub Actions: przebieg pozytywny na `main` (3 zadania zielone) i negatywny na jednorazowej gałęzi z
+  podatnym `next` (zadanie Frontend czerwone na `npm audit`) — szczegóły w odbiorze AU-010.

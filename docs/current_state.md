@@ -477,7 +477,7 @@ lokalna: CSS i jeden komponent).
 
 ## Audyt 2026-10-05 — podatności, lockfile, lint i typy w CI (AU-010, 2026-10-08)
 
-Zacommitowane w `main` (AU-009, 2026-10-08). Decyzje: [ADR-018](adr/ADR-018-dependency-lockfiles-multistage-images-and-ci-gates.md);
+Zacommitowane i wypchnięte do `main` (AU-009, 2026-10-08). Decyzje: [ADR-018](adr/ADR-018-dependency-lockfiles-multistage-images-and-ci-gates.md);
 odbiór: [AU-010](evaluation/au-010-verification.md).
 
 - **Stan zastany:** `npm audit --omit=dev` — 7 podatności (2 krytyczne: `next 16.2.10`, `maplibre-gl 5.24.0`; wysokie: `nanoid`, `sharp`,
@@ -492,8 +492,8 @@ odbiór: [AU-010](evaluation/au-010-verification.md).
   zgłoszeń (`mypy-baseline.txt`, bramka na NOWE); `pip-audit` czysty. Dwa buildy `--no-cache` dają identyczną listę pakietów.
 - **CI:** zadania `backend` (build `runtime`+`test`, kontrola zawartości runtime, `ruff`, `mypy`, `pip-audit`, testy z `--cov-fail-under=80`),
   `backend-reproducible`, `frontend` (`npm audit --omit=dev --audit-level=high`, ESLint, `tsc`, testy, build); `.github/dependabot.yml`.
-  Zgodnie z testem negatywnym bramki zwracają kod 1 dla podatnego `next`, podatnego pakietu Pythona i nieużywanego importu; przebieg na
-  GitHub Actions nie został wykonany (wymaga push gałęzi).
+  Przebieg na `main` w GitHub Actions: wszystkie 3 zadania zielone; test negatywny na jednorazowej gałęzi z podatnym `next` — zadanie Frontend
+  czerwone na `npm audit` (PR #369 zamknięty bez scalenia).
 - **Zmiana poleceń:** testy backendu uruchamia się w usłudze `backend-test` (`docker compose --profile test run --rm backend-test pytest …`),
   a nie w `backend` (obraz produkcyjny nie zawiera `pytest`); skrypty operacyjne z README działają z hosta (`python3 backend/scripts/…`).
 - **Weryfikacja:** backend w kontenerze `backend-test` jak w CI: **4088 passed**, pokrycie **94,59%**; frontend: `npm audit` 0, ESLint, `tsc`, **537 testów**,

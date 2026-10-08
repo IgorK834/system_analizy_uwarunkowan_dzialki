@@ -11,8 +11,8 @@
 | Kryterium | Wynik | Dowód |
 |---|---|---|
 | `npm audit --omit=dev` → 0 podatności critical/high | **spełnione — 0 podatności** (także pełny `npm audit`, z narzędziami deweloperskimi) | przed: 7 (2 krytyczne: `next`, `maplibre-gl`; 3 wysokie: `nanoid`, `sharp`, `source-map-js`; 2 umiarkowane), bramka `--audit-level=high` zwraca 1; po: 0, kod 0 — [01-gates.txt](results/au-010/01-gates.txt) |
-| `pip-audit` czysty | **spełnione** (lock produkcyjny i dev, `--require-hashes`) | `No known vulnerabilities found` ×2 |
-| CI jest czerwone po wprowadzeniu znanej podatnej wersji (test negatywny) | **spełnione lokalnie; przebieg na GitHub Actions nie wykonany** | te same polecenia co w krokach CI na „gałęzi” z podatną wersją: `npm audit --omit=dev --audit-level=high` z `package.json`+lockfile z HEAD → kod 1; `pip-audit` z `jinja2==3.1.2` (6 podatności PYSEC) → kod 1; `ruff` z nieużywanym importem → kod 1; zgłoszenie `mypy` spoza bazy → kod 1 (`tests/test_check_mypy_baseline.py`). Wypchnięcie gałęzi z podatnym pinem i obserwacja czerwonego przebiegu w Actions wymaga push — nie zrobiono |
+| `pip-audit` czysty | **spełnione** (lock produkcyjny i dev, `--require-hashes`) | `No known vulnerabilities found` ×2 (lokalnie i w CI) |
+| CI jest czerwone po wprowadzeniu znanej podatnej wersji (test negatywny na gałęzi) | **spełnione — na GitHub Actions** | gałąź jednorazowa z `package.json`+lockfile sprzed AU-010 (`next 16.2.10`, `maplibre-gl 5.24.0`) i PR [#369](https://github.com/IgorK834/system_analizy_uwarunkowan_dzialki/pull/369) (zamknięty bez scalenia, gałąź usunięta): zadanie Frontend czerwone na kroku `npm audit --omit=dev --audit-level=high` („11 vulnerabilities (5 moderate, 4 high, 2 critical)”), przebieg [37785509318](https://github.com/IgorK834/system_analizy_uwarunkowan_dzialki/actions/runs/37785509318). Lokalnie dodatkowo: `pip-audit` z `jinja2==3.1.2` (6 podatności PYSEC) → kod 1, `ruff` z nieużywanym importem → kod 1, zgłoszenie `mypy` spoza bazy → kod 1 (`tests/test_check_mypy_baseline.py`) |
 | Dwukrotny build backendu daje identyczną listę pakietów | **spełnione** | dwa buildy `--no-cache` obrazu `runtime`: `diff` list `pip freeze --all` pusty; w CI osobne zadanie `backend-reproducible` |
 | Obraz `runtime` nie zawiera `pytest` ani katalogu `tests/` | **spełnione** | `/app`: `alembic alembic.ini app pyproject.toml requirements.lock shared`; `pytest`, `respx`, `pytest_cov`, `ruff`, `mypy` nieobecne; `scripts/` też nieobecne (w obrazie `test`: są) |
 | Lockfile backendu z hashami, instalacja `--require-hashes` | **spełnione** | `requirements.lock` (58 pakietów) i `requirements-dev.txt` (47) — każdy wpis `==` z ≥ 1 skrótem SHA-256 (`tests/test_supply_chain.py`); `RUN pip install --require-hashes --no-deps` w obu etapach |
@@ -48,7 +48,7 @@
 
 ## Ograniczenia i decyzje do potwierdzenia
 
-1. **Brak przebiegu na GitHub Actions** (wymaga push gałęzi) — bramki odtworzono lokalnie tymi samymi poleceniami.
+1. **Przebiegi na GitHub Actions:** pozytywny na `main` — przebieg [37784168109](https://github.com/IgorK834/system_analizy_uwarunkowan_dzialki/actions/runs/37784168109), wszystkie 3 zadania zielone (backend z testami i pokryciem, powtarzalność buildu, frontend); negatywny — patrz tabela. Pierwszy przebieg (37781775501) wykazał błąd samego kroku powtarzalności (nazwa `pdfminer.six` vs `pdfminer-six` — brak normalizacji PEP 503), poprawiony commitem `2c0b43d`; backend i frontend były już wtedy zielone.
 2. **Lock Pythona generowany ręcznie** (Dependabot nie przelicza `requirements.lock`); `pymupdf` (AGPL) pozostaje — decyzja AU-407.
 3. **ESLint bez `eslint-config-next`** (podatność `braces` bez poprawki) i bez reguł kompilatora React — ADR-018 §2.
 4. **`mypy` ma 19 znanych zgłoszeń** w `app/modules/*` i dodatkowe 13 poza zakresem — jawna baza, nie naprawa.
