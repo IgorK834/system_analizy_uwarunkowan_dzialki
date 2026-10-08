@@ -84,8 +84,9 @@ jobs:
           # Lista pakietów w obrazie to dokładnie lock (plus pip/setuptools z obrazu bazowego).
           python3 - <<'PY'
           import re
-          locked = {m.group(1).lower().replace("_", "-") for m in re.finditer(r"^([A-Za-z0-9_.-]+)==", open("backend/requirements.lock").read(), re.M)}
-          frozen = {line.split("==")[0].lower().replace("_", "-") for line in open("freeze-1.txt") if "==" in line}
+          normalize = lambda name: re.sub(r"[-_.]+", "-", name).lower()  # PEP 503: pdfminer.six == pdfminer-six
+          locked = {normalize(m.group(1)) for m in re.finditer(r"^([A-Za-z0-9_.-]+)==", open("backend/requirements.lock").read(), re.M)}
+          frozen = {normalize(line.split("==")[0]) for line in open("freeze-1.txt") if "==" in line}
           missing = locked - frozen
           assert not missing, f"w obrazie brakuje pakietów z locka: {sorted(missing)}"
           PY
