@@ -1071,7 +1071,10 @@ export type MpzpDiscoverySection = {
 
 export type AnalyzeResponse = {
   analysis_id: number | null;
-  /** Token dostępu do raportu PDF i dokumentu analizy; null dla wyniku niezapisanego. */
+  /**
+   * Token dostępu do raportu PDF i dokumentu analizy (`v2.<exp>.<kid>.<sig>`, ważny domyślnie 30 dni);
+   * przekazuj go nagłówkiem `X-Analysis-Token`. null dla wyniku niezapisanego.
+   */
   access_token: string | null;
   status: string;
   analyzed_at: string;
@@ -1148,4 +1151,19 @@ export type AddressSearchResponse = {
   query: string;
   results: AddressSearchResult[];
   total_returned: number;
+};
+
+/** Rodzaj linku z `POST /analyze/{id}/links`: `download` (15 min) albo `share` (30 dni). */
+export type AnalysisLinkPurpose = "download" | "share";
+
+export type AnalysisLinks = {
+  analysis_id: number;
+  purpose: AnalysisLinkPurpose;
+  access_token: string;
+  /** Koniec ważności tokenu (ISO 8601, UTC). */
+  expires_at: string;
+  expires_in_seconds: number;
+  /** Ścieżki względem adresu API z tokenem w query-stringu; użyj `getApiResourceUrl`. */
+  report_url: string;
+  audit_package_url: string;
 };
