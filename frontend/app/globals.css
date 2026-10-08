@@ -224,15 +224,36 @@ input:disabled {
   color: var(--danger);
 }
 
+/* AU-008: lista podpowiedzi to popover pod polem adresu (nie element przepływu), więc nie
+   przesuwa panelu POG, a przy małej wysokości okna przewija się wewnątrz. Panel wyszukiwania ma
+   z-index 5, czyli pod `.map-controls` (6) i `.result-stack` (7) — gdy lista jest otwarta,
+   panel dostaje klasę `search-panel-suggesting` i leży nad nimi (inaczej środek pozycji listy
+   trafiałby w panel POG). */
+.address-field {
+  position: relative;
+}
+
+.search-panel-suggesting {
+  z-index: 8;
+}
+
 .suggestions {
-  max-height: 260px;
-  margin: 10px 0 0;
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  /* Pięć pozycji mieści się bez przewijania; przy niskim oknie lista przewija się wewnątrz. */
+  max-height: clamp(8rem, calc(100dvh - 20rem), 24rem);
+  margin: 0;
   padding: 4px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface);
+  box-shadow: 0 12px 28px rgba(19, 43, 31, 0.22);
 }
 
 .suggestion {
@@ -1535,4 +1556,24 @@ input:disabled {
 .result-table-scroll:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Akty MPZP wskazane przez KIMPZP (AU-004). */
+.mpzp-discovery {
+  margin-top: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.mpzp-discovery h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.mpzp-discovery .link-list {
+  margin: 0.25rem 0;
+  padding-left: 1.1rem;
+}
+
+.mpzp-discovery details {
+  margin-top: 0.25rem;
 }

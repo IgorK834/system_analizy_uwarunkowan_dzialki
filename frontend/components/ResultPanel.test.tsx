@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { ResultPanel } from "@/components/ResultPanel";
 import { buildAnalyzeResponse, buildPogResult, buildQualityMatrix } from "@/test/fixtures";

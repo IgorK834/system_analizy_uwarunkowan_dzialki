@@ -12,6 +12,8 @@ import {
   getPogAreaSummary,
   getPogFeatureDetails,
   getPreviewSources,
+  parseRetryAfter,
+  rateLimitMessage,
   resumeAnalysis,
   searchAddresses,
 } from "@/lib/api";
@@ -101,7 +103,11 @@ describe("klient API", () => {
     fetchMock.mockResolvedValue(jsonResponse(response));
 
     await expect(
-      resumeAnalysis({ analysis_id: 42, zone_symbol: "230_U" }),
+      resumeAnalysis({
+        analysis_id: 42,
+        access_token: "token-42",
+        zone_symbol: "230_U",
+      }),
     ).resolves.toEqual(response);
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -109,7 +115,11 @@ describe("klient API", () => {
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysis_id: 42, zone_symbol: "230_U" }),
+        body: JSON.stringify({
+          analysis_id: 42,
+          access_token: "token-42",
+          zone_symbol: "230_U",
+        }),
       }),
     );
   });
@@ -298,7 +308,7 @@ describe("klient API", () => {
     [422, { detail: [{ msg: "Pole jest wymagane" }] }, "Nieprawidłowe dane"],
     [503, { detail: { message: "Serwis ULDK nie odpowiada" } }, "chwilowo niedostępna"],
     [404, { detail: "Brak działki" }, "Nie znaleziono"],
-    [500, { error: "INTERNAL" }, "Nie udało się wykonać"],
+    [500, { error: "INTERNAL" }, "Błąd po stronie serwera"],
   ])(
     "mapuje odpowiedź HTTP %s na bezpieczny ApiError",
     async (status, body, expectedMessage) => {
@@ -394,6 +404,238 @@ describe("klient API", () => {
     const error = new ApiError(418, "Test");
 
     expect(error).toMatchObject({ name: "ApiError", status: 418, message: "Test" });
+  });
+
+  describe("błędy HTTP z request_id (AU-003)", () => {
+    const REQUEST_ID = "5d0c2f3e-6f0e-4b61-9d57-0c5c1f4a1b3e";
+    const analyzePayload = { method: "map", lon: 19.5, lat: 52.1 } as const;
+
+    function errorResponse(
+      status: number,
+      body: unknown,
+      headers: Record<string, string> = {},
+    ): Response {
+      return new Response(typeof body === "string" ? body : JSON.stringify(body), {
+        status,
+        headers: {
+          "Content-Type": typeof body === "string" ? "text/plain" : "application/json",
+          ...headers,
+        },
+      });
+    }
+
+    async function failure(response: Response | Error): Promise<ApiError> {
+      if (response instanceof Error) {
+        fetchMock.mockRejectedValueOnce(response);
+      } else {
+        fetchMock.mockResolvedValueOnce(response);
+      }
+      const error = await analyzeParcel(analyzePayload).then(
+        () => {
+          throw new Error("oczekiwano odrzucenia");
+        },
+        (caught: unknown) => caught,
+      );
+      expect(error).toBeInstanceOf(ApiError);
+      return error as ApiError;
+    }
+
+    it("422: nieprawidłowe dane z komunikatem pola, bez kodu zgłoszenia", async () => {
+      const error = await failure(
+        errorResponse(422, { detail: [{ msg: "Pole jest wymagane" }] }),
+      );
+
+      expect(error.status).toBe(422);
+      expect(error.message).toBe("Nieprawidłowe dane wejściowe. Pole jest wymagane");
+    });
+
+    it("429: komunikat z czasem z Retry-After i polem retryAfterSeconds", async () => {
+      const error = await failure(
+        errorResponse(
+          429,
+          { error: "RATE_LIMITED", detail: "Przekroczono limit zapytań.", request_id: REQUEST_ID },
+          { "Retry-After": "30" },
+        ),
+      );
+
+      expect(error).toMatchObject({ status: 429, code: "RATE_LIMITED", retryAfterSeconds: 30 });
+      expect(error.message).toBe("Zbyt wiele żądań. Spróbuj ponownie za 30 s.");
+    });
+
+    it("429 bez Retry-After: komunikat bez czasu i bez retryAfterSeconds", async () => {
+      const error = await failure(errorResponse(429, { detail: "limit" }));
+
+      expect(error.retryAfterSeconds).toBeNull();
+      expect(error.message).toBe("Zbyt wiele żądań. Spróbuj ponownie za chwilę.");
+    });
+
+    it("500: błąd po stronie serwera z kodem zgłoszenia i bez zachęty do ponawiania", async () => {
+      const error = await failure(
+        errorResponse(500, {
+          error: "INTERNAL_ERROR",
+          detail: "Wystąpił nieoczekiwany błąd po stronie serwera. Podaj kod zgłoszenia operatorowi.",
+          section: null,
+          request_id: REQUEST_ID,
+        }),
+      );
+
+      expect(error).toMatchObject({ status: 500, code: "INTERNAL_ERROR", requestId: REQUEST_ID });
+      expect(error.message).toBe(`Błąd po stronie serwera. Kod zgłoszenia: ${REQUEST_ID}.`);
+      expect(error.message).not.toMatch(/ponów|ponownie|spróbuj/i);
+      expect(error.message).not.toContain("połączyć");
+    });
+
+    it("500 bez JSON-a (np. odpowiedź proxy) bierze identyfikator z nagłówka X-Request-ID", async () => {
+      const error = await failure(
+        errorResponse(500, "Internal Server Error", { "X-Request-ID": REQUEST_ID }),
+      );
+
+      expect(error.requestId).toBe(REQUEST_ID);
+      expect(error.message).toBe(`Błąd po stronie serwera. Kod zgłoszenia: ${REQUEST_ID}.`);
+    });
+
+    it("500 bez żadnego identyfikatora nie zmyśla kodu zgłoszenia", async () => {
+      const error = await failure(errorResponse(500, "Internal Server Error"));
+
+      expect(error.requestId).toBeNull();
+      expect(error.message).toBe("Błąd po stronie serwera.");
+    });
+
+    it("odrzuca identyfikator, który nie wygląda jak X-Request-ID (nie wstawia go do komunikatu)", async () => {
+      const error = await failure(
+        errorResponse(500, { error: "INTERNAL_ERROR", detail: "x", request_id: "<script>alert(1)</script>" }),
+      );
+
+      expect(error.requestId).toBeNull();
+      expect(error.message).toBe("Błąd po stronie serwera.");
+    });
+
+    it("502: źródło zwróciło nieczytelną odpowiedź, z kodem zgłoszenia", async () => {
+      const error = await failure(
+        errorResponse(502, {
+          error: "UPSTREAM_INVALID_RESPONSE",
+          detail: "Usługa zewnętrzna zwróciła odpowiedź w nieoczekiwanym formacie.",
+          request_id: REQUEST_ID,
+        }),
+      );
+
+      expect(error).toMatchObject({ status: 502, code: "UPSTREAM_INVALID_RESPONSE" });
+      expect(error.message).toBe(
+        `Zewnętrzne źródło danych zwróciło odpowiedź, której nie da się odczytać. Kod zgłoszenia: ${REQUEST_ID}.`,
+      );
+    });
+
+    it("503: usługa chwilowo niedostępna z komunikatem źródła", async () => {
+      const error = await failure(
+        errorResponse(503, {
+          error: "UPSTREAM_UNAVAILABLE",
+          detail: "Usługa ULDK jest niedostępna po 3 próbach.",
+          request_id: REQUEST_ID,
+        }),
+      );
+
+      expect(error.message).toBe(
+        `Usługa analizy jest chwilowo niedostępna. Usługa ULDK jest niedostępna po 3 próbach. Kod zgłoszenia: ${REQUEST_ID}.`,
+      );
+    });
+
+    it("503 PERSISTENCE_FAILED to błąd zapisu po stronie serwera, nie chwilowa niedostępność", async () => {
+      const error = await failure(
+        errorResponse(503, {
+          error: "PERSISTENCE_FAILED",
+          detail: "Nie udało się zapisać wyniku analizy.",
+          request_id: REQUEST_ID,
+        }),
+      );
+
+      expect(error.code).toBe("PERSISTENCE_FAILED");
+      expect(error.message).toBe(`Nie udało się zapisać wyniku analizy. Kod zgłoszenia: ${REQUEST_ID}.`);
+      expect(error.message).not.toContain("chwilowo");
+    });
+
+    it("404 z brakiem działki zachowuje komunikat źródła", async () => {
+      const error = await failure(
+        errorResponse(404, {
+          error: "PARCEL_NOT_FOUND",
+          detail: "ULDK nie zwróciło działki dla tej lokalizacji (brak działki albo chwilowy błąd źródła)",
+          request_id: REQUEST_ID,
+        }),
+      );
+
+      expect(error.message).toBe(
+        "Nie znaleziono działki lub adresu. ULDK nie zwróciło działki dla tej lokalizacji (brak działki albo chwilowy błąd źródła)",
+      );
+    });
+
+    it("0: tylko odrzucony fetch to brak sieci", async () => {
+      const error = await failure(new TypeError("Failed to fetch"));
+
+      expect(error).toMatchObject({ status: 0, code: null, requestId: null });
+      expect(error.message).toBe(
+        "Nie udało się połączyć z usługą. Sprawdź połączenie i spróbuj ponownie.",
+      );
+    });
+
+    it("5xx nie wygląda jak awaria sieci (komunikat serwera, nie „Sprawdź połączenie”)", async () => {
+      const error = await failure(errorResponse(500, { error: "INTERNAL_ERROR", detail: "x", request_id: REQUEST_ID }));
+
+      expect(error.message).not.toContain("Sprawdź połączenie");
+      expect(error.status).not.toBe(0);
+    });
+
+    it("raport PDF i pakiet audytowy: 5xx z kodem zgłoszenia i zachowanymi metadanymi", async () => {
+      fetchMock.mockResolvedValueOnce(
+        errorResponse(500, { error: "INTERNAL_ERROR", detail: "x", request_id: REQUEST_ID }),
+      );
+      await expect(getAnalysisReport(42)).rejects.toMatchObject({
+        status: 500,
+        requestId: REQUEST_ID,
+        message: `Nie udało się wygenerować raportu PDF. Kod zgłoszenia: ${REQUEST_ID}.`,
+      });
+
+      fetchMock.mockResolvedValueOnce(
+        errorResponse(500, "oops", { "X-Request-ID": REQUEST_ID }),
+      );
+      await expect(getAnalysisAuditPackage(42)).rejects.toMatchObject({
+        status: 500,
+        requestId: REQUEST_ID,
+        message: `Nie udało się przygotować pakietu audytowego. Kod zgłoszenia: ${REQUEST_ID}.`,
+      });
+    });
+
+    it("ApiError ma metadane domyślnie puste", () => {
+      expect(new ApiError(503, "x")).toMatchObject({
+        code: null,
+        requestId: null,
+        retryAfterSeconds: null,
+      });
+    });
+
+    describe("parseRetryAfter i rateLimitMessage", () => {
+      const now = Date.parse("2026-10-06T12:00:00Z");
+
+      it.each([
+        [null, null],
+        ["", null],
+        ["12", 12],
+        [" 7 ", 7],
+        ["0", 0],
+        ["abc", null],
+        ["-5", null],
+        ["Tue, 06 Oct 2026 12:00:30 GMT", 30],
+        ["Tue, 06 Oct 2026 11:59:00 GMT", 0],
+      ])("Retry-After %j → %j", (value, expected) => {
+        expect(parseRetryAfter(value, now)).toBe(expected);
+      });
+
+      it.each([
+        [null, "Zbyt wiele żądań. Spróbuj ponownie za chwilę."],
+        [45, "Zbyt wiele żądań. Spróbuj ponownie za 45 s."],
+        [0, "Limit żądań został odnowiony — możesz ponowić próbę."],
+      ])("komunikat limitu dla %j", (seconds, expected) => {
+        expect(rateLimitMessage(seconds)).toBe(expected);
+      });
+    });
   });
 
   describe("pakiet audytowy (BK-505)", () => {

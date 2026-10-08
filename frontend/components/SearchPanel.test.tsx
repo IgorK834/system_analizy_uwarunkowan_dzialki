@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { SearchPanel } from "@/components/SearchPanel";
 import { ApiError, searchAddresses } from "@/lib/api";
@@ -242,5 +242,89 @@ describe("SearchPanel", () => {
 
     expect(screen.getByLabelText("Identyfikator działki")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Analizuję…" })).toBeDisabled();
+  });
+  describe("lista podpowiedzi jako popover (AU-008)", () => {
+    const fiveResults = Array.from({ length: 5 }, (_, index) => ({
+      ...warsawResult,
+      id: `hash:suggestion-${index}`,
+      label: `Warszawa, Marszałkowska ${index + 1}`,
+    }));
+
+    async function openFiveSuggestions() {
+      searchAddressesMock.mockResolvedValue({
+        query: "Warszawa",
+        results: fiveResults,
+        total_returned: 5,
+      });
+      const user = userEvent.setup();
+      const view = render(<SearchPanel loading={false} onAnalyze={vi.fn()} />);
+      await user.click(screen.getByRole("tab", { name: "Adres" }));
+      await user.type(screen.getByLabelText("Adres"), "Warszawa");
+      await screen.findAllByRole("option");
+      return { user, ...view };
+    }
+
+    it("renderuje listę wewnątrz opakowania pola i podnosi panel tylko, gdy lista jest otwarta", async () => {
+      const { container } = await openFiveSuggestions();
+
+      const list = screen.getByRole("listbox");
+      expect(list.parentElement).toHaveClass("address-field");
+      expect(list.parentElement).toContainElement(screen.getByLabelText("Adres"));
+      expect(screen.getAllByRole("option")).toHaveLength(5);
+      expect(container.querySelector(".search-panel")).toHaveClass("search-panel-suggesting");
+    });
+
+    it("panel nie jest podniesiony przed otwarciem listy ani w innych zakładkach", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<SearchPanel loading={false} onAnalyze={vi.fn()} />);
+      const panel = () => container.querySelector(".search-panel");
+
+      expect(panel()).not.toHaveClass("search-panel-suggesting");
+      await user.click(screen.getByRole("tab", { name: "Adres" }));
+      expect(panel()).not.toHaveClass("search-panel-suggesting");
+    });
+
+    it("zachowuje klawiaturę i aria-activedescendant", async () => {
+      const { user } = await openFiveSuggestions();
+      const input = screen.getByLabelText("Adres");
+
+      await user.type(input, "{ArrowDown}{ArrowDown}");
+      expect(input).toHaveAttribute("aria-activedescendant", "address-suggestion-1");
+      expect(screen.getAllByRole("option")[1]).toHaveAttribute("aria-selected", "true");
+      await user.type(input, "{ArrowUp}{ArrowUp}");
+      expect(input).toHaveAttribute("aria-activedescendant", "address-suggestion-4");
+      expect(input).toHaveAttribute("aria-controls", "address-suggestions");
+      expect(screen.getByRole("listbox")).toHaveAttribute("id", "address-suggestions");
+    });
+
+    it("Escape zamyka listę i opuszcza panel do poziomu spoczynkowego", async () => {
+      const { user, container } = await openFiveSuggestions();
+
+      await user.type(screen.getByLabelText("Adres"), "{ArrowDown}{Escape}");
+
+      expect(screen.queryByRole("listbox")).toBeNull();
+      expect(screen.getByLabelText("Adres")).not.toHaveAttribute("aria-activedescendant");
+      expect(container.querySelector(".search-panel")).not.toHaveClass("search-panel-suggesting");
+    });
+
+    it("Escape bez otwartej listy nie robi nic", async () => {
+      const user = userEvent.setup();
+      render(<SearchPanel loading={false} onAnalyze={vi.fn()} />);
+      await user.click(screen.getByRole("tab", { name: "Adres" }));
+
+      await user.type(screen.getByLabelText("Adres"), "{Escape}");
+
+      expect(screen.queryByRole("listbox")).toBeNull();
+    });
+
+    it("kliknięcie poza panelem zamyka listę, kliknięcie w panelu nie", async () => {
+      const { user } = await openFiveSuggestions();
+
+      await user.click(screen.getByRole("heading", { name: "Znajdź działkę" }));
+      expect(screen.getByRole("listbox")).toBeVisible();
+
+      await user.click(document.body);
+      expect(screen.queryByRole("listbox")).toBeNull();
+    });
   });
 });

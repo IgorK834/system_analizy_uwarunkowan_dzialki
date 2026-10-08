@@ -10,6 +10,9 @@ import type { AnalyzeResponse, AnalyzeResumeRequest } from "@/lib/types";
  * opisuje 404 jako brak działki, co przy resume byłoby mylące.
  */
 export function resumeErrorMessage(error: ApiError): string {
+  if (error.status === 403) {
+    return "Brak dostępu do tej analizy — uruchom analizę działki ponownie, aby wznowić ją z poprawnym tokenem.";
+  }
   if (error.status === 404) {
     return "Analiza o tym identyfikatorze nie istnieje — uruchom analizę działki ponownie.";
   }

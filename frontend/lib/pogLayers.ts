@@ -6,7 +6,7 @@
  * `setPaintProperty` (bez `addSource`, `setTiles`, `setData` ani żądań sieciowych),
  * a filtr statusu prawnego to `setFilter` na tych samych, już pobranych kaflach.
  */
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { getApiResourceUrl } from "@/lib/config";
 import { buildPatternImage } from "@/lib/pogPatterns";
@@ -269,16 +269,22 @@ export function addPogLayers(
   }
 }
 
+// Wyrażenia motywów są budowane jako `unknown[]` (wspólny kod z testami kontrastu); MapLibre 6 ma
+// przeciążone, ścisłe typy `setPaintProperty`, więc wartość zawężamy do `never` (jak `setFilter` niżej).
 /** BK-402: zmiana trybu to wyłącznie `setPaintProperty` na istniejących warstwach. */
 export function applyPogTheme(map: maplibregl.Map, themeId: PogThemeId): void {
   if (!map.getLayer(POG_LAYER_IDS.zonesFill)) return;
   const theme = themeById(themeId);
-  map.setPaintProperty(POG_LAYER_IDS.zonesFill, "fill-color", themeFillColorExpression(theme));
+  map.setPaintProperty(
+    POG_LAYER_IDS.zonesFill,
+    "fill-color",
+    themeFillColorExpression(theme) as never,
+  );
   map.setPaintProperty(POG_LAYER_IDS.zonesPattern, "fill-pattern", themePatternImage(theme));
   map.setPaintProperty(
     POG_LAYER_IDS.zonesPattern,
     "fill-opacity",
-    themePatternOpacityExpression(theme),
+    themePatternOpacityExpression(theme) as never,
   );
 }
 

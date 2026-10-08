@@ -34,7 +34,7 @@ describe("useResumeAnalysis", () => {
 
     let runPromise!: Promise<ReturnType<typeof buildAnalyzeResponse> | null>;
     act(() => {
-      runPromise = result.current.run({ analysis_id: 42, zone_symbol: "230_U" });
+      runPromise = result.current.run({ analysis_id: 42, access_token: "token-42", zone_symbol: "230_U" });
     });
     expect(result.current.loading).toBe(true);
     expect(result.current.error).toBeNull();
@@ -53,13 +53,13 @@ describe("useResumeAnalysis", () => {
     const { result } = renderHook(() => useResumeAnalysis());
 
     await act(async () => {
-      await result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+      await result.current.run({ analysis_id: 1, access_token: "token-1", zone_symbol: "MN" });
     });
     expect(result.current.error).toBe("Nieprawidłowy symbol");
 
     resumeAnalysisMock.mockRejectedValueOnce(new Error("sekret techniczny"));
     await act(async () => {
-      await result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+      await result.current.run({ analysis_id: 1, access_token: "token-1", zone_symbol: "MN" });
     });
     expect(result.current.error).toBe(
       "Wystąpił nieoczekiwany błąd podczas wznawiania analizy.",
@@ -79,7 +79,7 @@ describe("useResumeAnalysis", () => {
 
     let runPromise!: Promise<unknown>;
     act(() => {
-      runPromise = result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+      runPromise = result.current.run({ analysis_id: 1, access_token: "token-1", zone_symbol: "MN" });
     });
     const signal = resumeAnalysisMock.mock.calls[0][1]?.signal;
 
@@ -103,7 +103,7 @@ describe("useResumeAnalysis", () => {
     const { result, unmount } = renderHook(() => useResumeAnalysis());
     let runPromise!: Promise<unknown>;
     act(() => {
-      runPromise = result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+      runPromise = result.current.run({ analysis_id: 1, access_token: "token-1", zone_symbol: "MN" });
     });
     const signal = resumeAnalysisMock.mock.calls[0][1]?.signal;
 
@@ -114,6 +114,7 @@ describe("useResumeAnalysis", () => {
   });
 
   it.each([
+    [403, "Brak dostępu do tej analizy"],
     [404, "nie istnieje"],
     [409, "nie czeka już na symbol strefy"],
     [503, "Nic nie zapisano — analiza nadal czeka na symbol strefy."],
@@ -122,7 +123,7 @@ describe("useResumeAnalysis", () => {
     const { result } = renderHook(() => useResumeAnalysis());
 
     await act(async () => {
-      await result.current.run({ analysis_id: 1, zone_symbol: "MN" });
+      await result.current.run({ analysis_id: 1, access_token: "token-1", zone_symbol: "MN" });
     });
 
     expect(result.current.error).toContain(text);

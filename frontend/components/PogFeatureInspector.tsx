@@ -256,6 +256,9 @@ export function PogFeatureInspector({
   );
 
   return (
+    // Kliknięcie i Escape w inspektorze nie mogą dotrzeć do mapy (nie uruchamiają analizy ani zamknięcia);
+    // sama sekcja nie jest kontrolką — działanie wykonują przyciski wewnątrz.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
       className="analysis-card pog-inspector"
       aria-labelledby={headingId}

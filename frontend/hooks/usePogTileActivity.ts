@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 import { POG_SOURCE_ID } from "@/lib/pogLayers";
 import {
@@ -14,8 +14,11 @@ type SourceEvent = {
   sourceId?: string;
   isSourceLoaded?: boolean;
   tile?: unknown;
-  error?: { status?: number } | null;
+  error?: { message?: string; status?: number } | null;
 };
+
+/** Zdarzenie `error` MapLibre 6: `ErrorEvent` z identyfikatorem źródła dopisywanym przy błędach kafli. */
+type SourceErrorEvent = maplibregl.ErrorEvent & SourceEvent & { error: { message: string; status?: number } };
 
 function viewportOf(map: maplibregl.Map): LonLatBounds {
   const bounds = map.getBounds();
@@ -65,7 +68,7 @@ export function usePogTileActivity(map: maplibregl.Map | null, releaseId: number
         anyTileLoaded: current.anyTileLoaded || Boolean(event.tile),
       }));
     };
-    const onError = (event: SourceEvent) => {
+    const onError = (event: SourceErrorEvent) => {
       if (event.sourceId !== POG_SOURCE_ID) return;
       update((current) => ({
         ...current,
