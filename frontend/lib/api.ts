@@ -1,6 +1,8 @@
 import { getApiBaseUrl } from "@/lib/config";
 import type {
   AddressSearchResponse,
+  AnalysisLinkPurpose,
+  AnalysisLinks,
   AnalyzeRequest,
   AnalyzeResponse,
   AnalyzeResumeRequest,
@@ -314,19 +316,41 @@ export async function getPogAreaSummary(
   }
 }
 
+/** Nagłówek tokenu analizy (AU-012): w przeciwieństwie do `?access_token=` nie trafia do logów ani do `Referer`. */
+export const ANALYSIS_TOKEN_HEADER = "X-Analysis-Token";
+
+function analysisTokenHeader(accessToken?: string | null): Record<string, string> {
+  return accessToken ? { [ANALYSIS_TOKEN_HEADER]: accessToken } : {};
+}
+
+/**
+ * Wydaje krótkotrwały link do raportu PDF i pakietu audytowego (`POST /analyze/{id}/links`, AU-012).
+ * `download` — 15 min, `share` — 30 dni (nigdy dłużej niż token użyty do wydania). Ścieżki z tokenem
+ * rozwiąż przez `getApiResourceUrl`.
+ */
+export async function createAnalysisLinks(
+  analysisId: number,
+  accessToken: string,
+  options: { purpose?: AnalysisLinkPurpose; signal?: AbortSignal } = {},
+): Promise<AnalysisLinks> {
+  return requestJson<AnalysisLinks>(`${getApiBaseUrl()}/analyze/${analysisId}/links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...analysisTokenHeader(accessToken) },
+    body: JSON.stringify({ purpose: options.purpose ?? "download" }),
+    signal: options.signal,
+  });
+}
+
 export async function getAnalysisReport(
   analysisId: number,
   options: { accessToken?: string | null; signal?: AbortSignal } = {},
 ): Promise<Blob> {
   let response: Response;
-  const query = options.accessToken
-    ? `?access_token=${encodeURIComponent(options.accessToken)}`
-    : "";
 
   try {
-    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}${query}`, {
+    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}`, {
       method: "GET",
-      headers: { Accept: "application/pdf" },
+      headers: { Accept: "application/pdf", ...analysisTokenHeader(options.accessToken) },
       signal: options.signal,
     });
   } catch (error) {
@@ -352,7 +376,7 @@ export async function getAnalysisReport(
       response.status === 404
         ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
         : response.status === 403
-          ? "Brak dostępu do raportu tej analizy. Uruchom analizę ponownie."
+          ? "Dostęp do raportu tej analizy wygasł lub jest nieprawidłowy. Uruchom analizę ponownie."
           : response.status === 429
             ? "Zbyt wiele żądań raportu. Spróbuj ponownie za chwilę."
             : response.status >= 500
@@ -412,14 +436,11 @@ export async function getAnalysisAuditPackage(
   options: { accessToken?: string | null; signal?: AbortSignal } = {},
 ): Promise<AuditPackageDownload> {
   let response: Response;
-  const query = options.accessToken
-    ? `?access_token=${encodeURIComponent(options.accessToken)}`
-    : "";
 
   try {
-    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}/audit.zip${query}`, {
+    response = await fetch(`${getApiBaseUrl()}/report/${analysisId}/audit.zip`, {
       method: "GET",
-      headers: { Accept: "application/zip" },
+      headers: { Accept: "application/zip", ...analysisTokenHeader(options.accessToken) },
       signal: options.signal,
     });
   } catch (error) {
@@ -445,7 +466,7 @@ export async function getAnalysisAuditPackage(
       response.status === 404
         ? `Nie znaleziono zapisanej analizy.${detail ? ` ${detail}` : ""}`
         : response.status === 403
-          ? "Brak dostępu do pakietu audytowego tej analizy. Uruchom analizę ponownie."
+          ? "Dostęp do pakietu audytowego tej analizy wygasł lub jest nieprawidłowy. Uruchom analizę ponownie."
           : response.status === 413
             ? "Pakiet audytowy tej analizy przekracza dopuszczalny rozmiar."
             : response.status === 429
