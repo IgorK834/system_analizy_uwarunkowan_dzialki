@@ -1986,9 +1986,11 @@ class AnalyzeResponse(BaseModel):
 
     @computed_field(  # type: ignore[prop-decorator]
         description=(
-            "Token dostępu do raportu PDF i dokumentu tej analizy (parametr "
-            "``access_token``). Wyliczany z ``analysis_id``; None dla wyniku "
-            "niezapisanego."
+            "Token dostępu do raportu PDF i dokumentu tej analizy (AU-012): "
+            "``v2.<exp>.<kid>.<sig>``, ważny ``ACCESS_TOKEN_TTL_SECONDS`` (domyślnie 30 dni) "
+            "i wyliczany przy każdej odpowiedzi — także z cache. Przekazuj go w nagłówku "
+            "``X-Analysis-Token``; do adresów URL użyj krótkotrwałego tokenu z "
+            "``POST /analyze/{id}/links``. None dla wyniku niezapisanego."
         ),
     )
     @property
@@ -1996,6 +1998,33 @@ class AnalyzeResponse(BaseModel):
         if self.analysis_id is None:
             return None
         return make_analysis_token(self.analysis_id)
+
+
+class AnalysisLinksRequest(BaseModel):
+    """Żądanie linku do raportu PDF i pakietu audytowego (AU-012)."""
+
+    purpose: Literal["download", "share"] = Field(
+        default="download",
+        description=(
+            "``download`` — bezpośrednie pobranie (domyślnie 15 min, ``ACCESS_TOKEN_DOWNLOAD_TTL_SECONDS``); "
+            "``share`` — link „Udostępnij” (domyślnie 30 dni, ``ACCESS_TOKEN_TTL_SECONDS``). "
+            "Termin nie przekracza ważności tokenu, którym uwierzytelniono żądanie."
+        ),
+    )
+
+
+class AnalysisLinksResponse(BaseModel):
+    """Krótkotrwałe linki do raportu PDF i pakietu audytowego jednej analizy (AU-012)."""
+
+    analysis_id: int = Field(description="Identyfikator analizy.")
+    purpose: Literal["download", "share"] = Field(description="Rodzaj linku z żądania.")
+    access_token: str = Field(
+        description="Token ``v2.<exp>.<kid>.<sig>`` ważny do ``expires_at``; można go też podać w nagłówku.",
+    )
+    expires_at: datetime = Field(description="Koniec ważności tokenu (UTC).")
+    expires_in_seconds: int = Field(ge=0, description="Pozostały czas ważności w sekundach.")
+    report_url: str = Field(description="Ścieżka względem adresu API: raport PDF z tokenem.")
+    audit_package_url: str = Field(description="Ścieżka względem adresu API: pakiet audytowy ZIP z tokenem.")
 
 
 class ErrorResponse(BaseModel):
