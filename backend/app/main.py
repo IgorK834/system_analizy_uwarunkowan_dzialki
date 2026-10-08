@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import configure_logging
 from app.core.request_id import RequestIdMiddleware
+from app.core.response_headers import SensitiveResponseHeadersMiddleware
 from app.core.settings import settings
 from app.modules.location.api.router import router as address_search_router
 from app.modules.documents.api.router import router as documents_router
@@ -53,6 +54,9 @@ app.add_middleware(
         *EXPOSED_RESPONSE_HEADERS,
     ],
 )
+# AU-012: ``Referrer-Policy: no-referrer`` i ``Cache-Control: private, no-store`` dla raportów i tokenów
+# (dodany po CORS, więc obejmuje też odpowiedzi błędów tych ścieżek).
+app.add_middleware(SensitiveResponseHeadersMiddleware)
 # Dodany po CORS, więc najbardziej zewnętrzny z middleware aplikacji: ``X-Request-ID`` trafia też do
 # odpowiedzi na preflight i do odpowiedzi błędów. Handler ``Exception`` (poza middleware) odczytuje
 # identyfikator ze ``scope["state"]``.
