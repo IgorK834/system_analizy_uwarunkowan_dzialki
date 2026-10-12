@@ -12,6 +12,14 @@ opisowych; zmieniły się wyłącznie parametry opisowe trzech dokumentów (Łó
 etykiecie i pełne „4,0 m” w zakazie; Poznań: drugie przeznaczenie uzupełniające; Kraków, tryb ``legacy``:
 trzy zakazy przełamane w wierszu) oraz wersja parsera w evidence. Wartości liczbowe — bez zmian.
 
+2026-10-10, AU-102 (``mpzp-parser/3.2-det``, kontrakt 3.0) — zakresy symboli, więcej zwrotów opisowych i jawne
+powody braku sekcji. Przegląd różnic względem poprzedniego zamrożenia: wyłącznie DODANE ustalenia opisowe
+(dopuszczenia: ``dopuszcza się…`` / ``dopuszczenie…`` także w wierszach przełamanych; przeznaczenie
+z ``o podstawowym przeznaczeniu pod…`` w Krakowie Morelowej), jedna korekta strony dowodu (Bielsko, tryb blokowy:
+strona z bloku, nie z pierwszego zdania o tej treści w dokumencie), kod ``SCANNED_NO_OCR`` zamiast
+``ZONE_SECTION_NOT_FOUND`` dla skanu bez tekstu oraz wersja parsera w evidence. Żadna wartość liczbowa ani
+żadna wcześniej zwrócona wartość opisowa nie zniknęła ani nie zmieniła się.
+
     python3 scripts/freeze_mpzp_parser_modes.py          # zapis
     python3 scripts/freeze_mpzp_parser_modes.py --check  # porównanie (kod 1 przy różnicy)
 """
