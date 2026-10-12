@@ -1,0 +1,19 @@
+{
+ "landing_kleparz.html": {
+  "url": "https://www.bip.krakow.pl/?dok_id=137657",
+  "content_type": "text/html",
+  "page_sha256": "2c0337dbaa3af2e480e7ba260b54a40a8ad0519e906d1114ab03c59122672fce",
+  "bytes": 62785,
+  "anchors_kept": 82,
+  "title": "Kleparz – plan obowiązujący- Biuletyn Informacji Publicznej Miasta Krakowa - BIP MK"
+ },
+ "card_kleparz_text.html": {
+  "url": "https://www.bip.krakow.pl/zalaczniki/dokumenty/n/298025/karta",
+  "content_type": "text/html",
+  "page_sha256": "307f1a59a0528d3f0977e926c29a4f8b2a848c8758275c0afb64ada393d6b263",
+  "bytes": 53950,
+  "anchors_kept": 48,
+  "title": "Ustalenia planu - tekst- Biuletyn Informacji Publicznej Miasta Krakowa - BIP MK"
+ },
+ "_fetched_at": "2026-10-10T21:22:52.715766+00:00"
+}
