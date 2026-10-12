@@ -50,6 +50,11 @@ class Analysis(Base):
     # Akty MPZP wskazane przez KIMPZP i status źródła (AU-004, migracja 032).
     # NULL = zapis sprzed AU-004 — odczyt zwraca brak sekcji, nie „brak planu”.
     mpzp_discovery: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Akty MPZP przecinające działkę z RU i KIMPZP (AU-101, migracja 033). NULL = zapis sprzed AU-101 — odczyt
+    # zwraca pustą listę, a o braku aktu świadczy dopiero ``mpzp_status`` (migracja 034, AU-103).
+    mpzp_acts: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    # Rozłączny stan ustalenia MPZP (AU-103, migracja 034). NULL = zapis sprzed AU-103 — brak stanu, nie „brak planu”.
+    mpzp_status: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     # Zamrożona specyfikacja map raportu (BK-503, ADR-010): geometrie EPSG:2180,
     # kadr, tryb, kolejność warstw, style, font, wydania i hash semantyczny.
     # NULL = zapis sprzed migracji 025; raport odtwarza wtedy mapy z danych
