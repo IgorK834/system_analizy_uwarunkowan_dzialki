@@ -1,0 +1,32 @@
+{
+  "url": "https://www.inforlex.pl/download/akty_pdf,U70,2016,188,4379.pdf",
+  "fetched_at": "2026-10-10T21:01:17.330801+00:00",
+  "media_type": "application/pdf",
+  "filename": "pobierz,U70.2016.188.0004379,Uchwala-nr-XXIV-220-16-Rady-Miejskiej-Legnicy-z-dnia-26-wrzesnia-2016r-w-sprawie-uchwalenia-zmiany-miejscowego-planu-zagospodarowania-przestrzennego.pdf",
+  "quality_score": 0.9166666666666666,
+  "needs_ocr": false,
+  "note": "Uchwała nr XXIV/220/16 Rady Miejskiej Legnicy z 26 września 2016 r. — zmiana planu, kwartał Sudecka–Armii Krajowej–Okulickiego",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "tls_verification": "enabled",
+  "voivodeship": "dolnośląskie",
+  "document_sha256": "65bb8a8763e074d04904ab9a0ef81a3e6b55f22d1c3d2c88ee6be6314ebc2e3e",
+  "content_length": 1119215,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ]
+}

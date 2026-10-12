@@ -1,0 +1,33 @@
+{
+  "url": "https://www.inforlex.pl/download/akty_pdf,U70,2024,66,1615.pdf",
+  "fetched_at": "2026-10-10T21:01:18.116110+00:00",
+  "media_type": "application/pdf",
+  "filename": "pobierz,U70.2024.066.0001615,Uchwala-nr-LXXXI-420-2024-Rady-Gminy-Czarny-Bor-z-dnia-27-lutego-2024-r-w-sprawie-uchwalenia-zmiany-miejscowego-planu-zagospodarowania.pdf",
+  "quality_score": 1.0,
+  "needs_ocr": false,
+  "note": "Uchwała nr LXXXI/420/2024 Rady Gminy Czarny Bór z 27 lutego 2024 r. — zmiana planu wsi Czarny Bór i Borówno, obszar „A”",
+  "legal_basis": "Akt prawa miejscowego, jawny publicznie (BIP urzędu miasta), pobrany zgodnie z ustawą o dostępie do informacji publicznej.",
+  "tls_verification": "enabled",
+  "voivodeship": "dolnośląskie",
+  "document_sha256": "4eaeb944cbd91b783544752e8e4b5b066ee535e30592132c74da3822fb18f92c",
+  "content_length": 1190526,
+  "extraction_method": "pdf_text",
+  "ocr_used": false,
+  "ocr_engine_version": null,
+  "manual_review_required": false,
+  "source_page_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ]
+}

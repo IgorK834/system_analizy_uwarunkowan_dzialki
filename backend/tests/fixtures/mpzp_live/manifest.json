@@ -1,0 +1,1523 @@
+{
+ "schema": "mpzp-live-annotations/1",
+ "annotator": "asystent AI (odczyt tekstu uchwał); brak niezależnego przeglądu człowieka — independent_human_review: pending",
+ "independent_human_review": "pending",
+ "documents": [
+  {
+   "slug": "krakow_stare_miasto_xii_131_11",
+   "municipality": "Kraków",
+   "voivodeship": "małopolskie",
+   "resolution": "XII/131/11",
+   "split": "development",
+   "format": "pdf_text",
+   "title": "Uchwała nr XII/131/11 Rady Miasta Krakowa z 13 kwietnia 2011 r. — plan „Stare Miasto”",
+   "source_url": "https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw",
+   "landing_url": "http://www.bip.krakow.pl/?bip_id=1&dok_id=45241&sub_dok_id=45241",
+   "zones": [
+    {
+     "zone_symbol": "MW/U.4",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": "126105_9.0001.49/2",
+     "section": {
+      "first_page": 42,
+      "last_page": 44,
+      "start_quote": "Wyznacza się Teren zabudowy mieszkaniowej wielorodzinnej z usługami , oznaczony symbolem MW/U.4"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 42,
+       "quote": "z podstawowym przeznaczeniem na: 1) zabudowę mieszkaniową wielorodzinną z usługami"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 43,
+       "quote": "zakaz lokalizacji lokali mieszkalnych na pierwszej kondygnacji nadziemnej budynków frontowych"
+      },
+      {
+       "name": "permission",
+       "normalized_value": null,
+       "unit": null,
+       "page": 43,
+       "quote": "możliwość lokalizacji lokali usługowych na dwóch pierwszych kondygnacjach nadziemnych budynków"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "KP.1",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": "126105_9.0001.580/4",
+     "section": {
+      "first_page": 87,
+      "last_page": 89,
+      "start_quote": "§ 95. 1. Wyznacza się Teren placu miejskiego, oznaczony symbolem KP.1 , obejmujący pl. Ryn"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 87,
+       "quote": "z podstawowym przeznaczeniem na plac miejski"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 88,
+       "quote": "zakaz lokalizacji nowej zabudowy"
+      },
+      {
+       "name": "permission",
+       "normalized_value": null,
+       "unit": null,
+       "page": 88,
+       "quote": "możliwość lokalizacji: ogródków gastronomicznych, zgodnie z rejonami"
+      }
+     ],
+     "note": "symbol występuje też w listach ogólnych (KP.1 – KP.6 i KP.8) na stronach 3 i 11"
+    },
+    {
+     "zone_symbol": "ZP.4",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": "126105_9.0001.540/15",
+     "section": {
+      "first_page": 93,
+      "last_page": 94,
+      "start_quote": "§ 105. 1. Wyznacza się Teren zieleni urządzonej , oznaczony symbolem ZP.4 , obejmujący „Og"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 93,
+       "quote": "z podstawowym przeznaczeniem na ogólnodostępną zieleń urządzoną"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 94,
+       "quote": "zakaz zabudowy"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "U.9",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": "126105_9.0001.540/15",
+     "section": {
+      "first_page": 20,
+      "last_page": 20,
+      "start_quote": "§ 22. 1. Wyznacza się Teren zabudowy usługowej , oznaczony symbolem U.9 , z podstawowym pr"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 20,
+       "quote": "z podstawowym przeznaczeniem na obiekty użyteczności publicznej z zakresu szkolnictwa wyższego i nauki"
+      },
+      {
+       "name": "permission",
+       "normalized_value": null,
+       "unit": null,
+       "page": 20,
+       "quote": "ustala się możliwość lokalizacji innych usług"
+      }
+     ],
+     "note": "symbol występuje też w liście na stronie 4 (… MW/U.39, U.9, U.10 …)"
+    },
+    {
+     "zone_symbol": "MW/U.28.1",
+     "layout": "compound_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 75,
+      "last_page": 76,
+      "start_quote": "§ 82. 1. Wyznacza się Tereny zabudowy mieszkaniowej wielorodzinnej z usługami , oznaczone"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 75,
+       "quote": "z podstawowym przeznaczeniem na: 1) zabudowę mieszkaniową wielorodzinną z usługami"
+      }
+     ],
+     "note": "wspólny § dla dwóch symboli „MW/U.28 i MW/U.28.1”; symbol z dodatkowym członem .1"
+    },
+    {
+     "zone_symbol": "MW/U.99",
+     "layout": "absent",
+     "expected": "ZONE_NOT_IN_DOCUMENT",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "symbol spoza planu (MW/U.1–MW/U.40)"
+    }
+   ],
+   "document_sha256": "db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c",
+   "content_length": 559662,
+   "fetched_at": "2026-10-10T21:00:55.562485+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 99,
+   "pages_sha256": "48884b5fa1b6045b2ef7752400d2ae5932fdf1c9fa4cefcd9be3abc312f5e069"
+  },
+  {
+   "slug": "krakow_kleparz_liii_1464_21",
+   "municipality": "Kraków",
+   "voivodeship": "małopolskie",
+   "resolution": "LIII/1464/21",
+   "split": "development",
+   "format": "pdf_text",
+   "title": "Uchwała nr LIII/1464/21 Rady Miasta Krakowa z 18 lutego 2021 r. — plan „Kleparz”",
+   "source_url": "https://www.bip.krakow.pl/plik.php?zid=298025&wer=0&new=t&mode=shw",
+   "landing_url": "https://www.bip.krakow.pl/?dok_id=137657",
+   "zones": [
+    {
+     "zone_symbol": "MW.1",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 22,
+      "last_page": 23,
+      "start_quote": "§ 16. 1. Wyznacza się Teren zabudowy mieszkaniowej wielorodzinnej, oznaczony symbolem MW.1"
+     },
+     "parameters": [
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 16,
+       "unit": "%",
+       "page": 22,
+       "quote": "minimalny wskaźnik terenu biologicznie czynnego: 16%"
+      },
+      {
+       "name": "min_intensity",
+       "normalized_value": 3.7,
+       "unit": null,
+       "page": 22,
+       "quote": "wskaźnik intensywności zabudowy: 3,7 – 4,5"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 4.5,
+       "unit": null,
+       "page": 22,
+       "quote": "wskaźnik intensywności zabudowy: 3,7 – 4,5"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 20,
+       "unit": "m",
+       "page": 22,
+       "quote": "maksymalną wysokość zabudowy: 20 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "MW.2",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 23,
+      "last_page": 23,
+      "start_quote": "§ 17. 1. Wyznacza się Teren zabudowy mieszkaniowej wielorodzinnej, oznaczony symbolem MW.2"
+     },
+     "parameters": [
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 16,
+       "unit": "%",
+       "page": 23,
+       "quote": "minimalny wskaźnik terenu biologicznie czynnego: 16%"
+      },
+      {
+       "name": "min_intensity",
+       "normalized_value": 1.5,
+       "unit": null,
+       "page": 23,
+       "quote": "wskaźnik intensywności zabudowy: 1,5 – 2,5"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 2.5,
+       "unit": null,
+       "page": 23,
+       "quote": "wskaźnik intensywności zabudowy: 1,5 – 2,5"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 20,
+       "unit": "m",
+       "page": 23,
+       "quote": "maksymalną wysokość zabudowy: 20 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "ZPb.9",
+     "layout": "list_assignment",
+     "expected": "parameters",
+     "corpus_parcel": "126105_9.0119.181/10",
+     "section": {
+      "first_page": 90,
+      "last_page": 91,
+      "start_quote": "§ 172. 1. Wyznacza się Tereny zieleni urządzonej, oznaczone symbolami ZPb.1, ZPb.2, ZPb.3,"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 90,
+       "quote": "o podstawowym przeznaczeniu pod zieleń towarzyszącą obiektom budowlanym"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 80,
+       "unit": "%",
+       "page": 90,
+       "quote": "80% w terenach ZPb.1-ZPb.11, ZPb.14, ZPb.16, ZPb.17"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 11,
+       "unit": "m",
+       "page": 91,
+       "quote": "11 m w terenach ZPb.1-ZPb.14, ZPb.16, ZPb.17"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 90,
+       "quote": "budynków w terenach ZPb.1-ZPb.5, ZPb.7-ZPb.16, ZPb.17"
+      }
+     ],
+     "note": "wartości przypisane symbolom listami i zakresami (ZPb.1-ZPb.11, ZPb.14 …); symbol bez własnego paragrafu"
+    },
+    {
+     "zone_symbol": "MW.99",
+     "layout": "absent",
+     "expected": "ZONE_NOT_IN_DOCUMENT",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "symbol spoza planu"
+    }
+   ],
+   "document_sha256": "93c3e50fcdacc83ca9687ae3eb4acf9dadd0a070a61c520b8dd23df42b847ca2",
+   "content_length": 1137422,
+   "fetched_at": "2026-10-10T21:01:01.790951+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 95,
+   "pages_sha256": "d9efe61cf6f97bac17418af63787ad1fade088e6b146a464893bfca2b01c5ae6"
+  },
+  {
+   "slug": "krakow_bienczyce_lxx_1007_13",
+   "municipality": "Kraków",
+   "voivodeship": "małopolskie",
+   "resolution": "LXX/1007/13",
+   "split": "development",
+   "format": "pdf_text",
+   "title": "Uchwała nr LXX/1007/13 Rady Miasta Krakowa — plan „Bieńczyce – Osiedle”",
+   "source_url": "https://www.bip.krakow.pl/plik.php?zid=321735&wer=0&new=t&mode=shw",
+   "landing_url": "https://www.bip.krakow.pl/?dok_id=55713",
+   "zones": [
+    {
+     "zone_symbol": "MW.2",
+     "layout": "per_zone_subblock",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 10,
+      "last_page": 11,
+      "start_quote": "§ 14. 1. Wyznacza się Tereny Zabudowy Mieszkaniowej Wielorodzinnej oznaczone symbolami MW."
+     },
+     "parameters": [
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 45,
+       "unit": "%",
+       "page": 10,
+       "quote": "wskaźnik terenu biologicznie czynnego – min. 45 %"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 21,
+       "unit": "m",
+       "page": 10,
+       "quote": "wysokość zabudowy – max. 21 m"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 10,
+       "quote": "ustala się zakaz lokalizacji nowych budynków"
+      }
+     ],
+     "note": "paragraf wspólny dla MW.1–MW.14 z podpunktami „dla MW.2:”"
+    },
+    {
+     "zone_symbol": "MW.7",
+     "layout": "per_zone_subblock",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 10,
+      "last_page": 11,
+      "start_quote": "§ 14. 1. Wyznacza się Tereny Zabudowy Mieszkaniowej Wielorodzinnej oznaczone symbolami MW."
+     },
+     "parameters": [
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 40,
+       "unit": "%",
+       "page": 10,
+       "quote": "wskaźnik terenu biologicznie czynnego – min. 40 %"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 21,
+       "unit": "m",
+       "page": 10,
+       "quote": "wysokość zabudowy – max. 21 m"
+      }
+     ],
+     "note": "podpunkt „dla MW.3, MW.7, MW.11” wspólny dla trzech symboli"
+    },
+    {
+     "zone_symbol": "U.9",
+     "layout": "per_zone_subblock",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 12,
+      "last_page": 15,
+      "start_quote": "§ 16. 1. Wyznacza się Tereny Zabudowy Usługowej oznaczone symbolami U.1, U.2, U.3, U.4, U."
+     },
+     "parameters": [
+      {
+       "name": "min_intensity",
+       "normalized_value": 1.0,
+       "unit": null,
+       "page": 13,
+       "quote": "wskaźnik intensywności zabudowy – od 1,0 do 2,2"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 2.2,
+       "unit": null,
+       "page": 13,
+       "quote": "wskaźnik intensywności zabudowy – od 1,0 do 2,2"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 25,
+       "unit": "%",
+       "page": 13,
+       "quote": "wskaźnik terenu biologicznie czynnego – min. 25 %"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 16,
+       "unit": "m",
+       "page": 13,
+       "quote": "wysokość zabudowy – max. 16 m"
+      }
+     ],
+     "note": "symbol z odstępem przed dwukropkiem („dla U.9 :”)"
+    },
+    {
+     "zone_symbol": "ZPp.3",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 16,
+      "last_page": 16,
+      "start_quote": "§ 19. 1. Wyznacza się Tereny Zieleni Urządzonej oznaczone symbolami ZPp.1, ZPp.2, ZPp.3, Z"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 16,
+       "quote": "z przeznaczeniem podstawowym pod ogólnodostępny park miejski"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 80,
+       "unit": "%",
+       "page": 16,
+       "quote": "ustala się wskaźnik terenu biologicznie czynnego – min. 80 %"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 16,
+       "quote": "rozbudowy i nadbudowy istniejących obiektów"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "KP.2",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 17,
+      "last_page": 17,
+      "start_quote": "§ 23. 1. Wyznacza się Tereny Parkingu oznaczone symbolami KP.1, KP.2, KP.3, KP.4, KP.5, KP"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 17,
+       "quote": "z przeznaczeniem podstawowym pod wydzielone i urządzone miejsca postojowe"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 10,
+       "unit": "%",
+       "page": 17,
+       "quote": "ustala się wskaźnik powierzchni terenu biologicznie czynnego – min. 10 %"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 17,
+       "quote": "zakazuje się lokalizacji nowych budynków"
+      }
+     ]
+    }
+   ],
+   "document_sha256": "9a8967aa4de49adf53f494550491c529382442f1f7ebaa2bf747d2ea61259b03",
+   "content_length": 173501,
+   "fetched_at": "2026-10-10T21:01:09.199725+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 18,
+   "pages_sha256": "da5bd432fa7e3e88206d4b0416308dd89a6f4d7518d9618246bedc32a26efcb4"
+  },
+  {
+   "slug": "gora_kalwaria_iv_30_2024",
+   "municipality": "Góra Kalwaria",
+   "voivodeship": "mazowieckie",
+   "resolution": "IV/30/2024",
+   "split": "development",
+   "format": "pdf_text",
+   "title": "Uchwała nr IV/30/2024 Rady Miejskiej w Górze Kalwarii — rejon ul. Lipkowskiej, cz. I",
+   "source_url": "http://mpzp.gorakalwaria.pl/portal/mpzp/uch/IV_30_2024.pdf",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "1MNW",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 7,
+      "last_page": 7,
+      "start_quote": "§ 21. Dla terenu oznaczonego na rysunku planu symbolem 1MNW ustala się: 1) przeznaczenie –"
+     },
+     "parameters": [
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 30,
+       "unit": "%",
+       "page": 7,
+       "quote": "maksymalny wskaźnik powierzchni zabudowy: 30% powierzchni działki budowlanej"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 7,
+       "quote": "udział powierzchni biologicznie czynnej: minimum 50% powierzchni działki budowlanej"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.6,
+       "unit": null,
+       "page": 7,
+       "quote": "wskaźnik maksymalnej intensywności zabudowy: 0,6 dla działki budowlanej"
+      },
+      {
+       "name": "min_intensity",
+       "normalized_value": 0.01,
+       "unit": null,
+       "page": 7,
+       "quote": "wskaźnik minimalnej intensywności zabudowy: 0,01 dla działki budowlanej"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 12.0,
+       "unit": "m",
+       "page": 7,
+       "quote": "dla budynków mieszkalnych 12,0 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "2MNW-U",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 7,
+      "last_page": 8,
+      "start_quote": "§ 22. Dla terenów oznaczonych na rysunku planu symbolami 1MNW-U, 2MNW-U, 3MNW-U: 1) przezn"
+     },
+     "parameters": [
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 30,
+       "unit": "%",
+       "page": 8,
+       "quote": "maksymalny wskaźnik powierzchni zabudowy: 30% powierzchni działki budowlanej"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 40,
+       "unit": "%",
+       "page": 8,
+       "quote": "udział powierzchni biologicznie czynnej: minimum 40% powierzchni działki budowlanej"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.9,
+       "unit": null,
+       "page": 8,
+       "quote": "wskaźnik maksymalnej intensywności zabudowy: 0,9 dla działki budowlanej"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 12.0,
+       "unit": "m",
+       "page": 8,
+       "quote": "dla budynków mieszkalnych 12,0 m"
+      }
+     ],
+     "note": "paragraf wspólny: „symbolami 1MNW-U, 2MNW-U, 3MNW-U”; symbole z członem -U"
+    },
+    {
+     "zone_symbol": "1U",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 9,
+      "last_page": 9,
+      "start_quote": "§ 24. Dla terenu oznaczonego na rysunku planu symbolem 1U ustala się: 1) przeznaczenie – u"
+     },
+     "parameters": [
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 30,
+       "unit": "%",
+       "page": 9,
+       "quote": "maksymalny wskaźnik powierzchni zabudowy: 30% powierzchni działki budowlanej"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 9,
+       "quote": "udział powierzchni biologicznie czynnej: minimum 50% powierzchni działki budowlanej"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.6,
+       "unit": null,
+       "page": 9,
+       "quote": "wskaźnik maksymalnej intensywności zabudowy: 0,6 dla działki budowlanej"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 12.0,
+       "unit": "m",
+       "page": 9,
+       "quote": "dla budynków usługowych 12,0 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "2KR",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 10,
+      "last_page": 10,
+      "start_quote": "§ 28. Dla terenów oznaczonych na rysunku planu symbolami 1KR, 2KR, 3KR ustala się: 1) prze"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 10,
+       "quote": "przeznaczenie – komunikacja drogowa wewnętrzna"
+      }
+     ],
+     "note": "paragraf wspólny „1KR, 2KR, 3KR”"
+    },
+    {
+     "zone_symbol": "2ZN-ZP",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 9,
+      "last_page": 9,
+      "start_quote": "§ 25. Dla terenu oznaczonego na rysunku planu symbolem 1ZN-ZP, 2ZN-ZP ustala się: 1) przez"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 9,
+       "quote": "przeznaczenie:"
+      }
+     ],
+     "note": "paragraf wspólny „1ZN-ZP, 2ZN-ZP”; symbol z kreską wewnątrz"
+    }
+   ],
+   "document_sha256": "1c2b0af11b9ef0a80db7d6a9727e7103149a0a2a284afa6ea409d3d1377322e9",
+   "content_length": 22698919,
+   "fetched_at": "2026-10-10T21:01:11.656270+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 16,
+   "pages_sha256": "6c6f0035afe8c7d2944038127e36f8fb6fe458e1e077da7126c65339e406f1e4"
+  },
+  {
+   "slug": "pisz_xxi_232_20",
+   "municipality": "Pisz",
+   "voivodeship": "warmińsko-mazurskie",
+   "resolution": "XXI/232/20",
+   "split": "development",
+   "format": "pdf_text",
+   "title": "Uchwała nr XXI/232/20 Rady Miejskiej w Piszu z 23 września 2020 r. — teren przemysłowy przy ul. Warszawskiej i inne",
+   "source_url": "https://bip.pisz.hi.pl/download.php?id=21957",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "2KDZ",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": "281603_4.0001.496/5",
+     "section": {
+      "first_page": 26,
+      "last_page": 26,
+      "start_quote": "§ 25. Dla terenów oznaczonych symbolami 1KDZ-11KDZ ustala się: 1) przeznaczenie: droga pub"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 26,
+       "quote": "przeznaczenie: droga publiczna - zbiorcza"
+      }
+     ],
+     "note": "zakres „1KDZ-11KDZ” (cyfra + litery po obu stronach)"
+    },
+    {
+     "zone_symbol": "12MNU",
+     "layout": "grouped_section_with_subblocks",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 11,
+      "last_page": 13,
+      "start_quote": "§ 18. Dla terenów oznaczonych symbolami 1MNU-23MNU ustala się: 1) przeznaczenie: zabudowa"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.75,
+       "unit": null,
+       "page": 12,
+       "quote": "maksymalna intensywność zabudowy: 0,75"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 20,
+       "unit": "%",
+       "page": 12,
+       "quote": "20%"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 12,
+       "quote": "maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 50%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 11,
+       "unit": "m",
+       "page": 12,
+       "quote": "dla budynków mieszkalnych jednorodzinnych: 11 m"
+      }
+     ],
+     "note": "symbol wielkimi literami „MNU” w zakresie 1MNU-23MNU; podblok „1MNU-20MNU”"
+    },
+    {
+     "zone_symbol": "5MNu",
+     "layout": "grouped_section_with_subblocks",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 9,
+      "last_page": 11,
+      "start_quote": "§ 17. Dla terenów oznaczonych symbolami 1MNu - 30MNu ustala się: 1) przeznaczenie: zabudow"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.75,
+       "unit": null,
+       "page": 10,
+       "quote": "maksymalna intensywność zabudowy: 0,75"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 20,
+       "unit": "%",
+       "page": 10,
+       "quote": "20%"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 70,
+       "unit": "%",
+       "page": 10,
+       "quote": "maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 70%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 11,
+       "unit": "m",
+       "page": 10,
+       "quote": "dla budynków mieszkalnych jednorodzinnych: 11 m"
+      }
+     ],
+     "note": "zakres z odstępami „1MNu - 30MNu”; podblok „3MNu-5MNu”"
+    },
+    {
+     "zone_symbol": "3MW",
+     "layout": "per_zone_subblock",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 13,
+      "last_page": 15,
+      "start_quote": "§ 19. Dla terenów oznaczonych symbolami 1MW-12MW ustala się: 1) przeznaczenie: zabudowa mi"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 1.5,
+       "unit": null,
+       "page": 13,
+       "quote": "maksymalna intensywność zabudowy: 1,5"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 25,
+       "unit": "%",
+       "page": 13,
+       "quote": "25%"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 13,
+       "quote": "maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 50%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 17,
+       "unit": "m",
+       "page": 13,
+       "quote": "dla budynków mieszkalnych wielorodzinnych: 17 m"
+      }
+     ],
+     "note": "podblok „dla terenu oznaczonego symbolem 3MW:” obok podbloków innych symboli z innymi wartościami"
+    },
+    {
+     "zone_symbol": "7U",
+     "layout": "per_zone_subblock",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 19,
+      "last_page": 25,
+      "start_quote": "§ 22. Dla terenów oznaczonych symbolami 1U - 32U ustala się: 1) przeznaczenie: zabudowa us"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.8,
+       "unit": null,
+       "page": 20,
+       "quote": "maksymalna intensywność zabudowy: 0,8"
+      }
+     ],
+     "note": "podblok 7) dla 7U wśród kilkunastu podbloków"
+    },
+    {
+     "zone_symbol": "2PU",
+     "layout": "grouped_section_with_subblocks",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 25,
+      "last_page": 26,
+      "start_quote": "§ 23. Dla terenów oznaczonych symbolami 1PU-6PU ustala się: 1) przeznaczenie: zabudowa pro"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.7,
+       "unit": null,
+       "page": 25,
+       "quote": "maksymalna intensywność zabudowy: 0,7"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 10,
+       "unit": "%",
+       "page": 25,
+       "quote": "10%"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 70,
+       "unit": "%",
+       "page": 25,
+       "quote": "maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 70%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 12,
+       "unit": "m",
+       "page": 25,
+       "quote": "maksymalna wysokość zabudowy: 12 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "2ZP",
+     "layout": "grouped_section_with_subblocks",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 28,
+      "last_page": 29,
+      "start_quote": "§ 35. Dla terenów oznaczonych symbolami 1ZP-4ZP ustala się: 1) przeznaczenie: zieleń urząd"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.2,
+       "unit": null,
+       "page": 29,
+       "quote": "maksymalna intensywność zabudowy: 0,20"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 70,
+       "unit": "%",
+       "page": 29,
+       "quote": "70%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 5,
+       "unit": "m",
+       "page": 29,
+       "quote": "maksymalna wysokość zabudowy: 5 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "3E",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 27,
+      "last_page": 27,
+      "start_quote": "§ 31. Dla terenów oznaczonych symbolami 1E-8E ustala się: 1) przeznaczenie: tereny infrast"
+     },
+     "parameters": [
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.5,
+       "unit": null,
+       "page": 27,
+       "quote": "maksymalna intensywność zabudowy: 0,5"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 10,
+       "unit": "%",
+       "page": 27,
+       "quote": "10%"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 27,
+       "quote": "maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 50%"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 5,
+       "unit": "m",
+       "page": 27,
+       "quote": "maksymalna wysokość zabudowy: 5 m"
+      }
+     ]
+    }
+   ],
+   "document_sha256": "f3bab0b1c93d05e59163f0b4cd7189d3cae5747382133367a2036b32201ca2a4",
+   "content_length": 12743841,
+   "fetched_at": "2026-10-10T21:01:15.206939+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 38,
+   "pages_sha256": "6bd41bde6e36f67da58ded74f0c7024f5704264e64db2e399922a02917a0013d"
+  },
+  {
+   "slug": "legnica_xxiv_220_16",
+   "municipality": "Legnica",
+   "voivodeship": "dolnośląskie",
+   "resolution": "XXIV/220/16",
+   "split": "holdout",
+   "format": "pdf_text",
+   "title": "Uchwała nr XXIV/220/16 Rady Miejskiej Legnicy z 26 września 2016 r. — zmiana planu, kwartał Sudecka–Armii Krajowej–Okulickiego",
+   "source_url": "https://www.inforlex.pl/download/akty_pdf,U70,2016,188,4379.pdf",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "1MW",
+     "layout": "split_sections",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 3,
+      "last_page": 3,
+      "start_quote": "§ 5. 1. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1MW ustala się następ"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie podstawowe terenu: tereny zabudowy mieszkaniowej wielorodzinnej"
+      }
+     ],
+     "note": "przeznaczenie w § 5, wskaźniki w osobnym § 17 (ten sam symbol w dwóch sekcjach)"
+    },
+    {
+     "zone_symbol": "1MW",
+     "layout": "split_sections",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 5,
+      "last_page": 6,
+      "start_quote": "§ 17. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1MW ustala się następuj"
+     },
+     "parameters": [
+      {
+       "name": "min_intensity",
+       "normalized_value": 0.4,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,40 – 1,25"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 1.25,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,40 – 1,25"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 25,
+       "unit": "%",
+       "page": 6,
+       "quote": "minimalna powierzchnia biologicznie czynna działki budowlanej: 25 %"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 13.9,
+       "unit": "m",
+       "page": 6,
+       "quote": "maksymalna wysokość elewacji lub attyki budynku: 13,9 m"
+      }
+     ],
+     "note": "druga sekcja tego samego symbolu — wskaźniki zagospodarowania"
+    },
+    {
+     "zone_symbol": "1MN",
+     "layout": "split_sections",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 6,
+      "last_page": 6,
+      "start_quote": "§ 18. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1MN ustala się następuj"
+     },
+     "parameters": [
+      {
+       "name": "min_intensity",
+       "normalized_value": 0.25,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,25 – 0,60"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.6,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,25 – 0,60"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 35,
+       "unit": "%",
+       "page": 6,
+       "quote": "minimalna powierzchnia biologicznie czynna działki budowlanej: 35 %"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 7.5,
+       "unit": "m",
+       "page": 6,
+       "quote": "maksymalna wysokość elewacji lub attyki budynku: 7,5 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "1MN",
+     "layout": "split_sections",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 3,
+      "last_page": 3,
+      "start_quote": "§ 6. 1. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1MN ustala się następujące"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie podstawowe terenu: tereny zabudowy mieszkaniowej jednorodzinnej"
+      },
+      {
+       "name": "supplementary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie uzupełniające terenu: zabudowa usługowa, zieleń urządzona"
+      }
+     ],
+     "note": "przeznaczenie w § 6, wskaźniki w osobnym § 18 (ten sam symbol w dwóch sekcjach)"
+    },
+    {
+     "zone_symbol": "1E",
+     "layout": "split_sections",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 3,
+      "last_page": 3,
+      "start_quote": "§ 7. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1E ustala się następujące przeznaczenie"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie podstawowe terenu: tereny infrastruktury – elektroenergetyka"
+      },
+      {
+       "name": "supplementary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie uzupełniające terenu: urządzenia i przewody uzbrojenia terenu"
+      }
+     ],
+     "note": "przeznaczenie w § 7, wskaźniki w osobnym § 19 (ten sam symbol w dwóch sekcjach)"
+    },
+    {
+     "zone_symbol": "1E",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 6,
+      "last_page": 7,
+      "start_quote": "§ 19. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1E ustala się: 1) minim"
+     },
+     "parameters": [
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 5,
+       "unit": "%",
+       "page": 6,
+       "quote": "minimalna powierzchnia biologicznie czynna działki budowlanej: 5%"
+      },
+      {
+       "name": "min_intensity",
+       "normalized_value": 0.05,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,05 – 0,70"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.7,
+       "unit": null,
+       "page": 6,
+       "quote": "intensywność zabudowy działki budowlanej: 0,05 – 0,70"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 4.5,
+       "unit": "m",
+       "page": 6,
+       "quote": "maksymalna wysokość okapu / elewacji lub attyki budynku: 4,5 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "1KDL1/2",
+     "layout": "alias_spacing",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 3,
+      "last_page": 3,
+      "start_quote": "§ 8. Dla terenu oznaczonego na rysunku planu miejscowego symbolem 1KDL1/2 ustala się nastę"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 3,
+       "quote": "przeznaczenie podstawowe terenu: tereny drogi publicznej klasy lokalnej L1/2"
+      }
+     ],
+     "note": "symbol z ukośnikiem; w innych miejscach zapisany z odstępem („1KD L1/2”)"
+    }
+   ],
+   "document_sha256": "65bb8a8763e074d04904ab9a0ef81a3e6b55f22d1c3d2c88ee6be6314ebc2e3e",
+   "content_length": 1119215,
+   "fetched_at": "2026-10-10T21:01:17.330801+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 12,
+   "pages_sha256": "eaec08cd12c4e7500f5280575f527b248f17028fa6b08df9b9c83f25dac2e4b4"
+  },
+  {
+   "slug": "czarny_bor_lxxxi_420_2024",
+   "municipality": "Czarny Bór",
+   "voivodeship": "dolnośląskie",
+   "resolution": "LXXXI/420/2024",
+   "split": "holdout",
+   "format": "pdf_text",
+   "title": "Uchwała nr LXXXI/420/2024 Rady Gminy Czarny Bór z 27 lutego 2024 r. — zmiana planu wsi Czarny Bór i Borówno, obszar „A”",
+   "source_url": "https://www.inforlex.pl/download/akty_pdf,U70,2024,66,1615.pdf",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "1MN",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 8,
+      "last_page": 9,
+      "start_quote": "§ 14. 1. Wyznacza się teren zabudowy mieszkaniowej jednorodzinnej, oznaczony na rysunku pl"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 8,
+       "quote": "Przeznaczenie podstawowe- zabudowa mieszkaniowa jednorodzinna"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 9.0,
+       "unit": "m",
+       "page": 8,
+       "quote": "maksymalna wysokość zabudowy, liczona do wysokości kalenicy lub najwyższego punktu obiektu budowlanego - 9,00 m"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 50,
+       "unit": "%",
+       "page": 8,
+       "quote": "50% dla zabudowy mieszkaniowej jednorodzinnej"
+      },
+      {
+       "name": "max_building_coverage_percent",
+       "normalized_value": 30,
+       "unit": "%",
+       "page": 9,
+       "quote": "30% dla zabudowy mieszkaniowej jednorodzinnej"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.7,
+       "unit": null,
+       "page": 8,
+       "quote": "0,001 - 0,70 dla zabudowy mieszkaniowej jednorodzinnej"
+      }
+     ],
+     "note": "symbol w nagłówku „1MN”, a w § 5 jako „MN”; wartości zależne od rodzaju zabudowy (warunkowe)"
+    },
+    {
+     "zone_symbol": "2MN",
+     "layout": "absent",
+     "expected": "ZONE_NOT_IN_DOCUMENT",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "symbol spoza zmiany planu (jedyny teren: 1MN)"
+    }
+   ],
+   "document_sha256": "4eaeb944cbd91b783544752e8e4b5b066ee535e30592132c74da3822fb18f92c",
+   "content_length": 1190526,
+   "fetched_at": "2026-10-10T21:01:18.116110+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 13,
+   "pages_sha256": "d9f575e9b553b878a66f313a3f6c7729dd83c60f6ed2389552a9538908dc014c"
+  },
+  {
+   "slug": "ruciane_nida_lxxiv_686_2023",
+   "municipality": "Ruciane-Nida",
+   "voivodeship": "warmińsko-mazurskie",
+   "resolution": "LXXIV/686/2023",
+   "split": "holdout",
+   "format": "pdf_text",
+   "title": "Uchwała nr LXXIV/686/2023 Rady Miejskiej Ruciane-Nida z 18 grudnia 2023 r. — część miasta, ul. Leśna",
+   "source_url": "https://edzienniki.olsztyn.uw.gov.pl/WDU_N/2024/863/akt.pdf",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "ZC",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 4,
+      "last_page": 4,
+      "start_quote": "§ 17. Ustalenia szczegółowe dla terenu oznaczonego symbolem ZC: 1) przeznaczenie – teren c"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 4,
+       "quote": "przeznaczenie – teren cmentarza"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 5.0,
+       "unit": "m",
+       "page": 4,
+       "quote": "maksymalna wysokość zabudowy: 5,0 m"
+      },
+      {
+       "name": "max_intensity",
+       "normalized_value": 0.01,
+       "unit": null,
+       "page": 4,
+       "quote": "maksymalny wskaźnik intensywności zabudowy: 0,01"
+      },
+      {
+       "name": "min_biologically_active_percent",
+       "normalized_value": 10,
+       "unit": "%",
+       "page": 4,
+       "quote": "minimalna powierzchnia biologicznie czynna: 10% powierzchni działki budowlanej"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 4,
+       "quote": "ustala się zakaz lokalizowania budynków"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "2ZL",
+     "layout": "grouped_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 4,
+      "last_page": 4,
+      "start_quote": "§ 18. Ustalenia szczegółowe dla terenów oznaczonych symbolami 1ZL, 2ZL, 3ZL: 1) przeznacze"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 4,
+       "quote": "przeznaczenie – teren lasu"
+      },
+      {
+       "name": "prohibition",
+       "normalized_value": null,
+       "unit": null,
+       "page": 4,
+       "quote": "zakazuje się lokalizacji obiektów budowlanych"
+      }
+     ],
+     "note": "paragraf wspólny „1ZL, 2ZL, 3ZL”; punkt 4) dotyczy wyłącznie 2ZL"
+    },
+    {
+     "zone_symbol": "KDD",
+     "layout": "single_section",
+     "expected": "parameters",
+     "corpus_parcel": null,
+     "section": {
+      "first_page": 4,
+      "last_page": 5,
+      "start_quote": "§ 19. Ustalenia szczegółowe dla terenu oznaczonego symbolem KDD: 1) przeznaczenie – teren"
+     },
+     "parameters": [
+      {
+       "name": "primary_use",
+       "normalized_value": null,
+       "unit": null,
+       "page": 4,
+       "quote": "przeznaczenie – teren drogi publicznej klasy dojazdowej"
+      },
+      {
+       "name": "max_building_height_m",
+       "normalized_value": 12.0,
+       "unit": "m",
+       "page": 4,
+       "quote": "maksymalna wysokość zabudowy 12,0 m"
+      }
+     ]
+    },
+    {
+     "zone_symbol": "MN.1",
+     "layout": "absent",
+     "expected": "ZONE_NOT_IN_DOCUMENT",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "symbol spoza planu (ZC, 1ZL–3ZL, KDD)"
+    }
+   ],
+   "document_sha256": "4b0e5acaa63b8f1f1903750440279e37e611fae235d5f612dd9c2955a3fdbc37",
+   "content_length": 7004740,
+   "fetched_at": "2026-10-10T21:01:23.839780+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": false,
+   "page_count": 15,
+   "pages_sha256": "77b43980ed9751f7b4cafea5c6a98559da0abd96238a902450febfef8f3bac9b"
+  },
+  {
+   "slug": "bielsko_biala_liii_749_1998",
+   "municipality": "Bielsko-Biała",
+   "voivodeship": "śląskie",
+   "resolution": "LIII/749/98",
+   "split": "development",
+   "format": "pdf_scan_real",
+   "title": "Uchwała nr LIII/749/98 Rady Miejskiej w Bielsku-Białej z 10 lutego 1998 r. — plan bielskiej Starówki (skan, 115 stron)",
+   "source_url": "https://brm.bielsko-biala.pl/wp-content/uploads/2021/01/006_uchwala.pdf",
+   "landing_url": null,
+   "zones": [
+    {
+     "zone_symbol": "A1",
+     "layout": "scan",
+     "expected": "SCANNED_NO_OCR",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "jednostka planu A1 (§ 10, strona 9); dokument jest skanem bez warstwy tekstowej, a produkcyjny OCR przekracza limit czasu (115 stron) — oczekiwany jawny powód SCANNED_NO_OCR"
+    },
+    {
+     "zone_symbol": "A6",
+     "layout": "scan",
+     "expected": "SCANNED_NO_OCR",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "jednostka planu A6 (§ 15, strona 14–15); dokument jest skanem bez warstwy tekstowej, a produkcyjny OCR przekracza limit czasu (115 stron) — oczekiwany jawny powód SCANNED_NO_OCR"
+    },
+    {
+     "zone_symbol": "B1",
+     "layout": "scan",
+     "expected": "SCANNED_NO_OCR",
+     "corpus_parcel": null,
+     "section": null,
+     "parameters": [],
+     "note": "jednostka planu B1 (§ 19, strona 18); dokument jest skanem bez warstwy tekstowej, a produkcyjny OCR przekracza limit czasu (115 stron) — oczekiwany jawny powód SCANNED_NO_OCR"
+    }
+   ],
+   "document_sha256": "2bc18e69c251807ca4638cf07cdbe29551bb9444b9040316ef368bb0e21a689f",
+   "content_length": 42857611,
+   "fetched_at": "2026-10-10T21:02:14.408534+00:00",
+   "extraction_method": "pdf_text",
+   "needs_ocr": true,
+   "page_count": 115,
+   "pages_sha256": "b086e78192a2a40cfae004f767a44cbd881b3f5268e8048c278acf9573a0d504"
+  }
+ ]
+}
