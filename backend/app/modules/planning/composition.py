@@ -11,7 +11,9 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from app.core.data_sources import CatalogError, ensure_source_runnable
 from app.core.settings import Settings, settings
+from app.modules.imports.composition import build_ogc_client
 from app.modules.planning.application import llm_metrics
 from app.modules.planning.application.llm_extraction import ExtractionLimits, LlmExtractionService
 from app.modules.planning.application.llm_monitoring import (
@@ -25,6 +27,7 @@ from app.modules.planning.application.llm_monitoring import (
 from app.modules.planning.application.llm_pipeline import BudgetTracker, LlmBudget, LlmPricing, MpzpLlmPipeline
 from app.modules.planning.application.ports import (
     KimpzpFeatureInfoParser,
+    RuMpzpActsSource,
     StructuredExtractionError,
     StructuredExtractionErrorCode,
     StructuredExtractionProvider,
@@ -51,6 +54,7 @@ from app.modules.planning.infrastructure.llm.resilience import CircuitBreaker, R
 from app.modules.planning.domain import extraction_contract as contract
 from app.modules.planning.domain.candidate_verifier import VerifierPolicy
 from app.modules.planning.infrastructure.kimpzp_feature_info import parse_kimpzp_feature_info
+from app.modules.planning.infrastructure.ru_mpzp_acts import RuMpzpActsAdapter
 from app.modules.planning.infrastructure.mvt import (
     InMemoryPogTileCache,
     SqlAlchemyPogTileRepository,
@@ -71,6 +75,39 @@ logger = logging.getLogger(__name__)
 def kimpzp_feature_info_parser() -> KimpzpFeatureInfoParser:
     """Adapter odpowiedzi GetFeatureInfo KIMPZP (AU-004) za portem ``KimpzpFeatureInfoParser``."""
     return parse_kimpzp_feature_info
+
+
+def ru_mpzp_acts_source(app_settings: Settings | None = None) -> RuMpzpActsSource | None:
+    """Kanał ``mpzp_ru`` (AU-101): akty MPZP z Rejestru Urbanistycznego za portem ``RuMpzpActsSource``.
+
+    Adres WFS pochodzi z katalogu źródeł (zasób ``boundaries``), a źródło musi przejść guard uruchomienia
+    (``production``, kontrakt i licencja potwierdzone). Wyłączony kanał albo źródło niedozwolone w katalogu to
+    ``None`` — kanał nie jest wtedy odpytywany, a analiza traktuje go jako nieodpytany (nie jako „brak aktu”).
+    """
+    active = app_settings or settings
+    if not active.ru_mpzp_acts_enabled:
+        return None
+    try:
+        entry = ensure_source_runnable("mpzp_ru")
+    except CatalogError:
+        logger.warning("ru_mpzp_acts_source_not_runnable")
+        return None
+    resource = next((item for item in entry.resources if item.role == "boundaries"), None)
+    if resource is None:
+        logger.warning("ru_mpzp_acts_boundaries_resource_missing")
+        return None
+    url = resource.url
+
+    def client_factory():  # noqa: ANN202 - OgcClient jest typem publicznym modułu imports
+        return build_ogc_client(
+            source_id="mpzp_ru",
+            urls=[url],
+            total_timeout_seconds=active.ru_mpzp_timeout_seconds,
+            max_response_bytes=active.ru_mpzp_max_response_bytes,
+            retries=2,
+        )
+
+    return RuMpzpActsAdapter(wfs_url=url, client_factory=client_factory)
 
 
 def build_planning_rule_service(session: Session) -> PlanningRuleService:

@@ -12,7 +12,13 @@ from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
 from app.modules.planning.domain.kimpzp_discovery import KimpzpPointResult
+from app.modules.planning.domain.mpzp_acts import (
+    RuActRecord,
+    RuDocumentRecord,
+    RuDrawingRecord,
+)
 from app.modules.planning.domain.rules import PlanningRuleCandidate
+from app.shared.provenance import Provenance
 
 
 class PlanningRuleRepository(Protocol):
@@ -266,3 +272,48 @@ class KimpzpFeatureInfoParser(Protocol):
 
     def __call__(self, text: str) -> KimpzpPointResult:
         """Wynik jednego punktu: status źródła, akty obecne w punkcie i ich zmiany."""
+
+
+# --- akty MPZP z Rejestru Urbanistycznego (AU-101) -----------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RuActsResponse:
+    """Wynik zapytania o akty RU dla ``bbox`` działki.
+
+    ``error_code`` jest ustawiony wyłącznie przy niepowodzeniu odczytu — wtedy ``acts`` jest puste, ale
+    odpowiedź NIE jest „brakiem aktów” (to ``unavailable``). ``complete=False`` oznacza wynik częściowy
+    (przerwana paginacja), czyli także nie dowód braku aktu.
+    """
+
+    acts: tuple[RuActRecord, ...]
+    complete: bool
+    source: Provenance | None = None
+    issues: tuple[str, ...] = ()
+    error_code: str | None = None
+    error_message: str | None = None
+
+
+@dataclass(frozen=True)
+class RuRelatedResponse:
+    """Dokumenty formalne i rysunki wskazane przez akty; brak obiektu nie jest błędem całości."""
+
+    documents: dict[str, RuDocumentRecord]
+    drawings: dict[str, RuDrawingRecord]
+    unresolved_documents: tuple[str, ...] = ()
+    unresolved_drawings: tuple[str, ...] = ()
+    sources: tuple[Provenance, ...] = ()
+    error_codes: tuple[str, ...] = ()
+
+
+@runtime_checkable
+class RuMpzpActsSource(Protocol):
+    """Port kanału ``mpzp_ru``: akty z granicą, dokumenty i rysunki (blokujące wywołania sieciowe)."""
+
+    def fetch_acts(self, bbox: tuple[float, float, float, float]) -> RuActsResponse:
+        """Akty, których zasięg przecina ``bbox`` (x_min, y_min, x_max, y_max, EPSG:2180, x = wschód)."""
+
+    def fetch_related(
+        self, document_paths: tuple[str, ...] | list[str], drawing_paths: tuple[str, ...] | list[str]
+    ) -> RuRelatedResponse:
+        """Dokumenty formalne i rysunki po identyfikatorach z ``xlink:href`` aktów."""
