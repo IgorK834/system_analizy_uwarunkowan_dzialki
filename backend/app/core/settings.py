@@ -74,6 +74,12 @@ class Settings(BaseSettings):
         "https://mapy.geoportal.gov.pl/wss/ext/"
         "KrajowaIntegracjaMiejscowychPlanowZagospodarowaniaPrzestrzennego"
     )
+    # Kanał ``mpzp_ru`` (AU-101): akty MPZP z Rejestru Urbanistycznego (WFS ``app-mpzp``) przecinane z
+    # granicą działki. Adres i typy obiektów to kontrakt katalogu (source_id ``mpzp_ru``); tutaj są
+    # wyłącznie wyłącznik i limity bezpieczeństwa jednego zapytania.
+    ru_mpzp_acts_enabled: bool = True
+    ru_mpzp_timeout_seconds: float = 30.0
+    ru_mpzp_max_response_bytes: int = 8 * 1024 * 1024
     # Warstwy używane przez serwerowy proxy kafelków. Frontend nie przekazuje
     # nazw warstw ani adresu upstreamu, dzięki czemu endpoint nie staje się
     # otwartym proxy SSRF.
