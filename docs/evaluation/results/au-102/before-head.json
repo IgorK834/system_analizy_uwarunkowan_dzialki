@@ -1,0 +1,2649 @@
+{
+ "legacy": {
+  "mode": "legacy",
+  "overall": {
+   "zones": 41,
+   "ok": 23,
+   "share": 0.561
+  },
+  "strict": {
+   "zones": 41,
+   "ok": 19,
+   "share": 0.4634
+  },
+  "zones_with_parameter": {
+   "zones": 34,
+   "with_parameter": 23,
+   "share": 0.6765
+  },
+  "by_split": {
+   "development": {
+    "zones": 31,
+    "ok": 18,
+    "share": 0.5806
+   },
+   "holdout": {
+    "zones": 10,
+    "ok": 5,
+    "share": 0.5
+   }
+  },
+  "by_municipality": {
+   "Bielsko-Biała": {
+    "zones": 3,
+    "ok": 0,
+    "share": 0.0
+   },
+   "Czarny Bór": {
+    "zones": 2,
+    "ok": 1,
+    "share": 0.5
+   },
+   "Góra Kalwaria": {
+    "zones": 5,
+    "ok": 5,
+    "share": 1.0
+   },
+   "Kraków": {
+    "zones": 15,
+    "ok": 11,
+    "share": 0.7333
+   },
+   "Legnica": {
+    "zones": 4,
+    "ok": 2,
+    "share": 0.5
+   },
+   "Pisz": {
+    "zones": 8,
+    "ok": 2,
+    "share": 0.25
+   },
+   "Ruciane-Nida": {
+    "zones": 4,
+    "ok": 2,
+    "share": 0.5
+   }
+  },
+  "by_layout": {
+   "absent": {
+    "zones": 4,
+    "ok": 0,
+    "share": 0.0
+   },
+   "alias_spacing": {
+    "zones": 1,
+    "ok": 0,
+    "share": 0.0
+   },
+   "compound_section": {
+    "zones": 1,
+    "ok": 1,
+    "share": 1.0
+   },
+   "grouped_section": {
+    "zones": 8,
+    "ok": 5,
+    "share": 0.625
+   },
+   "grouped_section_with_subblocks": {
+    "zones": 4,
+    "ok": 0,
+    "share": 0.0
+   },
+   "list_assignment": {
+    "zones": 1,
+    "ok": 1,
+    "share": 1.0
+   },
+   "per_zone_subblock": {
+    "zones": 5,
+    "ok": 5,
+    "share": 1.0
+   },
+   "scan": {
+    "zones": 3,
+    "ok": 0,
+    "share": 0.0
+   },
+   "single_section": {
+    "zones": 12,
+    "ok": 10,
+    "share": 0.8333
+   },
+   "split_sections": {
+    "zones": 3,
+    "ok": 2,
+    "share": 0.6667
+   }
+  },
+  "reported_parameters": 162,
+  "parameters_outside_section": 43,
+  "expected_parameters": 110,
+  "matched_expected_parameters": 44,
+  "expected_recall": 0.4,
+  "verdicts": {
+   "fail_no_parameters": 11,
+   "ok_parameters": 23,
+   "fail_wrong_reason": 7
+  },
+  "zones": [
+   {
+    "zone_symbol": "MW/U.4",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.49/2",
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None",
+     "permission=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "KP.1",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.580/4",
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 0,
+    "outside_section": 10,
+    "outside_pages": [
+     11
+    ],
+    "expected_parameters": 3,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None",
+     "permission=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZP.4",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.540/15",
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "U.9",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.540/15",
+    "verdict": "ok_parameters",
+    "parameters": 5,
+    "parameter_names": [
+     "prohibition",
+     "roof_geometry"
+    ],
+    "in_section": 0,
+    "outside_section": 5,
+    "outside_pages": [
+     4
+    ],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "permission=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW/U.28.1",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "compound_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 0,
+    "outside_section": 1,
+    "outside_pages": [
+     39
+    ],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW/U.99",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.1",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "prohibition"
+    ],
+    "in_section": 5,
+    "outside_section": 5,
+    "outside_pages": [
+     12
+    ],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 4,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity"
+    ],
+    "in_section": 4,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZPb.9",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "list_assignment"
+    ],
+    "corpus_parcel": "126105_9.0119.181/10",
+    "verdict": "ok_parameters",
+    "parameters": 3,
+    "parameter_names": [
+     "max_building_height_m",
+     "min_biologically_active_percent"
+    ],
+    "in_section": 3,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 2,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.99",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 11,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 3,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.7",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 11,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 2,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "U.9",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 15,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity"
+    ],
+    "in_section": 15,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZPp.3",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "min_biologically_active_percent"
+    ],
+    "in_section": 1,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "KP.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "min_biologically_active_percent"
+    ],
+    "in_section": 1,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1MNW",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 10,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 5,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2MNW-U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 2,
+    "parameter_names": [
+     "permission",
+     "roof_geometry"
+    ],
+    "in_section": 2,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_building_coverage_percent=30",
+     "min_biologically_active_percent=40",
+     "max_intensity=0.9",
+     "max_building_height_m=12.0"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 4,
+    "outside_section": 6,
+    "outside_pages": [
+     7,
+     8
+    ],
+    "expected_parameters": 4,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "max_building_coverage_percent=30",
+     "min_biologically_active_percent=50",
+     "max_intensity=0.6"
+    ],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2KR",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 0,
+    "outside_section": 11,
+    "outside_pages": [
+     7,
+     8
+    ],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2ZN-ZP",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 2,
+    "parameter_names": [
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 2,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2KDZ",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": "281603_4.0001.496/5",
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "12MNU",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.75",
+     "min_biologically_active_percent=20",
+     "max_building_coverage_percent=50",
+     "max_building_height_m=11"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "5MNu",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.75",
+     "min_biologically_active_percent=20",
+     "max_building_coverage_percent=70",
+     "max_building_height_m=11"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "3MW",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 13,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "prohibition",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg",
+     "roof_geometry"
+    ],
+    "in_section": 11,
+    "outside_section": 2,
+    "outside_pages": [
+     9,
+     12
+    ],
+    "expected_parameters": 4,
+    "matched_parameters": 2,
+    "missing_parameters": [
+     "min_biologically_active_percent=25",
+     "max_building_coverage_percent=50"
+    ],
+    "codes": [],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "7U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "roof_geometry"
+    ],
+    "in_section": 7,
+    "outside_section": 3,
+    "outside_pages": [
+     13
+    ],
+    "expected_parameters": 1,
+    "matched_parameters": 1,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2PU",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.7",
+     "min_biologically_active_percent=10",
+     "max_building_coverage_percent=70",
+     "max_building_height_m=12"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2ZP",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.2",
+     "min_biologically_active_percent=70",
+     "max_building_height_m=5"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "3E",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.5",
+     "min_biologically_active_percent=10",
+     "max_building_coverage_percent=50",
+     "max_building_height_m=5"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1MW",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "min_intensity=0.4",
+     "max_intensity=1.25",
+     "min_biologically_active_percent=25",
+     "max_building_height_m=13.9"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1MN",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_building_coverage_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 6,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "max_building_height_m=7.5",
+     "primary_use=None",
+     "supplementary_use=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1E",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section",
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_building_coverage_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 6,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "primary_use=None",
+     "supplementary_use=None",
+     "max_building_height_m=4.5"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1KDL1/2",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "alias_spacing"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1MN",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "primary_use",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg",
+     "supplementary_use"
+    ],
+    "in_section": 11,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "max_building_height_m=9.0",
+     "max_building_coverage_percent=30"
+    ],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "czarny_bor_lxxxi_420_2024",
+    "municipality": "Czarny Bór",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "2MN",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "czarny_bor_lxxxi_420_2024",
+    "municipality": "Czarny Bór",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "ZC",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 6,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "prohibition"
+    ],
+    "in_section": 6,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 4,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [
+     "DOMAIN_RANGE_VIOLATION",
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "2ZL",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "KDD",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "max_building_height_m"
+    ],
+    "in_section": 1,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_AMBIGUOUS"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "MN.1",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "A1",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "A6",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "B1",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   }
+  ]
+ },
+ "v3": {
+  "mode": "v3",
+  "overall": {
+   "zones": 41,
+   "ok": 23,
+   "share": 0.561
+  },
+  "strict": {
+   "zones": 41,
+   "ok": 20,
+   "share": 0.4878
+  },
+  "zones_with_parameter": {
+   "zones": 34,
+   "with_parameter": 23,
+   "share": 0.6765
+  },
+  "by_split": {
+   "development": {
+    "zones": 31,
+    "ok": 19,
+    "share": 0.6129
+   },
+   "holdout": {
+    "zones": 10,
+    "ok": 4,
+    "share": 0.4
+   }
+  },
+  "by_municipality": {
+   "Bielsko-Biała": {
+    "zones": 3,
+    "ok": 0,
+    "share": 0.0
+   },
+   "Czarny Bór": {
+    "zones": 2,
+    "ok": 1,
+    "share": 0.5
+   },
+   "Góra Kalwaria": {
+    "zones": 5,
+    "ok": 4,
+    "share": 0.8
+   },
+   "Kraków": {
+    "zones": 15,
+    "ok": 12,
+    "share": 0.8
+   },
+   "Legnica": {
+    "zones": 4,
+    "ok": 3,
+    "share": 0.75
+   },
+   "Pisz": {
+    "zones": 8,
+    "ok": 3,
+    "share": 0.375
+   },
+   "Ruciane-Nida": {
+    "zones": 4,
+    "ok": 0,
+    "share": 0.0
+   }
+  },
+  "by_layout": {
+   "absent": {
+    "zones": 4,
+    "ok": 0,
+    "share": 0.0
+   },
+   "alias_spacing": {
+    "zones": 1,
+    "ok": 0,
+    "share": 0.0
+   },
+   "compound_section": {
+    "zones": 1,
+    "ok": 1,
+    "share": 1.0
+   },
+   "grouped_section": {
+    "zones": 8,
+    "ok": 4,
+    "share": 0.5
+   },
+   "grouped_section_with_subblocks": {
+    "zones": 4,
+    "ok": 1,
+    "share": 0.25
+   },
+   "list_assignment": {
+    "zones": 1,
+    "ok": 1,
+    "share": 1.0
+   },
+   "per_zone_subblock": {
+    "zones": 5,
+    "ok": 5,
+    "share": 1.0
+   },
+   "scan": {
+    "zones": 3,
+    "ok": 0,
+    "share": 0.0
+   },
+   "single_section": {
+    "zones": 12,
+    "ok": 9,
+    "share": 0.75
+   },
+   "split_sections": {
+    "zones": 3,
+    "ok": 3,
+    "share": 1.0
+   }
+  },
+  "reported_parameters": 164,
+  "parameters_outside_section": 9,
+  "expected_parameters": 110,
+  "matched_expected_parameters": 52,
+  "expected_recall": 0.4727,
+  "verdicts": {
+   "ok_parameters": 23,
+   "fail_no_parameters": 11,
+   "fail_wrong_reason": 7
+  },
+  "zones": [
+   {
+    "zone_symbol": "MW/U.4",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.49/2",
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 0,
+    "outside_section": 1,
+    "outside_pages": [
+     39
+    ],
+    "expected_parameters": 3,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None",
+     "permission=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "KP.1",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.580/4",
+    "verdict": "ok_parameters",
+    "parameters": 2,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 2,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None",
+     "permission=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZP.4",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.540/15",
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 0,
+    "outside_section": 1,
+    "outside_pages": [
+     8
+    ],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "U.9",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": "126105_9.0001.540/15",
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "permission=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW/U.28.1",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "compound_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "prohibition"
+    ],
+    "in_section": 0,
+    "outside_section": 1,
+    "outside_pages": [
+     39
+    ],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW/U.99",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "krakow_stare_miasto_xii_131_11",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.1",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "prohibition"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 4,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity"
+    ],
+    "in_section": 4,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZPb.9",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "list_assignment"
+    ],
+    "corpus_parcel": "126105_9.0119.181/10",
+    "verdict": "ok_parameters",
+    "parameters": 4,
+    "parameter_names": [
+     "max_building_height_m",
+     "min_biologically_active_percent"
+    ],
+    "in_section": 4,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 2,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.99",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "krakow_kleparz_liii_1464_21",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 13,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 13,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 3,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "MW.7",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 13,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 13,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 2,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "U.9",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 18,
+    "parameter_names": [
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity"
+    ],
+    "in_section": 18,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "PARAMETER_CONFLICT"
+    ],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "ZPp.3",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "min_biologically_active_percent"
+    ],
+    "in_section": 1,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "KP.2",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 1,
+    "parameter_names": [
+     "min_biologically_active_percent"
+    ],
+    "in_section": 1,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 1,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [],
+    "slug": "krakow_bienczyce_lxx_1007_13",
+    "municipality": "Kraków",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1MNW",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 10,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 5,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2MNW-U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 11,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 10,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "permission",
+     "roof_angle_max_deg",
+     "roof_geometry"
+    ],
+    "in_section": 9,
+    "outside_section": 1,
+    "outside_pages": [
+     7
+    ],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2KR",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2ZN-ZP",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 2,
+    "parameter_names": [
+     "min_biologically_active_percent",
+     "prohibition"
+    ],
+    "in_section": 2,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "gora_kalwaria_iv_30_2024",
+    "municipality": "Góra Kalwaria",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2KDZ",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": "281603_4.0001.496/5",
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "12MNU",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.75",
+     "min_biologically_active_percent=20",
+     "max_building_coverage_percent=50",
+     "max_building_height_m=11"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "5MNu",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 6,
+    "parameter_names": [
+     "permission",
+     "prohibition",
+     "roof_geometry"
+    ],
+    "in_section": 4,
+    "outside_section": 2,
+    "outside_pages": [
+     2,
+     8
+    ],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.75",
+     "min_biologically_active_percent=20",
+     "max_building_coverage_percent=70",
+     "max_building_height_m=11"
+    ],
+    "codes": [],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "3MW",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 11,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 11,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 4,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SCOPE_AMBIGUOUS"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "7U",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "per_zone_subblock"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 14,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_building_height_m",
+     "max_intensity",
+     "max_storeys",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg",
+     "roof_geometry"
+    ],
+    "in_section": 11,
+    "outside_section": 3,
+    "outside_pages": [
+     13
+    ],
+    "expected_parameters": 1,
+    "matched_parameters": 1,
+    "missing_parameters": [],
+    "codes": [],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2PU",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.7",
+     "min_biologically_active_percent=10",
+     "max_building_coverage_percent=70",
+     "max_building_height_m=12"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "2ZP",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section_with_subblocks"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 3,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.2",
+     "min_biologically_active_percent=70",
+     "max_building_height_m=5"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "3E",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 4,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "max_intensity=0.5",
+     "min_biologically_active_percent=10",
+     "max_building_coverage_percent=50",
+     "max_building_height_m=5"
+    ],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "pisz_xxi_232_20",
+    "municipality": "Pisz",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "1MW",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_building_coverage_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "primary_use=None",
+     "max_building_height_m=13.9"
+    ],
+    "codes": [
+     "ZONE_SCOPE_MULTIPLE_SECTIONS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1MN",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_building_coverage_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 6,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "max_building_height_m=7.5",
+     "primary_use=None",
+     "supplementary_use=None"
+    ],
+    "codes": [
+     "ZONE_SCOPE_MULTIPLE_SECTIONS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1E",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section",
+     "split_sections"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 7,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "min_biologically_active_percent",
+     "min_building_coverage_percent",
+     "min_intensity",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 7,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 6,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "primary_use=None",
+     "supplementary_use=None",
+     "max_building_height_m=4.5"
+    ],
+    "codes": [
+     "ZONE_SCOPE_MULTIPLE_SECTIONS"
+    ],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1KDL1/2",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "alias_spacing"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 1,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None"
+    ],
+    "codes": [],
+    "slug": "legnica_xxiv_220_16",
+    "municipality": "Legnica",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "1MN",
+    "expected": "parameters",
+    "strict_ok": true,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "ok_parameters",
+    "parameters": 13,
+    "parameter_names": [
+     "max_building_coverage_percent",
+     "max_intensity",
+     "max_retail_sales_area_m2",
+     "min_biologically_active_percent",
+     "min_intensity",
+     "min_plot_area_m2",
+     "roof_angle_max_deg",
+     "roof_angle_min_deg"
+    ],
+    "in_section": 13,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 3,
+    "missing_parameters": [
+     "primary_use=None",
+     "max_building_height_m=9.0"
+    ],
+    "codes": [
+     "PARAMETER_CONFLICT",
+     "ZONE_SCOPE_AMBIGUOUS"
+    ],
+    "slug": "czarny_bor_lxxxi_420_2024",
+    "municipality": "Czarny Bór",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "2MN",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "czarny_bor_lxxxi_420_2024",
+    "municipality": "Czarny Bór",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "ZC",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 5,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "max_building_height_m=5.0",
+     "max_intensity=0.01",
+     "min_biologically_active_percent=10",
+     "prohibition=None"
+    ],
+    "codes": [
+     "ZONE_SCOPE_AMBIGUOUS"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "2ZL",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "grouped_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "prohibition=None"
+    ],
+    "codes": [
+     "ZONE_SCOPE_MULTIPLE_SECTIONS"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "KDD",
+    "expected": "parameters",
+    "strict_ok": false,
+    "layouts": [
+     "single_section"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_no_parameters",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 2,
+    "matched_parameters": 0,
+    "missing_parameters": [
+     "primary_use=None",
+     "max_building_height_m=12.0"
+    ],
+    "codes": [],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "MN.1",
+    "expected": "ZONE_NOT_IN_DOCUMENT",
+    "strict_ok": false,
+    "layouts": [
+     "absent"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "ruciane_nida_lxxiv_686_2023",
+    "municipality": "Ruciane-Nida",
+    "split": "holdout"
+   },
+   {
+    "zone_symbol": "A1",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "A6",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   },
+   {
+    "zone_symbol": "B1",
+    "expected": "SCANNED_NO_OCR",
+    "strict_ok": false,
+    "layouts": [
+     "scan"
+    ],
+    "corpus_parcel": null,
+    "verdict": "fail_wrong_reason",
+    "parameters": 0,
+    "parameter_names": [],
+    "in_section": 0,
+    "outside_section": 0,
+    "outside_pages": [],
+    "expected_parameters": 0,
+    "matched_parameters": 0,
+    "missing_parameters": [],
+    "codes": [
+     "ZONE_SECTION_NOT_FOUND"
+    ],
+    "slug": "bielsko_biala_liii_749_1998",
+    "municipality": "Bielsko-Biała",
+    "split": "development"
+   }
+  ]
+ }
+}
