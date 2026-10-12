@@ -19,8 +19,9 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 from app.modules.planning.domain.quantity_lexicon import find_roof_geometry
+from app.shared.zone_symbol import find_zone_symbol_mentions, find_zone_symbol_range_mentions
 
-DESCRIPTIVE_ENGINE_VERSION: Final[str] = "descriptive/1"
+DESCRIPTIVE_ENGINE_VERSION: Final[str] = "descriptive/2"
 
 FindingCode = Literal[
     "primary_use",
@@ -34,13 +35,43 @@ FindingCode = Literal[
 
 # --- przeznaczenie terenu ---------------------------------------------------------------
 
+# Skróty, po których kropka nie kończy zdania (``§ 9 ust. 1 pkt 1``).
+_ABBREVIATION: Final[str] = r"\b(?:ust|pkt|lit|nr|poz|art|ul|tzw|np|tj|zał|rys)\."
 # Zapis z etykietą: ``Przeznaczenie podstawowe: zabudowa mieszkaniowa`` albo etykieta z listą
-# (``przeznaczenie podstawowe:\na) tereny zabudowy…,\nb) …``).
-_PRIMARY_USE_LABEL: Final[re.Pattern[str]] = re.compile(r"przeznaczeni\w*\s+podstawow\w*\s*[:–-]\s*", re.IGNORECASE)
-_SUPPLEMENTARY_USE_LABEL: Final[re.Pattern[str]] = re.compile(
-    r"przeznaczeni\w*\s+(?:uzupełniając\w*|dopuszczaln\w*)\s*[:–-]\s*", re.IGNORECASE
+# (``przeznaczenie podstawowe:\na) tereny zabudowy…,\nb) …``). Warianty spotykane w realnych uchwałach:
+# ``przeznaczenie podstawowe terenu: …``, ``1) przeznaczenie: …`` (sama etykieta tylko na początku punktu,
+# żeby nie łapać nagłówka ``ustala się następujące przeznaczenie:``) oraz zwrot opisowy
+# ``…, z podstawowym przeznaczeniem na …`` / ``o przeznaczeniu podstawowym pod …``.
+_PRIMARY_USE_PHRASE: Final[str] = (
+    r"(?:z|o)\s+(?:podstawowym\s+przeznaczeni\w+|przeznaczeni\w+\s+podstawow\w+)\s+(?:na|pod)\b:?\s*"
 )
-_INLINE_VALUE: Final[re.Pattern[str]] = re.compile(r"[^.;\n]+")
+_PRIMARY_USE_LABEL: Final[re.Pattern[str]] = re.compile(
+    r"przeznaczeni\w*\s+podstawow\w*(?:\s+terenu)?\s*[:–-]\s*"
+    rf"|{_PRIMARY_USE_PHRASE}"
+    r"|(?:^|(?<=\n)|(?<=\)\s))przeznaczenie\s*[:–-]\s*",
+    re.IGNORECASE,
+)
+_SUPPLEMENTARY_USE_LABEL: Final[re.Pattern[str]] = re.compile(
+    r"przeznaczeni\w*\s+(?:uzupełniając\w*|dopuszczaln\w*)(?:\s+terenu)?\s*[:–-]\s*", re.IGNORECASE
+)
+_INLINE_VALUE: Final[re.Pattern[str]] = re.compile(rf"(?:{_ABBREVIATION}|[^.;\n])+")
+# Treść zwrotu ``z podstawowym przeznaczeniem na …`` sięga do następnego ustępu (``2. W …``), akapitu (``§``) albo,
+# bez numeracji ustępów, do końca zdania; punkty ``1) …; 2) …`` są osobnymi przeznaczeniami.
+_PHRASE_END: Final[re.Pattern[str]] = re.compile(
+    r"\s\d+\.\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])|\n§|(?<!\bust)(?<!\bpkt)(?<!\blit)(?<!\bnr)(?<!\bart)\.\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])"
+)
+_PHRASE_ITEM: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?:\d+|[a-z])\)\s+")
+# Bez listy po zwrocie przeznaczenie kończy się przed następną pozycją nadrzędnej listy (``…, b) MNi.1 – …``).
+_PHRASE_END_PLAIN: Final[re.Pattern[str]] = re.compile(_PHRASE_END.pattern + r"|(?<=[,;])\s+(?=(?:[a-z]|\d+)\)\s)")
+_PHRASE_MAX: Final[int] = 600
+# Zwrot ``…, z podstawowym przeznaczeniem na …`` opisuje strefę nazwaną w tym samym zdaniu albo punkcie listy
+# (``b) MNi.1 – MNi.3 – Tereny …, o podstawowym przeznaczeniu pod …``). Gdy tekst obejmuje opisy wielu stref
+# (wykaz rodzajów terenów w przepisach ogólnych), przeznaczenie cudzej strefy nie może trafić do żądanej.
+_PHRASE_LEAD_START: Final[re.Pattern[str]] = re.compile(r"[;,]\s*(?=[a-z]\)|\d+\))|;\s|\.\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ0-9])|\b[a-z]\)\s|\b\d+\)\s")
+_PHRASE_LEAD_MAX: Final[int] = 250
+_LEAD_SYMBOL: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w.])(?:[A-ZĄĆĘŁŃÓŚŹŻ][A-Za-zĄ-ż/]*\.\d[\w./-]*|\d+[A-ZĄĆĘŁŃÓŚŹŻ][A-Za-zĄ-ż]*(?:-[A-Za-z]+)?)"
+)
 _LIST_START: Final[re.Pattern[str]] = re.compile(r"a\)\s")
 _LONE_LIST_MARK: Final[re.Pattern[str]] = re.compile(r"[a-z]\)")
 # Koniec listy po etykiecie: następny punkt ``N)``, ustęp ``N.`` albo paragraf.
@@ -69,13 +100,25 @@ _PRIMARY_ITEM: Final[re.Pattern[str]] = re.compile(r"zabudowa\b", re.IGNORECASE)
 # Przecinek i kropka między cyframi (``18,0 m``, ``1.5``) są częścią liczby, nie końcem zakazu.
 _NUMBER_SEPARATOR: Final[str] = r"(?<=\d)[,.](?=\d)"
 _PROHIBITION: Final[re.Pattern[str]] = re.compile(
-    rf"zakaz\s+(?:[^,;.:\n]|{_NUMBER_SEPARATOR})+"  # treść do dwukropka
+    rf"zakaz(?:uje\s+się)?\s+(?:[^,;.:\n]|{_NUMBER_SEPARATOR})+"  # treść do dwukropka
     rf"(?::(?:[^,;.\n]|{_NUMBER_SEPARATOR})+)?"  # treść po dwukropku w tym samym wierszu
     rf"(?:\n(?![-–•§]|[a-z]\)|\d+[).])(?:[^,;.:\n]|{_NUMBER_SEPARATOR})+)*"  # wiersze przełamane
     r"(?:[,;.]|$)",
     re.IGNORECASE,
 )
-_PERMISSION: Final[re.Pattern[str]] = re.compile(r"dopuszczeni\w*\s+[^;.\n]+(?:[;.]|$)", re.IGNORECASE)
+# Dopuszczenie: rzeczownik (``dopuszczenie funkcji…``), czasownik (``dopuszcza się…``) i ``możliwość lokalizacji…``
+# (Kraków). Kropka po skrócie (``ust.``) nie kończy ustalenia.
+# Wiersz przełamany przez ekstrakcję PDF należy do tego samego ustalenia, o ile nie zaczyna nowego punktu.
+_PERMISSION_TEXT: Final[str] = (
+    rf"(?:{_ABBREVIATION}|[^;.\n]|\n(?![-–•§]|[a-z]\)|\d+[).]\s))+(?:[;.]|$|(?=\n(?:[-–•§]|[a-z]\)|\d+[).]\s)))"
+)
+_PERMISSION: Final[re.Pattern[str]] = re.compile(
+    rf"dopuszczeni\w*\s+{_PERMISSION_TEXT}"
+    rf"|dopuszcza\s+się\s+{_PERMISSION_TEXT}"
+    rf"|(?:ustala\s+się\s+)?możliwość\s+(?:lokalizacji|zlokalizowania|realizacji|odbudowy|przebudowy|rozbudowy|nadbudowy"
+    rf"|zagospodarowania|przekształcenia|adaptacji)\s+{_PERMISSION_TEXT}",
+    re.IGNORECASE,
+)
 _ENVIRONMENT_HEADING: Final[re.Pattern[str]] = re.compile(r"ochron\w*\s+środowiska", re.IGNORECASE)
 # Fragmenty realnego dokumentu bywają zawinięte przez ekstrakcję PDF w środku zdania (nowa linia
 # zamiast spacji), więc ustalenie kończy dopiero kropka albo średnik.
@@ -126,8 +169,55 @@ def _purpose_section(text: str) -> tuple[int, str] | None:
     return start, text[start : boundary.start() if boundary is not None else len(text)]
 
 
-def _labelled(code: FindingCode, text: str, label: re.Match[str]) -> list[DescriptiveFinding]:
+_PRIMARY_USE_PHRASE_RE: Final[re.Pattern[str]] = re.compile(_PRIMARY_USE_PHRASE, re.IGNORECASE)
+
+
+def _names_other_zone(text: str, label: re.Match[str], zone_symbol: str | None) -> bool:
+    """Czy zdanie/punkt przed zwrotem nazywa symbol strefy, ale nie żądany (przeznaczenie cudzej strefy)."""
+    if zone_symbol is None:
+        return False
+    window = text[max(0, label.start() - _PHRASE_LEAD_MAX) : label.start()]
+    starts = list(_PHRASE_LEAD_START.finditer(window))
+    lead = window[starts[-1].end() :] if starts else window
+    if _LEAD_SYMBOL.search(lead) is None:
+        return False
+    return not (find_zone_symbol_mentions(lead, zone_symbol) or find_zone_symbol_range_mentions(lead, zone_symbol))
+
+
+def _phrase(
+    code: FindingCode, text: str, label: re.Match[str], zone_symbol: str | None = None
+) -> list[DescriptiveFinding]:
+    """Przeznaczenie ze zwrotu ``z podstawowym przeznaczeniem na …``: zdanie albo punkty ``1) …; 2) …``."""
+    if _names_other_zone(text, label, zone_symbol):
+        return []
+    limit = min(len(text), label.end() + _PHRASE_MAX)
+    list_follows = _PHRASE_ITEM.match(" " + text[label.end() : label.end() + 8]) is not None
+    boundary = (_PHRASE_END if list_follows else _PHRASE_END_PLAIN).search(text, label.end(), limit)
+    end = boundary.start() if boundary is not None else limit
+    clause = text[label.end() : end]
+    items = list(_PHRASE_ITEM.finditer(clause))
+    if items and _PHRASE_ITEM.match(" " + clause.lstrip()) is not None:
+        found: list[DescriptiveFinding] = []
+        for index, item in enumerate(items):
+            stop = items[index + 1].start() if index + 1 < len(items) else len(clause)
+            value = _squash(clause[item.end() : stop].strip(_TRIM))
+            if value and not _DEFINITION_VALUE.match(value):
+                found.append(
+                    DescriptiveFinding(code, value, value, label.end() + item.end(), label.end() + stop)
+                )
+        return found
+    value = _squash(clause.strip(_TRIM))
+    if not value or _DEFINITION_VALUE.match(value):
+        return []
+    return [DescriptiveFinding(code, value, _squash(text[label.start() : end].strip(_TRIM)), label.start(), end)]
+
+
+def _labelled(
+    code: FindingCode, text: str, label: re.Match[str], zone_symbol: str | None = None
+) -> list[DescriptiveFinding]:
     """Wartości po etykiecie przeznaczenia: lista podpunktów a)/b)… albo wartość w tym samym wierszu."""
+    if _PRIMARY_USE_PHRASE_RE.fullmatch(label.group(0)):
+        return _phrase(code, text, label, zone_symbol)
     if _LIST_START.match(text, label.end()):
         boundary = _LIST_END.search(text, label.end())
         end = boundary.start() if boundary is not None else len(text)
@@ -148,8 +238,10 @@ def _labelled(code: FindingCode, text: str, label: re.Match[str]) -> list[Descri
     return [DescriptiveFinding(code, value, _squash(text[label.start() : inline.end()]), label.start(), inline.end())]
 
 
-def find_use_designations(text: str) -> list[DescriptiveFinding]:
+def find_use_designations(text: str, zone_symbol: str | None = None) -> list[DescriptiveFinding]:
     """Przeznaczenie podstawowe i uzupełniające — z etykiet i z podpunktów sekcji przeznaczenia.
+
+    ``zone_symbol`` (gdy znany) pozwala odrzucić zwroty opisowe nazywające inną strefę niż żądana.
 
     Gdy sekcja przeznaczenia istnieje, ale nie ma ani etykiet, ani podpunktów a)/b)/c), zwracany jest
     cały opis jako ``primary_use`` z ``structured=False`` (uczciwa degradacja, bez zgadywania granicy).
@@ -157,7 +249,7 @@ def find_use_designations(text: str) -> list[DescriptiveFinding]:
     findings: list[DescriptiveFinding] = []
     for code, label in (("primary_use", _PRIMARY_USE_LABEL), ("supplementary_use", _SUPPLEMENTARY_USE_LABEL)):
         for match in label.finditer(text):
-            findings.extend(_labelled(code, text, match))  # type: ignore[arg-type]
+            findings.extend(_labelled(code, text, match, zone_symbol))  # type: ignore[arg-type]
     section = _purpose_section(text)
     if section is None:
         return findings
@@ -167,13 +259,15 @@ def find_use_designations(text: str) -> list[DescriptiveFinding]:
         item_text = _squash(item.group(2).strip(" ,;"))
         if not item_text:
             continue
-        code: FindingCode | None = (
+        item_code: FindingCode | None = (
             "supplementary_use" if _SUPPLEMENTARY_ITEM.match(item_text)
             else "primary_use" if _PRIMARY_ITEM.match(item_text)
             else None
         )
-        if code is not None:
-            findings.append(DescriptiveFinding(code, item_text, item_text, offset + item.start(2), offset + item.end(2)))
+        if item_code is not None:
+            findings.append(
+                DescriptiveFinding(item_code, item_text, item_text, offset + item.start(2), offset + item.end(2))
+            )
     if not items and not findings:
         whole = _squash(window.strip(" :\n"))
         if whole:
@@ -193,7 +287,12 @@ def find_prohibitions(text: str) -> list[DescriptiveFinding]:
 
 
 def find_permissions(text: str) -> list[DescriptiveFinding]:
-    return [_literal("permission", match) for match in _PERMISSION.finditer(text)]
+    """Dopuszczenia; wprowadzenie listy (``dopuszcza się zwiększenie wskaźników:``) nie jest ustaleniem."""
+    return [
+        _literal("permission", match)
+        for match in _PERMISSION.finditer(text)
+        if not match.group(0).rstrip(" ;.\n").endswith(":")
+    ]
 
 
 def find_environmental_restrictions(text: str, *, heading_required: bool) -> list[DescriptiveFinding]:

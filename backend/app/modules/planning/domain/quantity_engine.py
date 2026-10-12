@@ -86,6 +86,7 @@ from app.modules.planning.domain.quantity_normalization import (
     normalize_quantity,
 )
 from app.shared.numbers import NUMBER_PATTERN, NUMBER_WORD_PATTERN, parse_number_prefix, parse_number_word, parse_polish_number
+from app.shared.zone_symbol import split_symbol_range_token
 
 ENGINE_VERSION: Final[str] = f"quantity-engine/1.0+{LEXICON_VERSION}"
 
@@ -398,6 +399,13 @@ def _parse_symbol_list(rest: str, cursor: int) -> tuple[list[str], list[tuple[st
         separator = _SYMBOL_SEPARATOR.match(rest, cursor)
         following = _SYMBOL_TOKEN.match(rest, separator.end()) if separator is not None else None
         follower = following.group("tok").rstrip(".") if following is not None else ""
+        hyphen_range = split_symbol_range_token(token)
+        if hyphen_range is not None:  # ``1MNU-20MNU`` bez odstępów: jeden token, ale przedział stref
+            ranges.append(hyphen_range)
+            if separator is None or following is None or not _is_symbol_token(follower):
+                break
+            cursor = separator.end()
+            continue
         if (
             separator is not None
             and following is not None

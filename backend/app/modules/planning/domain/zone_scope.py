@@ -41,7 +41,11 @@ from app.modules.planning.domain.zone_blocks import (
     ZoneBlock,
     block_from_span,
 )
-from app.shared.zone_symbol import find_zone_symbol_mentions, zone_symbol_text_pattern
+from app.shared.zone_symbol import (
+    find_zone_symbol_mentions,
+    find_zone_symbol_range_mentions,
+    zone_symbol_text_pattern,
+)
 
 ZONE_SECTION_NOT_FOUND: Final[str] = "ZONE_SECTION_NOT_FOUND"
 ZONE_SYMBOL_OCR_MATCH: Final[str] = "ZONE_SYMBOL_OCR_MATCH"
@@ -56,7 +60,7 @@ _MARKER_PREFIX: Final[re.Pattern[str]] = re.compile(
     r"^\s*(?:(?:§\s*\d+\w*\.?|\d+\w*[.)]|[a-ząćęłńóśźż]\)|[–—-])\s*)+"
 )
 _INTRO_START: Final[re.Pattern[str]] = re.compile(
-    r"^(?:ustalenia\s+)?(?:dla\s+(?:wszystkich\s+)?(?:teren\w*|obszar\w*|stref\w*|jednostk\w*)"
+    r"^(?:ustalenia\s+(?:szczegółow\w+\s+)?)?(?:dla\s+(?:wszystkich\s+)?(?:teren\w*|obszar\w*|stref\w*|jednostk\w*)"
     r"|w\s+zakresie\b[^:.]{0,240}?\bteren\w*|na\s+teren\w*|teren\w*|obszar\w*|stref[ay]\b"
     r"|(?:ustala|wyznacza|określa)\s+się\b[^:.]{0,300}?\b(?:teren|obszar)\w*)",
     re.IGNORECASE,
@@ -70,6 +74,9 @@ _INTRO_END: Final[re.Pattern[str]] = re.compile(
     r":|\b(?:ustala\w*|obowiązuj\w*|przeznacza\w*|przeznaczen\w*|dopuszcza\w*|wprowadza\w*|znajduj\w*|wskazuje\w*)\b"
     r"|\.\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])"
 )
+# „Wyznacza się teren … oznaczony na rysunku planu symbolem 1MN.” — ustęp składa się z jednego zdania wyznaczającego
+# strefę, a jego treścią są kolejne ustępy. Samo „Ustala się … dla terenów 1Up i 2Up.” to odwołanie, nie wprowadzenie.
+_DESIGNATION_START: Final[re.Pattern[str]] = re.compile(r"^(?:wyznacza|określa)\s+się\b", re.IGNORECASE)
 _LIST_SPLIT: Final[re.Pattern[str]] = re.compile(r"\s*(?:,\s+|[:;–—]|\si\s|\soraz\s)\s*")
 _BARE_SYMBOL: Final[re.Pattern[str]] = re.compile(r"[0-9A-ZĄĆĘŁŃÓŚŹŻ][0-9A-Za-ząćęłńóśźż._/()+\-]{0,24}")
 _SYMBOL_KEYWORD: Final[re.Pattern[str]] = re.compile(r"\b(?:symbol\w*|oznaczon\w*|wyznaczon\w*)", re.IGNORECASE)
@@ -84,14 +91,6 @@ _KEYED_BARE: Final[re.Pattern[str]] = re.compile(
 _KEYED_RESIDUAL: Final[re.Pattern[str]] = re.compile(r"^(?:w|dla|na)\s+pozosta\w+\s+(?:terenach|terenów|obszarach|strefach)", re.IGNORECASE)
 _KEYED_ZONE_AREA: Final[re.Pattern[str]] = re.compile(r"^(?:w|dla)\s+(?:strefie|strefach)\b", re.IGNORECASE)
 _KEY_SPLIT: Final[re.Pattern[str]] = re.compile(r"\s*(?:,\s+|;|\si\s|\soraz\s)\s*")
-_ORDINAL: Final[re.Pattern[str]] = re.compile(r"^(?P<pre>.*?)(?P<num>\d+)(?P<suf>\D*)$")
-_RANGE_TOKEN: Final[str] = r"[0-9A-Za-zĄ-ż][0-9A-Za-ząćęłńóśźż._/()+\-]*"
-# Początek ``a`` tylko na granicy słowa: start w środku tokenu i tak kończy się porażką (ten sam koniec
-# tokenu), a bez tej granicy długi token bez odstępu (np. śmieci OCR) dawał koszt kwadratowy (PV3-16).
-_RANGE_MENTION: Final[re.Pattern[str]] = re.compile(
-    rf"(?<![0-9A-Za-zĄ-ż])(?P<a>{_RANGE_TOKEN})(?:\s*[–—]\s*|\s+-\s+)(?P<b>{_RANGE_TOKEN})"
-)
-_MAX_RANGE: Final[int] = 200
 
 
 @dataclass(frozen=True)
@@ -192,6 +191,17 @@ class _Resolver:
         """Token wygląda na symbol strefy: ma cyfrę albo co najmniej dwie wielkie litery."""
         return any(ch.isdigit() for ch in token) or sum(ch.isupper() for ch in token) >= 2
 
+    @staticmethod
+    def intro_end(lead: str, start: int = 0) -> int | None:
+        """Gdzie kończy się zdanie wprowadzające strefę (od ``start``); ``None`` — to wyliczenie, nie wprowadzenie."""
+        found = _INTRO_END.search(lead, start)
+        if found is not None:
+            return found.start()
+        stripped = lead.rstrip()
+        if _DESIGNATION_START.match(lead) and stripped.endswith(".") and len(stripped) - 1 >= start:
+            return len(stripped) - 1
+        return None
+
     def is_intro(self, node: StructureNodeView, mention: tuple[int, int]) -> tuple[bool, list[str], bool]:
         """Czy wzmianka jest we wstępie węzła wprowadzającym strefę: (tak/nie, symbole, wspólny).
 
@@ -205,12 +215,16 @@ class _Resolver:
         rel = mention[0] - lead_start
         if not 0 <= rel < len(lead):
             return False, [], False
-        end = _INTRO_END.search(lead, mention[1] - lead_start)
+        end = self.intro_end(lead, mention[1] - lead_start)
         if end is None:  # „teren X, dla terenu … symbolem Y;” to wyliczenie, nie wprowadzenie sekcji
             return False, [], False
-        region = lead[: end.start()]
-        keyword = _SYMBOL_KEYWORD.search(region)
-        if keyword is not None and keyword.start() <= rel:
+        region = lead[:end]
+        keyword = None
+        for found in _SYMBOL_KEYWORD.finditer(region):  # ostatnie słowo przed symbolem: „oznaczone symbolami …”
+            if found.start() > rel:
+                break
+            keyword = found
+        if keyword is not None:
             # po „symbolem/symbolami” lista: krótkie człony rozdzielone przecinkiem, „i”, „oraz”, dwukropkiem
             zone = region[keyword.end() :]
             parts = (part.strip() for part in _LIST_SPLIT.split(zone))
@@ -246,8 +260,8 @@ class _Resolver:
         """Czy wstęp węzła wprowadza jakąkolwiek strefę (fraza o terenie, symbol, koniec zdania)."""
         _, lead = self.lead(node)
         match = _INTRO_START.match(lead)
-        end = _INTRO_END.search(lead) if match else None
-        return bool(match and end and any(self.symbol_like(t) for t in _SYMBOL_LIKE_RE.findall(lead[: end.start()])))
+        end = self.intro_end(lead) if match else None
+        return bool(match and end is not None and any(self.symbol_like(t) for t in _SYMBOL_LIKE_RE.findall(lead[:end])))
 
     def extend_run(self, node: StructureNodeView) -> tuple[int, tuple[str, ...]]:
         """Ustępy bezpośrednio pod rozdziałem: zakres sięga do następnego wprowadzenia innej strefy.
@@ -309,36 +323,22 @@ class _Resolver:
                 found.append((node, keyed))
         return found
 
-    # --- zakresy symboli („1MN-U – 5MN-U”) -------------------------------------------------------
+    # --- zakresy symboli („1MN-U – 5MN-U”, „1KDZ-11KDZ”) -----------------------------------------
 
-    @staticmethod
-    def _ordinal(token: str) -> tuple[str, int, str] | None:
-        match = _ORDINAL.match(token.strip(" .,;:"))
-        return (match.group("pre"), int(match.group("num")), match.group("suf")) if match else None
-
-    def range_mentions(self, symbol: str) -> list[tuple[int, int]]:
-        """Zakresy typu ``1MN-U – 5MN-U`` obejmujące symbol, który nie jest ich końcem."""
-        target = self._ordinal(" ".join(symbol.split()))
-        if target is None:
-            return []
-        found: list[tuple[int, int]] = []
-        for match in _RANGE_MENTION.finditer(self.view.text):
-            first, last = self._ordinal(match.group("a")), self._ordinal(match.group("b"))
-            if first is None or last is None or first[0] != last[0] or first[2] != last[2]:
-                continue
-            if (first[0], first[2]) != (target[0], target[2]):
-                continue
-            low, high = first[1], last[1]
-            if low < target[1] < high and high - low <= _MAX_RANGE:
-                found.append((match.start(), match.end()))
-        return found
+    def range_mentions(self, symbol: str, literal: list[tuple[int, int]]) -> list[tuple[int, int]]:
+        """Zakresy obejmujące symbol (końce włącznie), z pominięciem tych, w których symbol stoi wprost."""
+        return [
+            span for span in find_zone_symbol_range_mentions(self.view.text, symbol)
+            if not any(span[0] <= low and high <= span[1] for low, high in literal)
+        ]
 
     # --- jeden symbol -------------------------------------------------------------------------
 
     def resolve(self, symbol: str) -> tuple[list[_Piece], list[str]]:
         warnings: list[str] = []
         mentions = list(find_zone_symbol_mentions(self.view.text, symbol))
-        mentions.extend(self.range_mentions(symbol))
+        ranges = self.range_mentions(symbol, mentions)
+        mentions.extend(ranges)
         mentions.sort()
         ocr_only = False
         if not mentions:
@@ -358,11 +358,23 @@ class _Resolver:
             ok, _tokens, shared = self.is_intro(owner, mention)
             if not ok:
                 continue
+            shared = shared or mention in ranges  # zakres symboli opisuje wiele stref naraz
             node = self.climb(owner)
             end, ids = self.extend_run(node)
             key = (node.start, end)
             previous = found.get(key)
             found[key] = _Intro(node, node.start, end, shared if previous is None else previous.shared and shared, ids)
+
+        # Punkt-liść wewnątrz wspólnego § („e) dla terenu 2Up dopuszcza się dachy płaskie;”) jest wyjątkiem w tej samej
+        # sekcji, a nie własną sekcją strefy: nie ma podpunktów, więc nie niesie zestawu ustaleń. Własną sekcją jest
+        # punkt z podpunktami („N) dla terenu MN.11: a) … b) …”) — wtedy wspólny § jest klauzulą ogólną.
+        shared_spans = [(i.start, i.end) for i in found.values() if i.shared]
+        found = {
+            key: intro for key, intro in found.items()
+            if intro.shared
+            or self.items_of(intro.node)
+            or not any(low <= intro.start and intro.end <= high and (low, high) != (intro.start, intro.end) for low, high in shared_spans)
+        }
 
         def outermost(items: list[_Intro]) -> list[_Intro]:
             ordered = sorted(items, key=lambda i: (i.start, -i.end))
