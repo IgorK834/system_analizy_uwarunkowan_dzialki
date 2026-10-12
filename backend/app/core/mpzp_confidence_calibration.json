@@ -34,8 +34,8 @@
     "prompt": null,
     "quantity_engine": "quantity-engine/1.0+quantity-lexicon/1.0",
     "versions": [
-      "mpzp-parser/3.1-det",
-      "mpzp-parser/3.1-det+scope.1"
+      "mpzp-parser/3.2-det",
+      "mpzp-parser/3.2-det+scope.2"
     ]
   },
   "manual_review": {
@@ -174,9 +174,9 @@
         }
       },
       "bands_monotone": true,
-      "brier_score": 0.0342982647,
+      "brier_score": 0.0343117341,
       "errors": 23,
-      "expected_calibration_error": 0.0586205428,
+      "expected_calibration_error": 0.0587745819,
       "n": 434,
       "reliability_curve": [
         {
@@ -255,7 +255,7 @@
           "accuracy": 1.0,
           "errors": 0,
           "lower": 0.9,
-          "mean_confidence": 0.960826636,
+          "mean_confidence": 0.9606388468,
           "n": 356,
           "upper": 1.0
         }

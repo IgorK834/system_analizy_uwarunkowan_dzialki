@@ -194,3 +194,83 @@ def find_zone_symbol_mentions(
         for match in pattern.finditer(text)
         if not is_tail_of_spaced_symbol(text, match.start())
     ]
+
+
+# --- zakresy symboli („1KDZ-11KDZ”, „1MN-U – 5MN-U”, „1-13MWU”) ----------------------------------
+
+_RANGE_TOKEN_CHARS: Final[str] = _LETTERS_AND_DIGITS + "._/()+"
+_RANGE_BEFORE: Final[str] = rf"(?<![{_LETTERS_AND_DIGITS}_./\-])"
+# Dwie postacie zapisu: myślnik w tokenach (``1MN-U – 5MN-U``, separator to półpauza albo myślnik ze
+# spacjami) oraz zwykły myślnik bez spacji, także z łamaniem wiersza (``1KDZ-11KDZ``, ``26U-\n27U``),
+# gdzie tokeny nie zawierają myślnika, żeby ``1MN-U`` nie zlewało się z zakresem.
+_DASH_RANGE_RE: Final[re.Pattern[str]] = re.compile(
+    rf"{_RANGE_BEFORE}(?P<a>[{_LETTERS_AND_DIGITS}][{_RANGE_TOKEN_CHARS}\-]*)(?:\s*[–—]\s*|\s+-\s+)"
+    rf"(?P<b>[{_LETTERS_AND_DIGITS}][{_RANGE_TOKEN_CHARS}\-]*)"
+)
+_HYPHEN_RANGE_RE: Final[re.Pattern[str]] = re.compile(
+    rf"{_RANGE_BEFORE}(?P<a>[{_LETTERS_AND_DIGITS}][{_RANGE_TOKEN_CHARS}]*)\s*-\s*"
+    rf"(?P<b>[{_LETTERS_AND_DIGITS}][{_RANGE_TOKEN_CHARS}]*)"
+)
+_ORDINAL_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<pre>.*?)(?P<num>\d+)(?P<suf>\D*)$")
+MAX_SYMBOL_RANGE: Final[int] = 200
+
+
+def _ordinal(token: str, *, fold: bool = True) -> tuple[str, int, str] | None:
+    """Rozkład symbolu na przedrostek, numer porządkowy i przyrostek (bez odstępów)."""
+    compact = re.sub(r"\s+", "", token).strip(".,;:")
+    match = _ORDINAL_RE.match(compact.casefold() if fold else compact)
+    return (match.group("pre"), int(match.group("num")), match.group("suf")) if match else None
+
+
+def find_zone_symbol_range_mentions(text: str, symbol: str) -> list[tuple[int, int]]:
+    """Spans zakresów symboli obejmujących ``symbol`` (końce zakresu włącznie).
+
+    Zakres to dwa symbole o tym samym przedrostku i przyrostku i rosnących numerach porządkowych:
+    ``1KDZ-11KDZ`` obejmuje ``2KDZ`` i ``11KDZ``, ``MW.1-MW.5`` obejmuje ``MW.3``. Skrót ``1-13MWU``
+    oznacza ``1MWU-13MWU``. Wielkość liter nie rozstrzyga, o ile jest czym rozstrzygnąć: plan
+    może mieć rodziny ``MNu`` i ``MNU`` (Pisz), więc gdy jakiś zakres pasuje co do wielkości liter,
+    zakresy różniące się od niego tylko wielkością liter są pomijane. Zapis bez litery w przedrostku
+    i przyrostku (``10-12``) nie jest zakresem symboli, a rozpiętość ponad ``MAX_SYMBOL_RANGE`` numerów
+    jest pomijana (śmieci OCR, tabele liczb).
+    """
+    target = _ordinal(symbol)
+    exact_target = _ordinal(symbol, fold=False)
+    if target is None or exact_target is None or not (target[0] or target[2]):
+        return []
+    exact: set[tuple[int, int]] = set()
+    folded: set[tuple[int, int]] = set()
+    for pattern in (_DASH_RANGE_RE, _HYPHEN_RANGE_RE):
+        for match in pattern.finditer(text):
+            span = (match.start(), match.end())
+            for fold, bucket, wanted in ((True, folded, target), (False, exact, exact_target)):
+                first, last = _ordinal(match.group("a"), fold=fold), _ordinal(match.group("b"), fold=fold)
+                if first is None or last is None:
+                    continue
+                if not (first[0] or first[2]) and (last[0] or last[2]):
+                    first = (last[0], first[1], last[2])  # „1-13MWU”: przedrostek i przyrostek z drugiego końca
+                if not (first[0] or first[2]) or (first[0], first[2]) != (last[0], last[2]):
+                    continue
+                if (first[0], first[2]) != (wanted[0], wanted[2]):
+                    continue
+                if first[1] <= wanted[1] <= last[1] and last[1] - first[1] <= MAX_SYMBOL_RANGE:
+                    bucket.add(span)
+    return sorted(exact or folded)
+
+
+def split_symbol_range_token(token: str) -> tuple[str, str] | None:
+    """Rozdziela pojedynczy token ``1MNU-20MNU`` (myślnik bez odstępów) na końce zakresu symboli.
+
+    Zwraca ``None``, gdy token nie jest zakresem: symbol ze zwykłym myślnikiem (``2MN-U``, ``230_U-1``)
+    ma po obu stronach myślnika co innego niż ten sam przedrostek i przyrostek z rosnącym numerem.
+    """
+    match = _HYPHEN_RANGE_RE.fullmatch(token)
+    if match is None:
+        return None
+    first, last = _ordinal(match.group("a")), _ordinal(match.group("b"))
+    if first is None or last is None:
+        return None
+    if not (first[0] or first[2]) and (last[0] or last[2]):
+        first = (last[0], first[1], last[2])
+    if not (first[0] or first[2]) or (first[0], first[2]) != (last[0], last[2]) or first[1] >= last[1]:
+        return None
+    return match.group("a"), match.group("b")
