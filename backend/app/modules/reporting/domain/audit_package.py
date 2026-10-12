@@ -29,7 +29,10 @@ AUDIT_PACKAGE_SCHEMA_VERSION: Final[str] = "audit-package/1"
 # 1.2.0 (PV3-18): ``analysis.json`` ma blok ``model_provenance`` (model, wersja promptu, skrót odpowiedzi,
 # zweryfikowany cytat wartości z modelu językowego); cytat podlega regule redystrybucji źródła, odpowiedź
 # modelu nie jest nigdy dołączana (tylko jej skrót), a README opisuje odczyt automatyczny.
-AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.2.0"
+# 1.3.0 (AU-101, AU-103): ``analysis.json`` ma ``mpzp_acts`` i ``mpzp_status`` (jeden z sześciu rozłącznych stanów,
+# kanały, akty odrzucone), warstwa ``layers/mpzp_acts.geojson`` (granice aktów z Rejestru Urbanistycznego,
+# ``redistribution: allowed``) i sekcja README o stanach MPZP; akt tylko z KIMPZP nie ma geometrii.
+AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.3.0"
 MANIFEST_NAME: Final[str] = "manifest.json"
 README_NAME: Final[str] = "README.md"
 

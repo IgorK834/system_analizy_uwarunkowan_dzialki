@@ -47,6 +47,7 @@ GEOMETRY_KEYS: Final[frozenset[str]] = frozenset(
     {
         "geometry_geojson",
         "intersection_geojson",
+        "boundary_geojson",
         "buildable_area_geojson",
         "network_geometry_geojson",
         "protection_zone_geojson",
@@ -200,6 +201,10 @@ def _all_sources(response: AnalyzeResponse) -> list[SourceMetadata]:
     if response.parcel:
         found.append(response.parcel.source)
     found.extend(zone.source for zone in response.mpzp_zones)
+    if response.mpzp_status is not None:
+        found.extend(channel.source for channel in response.mpzp_status.channels if channel.source)
+        if response.mpzp_status.source:
+            found.append(response.mpzp_status.source)
     if response.pog:
         if response.pog.source:
             found.append(response.pog.source)
@@ -384,6 +389,32 @@ def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> lis
     add("mpzp_zones", "Strefy MPZP przecinające działkę",
         "Przecięcia stref MPZP z działką (obliczone w EPSG:2180, zapis w EPSG:4326).",
         mpzp, [zone.source for zone in response.mpzp_zones])
+
+    # AU-101: granice aktów (RU, ``redistribution: allowed``) i części działki objęte aktem. Akt znany tylko z
+    # KIMPZP nie ma geometrii, więc nie tworzy obiektu warstwy; jego dane są w ``analysis.json``.
+    acts: list[dict[str, Any]] = []
+    for act in response.mpzp_acts:
+        properties = {
+            "layer": "mpzp_act",
+            "resolution_number": act.resolution_number,
+            "act_identifier": act.act_identifier,
+            "legal_status": act.legal_status,
+            "precedence": act.precedence,
+            "share_pct": act.intersection_pct,
+            "area_sqm": act.intersection_area_sqm,
+            "sources": list(act.sources),
+        }
+        acts += _features(act.intersection_geojson, {**properties, "part": "intersection"})
+        acts += _features(act.boundary_geojson, {**properties, "part": "boundary_window"})
+    act_sources = [
+        channel.source
+        for channel in (response.mpzp_status.channels if response.mpzp_status else [])
+        if channel.channel == "mpzp_ru"
+    ]
+    add("mpzp_acts", "Akty MPZP przecinające działkę (Rejestr Urbanistyczny)",
+        "Granice aktów MPZP z Rejestru Urbanistycznego (przycięte do okna wokół działki) i części działki objęte "
+        "aktem (obliczone w EPSG:2180). Akt to granica i dokument, nie strefa przeznaczenia.",
+        acts, act_sources)
 
     if response.pog is not None:
         pog = response.pog

@@ -43,6 +43,12 @@ from app.modules.reporting.domain.audit_package import (
     render_json,
     sha256_hex,
 )
+from app.shared.mpzp_status_text import (
+    MPZP_STATUS_LABELS,
+    MPZP_STATUS_MESSAGES,
+    MPZP_STATUS_MISSING_MESSAGE,
+    MPZP_STATUS_VALUES,
+)
 from app.shared.model_reading import (
     EXTRACTION_METHOD_LLM_VERIFIED,
     MODEL_READING_DISCLAIMER,
@@ -483,6 +489,36 @@ def _sources_document(source: AuditInput) -> dict[str, Any]:
 # --- README --------------------------------------------------------------------------------
 
 
+def _mpzp_status_readme(source: AuditInput) -> list[str]:
+    """Sekcja README o stanie ustalenia MPZP i aktach (AU-101, AU-103): sześć rozłącznych stanów."""
+    state = source.analysis.get("mpzp_status") if isinstance(source.analysis, Mapping) else None
+    lines = [
+        "",
+        "## Stan ustalenia MPZP i akty",
+        "",
+        "`analysis.json` zawiera `result.mpzp_status` (jeden z sześciu rozłącznych stanów, kod powodu, stan kanałów "
+        "KIMPZP i Rejestru Urbanistycznego, akty odrzucone z diagnostyką) oraz `result.mpzp_acts[]` (akty z "
+        "numerem uchwały, statusem, dokumentem, udziałem działki i pierwszeństwem informacyjnym). Akt to granica "
+        "i dokument planu, nie strefa. Granice aktów są w `layers/mpzp_acts.geojson` (Rejestr Urbanistyczny, "
+        "`redistribution: allowed`); akt znany tylko z KIMPZP nie ma granicy, więc jego udział to `null`, nie zero.",
+        "",
+        "| Stan | Znaczenie |",
+        "| --- | --- |",
+    ]
+    for key in MPZP_STATUS_VALUES:
+        lines.append(f"| `{key}` — {MPZP_STATUS_LABELS[key]} | {MPZP_STATUS_MESSAGES[key]} |")
+    lines.append("")
+    if isinstance(state, Mapping):
+        lines.append(
+            f"Stan w tej analizie: `{state.get('status')}` — {state.get('label')} "
+            f"(kod powodu: `{state.get('reason_code')}`; reguła pierwszeństwa: "
+            f"`{state.get('precedence_rule_version')}`)."
+        )
+    else:
+        lines.append(MPZP_STATUS_MISSING_MESSAGE)
+    return lines
+
+
 def _readme(
     source: AuditInput,
     files: Sequence[PackageFile],
@@ -553,6 +589,7 @@ def _readme(
     ]
     for key, label in QUALITY_STATUS_LABELS_PL.items():
         lines.append(f"| `{key}` — {label} | {QUALITY_STATUS_DESCRIPTIONS_PL[key]} |")
+    lines += _mpzp_status_readme(source)
     lines += [
         "",
         "Świeżość jest oceniana osobno, według jawnej reguły wieku przypisanej do źródła i "
