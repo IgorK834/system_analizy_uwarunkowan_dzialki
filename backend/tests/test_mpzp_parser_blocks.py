@@ -115,7 +115,8 @@ def test_conflicting_values_inside_one_scope_are_flagged() -> None:
 def test_unfound_symbol_yields_a_warning_and_no_values() -> None:
     result, _ = _parse("bielsko_viii_187_2024", ["999_NIE"], "blocks")
     assert [p for z in result.zones for p in z.parameters] == []
-    assert any(w.code == "ZONE_SECTION_NOT_FOUND" and w.zone_symbol == "999_NIE" for w in result.warnings)
+    assert any(w.code == "ZONE_NOT_IN_DOCUMENT" and w.zone_symbol == "999_NIE" for w in result.warnings)
+    assert not any(w.code == "ZONE_SECTION_NOT_FOUND" for w in result.warnings)
 
 
 def test_scope_warnings_for_unresolved_scope_and_ocr_symbols_reach_the_result() -> None:

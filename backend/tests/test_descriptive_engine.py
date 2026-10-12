@@ -163,3 +163,100 @@ def test_the_vocabulary_guard_detects_a_reintroduced_pattern(tmp_path: Path) -> 
     sample.write_text('import re\nP = re.compile(r"zakaz\\s+[^,;.\\n]+")\nQ = re.compile(r"Rozdział\\s+\\d+")\n', encoding="utf-8")
     flagged = [pattern for _, pattern in _regex_literals(sample) if _VOCABULARY.search(pattern)]
     assert flagged == [r"zakaz\s+[^,;.\n]+"]
+
+
+# --- zwroty opisowe z realnych uchwał (AU-102) --------------------------------------------------------
+
+
+def test_primary_use_from_the_phrase_with_a_numbered_list_splits_the_points() -> None:
+    text = (
+        "§ 58. 1. Wyznacza się Teren zabudowy mieszkaniowej wielorodzinnej z usługami, oznaczony symbolem MW/U.4 , "
+        "z podstawowym przeznaczeniem na: 1) zabudowę mieszkaniową wielorodzinną z usługami, z zastrzeżeniem § 9 ust. 1 pkt 1; "
+        "2) obiekty i lokale zamieszkania zbiorowego takie jak: hotele, hostele, pensjonaty. "
+        "2. W przeznaczeniu podstawowym terenu zawierają się odpowiednio elementy niezbędne dla jego urządzenia."
+    )
+    uses = engine.find_use_designations(text, "MW/U.4")
+    assert _values(uses, "primary_use") == [
+        "zabudowę mieszkaniową wielorodzinną z usługami, z zastrzeżeniem § 9 ust. 1 pkt 1",
+        "obiekty i lokale zamieszkania zbiorowego takie jak: hotele, hostele, pensjonaty",
+    ]
+    for finding in uses:  # skrót „ust.” nie kończy punktu, a cytat jest dosłownym fragmentem
+        assert finding.quote in " ".join(text.split())
+
+
+def test_primary_use_from_the_phrase_without_a_list_ends_at_the_next_paragraph_number() -> None:
+    text = "1. Wyznacza się Teren zieleni, z podstawowym przeznaczeniem na ogólnodostępną zieleń urządzoną. 2. W przeznaczeniu podstawowym terenu"
+    (use,) = engine.find_use_designations(text)
+    assert use.value == "ogólnodostępną zieleń urządzoną"
+    assert use.quote == "z podstawowym przeznaczeniem na ogólnodostępną zieleń urządzoną"
+
+
+@pytest.mark.parametrize(
+    ("text", "value"),
+    [
+        ("ustala się: 1) przeznaczenie: droga publiczna - zbiorcza; 2) szerokość", "droga publiczna - zbiorcza"),
+        ("ustala się: 1) przeznaczenie – komunikacja drogowa wewnętrzna; 2) szerokość", "komunikacja drogowa wewnętrzna"),
+        ("1) przeznaczenie podstawowe terenu: tereny drogi klasy L1/2 – ulica; 2) inne", "tereny drogi klasy L1/2 – ulica"),
+    ],
+)
+def test_bare_and_terrain_labelled_primary_use(text: str, value: str) -> None:
+    assert _values(engine.find_use_designations(text), "primary_use") == [value]
+
+
+def test_the_bare_label_is_only_read_at_the_start_of_a_point() -> None:
+    """Nagłówek „ustala się następujące przeznaczenie:” nie jest wartością przeznaczenia."""
+    assert engine.find_use_designations("Dla terenu ustala się następujące przeznaczenie: 1) inne") == []
+
+
+def test_a_phrase_naming_another_zone_is_not_assigned_to_the_requested_zone() -> None:
+    """Kraków Morelowa: wykaz rodzajów terenów w przepisach ogólnych opisuje przeznaczenie KAŻDEJ strefy."""
+    text = (
+        "a) MN.1 - MN.11 – Tereny zabudowy mieszkaniowej jednorodzinnej,\n"
+        "o podstawowym przeznaczeniu pod zabudowę jednorodzinną,\n"
+        "b) MNi.1 - MNi.3 – Tereny zabudowy mieszkaniowej jednorodzinnej istniejącej, o podstawowym przeznaczeniu pod "
+        "zabudowę budynkami mieszkalnymi jednorodzinnymi,\n"
+        "c) U.1 – Teren usług o podstawowym przeznaczeniu pod zabudowę usługową,"
+    )
+    assert _values(engine.find_use_designations(text, "MN.5"), "primary_use") == ["zabudowę jednorodzinną"]
+    assert _values(engine.find_use_designations(text, "MNi.2"), "primary_use") == ["zabudowę budynkami mieszkalnymi jednorodzinnymi"]
+    assert _values(engine.find_use_designations(text, "ZP.1"), "primary_use") == []
+    # bez symbolu strefy (reguły jednostek prawnych) silnik nie ma czym odfiltrować i zwraca wszystkie
+    assert len(_values(engine.find_use_designations(text), "primary_use")) == 3
+
+
+def test_permission_phrases_with_wrapped_lines_abbreviations_and_the_possibility_form() -> None:
+    text = (
+        "4) zakaz lokalizacji lokali mieszkalnych na pierwszej kondygnacji nadziemnej budynków frontowych i w\n"
+        "kondygnacjach podziemnych;\n"
+        "5) możliwość lokalizacji lokali usługowych na dwóch pierwszych kondygnacjach nadziemnych budynków,\n"
+        "a także w kondygnacjach podziemnych, pod warunkiem zapewnienia dostępu do części mieszkalnej\n"
+        "(komunikacji wewnętrznej) niezależnego od użytkowania lokali usługowych;\n"
+        "6) możliwość lokalizacji usług z zakresu: hotelarskich, obsługi bankowej;\n"
+        "3. W obiektach z ust.1 ustala się możliwość lokalizacji innych usług, z zastrzeżeniem § 9 ust. 1 pkt 1.\n"
+        "2) dopuszcza się zagospodarowanie zgodnie z §15 pkt 3;"
+    )
+    permissions = _values(engine.find_permissions(text))
+    assert permissions == [
+        "możliwość lokalizacji lokali usługowych na dwóch pierwszych kondygnacjach nadziemnych budynków, a także w "
+        "kondygnacjach podziemnych, pod warunkiem zapewnienia dostępu do części mieszkalnej (komunikacji wewnętrznej) "
+        "niezależnego od użytkowania lokali usługowych",
+        "możliwość lokalizacji usług z zakresu: hotelarskich, obsługi bankowej",
+        "ustala się możliwość lokalizacji innych usług, z zastrzeżeniem § 9 ust. 1 pkt 1",
+        "dopuszcza się zagospodarowanie zgodnie z §15 pkt 3",
+    ]
+    assert _values(engine.find_prohibitions(text)) == [
+        "zakaz lokalizacji lokali mieszkalnych na pierwszej kondygnacji nadziemnej budynków frontowych i w kondygnacjach podziemnych"
+    ]
+    assert _values(engine.find_prohibitions("1) zakazuje się lokalizacji obiektów budowlanych, z wyłączeniem lasów")) == [
+        "zakazuje się lokalizacji obiektów budowlanych"
+    ]
+
+
+def test_a_wrapped_permission_stops_before_the_next_list_point() -> None:
+    text = "5) możliwość lokalizacji garaży na terenie\nposesji\n6) inne ustalenia dotyczące parkowania;"
+    assert _values(engine.find_permissions(text)) == ["możliwość lokalizacji garaży na terenie posesji"]
+
+
+def test_a_permission_that_only_introduces_a_list_is_not_a_finding() -> None:
+    text = "dopuszcza się zwiększenie maksymalnych wskaźników:\na) intensywności zabudowy,\nb) wysokości."
+    assert _values(engine.find_permissions(text)) == []

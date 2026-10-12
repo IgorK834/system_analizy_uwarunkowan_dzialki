@@ -463,6 +463,23 @@ def test_scope_comparison_tolerates_ocr_confusions_and_ranges_of_symbols() -> No
     assert values(ranged, "max_building_height_m", target_symbol="MN.5") == [11.0]  # przedział symboli: nie odrzucamy
 
 
+def test_a_range_written_without_spaces_is_a_range_of_zones_not_one_symbol() -> None:
+    """Pisz (AU-102): ``1MNU-20MNU`` było jednym tokenem, więc wartości sekcji odrzucano jako cudze."""
+    text = (
+        "3) szczegółowe zasady kształtowania zabudowy dla terenów oznaczonych symbolami 1MNU-20MNU:\n"
+        "a) maksymalna intensywność zabudowy: 0,75,\n"
+        "d) maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 50%;\n"
+        "4) szczegółowe zasady kształtowania zabudowy dla terenów oznaczonych symbolami 21MNU-23MNU:\n"
+        "a) maksymalna intensywność zabudowy: 2,0,\n"
+        "d) maksymalna powierzchnia zabudowy w stosunku do powierzchni działki: 100%;"
+    )
+    assert values(text, "max_intensity", target_symbol="12MNU") == [0.75]
+    assert values(text, "max_building_coverage_percent", target_symbol="12MNU") == [50.0]
+    assert values(text, "max_intensity", target_symbol="22MNU") == [2.0]
+    assert values(text, "max_intensity", target_symbol="20MNU") == [0.75]  # koniec zakresu włącznie
+    assert values(text, "max_intensity", target_symbol="30MNU") == []  # poza obydwoma zakresami
+
+
 def test_subzones_are_conditions_not_zone_scopes() -> None:
     text = "a) wysokość zabudowy:\n- w strefie SWZ 22 oznaczonej na rysunku planu - maksimum 22,0 m,"
     assert values(text, "max_building_height_m", target_symbol="6.6.MW/U") == [22.0]

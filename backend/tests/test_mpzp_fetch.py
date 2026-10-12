@@ -1,6 +1,7 @@
 import io
 import socket
 import zipfile
+from pathlib import Path
 
 import httpx
 import pytest
@@ -14,7 +15,9 @@ from app.services.mpzp_fetch import (
     MpzpDocumentFetchError,
     MpzpDocumentNotFoundError,
     MpzpDocumentSecurityError,
+    MPZP_MAX_HTML_HOPS,
     _extract_best_pdf_from_zip,
+    _find_document_link_in_html,
     _find_pdf_link_in_html,
     _looks_like_html,
     _looks_like_pdf,
@@ -457,3 +460,115 @@ def test_magic_byte_recognition_with_octet_stream() -> None:
     zip_bytes = make_zip_bytes([("plan.pdf", PDF_BYTES)])
     assert _looks_like_zip(zip_bytes, "application/octet-stream", PUBLIC_URL) is True
     assert _looks_like_html(b"  <!DOCTYPE html><p>x</p>", "application/octet-stream")
+
+
+# --- strony BIP: dokument -> karta załącznika -> plik (AU-102) ----------------------------------------
+
+BIP_FIXTURES = Path(__file__).parent / "fixtures" / "mpzp_fetch" / "krakow_bip"
+BIP_LANDING_URL = "https://www.bip.krakow.pl/?dok_id=137657"
+BIP_TEXT_CARD_URL = "https://www.bip.krakow.pl/zalaczniki/dokumenty/n/298025/karta"
+BIP_TEXT_FILE_URL = "https://www.bip.krakow.pl/plik.php?zid=298025&wer=0&new=t&mode=shw"
+HTML_HEADERS = {"content-type": "text/html; charset=utf-8"}
+
+
+def bip_page(name: str) -> bytes:
+    """Zamrożona strona BIP Krakowa (wszystkie linki ``<a>`` realnej strony, bez reszty szablonu)."""
+    return (BIP_FIXTURES / name).read_bytes()
+
+
+def test_the_text_link_is_chosen_over_every_other_attachment_of_the_real_landing_page() -> None:
+    landing = bip_page("landing_kleparz.html")
+    assert _find_document_link_in_html(landing, BIP_LANDING_URL) == BIP_TEXT_CARD_URL
+    # strona ma też rysunek planu, GML, prognozę i ekofizjografię — żadna z nich nie jest tekstem uchwały
+    assert b"/n/298026/karta" in landing and b"/n/636649/karta" in landing
+
+
+def test_the_card_of_the_text_leads_to_its_single_file() -> None:
+    assert _find_document_link_in_html(bip_page("card_kleparz_text.html"), BIP_TEXT_CARD_URL) == BIP_TEXT_FILE_URL
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_a_bip_landing_page_is_followed_through_the_text_card_to_the_pdf() -> None:
+    landing = respx.get(BIP_LANDING_URL).mock(
+        return_value=httpx.Response(200, headers=HTML_HEADERS, content=bip_page("landing_kleparz.html"))
+    )
+    card = respx.get(BIP_TEXT_CARD_URL).mock(
+        return_value=httpx.Response(200, headers=HTML_HEADERS, content=bip_page("card_kleparz_text.html"))
+    )
+    plik = respx.get(BIP_TEXT_FILE_URL).mock(
+        return_value=httpx.Response(200, headers={"content-type": "application/pdf"}, content=PDF_BYTES)
+    )
+    attachment = respx.get(url__regex=r"https://www\.bip\.krakow\.pl/zalaczniki/dokumenty/n/(?!298025/).*").mock(
+        return_value=httpx.Response(200, headers=HTML_HEADERS, content=b"<html></html>")
+    )
+
+    result = await fetch_mpzp_document(BIP_LANDING_URL)
+
+    assert result.media_type == "application/pdf" and result.content == PDF_BYTES
+    assert result.source_metadata.source_url == BIP_TEXT_FILE_URL
+    assert result.source_metadata.manual_review_required is False
+    assert (landing.call_count, card.call_count, plik.call_count) == (1, 1, 1)
+    assert attachment.call_count == 0  # rysunek planu i pozostałe załączniki nie są pobierane
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_following_stops_after_the_hop_limit_and_returns_the_page() -> None:
+    page = b'<html><body><a href="/dokument?n=NEXT">Tekst planu (uchwala nr 1/2020)</a></body></html>'
+    for index in range(MPZP_MAX_HTML_HOPS + 3):
+        respx.get(f"https://bip.example.test/dokument?n={index}").mock(
+            return_value=httpx.Response(200, headers=HTML_HEADERS, content=page.replace(b"NEXT", str(index + 1).encode()))
+        )
+
+    result = await fetch_mpzp_document("https://bip.example.test/dokument?n=0")
+
+    assert result.media_type == "text/html" and result.source_metadata.manual_review_required is True
+    assert len(respx.calls) == MPZP_MAX_HTML_HOPS + 1
+    assert str(respx.calls.last.request.url).endswith(f"n={MPZP_MAX_HTML_HOPS}")
+
+
+def test_links_to_another_site_are_not_followed_from_a_page_without_pdf() -> None:
+    html = b'<html><a href="https://obcy.example.test/plik.php?zid=1">Tekst planu</a><a href="https://obcy.example.test/x/karta">Tekst planu</a></html>'
+    assert _find_document_link_in_html(html, "https://bip.example.test/dokument") is None
+
+
+def test_several_download_links_need_a_unique_text_of_the_resolution() -> None:
+    base = "https://bip.example.test/dokument"
+    ambiguous = b'<a href="/plik.php?zid=1">zobacz</a><a href="/plik.php?zid=2">zobacz</a>'
+    assert _find_document_link_in_html(ambiguous, base) is None
+    labelled = (
+        b'<a href="/plik.php?zid=1">Rysunek planu - zalacznik nr 1</a>'
+        b'<a href="/plik.php?zid=2">Tekst planu (uchwala nr 5/2020)</a>'
+        b'<a href="/plik.php?zid=3">Prognoza oddzialywania na srodowisko</a>'
+    )
+    assert _find_document_link_in_html(labelled, base) == "https://bip.example.test/plik.php?zid=2"
+    only_attachments = b'<a href="/pobierz?id=1">Rysunek planu</a><a href="/pobierz?id=2">Zalacznik nr 2</a>'
+    assert _find_document_link_in_html(only_attachments, base) is None
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_a_card_whose_file_redirects_to_a_private_address_is_blocked() -> None:
+    respx.get(BIP_LANDING_URL).mock(
+        return_value=httpx.Response(200, headers=HTML_HEADERS, content=bip_page("landing_kleparz.html"))
+    )
+    respx.get(BIP_TEXT_CARD_URL).mock(
+        return_value=httpx.Response(200, headers=HTML_HEADERS, content=bip_page("card_kleparz_text.html"))
+    )
+    respx.get(BIP_TEXT_FILE_URL).mock(
+        return_value=httpx.Response(302, headers={"location": "http://127.0.0.1/plik.pdf"})
+    )
+    original = socket.getaddrinfo
+
+    def getaddrinfo(hostname: str, port: int | None):
+        if hostname == "127.0.0.1":
+            return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("127.0.0.1", 0))]
+        return original(hostname, port)
+
+    socket.getaddrinfo = getaddrinfo  # type: ignore[assignment]
+    try:
+        with pytest.raises(MpzpDocumentSecurityError):
+            await fetch_mpzp_document(BIP_LANDING_URL)
+    finally:
+        socket.getaddrinfo = original  # type: ignore[assignment]

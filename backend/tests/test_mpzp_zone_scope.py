@@ -338,3 +338,67 @@ def test_corpus_blocks_are_identical_on_every_build() -> None:
             for _ in range(2)
         }
         assert len(digests) == 1
+
+
+# --- AU-102: zakresy symboli, wprowadzenia i wyjątki we wspólnym § ----------------------------------------
+
+
+def test_a_symbol_inside_a_range_without_spaces_gets_the_shared_paragraph() -> None:
+    view = _view([
+        "§ 25. Dla terenów oznaczonych symbolami 1KDZ-11KDZ ustala się:\n1) przeznaczenie: droga publiczna - zbiorcza;\n"
+        "§ 26. Dla terenów oznaczonych symbolami 1KDL-3KDL ustala się:\n1) przeznaczenie: droga lokalna.\n"
+    ])
+    resolution = resolve_zone_scope(view, ["2KDZ", "11KDZ", "2KDL", "12KDZ"])
+    zone = _only(resolution, "2KDZ")
+    assert (zone.strategy, zone.scope_kind) == (2, "zone_section") and "droga publiczna" in zone.text
+    assert _only(resolution, "11KDZ").block_id == zone.block_id  # koniec zakresu włącznie, ten sam blok
+    assert "droga lokalna" in _only(resolution, "2KDL").text and "droga lokalna" not in zone.text
+    assert resolution.blocks_for("12KDZ") == () and resolution.warnings_for("12KDZ") == (ZONE_SECTION_NOT_FOUND,)
+
+
+def test_detailed_provisions_intro_opens_the_zone_section_and_a_symbols_keyword_chain_is_one_list() -> None:
+    view = _view([
+        "§ 17. Ustalenia szczegółowe dla terenu oznaczonego symbolem ZC:\n1) przeznaczenie – teren cmentarza;\n2) maksymalna wysokość zabudowy: 5,0 m.\n"
+        "§ 18. Ustalenia szczegółowe dla terenów oznaczonych symbolami 1ZL, 2ZL, 3ZL:\n1) przeznaczenie – teren lasu;\n"
+        "2) tereny oznaczone symbolami 1ZL oraz 2ZL zlokalizowane są częściowo w strefie ochrony – obowiązują zasady z §12;\n"
+    ])
+    resolution = resolve_zone_scope(view, ["ZC", "2ZL"])
+    zc = _only(resolution, "ZC")
+    assert (zc.strategy, zc.scope_kind) == (1, "zone_section") and "5,0 m" in zc.text and "las" not in zc.text
+    zl = _only(resolution, "2ZL")  # punkt „2) tereny oznaczone symbolami 1ZL oraz 2ZL…” nie jest osobną sekcją strefy
+    assert (zl.strategy, zl.scope_kind) == (2, "zone_section") and "teren lasu" in zl.text
+
+
+def test_a_designating_sentence_of_one_paragraph_is_an_intro_but_a_cross_reference_is_not() -> None:
+    designating = _view([
+        "§ 14. 1. Wyznacza się teren zabudowy mieszkaniowej jednorodzinnej, oznaczony na rysunku planu symbolem 1MN.\n"
+        "2. Przeznaczenie podstawowe- zabudowa mieszkaniowa jednorodzinna.\n3. Maksymalna wysokość zabudowy 9 m.\n"
+        "§ 15. 1. Wyznacza się teren usług, oznaczony na rysunku planu symbolem 1U.\n2. Wysokość zabudowy 12 m.\n"
+    ])
+    resolution = resolve_zone_scope(designating, ["1MN"])
+    block = _only(resolution, "1MN")
+    assert block.scope_kind == "zone_section" and "9 m" in block.text and "12 m" not in block.text
+
+    reference = _view([
+        "§ 11. 1. Ustala się zagospodarowanie przestrzeni publicznej zgodnie z ustaleniami szczegółowymi określonymi dla terenów 1Up i 2Up.\n"
+        "§ 12. 1. Ustala się zasady kształtowania zabudowy terenów oznaczonych symbolami 1Up, 2Up:\n1) wysokość zabudowy do 12 m;\n"
+    ])
+    block = _only(resolve_zone_scope(reference, ["1Up"]), "1Up")
+    assert "12 m" in block.text and "przestrzeni publicznej" not in block.text
+
+
+def test_a_leaf_item_inside_a_shared_paragraph_is_an_exception_but_an_item_with_a_sublist_is_an_own_section() -> None:
+    leaf = _view([
+        "§ 7. Ustala się zasady kształtowania zabudowy terenów funkcjonalnych oznaczonych symbolami 1Up, 2Up:\n"
+        "1) wysokość zabudowy do 12 m;\n2) dachy:\na) dla terenu funkcjonalnego 2Up dopuszcza się dachy płaskie;\n"
+    ])
+    resolution = resolve_zone_scope(leaf, ["1Up", "2Up"])
+    assert _only(resolution, "1Up").block_id == _only(resolution, "2Up").block_id  # jeden wspólny blok, bez rozdzielania
+    assert _only(resolution, "2Up").scope_kind == "zone_section"
+
+    with_sublist = _view([
+        "§ 7. Ustala się zasady kształtowania zabudowy terenów funkcjonalnych oznaczonych symbolami 1Up, 2Up:\n"
+        "1) wysokość zabudowy do 12 m;\n2) dla terenu funkcjonalnego 2Up ustala się:\na) dachy płaskie,\nb) wysokość do 9 m.\n"
+    ])
+    kinds = {block.scope_kind for block in resolve_zone_scope(with_sublist, ["2Up"]).blocks}
+    assert "general_clause" in kinds  # wspólny § to klauzula ogólna, a punkt z podpunktami — własna sekcja strefy

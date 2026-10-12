@@ -84,9 +84,10 @@ async def test_parse_with_many_zone_symbols_returns_one_result_per_symbol() -> N
         result = await parse_mpzp_document(PDF_DOCUMENT, ["MN", "U"])
 
     assert [zone.zone_symbol for zone in result.zones] == ["MN", "U"]
+    # tekst jest czytelny, a żądanych symboli w nim nie ma: jawny powód zamiast ogólnego „nie znaleziono sekcji”
     assert [warning.code for warning in result.warnings] == [
-        "ZONE_SECTION_NOT_FOUND",
-        "ZONE_SECTION_NOT_FOUND",
+        "ZONE_NOT_IN_DOCUMENT",
+        "ZONE_NOT_IN_DOCUMENT",
     ]
 
 

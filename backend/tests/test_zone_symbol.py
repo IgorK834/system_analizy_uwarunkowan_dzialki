@@ -260,3 +260,67 @@ def test_migration_027_widens_the_resolved_symbol_column_and_follows_head_026() 
 
     assert Analysis.__table__.c.resolved_zone_symbol.type.length == 50
     assert len(list(versions.glob("02[0-9]_*.py"))) >= 8  # historia nie została przepisana
+
+
+# --- zakresy symboli (AU-102) ------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "symbol", "expected"),
+    [
+        ("symbolami 1KDZ-11KDZ ustala się", "2KDZ", "1KDZ-11KDZ"),  # myślnik bez odstępów
+        ("symbolami 1KDZ-11KDZ ustala się", "11KDZ", "1KDZ-11KDZ"),  # koniec zakresu włącznie
+        ("symbolami 1KDZ-11KDZ ustala się", "1KDZ", "1KDZ-11KDZ"),
+        ("terenów 1MN-U – 5MN-U ustala się", "3MN-U", "1MN-U – 5MN-U"),  # półpauza, myślnik w symbolu
+        ("terenów MW.1 - MW.5 ustala się", "MW.3", "MW.1 - MW.5"),
+        ("terenów MW.1-MW.5 ustala się", "MW.5", "MW.1-MW.5"),
+        ("c) 1-13MWU, 1-23MNU jak dla terenów", "7MWU", "1-13MWU"),  # skrót: przedrostek z drugiego końca
+        ("27U-\n28U, 29U-30U", "28U", "27U-\n28U"),  # złamanie wiersza po myślniku
+        ("symbolami 1U-32U, 1PU-6PU", "5PU", "1PU-6PU"),
+    ],
+)
+def test_ranges_cover_the_symbol_with_inclusive_ends(text: str, symbol: str, expected: str) -> None:
+    spans = zs.find_zone_symbol_range_mentions(text, symbol)
+    assert [text[a:b] for a, b in spans] == [expected]
+
+
+@pytest.mark.parametrize(
+    ("text", "symbol"),
+    [
+        ("symbolami 1KDZ-11KDZ", "12KDZ"),  # poza zakresem
+        ("symbolami 1KDZ-11KDZ", "2KDD"),  # inny przyrostek
+        ("symbolami 1KDZ-11KDZ", "KDZ"),  # symbol bez numeru
+        ("wysokość 10-12 m, 4-5 kondygnacji", "11"),  # liczby, nie symbole
+        ("symbol 2MN-U oznacza", "2MN"),  # symbol z myślnikiem, nie zakres
+        ("symbolami 5KDZ-2KDZ", "3KDZ"),  # zakres odwrócony
+        ("symbolami 1KDZ-900KDZ", "5KDZ"),  # rozpiętość ponad limit (śmieci OCR)
+    ],
+)
+def test_text_that_is_not_a_range_over_the_symbol_gives_no_mention(text: str, symbol: str) -> None:
+    assert zs.find_zone_symbol_range_mentions(text, symbol) == []
+
+
+def test_the_exact_case_family_wins_over_a_case_insensitive_one() -> None:
+    """Pisz ma rodziny ``MNu`` i ``MNU``: zakres w tej samej wielkości liter wyklucza zakres innej rodziny."""
+    text = "1MNu - 30MNu oraz 1MNU-23MNU"
+    assert [text[a:b] for a, b in zs.find_zone_symbol_range_mentions(text, "12MNU")] == ["1MNU-23MNU"]
+    assert [text[a:b] for a, b in zs.find_zone_symbol_range_mentions(text, "5MNu")] == ["1MNu - 30MNu"]
+    # bez zakresu w tej samej wielkości liter zostaje dopasowanie bez rozróżnienia
+    assert [text[a:b] for a, b in zs.find_zone_symbol_range_mentions("1MNu - 30MNu", "5MNU")] == ["1MNu - 30MNu"]
+
+
+def test_split_symbol_range_token() -> None:
+    assert zs.split_symbol_range_token("1MNU-20MNU") == ("1MNU", "20MNU")
+    assert zs.split_symbol_range_token("MW.1-MW.5") == ("MW.1", "MW.5")
+    assert zs.split_symbol_range_token("1-13MWU") == ("1", "13MWU")
+    for token in ("2MN-U", "230_U", "MN.1", "5MNU-2MNU", "1MN-1MN", "10-12"):
+        assert zs.split_symbol_range_token(token) is None
+
+
+def test_legacy_locator_finds_a_symbol_that_is_only_named_by_a_range() -> None:
+    text = "§ 25. Dla terenów oznaczonych symbolami 1KDZ-11KDZ ustala się:\n1) przeznaczenie: droga publiczna - zbiorcza;"
+    segments = segment_document(TextExtractionResult(pages=[text]))
+    result = find_zone_sections(segments, ["2KDZ", "12KDZ"])
+    assert [c.match_pattern for c in result[0].candidates] == ["zakres symboli"]
+    assert result[0].candidates[0].page_number == 1 and "1KDZ-11KDZ" in result[0].candidates[0].source_text
+    assert result[1].candidates == [] and result[1].manual_review_required
