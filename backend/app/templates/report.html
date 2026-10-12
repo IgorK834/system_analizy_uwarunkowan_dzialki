@@ -53,6 +53,11 @@
   .empty { color: #6b3a10; font-style: italic; background: #fff7ef; padding: 1.2mm 2mm;
            border-left: 2pt solid #c96a1f; break-inside: avoid; }
   .note { font-size: 8pt; color: #475467; }
+  .callout { background: #f8f9fb; border-left: 2pt solid #475467; padding: 1.4mm 2.4mm; margin: 1.5mm 0 2.5mm 0;
+             break-inside: avoid; font-size: 8.5pt; }
+  .callout[data-mpzp-status="available"] { border-left-color: #0d5137; }
+  .callout[data-mpzp-status="ambiguous"], .callout[data-mpzp-status="unavailable"] { border-left-color: #c96a1f; background: #fff7ef; }
+  .callout[data-mpzp-status="unknown"], .callout[data-mpzp-status="missing"], .callout[data-mpzp-status="no_coverage"] { border-left-color: #8f2525; }
   .kind { display: inline-block; font-size: 6.5pt; padding: 0 1mm; border-radius: 1mm;
           border: 0.5pt solid #98a2b3; color: #344054; }
   .kind-source_fact { background: #eef4ff; }
@@ -203,6 +208,11 @@
 {# ---------- 3. MPZP ---------- #}
 <section class="report-section" id="sec-mpzp">
   <h2>{{ section.mpzp.number }}. {{ section.mpzp.title }}</h2>
+  {# AU-103: rozłączny stan ustalenia MPZP — osobny komunikat dla każdego stanu #}
+  <div class="callout" data-mpzp-status="{{ mpzp.status.status }}">
+    <strong>Stan ustalenia MPZP: {{ mpzp.status.label }}.</strong> {{ mpzp.status.message }}
+    {% if mpzp.status.reason_code %}<br><small>Kod powodu: <span class="mono">{{ mpzp.status.reason_code }}</span>{% if mpzp.status.reason_codes and mpzp.status.reason_codes != mpzp.status.reason_code %}; kody: <span class="mono">{{ mpzp.status.reason_codes }}</span>{% endif %}</small>{% endif %}
+  </div>
   {% if mpzp.waiting %}
   <h3>Tabela 3.4. Analiza wstrzymana — wymagany symbol strefy</h3>
   <table class="kv">
@@ -303,6 +313,48 @@
   {% else %}
   <p class="empty">{{ mpzp.empty_reason }}</p>
   {{ map_figure("mpzp") }}
+  {% endif %}
+  {% if mpzp.acts %}
+  {{ map_figure("mpzp_acts") }}
+  <h3>Tabela 3.6. Akty MPZP przecinające działkę (Rejestr Urbanistyczny + KIMPZP)</h3>
+  <table class="data" data-table="mpzp-acts">
+    <colgroup><col style="width: 14%"><col style="width: 25%"><col style="width: 14%"><col style="width: 13%"><col style="width: 34%"></colgroup>
+    <thead><tr><th>Uchwała</th><th>Nazwa i status</th><th>Daty</th><th>Działka objęta aktem</th><th>Dokumenty, źródła, pierwszeństwo</th></tr></thead>
+    <tbody>
+    {% for act in mpzp.acts %}
+      <tr data-row="mpzp-act" data-precedence="{{ act.precedence_code }}">
+        <td><strong>{{ na(act.number) }}</strong>{% if act.identifier %}<br><small class="mono">{{ act.identifier }}</small>{% endif %}{% if act.number_basis == "identifier" %}<br><small>numer z identyfikatora RU</small>{% endif %}</td>
+        <td>{{ na(act.title) }}<br><small>{{ act.status }}{% if act.raw_status %} ({{ act.raw_status }}){% endif %}{% if act.journal %}; {{ act.journal }}{% endif %}</small></td>
+        <td><small>uchwalono: {{ na(act.resolution_date) }}{% if act.valid_from %}<br>obowiązuje od: {{ act.valid_from }}{% endif %}{% if act.valid_to %}<br>do: {{ act.valid_to }}{% endif %}</small></td>
+        <td class="num">{% if act.share %}{{ act.share }}<br><small>{{ act.area }}</small>{% else %}<small>nie ustalono (akt bez granicy w źródle)</small>{% endif %}</td>
+        <td><small>{% if act.document_url %}{{ act.document_kind or "dokument" }}: <span class="mono">{{ act.document_url }}</span><br>{% endif %}{% if act.legend_url %}legenda: <span class="mono">{{ act.legend_url }}</span><br>{% endif %}{% if act.drawing_url %}rysunek: <span class="mono">{{ act.drawing_url }}</span><br>{% endif %}{% for amendment in act.amendments %}zmiana{% if amendment.number %} {{ amendment.number }}{% endif %}{% if amendment.valid_from %}, od {{ amendment.valid_from }}{% endif %}{% if amendment.url %}: <span class="mono">{{ amendment.url }}</span>{% endif %}<br>{% endfor %}źródła: {{ act.sources }}<br>pierwszeństwo: {{ act.precedence }}{% if act.manual_review %} <span class="tag tag-review">wymaga weryfikacji</span>{% endif %}{% if act.reason_codes %}<br><span class="mono">{{ act.reason_codes }}</span>{% endif %}</small></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note" data-note="mpzp-acts">Akt to granica i dokument planu, a nie strefa przeznaczenia: Rejestr Urbanistyczny nie udostępnia wydzieleń stref. Udział działki jest policzony w EPSG:2180 z granicy aktu w Rejestrze Urbanistycznym; akt znany tylko z KIMPZP nie ma granicy, więc udziału nie ustalono (to nie jest 0%). Reguła pierwszeństwa jest informacyjna i nie zastępuje wypisu z planu.</p>
+  {% endif %}
+  {% if mpzp.status.present %}
+  <h3>Tabela 3.7. Kanały MPZP i akty odrzucone</h3>
+  <table class="kv" data-table="mpzp-channels">
+    {% for channel in mpzp.status.channels %}
+    <tr><th>{{ channel.label }}</th><td data-channel-status="{{ channel.status }}">{{ channel.status_label }}{% if channel.acts_found %}; akty: {{ channel.acts_found }}{% endif %}{% if channel.reason_codes %}<br><small class="mono">{{ channel.reason_codes }}</small>{% endif %}{% if channel.source %}<br><small>{{ source_line(channel.source) }}</small>{% endif %}</td></tr>
+    {% endfor %}
+    <tr><th>Zgodność kanałów</th><td data-agreement="{{ mpzp.status.agreement_code }}">{{ mpzp.status.agreement }}</td></tr>
+    <tr><th>Reguła pierwszeństwa</th><td><span class="mono">{{ mpzp.status.rule_version }}</span></td></tr>
+  </table>
+  {% if mpzp.status.rejected %}
+  <table class="data" data-table="mpzp-rejected-acts">
+    <colgroup><col style="width: 18%"><col style="width: 34%"><col style="width: 28%"><col style="width: 20%"></colgroup>
+    <thead><tr><th>Akt odrzucony</th><th>Nazwa i status</th><th>Powód</th><th class="num">Odległość od działki</th></tr></thead>
+    <tbody>
+    {% for item in mpzp.status.rejected %}
+      <tr data-row="mpzp-rejected-act"><td>{{ item.number or item.identifier }}</td><td>{{ na(item.title) }}<br><small>{{ item.status }}{% if item.raw_status %} ({{ item.raw_status }}){% endif %}</small></td><td>{{ item.reason }}</td><td class="num">{{ item.distance }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note" data-note="mpzp-rejected">Akty zwrócone przez Rejestr Urbanistyczny dla prostokąta działki, ale nieprzecinające jej, nie są aktami działki.</p>
+  {% endif %}
   {% endif %}
   {% if mpzp.discovery %}
   <h3>Tabela 3.5. Akty MPZP wskazane przez KIMPZP w punktach działki (discovery)</h3>

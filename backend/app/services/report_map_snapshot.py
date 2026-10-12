@@ -51,6 +51,7 @@ _TO_2180 = Transformer.from_crs("EPSG:4326", "EPSG:2180", always_xy=True)
 MAP_TITLES: dict[str, str] = {
     "parcel": "Mapa 1. Działka, obszar po odsunięciu i przybliżenia techniczne",
     "mpzp": "Mapa 3. Strefy MPZP przecinające działkę",
+    "mpzp_acts": "Mapa 3a. Granice aktów MPZP i część działki objęta aktem",
     "pog": "Mapa 4. Strefy POG oraz OUZ, OZS i OSDIS",
     "environment": "Mapa 5. Zagrożenie powodziowe i formy ochrony przyrody",
 }
@@ -104,6 +105,13 @@ def build_report_map_snapshot(
     maps = [
         _parcel_map(response, config, clip, parcel_layer),
         _mpzp_map(response, config, clip, parcel_layer),
+        # Mapa 3a istnieje tylko wtedy, gdy wynik ma akty MPZP (AU-101); analizy bez aktów mają ten sam zestaw
+        # i ten sam hash semantyczny map co przed zmianą.
+        *(
+            [_mpzp_acts_map(response, config, clip, parcel_layer)]
+            if getattr(response, "mpzp_acts", None)
+            else []
+        ),
         _pog_map(pog, config, clip, parcel_layer),
         _environment_map(response, config, clip, parcel_layer),
     ]
@@ -198,7 +206,7 @@ def _mpzp_map(
             + (
                 f" (strefy bez wektora: {', '.join(without_geometry)} — przypisanie dokumentowe lub ręczne)"
                 if without_geometry
-                else " (nie znaleziono albo nie sprawdzono stref MPZP)"
+                else f" ({_mpzp_state_phrase(response)})"
             )
             + ". Brak strefy na mapie nie oznacza braku planu."
         )
@@ -209,6 +217,111 @@ def _mpzp_map(
     )
     return _map("mpzp", "mpzp_zones", "Strefy MPZP (symbol podpisany na mapie)", [*layers, parcel_layer],
                 reason, notes)
+
+
+def _mpzp_state_phrase(response: Any) -> str:
+    """Stan ustalenia MPZP (AU-103) zamiast jednego zdania „nie znaleziono albo nie sprawdzono”."""
+    state = getattr(response, "mpzp_status", None)
+    if state is None:
+        return "stan ustalenia MPZP nieznany — zapis sprzed wprowadzenia stanów"
+    return f"stan ustalenia MPZP: {state.label}"
+
+
+def _clip_boundary_lines(geojson: Mapping[str, Any] | None, clip: tuple[float, ...]) -> dict[str, Any] | None:
+    """Obrys aktu jako linie (bez sztucznych krawędzi na brzegu kadru) w EPSG:2180, przycięty do kadru."""
+    geometry = _geojson_geometry(geojson)
+    if geometry is None:
+        return None
+    try:
+        projected = transform(_TO_2180.transform, shape(geometry))
+    except (ValueError, TypeError, AttributeError, KeyError):
+        logger.warning("report_map_snapshot_invalid_geometry")
+        return None
+    if not projected.is_valid and projected.geom_type in {"Polygon", "MultiPolygon"}:
+        projected = shapely.make_valid(projected)
+    lines = projected.boundary if projected.geom_type in {"Polygon", "MultiPolygon"} else projected
+    clipped = shapely.clip_by_rect(lines, *clip)
+    if clipped.is_empty:
+        return None
+    data = mapping(clipped)
+    return {"type": data["type"], "coordinates": round_coordinates(data["coordinates"])}
+
+
+def _mpzp_acts_map(
+    response: Any, config: Mapping[str, Any], clip: tuple[float, ...], parcel_layer: dict[str, Any]
+) -> dict[str, Any]:
+    """Mapa 3a: granice aktów MPZP (linie przerywane) i część działki objęta aktem (AU-101).
+
+    Akt nie jest strefą, więc mapa nie podpisuje przeznaczeń; legenda wymienia numer uchwały. Akt bez
+    granicy w źródle (wyłącznie KIMPZP) nie jest rysowany i jest wymieniony w uwadze.
+    """
+    acts = list(getattr(response, "mpzp_acts", None) or [])
+    palette = config["mpzp_palette"]
+    layers: list[dict[str, Any]] = []
+    undrawn: list[str] = []
+    for index, act in enumerate(acts):
+        number = act.resolution_number or act.act_identifier or f"akt {index + 1}"
+        fill, outline = palette[index % len(palette)]
+        in_force = act.legal_status in {"binding", "unknown"}
+        intersection = _clip_geojson(act.intersection_geojson, clip)
+        boundary = _clip_boundary_lines(act.boundary_geojson, clip)
+        if intersection is None and boundary is None:
+            undrawn.append(number)
+            continue
+        if boundary is not None:
+            layers.append(
+                _layer(
+                    f"mpzp_act_boundary:{index}",
+                    {
+                        "layer": f"mpzp_act_boundary:{index}",
+                        "label": f"Granica aktu {number}" + ("" if in_force else " (projekt lub bez mocy)"),
+                        "outline": outline,
+                        "line_width": 2,
+                        "fill": None,
+                        "fill_alpha": None,
+                        "pattern": None,
+                        "line_dash": [6, 4],
+                    },
+                    [_feature(f"mpzp-act-boundary:{index}", None, boundary)],
+                )
+            )
+        if intersection is not None:
+            feature = _feature(f"mpzp-act:{index}", number, intersection)
+            feature["label_point"] = _label_point(intersection)
+            layers.append(
+                _layer(
+                    f"mpzp_act:{index}",
+                    {
+                        "layer": f"mpzp_act:{index}",
+                        "label": f"Część działki objęta aktem {number}",
+                        "outline": outline,
+                        "line_width": 2,
+                        "fill": fill if in_force else None,
+                        "fill_alpha": config["mpzp_fill_alpha"] if in_force else None,
+                        "pattern": None if in_force else "diagonal-lines",
+                        "line_dash": None,
+                    },
+                    [feature],
+                )
+            )
+    reason = None
+    if not layers:
+        reason = (
+            "Akty znane tylko z KIMPZP nie mają granicy w źródle, więc mapy granic nie narysowano "
+            "(udział działki nie został ustalony)."
+            if undrawn
+            else f"Brak aktu z granicą w zapisanym wyniku ({_mpzp_state_phrase(response)}). "
+            "Brak aktu na mapie nie oznacza braku planu."
+        )
+    notes = [f"Bez granicy w źródle (nienarysowane): {', '.join(undrawn)}."] if layers and undrawn else []
+    return _map(
+        "mpzp_acts",
+        "mpzp_acts",
+        "Akty MPZP (granica aktu i część działki; akt nie jest strefą)",
+        [*layers, parcel_layer],
+        reason,
+        notes,
+    )
 
 
 def _pog_map(
@@ -520,6 +633,10 @@ def _map_data_provenance(response: Any, map_id: str) -> tuple[list[str], list[in
         sources.append(parcel.source)
     if map_id == "mpzp":
         sources.extend(zone.source for zone in getattr(response, "mpzp_zones", None) or [])
+    elif map_id == "mpzp_acts":
+        state = getattr(response, "mpzp_status", None)
+        if state is not None:
+            sources.extend(channel.source for channel in state.channels)
     elif map_id == "pog":
         pog = getattr(response, "pog", None)
         if pog is not None:

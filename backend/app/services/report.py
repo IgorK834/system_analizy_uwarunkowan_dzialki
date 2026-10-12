@@ -72,6 +72,7 @@ from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.section_quality import build_section_quality
 from app.services.terrain import terrain_from_snapshot
+from app.shared.mpzp_status_text import MPZP_STATUS_MISSING_MESSAGE
 from app.shared.model_reading import (
     EXTRACTION_METHOD_LLM_VERIFIED,
     MODEL_READING_DISCLAIMER,
@@ -481,7 +482,11 @@ def _mpzp_finding(response: AnalyzeResponse) -> tuple[str, str | None]:
     if response.manual_zone_required:
         return "Analiza wstrzymana — symbol strefy wymaga ręcznego podania.", "manual"
     if not zones:
-        return "Brak stref MPZP w wyniku.", None
+        state = response.mpzp_status
+        label = f" Stan ustalenia MPZP: {state.label}." if state is not None else ""
+        acts = [act.resolution_number or act.act_identifier or "akt bez numeru" for act in response.mpzp_acts]
+        listed = f" Akty: {', '.join(acts)}." if acts else ""
+        return f"Brak stref MPZP w wyniku.{label}{listed}", None
     parts = [
         f"{zone.zone_symbol} ({_share(zone.intersection_pct) if zone.intersection_pct is not None else 'udział nieustalony'})"
         for zone in zones
@@ -752,15 +757,151 @@ def _mpzp_section_context(response: AnalyzeResponse) -> dict[str, Any]:
             "disclaimer": MODEL_READING_DISCLAIMER,
         },
         "no_data_note": f"{NO_DATA_NOT_NO_RESTRICTION} {NULL_NOT_ZERO}",
+        # AU-103: komunikat zależy od rozłącznego stanu MPZP — „brak pokrycia”, „nie znaleziono”, „nie sprawdzono”
+        # i „wiele planów” nie są już jednym zdaniem.
         "empty_reason": (
             None
             if response.mpzp_zones
             else "Analiza oczekuje na ręczne podanie symbolu strefy MPZP."
             if response.manual_zone_required
-            else "Nie znaleziono ani nie sprawdzono stref MPZP przecinających działkę — "
-            "nie potwierdza to braku planu."
+            else _mpzp_empty_reason(response)
         ),
+        "status": _mpzp_status_context(response),
+        "acts": _mpzp_acts_context(response),
     }
+
+
+_PRECEDENCE_LABELS: Final[dict[str, str]] = {
+    "applies": "obowiązuje na działce",
+    "complementary": "obejmuje inną część działki niż pozostałe akty",
+    "superseded": "wyparty przez inny akt",
+    "unresolved": "kilka aktów bez rozstrzygnięcia",
+    "not_in_force": "nie obowiązuje",
+}
+_ACT_STATUS_LABELS: Final[dict[str, str]] = {
+    "binding": "obowiązujący",
+    "not_binding": "utracił moc / nieobowiązujący",
+    "not_yet_binding": "projekt lub jeszcze nieobowiązujący",
+    "unknown": "status nieustalony",
+}
+_DOCUMENT_KIND_LABELS: Final[dict[str, str]] = {
+    "adopting": "uchwała uchwalająca plan",
+    "commencement": "uchwała o przystąpieniu (nie tekst planu)",
+    "other": "dokument aktu",
+}
+_REJECTION_LABELS: Final[dict[str, str]] = {
+    "no_overlap": "granica aktu leży poza działką",
+    "boundary_touch_only": "akt tylko styka się z działką",
+    "below_min_area": "przecięcie poniżej progu (szum granicy)",
+    "geometry_unusable": "brak użytecznej granicy aktu",
+}
+_CHANNEL_AGREEMENT_LABELS: Final[dict[str, str]] = {
+    "agree": "kanały wskazują te same akty",
+    "mismatch": "kanały wskazują różne akty (MPZP_CHANNEL_MISMATCH)",
+    "single_channel": "akt wskazał tylko jeden kanał",
+    "none": "żaden kanał nie wskazał aktu",
+}
+
+
+def _mpzp_empty_reason(response: AnalyzeResponse) -> str:
+    state = response.mpzp_status
+    if state is None:
+        return MPZP_STATUS_MISSING_MESSAGE
+    return state.message
+
+
+def _mpzp_status_context(response: AnalyzeResponse) -> dict[str, Any]:
+    """Ramka „Stan ustalenia MPZP” (AU-103) — ten sam stan, kod i komunikat co w API i interfejsie."""
+    state = response.mpzp_status
+    if state is None:
+        return {
+            "present": False,
+            "status": "missing",
+            "label": "Brak stanu w zapisie",
+            "message": MPZP_STATUS_MISSING_MESSAGE,
+            "reason_code": None,
+            "reason_codes": None,
+            "source": None,
+        }
+    return {
+        "present": True,
+        "status": state.status,
+        "label": state.label,
+        "message": state.message,
+        "reason_code": state.reason_code,
+        "reason_codes": ", ".join(state.reason_codes) or None,
+        "source": _source_brief(state.source),
+        "agreement": _CHANNEL_AGREEMENT_LABELS.get(state.channel_agreement, state.channel_agreement),
+        "agreement_code": state.channel_agreement,
+        "rule_version": state.precedence_rule_version,
+        "channels": [
+            {
+                "label": channel.label,
+                "status": channel.status,
+                "status_label": channel.status_label,
+                "reason_codes": ", ".join(channel.reason_codes) or None,
+                "acts_found": channel.acts_found,
+                "source": _source_brief(channel.source),
+            }
+            for channel in state.channels
+        ],
+        "rejected": [
+            {
+                "number": item.resolution_number,
+                "identifier": item.act_identifier,
+                "title": item.title,
+                "status": _ACT_STATUS_LABELS.get(item.legal_status, item.legal_status),
+                "raw_status": item.raw_status,
+                "reason": _REJECTION_LABELS.get(item.reason, item.reason),
+                "distance": _meters(item.distance_m, 2) if item.distance_m is not None else NOT_SPECIFIED,
+            }
+            for item in state.rejected_acts
+        ],
+    }
+
+
+def _mpzp_acts_context(response: AnalyzeResponse) -> list[dict[str, Any]]:
+    """Tabela 3.6 — akty MPZP z RU i KIMPZP: udział działki policzony z granicy aktu albo „nie ustalono”."""
+    rows: list[dict[str, Any]] = []
+    for act in response.mpzp_acts:
+        shown_dates = act.legal_status in {"binding", "not_binding"}
+        rows.append(
+            {
+                "number": act.resolution_number,
+                "number_basis": act.resolution_number_basis,
+                "identifier": act.act_identifier,
+                "title": act.title,
+                "status": _ACT_STATUS_LABELS.get(act.legal_status, act.legal_status),
+                "raw_status": act.raw_status,
+                "resolution_date": _format_date(act.resolution_date),
+                "valid_from": _format_date(act.effective_from) if shown_dates else None,
+                "valid_to": _format_date(act.effective_to),
+                "area": _area(act.intersection_area_sqm) if act.intersection_area_sqm is not None else None,
+                "share": _share(act.intersection_pct) if act.intersection_pct is not None else None,
+                "document_url": act.document_url,
+                "document_kind": _DOCUMENT_KIND_LABELS.get(act.document_kind or "", None),
+                "legend_url": act.legend_url,
+                "drawing_url": act.drawing_url,
+                "journal": act.journal,
+                "amendments": [
+                    {
+                        "number": item.resolution_number,
+                        "valid_from": _format_date(item.effective_from),
+                        "name": item.name,
+                        "url": item.document_url,
+                    }
+                    for item in act.amendments
+                ],
+                "sources": ", ".join(
+                    "KIMPZP" if source == "kimpzp" else "Rejestr Urbanistyczny" for source in act.sources
+                ),
+                "precedence": _PRECEDENCE_LABELS.get(act.precedence, act.precedence),
+                "precedence_code": act.precedence,
+                "manual_review": act.manual_review_required,
+                "reason_codes": ", ".join(act.reason_codes) or None,
+            }
+        )
+    return rows
 
 
 _DISCOVERY_STATUS_LABELS: Final[dict[str, str]] = {
@@ -1757,6 +1898,12 @@ def _provenance_context(
             response.mpzp_discovery.schema_version if response.mpzp_discovery else None,
         ),
         (
+            "Stan ustalenia MPZP i reguła pierwszeństwa aktów",
+            f"{response.mpzp_status.schema_version}; {response.mpzp_status.precedence_rule_version}"
+            if response.mpzp_status
+            else None,
+        ),
+        (
             "Teren — raster",
             response.terrain.relief.schema_version
             if response.terrain and response.terrain.relief
@@ -1855,9 +2002,14 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
     if response.parcel is None:
         limitations.append("Nie ustalono geometrii działki — analiza jest niepełna.")
     if not response.mpzp_zones:
+        state = response.mpzp_status
         limitations.append(
-            "Brak stref MPZP w wyniku — nie sprawdzono planu albo działka nie "
-            "przecina wektorowych danych MPZP."
+            "Brak stref MPZP w wyniku. "
+            + (
+                f"Stan ustalenia MPZP: {state.label}. {state.message}"
+                if state is not None
+                else MPZP_STATUS_MISSING_MESSAGE
+            )
         )
     if response.manual_zone_required:
         limitations.append(
