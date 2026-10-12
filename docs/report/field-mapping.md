@@ -56,6 +56,20 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `manual_zone_context.symbol_max_length` | 3 | *pominięte:* reguła walidacji formularza UI | metadane |
 | `manual_zone_context.symbol_allowed_pattern` | 3 | *pominięte:* reguła walidacji formularza UI | metadane |
 | `manual_zone_context.*` | 3 | Tabela 3.4 — plan, kandydaci, status i SHA-256 przypiętego dokumentu, komunikat | dane ręczne |
+| `mpzp_acts[].intersection_geojson` | 3 | Mapa 3a — część działki objęta aktem (zamrożona w EPSG:2180) | wynik obliczenia |
+| `mpzp_acts[].boundary_geojson` | 3 | Mapa 3a — granica aktu w oknie wokół działki (linia przerywana) | fakt źródłowy |
+| `mpzp_acts[].intersection_area_sqm` | 3 | Tabela 3.6 — pole części działki objętej aktem [m²] | wynik obliczenia |
+| `mpzp_acts[].intersection_pct` | 3 | Tabela 3.6 — udział działki objęty aktem [%] | wynik obliczenia |
+| `mpzp_acts[].precedence` | 3 | Tabela 3.6 — pierwszeństwo informacyjne (reguła mpzp-act-precedence) | wynik obliczenia |
+| `mpzp_acts[].manual_review_required` | 8 | Tabela 3.6 — plakietka „wymaga weryfikacji”; macierz 8.1 | metadane |
+| `mpzp_acts[].amendments[].*` | 3 | Tabela 3.6 — zmiany aktu (numer, data, nazwa, link do tekstu zmiany) | fakt źródłowy |
+| `mpzp_acts[].*` | 3 | Tabela 3.6 — akt MPZP: numer, tytuł, daty, status prawny, dokument, legenda, rysunek, źródła, kody powodów | fakt źródłowy |
+| `mpzp_status.schema_version` | 9 | Tabela 9.3 — wersje kontraktów snapshotu | metadane |
+| `mpzp_status.source.*` | 9 | Tabela 3.7 — źródło rozstrzygające stan; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
+| `mpzp_status.channels[].source.*` | 9 | Tabela 3.7 — źródło kanału; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
+| `mpzp_status.channels[].*` | 3 | Tabela 3.7 — stan kanału KIMPZP / Rejestru Urbanistycznego, liczba aktów i kody powodów | fakt źródłowy |
+| `mpzp_status.rejected_acts[].*` | 3 | Tabela 3.7 — akty odrzucone z diagnostyką (powód, odległość od działki) | wynik obliczenia |
+| `mpzp_status.*` | 3 | Ramka „Stan ustalenia MPZP” na początku sekcji 3 (stan, etykieta, komunikat, kod powodu) i Tabela 3.7 (zgodność kanałów, wersja reguły pierwszeństwa) | metadane |
 | `mpzp_discovery.schema_version` | 9 | Tabela 9.3 — wersje kontraktów snapshotu | metadane |
 | `mpzp_discovery.source.*` | 9 | Tabela 3.5 — wiersz „Źródło”; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `mpzp_discovery.acts[].amendments[].*` | 3 | Tabela 3.5 — kolumna „Dokumenty i zmiany” (rodzaj, numer, daty, nazwa, opis, linki zmiany) | fakt źródłowy |
@@ -144,4 +158,4 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 601.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 675.

@@ -281,6 +281,33 @@ python3 backend/scripts/verify_audit_package.py analiza_123_pakiet_audytowy.zip 
 Decyzje: `docs/adr/ADR-011-section-quality-matrix-and-audit-package.md`; odbiór:
 `docs/evaluation/results/bk-504-505-verification.md`.
 
+### Akty MPZP z Rejestru Urbanistycznego, stan MPZP i sekcje stref (AU-101–AU-103)
+
+- **Akty z dwóch kanałów.** Obok KIMPZP (akty w punktach działki, bez geometrii) backend odpytuje WFS Rejestru Urbanistycznego
+  (`app-mpzp`, `source_id: mpzp_ru`) o akty z granicą, przecina je z działką **w EPSG:2180** (`intersection_area_sqm`, `intersection_pct`)
+  i scala po numerze uchwały w `AnalyzeResponse.mpzp_acts[]` (numer, tytuł, daty, status prawny, link, udział działki, `sources: kimpzp|mpzp_ru`,
+  zgodność kanałów, `manual_review_required`). Akt, który tylko dotyka obwiedni działki, jest odrzucany z diagnostyką; akty nie są strefami
+  i RU nigdy nie zasila `vector_zones`. Przy kilku aktach bez rozstrzygnięcia zwracane są oba (reguła informacyjna `mpzp-act-precedence/1.0`,
+  data wejścia w życie sama nie rozstrzyga) i `manual_review_required`; rozbieżność kanałów to ostrzeżenie `MPZP_CHANNEL_MISMATCH`.
+  UI pokazuje listę aktów z linkiem do uchwały i mapę granic aktów, raport PDF — tabele 3.6/3.7 i „Mapę 3a”, pakiet audytowy — warstwę
+  `layers/mpzp_acts.geojson` (RU: `redistribution: allowed`).
+- **Stan MPZP** (`AnalyzeResponse.mpzp_status`): rozłączne `available | ambiguous | no_match | no_coverage | unavailable | unknown` z `reason_code`,
+  kanałami i źródłem rozstrzygającym. „Brak serwisu” → `no_coverage`, pusta odpowiedź działającej usługi → `no_match`, timeout/5xx → `unavailable`
+  (nigdy `no_match`), dwa nierozstrzygnięte akty → `ambiguous`. Komunikaty UI, PDF i pakietu audytowego pochodzą z jednego modułu
+  (`app/shared/mpzp_status_text.py`); wiersz macierzy jakości `mpzp` ma właściwe `source_id`.
+- **Ustawienia kanału RU:** `RU_MPZP_ACTS_ENABLED` (domyślnie `true`; `false` = kanał nieodpytany, stan to odnotowuje), `RU_MPZP_TIMEOUT_SECONDS`
+  (30), `RU_MPZP_MAX_RESPONSE_BYTES` (8 MiB). Migracje `033` (`analyses.mpzp_acts`) i `034` (`analyses.mpzp_status`), obie kolumny nullable — starsze
+  analizy się nie uzupełniają, a wyniki o `MPZP_RESULT_SCHEMA_VERSION` < 3.0 nie są serwowane z cache.
+- **Sekcje stref w uchwale (AU-102).** Parser rozwija zakresy symboli (`1KDZ-11KDZ`), rozpoznaje wprowadzenia „Ustalenia szczegółowe dla terenu…”
+  i zdania wyznaczające strefę oraz zapisy opisowe kart terenu (`z podstawowym przeznaczeniem na…`, `możliwość lokalizacji…`). Brak sekcji ma jawny powód:
+  `ZONE_NOT_IN_DOCUMENT` (symbol nie występuje w czytelnym tekście) albo `SCANNED_NO_OCR` (skan bez tekstu) — nigdy „brak ograniczeń”. Fetcher idzie za linkami
+  stron BIP (dokument → karta → plik; do 2 skoków, ta sama witryna, walidacja SSRF). Pomiar: zbiór `backend/tests/fixtures/mpzp_live`
+  (9 uchwał, 41 stref) i `python -m scripts.evaluate_mpzp_live`; **adnotacje przygotował asystent AI bez przeglądu człowieka, a zbiór nie jest ślepy**
+  — zob. analizę przyczyn.
+
+Decyzje: `docs/adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md`, `docs/adr/ADR-021-mpzp-zone-section-detection.md`; analiza przyczyn:
+`docs/evaluation/au-102-zone-section-causes.md`; odbiór: `docs/evaluation/au-101-103-verification.md`.
+
 ### Lokalny indeks podpowiedzi adresowych
 
 Autocomplete korzysta z lokalnego PostgreSQL/PostGIS zasilanego oficjalnymi,
@@ -418,7 +445,9 @@ docker compose --profile test run --rm backend-test python scripts/evaluate_refe
   `docs/evaluation/results/live-smoke/`.
 - **Wynik z 2026-10-08:** [live-smoke/2026-10-08.md](docs/evaluation/results/live-smoke/2026-10-08.md) — 30/30 HTTP 200,
   0 odpowiedzi 5xx (audyt: 27% HTTP 500), wszystkie `partial`, strefy MPZP dla 4 działek, POG dla 0 (pusty import).
-  Odbiór: [AU-011–013](docs/evaluation/au-011-013-verification.md).
+  Dowody AU-011: raport wyżej, skrypt `backend/scripts/live_smoke_corpus.py` i workflow
+  [`live-smoke.yml`](.github/workflows/live-smoke.yml); osobna nota odbioru AU-011–013 nie została napisana. Decyzje o
+  tokenach dostępu (AU-012): [ADR-019](docs/adr/ADR-019-expiring-access-tokens-and-key-rotation.md).
 
 ### Badania ilościowe BK-601–BK-603
 

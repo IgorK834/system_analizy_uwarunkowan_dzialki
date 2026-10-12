@@ -498,3 +498,57 @@ odbiór: [AU-010](evaluation/au-010-verification.md).
   a nie w `backend` (obraz produkcyjny nie zawiera `pytest`); skrypty operacyjne z README działają z hosta (`python3 backend/scripts/…`).
 - **Weryfikacja:** backend w kontenerze `backend-test` jak w CI: **4088 passed**, pokrycie **94,59%**; frontend: `npm audit` 0, ESLint, `tsc`, **537 testów**,
   pokrycie 97,72%, `next build` zielone; przebieg w przeglądarce na buildzie produkcyjnym (mapa z kaflami, worker, popover AU-008 5/5).
+
+## Audyt 2026-10-05 — akty MPZP z Rejestru Urbanistycznego, scalenie kanałów (AU-101, Task 22.1, 2026-10-10)
+
+**Niezacommitowane** (drzewo robocze nad `61f26da`). Decyzje:
+[ADR-020](adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md); odbiór: [AU-101–103](evaluation/au-101-103-verification.md).
+
+- **Stan zastany:** brak adaptera RU, `mpzp_acts` i `mpzp_status` (zadanie nie było wykonane). KIMPZP wskazywał akty w punktach bez geometrii (AU-004),
+  więc działka na styku dwóch planów (Góra Kalwaria `141801_4.0701.23/8`: `IV/30/2024` oraz cz. II) nie miała rozstrzygnięcia, które akty ją naprawdę obejmują.
+- **Teraz:** adapter `modules/planning/infrastructure/ru_mpzp_acts.py` na `OgcClient` (WFS 2.0 `app-mpzp`, osie `bbox` północ–wschód dla `urn:ogc:def:crs:EPSG::2180`,
+  stronicowanie po 10, pobranie dokumentów po `resourceId` w paczkach po 8, kontrola zamienionych osi po obwiedniach); logika domenowa w
+  `modules/planning/domain/mpzp_acts.py` (przecięcie granicy aktu z działką w EPSG:2180 z `make_valid`, minimalne pole 0,5 m²; odrzucenie aktów tylko dotykających obwiedni
+  z diagnostyką; status prawny INSPIRE `legalForce/obsolete`; numer uchwały z dokumentu, a nie z dokumentu „przystąpienie”; scalenie z KIMPZP po numerze i po linkach; zgodność kanałów
+  `agree|mismatch|single_channel|none`; reguła pierwszeństwa **informacyjna** `mpzp-act-precedence/1.0` — sama data „obowiązuje od” nie rozstrzyga, nierozstrzygnięte akty wracają oba
+  z `manual_review_required`); serwis `services/mpzp_acts.py` (kanał RU nigdy nie zgłasza wyjątku; `RU_MPZP_ACTS_ENABLED=false` → kanał nieodpytany).
+- **Kontrakt:** `AnalyzeResponse.mpzp_acts[]` (numer, tytuł, daty, status, link, `intersection_area_sqm`/`intersection_pct`, `sources`, zgodność kanałów, granica w WGS84 z
+  przycięciem okna i limitem 4000 wierzchołków — `MPZP_ACT_BOUNDARY_OMITTED`), ostrzeżenie `MPZP_CHANNEL_MISMATCH`; `MPZP_RESULT_SCHEMA_VERSION` 2.8 → (3.0 po AU-103); migracja
+  **`033_analysis_mpzp_acts`** (JSONB nullable). Akty nie są strefami; RU nie zasila `vector_zones`.
+- **UI / PDF / ZIP:** lista aktów z linkiem do uchwały i mapa granic aktów (`MpzpActsList`), raport — Tabele 3.6/3.7 i „Mapa 3a” (tylko gdy są akty), pakiet audytowy — `layers/mpzp_acts.geojson`
+  (RU `redistribution: allowed` wg katalogu; eksporter **1.3.0**).
+- **Fixtures:** realne odpowiedzi RU (Góra Kalwaria, Kraków — szkic planu zwracany dla obwiedni, Bielsko-Biała, Dygowo) w `backend/tests/fixtures/source_contracts/ru_mpzp_acts/`
+  (skrypt `scripts/capture_ru_mpzp_fixtures.py`); test odrzuca fałszywe „zamienione osie” na prawdziwym szkicu krakowskim.
+- **Żywe usługi (2026-10-10):** działka z audytu → `IV/30/2024` i `576/XLVII/2010`, stan `ambiguous`, cz. II odrzucona (5,994 m styku); Bielsko-Biała: akt tylko z RU (`available`, 11,84% działki);
+  Dygowo: `no_coverage`; Warszawa: `unavailable` (nie „brak planu”).
+- **Do decyzji właściciela:** minimalne pole przecięcia 0,5 m²; reguła pierwszeństwa jest tylko informacyjna; reguła świeżości dla kanału `mpzp_ru` nie została wprowadzona (zostaje `unknown`, jak dotąd; to samo `source_id` opisuje wektorowe strefy z importu);
+  `redistribution: allowed` dla RU wymaga potwierdzenia prawnego.
+
+## Audyt 2026-10-05 — jawny stan MPZP (AU-103, Task 22.3, 2026-10-10)
+
+Decyzje: [ADR-020](adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md); odbiór: [AU-101–103](evaluation/au-101-103-verification.md).
+
+- **Stan zastany:** brak aktów, błąd źródła i „nie znaleziono” zlewały się w jeden komunikat „Nie sprawdzono albo nie znaleziono stref MPZP przecinających działkę”; w macierzy jakości wiersz `mpzp`
+  miał „brak źródła”.
+- **Teraz:** `AnalyzeResponse.mpzp_status` — `available | ambiguous | no_match | no_coverage | unavailable | unknown` z `reason_code`, kanałami (`kimpzp`, `mpzp_ru`) i źródłem rozstrzygającym;
+  tabela decyzyjna w `modules/planning/domain/mpzp_status.py`: „brak serwisu” → `no_coverage`, pusta odpowiedź działającej usługi → `no_match`, timeout/5xx → `unavailable`, dwa nierozstrzygnięte
+  akty → `ambiguous`; **`no_match` nigdy przy błędzie żadnego odpytanego kanału**. Komunikaty z jednego modułu `shared/mpzp_status_text.py` (UI, PDF, pakiet audytowy); wiersz `mpzp` macierzy
+  jakości dostaje właściwe `source_id`. Po ręcznym wskazaniu strefy (resume) stan jest przeliczany (`_status_after_manual_zone`).
+- **Kontrakt:** `MPZP_RESULT_SCHEMA_VERSION` **3.0** (`RESULT_CONTRACT_VERSION` pochodzi z niego; wyniki 2.x nie są serwowane z cache); migracja **`034_mpzp_status`** (head; JSONB nullable);
+  test na każdy z 6 stanów w backendzie (`test_mpzp_status_contract.py`) i frontendzie (`MpzpStatusBanner`, fixtures generowane z backendu); moduły frontendu dodane do `coverage.include`.
+
+## Audyt 2026-10-05 — sekcje stref w uchwale: zakresy, wprowadzenia, powody braku (AU-102, Task 22.2, 2026-10-11)
+
+Decyzje: [ADR-021](adr/ADR-021-mpzp-zone-section-detection.md); przyczyny i pomiar: [au-102-zone-section-causes](evaluation/au-102-zone-section-causes.md); odbiór: [AU-101–103](evaluation/au-101-103-verification.md).
+
+- **Stan zastany:** Kraków `MW/U.4` — 0 parametrów w `legacy` i `v3`; na 9 realnych uchwałach (41 stref) tylko 23 strefy miały parametr lub poprawny powód (56%), metryka surowa (parametr z sekcji strefy) 46%/49%.
+- **Teraz:** wspólny rozwijacz zakresów symboli (`shared/zone_symbol.py`) w obu trybach i w silniku ilości; wprowadzenia „Ustalenia szczegółowe dla terenu…”, lista po „oznaczone symbolami”, zdanie wyznaczające strefę, wyjątek-liść
+  we wspólnym § (`planning/domain/zone_scope.py`); silnik opisowy `descriptive/2` (przeznaczenie z etykiet i zwrotów, `możliwość lokalizacji`, `dopuszcza się`); dowód opisowy z miejsca w bloku (`v3`) albo z segmentów strefy (`legacy`);
+  jawne `ZONE_NOT_IN_DOCUMENT` / `SCANNED_NO_OCR` (`services/mpzp_parser_reasons.py`); fetcher idzie za stronami BIP (dokument → karta → plik, do 2 skoków, ta sama witryna, SSRF) — na żywo trzy plany krakowskie
+  dały pliki o SHA-256 zgodnym z korpusem.
+- **Zbiór i pomiar:** `backend/tests/fixtures/mpzp_live` (9 uchwał z 7 gmin, 41 stref, 110 oczekiwanych parametrów, bez PDF-ów), `scripts/evaluate_mpzp_live.py`, `tests/test_mpzp_live_corpus.py`. Po zmianach **41/41 (100%)** w obu trybach
+  (próg 70%), metryka surowa 100%/100%, odtworzenie oczekiwanych parametrów `v3` 94% (103/110), `legacy` 78%; `legacy` nadal zwraca 224 wartości spoza sekcji strefy (`v3`: 0).
+  **Adnotacje przygotował asystent AI bez przeglądu człowieka; zbiór nie jest ślepy; brak Warszawy (dziennik nie odpowiada).**
+- **Wersje:** parser `mpzp-parser/3.2-det` (blokowy `3.2-det+scope.2`), `descriptive/2`; kontrakt 3.0 (historia: 2.9); migawka BK-603 zamrożona ponownie po przeglądzie (same dodatki), kalibracja pewności powtórzona
+  (ECE finalnego zbioru 0,0588), złote odpowiedzi modelu odtworzone (identyczne).
+- **Weryfikacja (AU-101–AU-103):** backend w kontenerze jak w CI: **4491 passed**, w tym przebiegu 1 niezwiązany błąd (`test_readme_links`: martwy link do nieistniejącej noty `au-011-013-verification.md` w README — naprawiony 2026-10-12), pokrycie **94,59%**; `ruff` czysto, `mypy` bez nowych zgłoszeń; frontend 573 testy, pokrycie 97,78%, `eslint`/`tsc`/`next build` zielone; live smoke korpusu 30/30 HTTP 200, 0 × 5xx; UI/PDF/ZIP sprawdzone na żywo (zob. [odbiór](evaluation/au-101-103-verification.md)).

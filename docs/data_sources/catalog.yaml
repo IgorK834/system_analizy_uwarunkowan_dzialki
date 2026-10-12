@@ -186,7 +186,7 @@ sources:
     expected_update_interval: "not_published"
     redistribution: allowed
     sla: "not_published"
-    last_manual_verification: 2026-09-24
+    last_manual_verification: 2026-10-10
     mpzp_classification: act_boundary_document
     resources:
       - role: boundaries
@@ -223,6 +223,21 @@ sources:
       granicy i provenance, ale guard MPZP zabrania użycia go jako vector_zones.
       Capabilities, DescribeFeatureType i zapytania hits dla gmin korpusu
       zamrożono w tests/fixtures/source_contracts/mpzp/.
+      Od AU-101 (Task 22.1) źródło jest używane w runtime jako kanał `mpzp_ru`:
+      adapter modules/planning/infrastructure/ru_mpzp_acts.py (OgcClient) pobiera
+      AktPlanowaniaPrzestrzennego z filtrem bbox (kolejność osi dla URN EPSG:2180 to
+      północ,wschód — dotyczy parametru bbox i współrzędnych posList w odpowiedzi),
+      a dla aktów przecinających działkę także DokumentFormalny (numer uchwały,
+      link do tekstu, relacje) i RysunekAktuPlanowaniaPrzestrzennego po resourceId.
+      Serwer filtruje po obwiedni, więc wielokąt aktu zwróconego dla bbox może nie
+      dotykać działki; przecięcie liczy się lokalnie w EPSG:2180 (akt tylko
+      dotykający bbox jest odrzucany z diagnostyką). Strony po 10 obiektów, błędy
+      zgłaszane jako ows:ExceptionReport z HTTP 400 lub 200, sporadyczne zerwania
+      połączenia — wszystkie dają stan kanału `unavailable`, nigdy „brak aktu”.
+      Zamrożone odpowiedzi: tests/fixtures/source_contracts/ru_mpzp_acts/.
+      Pokrycie RU jest niepełne (np. IV/30/2024 dla Góry Kalwarii jest tylko w KIMPZP;
+      RU zwraca tam wyłącznie projekty), dlatego pusty wynik RU to `no_match` kanału,
+      a nie dowód braku planu.
 
   - source_id: pog_wms
     name: "Plany Ogólne Gmin (WMS)"
