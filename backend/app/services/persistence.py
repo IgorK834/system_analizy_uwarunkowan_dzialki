@@ -45,7 +45,9 @@ from app.schemas.analyze import (
     InfrastructureResult,
     ManualZoneContext,
     ManualZoneSourceDocument,
+    MpzpActResult,
     MpzpDiscoverySection,
+    MpzpStatus,
     MpzpZoneResult,
     ParcelGeometryResponse,
     PogResult,
@@ -360,6 +362,17 @@ def save_analysis(
             mpzp_discovery=(
                 result.mpzp_discovery.model_dump(mode="json")
                 if result.mpzp_discovery is not None
+                else None
+            ),
+            # Zapis stanu razem z aktami: ``NULL`` kolumny aktów ma znaczenie tylko bez stanu (zapis sprzed AU-101).
+            mpzp_acts=(
+                [act.model_dump(mode="json") for act in result.mpzp_acts]
+                if result.mpzp_status is not None
+                else None
+            ),
+            mpzp_status=(
+                result.mpzp_status.model_dump(mode="json")
+                if result.mpzp_status is not None
                 else None
             ),
             pending_uchwala_url=pending_uchwala_url,
@@ -862,6 +875,8 @@ def build_analyze_response_from_analysis(
         parcel=parcel_response,
         mpzp_zones=zones,
         mpzp_discovery=mpzp_discovery_from_snapshot(loaded.mpzp_discovery),
+        mpzp_acts=mpzp_acts_from_snapshot(loaded.mpzp_acts),
+        mpzp_status=mpzp_status_from_snapshot(loaded.mpzp_status),
         pog=pog,
         infrastructure=infrastructure,
         utilities_preview=(
@@ -894,6 +909,18 @@ def mpzp_discovery_from_snapshot(snapshot: dict | None) -> MpzpDiscoverySection 
     if snapshot is None:
         return None
     return MpzpDiscoverySection.model_validate(snapshot)
+
+
+def mpzp_acts_from_snapshot(snapshot: list | None) -> list[MpzpActResult]:
+    """Akty MPZP z zapisu; ``NULL`` (zapis sprzed AU-101) → pusta lista, a nie „brak aktu” (decyduje ``mpzp_status``)."""
+    return [MpzpActResult.model_validate(item) for item in snapshot or []]
+
+
+def mpzp_status_from_snapshot(snapshot: dict | None) -> MpzpStatus | None:
+    """Stan MPZP z zapisu; ``NULL`` (zapis sprzed AU-103) → brak stanu."""
+    if snapshot is None:
+        return None
+    return MpzpStatus.model_validate(snapshot)
 
 
 def _source_record_data(

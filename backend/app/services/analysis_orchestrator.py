@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from dataclasses import replace
 from datetime import date, datetime, timezone
 from typing import Literal, Sequence
 
@@ -32,6 +33,8 @@ from app.schemas.analyze import (
     GeometryMetrics,
     InfrastructureResult,
     MapAnalyzeRequest,
+    MpzpActResult,
+    MpzpStatus,
     MpzpZoneResult,
     ParcelGeometryResponse,
     ParcelIdAnalyzeRequest,
@@ -70,6 +73,15 @@ from app.services.kiut_coverage import (
     unknown_kiut_coverage_result,
 )
 from app.services.mpzp import MpzpDiscoveryResult, discover_mpzp, discovery_section
+from app.services.mpzp_acts import (
+    MpzpActsResolution,
+    RuChannelResult,
+    acts_to_contract,
+    build_mpzp_status,
+    fetch_ru_channel,
+    resolve_mpzp_acts,
+    unresolved_resolution,
+)
 from app.services.singleflight import analysis_single_flight, lookup_single_flight
 from app.services.uldk import ParcelLookupResult
 from app.services.mpzp_fetch import DocumentBlob, fetch_mpzp_document
@@ -326,9 +338,18 @@ async def _analyze_uncached(
         _assess_mpzp_vectors_safely, db, parcel_geometry, mpzp_as_of
     )
     warnings.extend(vector_warnings)
-    discovery, discovery_warnings = await _discover_mpzp_safely(parcel_geometry)
+    # Kanały MPZP pytane równolegle (AU-101): KIMPZP (punkty, bez geometrii) i Rejestr Urbanistyczny (granice aktów).
+    (discovery, discovery_warnings), ru_channel = await asyncio.gather(
+        _discover_mpzp_safely(parcel_geometry), fetch_ru_channel(parcel_geometry)
+    )
     warnings.extend(discovery_warnings)
     mpzp_discovery = discovery_section(discovery)
+    resolution = _resolve_mpzp_acts_safely(discovery, ru_channel, parcel_geometry)
+    warnings.extend(resolution.warnings)
+    mpzp_acts = _acts_contract_safely(resolution)
+    # Akt rozstrzygnięty regułą pierwszeństwa (np. KIMPZP: dwa obowiązujące, RU: jeden utracił moc) zastępuje
+    # brak wyboru z AU-004; przy braku rozstrzygnięcia dokument nadal nie jest wybierany po cichu.
+    discovery = _discovery_with_selected_act(discovery, resolution)
     pog, ouz_status, pog_warnings, pog_sources = await _analyze_pog_best_effort(
         parcel_geometry,
         lookup.teryt,
@@ -344,6 +365,8 @@ async def _analyze_uncached(
     ]
     if discovery is not None:
         sources.append(discovery.source_metadata)
+    if "mpzp_ru" in resolution.sources:
+        sources.append(resolution.sources["mpzp_ru"])
 
     has_vector_zones = vector is not None and bool(vector.positive_zones)
     if not has_vector_zones and discovery is not None and discovery.brak_wektorow:
@@ -373,6 +396,8 @@ async def _analyze_uncached(
             parcel=parcel_response,
             mpzp_zones=[],
             mpzp_discovery=mpzp_discovery,
+            mpzp_acts=mpzp_acts,
+            mpzp_status=_mpzp_status_safely(resolution, has_zones=False, manual_zone_required=True),
             pog=pog,
             infrastructure=infrastructure,
             utilities_preview=utilities_preview,
@@ -479,6 +504,12 @@ async def _analyze_uncached(
         parcel=parcel_response,
         mpzp_zones=mpzp_zones,
         mpzp_discovery=mpzp_discovery,
+        mpzp_acts=mpzp_acts,
+        mpzp_status=_mpzp_status_safely(
+            resolution,
+            has_zones=any(zone.assignment_method == "vector_intersection" for zone in mpzp_zones),
+            manual_zone_required=False,
+        ),
         pog=pog,
         infrastructure=infrastructure,
         utilities_preview=utilities_preview,
@@ -508,6 +539,65 @@ async def _analyze_uncached(
         )
     _log_completion(started, parcel_identifier, response)
     return response
+
+
+def _resolve_mpzp_acts_safely(
+    discovery: MpzpDiscoveryResult | None,
+    ru_channel: RuChannelResult,
+    parcel_geometry: BaseGeometry,
+) -> MpzpActsResolution:
+    """Scalenie kanałów MPZP; wyjątek daje wynik „nie ustalono”, a nie surowy błąd 500 (AU-101)."""
+    try:
+        return resolve_mpzp_acts(discovery, ru_channel, parcel=parcel_geometry)
+    except Exception as exc:  # noqa: BLE001 - błąd scalenia nie może zatrzymać analizy
+        log_analysis_event("section_error", section="mpzp_acts", status=type(exc).__name__)
+        return unresolved_resolution(parcel_geometry)
+
+
+def _acts_contract_safely(resolution: MpzpActsResolution) -> list[MpzpActResult]:
+    try:
+        return acts_to_contract(resolution)
+    except Exception as exc:  # noqa: BLE001
+        log_analysis_event("section_error", section="mpzp_acts_contract", status=type(exc).__name__)
+        return []
+
+
+def _mpzp_status_safely(
+    resolution: MpzpActsResolution, *, has_zones: bool, manual_zone_required: bool
+) -> MpzpStatus:
+    """Stan MPZP; przy błędzie obliczenia jawne ``unknown`` — nigdy „nie znaleziono planu”."""
+    try:
+        return build_mpzp_status(
+            resolution, has_zones=has_zones, manual_zone_required=manual_zone_required
+        )
+    except Exception as exc:  # noqa: BLE001
+        log_analysis_event("section_error", section="mpzp_status", status=type(exc).__name__)
+        return build_mpzp_status(
+            unresolved_resolution(resolution.parcel), has_zones=False, manual_zone_required=False
+        )
+
+
+def _discovery_with_selected_act(
+    discovery: MpzpDiscoveryResult | None, resolution: MpzpActsResolution
+) -> MpzpDiscoveryResult | None:
+    """Gdy KIMPZP wskazało kilka aktów, a reguła pierwszeństwa zostawiła jeden — dalej używany jest ten akt."""
+    if discovery is None or not (discovery.multiple_acts_at_point or discovery.multiple_acts_on_parcel):
+        return discovery
+    selected = resolution.selected
+    if selected is None or selected.kimpzp is None:
+        return discovery
+    act = selected.kimpzp
+    return replace(
+        discovery,
+        plan_id=act.resolution_number,
+        uchwala_url=act.document_url,
+        candidate_zone_symbols=list(act.zone_symbols),
+        multiple_acts_at_point=False,
+        multiple_acts_on_parcel=False,
+        reason_codes=[
+            code for code in discovery.reason_codes if code != "MPZP_MULTIPLE_ACTS_AT_POINT"
+        ],
+    )
 
 
 async def _analyze_context_safely(parcel_geometry: BaseGeometry) -> ContextResult:

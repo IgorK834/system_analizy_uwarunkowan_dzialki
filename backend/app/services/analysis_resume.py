@@ -27,6 +27,10 @@ from app.models.mpzp_parameter import MpzpParameter
 from app.models.mpzp_zone import MpzpZone
 from app.models.pog_data import PogData
 from app.models.source_record import SourceRecord
+from app.modules.planning.domain.mpzp_status import (
+    MPZP_MANUAL_ZONE_REQUIRED,
+    MPZP_MANUAL_ZONE_SELECTED,
+)
 from app.schemas.analyze import (
     AnalyzeResponse,
     ManualZoneSelection,
@@ -182,6 +186,26 @@ def _prepare_resume(db: Session, analysis_id: int, raw_zone_symbol: str) -> _Res
     )
 
 
+def _status_after_manual_zone(snapshot: dict | None) -> dict | None:
+    """Stan MPZP po wznowieniu: powód „strefa wskazana ręcznie” zamiast „czeka na symbol” (AU-103).
+
+    Wartość stanu (``available``) się nie zmienia; wymieniany jest wyłącznie kod powodu. Zapis bez stanu
+    (sprzed AU-103) pozostaje bez stanu.
+    """
+    if not snapshot:
+        return snapshot
+    codes = [
+        MPZP_MANUAL_ZONE_SELECTED if code == MPZP_MANUAL_ZONE_REQUIRED else code
+        for code in snapshot.get("reason_codes") or []
+    ]
+    reason = snapshot.get("reason_code")
+    return {
+        **snapshot,
+        "reason_code": MPZP_MANUAL_ZONE_SELECTED if reason == MPZP_MANUAL_ZONE_REQUIRED else reason,
+        "reason_codes": list(dict.fromkeys(codes)),
+    }
+
+
 def _apply_resume(
     db: Session,
     analysis_id: int,
@@ -277,6 +301,7 @@ def _apply_resume(
         ]
         # Ręczna identyfikacja strefy nigdy nie daje ``complete`` (BK-204).
         analysis.status = "partial"
+        analysis.mpzp_status = _status_after_manual_zone(analysis.mpzp_status)
         analysis.analyzed_at = datetime.now(timezone.utc)
         analysis.resolved_zone_symbol = zone_symbol
         analysis.pending_uchwala_url = None

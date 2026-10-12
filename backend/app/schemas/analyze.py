@@ -28,6 +28,7 @@ from app.shared.planning_compatibility_text import (
     COMPATIBILITY_INFORMATIONAL_NOTICE,
     LEGACY_AGGREGATION_NOTE,
 )
+from app.shared.mpzp_status_text import MpzpStatusValue
 from app.shared.provenance import is_verified_https_url
 from app.shared.zone_symbol import (
     ZONE_SYMBOL_MAX_LENGTH,
@@ -276,8 +277,20 @@ MpzpAssignmentMethod = Literal[
 # 2.7 (AU-004): odpowiedź niesie sekcję ``mpzp_discovery`` — listę aktów wskazanych przez KIMPZP w punktach
 # działki (numer uchwały, daty, linki tekstu/legendy/BIP, zmiany) i rozłączny status źródła; przy kilku aktach
 # ``plan_id``/dokument nie są wybierane. Zapisy 2.6 nie mają sekcji i nie są serwowane z cache jako trafienie.
-MPZP_RESULT_SCHEMA_VERSION = "2.7"
+# 2.8 (AU-101, Task 22.1): odpowiedź niesie ``mpzp_acts[]`` — akty MPZP z Rejestru Urbanistycznego i KIMPZP scalone po
+# numerze uchwały, z przecięciem granicy aktu z działką (EPSG:2180: ``intersection_area_sqm``/``intersection_pct``),
+# dokumentem, statusem prawnym i pierwszeństwem informacyjnym (``mpzp-act-precedence/1.0``). Akty nie są strefami.
+# Zapisy 2.7 nie mają pola i nie są serwowane z cache jako trafienie.
+# 2.9 (AU-102, Task 22.2): parser (``mpzp-parser/3.2-det``) rozwija zakresy symboli („1KDZ-11KDZ”), rozpoznaje wprowadzenia
+# sekcji („Ustalenia szczegółowe dla terenu…”, zdanie wyznaczające strefę) i więcej zapisów opisowych (karty terenu), dowód
+# opisowy niesie stronę z bloku strefy, a brak sekcji ma jawny powód (``ZONE_NOT_IN_DOCUMENT``, ``SCANNED_NO_OCR``) zamiast
+# ogólnego ``ZONE_SECTION_NOT_FOUND`` — zapis 2.8 nie jest trafieniem cache.
+# 3.0 (AU-103, Task 22.3): ``mpzp_status`` — rozłączny stan ustalenia MPZP (``available|ambiguous|no_match|no_coverage|
+# unavailable|unknown``) z ``reason_code``, kanałami i źródłem rozstrzygającym; zapis 2.x nie ma stanu.
+MPZP_RESULT_SCHEMA_VERSION = "3.0"
 MPZP_DISCOVERY_SCHEMA_VERSION = "1.0"
+MPZP_ACTS_SCHEMA_VERSION = "1.0"
+MPZP_STATUS_SCHEMA_VERSION = "1.0"
 
 MpzpDiscoveryStatus = Literal["available", "no_match", "no_coverage", "unavailable", "unknown"]
 
@@ -385,6 +398,168 @@ class MpzpDiscoverySection(BaseModel):
     failed_points: int = Field(default=0, ge=0)
     is_discovery_only: bool = True
     source: SourceMetadata | None = None
+
+
+MpzpActLegalStatus = Literal["binding", "not_binding", "not_yet_binding", "unknown"]
+MpzpActChannel = Literal["kimpzp", "mpzp_ru"]
+MpzpActPrecedence = Literal["applies", "complementary", "superseded", "unresolved", "not_in_force"]
+MpzpActRejection = Literal["no_overlap", "boundary_touch_only", "below_min_area", "geometry_unusable"]
+MpzpChannelStatusValue = Literal["available", "no_match", "no_coverage", "unavailable", "unknown"]
+
+
+class MpzpActAmendment(BaseModel):
+    """Zmiana planu wymieniona przy akcie (dokument zmieniający) — nigdy samodzielny akt."""
+
+    resolution_number: str | None = None
+    effective_from: date | None = None
+    document_url: str | None = None
+    name: str | None = None
+    source: MpzpActChannel = "kimpzp"
+
+    @computed_field(description="Czy document_url może być klikalnym linkiem HTTPS.")  # type: ignore[prop-decorator]
+    @property
+    def document_url_verified(self) -> bool:
+        return is_verified_https_url(self.document_url)
+
+
+class MpzpActResult(BaseModel):
+    """Akt MPZP wskazany dla działki przez Rejestr Urbanistyczny i/lub KIMPZP (AU-101).
+
+    To akt (granica + dokument), nie strefa: parametry przeznaczenia leżą w ``mpzp_zones``. Udział w działce
+    jest policzony w EPSG:2180 z granicy aktu RU; akt znany tylko z KIMPZP nie ma geometrii, więc jego udział
+    to ``null`` (nie ``0``).
+    """
+
+    act_identifier: str | None = Field(
+        default=None,
+        description="Identyfikator aktu w RU (przestrzeń nazw/lokalny identyfikator); null dla aktu tylko z KIMPZP.",
+        json_schema_extra={"example": "PL.ZIPPZP.6728/141801-MPZP/IV_30_2024_P1"},
+    )
+    title: str | None = None
+    resolution_number: str | None = Field(
+        default=None,
+        description=(
+            "Numer uchwały uchwalającej plan. Dla projektu znanego wyłącznie z uchwały o przystąpieniu — null "
+            "(numer uchwały o przystąpieniu nie jest numerem planu)."
+        ),
+        json_schema_extra={"example": "IV/30/2024"},
+    )
+    resolution_number_basis: Literal["document_number", "document_title", "identifier", "kimpzp"] | None = Field(
+        default=None, description="Skąd pochodzi numer: pole dokumentu RU, tytuł dokumentu, identyfikator RU albo KIMPZP."
+    )
+    resolution_date: date | None = None
+    effective_from: date | None = Field(
+        default=None,
+        description="„Obowiązuje od”. Dla projektu (legal_status=not_yet_binding) to data wersji rekordu, nie data wejścia w życie.",
+    )
+    effective_to: date | None = Field(default=None, description="„Obowiązuje do” / „utracił moc”.")
+    legal_status: MpzpActLegalStatus = "unknown"
+    raw_status: str | None = Field(default=None, description="Status wprost ze źródła (np. „w opracowaniu”).")
+    document_url: str | None = Field(default=None, description="Link do tekstu uchwały (lub uchwały o przystąpieniu — patrz document_kind).")
+    document_kind: Literal["adopting", "commencement", "other"] | None = Field(
+        default=None,
+        description="adopting — uchwała uchwalająca plan; commencement — uchwała o przystąpieniu; other — dokument ogólny.",
+    )
+    legend_url: str | None = None
+    drawing_url: str | None = None
+    journal: str | None = None
+    amendments: list[MpzpActAmendment] = Field(default_factory=list)
+    intersection_area_sqm: float | None = Field(
+        default=None, ge=0.0, description="Pole części działki objętej aktem [m², EPSG:2180]; null = brak granicy aktu."
+    )
+    intersection_pct: float | None = Field(
+        default=None, ge=0.0, le=100.0, description="Udział powierzchni działki objętej aktem [%]; null = brak granicy aktu."
+    )
+    intersection_geojson: dict[str, Any] | None = Field(
+        default=None, description="Część aktu leżąca na działce (GeoJSON Feature, EPSG:4326)."
+    )
+    boundary_geojson: dict[str, Any] | None = Field(
+        default=None,
+        description="Granica aktu w oknie wokół działki, uproszczona (GeoJSON Feature, EPSG:4326) — kontekst mapy.",
+    )
+    sources: list[MpzpActChannel] = Field(
+        default_factory=list, description="Kanały, które wskazały ten akt (kimpzp, mpzp_ru)."
+    )
+    precedence: MpzpActPrecedence = Field(
+        default="applies",
+        description=(
+            "Pierwszeństwo informacyjne wg reguły mpzp-act-precedence: applies, complementary (rozłączne części "
+            "działki), unresolved (nakładanie bez rozstrzygnięcia), not_in_force (projekt/utracił moc)."
+        ),
+    )
+    manual_review_required: bool = False
+    reason_codes: list[str] = Field(default_factory=list)
+
+    @computed_field(  # type: ignore[prop-decorator]
+        description=(
+            "Nazwy pól linków aktu, które mogą być klikalne (wyłącznie HTTPS po weryfikacji składniowej); "
+            "pozostałe UI pokazuje jako tekst."
+        )
+    )
+    @property
+    def verified_links(self) -> list[str]:
+        return [
+            name
+            for name in ("document_url", "legend_url", "drawing_url")
+            if is_verified_https_url(getattr(self, name))
+        ]
+
+
+class MpzpRejectedAct(BaseModel):
+    """Akt zwrócony przez RU dla ``bbox`` działki, ale nieprzecinający jej (diagnostyka odrzucenia)."""
+
+    act_identifier: str
+    title: str | None = None
+    resolution_number: str | None = None
+    legal_status: MpzpActLegalStatus = "unknown"
+    raw_status: str | None = None
+    reason: MpzpActRejection = Field(
+        description=(
+            "no_overlap — granica aktu leży poza działką (distance_m); boundary_touch_only — tylko styk; "
+            "below_min_area — przecięcie mniejsze od progu; geometry_unusable — brak użytecznej granicy."
+        )
+    )
+    distance_m: float | None = Field(default=None, ge=0.0, description="Odległość granicy aktu od działki [m].")
+    area_sqm: float = Field(default=0.0, ge=0.0)
+    channel: MpzpActChannel = "mpzp_ru"
+
+
+class MpzpChannelStatus(BaseModel):
+    """Stan jednego kanału (KIMPZP albo RU) dla działki; statusy rozłączne."""
+
+    channel: MpzpActChannel
+    label: str
+    status: MpzpChannelStatusValue
+    status_label: str
+    reason_codes: list[str] = Field(default_factory=list)
+    acts_found: int = Field(default=0, ge=0)
+    source: SourceMetadata | None = None
+
+
+class MpzpStatus(BaseModel):
+    """Rozłączny stan ustalenia MPZP dla działki (AU-103).
+
+    ``no_match`` występuje wyłącznie wtedy, gdy każdy odpytany kanał odpowiedział poprawnie; błąd źródła daje
+    ``unavailable``, brak usługi dla obszaru — ``no_coverage``, kilka planów bez rozstrzygnięcia — ``ambiguous``.
+    """
+
+    schema_version: str = Field(default=MPZP_STATUS_SCHEMA_VERSION)
+    status: MpzpStatusValue
+    reason_code: str
+    reason_codes: list[str] = Field(default_factory=list)
+    label: str = Field(description="Krótka etykieta stanu (ta sama w UI, PDF i paczce audytowej).")
+    message: str = Field(description="Komunikat stanu (ten sam w UI, PDF i paczce audytowej).")
+    channels: list[MpzpChannelStatus] = Field(default_factory=list)
+    channel_agreement: Literal["agree", "mismatch", "single_channel", "none"] = Field(
+        default="none",
+        description="Zgodność kanałów: agree, mismatch (MPZP_CHANNEL_MISMATCH), single_channel, none.",
+    )
+    precedence_rule_version: str
+    rejected_acts: list[MpzpRejectedAct] = Field(default_factory=list)
+    source: SourceMetadata | None = Field(
+        default=None,
+        description="Źródło kanału, który rozstrzygnął stan (podstawa source_id w macierzy jakości sekcji).",
+    )
 
 
 class ManualZoneSelection(BaseModel):
@@ -1965,6 +2140,22 @@ class AnalyzeResponse(BaseModel):
             "Akty MPZP wskazane przez KIMPZP w punktach działki (numer uchwały, daty, "
             "linki, zmiany) i status źródła. null — snapshot sprzed AU-004 albo "
             "discovery się nie wykonało."
+        ),
+    )
+    mpzp_acts: list[MpzpActResult] = Field(
+        default_factory=list,
+        description=(
+            "Akty MPZP przecinające działkę, scalone z Rejestru Urbanistycznego i KIMPZP: numer, tytuł, daty, "
+            "status prawny, dokument, udział działki objęty aktem (EPSG:2180) i pierwszeństwo informacyjne. "
+            "Akt nie jest strefą. Pusta lista bez mpzp_status oznacza zapis sprzed AU-101; ze stanem — brak aktu "
+            "(patrz mpzp_status.status)."
+        ),
+    )
+    mpzp_status: MpzpStatus | None = Field(
+        default=None,
+        description=(
+            "Rozłączny stan ustalenia MPZP (available, ambiguous, no_match, no_coverage, unavailable, unknown) z "
+            "kodem powodu, stanem kanałów KIMPZP i RU oraz aktami odrzuconymi z diagnostyką. null — zapis sprzed AU-103."
         ),
     )
     manual_zone_context: ManualZoneContext | None = Field(

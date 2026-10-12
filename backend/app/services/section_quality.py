@@ -328,6 +328,8 @@ def _mpzp_without_zones(response: AnalyzeResponse) -> _Draft:
     strefy daje wynik częściowy — żaden z tych przypadków nie jest „brakiem planu”.
     Zapis sprzed AU-004 (bez sekcji) pozostaje ``unknown``.
     """
+    if response.mpzp_status is not None:
+        return _mpzp_from_status(response)
     discovery = response.mpzp_discovery
     if discovery is None:
         return _Draft("unknown", None, False, ["MPZP_NOT_DETERMINED"])
@@ -343,6 +345,31 @@ def _mpzp_without_zones(response: AnalyzeResponse) -> _Draft:
             codes.append("MPZP_MULTIPLE_ACTS_ON_PARCEL")
         return _Draft("partial", discovery.source, True, codes)
     return _Draft("unknown", None, False, ["MPZP_NOT_DETERMINED"])
+
+
+def _mpzp_from_status(response: AnalyzeResponse) -> _Draft:
+    """Sekcja MPZP bez stref ze stanu ``mpzp_status`` (AU-103) i źródłem kanału rozstrzygającego.
+
+    Źródło (``source_id`` z katalogu) pochodzi ze stanu, więc macierz nie pokazuje „brak źródła” także przy
+    błędzie lub braku pokrycia. ``no_match`` zostaje ``unknown`` — odpowiedź kanałów nie dowodzi braku planu.
+    """
+    state = response.mpzp_status
+    assert state is not None
+    source = state.source
+    codes = list(dict.fromkeys([state.reason_code, *state.reason_codes]))
+    if state.status in {"available", "ambiguous"}:
+        discovery = response.mpzp_discovery
+        extra = ["MPZP_ACT_WITHOUT_ZONE"]
+        if discovery is not None and discovery.multiple_acts_at_point:
+            extra.append("MPZP_MULTIPLE_ACTS_AT_POINT")
+        elif discovery is not None and discovery.multiple_acts_on_parcel:
+            extra.append("MPZP_MULTIPLE_ACTS_ON_PARCEL")
+        return _Draft("partial", source, True, list(dict.fromkeys([*extra, *codes])))
+    quality: SectionQualityStatus = {
+        "no_coverage": "no_coverage",
+        "unavailable": "unavailable",
+    }.get(state.status, "unknown")
+    return _Draft(quality, source, False, codes)
 
 
 def _pog_status(pog: PogResult | None) -> tuple[SectionQualityStatus, list[str]]:
