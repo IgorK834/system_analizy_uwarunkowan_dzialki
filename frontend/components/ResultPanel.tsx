@@ -5,7 +5,9 @@ import type * as maplibregl from "maplibre-gl";
 
 import { CompatibilityAssessmentCard } from "@/components/CompatibilityAssessmentCard";
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
+import { MpzpActsList } from "@/components/MpzpActsList";
 import { MpzpDiscoveryCard } from "@/components/MpzpDiscoveryCard";
+import { MpzpStatusBanner } from "@/components/MpzpStatusBanner";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { PogZoneShareChart } from "@/components/PogZoneShareChart";
@@ -22,6 +24,18 @@ import {
   BUILDABLE_AREA_LINE_WIDTH,
   BUILDABLE_AREA_SOURCE_ID,
   LAYER_LEGEND,
+  MPZP_ACT_BOUNDARY_COLOR,
+  MPZP_ACT_BOUNDARY_DASH,
+  MPZP_ACT_BOUNDARY_LAYER_ID,
+  MPZP_ACT_BOUNDARY_SOURCE_ID,
+  MPZP_ACT_BOUNDARY_WIDTH,
+  MPZP_ACT_FILL_COLOR,
+  MPZP_ACT_FILL_LAYER_ID,
+  MPZP_ACT_FILL_OPACITY,
+  MPZP_ACT_LINE_COLOR,
+  MPZP_ACT_LINE_LAYER_ID,
+  MPZP_ACT_LINE_WIDTH,
+  MPZP_ACT_SOURCE_ID,
   NETWORK_COLOR,
   NETWORK_FILL_LAYER_ID,
   NETWORK_LINE_LAYER_ID,
@@ -56,11 +70,14 @@ import {
   legalStatusLabel,
   pogStatusNotes,
 } from "@/lib/pogStatus";
+import { actMapLayers } from "@/lib/mpzpActs";
 import { verifiedHttpsHref } from "@/lib/safeLink";
 import type {
   AnalyzeResponse,
   InfrastructureResult,
+  MpzpActResult,
   MpzpDiscoverySection,
+  MpzpStatus,
   MpzpZoneResult,
   RiskResult,
   SourceMetadata,
@@ -85,6 +102,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
   const [networksVisible, setNetworksVisible] = useState(true);
   const [protectionZonesVisible, setProtectionZonesVisible] = useState(true);
   const [risksVisible, setRisksVisible] = useState(true);
+  const [mpzpActsVisible, setMpzpActsVisible] = useState(true);
   const layersReadyRef = useRef(false);
   const fittedResultRef = useRef<{
     map: maplibregl.Map;
@@ -111,6 +129,16 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     () => toFeatureCollection(result.risks.map((item) => item.geometry_geojson)),
     [result.risks],
   );
+  // Akty MPZP (AU-101): granica aktu w oknie wokół działki (kontekst) i część działki objęta aktem.
+  const mpzpActLayers = useMemo(() => actMapLayers(result.mpzp_acts ?? []), [result.mpzp_acts]);
+  const mpzpActBoundaryGeojson = useMemo(
+    () => toFeatureCollection(mpzpActLayers.boundaries),
+    [mpzpActLayers],
+  );
+  const mpzpActGeojson = useMemo(
+    () => toFeatureCollection(mpzpActLayers.intersections),
+    [mpzpActLayers],
+  );
 
   // Warstwy GeoJSON (obrys działki, obszar zabudowy) są dodawane/usuwane na
   // istniejącej instancji mapy przekazanej z page.tsx — nigdy nie tworzymy
@@ -130,6 +158,25 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       fillOpacity: RISK_FILL_OPACITY,
       lineColor: RISK_LINE_COLOR,
       lineWidth: RISK_LINE_WIDTH,
+    });
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: MPZP_ACT_BOUNDARY_SOURCE_ID,
+      fillLayerId: `${MPZP_ACT_BOUNDARY_LAYER_ID}-unused-fill`,
+      lineLayerId: MPZP_ACT_BOUNDARY_LAYER_ID,
+      geojson: mpzpActBoundaryGeojson,
+      lineColor: MPZP_ACT_BOUNDARY_COLOR,
+      lineWidth: MPZP_ACT_BOUNDARY_WIDTH,
+      lineDasharray: MPZP_ACT_BOUNDARY_DASH,
+    });
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: MPZP_ACT_SOURCE_ID,
+      fillLayerId: MPZP_ACT_FILL_LAYER_ID,
+      lineLayerId: MPZP_ACT_LINE_LAYER_ID,
+      geojson: mpzpActGeojson,
+      fillColor: MPZP_ACT_FILL_COLOR,
+      fillOpacity: MPZP_ACT_FILL_OPACITY,
+      lineColor: MPZP_ACT_LINE_COLOR,
+      lineWidth: MPZP_ACT_LINE_WIDTH,
     });
     addOrUpdateGeojsonLayer(map, {
       sourceId: PROTECTION_ZONE_SOURCE_ID,
@@ -198,6 +245,16 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         fillLayerId: RISK_FILL_LAYER_ID,
         lineLayerId: RISK_LINE_LAYER_ID,
       });
+      removeGeojsonLayer(map, {
+        sourceId: MPZP_ACT_SOURCE_ID,
+        fillLayerId: MPZP_ACT_FILL_LAYER_ID,
+        lineLayerId: MPZP_ACT_LINE_LAYER_ID,
+      });
+      removeGeojsonLayer(map, {
+        sourceId: MPZP_ACT_BOUNDARY_SOURCE_ID,
+        fillLayerId: `${MPZP_ACT_BOUNDARY_LAYER_ID}-unused-fill`,
+        lineLayerId: MPZP_ACT_BOUNDARY_LAYER_ID,
+      });
       layersReadyRef.current = false;
     };
   }, [
@@ -207,6 +264,8 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     networksGeojson,
     protectionZonesGeojson,
     risksGeojson,
+    mpzpActGeojson,
+    mpzpActBoundaryGeojson,
   ]);
 
   useEffect(() => {
@@ -269,6 +328,15 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     );
   }, [map, risksVisible]);
 
+  useEffect(() => {
+    if (!map || !layersReadyRef.current) return;
+    setLayerVisibility(
+      map,
+      [MPZP_ACT_FILL_LAYER_ID, MPZP_ACT_LINE_LAYER_ID, MPZP_ACT_BOUNDARY_LAYER_ID],
+      mpzpActsVisible,
+    );
+  }, [map, mpzpActsVisible]);
+
   const toggleItems: LayerToggleItem[] = [
     {
       id: "parcel",
@@ -307,6 +375,17 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       disabledReason: !protectionZonesGeojson
         ? "Brak efektywnych stref ochronnych dla tej analizy."
         : undefined,
+    },
+    {
+      id: "mpzp_acts",
+      label: LAYER_LEGEND.mpzp_acts.label,
+      color: LAYER_LEGEND.mpzp_acts.color,
+      checked: Boolean(mpzpActGeojson || mpzpActBoundaryGeojson) && mpzpActsVisible,
+      disabled: !mpzpActGeojson && !mpzpActBoundaryGeojson,
+      disabledReason:
+        !mpzpActGeojson && !mpzpActBoundaryGeojson
+          ? "Brak granicy aktu MPZP dla tej analizy (akt znany tylko z KIMPZP nie ma granicy w źródle)."
+          : undefined,
     },
     {
       id: "risks",
@@ -351,7 +430,12 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <LayerToggle items={toggleItems} onChange={handleToggleChange} legendLabel="Warstwy na mapie" />
 
       <GeometrySection result={result} />
-      <MpzpSection zones={result.mpzp_zones} discovery={result.mpzp_discovery ?? null} />
+      <MpzpSection
+        zones={result.mpzp_zones}
+        discovery={result.mpzp_discovery ?? null}
+        acts={result.mpzp_acts ?? []}
+        status={result.mpzp_status ?? null}
+      />
       <PogSection result={result} />
       {result.pog && (
         <CompatibilityAssessmentCard assessment={result.pog.compatibility_assessment} />
@@ -371,6 +455,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     if (id === "networks") setNetworksVisible(checked);
     if (id === "protection_zones") setProtectionZonesVisible(checked);
     if (id === "risks") setRisksVisible(checked);
+    if (id === "mpzp_acts") setMpzpActsVisible(checked);
   }
 }
 
@@ -419,18 +504,23 @@ function GeometrySection({ result }: { result: AnalyzeResponse }) {
 function MpzpSection({
   zones,
   discovery,
+  acts,
+  status,
 }: {
   zones: MpzpZoneResult[];
   discovery: MpzpDiscoverySection | null;
+  acts: MpzpActResult[];
+  status: MpzpStatus | null;
 }) {
+  const hasActs = acts.length > 0 || (discovery?.acts.length ?? 0) > 0;
   return (
     <section className="result-section" aria-label="Strefy MPZP">
       <h3>MPZP</h3>
+      <MpzpStatusBanner status={status} />
       {zones.length === 0 && (
-        <p className="section-empty">
-          {discovery && discovery.acts.length > 0
-            ? "Nie ustalono stref MPZP przecinających działkę — poniżej akty wskazane przez KIMPZP."
-            : "Nie sprawdzono albo nie znaleziono stref MPZP przecinających działkę."}
+        <p className="section-empty" data-testid="mpzp-zones-empty">
+          Nie ustalono stref MPZP przecinających działkę.
+          {hasActs ? " Poniżej akty planów wskazane przez źródła (akt nie jest strefą)." : ""}
         </p>
       )}
       {zones.length > 0 && (
@@ -440,6 +530,7 @@ function MpzpSection({
           ))}
         </ul>
       )}
+      <MpzpActsList acts={acts} rejected={status?.rejected_acts ?? []} />
       {discovery && <MpzpDiscoveryCard discovery={discovery} />}
     </section>
   );

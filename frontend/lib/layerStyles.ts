@@ -58,6 +58,22 @@ export const RISK_SOURCE_ID = "risk-source";
 export const RISK_FILL_LAYER_ID = "risk-fill-layer";
 export const RISK_LINE_LAYER_ID = "risk-line-layer";
 
+// --- Akty MPZP z Rejestru Urbanistycznego (AU-101): część działki objęta aktem i granica aktu ---
+// Akt nie jest strefą, więc kolor różni się od stref/ryzyk; granica jest przerywana (kontekst), a część
+// działki objęta aktem wypełniona.
+export const MPZP_ACT_FILL_COLOR = "#2a5db0";
+export const MPZP_ACT_LINE_COLOR = "#1c4180";
+export const MPZP_ACT_FILL_OPACITY = 0.18;
+export const MPZP_ACT_LINE_WIDTH = 1.5;
+export const MPZP_ACT_SOURCE_ID = "mpzp-act-source";
+export const MPZP_ACT_FILL_LAYER_ID = "mpzp-act-fill-layer";
+export const MPZP_ACT_LINE_LAYER_ID = "mpzp-act-line-layer";
+export const MPZP_ACT_BOUNDARY_COLOR = "#1c4180";
+export const MPZP_ACT_BOUNDARY_WIDTH = 2;
+export const MPZP_ACT_BOUNDARY_DASH: [number, number] = [3, 2];
+export const MPZP_ACT_BOUNDARY_SOURCE_ID = "mpzp-act-boundary-source";
+export const MPZP_ACT_BOUNDARY_LAYER_ID = "mpzp-act-boundary-layer";
+
 // --- Nakładka WMS MPZP (KIMPZP) ---
 export const MPZP_WMS_SOURCE_ID = "mpzp-wms-source";
 export const MPZP_WMS_LAYER_ID = "mpzp-wms-layer";
@@ -94,6 +110,7 @@ export type LayerId =
   | "networks"
   | "protection_zones"
   | "risks"
+  | "mpzp_acts"
   | "mpzp_wms"
   | "pog_wms"
   | "kiut_wms";
@@ -128,6 +145,11 @@ export const LAYER_LEGEND: Record<LayerId, LayerLegendEntry> = {
     id: "risks",
     label: "Ryzyka i formy ochrony",
     color: RISK_FILL_COLOR,
+  },
+  mpzp_acts: {
+    id: "mpzp_acts",
+    label: "Granice aktów MPZP (Rejestr Urbanistyczny)",
+    color: MPZP_ACT_FILL_COLOR,
   },
   mpzp_wms: {
     id: "mpzp_wms",

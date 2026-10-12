@@ -1069,6 +1069,109 @@ export type MpzpDiscoverySection = {
   source: SourceMetadata | null;
 };
 
+/** Rozłączne stany ustalenia MPZP (AU-103). */
+export type MpzpStatusValue =
+  | "available"
+  | "ambiguous"
+  | "no_match"
+  | "no_coverage"
+  | "unavailable"
+  | "unknown";
+
+/** Stan pojedynczego kanału (KIMPZP albo Rejestr Urbanistyczny). */
+export type MpzpChannelStatusValue = "available" | "no_match" | "no_coverage" | "unavailable" | "unknown";
+
+export type MpzpActChannel = "kimpzp" | "mpzp_ru";
+
+export type MpzpActLegalStatus = "binding" | "not_binding" | "not_yet_binding" | "unknown";
+
+export type MpzpActPrecedence = "applies" | "complementary" | "superseded" | "unresolved" | "not_in_force";
+
+/** Zmiana planu przy akcie (dokument zmieniający) — nigdy osobny akt. */
+export type MpzpActAmendment = {
+  resolution_number: string | null;
+  effective_from: string | null;
+  document_url: string | null;
+  name: string | null;
+  source: MpzpActChannel;
+  document_url_verified: boolean;
+};
+
+export type MpzpActLinkField = "document_url" | "legend_url" | "drawing_url";
+
+/** Akt MPZP przecinający działkę (AU-101). To granica i dokument, nie strefa przeznaczenia. */
+export type MpzpActResult = {
+  act_identifier: string | null;
+  title: string | null;
+  /** null dla projektu znanego tylko z uchwały o przystąpieniu — jej numer nie jest numerem planu. */
+  resolution_number: string | null;
+  resolution_number_basis: "document_number" | "document_title" | "identifier" | "kimpzp" | null;
+  resolution_date: string | null;
+  effective_from: string | null;
+  effective_to: string | null;
+  legal_status: MpzpActLegalStatus;
+  raw_status: string | null;
+  document_url: string | null;
+  document_kind: "adopting" | "commencement" | "other" | null;
+  legend_url: string | null;
+  drawing_url: string | null;
+  journal: string | null;
+  amendments: MpzpActAmendment[];
+  /** Pole części działki objętej aktem [m², EPSG:2180]; null = akt bez granicy w źródle (to nie jest 0). */
+  intersection_area_sqm: number | null;
+  /** Udział działki objęty aktem [%]; null = akt bez granicy w źródle (to nie jest 0). */
+  intersection_pct: number | null;
+  intersection_geojson: Record<string, unknown> | null;
+  boundary_geojson: Record<string, unknown> | null;
+  sources: MpzpActChannel[];
+  precedence: MpzpActPrecedence;
+  manual_review_required: boolean;
+  reason_codes: string[];
+  /** Nazwy pól linków zweryfikowanych jako HTTPS — tylko one są klikalne. */
+  verified_links: MpzpActLinkField[];
+};
+
+export type MpzpRejectedActReason = "no_overlap" | "boundary_touch_only" | "below_min_area" | "geometry_unusable";
+
+/** Akt zwrócony przez RU dla prostokąta działki, ale nieprzecinający jej. */
+export type MpzpRejectedAct = {
+  act_identifier: string;
+  title: string | null;
+  resolution_number: string | null;
+  legal_status: MpzpActLegalStatus;
+  raw_status: string | null;
+  reason: MpzpRejectedActReason;
+  distance_m: number | null;
+  area_sqm: number;
+  channel: MpzpActChannel;
+};
+
+export type MpzpChannelStatus = {
+  channel: MpzpActChannel;
+  label: string;
+  status: MpzpChannelStatusValue;
+  status_label: string;
+  reason_codes: string[];
+  acts_found: number;
+  source: SourceMetadata | null;
+};
+
+/** Rozłączny stan ustalenia MPZP z kodem powodu i stanem kanałów (AU-103). */
+export type MpzpStatus = {
+  schema_version: string;
+  status: MpzpStatusValue;
+  reason_code: string;
+  reason_codes: string[];
+  /** Etykieta i komunikat pochodzą z backendu — te same w UI, PDF i paczce audytowej. */
+  label: string;
+  message: string;
+  channels: MpzpChannelStatus[];
+  channel_agreement: "agree" | "mismatch" | "single_channel" | "none";
+  precedence_rule_version: string;
+  rejected_acts: MpzpRejectedAct[];
+  source: SourceMetadata | null;
+};
+
 export type AnalyzeResponse = {
   analysis_id: number | null;
   /**
@@ -1082,6 +1185,10 @@ export type AnalyzeResponse = {
   mpzp_zones: MpzpZoneResult[];
   /** Akty wskazane przez KIMPZP i status źródła; brak pola = odpowiedź sprzed AU-004. */
   mpzp_discovery?: MpzpDiscoverySection | null;
+  /** Akty MPZP z RU i KIMPZP z udziałem działki; brak pola albo brak `mpzp_status` = odpowiedź sprzed AU-101. */
+  mpzp_acts?: MpzpActResult[];
+  /** Rozłączny stan ustalenia MPZP; brak pola = odpowiedź sprzed AU-103 (osobny komunikat). */
+  mpzp_status?: MpzpStatus | null;
   pog: PogResult | null;
   infrastructure: InfrastructureResult[];
   utilities_preview: UtilitiesPreviewResult | null;

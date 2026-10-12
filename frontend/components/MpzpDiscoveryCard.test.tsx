@@ -69,7 +69,8 @@ describe("MpzpDiscoveryCard", () => {
     render(<ResultPanel result={buildAnalyzeResponse({ mpzp_discovery: GORA_KALWARIA_DISCOVERY })} map={null} />);
 
     const section = screen.getByRole("region", { name: "Strefy MPZP" });
-    expect(section).toHaveTextContent("poniżej akty wskazane przez KIMPZP");
+    expect(section).toHaveTextContent("Nie ustalono stref MPZP przecinających działkę.");
+    expect(section).toHaveTextContent("Poniżej akty planów wskazane przez źródła");
     expect(within(section).getAllByTestId("mpzp-discovery-act")).toHaveLength(2);
   });
 
@@ -77,6 +78,9 @@ describe("MpzpDiscoveryCard", () => {
     render(<ResultPanel result={buildAnalyzeResponse()} map={null} />);
 
     expect(screen.queryByTestId("mpzp-discovery")).toBeNull();
-    expect(screen.getByText("Nie sprawdzono albo nie znaleziono stref MPZP przecinających działkę.")).toBeVisible();
+    // AU-103: stany nie są zlane w jedno „nie sprawdzono albo nie znaleziono” — zapis bez stanu ma osobny komunikat.
+    expect(screen.getByTestId("mpzp-zones-empty")).toHaveTextContent("Nie ustalono stref MPZP przecinających działkę.");
+    expect(screen.getByTestId("mpzp-status-message")).toHaveTextContent("przed wprowadzeniem stanów MPZP");
+    expect(screen.queryByText(/Nie sprawdzono albo nie znaleziono/)).toBeNull();
   });
 });
