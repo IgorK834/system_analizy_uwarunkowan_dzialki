@@ -285,7 +285,7 @@ def test_empty_maps_have_explicit_reasons() -> None:
     no_mpzp = build_report_map_snapshot(
         emptied.model_copy(update={"mpzp_zones": []}), parcel, basemap_dir="", frozen_at=FROZEN_AT
     )
-    assert "nie sprawdzono stref MPZP" in _map(no_mpzp, "mpzp")["empty_reason"]
+    assert "stan ustalenia MPZP" in _map(no_mpzp, "mpzp")["empty_reason"]  # AU-103: stan zamiast „nie sprawdzono”
     # Strefy bez geometrii obok narysowanych są wymienione w notatce.
     mixed = build_report_map_snapshot(
         response.model_copy(update={"mpzp_zones": [response.mpzp_zones[1], manual_zone]}),

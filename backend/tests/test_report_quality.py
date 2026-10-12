@@ -73,7 +73,7 @@ def test_sections_without_source_state_the_reason_of_the_gap() -> None:
     assert "brak źródła" in transport[2]
     assert "brak potwierdzonego kontraktu" in transport[6] and "NO_SOURCE_CONTRACT" in transport[6]
     mpzp = by_label["MPZP"]
-    assert "nieustalone" in mpzp[1] and "nie dowodzi braku planu" in mpzp[6]
+    assert "nieustalone" in mpzp[1] and "nie ustalono stanu MPZP" in mpzp[6]  # zapis bez stanu (AU-103)
     flood = by_label["Zagrożenie powodziowe (ISOK)"]
     assert "źródło niedostępne" in flood[1]
     kiut = by_label["Uzbrojenie terenu (KIUT)"]

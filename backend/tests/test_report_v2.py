@@ -165,7 +165,7 @@ def test_every_empty_section_states_an_explicit_reason() -> None:
     pdf = _html_to_pdf(html)
     sections = _sections(pdf)
     reasons = {
-        3: "nie potwierdza to braku planu",
+        3: "przed wprowadzeniem stanów MPZP",  # AU-103: zapis bez stanu ma osobny komunikat
         4: "Brak wyniku nie oznacza braku planu",
         5: "NIE oznacza braku ryzyka ani ograniczeń",
         6: "nie oznacza płaskiego terenu",

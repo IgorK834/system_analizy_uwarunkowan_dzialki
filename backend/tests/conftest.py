@@ -34,6 +34,13 @@ def terrain_relief_offline(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def ru_mpzp_acts_offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Testy nie odpytują Rejestru Urbanistycznego (AU-101) — kanał ``mpzp_ru`` jest wyłączony, dopóki test
+    nie wstrzyknie źródła (``fetch_ru_channel(source=...)``) albo nie włączy go jawnie."""
+    monkeypatch.setattr(settings, "ru_mpzp_acts_enabled", False)
+
+
+@pytest.fixture(autouse=True)
 def enable_app_loggers() -> None:
     """``alembic/env.py`` woła ``fileConfig``, które domyślnie wyłącza istniejące loggery.
 
