@@ -17,7 +17,11 @@ from dataclasses import dataclass, field, replace
 from typing import Final, Literal
 
 from app.services.mpzp_parser_extract import TextExtractionResult
-from app.shared.zone_symbol import is_tail_of_spaced_symbol, zone_symbol_text_pattern
+from app.shared.zone_symbol import (
+    find_zone_symbol_range_mentions,
+    is_tail_of_spaced_symbol,
+    zone_symbol_text_pattern,
+)
 
 _MULTI_CANDIDATE_CONFIDENCE_PENALTY: Final[float] = 0.7
 
@@ -31,6 +35,10 @@ _ZONE_REFERENCE_PATTERNS: Final[tuple[tuple[str, float], ...]] = (
     (r"\bobszar\s+oznaczon\w*\s+{symbol}", 0.6),
     (r"{symbol}", 0.5),
 )
+# Symbol wymieniony tylko jako element zakresu (``symbolami 1KDZ-11KDZ``): sekcja dotyczy całego zakresu,
+# więc pewność jest niższa niż przy symbolu wymienionym wprost, ale wyższa niż przy dowolnej wzmiance.
+_RANGE_REFERENCE_CONFIDENCE: Final[float] = 0.55
+_RANGE_REFERENCE_PATTERN: Final[str] = "zakres symboli"
 # Symbol strefy jest całym tokenem (``MN`` nie dopasuje ``MN.1``, ``U`` nie dopasuje
 # ``MW/U``) i jest dopasowywany tolerancyjnie na odstępy (``146 MN`` = ``146MN``).
 # Reguły tokenu i odstępów mieszkają w ``app.shared.zone_symbol`` (PV3-04).
@@ -299,6 +307,19 @@ def _find_candidates_for_symbol(
                 )
             )
             break
+        else:
+            span = next(iter(find_zone_symbol_range_mentions(segment.text, zone_symbol)), None)
+            if span is not None:
+                candidates.append(
+                    ZoneSectionCandidate(
+                        zone_symbol=zone_symbol,
+                        segment_id=segment.segment_id,
+                        source_text=_source_excerpt_at(segment.text, span[0]),
+                        page_number=segment.page_number,
+                        confidence=_RANGE_REFERENCE_CONFIDENCE,
+                        match_pattern=_RANGE_REFERENCE_PATTERN,
+                    )
+                )
 
     candidates.sort(
         key=lambda candidate: (
@@ -319,7 +340,11 @@ def _search_reference(pattern: str, text: str) -> re.Match[str] | None:
 
 
 def _source_excerpt(text: str, match: re.Match[str]) -> str:
-    start = max(0, match.start() - _SOURCE_EXCERPT_LEFT_CONTEXT_CHARS)
+    return _source_excerpt_at(text, match.start())
+
+
+def _source_excerpt_at(text: str, position: int) -> str:
+    start = max(0, position - _SOURCE_EXCERPT_LEFT_CONTEXT_CHARS)
     end = min(len(text), start + _SOURCE_EXCERPT_MAX_CHARS)
     if end == len(text):
         start = max(0, end - _SOURCE_EXCERPT_MAX_CHARS)

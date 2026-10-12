@@ -5,6 +5,12 @@ z linkiem do PDF oraz HTML z treścią uchwały bezpośrednio na stronie. ZIP je
 rozpakowywany wyłącznie w pamięci przez ``zipfile.ZipFile`` i ``io.BytesIO`` —
 nigdy na dysk.
 
+Adres z KIMPZP/Rejestru często wskazuje stronę BIP (landing page), a nie plik:
+strona dokumentu (``?dok_id=…``) wylicza załączniki jako karty, a dopiero karta
+(``…/karta``) linkuje do pliku (``plik.php?zid=…``). Fetcher idzie wtedy za linkiem
+„Tekst planu / uchwały” przez najwyżej ``MPZP_MAX_HTML_HOPS`` stron HTML, tylko
+w obrębie tej samej witryny i z pełną walidacją SSRF każdego skoku (AU-102).
+
 Ochrona SSRF sprawdza schemat i wszystkie adresy IP hosta przed każdym żądaniem,
 także na każdym hopie ręcznie obsługiwanego przekierowania. Nie eliminuje jednak
 w 100% ryzyka DNS rebinding (TOCTOU): między walidacją DNS a połączeniem httpx
@@ -18,6 +24,7 @@ import asyncio
 import io
 import ipaddress
 import logging
+import re
 import socket
 import zipfile
 from dataclasses import dataclass
@@ -34,6 +41,8 @@ logger = logging.getLogger(__name__)
 
 MPZP_FETCH_TIMEOUT_S: Final[float] = 30.0
 MPZP_MAX_REDIRECTS: Final[int] = 5
+# Ile kolejnych stron HTML (strona dokumentu → karta załącznika) wolno prześledzić do pliku.
+MPZP_MAX_HTML_HOPS: Final[int] = 2
 MPZP_MAX_DOCUMENT_SIZE_BYTES: Final[int] = 50 * 1024 * 1024
 
 _ALLOWED_SCHEMES: Final[frozenset[str]] = frozenset({"http", "https"})
@@ -74,6 +83,40 @@ _PDF_LINK_TEXT_KEYWORDS: Final[tuple[str, ...]] = (
 )
 _ZIP_CONTENT_TYPES: Final[frozenset[str]] = frozenset(
     {"application/zip", "application/x-zip-compressed"}
+)
+# Strona dokumentu BIP: link do TEKSTU uchwały (nie do rysunku, prognozy, GML ani innych załączników).
+_TEXT_LINK_KEYWORDS: Final[tuple[str, ...]] = (
+    "tekst planu",
+    "tekst uchwały",
+    "tekst uchwaly",
+    "treść uchwały",
+    "tresc uchwaly",
+    "uchwała nr",
+    "uchwala nr",
+    "tekst jednolity",
+)
+_ATTACHMENT_LINK_KEYWORDS: Final[tuple[str, ...]] = (
+    "rysunek",
+    "załącznik",
+    "zalacznik",
+    "prognoz",
+    "ekofizjograf",
+    "gml",
+    "rozstrzygni",
+    "podsumowanie",
+    "uwag",
+    "obwieszczenie",
+    "streszczenie",
+    "legenda",
+    "odnośnik",
+    "odnosnik",
+    "wniosek",
+    "zawiadomienie",
+)
+# Adresy endpointów pobierania pliku, które nie kończą się na ``.pdf`` (``plik.php?zid=…``).
+_DOWNLOAD_HREF = re.compile(
+    r"(?:^|/)(?:plik|download|pobierz|getfile|getactpdf|file)(?:\.php|\.ashx|\.aspx|\.do)?(?:[/?#]|$)",
+    re.IGNORECASE,
 )
 
 
@@ -116,14 +159,14 @@ async def fetch_mpzp_document(uchwala_url: str) -> DocumentBlob:
         timeout=MPZP_FETCH_TIMEOUT_S, follow_redirects=False
     ) as client:
         return await _fetch_document_via_client(
-            client, uchwala_url, allow_html_link_follow=True
+            client, uchwala_url, html_hops_left=MPZP_MAX_HTML_HOPS
         )
 
 
 async def _fetch_document_via_client(
     client: httpx.AsyncClient,
     url: str,
-    allow_html_link_follow: bool,
+    html_hops_left: int,
 ) -> DocumentBlob:
     content, content_type, final_url = await _fetch_with_redirect_validation(
         client, url
@@ -154,13 +197,14 @@ async def _fetch_document_via_client(
         )
 
     if _looks_like_html(content, content_type):
-        if allow_html_link_follow:
-            pdf_link = _find_pdf_link_in_html(content, final_url)
-            if pdf_link is not None:
-                # Śledzimy tylko jeden skok HTML→dokument, żeby strony HTML
-                # wskazujące cyklicznie na inne strony nie powodowały rekurencji.
+        if html_hops_left > 0:
+            next_link = _find_document_link_in_html(content, final_url)
+            if next_link is not None:
+                # Liczba skoków HTML→HTML jest ograniczona, żeby strony wskazujące
+                # cyklicznie na siebie nie powodowały rekurencji; każdy skok przechodzi
+                # pełną walidację SSRF w ``_fetch_with_redirect_validation``.
                 return await _fetch_document_via_client(
-                    client, pdf_link, allow_html_link_follow=False
+                    client, next_link, html_hops_left=html_hops_left - 1
                 )
         return DocumentBlob(
             content=content,
@@ -384,6 +428,55 @@ def _find_pdf_link_in_html(html_bytes: bytes, base_url: str) -> str | None:
         return None
     candidates.sort(key=lambda candidate: candidate[0], reverse=True)
     return candidates[0][1]
+
+
+def _site_key(url: str) -> str:
+    host = (urlparse(url).hostname or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def _find_document_link_in_html(html_bytes: bytes, base_url: str) -> str | None:
+    """Następny skok do tekstu uchwały: link do PDF, do endpointu pobierania albo do strony tekstu.
+
+    Kolejność: (1) link do ``.pdf`` (dowolny host, jak dotąd); (2) w obrębie tej samej witryny endpoint
+    pobierania pliku (``plik.php?zid=…``) — karta załącznika ma ich zwykle jeden; (3) w obrębie tej samej
+    witryny link o tekście „Tekst planu / uchwały” (strona dokumentu BIP wylicza załączniki jako karty),
+    z pominięciem rysunku, prognozy, GML i innych załączników.
+    """
+    pdf_link = _find_pdf_link_in_html(html_bytes, base_url)
+    if pdf_link is not None:
+        return pdf_link
+    soup = BeautifulSoup(html_bytes, "html.parser")
+    downloads: list[tuple[int, bool, str]] = []
+    text_pages: list[tuple[int, str]] = []
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor["href"]).strip()
+        if not href or href.startswith(("#", "javascript:", "mailto:")):
+            continue
+        absolute_url = urljoin(base_url, href)
+        parsed = urlparse(absolute_url)
+        if parsed.scheme not in _ALLOWED_SCHEMES or _site_key(absolute_url) != _site_key(base_url):
+            continue
+        link_text = " ".join((anchor.get_text() or "").split()).lower()
+        text_score = sum(1 for keyword in _TEXT_LINK_KEYWORDS if keyword in link_text)
+        attachment = any(keyword in link_text for keyword in _ATTACHMENT_LINK_KEYWORDS)
+        if _DOWNLOAD_HREF.search(parsed.path + (f"?{parsed.query}" if parsed.query else "")):
+            downloads.append((text_score, attachment, absolute_url))
+        elif text_score > 0 and not attachment:
+            text_pages.append((text_score, absolute_url))
+    if downloads:
+        # Karta załącznika ma jeden plik (``zobacz załącznik``) — idziemy za nim. Przy wielu plikach
+        # liczy się tekst linku: tylko jednoznaczny „tekst planu/uchwały” bez cech innego załącznika.
+        distinct = sorted({url for _score, _attachment, url in downloads})
+        if len(distinct) == 1:
+            return distinct[0]
+        chosen = sorted({url for score, attachment, url in downloads if score > 0 and not attachment})
+        return chosen[0] if len(chosen) == 1 else None
+    if text_pages:
+        best = max(score for score, _ in text_pages)
+        top = sorted({url for score, url in text_pages if score == best})
+        return top[0] if len(top) == 1 else None
+    return None
 
 
 def _extract_best_pdf_from_zip(content: bytes) -> tuple[bytes, str]:

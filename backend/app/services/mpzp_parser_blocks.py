@@ -34,11 +34,10 @@ from app.modules.planning.domain.value_conditions import (
     condition_key,
 )
 from app.schemas.mpzp import ExtractedEvidence, MpzpParameter, MpzpParserWarning, MpzpZoneResult
-from app.services.mpzp_parser_descriptive import extract_descriptive_parameters
+from app.services.mpzp_parser_descriptive import describe_text
 from app.services.mpzp_parser_numeric import _condition_models, extract_numeric_matches
-from app.services.mpzp_parser_segment import DocumentSegment, ZoneSectionCandidate, ZoneSectionResult
 
-MPZP_PARSER_VERSION_BLOCKS: Final[str] = "mpzp-parser/3.1-det+scope.1"
+MPZP_PARSER_VERSION_BLOCKS: Final[str] = "mpzp-parser/3.2-det+scope.2"
 _BASE_CONFIDENCE: Final[float] = 0.85
 _DEDICATED_SCOPE_CONFIDENCE: Final[float] = 0.9
 _CONFLICT_PENALTY: Final[float] = 0.6
@@ -148,23 +147,49 @@ def extract_block_parameters(
     return found
 
 
-def _descriptive(symbol: str, blocks: list[ZoneBlock]) -> list[MpzpParameter]:
-    """Opisy (przeznaczenie, zakazy…) z bloków sekcji strefy; bez zakresu znaków wartości."""
-    sections = [block for block in blocks if block.scope_kind == "zone_section"]
-    if not sections:
-        return []
-    segments = [
-        DocumentSegment(segment_id=block.block_id, text=block.text, page_number=block.pages[0] if block.pages else None,
-                        heading=None, source="paragraph")
-        for block in sections
-    ]
-    candidates = [
-        ZoneSectionCandidate(symbol, block.block_id, block.text[:200], block.pages[0] if block.pages else None,
-                             block.scope_confidence, f"scope/strategy-{block.strategy}")
-        for block in sections
-    ]
-    parameters = extract_descriptive_parameters(symbol, ZoneSectionResult(zone_symbol=symbol, candidates=candidates), segments)
-    return [p.model_copy(update={"scope_kind": "zone_section", "scope_strategy": sections[0].strategy}) for p in parameters]
+def _descriptive(
+    symbol: str, blocks: list[ZoneBlock], tree: DocumentTree, view: DocumentStructureView
+) -> list[MpzpParameter]:
+    """Opisy (przeznaczenie, zakazy, dopuszczenia…) z bloków sekcji strefy.
+
+    Każde ustalenie niesie stronę i zakres znaków z miejsca w BLOKU, w którym je znaleziono (jak wartości
+    liczbowe) — strona nie jest wyszukiwana ponownie po całym dokumencie, bo to samo zdanie (``zakaz
+    zabudowy``) bywa powtórzone w innej strefie i dawało stronę cudzej sekcji (AU-102).
+    """
+    found: list[MpzpParameter] = []
+    seen: set[tuple[str, str]] = set()
+    for block in (b for b in blocks if b.scope_kind == "zone_section"):
+        for described in describe_text(block.text, symbol):
+            key = (described.name, described.value)
+            if key in seen or described.start is None or described.end is None:
+                continue
+            spans = block.locate(described.start, described.end)
+            if not spans:
+                continue
+            seen.add(key)
+            doc_start, doc_end = spans[0]
+            raw_spans = tree.document.raw_spans(doc_start, doc_end)
+            page, raw_start, raw_end = raw_spans[0] if raw_spans else (view.page_at(doc_start), None, None)
+            found.append(
+                MpzpParameter(
+                    name=described.name,
+                    normalized_value=described.value,
+                    unit=None,
+                    raw_value=described.quote,
+                    source_text=described.quote,
+                    page_number=page,
+                    confidence=described.confidence,
+                    manual_review_required=described.manual_review_required,
+                    segment_id=block.block_id,
+                    char_start=raw_start,
+                    char_end=raw_end,
+                    block_id=block.block_id,
+                    scope_kind="zone_section",
+                    scope_confidence=block.scope_confidence,
+                    scope_strategy=block.strategy,
+                )
+            )
+    return found
 
 
 def extract_zone_from_blocks(
@@ -199,7 +224,7 @@ def extract_zone_from_blocks(
         else parameter
         for parameter in parameters
     ]
-    parameters.extend(_descriptive(symbol, blocks))
+    parameters.extend(_descriptive(symbol, blocks, tree, view))
     first = next((b for b in blocks if b.scope_kind == "zone_section"), blocks[0] if blocks else None)
     evidence = (
         ExtractedEvidence(raw_value=None, source_text=" ".join(first.text[:200].split()),

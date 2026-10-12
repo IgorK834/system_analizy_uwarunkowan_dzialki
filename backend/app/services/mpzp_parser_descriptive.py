@@ -21,6 +21,7 @@ handlowych) ``quantity_engine`` (PV3-07). Tu zostaje opakowanie ustaleń w ``Mpz
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import Final
 
 from app.modules.planning.domain.descriptive_engine import (
@@ -52,33 +53,93 @@ def _context_excerpt(text: str, start: int, end: int, pad: int = 20) -> str:
     return " ".join(text[left:right].split())
 
 
-def _parameter(name: str, value: str, source_text: str, page_number: int | None) -> MpzpParameter:
-    return MpzpParameter(
-        name=name,
-        normalized_value=value,
-        unit=None,
-        raw_value=source_text,
-        source_text=source_text,
-        page_number=page_number,
-        confidence=_BASE_CONFIDENCE,
-        manual_review_required=False,
-    )
+@dataclass(frozen=True)
+class DescribedParameter:
+    """Ustalenie opisowe z miejscem w przeszukanym tekście (``start``/``end``) — dowód ma wskazywać stronę."""
+
+    name: str
+    value: str
+    quote: str
+    start: int | None
+    end: int | None
+    confidence: float = _BASE_CONFIDENCE
+    manual_review_required: bool = False
 
 
-def _literal_parameters(name: str, findings: list[DescriptiveFinding], page_number: int | None) -> list[MpzpParameter]:
-    return [_parameter(name, finding.value, finding.quote, page_number) for finding in findings]
+def _from_findings(name: str, findings: list[DescriptiveFinding]) -> list[DescribedParameter]:
+    return [DescribedParameter(name, f.value, f.quote, f.start, f.end) for f in findings]
 
 
-def _large_retail_restrictions(text: str, page_number: int | None) -> list[MpzpParameter]:
-    parameters: list[MpzpParameter] = []
+def _large_retail_restrictions(text: str) -> list[DescribedParameter]:
+    parameters: list[DescribedParameter] = []
     for quantity in find_quantities(text, families=[FAMILY_RETAIL]):
         # Kontekst liczony od rzeczownika (``obiektów handlowych``) do wartości, jak w zapisie źródłowym.
         left = quantity.noun_start if quantity.noun_start is not None else quantity.start
         excerpt = _context_excerpt(text, left, quantity.end, pad=10)
         area = f"{quantity.value:.0f}" if float(quantity.value).is_integer() else f"{quantity.value}"
         value = f"zakaz obiektów handlowych o powierzchni sprzedaży > {area} m²"
-        parameters.append(_parameter("large_retail_restriction", value, excerpt, page_number))
+        parameters.append(DescribedParameter("large_retail_restriction", value, excerpt, left, quantity.end))
     return parameters
+
+
+def describe_text(text: str, zone_symbol: str) -> list[DescribedParameter]:
+    """Opisowe (nieliczbowe) ustalenia MPZP w podanym tekście, z pozycją każdego w tym tekście.
+
+    Wspólny rdzeń trybu dotychczasowego (tekst skleja kandydackie segmenty) i blokowego (tekst jednego
+    bloku strefy, pozycja przeliczana na stronę dokumentu). Wielość dopasowań dla ``prohibition``/
+    ``permission``/``roof_geometry`` NIE jest konfliktem — to współistniejące ustalenia.
+    """
+    uses = find_use_designations(text, zone_symbol)
+    parameters: list[DescribedParameter] = []
+    parameters.extend(
+        DescribedParameter(f.code, f.value, f.quote, f.start, f.end)
+        for f in uses
+        if f.code == "primary_use" and f.structured
+    )
+    parameters.extend(DescribedParameter(f.code, f.value, f.quote, f.start, f.end) for f in uses if f.code == "supplementary_use")
+    for fallback in (f for f in uses if not f.structured):
+        parameters.append(
+            DescribedParameter(
+                fallback.code, fallback.value, fallback.quote, fallback.start, fallback.end,
+                confidence=_UNSTRUCTURED_PRIMARY_USE_CONFIDENCE, manual_review_required=True,
+            )
+        )
+        logger.debug(
+            "Strefa %s: nie udało się jednoznacznie rozdzielić przeznaczenia "
+            "podstawowego od uzupełniającego, zwrócono cały opis z niższym "
+            "confidence.",
+            zone_symbol,
+        )
+    parameters.extend(_from_findings("prohibition", find_prohibitions(text)))
+    parameters.extend(_from_findings("permission", find_permissions(text)))
+    parameters.extend(
+        _from_findings(
+            "environmental_restriction",
+            # Ograniczenia środowiskowe są rozpoznawane w kontekście nagłówka "ochrony środowiska"
+            # (§5 realnego dokumentu) — bez niego "nakaz"/"dopuszczalny poziom" mogą dotyczyć innych paragrafów.
+            find_environmental_restrictions(text, heading_required=True),
+        )
+    )
+    parameters.extend(_large_retail_restrictions(text))
+    parameters.extend(_from_findings("parking_requirement_descriptive", find_parking_requirements(text)))
+    parameters.extend(
+        DescribedParameter("roof_geometry", roof.value, _context_excerpt(text, roof.start, roof.end), roof.start, roof.end)
+        for roof in find_roof_geometries(text)
+    )
+    return parameters
+
+
+def _parameter(described: DescribedParameter, page_number: int | None) -> MpzpParameter:
+    return MpzpParameter(
+        name=described.name,
+        normalized_value=described.value,
+        unit=None,
+        raw_value=described.quote,
+        source_text=described.quote,
+        page_number=page_number,
+        confidence=described.confidence,
+        manual_review_required=described.manual_review_required,
+    )
 
 
 def extract_descriptive_parameters(
@@ -90,10 +151,8 @@ def extract_descriptive_parameters(
 
     Analogicznie do ``extract_numeric_parameters``: łączy tekst wszystkich
     segmentów wskazanych przez kandydatów ``zone_section`` i uruchamia na nim
-    wspólny silnik opisowy. Wielość dopasowań dla ``prohibition``/``permission``/
-    ``roof_geometry`` NIE jest traktowana jako konflikt — to naturalnie różne,
-    współistniejące ustalenia (np. dwie dozwolone geometrie dachu), nie
-    sprzeczne wartości jednego parametru liczbowego.
+    wspólny silnik opisowy (``describe_text``). Strony parametrów ustala potem
+    ``_attach_evidence_metadata`` względem segmentu zawierającego cytat.
     """
     segment_by_id = {segment.segment_id: segment for segment in segments}
     relevant_segments = [
@@ -103,46 +162,6 @@ def extract_descriptive_parameters(
     ]
     if not relevant_segments:
         return []
-
     combined_text = "\n".join(segment.text for segment in relevant_segments)
     page_number = relevant_segments[0].page_number
-
-    uses = find_use_designations(combined_text)
-    parameters: list[MpzpParameter] = []
-    parameters.extend(
-        _parameter(f.code, f.value, f.quote, page_number) for f in uses if f.code == "primary_use" and f.structured
-    )
-    parameters.extend(_parameter(f.code, f.value, f.quote, page_number) for f in uses if f.code == "supplementary_use")
-    for fallback in (f for f in uses if not f.structured):
-        parameters.append(
-            _parameter(fallback.code, fallback.value, fallback.quote, page_number).model_copy(
-                update={"confidence": _UNSTRUCTURED_PRIMARY_USE_CONFIDENCE, "manual_review_required": True}
-            )
-        )
-        logger.debug(
-            "Strefa %s: nie udało się jednoznacznie rozdzielić przeznaczenia "
-            "podstawowego od uzupełniającego, zwrócono cały opis z niższym "
-            "confidence.",
-            zone_symbol,
-        )
-
-    parameters.extend(_literal_parameters("prohibition", find_prohibitions(combined_text), page_number))
-    parameters.extend(_literal_parameters("permission", find_permissions(combined_text), page_number))
-    parameters.extend(
-        _literal_parameters(
-            "environmental_restriction",
-            # Ograniczenia środowiskowe są rozpoznawane w kontekście nagłówka "ochrony środowiska"
-            # (§5 realnego dokumentu) — bez niego "nakaz"/"dopuszczalny poziom" mogą dotyczyć innych paragrafów.
-            find_environmental_restrictions(combined_text, heading_required=True),
-            page_number,
-        )
-    )
-    parameters.extend(_large_retail_restrictions(combined_text, page_number))
-    parameters.extend(
-        _literal_parameters("parking_requirement_descriptive", find_parking_requirements(combined_text), page_number)
-    )
-    parameters.extend(
-        _parameter("roof_geometry", roof.value, _context_excerpt(combined_text, roof.start, roof.end), page_number)
-        for roof in find_roof_geometries(combined_text)
-    )
-    return parameters
+    return [_parameter(described, page_number) for described in describe_text(combined_text, zone_symbol)]

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from app.modules.planning.application.llm_pipeline import MpzpLlmPipeline
@@ -56,6 +57,7 @@ from app.services.mpzp_parser_hybrid import (
     close_pipeline,
     schedule_shadow,
 )
+from app.services.mpzp_parser_reasons import refine_missing_section_warnings
 from app.services.mpzp_parser_validate import validate_mpzp_result
 
 logger = logging.getLogger(__name__)
@@ -66,7 +68,10 @@ logger = logging.getLogger(__name__)
 # ``MPZP_RESULT_SCHEMA_VERSION`` (analizy sparsowane wersją ``2.0`` nie są serwowane z cache). ``3.1-det``
 # (PV3-21): zapisy opisowe z jednego silnika domenowego (``descriptive_engine``), wspólnego z regułami
 # planistycznymi — przeznaczenie z etykiety i z listy, zakazy przełamane w wierszu, liczby dziesiętne.
-MPZP_PARSER_VERSION = "mpzp-parser/3.1-det"
+# ``3.2-det`` (AU-102): zakresy symboli (``1KDZ-11KDZ``, ``1-13MWU``) w obu trybach, więcej zwrotów opisowych
+# (``z podstawowym przeznaczeniem na``, ``możliwość lokalizacji``, ``dopuszcza się``), jawne powody braku sekcji
+# (``ZONE_NOT_IN_DOCUMENT``, ``SCANNED_NO_OCR``); strona dowodu opisowego w trybie blokowym pochodzi z bloku.
+MPZP_PARSER_VERSION = "mpzp-parser/3.2-det"
 # Tryb zakresu strefy (PV3-06): ``legacy`` skleja tekst kandydackich segmentów (domyślny do
 # czasu Task 20.14), ``blocks`` przypisuje parametry na poziomie bloku strefy z prawdziwym
 # źródłem (strona i zakres znaków) każdej wartości.
@@ -172,6 +177,7 @@ async def _run_parse_pipeline(
         for message in extraction.warnings
     ]
     segments = segment_document(extraction)
+    zone_segments: dict[str, list[str]] = {}
     inferred_symbols = False
     active_zone_symbols = zone_symbols
     if not active_zone_symbols:
@@ -225,6 +231,10 @@ async def _run_parse_pipeline(
             zone_section_results = find_zone_sections(segments, active_zone_symbols)
             warnings.extend(_zone_section_warnings_to_parser_warnings(zone_section_results))
             zones = extract_parameters(zone_section_results, segments)
+            zone_segments = {
+                result.zone_symbol: [candidate.segment_id for candidate in result.candidates]
+                for result in zone_section_results
+            }
         if inferred_symbols:
             warnings.append(
                 MpzpParserWarning(
@@ -254,6 +264,7 @@ async def _run_parse_pipeline(
                 )
                 for zone in zones
             ]
+    warnings = refine_missing_section_warnings(warnings, extraction)
     status = validate_result(zones)
     if inferred_symbols and status == "complete":
         status = "partial"
@@ -278,6 +289,7 @@ async def _run_parse_pipeline(
         document_sha256=hashlib.sha256(document.content).hexdigest(),
         extraction_method=extraction.extraction_method,
         parser_version=MPZP_PARSER_VERSION_BLOCKS if scope_mode == "blocks" else MPZP_PARSER_VERSION,
+        zone_segments=zone_segments,
     )
 
 
@@ -288,12 +300,16 @@ def _attach_evidence_metadata(
     document_sha256: str,
     extraction_method: str,
     parser_version: str = MPZP_PARSER_VERSION,
+    zone_segments: Mapping[str, Sequence[str]] | None = None,
 ) -> MpzpParseResult:
     """Dopina do parametru segment/stronę dowodu, hash dokumentu i wersję parsera.
 
     Segment i strona pochodzą z segmentu, który faktycznie zawiera fragment
     dowodowy — a nie z pierwszego segmentu strefy — więc wskazują miejsce
     wartości w uchwale także wtedy, gdy strefa ma kilka kandydatów sekcji.
+    Fragment jest szukany najpierw wśród segmentów-kandydatów TEJ strefy (``zone_segments``, w kolejności
+    rankingu), dopiero potem w całym dokumencie: to samo zdanie (``zakaz zabudowy``) powtarza się w sekcjach
+    wielu stref i wyszukiwanie od początku dokumentu wskazywało stronę cudzej sekcji (AU-102).
     Parametr z trybu blokowego niesie już stronę, zakres znaków i blok z własnego
     dopasowania, więc jego miejsce nie jest ponownie wyszukiwane.
     """
@@ -301,10 +317,16 @@ def _attach_evidence_metadata(
         (segment, " ".join(segment.text.split())) for segment in segments
     ]
 
-    def locate(evidence: str | None) -> DocumentSegment | None:
+    normalized_by_id = {segment.segment_id: (segment, text) for segment, text in normalized_segments}
+
+    def locate(evidence: str | None, zone_symbol: str | None = None) -> DocumentSegment | None:
         if not evidence:
             return None
         needle = " ".join(evidence.split())
+        for segment_id in (zone_segments or {}).get(zone_symbol or "", ()):
+            segment, text = normalized_by_id[segment_id]
+            if needle in text:
+                return segment
         return next(
             (segment for segment, text in normalized_segments if needle in text),
             None,
@@ -325,7 +347,7 @@ def _attach_evidence_metadata(
                     )
                 )
                 continue
-            segment = locate(parameter.source_text)
+            segment = locate(parameter.source_text, zone.zone_symbol)
             parameters.append(
                 parameter.model_copy(
                     update={
