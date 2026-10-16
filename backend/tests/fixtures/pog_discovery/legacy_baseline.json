@@ -1,0 +1,1582 @@
+{
+  "captured_at": "2026-10-12T11:07:43+00:00",
+  "cases": [
+    {
+      "area_sqm": 15893.5,
+      "case_id": "real-001-146510-8-0502-1-3",
+      "elapsed_ms": 3085,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "1465108"
+    },
+    {
+      "area_sqm": 1478.0,
+      "case_id": "real-002-146510-8-0310-82-2",
+      "elapsed_ms": 2737,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 96,
+      "teryt": "1465108"
+    },
+    {
+      "area_sqm": 1780.9,
+      "case_id": "real-003-146510-8-0504-1",
+      "elapsed_ms": 3668,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 96,
+      "teryt": "1465108"
+    },
+    {
+      "area_sqm": 6512.9,
+      "case_id": "real-004-146510-8-0309-1-4",
+      "elapsed_ms": 3266,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "1465108"
+    },
+    {
+      "area_sqm": 26582.7,
+      "case_id": "real-005-126105-9-0001-580-4",
+      "elapsed_ms": 1709,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "1261059"
+    },
+    {
+      "area_sqm": 220.8,
+      "case_id": "real-006-126105-9-0001-49-2",
+      "elapsed_ms": 1548,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "1261059"
+    },
+    {
+      "area_sqm": 24228.0,
+      "case_id": "real-007-126105-9-0001-540-15",
+      "elapsed_ms": 1934,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "1261059"
+    },
+    {
+      "area_sqm": 307.5,
+      "case_id": "real-008-126105-9-0119-181-10",
+      "elapsed_ms": 1885,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "1261059"
+    },
+    {
+      "area_sqm": 1413.9,
+      "case_id": "real-009-246101-1-0056-155-3",
+      "elapsed_ms": 1127,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 46,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 4544.6,
+      "case_id": "real-010-246101-1-0055-68-13",
+      "elapsed_ms": 1607,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 524.2,
+      "case_id": "real-011-246101-1-0081-7",
+      "elapsed_ms": 1562,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 17102.5,
+      "case_id": "real-012-246101-1-0056-110-1",
+      "elapsed_ms": 1814,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 1965.6,
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "elapsed_ms": 2845,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 96,
+      "teryt": "0262011"
+    },
+    {
+      "area_sqm": 3603.8,
+      "case_id": "real-014-026201-1-0010-410-1",
+      "elapsed_ms": 2948,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0262011"
+    },
+    {
+      "area_sqm": 2418.1,
+      "case_id": "real-015-026201-1-0015-530",
+      "elapsed_ms": 3099,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0262011"
+    },
+    {
+      "area_sqm": 6602.7,
+      "case_id": "real-016-026201-1-0009-579-9",
+      "elapsed_ms": 2811,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0262011"
+    },
+    {
+      "area_sqm": 15828.0,
+      "case_id": "real-017-281603-4-0001-496-5",
+      "elapsed_ms": 1983,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 5,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 5,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 5,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 145,
+      "teryt": "2816034"
+    },
+    {
+      "area_sqm": 554.7,
+      "case_id": "real-018-281603-4-0001-358",
+      "elapsed_ms": 2623,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "2816034"
+    },
+    {
+      "area_sqm": 192.2,
+      "case_id": "real-019-281603-4-0001-740",
+      "elapsed_ms": 1481,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "2816034"
+    },
+    {
+      "area_sqm": 7936.2,
+      "case_id": "real-020-281603-4-0002-130",
+      "elapsed_ms": 1767,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "2816034"
+    },
+    {
+      "area_sqm": 675.7,
+      "case_id": "real-021-022104-2-0002-352",
+      "elapsed_ms": 2621,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 96,
+      "teryt": "0221042"
+    },
+    {
+      "area_sqm": 5530.6,
+      "case_id": "real-022-022104-2-0002-288-20",
+      "elapsed_ms": 2999,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0221042"
+    },
+    {
+      "area_sqm": 928.0,
+      "case_id": "real-023-022104-2-0002-776",
+      "elapsed_ms": 2658,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 96,
+      "teryt": "0221042"
+    },
+    {
+      "area_sqm": 3727.7,
+      "case_id": "real-024-022104-2-0002-230-2",
+      "elapsed_ms": 3208,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0221042"
+    },
+    {
+      "area_sqm": 237428.8,
+      "case_id": "real-025-281603-4-0001-431-66",
+      "elapsed_ms": 1711,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "2816034"
+    },
+    {
+      "area_sqm": 265703.1,
+      "case_id": "real-026-281604-5-0011-107",
+      "elapsed_ms": 2814,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "2816045"
+    },
+    {
+      "area_sqm": 2851.3,
+      "case_id": "real-027-246101-1-0001-1043",
+      "elapsed_ms": 1681,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 6,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 174,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 900.0,
+      "case_id": "real-028-246101-1-0004-737-26",
+      "elapsed_ms": 1523,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 2,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 2,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 58,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 4270.8,
+      "case_id": "real-029-246101-1-0004-741-132",
+      "elapsed_ms": 1236,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": true,
+        "is_discovery_only": true,
+        "legal_status": "binding",
+        "links": [],
+        "preview_features_found": 5,
+        "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 6,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          },
+          "planning_zones": {
+            "feature_count": 5,
+            "raw_legal_status": "PRAWNIE WIĄŻĄCY LUB REALIZOWANY",
+            "status": "found"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 138,
+      "teryt": "2461011"
+    },
+    {
+      "area_sqm": 6036.6,
+      "case_id": "real-030-026201-1-0009-578-2",
+      "elapsed_ms": 3105,
+      "error": null,
+      "other_requests": 0,
+      "result": {
+        "act_found": false,
+        "is_discovery_only": true,
+        "legal_status": "unknown",
+        "links": [],
+        "preview_features_found": 0,
+        "raw_legal_status": null,
+        "sections": {
+          "downtown_area": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "ouz": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_act": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          },
+          "planning_zones": {
+            "feature_count": 0,
+            "raw_legal_status": null,
+            "status": "empty"
+          }
+        },
+        "source": {
+          "manual_review_required": true,
+          "source_id": "pog_app",
+          "source_name": "REJESTR_URBANISTYCZNY_WMS",
+          "source_url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/wms-pog/wms"
+        },
+        "source_responded": true,
+        "uchwala_date": null,
+        "uchwala_nr": null,
+        "warning_codes": [
+          "POG_DISCOVERY_ONLY",
+          "POG_NOT_FOUND_IN_SOURCE",
+          "POG_RU_CATALOG_SOURCE"
+        ]
+      },
+      "ru_requests": 288,
+      "teryt": "0262011"
+    }
+  ],
+  "label": "legacy",
+  "note": "Stan PRZED AU-105: discovery POG przez RU WMS GetFeatureInfo (punkt x warstwa APP.POG.*), zamrozony 2026-10-12 na commicie fcf6a9b skryptem scripts/capture_pog_discovery.py --label legacy na zywym Rejestrze Urbanistycznym. UWAGA: ten stan powstal z kolejnosci osi x,y w bbox WMS 1.3.0, podczas gdy RU dla EPSG:2180 oczekuje polnoc,wschod - zapytania dotyczyly lustrzanych wspolrzednych (zob. ADR-022).",
+  "schema_version": "pog-discovery-capture/1"
+}
