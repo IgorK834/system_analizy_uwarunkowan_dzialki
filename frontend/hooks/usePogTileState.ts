@@ -2,56 +2,53 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getActivePogTileRelease } from "@/lib/api";
+import { getCurrentPogTileState } from "@/lib/api";
 import type { PogStatusFilter } from "@/lib/pogLayers";
 import { POG_STATUS_FILTERS } from "@/lib/pogLayers";
 import { DEFAULT_POG_THEME, isPogThemeId, type PogThemeId } from "@/lib/pogThemes";
-import type { PogReleaseState, PogTileRelease } from "@/lib/types";
+import type { PogStateStatus, PogTileState } from "@/lib/types";
 
-export type { PogReleaseState } from "@/lib/types";
+export type { PogStateStatus } from "@/lib/types";
 
-export type PogReleaseController = PogReleaseState & {
+export type PogStateController = PogStateStatus & {
   /** Jawne ponowienie pobrania metadanych (przycisk „Ponów”), nie odświeżanie w tle. */
   retry: () => void;
   retrying: boolean;
 };
 
 /**
- * Pobiera metadane aktywnego wydania POG raz na sesję mapy (BK-401).
+ * Pobiera metadane bieżącego stanu krajowego POG raz na sesję mapy (BK-401, ADR-026).
  *
- * URL kafli jest przypięty do `release_id` z tej odpowiedzi; aktywowanie nowego
- * wydania w tle nie podmienia źródła w trakcie sesji — inaczej część kafli
- * pochodziłaby z innego stanu danych niż reszta mapy. Nowe wydanie pojawia się
+ * URL-e kafli są przypięte do `state_id` z tej odpowiedzi; import kolejnych gmin w tle nie podmienia źródeł w
+ * trakcie sesji — inaczej część kafli pochodziłaby z innego stanu danych niż reszta mapy. Nowszy stan pojawia się
  * wyłącznie po jawnym ponowieniu (BK-406).
  *
- * Ponowienie nie usuwa ostatnich danych bez informacji: jeśli się nie uda, a
- * wcześniej wczytano wydanie, stan przechodzi w `stale` z tym samym wydaniem i
- * datą ostatniego potwierdzenia; ponowne potwierdzenie tego samego wydania
- * zachowuje ten sam obiekt (źródło mapy nie jest odtwarzane).
+ * Ponowienie nie usuwa ostatnich danych bez informacji: jeśli się nie uda, a wcześniej wczytano stan, wynik przechodzi
+ * w `stale` z tym samym stanem i datą ostatniego potwierdzenia; ponowne potwierdzenie tego samego stanu zachowuje ten
+ * sam obiekt (źródła mapy nie są odtwarzane).
  */
-export function usePogTileRelease(): PogReleaseController {
-  const [state, setState] = useState<PogReleaseState>({ status: "loading", release: null });
+export function usePogTileState(): PogStateController {
+  const [state, setState] = useState<PogStateStatus>({ status: "loading", state: null });
   const [attempt, setAttempt] = useState(0);
   const [retrying, setRetrying] = useState(false);
-  const lastGood = useRef<{ release: PogTileRelease; checkedAt: string } | null>(null);
+  const lastGood = useRef<{ state: PogTileState; checkedAt: string } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    void getActivePogTileRelease({ signal: controller.signal })
+    void getCurrentPogTileState({ signal: controller.signal })
       .then((fetched) => {
         if (controller.signal.aborted) return;
         setRetrying(false);
         if (!fetched) {
           lastGood.current = null;
-          setState({ status: "no_release", release: null });
+          setState({ status: "no_data", state: null });
           return;
         }
-        const previous = lastGood.current?.release;
-        const release =
-          previous && previous.release_id === fetched.release_id ? previous : fetched;
+        const previous = lastGood.current?.state;
+        const pinned = previous && previous.state_id === fetched.state_id ? previous : fetched;
         const checkedAt = new Date().toISOString();
-        lastGood.current = { release, checkedAt };
-        setState({ status: "available", release, checkedAt });
+        lastGood.current = { state: pinned, checkedAt };
+        setState({ status: "available", state: pinned, checkedAt });
       })
       .catch(() => {
         if (controller.signal.aborted) return;
@@ -61,11 +58,11 @@ export function usePogTileRelease(): PogReleaseController {
           previous
             ? {
                 status: "stale",
-                release: previous.release,
+                state: previous.state,
                 checkedAt: previous.checkedAt,
                 reason: "refresh_failed",
               }
-            : { status: "error", release: null },
+            : { status: "error", state: null },
         );
       });
     return () => controller.abort();

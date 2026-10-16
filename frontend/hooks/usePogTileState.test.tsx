@@ -4,80 +4,80 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   POG_MAP_PREFERENCES_KEY,
   usePogMapPreferences,
-  usePogTileRelease,
-} from "@/hooks/usePogTileRelease";
-import { getActivePogTileRelease } from "@/lib/api";
-import { buildPogRelease } from "@/test/pogFixtures";
+  usePogTileState,
+} from "@/hooks/usePogTileState";
+import { getCurrentPogTileState } from "@/lib/api";
+import { buildPogState } from "@/test/pogFixtures";
 
-vi.mock("@/lib/api", () => ({ getActivePogTileRelease: vi.fn() }));
+vi.mock("@/lib/api", () => ({ getCurrentPogTileState: vi.fn() }));
 
-const getReleaseMock = vi.mocked(getActivePogTileRelease);
+const getStateMock = vi.mocked(getCurrentPogTileState);
 
-describe("usePogTileRelease", () => {
-  beforeEach(() => getReleaseMock.mockReset());
+describe("usePogTileState", () => {
+  beforeEach(() => getStateMock.mockReset());
 
-  it("pobiera wydanie raz i nie odświeża go w trakcie sesji", async () => {
-    const release = buildPogRelease();
-    getReleaseMock.mockResolvedValue(release);
-    const { result, rerender } = renderHook(() => usePogTileRelease());
+  it("pobiera stan krajowy raz i nie odświeża go w trakcie sesji", async () => {
+    const state = buildPogState();
+    getStateMock.mockResolvedValue(state);
+    const { result, rerender } = renderHook(() => usePogTileState());
     expect(result.current.status).toBe("loading");
-    await waitFor(() => expect(result.current).toMatchObject({ status: "available", release }));
+    await waitFor(() => expect(result.current).toMatchObject({ status: "available", state }));
     expect(result.current.status === "available" && result.current.checkedAt).toBeTruthy();
     rerender();
-    expect(getReleaseMock).toHaveBeenCalledOnce();
+    expect(getStateMock).toHaveBeenCalledOnce();
   });
 
-  it("BK-406: ponowienie bez zmiany wydania zachowuje obiekt; nieudane daje stale z datą", async () => {
-    const release = buildPogRelease();
-    getReleaseMock.mockResolvedValueOnce(release);
-    const { result } = renderHook(() => usePogTileRelease());
+  it("BK-406: ponowienie bez zmiany stanu zachowuje obiekt; nieudane daje stale z datą", async () => {
+    const state = buildPogState();
+    getStateMock.mockResolvedValueOnce(state);
+    const { result } = renderHook(() => usePogTileState());
     await waitFor(() => expect(result.current.status).toBe("available"));
     const firstCheck = result.current.status === "available" ? result.current.checkedAt : null;
 
-    // To samo wydanie (nowy obiekt JSON) — źródło mapy nie może się przeładować.
-    getReleaseMock.mockResolvedValueOnce(buildPogRelease());
+    // Ten sam stan (nowy obiekt JSON) — źródło mapy nie może się przeładować.
+    getStateMock.mockResolvedValueOnce(buildPogState());
     act(() => result.current.retry());
     expect(result.current.retrying).toBe(true);
     // Podczas ponowienia dotychczasowe dane pozostają.
-    expect(result.current.release).toBe(release);
+    expect(result.current.state).toBe(state);
     await waitFor(() => expect(result.current.retrying).toBe(false));
-    expect(result.current.release).toBe(release);
+    expect(result.current.state).toBe(state);
 
-    getReleaseMock.mockRejectedValueOnce(new Error("503"));
+    getStateMock.mockRejectedValueOnce(new Error("503"));
     act(() => result.current.retry());
     await waitFor(() => expect(result.current.status).toBe("stale"));
-    expect(result.current).toMatchObject({ status: "stale", release, reason: "refresh_failed" });
+    expect(result.current).toMatchObject({ status: "stale", state, reason: "refresh_failed" });
     expect(result.current.status === "stale" && result.current.checkedAt >= (firstCheck ?? "")).toBe(true);
 
-    // Jawne ponowienie może przełączyć na nowsze wydanie.
-    const newer = buildPogRelease({ release_id: 43, version_label: "pog-new" });
-    getReleaseMock.mockResolvedValueOnce(newer);
+    // Jawne ponowienie może przełączyć na nowszy stan (zaimportowano kolejne gminy).
+    const newer = buildPogState({ state_id: 43, act_count: 5 });
+    getStateMock.mockResolvedValueOnce(newer);
     act(() => result.current.retry());
-    await waitFor(() => expect(result.current.release).toBe(newer));
+    await waitFor(() => expect(result.current.state).toBe(newer));
     expect(result.current.status).toBe("available");
 
-    getReleaseMock.mockResolvedValueOnce(null);
+    getStateMock.mockResolvedValueOnce(null);
     act(() => result.current.retry());
-    await waitFor(() => expect(result.current.status).toBe("no_release"));
-    getReleaseMock.mockRejectedValueOnce(new Error("503"));
+    await waitFor(() => expect(result.current.status).toBe("no_data"));
+    getStateMock.mockRejectedValueOnce(new Error("503"));
     act(() => result.current.retry());
     await waitFor(() => expect(result.current.status).toBe("error"));
   });
 
-  it("odróżnia brak lokalnego wydania od błędu warstwy", async () => {
-    getReleaseMock.mockResolvedValueOnce(null);
-    const missing = renderHook(() => usePogTileRelease());
-    await waitFor(() => expect(missing.result.current.status).toBe("no_release"));
+  it("odróżnia brak zaimportowanych gmin od błędu warstwy", async () => {
+    getStateMock.mockResolvedValueOnce(null);
+    const missing = renderHook(() => usePogTileState());
+    await waitFor(() => expect(missing.result.current.status).toBe("no_data"));
 
-    getReleaseMock.mockRejectedValueOnce(new Error("503"));
-    const failed = renderHook(() => usePogTileRelease());
+    getStateMock.mockRejectedValueOnce(new Error("503"));
+    const failed = renderHook(() => usePogTileState());
     await waitFor(() => expect(failed.result.current.status).toBe("error"));
   });
 
   it("ignoruje odpowiedź po odmontowaniu", async () => {
     let resolve: (value: null) => void = () => undefined;
-    getReleaseMock.mockReturnValueOnce(new Promise((done) => (resolve = done)));
-    const { result, unmount } = renderHook(() => usePogTileRelease());
+    getStateMock.mockReturnValueOnce(new Promise((done) => (resolve = done)));
+    const { result, unmount } = renderHook(() => usePogTileState());
     unmount();
     resolve(null);
     await Promise.resolve();
@@ -86,8 +86,8 @@ describe("usePogTileRelease", () => {
 
   it("ignoruje błąd po odmontowaniu", async () => {
     let reject: (error: Error) => void = () => undefined;
-    getReleaseMock.mockReturnValueOnce(new Promise((_, fail) => (reject = fail)));
-    const { result, unmount } = renderHook(() => usePogTileRelease());
+    getStateMock.mockReturnValueOnce(new Promise((_, fail) => (reject = fail)));
+    const { result, unmount } = renderHook(() => usePogTileState());
     unmount();
     reject(new Error("x"));
     await Promise.resolve();
