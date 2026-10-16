@@ -41,9 +41,10 @@ zaimportowanych danych**. Aplikacja działa, ale w stanie ograniczonym. Pomiar n
 
 | Obszar | Co zobaczysz po starcie | Dlaczego i co z tym zrobić |
 |---|---|---|
-| **Warstwa POG** | Pusta. Panel mapy: „Warstwa POG niedostępna: brak lokalnego wydania danych.”; `GET /api/v1/map/pog/releases/active` → `404`. W analizie `pog` nie ma stref, a ostrzeżenia mówią `POG_DISCOVERY_ONLY` i `POG_NOT_FOUND_IN_SOURCE`. | Strefy POG pochodzą wyłącznie z lokalnego, wersjonowanego wydania importowanego z Rejestru Urbanistycznego; obraz niczego nie zawiera. 404 to „brak wydania”, nie „brak planu”. → [import POG](#import-pog). |
+| **Warstwa POG** | Pusta. Panel mapy: „Warstwa POG niedostępna: baza nie zawiera jeszcze zaimportowanych planów ogólnych.”; `GET /api/v1/map/pog/state` → `404`; `GET /api/v1/coverage/pog` pokazuje 0 zaimportowanych gmin. W analizie `pog` nie ma stref, a ostrzeżenia mówią `POG_DISCOVERY_ONLY` i `POG_NOT_FOUND_IN_SOURCE`. | Strefy POG pochodzą wyłącznie z lokalnego, wersjonowanego stanu importowanego z Rejestru Urbanistycznego; obraz niczego nie zawiera. 404 to „brak zaimportowanych gmin”, nie „brak planu”. → [import POG dla kraju](#import-pog-krajowy), [import jednej gminy](#import-pog). |
 | **Wyszukiwanie adresów** | Działa ograniczony fallback UUG. Z 6 typowych zapisów pełnego adresu działa **1**: „Miasto, Ulica N” (także „Miasto, ul. Ulica N” i samo „Miasto”). **0 wyników** dla „Ulica N, Miasto”, „Miasto Ulica N”, „Ulica N Miasto”, „Ulica N” i „kod, Miasto, Ulica N”. | Lokalny indeks adresów jest pusty (`GET /api/v1/search/addresses/status` → `ready: false`). → [indeks adresów](#lokalny-indeks-podpowiedzi-adresowych). Identyfikator działki (`122101_1.0001.1234/2`) i kliknięcie mapy działają od razu. |
-| **Status analizy** | Praktycznie zawsze `partial` — wszystkie 30 działek korpusu referencyjnego dało `200 partial`, `complete` = 0 ([wynik live smoke](docs/evaluation/results/live-smoke/2026-10-08.md)). | `complete` wymaga jednocześnie: stref MPZP z przecięciem wektorowym, wiążącego i bieżącego POG ze statusem pokrycia `available`, dostępnych sekcji krytycznych (ISOK i GDOŚ oraz KIUT, o ile jego kontrakt jest potwierdzony) i braku ręcznej weryfikacji. Bez importu POG nigdy nie zajdzie; po imporcie nadal wymaga wektorowego MPZP, którego wiele gmin nie publikuje. `partial` nie jest błędem — to uczciwy stan niepełnej wiedzy. |
+| **Status analizy** | Wszystkie 30 działek korpusu referencyjnego daje `200 partial`, `complete` = 0 (live smoke [2026-10-12](docs/evaluation/results/live-smoke/2026-10-12.md) i [2026-10-13](docs/evaluation/results/live-smoke/2026-10-13.md)) — ale od AU-104 odpowiedź niesie **pasek kompletności** (`completeness`, `headline`): ile sekcji w zakresie sprawdzono i których brakuje (np. „4 z 10 sekcji sprawdzono; brak: MPZP, strefy POG, OUZ, OZS, OSDIS, droga i dostęp, zabudowa sąsiednia, relacja MPZP–POG. Poza zakresem: uzbrojenie terenu.” — droga i zabudowa dochodzą po [imporcie BDOT10k](#import-bdot10k)). | `complete` ⇔ wszystkie sekcje w zakresie analizy są sprawdzone ([ADR-022](docs/adr/ADR-022-definicja-complete-i-status-naglowkowy.md)); MPZP wystarczy z aktu i dokumentu, lokalny wektor nie jest warunkiem. Na korpusie blokuje to przede wszystkim POG (pokrycie `partial`: discovery wskazuje akt i strefy, ale bez analizy powierzchniowej). `partial` nie jest błędem — to uczciwy stan niepełnej wiedzy. |
+| **Droga i zabudowa sąsiednia** | Sekcje „Transport i dostęp do drogi” oraz „Zabudowa sąsiednia” mają status `no_coverage` (`NO_ACTIVE_RELEASE`): brak zaimportowanego powiatu BDOT10k. `GET /api/v1/coverage/bdot10k` zwraca pustą listę powiatów. | Dane pochodzą z lokalnych wydań BDOT10k (jeden powiat = jedno wydanie); brak wydania to „nie wiadomo”, nigdy „brak drogi” ani „brak budynków”. → [import BDOT10k](#import-bdot10k). |
 | **Czas analizy** | Pierwsza analiza działki: p50 ≈ 16 s, p95 ≈ 42 s (30 działek, równoległość 3, żywe usługi); powtórzenie z cache jest natychmiastowe. | Odpytywane są żywe usługi (ULDK, KIMPZP, KIUT, ISOK, GDOŚ, NMT). |
 
 Wynik `partial` jest zapisywany w cache na **15 minut**, a `complete` na `ANALYSIS_CACHE_MAX_AGE_DAYS` dni (domyślnie 7);
@@ -58,11 +59,40 @@ Wynik `partial` jest zapisywany w cache na **15 minut**, a `complete` na `ANALYS
 docker compose exec backend python -m app.modules.imports pog --source pog_app --act-id 246101-POG --teryt 246101
 ```
 
-`--act-id` to etykieta aktu nadawana przy imporcie, `--teryt` — TERYT gminy (tu Bielsko-Biała). Pomiar: **539 s (≈ 9 min)**,
-1 akt, 1168 stref, 213 obszarów OUZ i 16 śródmiejskich, wydanie opublikowane i aktywne (`releases/active` → `200`).
-Czas zależy od Rejestru Urbanistycznego, a nie od komputera. Po imporcie analiza działki `246101_1.0056.155/3` ma 3 strefy POG
-(`binding`, pokrycie `available`), ale nadal `partial` (brak wektorowego MPZP dla tej działki). Polecenie i kontrakt usług:
+`--act-id` to etykieta aktu nadawana przy imporcie, `--teryt` — TERYT gminy (tu Bielsko-Biała). Pomiar (2026-10-12, `--dry-run`): **123–187 s** przy 4
+równoległych żądaniach stron (dotychczas 359 s; 1 akt, 1168 stref, 213 obszarów OUZ i 16 śródmiejskich); postęp z ETA idzie na stderr co ≤ 10 s, wynik to jedna linia JSON na stdout, a przerwany import (kod wyjścia **3**) wznawia to samo polecenie
+([runbook](docs/operations/pog-import.md), [ADR-024](docs/adr/ADR-024-import-pog-rownolegly-wznawianie-postep.md)). Czas zależy od Rejestru Urbanistycznego, a nie od komputera (ten sam import 2026-10-13 przy wolniejszej odpowiedzi RU i równoległym obciążeniu maszyny: 566 s). Po imporcie analiza działki `246101_1.0056.155/3` ma 3 strefy POG
+(`binding`, pokrycie `available`); status zostaje `partial`, bo MPZP i relacja MPZP–POG nie są w pełni sprawdzone (2026-10-13, po imporcie POG i BDOT10k: „8 z 10 sekcji sprawdzono; brak: MPZP, relacja MPZP–POG”; KIMPZP odpowiadał błędem) — sam brak lokalnego wektora MPZP nie obniża statusu ([ADR-022](docs/adr/ADR-022-definicja-complete-i-status-naglowkowy.md)). Polecenie i kontrakt usług:
 [`docs/data_sources/ru_contracts.md`](docs/data_sources/ru_contracts.md).
+
+<a id="import-pog-krajowy"></a>
+**1a. Import POG dla całego kraju albo wybranych gmin** (z plików GML całych aktów z publicznego API Rejestru Urbanistycznego; [ADR-026](docs/adr/ADR-026-krajowy-stan-pog-rejestr-wersji-aktow.md), [runbook](docs/operations/pog-import.md)):
+
+```bash
+docker compose exec backend python -m app.modules.imports pog-national --plan-only          # plan z wykazu RU, nic nie pobiera
+docker compose exec backend python -m app.modules.imports pog-national --concurrency 3      # cały kraj, przyrostowo i wznawialnie
+docker compose exec backend python -m app.modules.imports pog-national --terc 246101 --terc 026201   # tylko wybrane gminy
+docker compose exec backend python -m app.modules.imports pog-status                        # stan rejestru, wykazu RU i kolejki
+docker compose --profile sync up -d pog-sync                                                # harmonogram: kolejka zleceń + odświeżanie co 24 h
+```
+
+Pomiar 2026-10-13 (żywy RU): pierwsze zasilenie **465 aktów POG w 462 gminach — 23 min, 3,0 GB pobrane, baza 4,0 GB** (plus 3,0 GB artefaktów GML; łącznie ok. 7 GB); 464 akty zaimportowane, jeden (Bolków) odrzucony przez kontrolę jakości
+z powodu wady danych w źródle (udział 150% w strefie). Przebieg przyrostowy bez zmian: 10 s. Import wielu gmin **nie ukrywa żadnej z nich** — mapa, inspektor, analiza, raport i pakiet audytowy czytają jeden krajowy stan
+(numer stanu, `GET /api/v1/map/pog/state`); analiza przypina numer stanu i `content_hash` użytych wersji aktów. Analiza działki w gminie, która ma plan w RU, a nie jest zaimportowana, zleca jej import w tle i mówi o tym w odpowiedzi.
+Pokrycie: `GET /api/v1/coverage/pog` i panel „Pokrycie importu planów ogólnych” na mapie (cztery rozłączne stany gminy: zaimportowana / plan w RU, jeszcze niezaimportowany / brak aktu w wykazie RU / źródło niedostępne —
+żaden z nich nie jest komunikatem „brak planu”).
+
+<a id="import-bdot10k"></a>
+**1b. Import BDOT10k** (jeden powiat; pobiera paczkę ZIP z `opendata.geoportal.gov.pl`, od ok. 5 MB do ok. 90 MB; `--dry-run` czyta i waliduje bez publikacji):
+
+```bash
+docker compose exec backend python -m app.modules.imports bdot10k --powiat 2461
+```
+
+`--powiat` to czterocyfrowy TERYT powiatu (tu Bielsko-Biała; pierwsze dwie cyfry wskazują województwo w adresie paczki). Paczkę można podać z dysku (`--package sciezka/2461_GML.zip`) albo z adresu `https`
+z hosta dozwolonego w katalogu źródeł. Polecenie zapisuje oryginał z SHA-256, importuje osie jezdni (`OT_SKJZ_L`), obrysy budynków (`OT_BUBD_A`) i granicę powiatu (`OT_ADJA_A`), a wynik drukuje jako jedną linię JSON;
+ten sam SHA-256 daje to samo wydanie (import idempotentny), a nowa paczka powiatu wygasza tylko jego poprzednie wydanie. Czas importu w kontenerze deweloperskim: 2–25 s zależnie od powiatu. Pokrycie sprawdzisz:
+`curl 'http://localhost:8000/api/v1/coverage/bdot10k?lon=19.05&lat=49.82'`. Kontrakt, liczności i weryfikacja: [`road_contracts.md`](docs/data_sources/road_contracts.md), [`building_contracts.md`](docs/data_sources/building_contracts.md).
 
 **2. Indeks adresów (`address-index-sync`)** — zob. [Lokalny indeks podpowiedzi adresowych](#lokalny-indeks-podpowiedzi-adresowych)
 (czas i rozmiar zależą od zakresu).
@@ -73,7 +103,7 @@ powstania „demo” to krok 1 (import POG jednej gminy) i analiza działki z te
 #### Przewodnik dla recenzenta (5 kroków)
 
 1. **Uruchom** (pierwszy build trwa kilka minut): `cp .env.example .env && docker compose up --build -d`
-2. **Zaimportuj dane** (≈ 9 min, krok 1 wyżej):
+2. **Zaimportuj dane** (2–10 min zależnie od Rejestru Urbanistycznego, krok 1 wyżej; opcjonalnie krok 1b — droga i zabudowa):
    `docker compose exec backend python -m app.modules.imports pog --source pog_app --act-id 246101-POG --teryt 246101`
 3. **Otwórz** `http://localhost:3000`, zakładka „Identyfikator działki”, wpisz `246101_1.0056.155/3` → „Analizuj działkę”
    (po ≈ 30 s: strefy POG z importu, status `partial` i lista ostrzeżeń).
@@ -121,23 +151,31 @@ zawsze dają `unknown`, nigdy `not_covered`. Ten sam wynik jest zapisywany jako
 `utilities_preview` w snapshotcie analizy i trafia do panelu oraz raportu PDF;
 nie zawiera odległości ani liczby sieci.
 
-### Wektorowa mapa POG z lokalnego wydania (BK-401–403)
+### Wektorowa mapa POG z krajowego stanu (BK-401–403, ADR-026)
 
 Mapa analityczna planu ogólnego nie korzysta z WMS: backend wystawia kafle
-Mapbox Vector Tile z aktywnego, wersjonowanego wydania POG w PostGIS.
+Mapbox Vector Tile z **krajowego stanu POG** (wszystkie zaimportowane gminy)
+w PostGIS, z tabel do wyświetlania `pog_map_*` (EPSG:3857, trzy stopnie
+uproszczenia geometrii zależne od zoomu, indeksy GiST).
 
-- `GET /api/v1/map/pog/releases/active` — metadane aktywnego wydania
-  (`release_id`, SHA-256 artefaktu, zasięg, liczba aktów wg statusu, wersja i
-  SHA stylu) oraz `tile_url_template` **przypięty do `release_id`**; 404, gdy
-  lokalnego wydania nie ma (to nie jest „brak planu”).
-- `GET /api/v1/map/pog/releases/{release_id}` — metadane konkretnego, także
-  historycznego wydania (odtworzenie stanu mapy).
-- `GET /api/v1/map/pog/releases/{release_id}/{z}/{x}/{y}.mvt?edition=all|binding|project`
-  — warstwy `zones`, `ouz`, `downtown`, `social_infrastructure_standard`,
-  `act_boundary`; pusty kafel to `200` z pustym protobufem, błędne z/x/y lub
-  edycja `422`, nieznane wydanie `404`, przekroczony limit obiektów/bajtów
-  `413`; `ETag` + `If-None-Match` → `304`, nagłówki `X-Tile-Cache`,
-  `X-Pog-Release`, `X-Pog-Edition`, `X-Pog-Tile-Schema`, `X-Pog-Tile-Features`.
+- `GET /api/v1/map/pog/state` — metadane bieżącego stanu krajowego
+  (`state_id`, rodzaj zmiany, liczba aktów wg statusu, zasięg, `coverage_areas[]`,
+  `layer_min_zoom`, `map_ready`, wersja i SHA stylu) oraz adresy kafli
+  **przypięte do `state_id`** (osobne źródła `binding` i `project`); 404, gdy
+  baza nie ma zaimportowanych gmin (to nie jest „brak planu”).
+- `GET /api/v1/map/pog/states/{state_id}` — metadane konkretnego, także starszego
+  stanu (odtworzenie stanu mapy).
+- `GET /api/v1/map/pog/states/{state_id}/{z}/{x}/{y}.mvt?edition=all|binding|project`
+  — warstwy `act_boundary` (granica aktu w kolorze statusu, od z0), `zones` (od z11),
+  `ouz`, `downtown`, `social_infrastructure_standard` (od z12); pusty kafel to `200`
+  z pustym protobufem, błędne z/x/y lub edycja `422`, nieznany stan `404`,
+  przekroczony limit obiektów/bajtów `413`; `ETag` + `If-None-Match` → `304`,
+  nagłówki `X-Tile-Cache`, `X-Pog-State`, `X-Pog-Edition`, `X-Pog-Tile-Schema`,
+  `X-Pog-Tile-Features`. Import kolejnej gminy tworzy nowy numer stanu, więc kafle
+  przypięte do starego numeru się nie zmieniają.
+- Pomiar (stan krajowy 464 akty, 518 tys. obiektów): zimne p95 niepustych kafli
+  z6 13 ms, z11 57 ms, z14 30 ms; największy kafel 199 KB; 0 kafli > 500 KB
+  ([wyniki](docs/evaluation/results/pog-national/live/tiles-binding.json)).
 
 Parametry stref w kaflu liczy ta sama funkcja domenowa co analiza działki, więc
 kliknięta cecha ma te same wartości co wynik analizy tej samej geometrii. Limity
@@ -154,26 +192,26 @@ raport PDF). Oba obrazy kopiują go z kontekstu budowania `shared`
 - **Kliknięcie mapy nie uruchamia analizy.** Otwiera inspektor punktu, który
   natychmiast pokazuje z kafli wszystkie obiekty POG w punkcie (nakładające się
   strefy, OUZ/OZS/OSDIS — bez duplikatów z sąsiednich kafli): symbol, cztery
-  parametry (`null` ≠ 0), profile, akt/status z plakietką projektu i wydanie.
+  parametry z jednostkami (`null` ≠ 0), profile po polsku, akt/status z plakietką projektu, uchwała, Dziennik Urzędowy, daty i odnośnik do karty aktu w Rejestrze Urbanistycznym; na przeglądzie krajowym (z0–z13) kliknięcie granicy gminy pokazuje akt i jego status.
   Pełną analizę działki uruchamia dopiero przycisk „Analizuj działkę w tym
   punkcie”. `Escape` zamyka panel i przywraca focus.
-- `GET /api/v1/map/pog/releases/{release_id}/features/{feature_id}` — szczegóły
+- `GET /api/v1/map/pog/states/{state_id}/features/{feature_id}` — szczegóły
   obiektu spoza kafla (pełna etykieta, nazwy profili, uchwała i urzędowy kod
   statusu aktu); `feature_id` to atrybut z kafla (z ukośnikami, kodowany jako
   `%2F`) albo `planning_feature:<id>`; ETag/304, `404`/`409`/`422`.
-- `GET /api/v1/map/pog/releases/{release_id}/summary?act_id=…` albo
+- `GET /api/v1/map/pog/states/{state_id}/summary?act_id=…` albo
   `?teryt=…&edition=binding|project` — struktura powierzchniowa stref aktu lub
   gminy (`area_sqkm`, `share_pct`, `zone_count`, `is_complete`, jawny mianownik,
   luka, nakładanie) policzona w EPSG:2180 **przy imporcie** (migracja `024`),
   bez obliczeń przestrzennych w HTTP; ETag/304. Brak granicy aktu daje
   `share_pct = null`, nie 100%. Wydanie opublikowane przed migracją `024`
   uzupełnia ponowny import jego artefaktu.
-- Metadane wydania mają `coverage_areas[]` (zasięg i kompletność każdego aktu).
+- Metadane stanu mają `coverage_areas[]` (zasięg i kompletność każdego aktu).
   Panel mapy pokazuje stan warstwy `loading | available | partial | no_coverage
   | error | stale` (niezależny od statusu prawnego), datę danych, przycisk
   „Ponów wczytanie warstwy” (zachowuje dotychczasowe dane) i stałą plakietkę
   „projekt / dane niewiążące”. Projekt ma też własny wzór na mapie
-  (`style_version` `2026.09.29-1` w `shared/pog-presentation.json`).
+  (`style_version` `2026.10.14-1` w `shared/pog-presentation.json`; `overview_color` dla przeglądu krajowego).
 
 Decyzje: `docs/adr/ADR-009-pog-inspector-area-summaries-layer-state.md`.
 
@@ -307,6 +345,47 @@ Decyzje: `docs/adr/ADR-011-section-quality-matrix-and-audit-package.md`; odbiór
 
 Decyzje: `docs/adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md`, `docs/adr/ADR-021-mpzp-zone-section-detection.md`; analiza przyczyn:
 `docs/evaluation/au-102-zone-section-causes.md`; odbiór: `docs/evaluation/au-101-103-verification.md`.
+
+### Kompletność analizy, discovery POG i import POG (AU-104–AU-106)
+
+- **Kompletność (AU-104).** `AnalyzeResponse.completeness` i `headline` zastępują sztywną plakietkę `partial`; `status` zostaje dla zgodności i wynika z kompletności. Migracja `035_completeness`
+  (`analyses.completeness` JSONB, nullable; `result_contract_version` poszerzone do 128 znaków, a w `036_bdot10k_context` do 256), `COMPLETENESS_RESULT_SCHEMA_VERSION` 1.0 w sygnaturze cache, raport `report-v2/2026.10.12-1`, pakiet audytowy `audit-exporter/1.4.0`.
+  Live smoke raportuje histogram brakujących sekcji i podstawę ustalenia MPZP. Decyzja: [ADR-022](docs/adr/ADR-022-definicja-complete-i-status-naglowkowy.md).
+- **Discovery POG w RU (AU-105).** Cztery zapytania WFS z `bbox` kafla zamiast pętli „punkt × ~48 warstw WMS”: **4–5 żądań HTTP na analizę** (przed: 46–288), budżet `RU_POG_REQUEST_BUDGET` = 6 z alarmem
+  `ru_pog.budget_exceeded` w `GET /health/upstream`, cache zapytań (typ, kafel) 24 h z deduplikacją, wyłącznik `RU_POG_DISCOVERY_ENABLED`. **Poprawiono błąd osi:** RU czyta `bbox` dla `EPSG:2180` w kolejności północ,wschód;
+  poprzedni silnik odpytywał lustrzane współrzędne (na korpusie 9 fałszywych i 5 przeoczonych wyników `binding`). `POG_RESULT_SCHEMA_VERSION` 2.5. Decyzja i porównanie: [ADR-023](docs/adr/ADR-023-discovery-pog-ru-wfs-budzet-zadan.md).
+- **Import POG (AU-106).** `--concurrency`, `--fresh`, `--no-resume`, `--progress-interval`; stderr z postępem, stdout z JSON, kody wyjścia 0/1/2/3; checkpoint `import_runs.checkpoint` i magazyn stron. Zob. [runbook](docs/operations/pog-import.md)
+  i [ADR-024](docs/adr/ADR-024-import-pog-rownolegly-wznawianie-postep.md); odbiór wszystkich trzech zadań: [au-104-106-verification.md](docs/evaluation/au-104-106-verification.md).
+
+### POG dla całej Polski: rejestr wersji aktów, import krajowy, mapa i analiza (ADR-026; issues #300, #258, #301, #335, #303)
+
+- **Błąd modelu i jego poprawka.** Dotychczas aktywne było jedno wydanie POG na źródło, więc import gminy B ukrywał gminę A w analizie, kafelkach i inspektorze (test odtwarzający: `backend/tests/test_pog_multi_commune.py`,
+  zapis czerwonego przebiegu w `docs/evaluation/results/pog-national/regression-before-fix.txt`). Teraz o widoczności decyduje **temporalny rejestr aktywnych wersji aktów** (`pog_registry_entries` nad rosnącymi numerami stanów
+  `pog_registry_states`); wydanie jest rekordem audytowym przebiegu. Migracja **`037_pog_registry`** (obecny head) zamienia istniejące aktywne wydanie POG w pierwszy stan i przywraca akty ukryte przez dawny model; tabele mapy dla
+  istniejących danych buduje `pog-map-rebuild` (`map_ready = false` do tego czasu).
+- **Import i odświeżanie.** `pog-national` (wykaz RU → pliki GML aktów → rejestr; równolegle, wznawialnie, przyrostowo, z wycofywaniem aktów, które RU wycofało — bez kasowania historii), usługa `pog-sync` z blokadą przed dublami,
+  kolejka zleceń i import „na żądanie” (analiza mówi o zleceniu wprost). Pomiar i kody przyczyn: [runbook](docs/operations/pog-import.md). `/health/imports` pokazuje stan, opóźnienie i kolejkę.
+- **Analiza.** `pog.registry_state_id` i `pog.pinned_act_versions` (identyfikator i `content_hash` każdej użytej wersji aktu) odtwarzają raport i pakiet audytowy po późniejszych importach; cache analiz jest unieważniany zmianą
+  aktów **gminy działki**, a nie importem innej gminy. `POG_RESULT_SCHEMA_VERSION` 2.7: strefy-okruchy styku (udział < 0,5% **i** pole < 1 m², progi `POG_SLIVER_MIN_PCT`/`POG_SLIVER_MIN_SQM`) są poza tabelą stref, zachowane w
+  `pog.topological_slivers` z flagą i opisane w raporcie i w UI. `docs/report/field-mapping.md` odtworzony.
+- **Mapa i pokrycie.** Kafle z krajowego stanu (zob. wyżej), przegląd statusów od z0, panel pokrycia importu i `GET /api/v1/coverage/pog`. Odbiór (komendy, liczby, zrzuty ekranu 1440×900 i 375×812):
+  [pog-national-verification.md](docs/evaluation/pog-national-verification.md).
+- **Nie zrobiono / do decyzji:** widok 3D zabudowy (z13), kafle granic gmin i powiatów, ortofotomapa i wyszukiwarka działek na mapie POG; Warszawa i Kraków nie mają bieżącego aktu POG w wykazie RU (2026-10-13);
+  wartości „Proponowany” (redystrybucja kafli, parametry odświeżania, akt z wadą danych) — zob. ADR-026.
+
+### Droga i zabudowa sąsiednia z BDOT10k (Task 23.1–23.3; BK-304, BK-305)
+
+- **Źródło.** Paczki powiatowe BDOT10k (GML 3.2, EPSG:2180) importowane poleceniem z kroku 1b. Kanału EGiB/KIEG dla budynków **nie ma** (usługa jest WMS-only i zabrania automatycznego pobierania) —
+  budynki pochodzą z `OT_BUBD_A`, więc wynik to „kontekst istniejącej zabudowy”, nie obrys ewidencyjny. Wydanie = powiat (`data_releases.scope_key`, migracja `036_bdot10k_context`).
+- **Droga (`road_context`).** Odległość od poligonu działki do osi jezdni w EPSG:2180, promienie 25 → 500 m, relacja `intersects`/`touches`/`disjoint`, kategoria zarządzania i klasa drogi. Wynik **nie potwierdza prawnego dostępu do drogi publicznej**
+  i nie zawiera takiego pola; to zdanie jest w API, UI, PDF i pakiecie audytowym.
+- **Zabudowa (`neighbour_buildings`).** Budynki na działce i w buforach 50/100/200 m (liczba, pole, pokrycie, odległości, kondygnacje), bez nazw i właścicieli; budynek liczy się raz.
+- **Statusy rozłączne:** `available`, `no_match` (nic w ograniczonym promieniu — nie dowód braku drogi), `no_coverage` (brak wydania dla obszaru), `unavailable` (błąd/limit), `unknown` (zapis sprzed sekcji).
+- **Kontrakt:** `ROAD_RESULT_SCHEMA_VERSION` i `BUILDINGS_RESULT_SCHEMA_VERSION` 1.0 w sygnaturze cache, macierz jakości `quality-v1.1` (11 sekcji), kompletność `completeness/1.1` (transport i zabudowa w zakresie),
+  raport `report-v2/2026.10.13-1`, pakiet audytowy `audit-exporter/1.5.0`. Ustawienia: `ROAD_CONTEXT_ENABLED`, `BUILDING_CONTEXT_ENABLED` (wyłączenie daje `unavailable`/`FEATURE_DISABLED`, nie brak obiektu).
+- **Niezależna weryfikacja:** 30 działek korpusu porównano z pomiarem Shapely z `gml:posList` oraz z pomiarem GDAL (`backend/scripts/verify_bdot10k_with_gdal.py`; **nie QGIS**) — 30/30 zgodnych.
+
+Decyzje i pozycje do potwierdzenia przez właściciela: [ADR-025](docs/adr/ADR-025-bdot10k-droga-i-zabudowa-sasiednia.md); odbiór: [bdot10k-road-buildings-verification.md](docs/evaluation/bdot10k-road-buildings-verification.md).
 
 ### Lokalny indeks podpowiedzi adresowych
 
@@ -645,11 +724,11 @@ docker compose run --rm --user root --entrypoint chown backend \
   `UPSTREAM_INVALID_RESPONSE` (502), `PERSISTENCE_FAILED` (503, zapis wyniku
   odrzucony przez bazę). Liczniki odpowiedzi ULDK: `GET /health/upstream`
   (`X-Admin-Key`). Decyzje: [ADR-015](docs/adr/ADR-015-api-errors-request-id-and-text-column-policy.md).
-- **Status analizy**: `complete` tylko wtedy, gdy są jednocześnie strefy MPZP z przecięciem wektorowym (bez trybu
-  ręcznego i discovery), wiążący, bieżący POG z pokryciem `available`, dostępne sekcje ISOK i GDOŚ (oraz KIUT, o ile jego
-  kontrakt jest potwierdzony) i żadne źródło nie wymaga ręcznej weryfikacji — w przeciwnym razie `partial`. Brak MPZP albo
-  POG zawsze daje `partial`, więc na świeżej instalacji `partial` jest normą (zob. „Stan po pierwszym uruchomieniu”).
-  Znana luka „brak potwierdzonego kontraktu KIUT/GESUT” jest tylko ostrzeżeniem i nie blokuje `complete`.
+- **Status analizy** (AU-104, [ADR-022](docs/adr/ADR-022-definicja-complete-i-status-naglowkowy.md)): `complete` ⇔ **wszystkie sekcje w zakresie analizy są sprawdzone**
+  (`available` albo potwierdzone `no_match` dla MPZP); w przeciwnym razie `partial`. MPZP może być ustalone z aktu i dokumentu (`assignment_method=document_candidate`) — lokalny wektor stref jest wyższą jakością,
+  nie warunkiem; symbol podany ręcznie, sprzeczne parametry i wektor niepokrywający całej działki nie są sprawdzeniem. Poza zakresem (jawnie wymienione): transport, uzbrojenie terenu (tylko podgląd KIUT) i relacja
+  MPZP–POG przy `no_match`. Status prawny POG i ręczna weryfikacja nie obniżają kompletności (są w `completeness.notes` i w komunikacie). Odpowiedź niesie `completeness` (sekcje, stany, podstawa) i `headline`;
+  UI pokazuje pasek kompletności, PDF — to samo na stronie 1. `partial` jest normą tam, gdzie POG nie ma pokrycia `available`.
 
 Cache analiz obejmuje oba statusy: `complete` jest serwowany przez `ANALYSIS_CACHE_MAX_AGE_DAYS` dni (domyślnie 7), a
 `partial` przez **15 minut**; `waiting_for_user_input` nie jest cache'owany. Podpis cache obejmuje wersje danych z katalogu, ale

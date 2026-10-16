@@ -580,6 +580,102 @@ sources:
       bez rasterio. Adapter:
       app/modules/analysis/infrastructure/terrain_raster.py.
 
+  - source_id: bdot10k
+    name: "Baza Danych Obiektów Topograficznych (BDOT10k) — paczki powiatowe GML, schemat 2021"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: file
+    capabilities_url: "https://mapy.geoportal.gov.pl/wss/service/PZGIK/BDOT/WFS/PobieranieBDOT10k?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities"
+    file_url: "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/{woj}/{powiat}_GML.zip"
+    type_names: null
+    layers: null
+    protocol_version: "BDOT10k schemat 2021 (GML 3.2)"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      Strona BDOT10k w Geoportalu (www.geoportal.gov.pl) podaje, że baza jest
+      dostępna bezpłatnie i możliwa do dowolnego wykorzystania, a GetCapabilities
+      usługi PobieranieBDOT10k deklaruje Fees=NONE i AccessConstraints=NONE
+      (sprawdzono 2026-10-13). To podstawa pobrania i przetwarzania paczek;
+      nie jest osobnym oświadczeniem o redystrybucji, więc w pakiecie audytowym
+      dopuszczamy ostrożnie wyłącznie warstwy pochodne (derived_only) do czasu
+      potwierdzenia przez właściciela danych.
+    attribution: "Źródło: Baza Danych Obiektów Topograficznych (BDOT10k), GUGiK — paczka powiatowa."
+    expected_update_interval: "not_published"
+    freshness_policy:
+      max_age_days: 365
+      basis: project_decision
+      rationale: >-
+        Decyzja projektowa, nie deklaracja właściciela danych (GUGiK nie
+        publikuje częstotliwości; pole Data_aktualizacji w WFS PobieranieBDOT10k
+        bywa starsze od obiektów w paczce). Wiek liczony jest od pobrania paczki
+        do lokalnego wydania, a rok to granica, po której migawkę zabudowy i
+        dróg traktujemy jako starszą niż reguła. Zmiana wartości zmienia
+        quality_policy_version.
+    redistribution: derived_only
+    sla: "not_published"
+    last_manual_verification: 2026-10-13
+    field_mapping:
+      local_id: "lokalnyId"
+      existence_category: "kategoriaIstnienia"
+      feature_version: "wersja"
+      management_category: "kategoriaZarzadzania"
+      road_class: "klasaDrogi"
+      surface_material: "materialNawierzchni"
+      road_position: "polozenie"
+      road_number: "numerDrogi"
+      street_name: "ulicaNazwa1"
+      surface_width_m: "szerokoscNawierzchni"
+      building_general_function: "funkcjaOgolnaBudynku"
+      building_detailed_function: "funkcjaSzczegolowaBudynku"
+      building_predominant_function: "przewazajacaFunkcjaBudynku"
+      building_floors: "liczbaKondygnacji"
+      geometry_source: "zrodloDanychGeometrycznych"
+      unit_kind: "rodzaj"
+      unit_teryt: "identyfikatorTERYTjednostki"
+      unit_name: "nazwa"
+    resources:
+      - role: package_catalog
+        access_type: wfs
+        url: "https://mapy.geoportal.gov.pl/wss/service/PZGIK/BDOT/WFS/PobieranieBDOT10k"
+        type_name: "ms:BDOT10k_powiaty"
+        protocol_version: "2.0.0"
+        namespace_uri: "http://mapserver.gis.umn.edu/mapserver"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2180"]
+        output_formats: ["application/gml+xml; version=3.2"]
+      - role: county_package
+        access_type: file
+        url: "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/{woj}/{powiat}_GML.zip"
+        layers:
+          - "OT_SKJZ_L"
+          - "OT_BUBD_A"
+          - "OT_ADJA_A"
+        protocol_version: "BDOT10k schemat 2021 (GML 3.2)"
+        namespace_uri: "urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0"
+        source_crs: "EPSG:2180"
+        output_formats: ["application/zip"]
+    notes: >-
+      Kontrakt potwierdzony 2026-10-13 na sześciu realnych paczkach powiatów
+      korpusu (1261, 1465, 2461, 0262, 2816, 0221), patrz
+      docs/data_sources/road_contracts.md (drogi) i building_contracts.md
+      (zabudowa). Ścieżką główną jest pobranie paczki ZIP: WFS PobieranieBDOT10k
+      ma jedną warstwę ms:BDOT10k_powiaty (katalog paczek z geometrią powiatu,
+      polami TERYT, NAZWA_POWIATU, Data_aktualizacji i URL_GML), a nie obiekty
+      topograficzne. Paczka ma jeden plik GML na klasę obiektów, układ
+      EPSG:2180 z osiami (easting northing) i brak pliku XSD. Importujemy trzy
+      klasy: OT_SKJZ_L (osie jezdni), OT_BUBD_A (obrysy budynków) i OT_ADJA_A
+      (granica powiatu = zasięg wydania). Klasy OT_SKDR_L, pokrycie terenu i
+      linie energetyczne pomijamy świadomie. Pola tekstu wolnego (nazwa,
+      informacjaDodatkowa, uwagi) i identyfikatorEGiB nie są importowane.
+      Wydanie jest per powiat (scope_key), aktywne jednocześnie z wydaniami
+      innych powiatów. Adapter importu:
+      app/modules/imports/infrastructure/bdot10k/; adapter zapytań:
+      app/modules/analysis/infrastructure/bdot_repository.py.
+
   # --- ŹRÓDŁA WYMAGAJĄCE UMOWY (dostęp reglamentowany) ----------------------
 
   - source_id: egib
@@ -611,6 +707,42 @@ sources:
       a redystrybucja danych osobowych jest zabroniona. Nie uruchamiać w
       produkcyjnym orchestratorze; ewentualne użycie wymaga jawnie spełnionych
       warunków prawnych i ograniczenia do danych nieosobowych.
+
+  - source_id: kieg_wms
+    name: "Krajowa Integracja Ewidencji Gruntów (KIEG) — zbiorcza usługa WMS"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: research
+    production_ready: false
+    contract_confirmed: false
+    access_type: wms
+    capabilities_url: "https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"
+    file_url: null
+    type_names: null
+    layers: ["dzialki", "budynki"]
+    protocol_version: "1.3.0"
+    source_crs: "EPSG:2180"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["*"]
+    license: >-
+      GetCapabilities deklaruje Fees "Brak opłat" i zakazuje wyłącznie
+      automatycznego pobierania i kolekcjonowania obrazów lub informacji
+      opisowych z GetFeatureInfo (harvesting). Usługa służy do prezentacji.
+    attribution: "Źródło: Krajowa Integracja Ewidencji Gruntów (KIEG), GUGiK."
+    expected_update_interval: "unknown"
+    sla: "unknown"
+    last_manual_verification: 2026-10-13
+    notes: >-
+      Sprawdzone 2026-10-13 (zadanie BK-304): to usługa wyłącznie WMS. Żądanie
+      WFS (SERVICE=WFS, GetCapabilities, wersje 1.1.0 i 2.0.0) zwraca te same
+      WMS_Capabilities co żądanie WMS (identyczny SHA-256, 32318 B; fixture
+      kieg_wfs_request_returns_wms.txt), a GetFeature zwraca stronę HTML usługi,
+      więc wektora budynków EGiB z tego kanału nie ma. Warstwa budynki ma
+      queryable=0, pojedyncze GetFeatureInfo zwraca atrybuty działki (bez
+      geometrii budynku), a harvesting jest zakazany. Usługa nie może być
+      źródłem obliczeń (geometria tylko jako obraz) i służy co najwyżej
+      podglądowi. Zabudowę sąsiednią liczymy z obrysów budynków BDOT10k
+      (OT_BUBD_A), które w paczkach powiatowych pochodzą w większości z EGiB
+      (atrybut zrodloDanychGeometrycznych), patrz building_contracts.md.
 
   - source_id: kiut_gesut
     name: "Krajowa Integracja Uzbrojenia Terenu / GESUT"
@@ -866,12 +998,31 @@ sources:
         protocol_version: "2.0.2"
         source_crs: "EPSG:2180"
         output_formats: ["application/json", "application/xml"]
+      # Kanał podstawowy importu krajowego (ADR-026): publiczne API frontendu Rejestru Urbanistycznego. Wykaz aktów
+      # (POST /query, strony po 100) i plik GML aktu (GET /{publishedActId}/download, ~1 s i 4–56 MB na akt) są jedyną
+      # drogą do GML całego aktu; WFS ``ru_wfs`` zostaje zapasem (strony po 10 obiektów). Adres nie jest usługą OGC
+      # z GetCapabilities, więc kontrakt jest przypięty zamrożonymi odpowiedziami z 2026-10-13.
+      - role: ru_published
+        access_type: rest
+        url: "https://rejestr-urbanistyczny.gov.pl/api/public/published"
+        layer: null
+        protocol_version: "ru-public-api/2026-10"
+        source_crs: "EPSG:2180"
+        supported_crs: ["EPSG:2176", "EPSG:2177", "EPSG:2178", "EPSG:2179", "EPSG:2180"]
+        output_formats: ["application/json", "application/octet-stream"]
     notes: >-
       Endpointy i deklaracje pochodzą wyłącznie ze snapshotu GetCapabilities z
       2026-09-23. WFS zmienił od 2026-09-03 CountDefault z 100 na 10 i przestrzeń
       nazw APP z 2.0 na 3.0; klient zawsze wysyła jawne count=100 oraz wersję
-      protokołu. WMS nie deklaruje EPSG:3857 i służy wyłącznie podglądowi oraz
-      discovery. SHA-256 i dokładne chwile pobrania zapisano w manifeście RU.
+      protokołu. WMS nie deklaruje EPSG:3857 i służy wyłącznie podglądowi mapy.
+      Discovery POG na działce (AU-105, ADR-023) idzie przez WFS ru_wfs: jedno
+      zapytanie GetFeature na typ obiektu z bbox kafla; RU zwraca jeden typ na
+      żądanie i strony po 10 obiektów, a dla EPSG:2180 (WMS 1.3.0 i WFS) czyta
+      bbox oraz zwraca posList w kolejności północ,wschód (zweryfikowane
+      2026-10-12). SHA-256 i dokładne chwile pobrania zapisano w manifeście RU.
+      Import krajowy (ADR-026, 2026-10-13) czyta GML całego aktu z zasobu ``ru_published``: lista bieżących wersji
+      (465 aktów POG w 462 gminach, 327 prawnie wiążących) oraz plik GML w układzie PL-2000 strefy gminy (EPSG:2176–2179,
+      oś północ,wschód w ``posList``), przeliczany do EPSG:2180. RU odpowiada HTTP 429 powyżej kilku żądań na sekundę.
 
   - source_id: pog_pilot_krakow
     name: "Plan Ogólny Gminy Kraków — pilotażowy import APP/GML (POG)"

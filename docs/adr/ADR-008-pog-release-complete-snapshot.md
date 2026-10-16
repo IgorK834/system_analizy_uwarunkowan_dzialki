@@ -70,3 +70,20 @@ Dla każdego aktu paczki w `publish_pog`:
 - Dowód: `test_new_release_is_complete_snapshot_including_unchanged_act` i
   `test_reimport_of_identical_artifact_adds_no_versions_and_repairs_nothing_twice`
   (`backend/tests/test_map_tiles.py`, PostGIS + HTTP).
+
+## Aneks (2026-10-13, [ADR-026](ADR-026-krajowy-stan-pog-rejestr-wersji-aktow.md)): wydanie POG nie jest już stanem mapy
+
+Decyzja tego ADR (wydanie = kompletny snapshot *wszystkich aktów paczki*, niezmienione akty kopiowane do nowego wydania) zakładała **jedno aktywne wydanie na źródło**. Przy imporcie
+kilku gmin to założenie jest błędem: `_activate_release` wygaszał inne wydania, a `publish_pog` przenosił do nowego wydania tylko akty z importowanej paczki, więc import gminy B
+odcinał gminę A od analizy, kafli i inspektora (odtworzone testem `test_pog_multi_commune.py`, zapis czerwonego przebiegu: `docs/evaluation/results/pog-national/regression-before-fix.txt`).
+
+Dla źródła `pog_app` ta decyzja jest **zastąpiona przez ADR-026**:
+
+- wydanie (`data_releases`) jest **rekordem audytowym jednego przebiegu/artefaktu** (kto, kiedy, jaki SHA, ile aktów) i dla `pog_app` zostaje nieaktywne (`is_active = false`) — nie wyznacza widocznych danych;
+- widoczność wyznacza **stan krajowy**: zbiór aktywnych wersji aktów w temporalnym rejestrze `pog_registry_entries`; **nie ma kopii „przeniesionych” aktów** (każda wersja aktu jest zapisana raz, wpisem rejestru
+  jest okres jej aktywności);
+- dalej obowiązuje to, co było wartościowe w ADR-008: wersja aktu jest niezmienna i samowystarczalna, ponowny import identycznej treści jest idempotentny (żadnych nowych wersji — zmienia się najwyżej token RU),
+  a zapisany stan można odtworzyć w dowolnej chwili — teraz po numerze stanu (`state_id`), a nie po `release_id`;
+- dla MPZP, BDOT10k i parcel ADR-008 nie jest zmieniany (tam wydanie nadal bywa aktywne i kompletne).
+
+Migracja `037_pog_registry` zamienia dotychczasowe aktywne wydanie POG w pierwszy stan krajowy (rodzaj `migration`) i przywraca akty ukryte przez dawny model (test danych `test_migration_037_data.py`).

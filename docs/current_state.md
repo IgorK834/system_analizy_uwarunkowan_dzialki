@@ -60,8 +60,9 @@ szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
    (BK-204, ADR-005). Symbol (do 40 znaków, także ze spacją, przecinkiem i
    plusem) jest sprowadzany do formy kanonicznej jedną regułą dla API i UI
    (`shared/zone-symbol-rules.json`, aneks PV3-04 w ADR-005).
-5. POG/OUZ ma discovery (także przez WMS), pobieranie wektorów i realne
-   przecięcia. Discovery WMS nie zastępuje geometrii analitycznej. Wewnętrzny
+5. POG/OUZ ma discovery, pobieranie wektorów i realne
+   przecięcia. Discovery w Rejestrze Urbanistycznym idzie od AU-105 przez **WFS `app-pog`** (cztery zapytania z `bbox` kafla, budżet 6 żądań HTTP na
+   analizę, cache 24 h i deduplikacja — [ADR-023](adr/ADR-023-discovery-pog-ru-wfs-budzet-zadan.md)); WMS RU służy wyłącznie podglądowi mapy. Discovery nie zastępuje geometrii analitycznej. Wewnętrzny
    `PogAnalysisResult` potrafi zachować listę stref, ale obecny `PogResult`
    przekazuje do API/bazy/UI/PDF głównie strefę dominującą. Relacja MPZP–POG
    jest informacyjną oceną `compatibility_assessment` par stref
@@ -69,7 +70,7 @@ szkieletu modułu nie oznacza ukończenia jego funkcji. Alembic ma migracje
    uzasadnieniem (BK-205, ADR-005) — nie urzędową wykładnią prawa.
 6. `save_analysis` utrwala działkę, analizę, sekcje, ostrzeżenia, statusy oraz
    `SourceRecord` także dla częściowego wyniku. Odpowiedź może mieć status
-   `complete`, `partial` albo wymagać uzupełnienia. Brak danych źródłowych nie
+   `complete`, `partial` albo wymagać uzupełnienia; od AU-104 status wynika z **kompletności sekcji** (`completeness`, `headline`, [ADR-022](adr/ADR-022-definicja-complete-i-status-naglowkowy.md)). Brak danych źródłowych nie
    jest dowodem braku ograniczenia; `null` nie oznacza zera.
 7. `GET /report/{analysis_id}` odtwarza raport z **zapisanego snapshotu** przez
    Jinja2/WeasyPrint, bez ponownej analizy. ~~Opcjonalna miniatura mapy może
@@ -501,7 +502,7 @@ odbiór: [AU-010](evaluation/au-010-verification.md).
 
 ## Audyt 2026-10-05 — akty MPZP z Rejestru Urbanistycznego, scalenie kanałów (AU-101, Task 22.1, 2026-10-10)
 
-**Niezacommitowane** (drzewo robocze nad `61f26da`). Decyzje:
+**W historii `main`** (commity `ecbcbb7`…`fcf6a9b`; w chwili odbioru były to zmiany niezacommitowane nad `61f26da`). Decyzje:
 [ADR-020](adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md); odbiór: [AU-101–103](evaluation/au-101-103-verification.md).
 
 - **Stan zastany:** brak adaptera RU, `mpzp_acts` i `mpzp_status` (zadanie nie było wykonane). KIMPZP wskazywał akty w punktach bez geometrii (AU-004),
@@ -552,3 +553,84 @@ Decyzje: [ADR-021](adr/ADR-021-mpzp-zone-section-detection.md); przyczyny i pomi
 - **Wersje:** parser `mpzp-parser/3.2-det` (blokowy `3.2-det+scope.2`), `descriptive/2`; kontrakt 3.0 (historia: 2.9); migawka BK-603 zamrożona ponownie po przeglądzie (same dodatki), kalibracja pewności powtórzona
   (ECE finalnego zbioru 0,0588), złote odpowiedzi modelu odtworzone (identyczne).
 - **Weryfikacja (AU-101–AU-103):** backend w kontenerze jak w CI: **4491 passed**, w tym przebiegu 1 niezwiązany błąd (`test_readme_links`: martwy link do nieistniejącej noty `au-011-013-verification.md` w README — naprawiony 2026-10-12), pokrycie **94,59%**; `ruff` czysto, `mypy` bez nowych zgłoszeń; frontend 573 testy, pokrycie 97,78%, `eslint`/`tsc`/`next build` zielone; live smoke korpusu 30/30 HTTP 200, 0 × 5xx; UI/PDF/ZIP sprawdzone na żywo (zob. [odbiór](evaluation/au-101-103-verification.md)).
+
+## Audyt 2026-10-05 — kompletność analizy i status nagłówkowy (AU-104, Task 22.4, 2026-10-12)
+
+Decyzje: [ADR-022](adr/ADR-022-definicja-complete-i-status-naglowkowy.md); odbiór: [AU-104–106](evaluation/au-104-106-verification.md).
+
+- **Stan zastany:** `complete` wymagał wektora MPZP z lokalnego importu (`vector_intersection`), więc w konfiguracji domyślnej status był zawsze `partial` (0 z 22 analiz audytu, 0 z 30 w live smoke) i nie niósł informacji.
+- **Teraz:** `AnalyzeResponse.completeness {checked, total, complete, headline, notes, sections[]}` i `headline` („5 z 8 sekcji sprawdzono; brak: strefy POG, OUZ, OZS, OSDIS, relacja MPZP–POG. Poza zakresem: uzbrojenie terenu, droga i dostęp.”).
+  `complete` ⇔ wszystkie sekcje w zakresie są sprawdzone (`available` albo potwierdzone `no_match`); MPZP może być ustalone z aktu i dokumentu (`assignment_method=document_candidate`), a lokalny wektor jest wyższą jakością,
+  nie warunkiem. Poza zakresem (jawnie wymienione): transport (brak kontraktu źródła — **od Task 23.2–23.3 transport i zabudowa sąsiednia są w zakresie**, reguła `completeness/1.1`, zob. sekcja BDOT10k niżej), uzbrojenie terenu (tylko podgląd KIUT), relacja MPZP–POG przy `no_match`. Status prawny POG, ręczna weryfikacja i świeżość nie obniżają
+  kompletności (są w `notes` i komunikacie). `status` zostaje dla zgodności i wynika z kompletności. Reguła `completeness/1.0` w jednym miejscu (`services/completeness.py`).
+- **Zapis i wersje:** migracja **`035_completeness`** (head; `analyses.completeness` JSONB nullable, bez uzupełniania wstecz; odczyt starego zapisu → `origin=reconstructed`, zapisany `status` bez zmian; **`result_contract_version` poszerzone z 64 do 128 znaków**
+  — kontrakt `…+completeness-v1.0` miał 71 znaków i bez tego każda analiza kończyła się 503; wykryte dopiero w live smoke). `COMPLETENESS_RESULT_SCHEMA_VERSION` 1.0 w `RESULT_CONTRACT_VERSION`; raport `report-v2/2026.10.12-1`; pakiet audytowy
+  `audit-exporter/1.4.0`; `docs/report/field-mapping.md` odświeżony (693 ścieżki).
+- **Prezentacja:** UI — pasek kompletności (`CompletenessBar`) zamiast plakietki `partial`; PDF strona 1 — ten sam komunikat, tabela sekcji i zastrzeżenia; ZIP — `analysis.json: completeness` i wiersz README.
+- **Wynik na korpusie (live smoke 2026-10-12, 30 działek, 0 × 5xx):** `complete` = **0/30**; sprawdzone sekcje: 2 z 8 (1 analiza), 3 z 8 (17), 4 z 8 (10), 5 z 8 (2). Brakowało: strefy POG i OUZ/OZS/OSDIS (30/30: 12 działek ma
+  POG `binding`, ale pokrycie `partial` — discovery bez analizy powierzchniowej; 18 nie ma obiektów POG w RU), relacji MPZP–POG (30/30), MPZP (26/30: błąd KIMPZP albo brak ustalonej strefy), terenu (20/30: WCS NMT „Server disconnected” — w przebiegu godzinę wcześniej 12/30, usługa jest zmienna)
+  i ochrony przyrody (1/30). MPZP sprawdzone w 4 analizach (3 × akt i dokument — Kraków, 1 × `no_match`); lokalnego wektora na korpusie nie ma. **Blokuje POG** (ADR-022). Od końca do końca (`tests/test_completeness_e2e.py`: orkiestrator → PostGIS → API →
+  cache → PDF) `complete` jest osiągalny bez wektora MPZP — strefa z aktu i dokumentu + POG z wektorami + ISOK, GDOŚ i NMT.
+
+## Audyt 2026-10-05 — discovery POG w RU przez WFS, budżet żądań (AU-105, Task 22.5, 2026-10-12)
+
+Decyzje: [ADR-023](adr/ADR-023-discovery-pog-ru-wfs-budzet-zadan.md); odbiór: [AU-104–106](evaluation/au-104-106-verification.md).
+
+- **Stan zastany:** 46–288 żądań `GetFeatureInfo` WMS RU na analizę (4 967 na 30 działek korpusu) **oraz błąd poprawności**: RU czyta `bbox` dla `EPSG:2180` w kolejności północ,wschód (WMS 1.3.0 i WFS), a klient wysyłał wschód,północ — odpytywał
+  lustrzane współrzędne. Z 16 działek korpusu z `binding` w poprzednim silniku 9 (Kraków, gmina 281603) było fałszywych, a 5 działek (Legnica) z obowiązującym POG dostało `unknown`.
+- **Teraz:** `services/pog._discover_from_catalog` pobiera cztery typy (akt, OZS, OUZ, strefy) po jednym zapytaniu WFS z `bbox` kafla 50 m (**4–5 żądań**, 123 na 30 działek, 0,13 s mediana), przynależność do działki rozstrzyga przecięcie w EPSG:2180;
+  port `RuPogFeaturesSource` + adapter `ru_pog_features` + `CachedRuPogFeaturesSource` (cache (typ, kafel) 24 h, deduplikacja równoległych analiz, błąd zapamiętywany 60 s); budżet `RU_POG_REQUEST_BUDGET` = 6 z alarmem `ru_pog.budget_exceeded`
+  w `/health/upstream`; poprawiona tabela osi WMS (`EPSG:2180 → yx`). `POG_RESULT_SCHEMA_VERSION` 2.5 (cache unieważniony).
+- **Porównanie z poprzednim silnikiem:** 7 działek `binding` (Bielsko-Biała) identyczne w polach kontraktu POG; 9 fałszywych `binding` → `unknown`; 5 przeoczonych → `binding` — [test porównawczy](../backend/tests/test_pog_discovery_baseline.py) z zamrożonym stanem „przed” i niezależnym parserem prawdy terenowej.
+  **Kryterium „identyczne jak przed zmianą” nie jest spełnione dla 9 działek, dla których wynik „przed” był błędny — decyzja do potwierdzenia przez właściciela.**
+
+## Audyt 2026-10-05 — import POG: równolegle, z postępem i wznawianiem (AU-106, Task 22.6, 2026-10-12)
+
+Decyzje: [ADR-024](adr/ADR-024-import-pog-rownolegly-wznawianie-postep.md); runbook i pomiary: [operations/pog-import.md](operations/pog-import.md); odbiór: [AU-104–106](evaluation/au-104-106-verification.md).
+
+- **Stan zastany:** import Bielska-Białej (1397 cech) 359 s (zmierzone 2026-10-12; w audycie 5,5 min), strony po 10 pobierane sekwencyjnie, brak wyjścia w tle, brak wznawiania, artefakt z `timeStamp` (inny skrót przy każdym imporcie).
+- **Teraz:** równoległe strony WFS (`--concurrency`, domyślnie 4), postęp z ETA na stderr co ≤ 10 s i jeden JSON na stdout, kody wyjścia 0/1/2/**3** (import niepełny), magazyn stron z SHA-256 i checkpoint w `import_runs.checkpoint`
+  (`pog-download-v1`: `running|interrupted|failed|fetched|succeeded|abandoned`), wznowienie po przerwaniu daje ten sam artefakt i to samo wydanie, artefakt bez `timeStamp`/`next`. RU ignoruje `count` > 10, więc większa strona nie jest dostępna.
+- **Pomiar (żywy RU, `--dry-run`, stary i nowy kod naprzemiennie):** Bielsko-Biała 359 s → 187 s / 123 s (52% / 34%), Legnica 213 s → 105 s (49%), Sopot 205 s → 68 s (33%).
+
+- **Weryfikacja (AU-104–AU-106):** backend w kontenerze jak w CI: **4744 passed**, 0 failed, pokrycie **94,76%**; `ruff` czysto, `mypy` bez nowych zgłoszeń; frontend 51 plików / 597 testów, pokrycie 97,8%, `eslint`/`tsc`/`next build` zielone; live smoke korpusu 30/30 HTTP 200, 0 × 5xx, 123 żądania WFS do RU na 30 analiz (maks. 5 na analizę), `complete` 0/30 (blokuje POG, ADR-022). Zastrzeżenia i punkty do decyzji właściciela: [odbiór](evaluation/au-104-106-verification.md).
+
+## Droga i zabudowa sąsiednia z BDOT10k (Task 23.1–23.3, BK-304/BK-305; #226, #227, #307, #308, #309; 2026-10-13)
+
+**Niezacommitowane** (drzewo robocze nad `fcf6a9b`, razem z AU-104–106). Decyzje i pozycje „Proponowany”: [ADR-025](adr/ADR-025-bdot10k-droga-i-zabudowa-sasiednia.md); kontrakty: [road_contracts.md](data_sources/road_contracts.md),
+[building_contracts.md](data_sources/building_contracts.md); odbiór: [bdot10k-road-buildings-verification.md](evaluation/bdot10k-road-buildings-verification.md).
+
+- **Stan zastany:** issues #226 i #227 były zamknięte, a w kodzie istniał tylko model i przypadek użycia drogi (`find_road_context` na jednym fixture Krakowa) — bez importu, infrastruktury, integracji z analizą, UI, PDF i eksportu; zabudowy sąsiedniej nie było wcale.
+  `transport` był „poza zakresem” w kompletności (brak kontraktu źródła).
+- **Kanał danych:** WFS `PobieranieBDOT10k` wydaje tylko katalog paczek, więc źródłem są paczki powiatowe (GML 3.2, EPSG:2180) z `opendata.geoportal.gov.pl`. EGiB/KIEG dla budynków **nie istnieje** jako kanał wektorowy (odpowiada WMS, warstwa niepytalna, zakaz
+  automatycznego pobierania); budynki pochodzą z `OT_BUBD_A` (85–97% obiektów w korpusie ma geometrię z EGiB). Wpisy katalogu: `bdot10k` (`production`, `contract_confirmed`, `redistribution: derived_only`, świeżość 365 dni od importu) i `kieg_wms` (`research`).
+- **Import:** `python -m app.modules.imports bdot10k --powiat <TERYT> [--package <ZIP|https>] [--dry-run]` → artefakt z SHA-256 → wydanie powiatu (`data_releases.scope_key = powiat:<TERYT>`; po jednym aktywnym wydaniu **na powiat**) → `bdot_roads` (`OT_SKJZ_L`, osie jezdni),
+  `bdot_buildings` (`OT_BUBD_A`), `bdot_releases` (granica powiatu z `OT_ADJA_A` jako zasięg). Migracja **`036_bdot10k_context`** (head w chwili wdrożenia; obecny head to `037_pog_registry`, zob. sekcja o krajowym stanie POG). Sześć powiatów korpusu: 156 tys. osi i 350 tys. budynków, 0 odrzuceń; czasy 2–25 s (emulacja amd64).
+- **Wynik w analizie:** `road_context` (najbliższa oś jezdni: odległość od poligonu działki, relacja, kategoria zarządzania, klasa, promień wyszukiwania 25→500 m) i `neighbour_buildings` (na działce i w buforach 50/100/200 m: liczba, pola, pokrycie, odległości, kondygnacje; do 100 obiektów na liście).
+  Statusy rozłączne: `available`, `no_match`, `no_coverage`, `unavailable`, `unknown`; brak wydania to `no_coverage`, **nigdy „brak drogi” ani „brak budynków”**. Wynik nie zawiera pola prawnego dostępu do drogi publicznej — UI, PDF i pakiet audytowy niosą zdanie, że bliskość geometryczna nie jest potwierdzeniem takiego dostępu.
+- **Kompletność i jakość:** `completeness/1.1` — transport i zabudowa wchodzą do zakresu (poza zakresem zostaje domyślnie tylko uzbrojenie terenu); macierz jakości ma 11 sekcji (`transport`, `buildings`, `source_id=bdot10k`); `no_coverage` nie ma czasu pobrania, więc świeżość jest „nieustalona”.
+- **Wersje i cache:** `road-v1.0`, `buildings-v1.0` w `RESULT_CONTRACT_VERSION`, `quality-v1.1`, raport `report-v2/2026.10.13-1`, `audit-exporter/1.5.0`; `analyses.result_contract_version` poszerzone do 256 znaków; `docs/report/field-mapping.md` odtworzony.
+- **Weryfikacja:** pomiar niezależny (Shapely z `gml:posList` oraz GDAL `ogr2ogr`, **nie QGIS**) 30/30 działek; backend w kontenerze jak w CI: **5011 passed, pokrycie 95,29%**; frontend **54 pliki / 621 testów, pokrycie 97,81%, `eslint`/`tsc`/`next build`/`npm audit` zielone**; `ruff` czysto, `mypy` bez nowych zgłoszeń (17 w bazie).
+  Live smoke 2026-10-13 (30 działek, 0 × 5xx): droga i zabudowa `available` 30/30, zgodność z pomiarem niezależnym 30/30, `complete` nadal 0/30 (POG). Przeglądarka 1440×900 i 375×812, PDF (30 s.) i ZIP zweryfikowane dla działki z wydaniem i poza pokryciem.
+- **Niespełnione / do decyzji:** #226 zakładał EGiB WFS (kanał nie istnieje); porównanie w QGIS wykonano w GDAL; #309 „11 budynków dla `141801_4.0701.23/8`” niesprawdzone (działka poza korpusem, powiat 1418 niepobrany); wartości D1–D8 w ADR-025 czekają na właściciela.
+
+## POG dla całej Polski: krajowy stan, import z GML RU, mapa i analiza (ADR-026; #300, #258, #301, #335, #303; 2026-10-13/14)
+
+- **Błąd i model.** Dotychczas jedno aktywne wydanie POG na źródło: import gminy B ukrywał gminę A w analizie, kafelkach i inspektorze (test `test_pog_multi_commune.py`, czerwony przebieg w `results/pog-national/regression-before-fix.txt`).
+  Teraz **temporalny rejestr aktywnych wersji aktów** (`pog_registry_entries` nad rosnącymi `pog_registry_states`, najwyżej jeden otwarty wpis na akt, numery stanów pod globalną blokadą doradczą); wydanie jest rekordem audytowym i dla `pog_app`
+  zostaje nieaktywne, brak kopii „przeniesionych” aktów. Migracja **`037_pog_registry`** (obecny head): 7 tabel (stany, wpisy, katalog RU `pog_ru_catalog`, kolejka `import_jobs`, `pog_map_acts/zones/overlays`), zamiana dotychczasowego aktywnego wydania w stan
+  `migration`, przywrócenie aktów ukrytych przez dawny model (test danych `test_migration_037_data.py`). ADR-008 dla POG zastąpiony (aneks), ADR-007/009/024 uzupełnione aneksami.
+- **Kanał danych.** Publiczne API RU (wykaz bieżących wersji i plik GML całego aktu w PL-2000; kontrakt, BOM, limit 429, układy: `ru_contracts.md`), zamrożone fixtury `backend/tests/fixtures/ru_national/` (5 stron wykazu i 4 realne akty), skrypt
+  `backend/scripts/capture_ru_pog_national.py`; WFS (ADR-024) zostaje zapasem. **Import:** `pog-national` (równolegle 1–6, wznawialnie, przyrostowo po tokenie `publishedActId` i `content_hash`, wycofania tylko z kompletnego wykazu z blokadą masową, kody wyjścia 0/1/3),
+  `pog-sync` (profil Compose `sync`, blokada doradcza, kolejka, import na żądanie z jawną informacją w odpowiedzi analizy), `pog-withdraw`, `pog-rollback`, `pog-map-rebuild`, `pog-enqueue`, `pog-status`; `GET /health/imports`.
+- **Pomiar (2026-10-13):** pełny import krajowy 434 z 435 aktów w **23,2 min**, **3,0 GB** pobrane, baza **3,96 GB** (+3,0 GB artefaktów), 440 żądań do RU, 0 × HTTP 429; przyrostowy bez zmian 10 s; stan #464: 464 akty w 461 gminach (327 `binding`, 112 `in_progress`, 25 `project`),
+  518 338 obiektów. Jeden akt odrzucony przez kontrolę jakości: Bolków (udział biologicznie czynny 150% w źródle).
+- **Kafle i mapa.** `GET /api/v1/map/pog/state`, `…/states/{state_id}/{z}/{x}/{y}.mvt?edition=binding|project`, `…/features/{id}`, `…/summary`; progi zoomu z serwera (granice aktów od z0, strefy z11, OUZ z12, etykiety z13/z14/z16), osobne źródła obowiązujących i projektów,
+  przegląd krajowy w kolorze statusu (`overview_color`, styl `2026.10.14-1`). **Zimne p95 niepustych kafli: z6 13 ms, z11 57 ms, z14 30 ms; największy kafel 199 KB; 0 kafli > 500 KB.** Silnik: `ST_AsMVT` w backendzie (bez kontenera kafli — wyniki uzasadniają).
+- **Analiza i cache.** `pog.registry_state_id`, `pog.pinned_act_versions`, cache unieważniany zmianą aktów **gminy działki**; krok lokalnej analizy POG p50 51 ms / p95 83 ms; `POG_RESULT_SCHEMA_VERSION` 2.7 (2.6: przypięcie, 2.7: okruchy stref — issue 303); `docs/report/field-mapping.md` odtworzony (834 ścieżki).
+- **UI.** Nowe: panel pokrycia importu (462 gminy w RU / 461 zaimportowanych / 1 czeka, cztery rozłączne stany gminy, ostatnia nieudana próba), inspektor z akt/uchwałą/Dziennikiem/datami/odnośnikami i **profilami jako etykietami (bez `KPT-*`)**, granica aktu na przeglądzie krajowym,
+  komunikaty zależne od zoomu („od przybliżenia 12” zamiast „brak obszarów”), nota o pominiętych okruchach. Glify etykiet hostowane lokalnie (`frontend/public/map-fonts`). Zachowane: wybór i analiza działki, panel wyniku.
+- **Weryfikacja:** backend w kontenerze jak w CI **5233 passed, pokrycie 95,29%** (moduły nowe ≥ 86%), `ruff` czysto, `mypy` bez nowych zgłoszeń (baza 17); frontend **56 plików / 661 testów, pokrycie 97,97%**, `eslint`/`tsc`/`next build`/`npm audit` czysto;
+  live smoke 30 działek: 0 × 5xx, **12/12 działek w gminach z wiążącym POG w RU ma strefy POG (`available`)**, `complete` nadal 0/30 (blokują MPZP i BDOT10k, nie POG); przeglądarka 1440×900 i 375×812. Odbiór: [pog-national-verification.md](evaluation/pog-national-verification.md).
+- **Niespełnione / do decyzji:** brak widoku 3D (z13), kafli granic gmin/powiatów, ortofotomapy i wyszukiwarki działek na mapie POG; Warszawa i Kraków bez aktu w wykazie RU; brak zewnętrznego dashboardu i alertów (jest `/health/imports` i flaga `stale`); wartości „Proponowany”
+  (redystrybucja kafli, parametry odświeżania, akt z wadą danych) w ADR-026.

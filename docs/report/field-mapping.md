@@ -97,6 +97,7 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `pog.zones[].max_*` | 4 | Tabela 4.3 — parametry z jednostkami (bez uśredniania stref) | fakt źródłowy |
 | `pog.zones[].min_*` | 4 | Tabela 4.3 — parametry z jednostkami (bez uśredniania stref) | fakt źródłowy |
 | `pog.zones[].*` | 4 | Tabela 4.2 — strefa (ID, symbol, rodzaj, etykieta, wersja obiektu, GML) | fakt źródłowy |
+| `pog.topological_slivers[].*` | 4 | Nota pod tabelą 4.2 — liczba, pole i udział pominiętych artefaktów styku sąsiednich stref (AU-110); okruchy nie są wierszami tabeli | wynik obliczenia |
 | `pog.dominant_zone_id` | 4 | Tabela 4.2 — oznaczenie „największy udział” (pole pomocnicze) | wynik obliczenia |
 | `pog.ouz[].geometry_geojson` | 4 | Mapa 4 — OUZ (wzór i obrys przerywany) | wynik obliczenia |
 | `pog.ouz[].area_*` | 4 | Tabela 4.4 — OUZ: pole [m²] i udział [%] | wynik obliczenia |
@@ -145,6 +146,28 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `terrain.relief.profile.*` | 6 | Tabela 6.4 i wykres — profil wysokościowy | wynik obliczenia |
 | `terrain.relief.*` | 6 | Tabele 6.2–6.3 — spadek, klasy nachylenia, ekspozycja | wynik obliczenia |
 | `terrain.*` | 6 | Tabela 6.1 — Hmin, Hmax, deniwelacja, siatka, status | wynik obliczenia |
+| `road_context.schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
+| `road_context.nearest.road_geojson` | 7 | *pominięte:* oś jezdni jest w warstwie layers/road_context.geojson pakietu audytowego; PDF podaje odległość w tabeli 7.3 (mapy raportu nie mają warstwy dróg) | wynik obliczenia |
+| `road_context.nearest.link_geojson` | 7 | *pominięte:* najkrótszy odcinek działka → oś jezdni jest w warstwie layers/road_context.geojson pakietu audytowego | wynik obliczenia |
+| `road_context.nearest.distance_m` | 7 | Tabela 7.3 — odległość od poligonu działki do osi jezdni [m] (EPSG:2180) | wynik obliczenia |
+| `road_context.nearest.relation` | 7 | Tabela 7.3 — relacja geometryczna (przecina, styka się, poza działką) | wynik obliczenia |
+| `road_context.nearest.*` | 7 | Tabela 7.3 — kategoria, klasa, numer, ulica, nawierzchnia, położenie ze źródła | fakt źródłowy |
+| `road_context.source.*` | 9 | Tabela 7.3 — przypis źródła; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
+| `road_context.release.*` | 7 | Tabela 7.3 — wydanie danych: powiat, stan danych, import, SHA-256 paczki | metadane |
+| `road_context.interpretation_note` | 7 | Uwaga interpretacyjna pod nagłówkiem „Transport i dostęp do drogi” i w sekcji 10 | metadane |
+| `road_context.*` | 7 | Tabela 7.3 — status, promień i metadane wyszukiwania, liczba osi w kontakcie z działką | wynik obliczenia |
+| `neighbour_buildings.schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
+| `neighbour_buildings.buildings[].geometry_geojson` | 7 | *pominięte:* obrysy budynków są w warstwie layers/neighbour_buildings.geojson pakietu audytowego; PDF podaje tabelę 7.5 (mapy raportu nie mają warstwy budynków) | fakt źródłowy |
+| `neighbour_buildings.buildings[].distance_m` | 7 | Tabela 7.5 — odległość od działki do obrysu [m] | wynik obliczenia |
+| `neighbour_buildings.buildings[].relation` | 7 | Tabela 7.5 — położenie względem działki | wynik obliczenia |
+| `neighbour_buildings.buildings[].overlap_with_parcel_sqm` | 7 | Tabela 7.5 — pole części obrysu na działce (pośrednio: położenie) | wynik obliczenia |
+| `neighbour_buildings.buildings[].*` | 7 | Tabela 7.5 — funkcja, kondygnacje, pole obrysu, źródło geometrii i wersja ze źródła | fakt źródłowy |
+| `neighbour_buildings.on_parcel.*` | 7 | Tabela 7.4 — budynki na działce i pokrycie działki | wynik obliczenia |
+| `neighbour_buildings.buffers[].*` | 7 | Tabela 7.4 — liczba, pola, udział pierścienia, odległość i wielkość obrysów w buforach | wynik obliczenia |
+| `neighbour_buildings.source.*` | 9 | Tabela 7.4 — przypis źródła; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
+| `neighbour_buildings.release.*` | 7 | Tabela 7.4 — wydanie danych: powiat, stan danych, SHA-256 paczki | metadane |
+| `neighbour_buildings.interpretation_note` | 7 | Uwaga pod nagłówkiem „Zabudowa sąsiednia” i w sekcji 10 | metadane |
+| `neighbour_buildings.*` | 7 | Tabele 7.4–7.5 — status, definicja pierścienia, bufory, pole działki i liczba kandydatów | wynik obliczenia |
 | `utilities_preview.source.*` | 9 | Tabela 7.1 — źródło; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `utilities_preview.*` | 7 | Tabela 7.1 — pokrycie powiatu danymi GESUT w KIUT (bez geometrii sieci) | fakt źródłowy |
 | `infrastructure[].network_geometry_geojson` | 7 | Mapa 1 — przebieg sieci (warstwa przybliżenia, bez wniosków obliczeniowych) | przybliżenie |
@@ -154,8 +177,13 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `section_quality.legend` | 8 | Tabela 8.2 — legenda statusów, świeżości i kodów powodów | metadane |
 | `section_quality.sections[].*` | 8 | Tabela 8.1 — macierz sekcji: status, źródło, pobranie, wydanie, weryfikacja, świeżość, powody; tabela 8.3 — wiek na dzień eksportu | metadane |
 | `section_quality.*` | 8 | Tabele 8.1 i 9.3 — wersja polityki, punkt odniesienia, pochodzenie i suma kontrolna macierzy | metadane |
+| `completeness.sections[].*` | 1 | Strona 1 — tabela kompletności: sekcja, stan (sprawdzono/brak/poza zakresem), podstawa ustalenia MPZP, status źródła i znacznik weryfikacji | metadane |
+| `completeness.notes[]` | 1 | Strona 1 — zastrzeżenia pod tabelą kompletności (MPZP bez lokalnego wektora, status prawny POG) | metadane |
+| `completeness.headline` | 1 | Strona 1 — komunikat nagłówkowy kompletności | metadane |
+| `completeness.*` | 1 | Strona 1 — liczba sprawdzonych sekcji, zakres, wersja reguły i pochodzenie kompletności; tabela 9.3 — wersja reguły | metadane |
+| `headline` | 1 | Strona 1 — komunikat nagłówkowy kompletności (wiersz „Kompletność analizy”) | metadane |
 | `warnings[].*` | 8 | Tabela 8.4 — ostrzeżenia analizy (kod, poziom, źródło, treść) | metadane |
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 675.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 834.

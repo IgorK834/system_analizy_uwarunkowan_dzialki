@@ -139,3 +139,9 @@ Po BK-401–403 mapa POG pokazywała wektorowe kafle z przypiętego wydania, ale
   `pog_aggregate_incomplete:<akt>:<przyczyny>` są w wyniku importu.
 - Zmiana stylu (nowe pola) podbiła `style_version`; analizy sprzed zmiany
   rysują się zapisanym snapshotem stylu (ADR-007).
+
+## Aneks (2026-10-13, [ADR-026](ADR-026-krajowy-stan-pog-rejestr-wersji-aktow.md)): inspektor, agregaty i stan warstwy w modelu krajowym
+
+Adresy przeniesiono z wydania na stan krajowy: `GET /api/v1/map/pog/states/{state_id}/features/{feature_id}` i `…/states/{state_id}/summary?act_id=…|teryt=…&edition=…`. Agregat aktu jest związany z wersją aktu, a agregat gminy z numerem
+stanu, w którym powstał (`computed_in_state_id`); zapytanie o starszy stan odtwarza agregaty z tamtego stanu. Stan warstwy (BK-406) jest wyznaczany ze stanu krajowego (`coverage_areas`, `map_ready`) i zdarzeń obu źródeł kafli;
+„poza zasięgiem” znaczy „poza zaimportowanymi gminami” — komunikat odsyła do panelu pokrycia i nigdy nie jest stwierdzeniem braku planu. Inspektor pokazuje też granicę aktu na przeglądzie krajowym (z0–z13).

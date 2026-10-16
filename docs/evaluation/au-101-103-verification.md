@@ -1,6 +1,6 @@
 # Odbiór AU-101, AU-102, AU-103 — akty z Rejestru Urbanistycznego, sekcje stref, jawny stan MPZP (Tasks 22.1–22.3)
 
-Data: 10–11 października 2026 r. Baza kodu: `61f26da` z **niezacommitowanymi** zmianami (wszystkie trzy zadania razem; nic nie zacommitowano ani nie wypchnięto).
+Data: 10–11 października 2026 r. Baza kodu: `61f26da` z **niezacommitowanymi** zmianami w chwili odbioru (wszystkie trzy zadania razem; nic nie zacommitowano ani nie wypchnięto). Stan na 13 października 2026 r.: zmiany są w historii `main` (commity `ecbcbb7`…`fcf6a9b`).
 Decyzje: [ADR-020](../adr/ADR-020-mpzp-acts-ru-channel-precedence-and-state.md) (AU-101/103), [ADR-021](../adr/ADR-021-mpzp-zone-section-detection.md) (AU-102);
 analiza przyczyn AU-102: [au-102-zone-section-causes.md](au-102-zone-section-causes.md).
 

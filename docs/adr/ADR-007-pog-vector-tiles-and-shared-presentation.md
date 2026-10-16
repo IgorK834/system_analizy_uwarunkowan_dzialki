@@ -123,3 +123,10 @@ raportu PDF były definiowane w trzech miejscach (TypeScript, Python, szablon).
 - Zależność BK-104: wydanie musi być kompletnym snapshotem aktów, bo kafle
   filtrują po `data_release_id`; zapewnia to ADR-008 (akty niezmienione są
   przenoszone do nowego wydania).
+
+## Aneks (2026-10-13, [ADR-026](ADR-026-krajowy-stan-pog-rejestr-wersji-aktow.md)): kafle przypięte do stanu krajowego
+
+Punkt 1 („kafle MVT przypięte do `release_id`”) jest zastąpiony: adresy kafli mają postać `/api/v1/map/pog/states/{state_id}/{z}/{x}/{y}.mvt?edition=binding|project`, a metadane bieżącego stanu zwraca
+`GET /api/v1/map/pog/state`. Stan krajowy obejmuje wszystkie zaimportowane gminy, więc import kolejnej gminy nie zmienia kafli przypiętych do wcześniejszego numeru. Obowiązujące i projekty są **osobnymi źródłami wektorowymi**,
+progi zoomu warstw przychodzą z serwera (`layer_min_zoom`), a kafle powstają z tabel do wyświetlania `pog_map_*` jednym zapytaniem `ST_AsMVT`. Punkty 2 (tryby tematyczne tylko przez `setPaintProperty`) i 3 (jeden artefakt
+prezentacji) pozostają w mocy; artefakt ma `overview_color` dla przeglądu krajowego (styl `2026.10.14-1`).
