@@ -110,7 +110,7 @@ def test_layers_without_terrain_relief_or_pog_are_simply_absent() -> None:
     response, _ = load_fixture("multizone")
     bare = response.model_copy(
         update={"pog": None, "terrain": None, "infrastructure": [], "risks": [], "mpzp_zones": [],
-                "parcel": None}
+                "parcel": None, "road_context": None, "neighbour_buildings": None}
     )
     assert _layers(bare, None) == []
     assert _raw_blocks(bare, None) == []

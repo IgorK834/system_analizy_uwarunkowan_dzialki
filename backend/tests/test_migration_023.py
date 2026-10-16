@@ -35,7 +35,7 @@ def test_migration_follows_head_022() -> None:
     assert 'down_revision: Union[str, None] = "022_analysis_terrain"' in migration
     assert "description" not in migration.split('"""', 2)[2].replace("``description``", "")
     assert "+risk-v1.0" in RESULT_CONTRACT_VERSION
-    assert len(RESULT_CONTRACT_VERSION) <= 64
+    assert len(RESULT_CONTRACT_VERSION) <= 224  # String(256) od migracji 036 (zapas 32 znaków)
 
 
 @pytest.mark.integration

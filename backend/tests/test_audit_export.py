@@ -167,6 +167,7 @@ def test_package_contains_the_required_files_sorted_and_only_them() -> None:
     assert layers == {
         "layers/buildable_area.geojson", "layers/flood_risk.geojson", "layers/mpzp_zones.geojson",
         "layers/nature_protection.geojson", "layers/pog_overlays.geojson", "layers/pog_zones.geojson",
+        "layers/road_context.geojson", "layers/neighbour_buildings.geojson",
     }
     for file in package.files:
         safe_entry_name(file.name)
@@ -212,7 +213,7 @@ def test_analysis_json_is_the_snapshot_without_secrets_geometry_and_source_regis
     # Macierz jakości jest zapisana w całości (bez legendy, która jest wyliczana).
     matrix = document["section_quality"]
     assert "legend" not in matrix and matrix["matrix_sha256"] == response.section_quality.matrix_sha256  # type: ignore[union-attr]
-    assert len(matrix["sections"]) == 10
+    assert len(matrix["sections"]) == 11
     assert matrix["policy_version"].startswith("quality-policy/1+")
     assert document["sources_file"] == "sources.json"
     assert {item["path"] for item in document["geometry_files"]} >= {"parcel.geojson", "layers/flood_risk.geojson"}
@@ -553,7 +554,7 @@ def test_offline_verifier_accepts_unpacked_and_zipped_package_and_detects_change
     archive_path.write_bytes(data)
 
     assert verifier.main([str(archive_path)]) == 0
-    assert "OK: 11 plików" in capsys.readouterr().out
+    assert "OK: 13 plików" in capsys.readouterr().out
     assert verifier.main([str(archive_path), "--package-sha256", sha256_hex(data)]) == 0
     assert verifier.main([str(archive_path), "--package-sha256", "0" * 64]) == 1
     assert "zła suma SHA-256 całej paczki" in capsys.readouterr().out
@@ -763,6 +764,6 @@ def test_package_carries_value_conditions_and_documents_them() -> None:
     assert plain["value_kind"] == "unconditional" and plain["conditions"] == []
     readme = package.by_name("README.md").data.decode("utf-8")
     assert "wartości warunkowe i sprzeczności" in readme and "`value_kind`" in readme and "`conditions[]`" in readme
-    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.3.0" and AUDIT_EXPORTER_VERSION in readme
+    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.5.0" and AUDIT_EXPORTER_VERSION in readme
     manifest = json.loads(package.by_name("manifest.json").data)
     assert manifest["exporter_version"] == AUDIT_EXPORTER_VERSION

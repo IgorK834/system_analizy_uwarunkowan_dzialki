@@ -44,11 +44,16 @@ def test_migration_follows_head_030_and_rewrites_no_history() -> None:
     )
 
 
+# Tabele utworzone po 031 mają kolumny ``Text`` od razu we własnej migracji (037 — tabele mapy POG), więc 031 ich nie dotyka.
+CREATED_AFTER_031 = frozenset({"pog_map_acts"})
+
+
 def test_migration_covers_exactly_the_columns_the_policy_declares_as_text() -> None:
     migrated = {(table, column) for table, column, _, _ in _load_migration()._URL_COLUMNS}
     declared = {
         (table, column)
         for table, columns in COLUMN_POLICY.items()
+        if table not in CREATED_AFTER_031
         for column, (category, _) in columns.items()
         if category == TEXT
     }

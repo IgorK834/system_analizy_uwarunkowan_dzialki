@@ -275,3 +275,91 @@ def test_zones_covering_part_of_parcel_are_partial_coverage() -> None:
     assert api_result.legal_status == "binding"
     assert api_result.coverage_status == "partial"
     assert api_result.manual_review_required is True
+
+
+# --- AU-110 / issue 303: strefy-okruchy na styku sąsiednich stref ---------------------------------------------------
+
+
+def _sliver_scenario() -> tuple[Polygon, list[PogVectorFeature]]:
+    """Działka z poważnym udziałem jednej strefy i dwoma okruchami styku (0,10 m² i 0,08 m² — liczby z audytu)."""
+    parcel = Polygon.from_bounds(0, 0, 100, 100)
+    main = _feature(Polygon.from_bounds(0, 0, 100, 99.99), "planning_zone", zone_type="SK", feature_id="SK-1")
+    sw = _feature(Polygon.from_bounds(0, 99.99, 10, 100), "planning_zone", zone_type="SW", feature_id="SW-1")  # 0,10 m²
+    su = _feature(Polygon.from_bounds(10, 99.99, 18, 100), "planning_zone", zone_type="SU", feature_id="SU-1")  # 0,08 m²
+    return parcel, [sw, main, su]
+
+
+def test_slivers_are_kept_out_of_the_zone_table_and_preserved_with_a_flag() -> None:
+    parcel, features = _sliver_scenario()
+
+    result = analyze_pog_vectors(parcel, _vector_data(zones=features))
+    api_result = to_pog_result(result, _decision(result))
+
+    assert [zone.zone_id for zone in result.zones] == ["SK-1"]
+    assert sorted(zone.zone_id for zone in result.topological_slivers) == ["SU-1", "SW-1"]  # type: ignore[type-var]
+    assert result.dominant_zone is not None and result.dominant_zone.zone_id == "SK-1"
+    assert [zone.id for zone in api_result.zones] == ["SK-1"]
+    assert all(zone.topological_sliver for zone in api_result.topological_slivers)
+    assert not any(zone.topological_sliver for zone in api_result.zones)
+    assert api_result.dominant_zone_id == "SK-1"
+    # Powierzchnia okruchów nie przepada: do sumy wlicza się je razem ze strefami (scenariusz nie wypełnia paska 0,0082%),
+    # więc pokrycie pozostaje „available”.
+    covered = sum(zone.area_pct for zone in (*api_result.zones, *api_result.topological_slivers))
+    assert covered == pytest.approx(99.9918, abs=1e-4)
+    assert zones_cover_parcel(result) and api_result.coverage_status == "available"
+    assert spatial_feature_count(result) == 3
+    notes = [warning for warning in result.warnings if warning.code == "POG_TOPOLOGICAL_SLIVERS_OMITTED"]
+    assert len(notes) == 1 and notes[0].severity == "info"
+    assert "Pominięto w tabeli stref 2 artefakty styku" in notes[0].message and "0.18 m²" in notes[0].message
+
+
+def test_a_zone_is_a_sliver_only_when_both_thresholds_hold() -> None:
+    parcel = Polygon.from_bounds(0, 0, 1000, 1000)  # 1 000 000 m²: 0,5% = 5 000 m²
+    main = _feature(Polygon.from_bounds(0, 0, 1000, 990), "planning_zone", zone_type="SK", feature_id="SK")
+    # Udział < 0,5%, ale pole 2 000 m² ≫ 1 m² → prawdziwa, wąska strefa, nie artefakt.
+    narrow = _feature(Polygon.from_bounds(0, 990, 1000, 992), "planning_zone", zone_type="SW", feature_id="narrow")
+    # Pole < 1 m², ale to nadal poniżej 0,5% → okruch.
+    crumb = _feature(Polygon.from_bounds(0, 999.9, 5, 1000), "planning_zone", zone_type="SU", feature_id="crumb")  # 0,5 m²
+
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[main, narrow, crumb]))
+
+    assert [zone.zone_id for zone in result.zones] == ["SK", "narrow"]
+    assert [zone.zone_id for zone in result.topological_slivers] == ["crumb"]
+
+    # Mała działka: pole < 1 m², ale udział ≥ 0,5% → nie jest okruchem (nie spełnia obu progów).
+    tiny_parcel = Polygon.from_bounds(0, 0, 1, 1)
+    tiny = analyze_pog_vectors(
+        tiny_parcel,
+        _vector_data(
+            zones=[
+                _feature(Polygon.from_bounds(0, 0, 1, 0.9), "planning_zone", zone_type="SK", feature_id="a"),
+                _feature(Polygon.from_bounds(0, 0.9, 1, 1), "planning_zone", zone_type="SW", feature_id="b"),
+            ]
+        ),
+    )
+    assert [zone.zone_id for zone in tiny.zones] == ["a", "b"] and tiny.topological_slivers == []
+
+
+def test_when_every_intersection_is_a_sliver_none_is_dropped() -> None:
+    parcel = Polygon.from_bounds(0, 0, 10_000, 10_000)  # 1e8 m²
+    only = _feature(Polygon.from_bounds(0, 0, 0.5, 1), "planning_zone", zone_type="SK", feature_id="only")  # 0,5 m²
+
+    result = analyze_pog_vectors(parcel, _vector_data(zones=[only]))
+
+    assert [zone.zone_id for zone in result.zones] == ["only"] and result.topological_slivers == []
+    assert not any(warning.code == "POG_TOPOLOGICAL_SLIVERS_OMITTED" for warning in result.warnings)
+
+
+def test_sliver_thresholds_come_from_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.settings import settings
+
+    parcel, features = _sliver_scenario()
+    monkeypatch.setattr(settings, "pog_sliver_min_sqm", 0.09)  # tylko 0,08 m² mieści się pod progiem
+
+    result = analyze_pog_vectors(parcel, _vector_data(zones=features))
+
+    assert [zone.zone_id for zone in result.topological_slivers] == ["SU-1"]
+    assert {zone.zone_id for zone in result.zones} == {"SK-1", "SW-1"}
+
+    monkeypatch.setattr(settings, "pog_sliver_min_pct", 0.0)  # przy 0% żaden udział nie jest „poniżej”
+    assert analyze_pog_vectors(parcel, _vector_data(zones=features)).topological_slivers == []

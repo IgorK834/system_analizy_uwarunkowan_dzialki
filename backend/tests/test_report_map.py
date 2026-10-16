@@ -220,7 +220,7 @@ def test_snapshot_freezes_geometry_frame_style_mode_and_releases() -> None:
     assert pog["data_release_ids"] == [12]
     assert pog["data_dates"] == ["2026-09-20T09:29:00+00:00"]
     assert _map(snapshot, "mpzp")["data_release_ids"] == [7]
-    assert snapshot["data"]["data_release_ids"] == [7, 12]
+    assert snapshot["data"]["data_release_ids"] == [7, 12, 21]  # 21 = wydanie BDOT10k (droga/zabudowa; mapy go nie rysują)
     assert drawable_feature_count(pog["layers"]) == 7
 
 

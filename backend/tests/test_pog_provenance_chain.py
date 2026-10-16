@@ -39,7 +39,6 @@ from app.modules.imports.infrastructure.pog.reader import (
 )
 from app.modules.imports.infrastructure.repository import (
     SqlAlchemyImportRepository,
-    active_pog_release,
 )
 from app.modules.imports.infrastructure.wfs import WfsResource
 from app.schemas.analyze import AnalyzeResponse
@@ -175,11 +174,7 @@ async def test_sopot_chain_feature_act_csw_document_and_sha(imported) -> None:
     assert requests[0].url.params["outputSchema"] == "http://www.isotc211.org/2005/gmd"
     assert "(226401)" in requests[0].url.params["constraint"]
 
-    pinned = active_pog_release(session, source_id=source_id)
-    with (
-        patch("app.services.analysis_orchestrator.active_pog_release", return_value=pinned),
-        patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()) as discover,
-    ):
+    with patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()) as discover:
         pog, _ouz, warnings, sources = await _analyze_pog_best_effort(
             _parcel_inside_zone(), "226401", session
         )
@@ -246,11 +241,7 @@ async def test_sopot_chain_feature_act_csw_document_and_sha(imported) -> None:
 async def test_saved_report_keeps_exact_version_without_reading_current_catalog(imported) -> None:
     session, source_id, _outcome, _requests = imported
     parcel = _parcel_inside_zone()
-    pinned = active_pog_release(session, source_id=source_id)
-    with (
-        patch("app.services.analysis_orchestrator.active_pog_release", return_value=pinned),
-        patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()),
-    ):
+    with patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()):
         pog, _ouz, _warnings, sources = await _analyze_pog_best_effort(parcel, "226401", session)
     response = AnalyzeResponse(
         status="partial",

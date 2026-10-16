@@ -39,11 +39,14 @@ def test_migrations_are_additive_chained_and_rewrite_no_history(path: Path, revi
     )
 
 
-def test_chain_has_a_single_head_after_034() -> None:
+def test_chain_has_a_single_head_and_034_follows_033() -> None:
     script = ScriptDirectory.from_config(Config(str(VERSIONS.parents[1] / "alembic.ini")))
-    assert script.get_heads() == ["034_mpzp_status"]
+    assert len(script.get_heads()) == 1  # kolejne migracje (AU-104, Task 23.1, ADR-026) dopisane po 034
     chain = [revision.revision for revision in script.walk_revisions("base", "heads")]
-    assert chain[:3] == ["034_mpzp_status", "033_mpzp_acts", "032_mpzp_discovery"]
+    start = chain.index("036_bdot10k_context")
+    assert chain[start : start + 5] == [
+        "036_bdot10k_context", "035_completeness", "034_mpzp_status", "033_mpzp_acts", "032_mpzp_discovery"
+    ]
 
 
 @pytest.mark.integration

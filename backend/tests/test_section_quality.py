@@ -113,6 +113,7 @@ def test_empty_response_has_every_section_with_explicit_reasons() -> None:
         update={
             "parcel": None, "mpzp_zones": [], "pog": None, "risks": [], "risk_sections": [],
             "terrain": None, "utilities_preview": None, "infrastructure": [], "sources": [],
+            "road_context": None, "neighbour_buildings": None,
         }
     )
     matrix = build_section_quality(response, catalog=_catalog())
@@ -125,8 +126,11 @@ def test_empty_response_has_every_section_with_explicit_reasons() -> None:
         assert item.freshness.reason_code == "FRESHNESS_NO_SOURCE"
         assert item.status in {"unknown", "out_of_scope"}, key
     assert sections["parcel"].reason_codes == ["PARCEL_GEOMETRY_MISSING"]
-    assert sections["transport"].status == "out_of_scope"
-    assert sections["transport"].reason_codes == ["NO_SOURCE_CONTRACT"]
+    # Od Task 23.2–23.3 droga i zabudowa mają kontrakt źródła: zapis bez sekcji to ``unknown``, nie „poza zakresem”.
+    assert sections["transport"].status == "unknown"
+    assert sections["transport"].reason_codes == ["ROAD_CONTEXT_NOT_RECORDED"]
+    assert sections["buildings"].status == "unknown"
+    assert sections["buildings"].reason_codes == ["NEIGHBOUR_BUILDINGS_NOT_RECORDED"]
     assert sections["flood"].status == "unknown" and sections["nature"].status == "unknown"
     assert sections["terrain"].status == "unknown"
 
@@ -230,7 +234,7 @@ def test_missing_catalog_degrades_to_unknown_freshness_without_failing(monkeypat
 def test_real_catalog_has_explicit_per_source_rules_and_never_for_unknown_interval() -> None:
     catalog = load_catalog(CATALOG_PATH)
     with_rules = {e.source_id: e.freshness_policy for e in catalog.sources if e.freshness_policy}
-    assert set(with_rules) == {"isok", "gdos", "nmt", "nmt_wcs"}
+    assert set(with_rules) == {"isok", "gdos", "nmt", "nmt_wcs", "bdot10k"}
     for source_id, policy in with_rules.items():
         assert policy.rationale and policy.basis == "project_decision", source_id
     for entry in catalog.sources:
@@ -585,7 +589,7 @@ def test_snapshot_excludes_legend_and_legend_lists_reasons_present() -> None:
     assert [item.id for item in legend.statuses][:3] == ["available", "partial", "no_coverage"]
     assert {item.id for item in legend.freshness} == {"fresh", "stale", "unknown"}
     codes = {item.code for item in legend.reasons}
-    assert {"MPZP_PARAMETER_CONFLICT", "NO_SOURCE_CONTRACT", "FRESHNESS_NO_POLICY"} <= codes
+    assert {"MPZP_PARAMETER_CONFLICT", "KIUT_PREVIEW_ONLY", "FRESHNESS_NO_POLICY"} <= codes
     assert all(item.label for item in legend.reasons)
 
 

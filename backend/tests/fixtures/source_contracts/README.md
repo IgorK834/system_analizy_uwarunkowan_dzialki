@@ -22,6 +22,8 @@ weryfikowane wobec realnej struktury odpowiedzi usługi, a nie wymyślane.
 | `isok_getfeature.xml` | WFS INSPIRE MZP/MRP | Przycięta realna cecha `nz-core:HazardArea`: klasa prawdopodobieństwa w `qualitativeLikelihood`, pierścienie wewnętrzne, `srsName` w formie HTTP. |
 | `nmt_getminmaxbypolygon.txt` | REST NMT, GUGiK | Pełna realna odpowiedź `GetMinMaxByPolygon` (`text/plain`, format `Klucz<TAB>wartość`). |
 | `nmt_getminmaxbypolygon_brak_pokrycia.txt` | REST NMT, GUGiK | Pełna realna odpowiedź dla obszaru bez danych wysokościowych: sentinel `Hmin 2500` / `Hmax 0`, `POINT(0 0 ...)`. |
+| `bdot10k_wfs_getcapabilities.xml` / `bdot10k_wfs_describe.xml` / `bdot10k_wfs_getfeature_1261.xml` | WFS `PobieranieBDOT10k`, GUGiK | Katalog paczek powiatowych BDOT10k (warstwa `ms:BDOT10k_powiaty`: `TERYT`, `NAZWA_POWIATU`, `Data_aktualizacji`, `URL_GML`). Usługa nie udostępnia obiektów topograficznych, tylko adresy paczek ZIP; opis kontraktu: `docs/data_sources/road_contracts.md`. |
+| `kieg_wfs_request_returns_wms.txt` | KIEG (EGiB), GUGiK | Żądanie `SERVICE=WFS` do `KrajowaIntegracjaEwidencjiGruntow` zwraca `WMS_Capabilities` (warstwa `budynki` niepytalna, skala ≤ 1:2500, zakaz automatycznego pobierania `GetFeatureInfo`). Dowód, że kanał nie nadaje się do obliczeń na budynkach; `docs/data_sources/building_contracts.md`. |
 
 ## Weryfikacja kolejności osi EPSG:2180 (GDOŚ, ISOK)
 

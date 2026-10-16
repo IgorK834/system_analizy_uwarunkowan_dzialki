@@ -151,6 +151,8 @@ def _sparse_response() -> AnalyzeResponse:
             ),
             "utilities_preview": None,
             "infrastructure": [],
+            "road_context": None,
+            "neighbour_buildings": None,
             "warnings": [],
             "sources": [],
             # Macierz z fixture opisuje pełną analizę — ta rzadka jest oceniana od nowa.
@@ -176,7 +178,8 @@ def test_every_empty_section_states_an_explicit_reason() -> None:
     for number, phrase in reasons.items():
         assert phrase in sections[number], (number, sections[number][:400])
     assert "Mapa niedostępna" in sections[1] or "Nie udało się wygenerować map" in sections[1]
-    assert "Nie analizowano" in sections[7]
+    assert "Brak danych nie oznacza braku drogi" in sections[7]
+    assert "Brak danych nie oznacza braku budynków" in sections[7]
     assert "Nie udało się wygenerować map raportu" in sections[10]
     _save_evidence("sparse", pdf)
 
@@ -376,7 +379,7 @@ def test_provenance_section_lists_versions_releases_and_map_hashes() -> None:
     _, pdf = _render("multizone")
     section = _sections(pdf)[9]
     assert "analysis-v9" in section and "report-v2/" in section
-    assert "Wydania: #7, #12." in section and "sig-123" in section
+    assert "Wydania: #7, #12, #21." in section and "sig-123" in section
     snapshot = reference_snapshot("multizone", "zones")
     assert _squash(snapshot["semantic_sha256"]) in _squash(section)
     assert "zgodność z zapisem: tak" in section
@@ -426,7 +429,8 @@ def test_summary_statuses_are_consistent_with_quality_matrix() -> None:
     assert rows["MPZP"]["manual_review"] is True
     assert rows["POG — strefy planistyczne"]["status"] == "available"
     assert rows["Zagrożenie powodziowe (ISOK)"]["status"] == "available"
-    assert rows["Transport i dostęp do drogi"]["status"] == "out_of_scope"
+    assert rows["Transport i dostęp do drogi"]["status"] == "available"
+    assert rows["Zabudowa sąsiednia"]["status"] == "available"
     assert rows["Uzbrojenie terenu (KIUT)"]["status"] == "partial"  # tylko podgląd
     project = _context_rows(load_fixture("project")[0])
     assert project["POG — strefy planistyczne"]["status"] == "available"
@@ -436,3 +440,25 @@ def test_summary_statuses_are_consistent_with_quality_matrix() -> None:
     assert sparse["Zagrożenie powodziowe (ISOK)"]["status"] == "unavailable"
     assert sparse["Teren (NMT)"]["status"] == "unavailable"
     assert sparse["Uzbrojenie terenu (KIUT)"]["status"] == "unknown"
+
+
+def test_report_note_names_the_omitted_slivers_and_is_absent_without_them() -> None:
+    from app.schemas.analyze import PogResult, PogZoneResult
+    from app.services.report import _pog_context, _slivers_note
+
+    def sliver(zone_id: str, area: float, pct: float) -> PogZoneResult:
+        return PogZoneResult(id=zone_id, type="SW", area_sqm=area, area_pct=pct, topological_sliver=True)
+
+    main = PogZoneResult(id="SK", symbol="SK", type="SK", area_sqm=999.9, area_pct=99.99)
+    pog = PogResult(touches_ouz_boundary=False, zones=[main], topological_slivers=[sliver("SW", 0.1, 0.01), sliver("SU", 0.08, 0.01)])
+
+    note = _slivers_note(pog)
+    assert note is not None
+    assert "Pominięto 2 artefakty styku sąsiednich stref (łącznie 0.18 m², 0.02% działki)" in note
+    assert "nie wchodzą do tabeli ani do sumy udziałów wierszy" in note
+    context = _pog_context(pog)
+    assert context is not None and context["slivers_note"] == note
+    assert len(context["zones"]) == 1  # okruchy nie są wierszami tabeli
+    assert _slivers_note(PogResult(touches_ouz_boundary=False, zones=[main])) is None
+    assert "artefaktów styku" in (_slivers_note(PogResult(touches_ouz_boundary=False, zones=[main], topological_slivers=[sliver(str(i), 0.1, 0.01) for i in range(5)])) or "")
+    assert "Pominięto 1 artefakt styku" in (_slivers_note(PogResult(touches_ouz_boundary=False, zones=[main], topological_slivers=[sliver("a", 0.1, 0.01)])) or "")

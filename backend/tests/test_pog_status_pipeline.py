@@ -8,6 +8,7 @@ PostGIS, zapytania repozytorium, wspólną tabelę decyzyjną statusu, kontrakt
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
@@ -25,7 +26,6 @@ from app.modules.imports.domain.pog import PogActRecord
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
 from app.modules.imports.infrastructure.repository import (
     SqlAlchemyImportRepository,
-    active_pog_release,
     find_pog_intersections,
     last_confirmed_pog_status,
 )
@@ -99,16 +99,18 @@ def _publish(
 
 
 async def _analyze(session: Session, source_id: str | None, *, discovery=None):
-    pinned = active_pog_release(session, source_id=source_id) if source_id else None
+    """Analiza z lokalnego stanu krajowego; ``source_id=None`` symuluje brak lokalnych danych (rejestr pusty)."""
     discover = (
         AsyncMock(side_effect=TimeoutError("RU timeout"))
         if discovery is None
         else AsyncMock(return_value=discovery)
     )
-    with (
-        patch("app.services.analysis_orchestrator.active_pog_release", return_value=pinned),
-        patch("app.services.analysis_orchestrator.discover_pog", new=discover),
-    ):
+    with ExitStack() as stack:
+        stack.enter_context(patch("app.services.analysis_orchestrator.discover_pog", new=discover))
+        if source_id is None:
+            stack.enter_context(
+                patch("app.services.analysis_orchestrator.active_pog_state", return_value=None)
+            )
         return await _analyze_pog_best_effort(from_wkt(PARCEL_WKT), TERYT, session)
 
 
@@ -143,9 +145,7 @@ async def test_project_release_is_available_but_never_in_force(
     assert pog.manual_review_required is True
     assert sources[0].data_release_id == release_id
     # Projekt nie jest zwracany przez zapytanie aktów wiążących.
-    assert find_pog_intersections(
-        session, GeometryPayload(PARCEL_WKT), data_release_id=release_id
-    ) == []
+    assert find_pog_intersections(session, GeometryPayload(PARCEL_WKT)) == []
     section = _report_pog_html(pog).lower()
     assert "projekt aktu" in section
     assert "obowiązuj" not in section

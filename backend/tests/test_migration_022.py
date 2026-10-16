@@ -23,7 +23,7 @@ def test_migration_follows_head_021_and_fits_version_column() -> None:
     assert len("022_analysis_terrain") <= 32
     # Upgrade nie wypełnia starych wierszy wartościami wysokości.
     assert "UPDATE analyses SET terrain" not in migration
-    assert len(RESULT_CONTRACT_VERSION) <= 64
+    assert len(RESULT_CONTRACT_VERSION) <= 224  # String(256) od migracji 036 (zapas 32 znaków)
     assert "+terrain-v1.0" in RESULT_CONTRACT_VERSION
 
 
@@ -67,7 +67,7 @@ def test_old_database_upgrades_without_fake_zero_and_downgrade_roundtrips() -> N
 
         columns = {column["name"]: column for column in inspect(engine).get_columns("analyses")}
         assert columns["terrain"]["nullable"] is True
-        assert columns["result_contract_version"]["type"].length == 64
+        assert columns["result_contract_version"]["type"].length == 256  # poszerzone w 035 (64→128) i 036 (→256)
         with engine.connect() as conn:
             raw = conn.execute(
                 text("SELECT terrain FROM analyses WHERE id = :a"), {"a": ids["analysis"]}

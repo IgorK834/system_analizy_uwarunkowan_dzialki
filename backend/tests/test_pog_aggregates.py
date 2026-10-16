@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from app.core.data_sources import DataSourceEntry
 from app.db.session import SessionLocal, get_db
 from app.main import app
-from app.models.versioned import DataRelease, PogAreaSummary
+from app.models.versioned import PogAreaSummary
 from app.modules.imports.application.common import ImportRelease
 from app.modules.imports.application.pog_import import PogSourceBatch, run_pog_import
 from app.modules.imports.domain.pog import (
@@ -48,11 +48,11 @@ from app.modules.imports.domain.pog_aggregates import (
 from app.modules.imports.infrastructure import repository as repository_module
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
 from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
-from app.modules.planning.application.pog_release_queries import (
+from app.modules.planning.application.pog_state_queries import (
     PogAreaSummaryNotFoundError,
-    PogReleaseQueryService,
+    PogStateQueryService,
 )
-from app.modules.planning.application.pog_tiles import PogReleaseNotFoundError
+from app.modules.planning.application.pog_tiles import PogStateNotFoundError
 from app.modules.planning.composition import pog_tile_cache
 from app.modules.planning.domain.pog_area_summary import (
     InvalidPogSummaryQueryError,
@@ -224,33 +224,33 @@ def test_summary_query_normalizes_scope() -> None:
 
 
 class _FakeRepository:
-    def __init__(self, *, release: bool = True, has_summaries: bool = True) -> None:
-        self.release = release
+    def __init__(self, *, state: bool = True, has_summaries: bool = True) -> None:
+        self.state = state
         self.has_summaries = has_summaries
 
-    def release_header(self, release_id: int):  # noqa: ANN201
-        return object() if self.release else None
+    def state_header(self, state_id: int):  # noqa: ANN201
+        return object() if self.state else None
 
-    def feature_rows(self, release_id, ref):  # noqa: ANN001, ANN201
+    def feature_rows(self, state_id, ref):  # noqa: ANN001, ANN201
         return []
 
     def area_summary(self, query):  # noqa: ANN001, ANN201
         return None
 
-    def release_has_area_summaries(self, release_id: int) -> bool:
+    def state_has_area_summaries(self, state_id: int) -> bool:
         return self.has_summaries
 
 
-def test_service_distinguishes_missing_release_legacy_release_and_missing_scope() -> None:
+def test_service_distinguishes_missing_state_legacy_data_and_missing_scope() -> None:
     query = PogAreaSummaryQuery(5, act_id="A")
-    with pytest.raises(PogReleaseNotFoundError):
-        PogReleaseQueryService(_FakeRepository(release=False)).area_summary(query)  # type: ignore[arg-type]
+    with pytest.raises(PogStateNotFoundError):
+        PogStateQueryService(_FakeRepository(state=False)).area_summary(query)  # type: ignore[arg-type]
     with pytest.raises(PogAreaSummaryNotFoundError, match="przed BK-405"):
-        PogReleaseQueryService(_FakeRepository(has_summaries=False)).area_summary(query)  # type: ignore[arg-type]
+        PogStateQueryService(_FakeRepository(has_summaries=False)).area_summary(query)  # type: ignore[arg-type]
     with pytest.raises(PogAreaSummaryNotFoundError, match="aktu 'A'"):
-        PogReleaseQueryService(_FakeRepository()).area_summary(query)  # type: ignore[arg-type]
+        PogStateQueryService(_FakeRepository()).area_summary(query)  # type: ignore[arg-type]
     with pytest.raises(PogAreaSummaryNotFoundError, match="gminy 226401 w edycji project"):
-        PogReleaseQueryService(_FakeRepository()).area_summary(  # type: ignore[arg-type]
+        PogStateQueryService(_FakeRepository()).area_summary(  # type: ignore[arg-type]
             PogAreaSummaryQuery(5, teryt="226401", edition="project")
         )
 
@@ -370,9 +370,14 @@ def client(db_session: Session) -> Iterator[TestClient]:
         app.dependency_overrides.pop(get_db, None)
 
 
-def _summary_url(release_id: int, **params: str) -> str:
+def _summary_url(state_id: int, **params: str) -> str:
     query = "&".join(f"{key}={value}" for key, value in params.items())
-    return f"/api/v1/map/pog/releases/{release_id}/summary?{query}"
+    return f"/api/v1/map/pog/states/{state_id}/summary?{query}"
+
+
+def _state(outcome) -> int:  # noqa: ANN001
+    """Numer stanu krajowego nadany importem (ADR-026)."""
+    return int(outcome.stats["registry_state_id"])
 
 
 SIXTY_FORTY = [("SW", _rect(0, 600)), ("SU", _rect(600, 1000))]
@@ -387,12 +392,12 @@ def test_one_km2_act_split_sixty_forty_via_import_and_http(
     assert outcome.status == "succeeded"
     assert outcome.stats["area_summaries"] == 2  # akt + gmina (edycja binding)
     assert outcome.stats["area_summaries_incomplete"] == 0
-    release_id = int(outcome.data_release_id)  # type: ignore[arg-type]
+    state_id = _state(outcome)
 
-    response = client.get(_summary_url(release_id, act_id=act.act_identifier))
+    response = client.get(_summary_url(state_id, act_id=act.act_identifier))
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["schema"] == "pog-area-summary/1"
+    assert body["schema"] == "pog-area-summary/2"
     assert body["scope"] == "act" and body["legal_status"] == "binding"
     assert body["act_version"] == "20260901T000000"
     assert body["denominator_area_sqkm"] == pytest.approx(1.0)
@@ -405,16 +410,16 @@ def test_one_km2_act_split_sixty_forty_via_import_and_http(
     assert body["is_complete"] is True and body["incomplete_reasons"] == []
     assert body["zone_count"] == 2 and body["act_count"] == 1
     assert body["method_version"] == AGGREGATE_METHOD_VERSION
-    assert body["release_is_active"] is True and body["artifact_sha256"]
+    assert body["state_is_current"] is True and body["artifact_sha256"]
 
     etag = response.headers["etag"]
     assert response.headers["cache-control"].startswith("public, max-age=")
     cached = client.get(
-        _summary_url(release_id, act_id=act.act_identifier), headers={"If-None-Match": etag}
+        _summary_url(state_id, act_id=act.act_identifier), headers={"If-None-Match": etag}
     )
     assert cached.status_code == 304 and cached.content == b""
 
-    municipality = client.get(_summary_url(release_id, teryt=TERYT)).json()
+    municipality = client.get(_summary_url(state_id, teryt=TERYT)).json()
     assert municipality["scope"] == "municipality" and municipality["edition"] == "binding"
     assert [zone["share_pct"] for zone in municipality["zones"]] == [
         pytest.approx(60.0),
@@ -430,14 +435,14 @@ def test_gap_of_point_one_km2_is_persisted_as_incomplete_with_denominator(
         "1POG", [("SW", _rect(0, 600)), ("SU", _rect(700, 1000))], boundary=_rect(0, 1000)
     )
     outcome = _import(db_session, tmp_path, act, label="A")
-    release_id = int(outcome.data_release_id)  # type: ignore[arg-type]
+    state_id = _state(outcome)
     assert outcome.stats["area_summaries_incomplete"] == 2
     assert (
         f"pog_aggregate_incomplete:{act.act_identifier}:missing_area,share_sum_out_of_tolerance"
         in outcome.warnings
     )
 
-    body = client.get(_summary_url(release_id, act_id=act.act_identifier)).json()
+    body = client.get(_summary_url(state_id, act_id=act.act_identifier)).json()
     assert body["is_complete"] is False
     assert body["denominator_area_sqkm"] == pytest.approx(1.0)
     assert body["missing_area_sqkm"] == pytest.approx(0.1)
@@ -455,9 +460,9 @@ def test_act_without_source_boundary_has_null_denominator_not_hundred_percent(
     db_session: Session, client: TestClient, tmp_path: Path
 ) -> None:
     act = _act("1POG", SIXTY_FORTY, boundary=None)
-    release_id = int(_import(db_session, tmp_path, act, label="A").data_release_id)  # type: ignore[arg-type]
+    state_id = _state(_import(db_session, tmp_path, act, label="A"))
 
-    body = client.get(_summary_url(release_id, act_id=act.act_identifier)).json()
+    body = client.get(_summary_url(state_id, act_id=act.act_identifier)).json()
     assert body["denominator_area_sqm"] is None and body["denominator_source"] is None
     assert body["share_sum_pct"] is None and body["missing_area_sqm"] is None
     assert [zone["share_pct"] for zone in body["zones"]] == [None, None]
@@ -467,8 +472,8 @@ def test_act_without_source_boundary_has_null_denominator_not_hundred_percent(
     ]
     assert body["is_complete"] is False and body["incomplete_reasons"] == ["no_boundary"]
 
-    # Metadane wydania (BK-406) przenoszą tę samą kompletność do stanu mapy.
-    release = client.get(f"/api/v1/map/pog/releases/{release_id}").json()
+    # Metadane stanu (BK-406) przenoszą tę samą kompletność do stanu mapy.
+    release = client.get(f"/api/v1/map/pog/states/{state_id}").json()
     assert release["coverage_areas"] == [
         {
             "act_id": act.act_identifier,
@@ -498,10 +503,10 @@ def test_municipality_summary_does_not_double_count_overlapping_acts(
         "3POG", [("SJ", _rect(0, 1000))], boundary=_rect(0, 1000), legal_status="project"
     )
     outcome = _import(db_session, tmp_path, older, newer, project, label="A")
-    release_id = int(outcome.data_release_id)  # type: ignore[arg-type]
+    state_id = _state(outcome)
     assert outcome.stats["area_summaries"] == 5  # 3 akty + gmina binding + gmina project
 
-    body = client.get(_summary_url(release_id, teryt=TERYT, edition="binding")).json()
+    body = client.get(_summary_url(state_id, teryt=TERYT, edition="binding")).json()
     assert body["act_ids"] == [newer.act_identifier, older.act_identifier]
     assert body["act_count"] == 2
     assert body["denominator_area_sqkm"] == pytest.approx(1.5)
@@ -516,14 +521,14 @@ def test_municipality_summary_does_not_double_count_overlapping_acts(
     assert body["is_complete"] is True
 
     # Projekt nie trafia do edycji wiążącej — ma własny agregat gminy.
-    project_body = client.get(_summary_url(release_id, teryt=TERYT, edition="project")).json()
+    project_body = client.get(_summary_url(state_id, teryt=TERYT, edition="project")).json()
     assert project_body["act_ids"] == [project.act_identifier]
     assert [zone["zone_code"] for zone in project_body["zones"]] == ["SJ"]
 
-    missing = client.get(_summary_url(release_id, act_id="nie-istnieje"))
+    missing = client.get(_summary_url(state_id, act_id="nie-istnieje"))
     assert missing.status_code == 404 and "nie zawiera agregatu" in missing.json()["detail"]
-    assert client.get(_summary_url(release_id)).status_code == 422
-    assert client.get(_summary_url(release_id, teryt="12")).status_code == 422
+    assert client.get(_summary_url(state_id)).status_code == 422
+    assert client.get(_summary_url(state_id, teryt="12")).status_code == 422
     assert client.get(_summary_url(987_654_321, act_id="x")).status_code == 404
 
 
@@ -532,7 +537,7 @@ def test_http_reads_ready_aggregates_without_spatial_functions(
     db_session: Session, client: TestClient, tmp_path: Path
 ) -> None:
     act = _act("1POG", SIXTY_FORTY, boundary=_rect(0, 1000))
-    release_id = int(_import(db_session, tmp_path, act, label="A").data_release_id)  # type: ignore[arg-type]
+    state_id = _state(_import(db_session, tmp_path, act, label="A"))
 
     statements: list[str] = []
 
@@ -543,7 +548,7 @@ def test_http_reads_ready_aggregates_without_spatial_functions(
     event.listen(engine, "before_cursor_execute", capture)
     try:
         for params in ({"act_id": act.act_identifier}, {"teryt": TERYT}):
-            assert client.get(_summary_url(release_id, **params)).status_code == 200
+            assert client.get(_summary_url(state_id, **params)).status_code == 200
     finally:
         event.remove(engine, "before_cursor_execute", capture)
 
@@ -557,63 +562,89 @@ def test_http_reads_ready_aggregates_without_spatial_functions(
 
 
 @pytest.mark.integration
-def test_release_switch_atomically_switches_aggregates(
+def test_registry_change_atomically_switches_aggregates(
     db_session: Session, client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     act_a = _act("1POG", SIXTY_FORTY, boundary=_rect(0, 1000))
-    release_a = int(_import(db_session, tmp_path, act_a, label="A").data_release_id)  # type: ignore[arg-type]
+    state_a = _state(_import(db_session, tmp_path, act_a, label="A"))
     act_b = _act(
         "1POG",
         [("SW", _rect(0, 700)), ("SU", _rect(700, 1000))],
         boundary=_rect(0, 1000),
         version="20260915T000000",
     )
-    release_b = int(_import(db_session, tmp_path, act_b, label="B").data_release_id)  # type: ignore[arg-type]
-    assert release_b != release_a
+    state_b = _state(_import(db_session, tmp_path, act_b, label="B"))
+    assert state_b > state_a
 
-    active = client.get("/api/v1/map/pog/releases/active").json()
-    assert active["release_id"] == release_b
+    active = client.get("/api/v1/map/pog/state").json()
+    assert active["state_id"] == state_b
     assert active["coverage_areas"][0]["is_complete"] is True
     shares_a = [
         zone["share_pct"]
-        for zone in client.get(_summary_url(release_a, act_id=act_a.act_identifier)).json()["zones"]
+        for zone in client.get(_summary_url(state_a, act_id=act_a.act_identifier)).json()["zones"]
     ]
     shares_b = [
         zone["share_pct"]
-        for zone in client.get(_summary_url(release_b, act_id=act_b.act_identifier)).json()["zones"]
+        for zone in client.get(_summary_url(state_b, act_id=act_b.act_identifier)).json()["zones"]
     ]
-    # Przypięte wydanie A nadal odtwarza własne agregaty; B ma nowe.
+    # Przypięty stan A nadal odtwarza własne agregaty; B ma nowe (także dla gminy).
     assert shares_a == [pytest.approx(60.0), pytest.approx(40.0)]
     assert shares_b == [pytest.approx(70.0), pytest.approx(30.0)]
-    assert client.get(_summary_url(release_a, act_id=act_a.act_identifier)).json()[
-        "release_is_active"
-    ] is False
+    municipality_a = client.get(_summary_url(state_a, teryt=TERYT)).json()
+    municipality_b = client.get(_summary_url(state_b, teryt=TERYT)).json()
+    assert municipality_a["state_is_current"] is False and municipality_b["state_is_current"] is True
+    assert [zone["share_pct"] for zone in municipality_a["zones"]] == shares_a
+    assert [zone["share_pct"] for zone in municipality_b["zones"]] == shares_b
 
-    # Awaria obliczenia agregatów wycofuje publikację: aktywne pozostaje B, a
-    # nowe wydanie nie zostaje z danymi bez agregatów.
+    # Awaria obliczenia agregatów wycofuje publikację: bieżący stan pozostaje B, a nowa wersja nie zostaje
+    # w bazie z danymi bez agregatów.
     def broken(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
         raise RuntimeError("agregaty niedostępne")
 
-    monkeypatch.setattr(repository_module, "compute_pog_area_summaries", broken)
+    monkeypatch.setattr(repository_module, "compute_act_summaries", broken)
     act_c = _act(
         "1POG", [("SW", _rect(0, 1000))], boundary=_rect(0, 1000), version="20260920T000000"
     )
     with pytest.raises(RuntimeError, match="agregaty niedostępne"):
         _import(db_session, tmp_path, act_c, label="C")
-    active_ids = db_session.execute(
-        select(DataRelease.id).where(DataRelease.is_active.is_(True))
-    ).scalars().all()
-    assert release_b in active_ids
-    assert client.get("/api/v1/map/pog/releases/active").json()["release_id"] == release_b
+    assert client.get("/api/v1/map/pog/state").json()["state_id"] == state_b
     orphan = db_session.execute(
         text(
-            "SELECT count(*) FROM data_releases dr WHERE dr.id > :b AND NOT EXISTS "
-            "(SELECT 1 FROM pog_area_summaries s WHERE s.data_release_id = dr.id) "
-            "AND EXISTS (SELECT 1 FROM planning_act_versions pav WHERE pav.data_release_id = dr.id)"
+            "SELECT count(*) FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id "
+            "WHERE pa.act_identifier = :id AND NOT EXISTS "
+            "(SELECT 1 FROM pog_area_summaries s WHERE s.planning_act_version_id = pav.id)"
         ),
-        {"b": release_b},
+        {"id": act_a.act_identifier},
     ).scalar_one()
     assert orphan == 0
+
+
+@pytest.mark.integration
+def test_withdrawn_act_gets_no_active_acts_tombstone_and_old_state_stays_readable(
+    db_session: Session, client: TestClient, tmp_path: Path
+) -> None:
+    from app.modules.imports.infrastructure.pog_registry import active_entries, withdraw_acts
+    from app.models.versioned import PlanningAct
+
+    act = _act("1POG", SIXTY_FORTY, boundary=_rect(0, 1000))
+    outcome = _import(db_session, tmp_path, act, label="A")
+    state_a = _state(outcome)
+    act_id = db_session.scalar(select(PlanningAct.id).where(PlanningAct.act_identifier == act.act_identifier))
+    entries = list(active_entries(db_session, [int(act_id)]).values())
+    state_w = withdraw_acts(
+        db_session, entries, reason="withdrawn", data_release_id=int(outcome.data_release_id)  # type: ignore[arg-type]
+    )
+    assert state_w is not None and state_w > state_a
+    from app.modules.imports.infrastructure.pog_aggregates import compute_municipality_summaries
+
+    compute_municipality_summaries(db_session, int(outcome.data_release_id), state_w, {TERYT})  # type: ignore[arg-type]
+    db_session.flush()
+
+    assert client.get(_summary_url(state_w, teryt=TERYT)).status_code == 404
+    assert client.get(_summary_url(state_w, act_id=act.act_identifier)).status_code == 404
+    # Starszy stan nadal odtwarza agregaty (audyt), a wycofana wersja nie została usunięta.
+    assert client.get(_summary_url(state_a, teryt=TERYT)).status_code == 200
+    assert client.get(_summary_url(state_a, act_id=act.act_identifier)).status_code == 200
 
 
 @pytest.mark.integration
@@ -635,9 +666,12 @@ def test_reimport_of_identical_artifact_recomputes_without_duplicates(
     second = run_pog_import(_SameContent(act), SOURCE_ID, repository, release=release)
     assert first.data_release_id == second.data_release_id
     rows = db_session.execute(
-        select(PogAreaSummary).where(PogAreaSummary.data_release_id == first.data_release_id)
+        select(PogAreaSummary).where(
+            PogAreaSummary.data_release_id == first.data_release_id, PogAreaSummary.act_count > 0
+        )
     ).scalars().all()
     assert sorted(row.scope for row in rows) == ["act", "municipality"]
+    assert second.stats["unchanged"] == 1 and second.stats["registry_state_id"] == "unchanged"
 
 
 @pytest.mark.integration

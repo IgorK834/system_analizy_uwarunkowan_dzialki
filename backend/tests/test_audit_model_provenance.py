@@ -208,7 +208,7 @@ def test_readme_explains_the_mark_the_rule_and_the_exporter_version() -> None:
     assert MODEL_READING_MARK in readme and "nie jest interpretacją prawną" in readme
     assert "`model_provenance`" in readme and "`response_sha256`" in readme and "model_responses_included: false" in readme
     assert "redistribution: allowed" in readme and "`quote_omitted_reason`" in readme
-    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.3.0" and AUDIT_EXPORTER_VERSION in readme
+    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.5.0" and AUDIT_EXPORTER_VERSION in readme
     assert json.loads(package("allowed").by_name("manifest.json").data)["exporter_version"] == AUDIT_EXPORTER_VERSION
 
 

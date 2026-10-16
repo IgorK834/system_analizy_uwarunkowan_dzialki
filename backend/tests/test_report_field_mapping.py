@@ -57,6 +57,10 @@ def test_omissions_are_few_and_never_hide_findings() -> None:
         "pog.raw_attributes",
         "pog.act.metadata.references[]",
         "terrain.relief.profile.line_geojson",
+        # Geometrie dróg i budynków są w warstwach pakietu audytowego; PDF podaje je tabelami 7.3–7.5.
+        "road_context.nearest.road_geojson",
+        "road_context.nearest.link_geojson",
+        "neighbour_buildings.buildings[].geometry_geojson",
         "access_token",
     }
 

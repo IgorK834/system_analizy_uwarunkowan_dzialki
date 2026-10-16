@@ -110,7 +110,7 @@ def test_tile_endpoints_have_a_higher_threshold_than_the_general_ones() -> None:
     routes = _routes()
     tile_paths = [
         "/api/v1/map/tiles/{source}/{z}/{x}/{y}.png",
-        "/api/v1/map/pog/releases/{release_id}/{z}/{x}/{y}.mvt",
+        "/api/v1/map/pog/states/{state_id}/{z}/{x}/{y}.mvt",
     ]
 
     for path in tile_paths:

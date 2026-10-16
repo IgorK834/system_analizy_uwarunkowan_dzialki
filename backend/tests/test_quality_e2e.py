@@ -171,9 +171,9 @@ def test_matrix_is_the_same_in_api_db_reread_cache_and_pdf() -> None:
     sections = _sections(body)
     assert [item["section"] for item in matrix["sections"]] == [
         "parcel", "mpzp", "pog", "pog_overlays", "flood", "nature", "terrain",
-        "utilities", "transport", "mpzp_pog_relation",
+        "utilities", "transport", "buildings", "mpzp_pog_relation",
     ]
-    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.0"
+    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.1"
     assert matrix["policy_version"].startswith("quality-policy/1+")
     assert len(matrix["matrix_sha256"]) == 64
     assert matrix["reference_at"] == body["analyzed_at"]  # punkt odniesienia = chwila analizy
@@ -185,9 +185,11 @@ def test_matrix_is_the_same_in_api_db_reread_cache_and_pdf() -> None:
     assert sections["terrain"]["status"] == "available" and sections["terrain"]["source_id"] == "nmt"
     assert sections["utilities"]["status"] == "partial"
     assert sections["utilities"]["reason_codes"] == ["KIUT_PREVIEW_ONLY"]
-    assert sections["transport"]["status"] == "out_of_scope"
-    assert sections["transport"]["source_id"] is None
-    assert sections["transport"]["reason_codes"] == ["NO_SOURCE_CONTRACT"]
+    # Bez zaimportowanego wydania BDOT10k droga i zabudowa to brak pokrycia (nie „brak drogi”), ze źródłem z katalogu.
+    for key in ("transport", "buildings"):
+        assert sections[key]["status"] == "no_coverage", key
+        assert sections[key]["source_id"] == "bdot10k", key
+        assert sections[key]["reason_codes"] == ["NO_ACTIVE_RELEASE"], key
     # Świeżość: reguła tylko tam, gdzie katalog ją ma; reszta jawnie „nieustalona”.
     for key in ("flood", "nature", "terrain"):
         assert sections[key]["freshness"]["state"] == "fresh", key
@@ -346,7 +348,7 @@ def test_legacy_row_is_reconstructed_on_read_and_never_written_back() -> None:
     reread = _reread(analysis_id)["section_quality"]
     assert reread["origin"] == "reconstructed"
     assert all("LEGACY_QUALITY_RECONSTRUCTED" in item["reason_codes"] for item in reread["sections"])
-    assert len(reread["sections"]) == 10
+    assert len(reread["sections"]) == 11
 
     with SessionLocal() as db:
         report_text = _pdf_text(generate_analysis_report_pdf(analysis_id, db))

@@ -50,7 +50,7 @@ from app.services.report_map import render_report_maps
 from app.shared.geometry import GeometryPayload
 from tests.test_map_tiles import (  # noqa: F401 - fixtury pytest
     _project_act,
-    _publish,
+    _publish_outcome,
     _sopot_act,
     pog_session,
     sopot_release,
@@ -199,10 +199,10 @@ def test_release_b_does_not_change_report_of_snapshot_a(
             parameters = replace(feature.parameters, max_building_height=PogNumericValue(33.0, "m"))
             feature = replace(feature.with_geometry(GeometryPayload(moved.wkt)), parameters=parameters)
         features.append(feature)
-    release_b = _publish(
+    release_b = _publish_outcome(
         pog_session, tmp_path, replace(act, features=tuple(features)),
         _project_act(zone_shape.wkt, height_m=None), label="B",  # type: ignore[attr-defined]
-    )
+    ).data_release_id
     assert release_b != release_a
     analysed_b = _analyze_pog_local_release(pog_session, parcel, "2264011")
     assert analysed_b is not None

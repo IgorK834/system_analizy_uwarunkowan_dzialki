@@ -6,7 +6,8 @@ import pytest
 import respx
 from shapely.geometry import Polygon
 
-from app.core.data_sources import SourceNotRunnableError, get_catalog
+from app.core.data_sources import SourceNotRunnableError
+from app.core.settings import settings
 from app.services.pog import (
     PogGminaSources,
     PogLayerNames,
@@ -17,11 +18,6 @@ from app.services.pog import (
 
 PARCEL = Polygon([(0, 0), (30, 0), (30, 10), (10, 10), (10, 30), (0, 30), (0, 0)])
 WMS_URL = "https://geo.example.test/pog/wms"
-RU_WMS_URL = next(
-    resource.url
-    for resource in get_catalog().get("pog_app").resources
-    if resource.role == "ru_wms_preview"
-)
 
 
 @pytest.fixture(autouse=True)
@@ -200,21 +196,24 @@ async def test_malformed_wms_response_is_unknown() -> None:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_no_gmina_source_uses_confirmed_catalog_wms() -> None:
-    route = respx.get(RU_WMS_URL).mock(
-        return_value=httpx.Response(200, text=_feature_response("ru", status=None))
-    )
+async def test_no_gmina_source_uses_confirmed_catalog_wfs_and_never_the_registry_wms(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tests import ru_pog_fixtures as fx
 
-    result = await discover_pog(PARCEL, PogGminaSources(teryt="1465011"))
+    monkeypatch.setattr(settings, "ru_pog_discovery_enabled", True)
+    route = fx.mount(respx.mock)
+    wms = respx.get(url__startswith=fx.WMS_URL).mock(return_value=httpx.Response(500))
 
-    # Bez atrybutu statusu urzędowy kod niesie nazwa warstwy RU.
+    result = await discover_pog(fx.parcel(fx.BIELSKO), PogGminaSources(teryt="2461011"))
+
+    # Urzędowy kod statusu niesie atrybut ``status`` obiektów APP z WFS.
     assert result.legal_status == "binding"
-    assert result.planning_act.matched_wms_layer == "APP.POG.PrawnieWiazacyLubRealizowany"
     assert result.legal_evidence is not None
-    assert result.legal_evidence.raw_value == "APP.POG.PrawnieWiazacyLubRealizowany"
-    assert result.source_metadata.source_name == "REJESTR_URBANISTYCZNY_WMS"
-    assert route.called
-    assert result.source_metadata.source_url == RU_WMS_URL
+    assert result.legal_evidence.raw_value.endswith("/legalForce")
+    assert result.source_metadata.source_name == "REJESTR_URBANISTYCZNY_WFS"
+    assert result.source_metadata.source_url == fx.WFS_URL
+    assert route.call_count == 4 and wms.call_count == 0
     assert any(warning.code == "POG_RU_CATALOG_SOURCE" for warning in result.warnings)
 
 

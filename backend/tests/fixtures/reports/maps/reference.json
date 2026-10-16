@@ -7,7 +7,7 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "72230050a920c5bc1a2548a6e123548b482cb1e3f8553aa4eb53b10cfda4abda",
-  "semantic_sha256": "2087725c4f6c3fd109803cdab21edd8c88816a7ac36d4e2adcad5f6ae99a30c3"
+  "semantic_sha256": "ffda2b9d608555125dde7b4021ea2324dcc0b41012754318e60af34ddfd06aef"
  },
  "multizone_pog": {
   "environment": {
@@ -17,7 +17,7 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "4a0fa6c9aa1cb47c228146d9e6030d68e00226d36d4c680e5debca46ccb672d1",
-  "semantic_sha256": "2087725c4f6c3fd109803cdab21edd8c88816a7ac36d4e2adcad5f6ae99a30c3"
+  "semantic_sha256": "ffda2b9d608555125dde7b4021ea2324dcc0b41012754318e60af34ddfd06aef"
  },
  "null_height_pog": {
   "environment": {
@@ -27,7 +27,7 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "c157bed283ca16dd021cab2afd3651b941a25069c37e470409fca68a367c39f3",
-  "semantic_sha256": "61ef1ea99af2e1a9c105c78391c6ba19faecbe929606f85952c21d976863babd"
+  "semantic_sha256": "c470f44b5d844fe811d437907301b0bde97e9628f7406015275ef1ebccbf6e77"
  },
  "parcel": {
   "environment": {
@@ -37,7 +37,7 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "e6d51684d499d823d822204479804c4ffede8faa80c3233399ba0f2ee5df115a",
-  "semantic_sha256": "2087725c4f6c3fd109803cdab21edd8c88816a7ac36d4e2adcad5f6ae99a30c3"
+  "semantic_sha256": "ffda2b9d608555125dde7b4021ea2324dcc0b41012754318e60af34ddfd06aef"
  },
  "project_pog": {
   "environment": {
@@ -47,7 +47,7 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "c3ac8645c37a7f3cee678dea3dda2b4aec6ca8b7bd2b2024fe41d55da03c0c0f",
-  "semantic_sha256": "d76f88ca2850fa4f3d5d9e9ad9b847682cd39b7c26635ccf634905553dd2b37c"
+  "semantic_sha256": "b12bc97a7b36b7e2118fa034831562984179aae40335b7e4165e3c56d486c48b"
  },
  "risk_environment": {
   "environment": {
@@ -57,6 +57,6 @@
    "pillow": "12.3.0"
   },
   "png_sha256": "fe7439efc140a3ed9fd9117570fd264ee342d2648807545b230af0c68b07efe1",
-  "semantic_sha256": "2087725c4f6c3fd109803cdab21edd8c88816a7ac36d4e2adcad5f6ae99a30c3"
+  "semantic_sha256": "ffda2b9d608555125dde7b4021ea2324dcc0b41012754318e60af34ddfd06aef"
  }
 }

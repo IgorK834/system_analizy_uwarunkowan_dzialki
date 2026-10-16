@@ -282,6 +282,12 @@ def test_upgrade_maps_aliases_and_downgrade_restores_exact_values() -> None:
                              {"ids": ids["analysis_ids"]})
                 conn.execute(text("DELETE FROM parcels WHERE id = :id"), {"id": ids["parcel_id"]})
                 conn.execute(
+                    text(
+                        "DELETE FROM pog_registry_entries WHERE planning_act_id = ANY(:ids)"
+                    ),
+                    {"ids": ids["act_ids"]},
+                )
+                conn.execute(
                     text("DELETE FROM planning_act_versions WHERE planning_act_id = ANY(:ids)"),
                     {"ids": ids["act_ids"]},
                 )

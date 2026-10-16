@@ -340,7 +340,8 @@ def test_wms_uses_explicit_version_and_axis_table() -> None:
     assert route.calls.last.request.url.params["version"] == "1.3.0"
     assert route.calls.last.request.url.params["bbox"] == "20,10,40,30"
     assert OgcClient.wms_bbox("CRS:84", (10, 20, 30, 40)) == "10,20,30,40"
-    assert OgcClient.wms_bbox("EPSG:2180", (10, 20, 30, 40)) == "10,20,30,40"
+    # EPSG:2180 ma w WMS 1.3.0 oś północ,wschód (zmierzone na RU 2026-10-12): x = wschód, y = północ → "y,x".
+    assert OgcClient.wms_bbox("EPSG:2180", (10, 20, 30, 40)) == "20,10,40,30"
     with pytest.raises(ValueError, match="reguły osi"):
         OgcClient.wms_bbox("EPSG:3857", (10, 20, 30, 40))
 

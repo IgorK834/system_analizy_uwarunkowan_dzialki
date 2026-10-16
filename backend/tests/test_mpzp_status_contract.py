@@ -20,7 +20,7 @@ from tests.report_map_reference import load_fixture
 def test_contract_versions_follow_the_three_tasks() -> None:
     assert schemas.MPZP_RESULT_SCHEMA_VERSION == "3.0"
     assert f"mpzp-v{schemas.MPZP_RESULT_SCHEMA_VERSION}" in cache.RESULT_CONTRACT_VERSION
-    assert len(cache.RESULT_CONTRACT_VERSION) <= 64  # analyses.result_contract_version
+    assert len(cache.RESULT_CONTRACT_VERSION) <= 224  # analyses.result_contract_version (String(256) od migracji 036)
     assert schemas.MPZP_ACTS_SCHEMA_VERSION == acts_domain.MPZP_ACTS_SCHEMA_VERSION
     assert schemas.MPZP_STATUS_SCHEMA_VERSION == status_domain.MPZP_STATUS_SCHEMA_VERSION
     assert {"mpzp_acts", "mpzp_status"} <= set(AnalyzeResponse.model_fields)

@@ -372,6 +372,7 @@ def test_guard_accepts_verified_ru_and_exposes_catalog_endpoints() -> None:
         "ru_wfs",
         "ru_wms_preview",
         "ru_csw",
+        "ru_published",
     }
     assert all(
         resource.url.startswith("https://rejestr-urbanistyczny.gov.pl/")

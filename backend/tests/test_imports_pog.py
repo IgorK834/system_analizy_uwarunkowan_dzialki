@@ -57,11 +57,13 @@ from app.modules.imports.infrastructure.pog.reader import (
     WfsPogReader,
     read_pog_archive,
 )
+from app.models.pog_registry import PogRegistryEntry, PogRegistryState
+from app.modules.imports.infrastructure.pog_registry import activate_previous_version
 from app.modules.imports.infrastructure.repository import (
     SqlAlchemyImportRepository,
-    active_pog_release,
+    active_pog_state,
     find_pog_intersections,
-    load_pog_release_features,
+    load_pog_state_features,
 )
 from app.services.analysis_orchestrator import _analyze_pog_best_effort
 from app.modules.imports.infrastructure.vector import VectorReadError
@@ -166,8 +168,10 @@ class FakePogRepository:
         self.published = acts
         return PogPublicationResult(len(acts), 0, 0, 1, 2)
 
-    def previous_pog_feature_count(self) -> int | None:
-        return self._previous_feature_count
+    def previous_pog_feature_counts(self, act_identifiers) -> dict[str, int]:
+        if self._previous_feature_count is None:
+            return {}
+        return {identifier: self._previous_feature_count for identifier in act_identifiers}
 
 
 # --- Domena ------------------------------------------------------------------
@@ -703,9 +707,7 @@ def test_postgis_pog_publication_stores_four_layers_and_status(
         "POLYGON((565005 244005,565015 244005,565015 244015,"
         "565005 244015,565005 244005))"
     )
-    hits = find_pog_intersections(
-        session, parcel, data_release_id=outcome.data_release_id
-    )
+    hits = find_pog_intersections(session, parcel)
     assert any(row["act_identifier"] == adopted.act_identifier for row in hits)
 
 
@@ -749,14 +751,26 @@ def test_postgis_project_pog_never_binding(session: Session, tmp_path: Path) -> 
         "POLYGON((565005 244005,565015 244005,565015 244015,"
         "565005 244015,565005 244005))"
     )
-    hits = find_pog_intersections(
-        session, parcel, data_release_id=outcome.data_release_id
-    )
+    hits = find_pog_intersections(session, parcel)
     assert all(row["act_identifier"] != project.act_identifier for row in hits)
 
 
+def _active_entries(session: Session, identifier: str) -> list[PogRegistryEntry]:
+    return list(
+        session.execute(
+            select(PogRegistryEntry)
+            .join(PlanningAct, PlanningAct.id == PogRegistryEntry.planning_act_id)
+            .where(PlanningAct.act_identifier == identifier, PogRegistryEntry.state_to_id.is_(None))
+        ).scalars()
+    )
+
+
+def _state_count(session: Session) -> int:
+    return int(session.scalar(select(func.count(PogRegistryState.id))) or 0)
+
+
 @pytest.mark.integration
-def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
+def test_failed_import_does_not_change_registry_and_reimport_is_idempotent(
     session: Session, tmp_path: Path
 ) -> None:
     source_id = f"pog_atomic_{uuid4().hex[:10]}"
@@ -772,6 +786,9 @@ def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
     )
     session.commit()
     assert release_a.data_release_id is not None
+    states_after_a = _state_count(session)
+    assert states_after_a == 1
+    (entry_a,) = _active_entries(session, identifier)
 
     bad = act(
         identifier,
@@ -785,12 +802,11 @@ def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
             release=release(source_id, label="B"),
         )
     session.rollback()
-    active_after_bad = session.scalar(
-        select(DataRelease.id)
-        .join(DataSource)
-        .where(DataSource.source_id == source_id, DataRelease.is_active.is_(True))
-    )
-    assert active_after_bad == release_a.data_release_id
+    # Odrzucony import nie zmienia rejestru: ta sama wersja pozostaje aktywna, bez nowego numeru stanu.
+    assert _state_count(session) == states_after_a
+    assert [item.planning_act_version_id for item in _active_entries(session, identifier)] == [
+        entry_a.planning_act_version_id
+    ]
 
     repeated = run_pog_import(
         StaticPogReader(act(identifier), content=b"release-a"),
@@ -801,17 +817,16 @@ def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
     session.commit()
     assert repeated.data_release_id == release_a.data_release_id
     assert repeated.stats["unchanged"] == 1
-    version_count = session.scalar(
-        select(func.count(PlanningActVersion.id))
-        .join(PlanningAct)
-        .where(PlanningAct.act_identifier == identifier)
-    )
-    assert version_count == 1
-    assert session.scalar(
-        select(func.count(DataRelease.id)).join(DataSource).where(
-            DataSource.source_id == source_id, DataRelease.is_active.is_(True)
+    assert repeated.stats["registry_state_id"] == "unchanged"
+    assert _state_count(session) == states_after_a
+    assert (
+        session.scalar(
+            select(func.count(PlanningActVersion.id))
+            .join(PlanningAct)
+            .where(PlanningAct.act_identifier == identifier)
         )
-    ) == 1
+        == 1
+    )
 
     changed = act(
         identifier,
@@ -837,41 +852,84 @@ def test_failed_release_does_not_switch_active_and_reimport_is_idempotent(
     )
     session.commit()
     assert release_b.data_release_id != release_a.data_release_id
+    assert release_b.stats["changed"] == 1
+    assert _state_count(session) == states_after_a + 1
+    (entry_b,) = _active_entries(session, identifier)
+    assert entry_b.planning_act_version_id != entry_a.planning_act_version_id
     parcel = geom("POLYGON((5 5,15 5,15 15,5 15,5 5))")
-    assert len(
-        load_pog_release_features(
-            session, parcel, data_release_id=release_a.data_release_id
-        )
-    ) == 4
-    assert len(
-        load_pog_release_features(
-            session, parcel, data_release_id=release_b.data_release_id
-        )
-    ) == 4
+    state_a = states_after_a and int(entry_a.state_from_id)
+    state_b = int(entry_b.state_from_id)
+    # Stan przypięty do numeru A nadal odtwarza dawną wersję, stan B — nową (rejestr jest czasowy).
+    rows_a = load_pog_state_features(session, parcel, state_id=state_a)
+    rows_b = load_pog_state_features(session, parcel, state_id=state_b)
+    assert len(rows_a) == len(rows_b) == 4
+    assert {row["act_version_id"] for row in rows_a} == {entry_a.planning_act_version_id}
+    assert {row["act_version_id"] for row in rows_b} == {entry_b.planning_act_version_id}
+    old_version = session.get(PlanningActVersion, entry_a.planning_act_version_id)
+    assert old_version is not None and old_version.valid_to is not None
 
-    reactivated_a = run_pog_import(
-        StaticPogReader(act(identifier), content=b"release-a"),
-        source_id,
-        repository,
-        release=release(source_id, label="A-reactivated"),
+    # Cofnięcie wersji: nowy wpis wskazuje istniejący wiersz wersji A (bez kopiowania geometrii).
+    rollback_state, rolled_to = activate_previous_version(
+        session,
+        act_identifier=identifier,
+        to_version_id=None,
+        data_release_id=int(release_b.data_release_id),  # type: ignore[arg-type]
     )
     session.commit()
-    assert reactivated_a.data_release_id == release_a.data_release_id
-    assert session.scalar(
-        select(DataRelease.id)
-        .join(DataSource)
-        .where(DataSource.source_id == source_id, DataRelease.is_active.is_(True))
-    ) == release_a.data_release_id
-    assert session.scalar(
-        select(func.count(PlanningActVersion.id))
-        .join(PlanningAct)
-        .where(PlanningAct.act_identifier == identifier)
-    ) == 2
+    assert rolled_to == entry_a.planning_act_version_id
+    (entry_c,) = _active_entries(session, identifier)
+    assert entry_c.planning_act_version_id == entry_a.planning_act_version_id
+    assert entry_c.state_from_id == rollback_state
+    assert (
+        session.scalar(
+            select(func.count(PlanningActVersion.id))
+            .join(PlanningAct)
+            .where(PlanningAct.act_identifier == identifier)
+        )
+        == 2
+    )
+    # Stan B pozostaje odtwarzalny po cofnięciu (audyt).
+    assert {
+        row["act_version_id"] for row in load_pog_state_features(session, parcel, state_id=state_b)
+    } == {entry_b.planning_act_version_id}
+
+
+@pytest.mark.integration
+def test_registry_keeps_all_communes_active_and_withdraw_keeps_history(
+    session: Session, tmp_path: Path
+) -> None:
+    source_id = f"pog_multi_{uuid4().hex[:10]}"
+    repository = SqlAlchemyImportRepository(
+        session, _source(source_id), LocalArtifactStore(tmp_path)
+    )
+    first = act(f"pog-first-{uuid4().hex[:8]}")
+    second = act(
+        f"pog-second-{uuid4().hex[:8]}",
+        boundary="POLYGON((1000 0,1100 0,1100 100,1000 100,1000 0))",
+        features=(feature("planning_zone", "POLYGON((1000 0,1050 0,1050 100,1000 100,1000 0))", SYMBOL="SU-01"),),
+    )
+    for label, record in (("first", first), ("second", second)):
+        outcome = run_pog_import(
+            StaticPogReader(record, content=label.encode()),
+            source_id,
+            repository,
+            release=release(source_id, label=label),
+        )
+        session.commit()
+        assert outcome.status == "succeeded"
+    state = active_pog_state(session)
+    assert state is not None
+    near_first = geom("POLYGON((5 5,15 5,15 15,5 15,5 5))")
+    near_second = geom("POLYGON((1005 5,1015 5,1015 15,1005 15,1005 5))")
+    assert load_pog_state_features(session, near_first, state_id=int(state["id"]))
+    assert load_pog_state_features(session, near_second, state_id=int(state["id"]))
+    assert {hit["act_identifier"] for hit in find_pog_intersections(session, near_first)} == {first.act_identifier}
+    assert {hit["act_identifier"] for hit in find_pog_intersections(session, near_second)} == {second.act_identifier}
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_local_postgis_release_analyzes_without_ru_network(
+async def test_local_postgis_state_analyzes_without_ru_network(
     session: Session, tmp_path: Path
 ) -> None:
     source_id = f"pog_offline_{uuid4().hex[:10]}"
@@ -888,19 +946,13 @@ async def test_local_postgis_release_analyzes_without_ru_network(
     )
     session.commit()
     assert outcome.data_release_id is not None
-    pinned = active_pog_release(session, source_id=source_id)
+    pinned = active_pog_state(session)
     assert pinned is not None
 
-    with (
-        patch(
-            "app.services.analysis_orchestrator.active_pog_release",
-            return_value=pinned,
-        ),
-        patch(
-            "app.services.analysis_orchestrator.discover_pog",
-            new_callable=AsyncMock,
-        ) as discovery,
-    ):
+    with patch(
+        "app.services.analysis_orchestrator.discover_pog",
+        new_callable=AsyncMock,
+    ) as discovery:
         pog, _ouz, _warnings, sources = await _analyze_pog_best_effort(
             from_wkt("POLYGON((5 5,15 5,15 15,5 15,5 5))"),
             "1261011",
@@ -918,12 +970,21 @@ async def test_local_postgis_release_analyzes_without_ru_network(
     assert len(pog.social_infrastructure_standard_areas) == 1
     assert sources[0].data_release_id == outcome.data_release_id
     assert sources[0].artifact_sha256 == hashlib.sha256(content).hexdigest()
+    # Analiza przypina stan krajowy i dokładną wersję aktu (identyfikator + content_hash).
+    assert pog.registry_state_id == int(pinned["id"])
+    (pinned_version,) = pog.pinned_act_versions
+    assert pinned_version.act_identifier == record.act_identifier
+    assert len(pinned_version.content_hash) == 64
+    assert pinned_version.artifact_sha256 == hashlib.sha256(content).hexdigest()
 
 
 @pytest.mark.integration
-def test_concurrent_publications_leave_exactly_one_active_release(tmp_path: Path) -> None:
+def test_concurrent_publications_of_different_acts_are_both_active_with_ordered_states(
+    tmp_path: Path,
+) -> None:
     source_id = f"pog_concurrent_{uuid4().hex[:10]}"
     barrier = Barrier(2)
+    identifiers = {label: f"pog-concurrent-{label}-{uuid4().hex[:8]}" for label in ("A", "B")}
 
     def publish(label: str) -> int:
         with SessionLocal() as thread_session:
@@ -933,7 +994,7 @@ def test_concurrent_publications_leave_exactly_one_active_release(tmp_path: Path
             barrier.wait(timeout=10)
             outcome = run_pog_import(
                 StaticPogReader(
-                    act(f"pog-concurrent-{label}-{uuid4().hex[:8]}"),
+                    act(identifiers[label]),
                     content=f"release-{label}".encode(),
                 ),
                 source_id,
@@ -949,10 +1010,62 @@ def test_concurrent_publications_leave_exactly_one_active_release(tmp_path: Path
 
     assert len(release_ids) == 2
     with SessionLocal() as verification_session:
+        entries = [
+            entry
+            for identifier in identifiers.values()
+            for entry in _active_entries(verification_session, identifier)
+        ]
+        # Obie gminy są aktywne równocześnie; numery stanów są różne (zatwierdzane pod jedną blokadą).
+        assert len(entries) == 2
+        assert len({entry.state_from_id for entry in entries}) == 2
         releases = verification_session.execute(
-            select(DataRelease.id, DataRelease.is_active)
-            .join(DataSource)
-            .where(DataSource.source_id == source_id)
-        ).all()
-    assert {row.id for row in releases} == release_ids
-    assert sum(1 for row in releases if row.is_active) == 1
+            select(DataRelease.is_active).join(DataSource).where(DataSource.source_id == source_id)
+        ).scalars().all()
+        assert len(releases) == 2 and not any(releases)
+
+
+@pytest.mark.integration
+def test_concurrent_publications_of_the_same_act_leave_exactly_one_active_version(
+    tmp_path: Path,
+) -> None:
+    source_id = f"pog_same_{uuid4().hex[:10]}"
+    identifier = f"pog-same-act-{uuid4().hex[:8]}"
+    barrier = Barrier(2)
+
+    def publish(label: str) -> None:
+        with SessionLocal() as thread_session:
+            repository = SqlAlchemyImportRepository(
+                thread_session, _source(source_id), LocalArtifactStore(tmp_path)
+            )
+            barrier.wait(timeout=10)
+            run_pog_import(
+                StaticPogReader(
+                    act(
+                        identifier,
+                        features=(
+                            feature(
+                                "planning_zone",
+                                "POLYGON((0 0,50 0,50 100,0 100,0 0))",
+                                SYMBOL=f"SJ-{label}",
+                            ),
+                        ),
+                    ),
+                    content=f"same-{label}".encode(),
+                ),
+                source_id,
+                repository,
+                release=release(source_id, label=label),
+            )
+            thread_session.commit()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        list(executor.map(publish, ("A", "B")))
+
+    with SessionLocal() as verification_session:
+        assert len(_active_entries(verification_session, identifier)) == 1
+        versions = verification_session.scalar(
+            select(func.count(PlanningActVersion.id))
+            .join(PlanningAct)
+            .where(PlanningAct.act_identifier == identifier)
+        )
+        assert versions == 2

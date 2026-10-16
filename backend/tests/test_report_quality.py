@@ -40,7 +40,7 @@ def _table_rows(html: str, kind: str) -> list[list[str]]:
 def test_matrix_has_one_row_per_section_with_source_time_release_and_freshness() -> None:
     response, _ = load_fixture("multizone")
     rows = _table_rows(_html(response, EXPORT_SOON), "quality")
-    assert len(rows) == len(QUALITY_SECTIONS) == 10
+    assert len(rows) == len(QUALITY_SECTIONS) == 11
     by_label = {row[0].split(" (§")[0]: row for row in rows}
     flood = by_label["Zagrożenie powodziowe (ISOK)"]
     assert "sprawdzono" in flood[1]
@@ -69,9 +69,9 @@ def test_sections_without_source_state_the_reason_of_the_gap() -> None:
     rows = _table_rows(_html(_sparse_response(), EXPORT_SOON), "quality")
     by_label = {row[0].split(" (§")[0]: row for row in rows}
     transport = by_label["Transport i dostęp do drogi"]
-    assert "poza zakresem" in transport[1]
+    assert "nieustalone" in transport[1]  # zapis bez sekcji drogowej: nie „brak drogi”
     assert "brak źródła" in transport[2]
-    assert "brak potwierdzonego kontraktu" in transport[6] and "NO_SOURCE_CONTRACT" in transport[6]
+    assert "zapis sprzed sekcji drogowej" in transport[6] and "ROAD_CONTEXT_NOT_RECORDED" in transport[6]
     mpzp = by_label["MPZP"]
     assert "nieustalone" in mpzp[1] and "nie ustalono stanu MPZP" in mpzp[6]  # zapis bez stanu (AU-103)
     flood = by_label["Zagrożenie powodziowe (ISOK)"]

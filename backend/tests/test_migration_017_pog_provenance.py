@@ -107,6 +107,8 @@ def test_upgrade_adds_provenance_and_keeps_document_versions_apart() -> None:
                              {"v": ids.get("version")})
                 conn.execute(text("DELETE FROM pog_formal_documents WHERE planning_act_version_id = :v"),
                              {"v": ids.get("version")})
+                conn.execute(text("DELETE FROM pog_registry_entries WHERE planning_act_version_id = :v"),
+                             {"v": ids.get("version")})
                 conn.execute(text("DELETE FROM planning_act_versions WHERE id = :v"), {"v": ids.get("version")})
                 conn.execute(text("DELETE FROM planning_acts WHERE id = :v"), {"v": ids.get("act")})
                 conn.execute(text("DELETE FROM data_releases WHERE id = :v"), {"v": ids.get("release")})

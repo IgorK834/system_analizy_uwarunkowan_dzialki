@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import pytest
 
+from app.modules.imports.infrastructure.pog_map_tables import canonical_status_sql
 from app.modules.planning.application.pog_tiles import (
-    PogReleaseNotFoundError,
+    EncodedTile,
+    PogStateNotFoundError,
     PogTileLimits,
     PogTileService,
     PogTileTooLargeError,
@@ -21,18 +21,17 @@ from app.modules.planning.domain.pog_features import (
     release_feature_attributes,
 )
 from app.modules.planning.domain.pog_tiles import (
+    LAYER_MIN_ZOOM,
     InvalidPogTileRequestError,
-    PogReleaseInfo,
+    PogStateInfo,
     PogTile,
     PogTileCandidate,
     PogTileRequest,
+    geometry_column,
     tile_etag,
     tile_feature_properties,
 )
-from app.modules.planning.infrastructure.mvt import (
-    InMemoryPogTileCache,
-    _canonical_legal_status_sql,
-)
+from app.modules.planning.infrastructure.mvt import InMemoryPogTileCache, _tile_sql
 from app.services.pog_analyzer import analyze_pog_vectors
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.schemas.source import SourceMetadata
@@ -79,7 +78,7 @@ def test_request_validation_rejects_out_of_range(z: int, x: int, y: int, edition
         PogTileRequest(1, z, x, y, edition).validate(min_zoom=0, max_zoom=18)
 
 
-def test_request_validation_rejects_non_positive_release() -> None:
+def test_request_validation_rejects_non_positive_state() -> None:
     with pytest.raises(InvalidPogTileRequestError):
         PogTileRequest(0, 0, 0, 0).validate(min_zoom=0, max_zoom=18)
 
@@ -88,7 +87,7 @@ def test_request_accepts_last_tile_and_builds_cache_key() -> None:
     request = PogTileRequest(5, 3, 7, 7, "binding")
     request.validate(min_zoom=0, max_zoom=18)
     assert request.legal_statuses == ("binding",)
-    assert request.cache_key == "pog-mvt/1|release=5|edition=binding|3/7/7"
+    assert request.cache_key == "pog-mvt/2|state=5|edition=binding|3/7/7"
     assert PogTileRequest(5, 3, 7, 7).legal_statuses is None
 
 
@@ -103,7 +102,7 @@ def test_etag_depends_on_key_and_content() -> None:
 
 
 def test_zone_properties_keep_null_distinct_from_zero() -> None:
-    props = tile_feature_properties(_candidate(), release_id=11)
+    props = tile_feature_properties(_candidate())
     assert props["max_overground_floor_area_ratio"] == 0.0
     assert props["max_building_height_m"] is None
     assert props["max_building_coverage_pct"] == 30.0
@@ -111,14 +110,14 @@ def test_zone_properties_keep_null_distinct_from_zero() -> None:
     assert props["primary_profiles"] == "KPT-MPZP-MN"
     assert props["additional_profiles"] is None
     assert props["parameters_informational"] is None
-    assert (props["layer"], props["pk"], props["data_release_id"]) == ("zones", 7, 11)
+    assert (props["layer"], props["pk"]) == ("zones", 7)
+    assert "data_release_id" not in props and props["designation"] is None
 
 
 def test_area_properties_have_no_zone_parameters_and_fallback_id() -> None:
     props = tile_feature_properties(
         _candidate(feature_type="ouz", feature_identifier=None, raw_attributes={},
                    legal_status="outdated", label="x" * 500),
-        release_id=3,
     )
     assert props["layer"] == "ouz"
     assert props["feature_id"] == "planning_feature:7"
@@ -129,7 +128,7 @@ def test_area_properties_have_no_zone_parameters_and_fallback_id() -> None:
 
 def test_unknown_feature_type_is_rejected() -> None:
     with pytest.raises(ValueError):
-        tile_feature_properties(_candidate(feature_type="line"), release_id=1)
+        tile_feature_properties(_candidate(feature_type="line"))
 
 
 def test_raw_attribute_subset_gives_same_presentation_as_full_record() -> None:
@@ -193,14 +192,14 @@ def test_analysis_and_tile_share_parameter_extraction() -> None:
         ),
     )
     zone = analysis.zones[0]
-    props = tile_feature_properties(candidate, release_id=1)
+    props = tile_feature_properties(candidate)
     assert props["max_overground_floor_area_ratio"] == 0.8
     assert zone.parameters["max_overground_floor_area_ratio"] == "0,8"
     assert (props["zone_code"], props["feature_id"]) == (zone.zone_type.value, zone.zone_id)
 
 
 def test_canonical_legal_status_sql_is_generated_from_shared_constants() -> None:
-    sql = _canonical_legal_status_sql("c")
+    sql = canonical_status_sql("c")
     assert "'binding', 'project', 'in_progress', 'superseded', 'unknown'" in sql
     assert "WHEN c = 'outdated' THEN 'superseded'" in sql
 
@@ -230,24 +229,21 @@ def test_cache_evicts_least_recently_used_by_bytes() -> None:
 
 
 class FakeRepository:
-    def __init__(self, candidates: list[PogTileCandidate], content: bytes = b"mvt") -> None:
-        self.candidates = candidates
+    def __init__(self, counts: dict[str, int] | None = None, content: bytes = b"mvt") -> None:
+        self.counts = counts if counts is not None else {"zones": 1}
         self.content = content
-        self.encoded: list[Sequence[dict[str, object]]] = []
-        self.releases = {1: PogReleaseInfo(1, "pog_app", "v1", None, True, "sha", None, {})}
+        self.encoded: list[PogTileRequest] = []
+        self.states = {1: PogStateInfo(1, "pog_app", "import", None, True, 1, None, {})}
 
-    def release_info(self, release_id: int) -> PogReleaseInfo | None:
-        return self.releases.get(release_id)
+    def state_info(self, state_id: int) -> PogStateInfo | None:
+        return self.states.get(state_id)
 
-    def active_release_id(self, source_id: str) -> int | None:
-        return 1 if source_id == "pog_app" else None
+    def current_state_id(self) -> int | None:
+        return max(self.states) if self.states else None
 
-    def tile_candidates(self, request: PogTileRequest, *, limit: int) -> list[PogTileCandidate]:
-        return self.candidates[:limit]
-
-    def encode_tile(self, request, features, *, boundary_limit: int) -> bytes:  # type: ignore[no-untyped-def]
-        self.encoded.append(features)
-        return self.content
+    def encode_tile(self, request: PogTileRequest, *, max_features: int) -> EncodedTile:
+        self.encoded.append(request)
+        return EncodedTile(self.content, dict(self.counts))
 
 
 def _service(repository: FakeRepository, **limits: int) -> PogTileService:
@@ -259,39 +255,58 @@ def _service(repository: FakeRepository, **limits: int) -> PogTileService:
 
 
 def test_service_caches_tiles_and_reports_hit() -> None:
-    repository = FakeRepository([_candidate()])
+    repository = FakeRepository()
     service = _service(repository)
     first = service.get_tile(PogTileRequest(1, 10, 1, 1))
     second = service.get_tile(PogTileRequest(1, 10, 1, 1))
     assert (first.cache_status, second.cache_status) == ("MISS", "HIT")
     assert first.etag == second.etag and len(repository.encoded) == 1
-    assert repository.encoded[0][0]["zone_code"] == "SJ"
+    assert first.feature_count == 1 and first.state_id == 1
 
 
 def test_service_enforces_feature_and_byte_limits() -> None:
     with pytest.raises(PogTileTooLargeError) as features:
-        _service(FakeRepository([_candidate(), _candidate(pk=8)]), max_features=1).get_tile(
-            PogTileRequest(1, 10, 1, 1)
-        )
+        _service(FakeRepository({"zones": 11}), max_features=10).get_tile(PogTileRequest(1, 10, 1, 1))
     assert features.value.limit == "features"
     with pytest.raises(PogTileTooLargeError) as size:
-        _service(FakeRepository([], content=b"x" * 101)).get_tile(PogTileRequest(1, 10, 1, 1))
+        _service(FakeRepository(content=b"x" * 101)).get_tile(PogTileRequest(1, 10, 1, 1))
     assert size.value.limit == "bytes"
 
 
-def test_service_release_lookup() -> None:
-    service = _service(FakeRepository([]))
-    assert service.active_release().release_id == 1
-    with pytest.raises(PogReleaseNotFoundError):
-        service.release(2)
-    with pytest.raises(PogReleaseNotFoundError):
+def test_service_state_lookup() -> None:
+    service = _service(FakeRepository())
+    assert service.current_state().state_id == 1
+    with pytest.raises(PogStateNotFoundError):
+        service.state(2)
+    with pytest.raises(PogStateNotFoundError):
         service.get_tile(PogTileRequest(2, 1, 0, 0))
-    inactive = PogTileService(
-        FakeRepository([]), InMemoryPogTileCache(10),
-        PogTileLimits(0, 18, 10, 100), source_id="other",
-    )
-    with pytest.raises(PogReleaseNotFoundError):
-        inactive.active_release()
+    empty = FakeRepository()
+    empty.states = {}
+    with pytest.raises(PogStateNotFoundError):
+        _service(empty).current_state()
+
+
+@pytest.mark.parametrize(
+    ("layer", "z", "expected"),
+    [
+        ("act_boundary", 6, "geom_overview"), ("act_boundary", 8, "geom_overview"),
+        ("act_boundary", 9, "geom_low"), ("act_boundary", 12, "geom_low"),
+        ("act_boundary", 13, "geom_full"), ("zones", 11, "geom_low"), ("zones", 12, "geom_low"),
+        ("zones", 13, "geom_mid"), ("zones", 14, "geom_mid"), ("zones", 15, "geom_full"),
+        ("ouz", 18, "geom_full"),
+    ],
+)
+def test_geometry_column_depends_on_zoom_band(layer: str, z: int, expected: str) -> None:
+    assert geometry_column(layer, z) == expected
+
+
+def test_layers_appear_at_documented_zoom_thresholds() -> None:
+    """z6–10: tylko granice aktów; strefy od z11; OUZ/OZS/OSDIS od z12 (progi jak we wzorcu UX)."""
+    assert _tile_sql(6)[1] == ["act_boundary"]
+    assert _tile_sql(10)[1] == ["act_boundary"]
+    assert _tile_sql(11)[1] == ["zones", "act_boundary"]
+    assert _tile_sql(12)[1] == ["zones", "ouz", "downtown", "social_infrastructure_standard", "act_boundary"]
+    assert LAYER_MIN_ZOOM["zones"] == 11 and LAYER_MIN_ZOOM["ouz"] == 12
 
 
 def test_every_official_zone_label_maps_to_its_code() -> None:

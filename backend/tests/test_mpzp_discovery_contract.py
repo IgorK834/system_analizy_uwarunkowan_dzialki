@@ -75,7 +75,7 @@ def _mpzp_quality(response: AnalyzeResponse):
 def test_contract_versions_are_bumped_for_the_new_section() -> None:
     assert tuple(map(int, analyze_schemas.MPZP_RESULT_SCHEMA_VERSION.split("."))) >= (2, 7)
     assert f"mpzp-v{analyze_schemas.MPZP_RESULT_SCHEMA_VERSION}" in cache.RESULT_CONTRACT_VERSION
-    assert len(cache.RESULT_CONTRACT_VERSION) <= 64  # analyses.result_contract_version
+    assert len(cache.RESULT_CONTRACT_VERSION) <= 224  # analyses.result_contract_version (String(256) od migracji 036)
     assert analyze_schemas.MPZP_DISCOVERY_SCHEMA_VERSION == "1.0"
     assert "mpzp_discovery" in AnalyzeResponse.model_fields
 

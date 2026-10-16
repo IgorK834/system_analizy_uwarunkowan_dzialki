@@ -136,7 +136,7 @@ def test_audit_package_end_to_end_from_persisted_snapshot() -> None:
     package_sha = response.headers["x-audit-package-sha256"]
     assert package_sha == hashlib.sha256(response.content).hexdigest()  # hash poza archiwum
     assert int(response.headers["content-length"]) == len(response.content)
-    assert response.headers["x-audit-exporter-version"] == "audit-exporter/1.3.0"
+    assert response.headers["x-audit-exporter-version"] == "audit-exporter/1.5.0"
 
     members = _members(response.content)
     assert {"analysis.json", "sources.json", "parcel.geojson", "manifest.json", "README.md"} <= set(members)
@@ -166,7 +166,9 @@ def test_audit_package_end_to_end_from_persisted_snapshot() -> None:
         (item["source_id"], item["source_name"]) for item in sources
     ]
     assert by_id["isok"]["redistribution"] == "allowed" and by_id["pog_app"]["redistribution"] == "derived_only"
-    assert all(item["fetched_at"] for item in sources if item["source_name"] != "KIUT")
+    # KIUT to podgląd bez pobrania, a BDOT10k bez wydania (brak pokrycia) niczego nie odczytał — czasu pobrania nie ma.
+    assert all(item["fetched_at"] for item in sources if item["source_name"] != "KIUT" and item["source_id"] != "bdot10k")
+    assert all(item["fetched_at"] is None for item in sources if item["source_id"] == "bdot10k")
 
     # GeoJSON w EPSG:4326, obliczenia w 2180 opisane osobno.
     parcel = json.loads(members["parcel.geojson"])

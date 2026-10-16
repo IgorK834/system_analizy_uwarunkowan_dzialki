@@ -103,6 +103,131 @@ def test_summary_of_a_success_never_contains_the_access_token() -> None:
     assert "TAJNYTOKEN" not in json.dumps(summary)
 
 
+COMPLETENESS = {
+    "checked": 6,
+    "total": 8,
+    "headline": "6 z 8 sekcji sprawdzono; brak: strefy POG, relacja MPZP–POG.",
+    "sections": [
+        {"section": "mpzp", "state": "checked", "basis": "document_candidate"},
+        {"section": "pog", "state": "missing", "basis": None},
+        {"section": "mpzp_pog_relation", "state": "missing", "basis": None},
+        {"section": "utilities", "state": "out_of_scope", "basis": None},
+        {"section": "transport", "state": "out_of_scope", "basis": None},
+    ],
+}
+
+
+def test_summary_carries_completeness_and_the_basis_of_the_mpzp_finding() -> None:
+    summary = smoke.summarize_response(200, _ok(completeness=COMPLETENESS))
+
+    assert (summary["completeness_checked"], summary["completeness_total"]) == (6, 8)
+    assert summary["completeness_missing"] == ["mpzp_pog_relation", "pog"]
+    assert summary["completeness_out_of_scope"] == ["transport", "utilities"]
+    assert summary["mpzp_basis"] == "document_candidate"
+    assert summary["completeness_headline"].startswith("6 z 8 sekcji sprawdzono")
+
+
+def test_summary_without_completeness_or_with_a_missing_mpzp_has_no_basis() -> None:
+    legacy = smoke.summarize_response(200, _ok())
+    assert legacy["completeness_checked"] is None and legacy["completeness_missing"] == [] and legacy["mpzp_basis"] is None
+
+    missing_mpzp = {**COMPLETENESS, "sections": [{"section": "mpzp", "state": "missing", "basis": "document_candidate"}]}
+    assert smoke.summarize_response(200, _ok(completeness=missing_mpzp))["mpzp_basis"] is None
+    assert smoke.summarize_response(200, _ok(completeness="zepsute"))["completeness_total"] is None
+
+
+def test_summary_histograms_name_the_sections_that_block_complete() -> None:
+    results = [
+        {**_result("a", 200, status="partial", mpzp=0, pog=0), **smoke.summarize_response(200, _ok(completeness=COMPLETENESS))},
+        {**_result("b", 200, status="complete", mpzp=1, pog=1), **smoke.summarize_response(
+            200,
+            _ok("complete", completeness={**COMPLETENESS, "checked": 8, "sections": [
+                {"section": "mpzp", "state": "checked", "basis": "vector_intersection"}]}),
+        )},
+    ]
+
+    summary = smoke.build_summary(results)
+
+    assert summary["completeness_missing_histogram"] == {"mpzp_pog_relation": 1, "pog": 1}
+    assert summary["completeness_checked_histogram"] == {"6 z 8": 1, "8 z 8": 1}
+    assert summary["mpzp_basis_histogram"] == {"document_candidate": 1, "vector_intersection": 1}
+    assert summary["complete"] == 1
+
+
+def test_summary_carries_the_road_and_buildings_statuses_without_inventing_zeros() -> None:
+    body = _ok(
+        road_context={"status": "available", "reason_code": None, "nearest": {"distance_m": 12.35}},
+        neighbour_buildings={"status": "available", "reason_code": None, "on_parcel": {"count": 0}},
+    )
+    summary = smoke.summarize_response(200, body)
+    assert (summary["road_status"], summary["road_distance_m"]) == ("available", 12.35)
+    assert (summary["buildings_status"], summary["buildings_on_parcel"]) == ("available", 0)  # sprawdzone 0 ≠ brak sekcji
+
+    uncovered = smoke.summarize_response(
+        200,
+        _ok(
+            road_context={"status": "no_coverage", "reason_code": "OUTSIDE_COVERAGE", "nearest": None},
+            neighbour_buildings={"status": "no_coverage", "reason_code": "OUTSIDE_COVERAGE", "on_parcel": None},
+        ),
+    )
+    assert uncovered["road_distance_m"] is None and uncovered["buildings_on_parcel"] is None  # null ≠ 0
+    assert (uncovered["road_reason"], uncovered["buildings_reason"]) == ("OUTSIDE_COVERAGE", "OUTSIDE_COVERAGE")
+    legacy = smoke.summarize_response(200, _ok())  # odpowiedź sprzed sekcji
+    assert legacy["road_status"] is None and legacy["buildings_status"] is None
+
+
+def test_summary_histograms_separate_no_coverage_no_match_and_unavailable_per_reason() -> None:
+    def result(case: str, road: dict | None, buildings: dict | None) -> dict[str, Any]:
+        return _result(case, 200, status="partial") | smoke.summarize_response(
+            200, _ok(road_context=road, neighbour_buildings=buildings)
+        ) | {"http_class": "2xx"}
+
+    results = [
+        result("a", {"status": "available", "nearest": {"distance_m": 1.0}}, {"status": "available", "on_parcel": {"count": 2}}),
+        result("b", {"status": "no_match", "reason_code": "SEARCH_RADIUS_EXHAUSTED"}, {"status": "no_coverage", "reason_code": "OUTSIDE_COVERAGE"}),
+        result("c", {"status": "no_coverage", "reason_code": "OUTSIDE_COVERAGE"}, {"status": "unavailable", "reason_code": "QUERY_TIMEOUT"}),
+        result("d", None, None),
+    ]
+
+    summary = smoke.build_summary(results)
+
+    assert summary["road_status_histogram"] == {
+        "available": 1, "brak sekcji": 1, "no_coverage (OUTSIDE_COVERAGE)": 1, "no_match (SEARCH_RADIUS_EXHAUSTED)": 1,
+    }
+    assert summary["buildings_status_histogram"] == {
+        "available": 1, "brak sekcji": 1, "no_coverage (OUTSIDE_COVERAGE)": 1, "unavailable (QUERY_TIMEOUT)": 1,
+    }
+
+
+def test_comparison_and_markdown_show_the_change_of_the_distributions() -> None:
+    def with_road(result: dict[str, Any], status: str, checked: int, total: int) -> dict[str, Any]:
+        return result | {
+            "road_status": status, "road_reason": None, "buildings_status": status, "buildings_reason": None,
+            "completeness_checked": checked, "completeness_total": total, "completeness_missing": [],
+        }
+
+    previous = _report([with_road(_result("a", 200, status="partial"), "unknown", 3, 8)])
+    previous["summary"]["road_status_histogram"] = {"brak sekcji": 1}
+    metadata = {
+        "generated_at": "2026-10-14T10:00:00Z", "started_at": "s", "finished_at": "f", "run_date": "2026-10-14",
+        "duration_seconds": 1.0, "base_url": "http://x", "corpus_id": "BK-002", "manifest_sha256": "a" * 64,
+        "commit_sha": "deadbeef", "concurrency": 3, "timeout_seconds": 180.0, "force_refresh": False,
+    }
+
+    report = smoke.build_report(
+        [with_road(_result("a", 200, status="partial"), "available", 6, 11)], metadata=metadata, previous=previous
+    )
+    markdown = smoke.render_markdown(report)
+
+    deltas = report["comparison"]["histogram_deltas"]
+    assert deltas["road_status_histogram"] == {"before": {"brak sekcji": 1}, "after": {"available": 1}}
+    assert "| `3 z 8` | 1 | 0 |" in markdown
+    assert "| `6 z 11` | 0 | 1 |" in markdown
+    assert "| `brak sekcji` | 1 | 0 |" in markdown and "| `available` | 0 | 1 |" in markdown  # klucz nieobecny = 0
+    assert "Droga (`road_context.status`)" in markdown
+    assert "### Droga i zabudowa sąsiednia" in markdown
+
+
 def test_missing_sections_are_null_not_zero() -> None:
     summary = smoke.summarize_response(200, _ok(mpzp=None, pog=None))
 

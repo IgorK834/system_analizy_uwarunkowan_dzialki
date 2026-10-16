@@ -302,6 +302,247 @@
     "zone_symbol": "U.2"
    }
   ],
+  "neighbour_buildings": {
+   "buffers": [
+    {
+     "built_share_pct": 0.8407,
+     "count": 2,
+     "footprint_area_in_ring_sqm": 150.0,
+     "footprint_max_sqm": 100.0,
+     "footprint_median_sqm": 100.0,
+     "footprint_min_sqm": 100.0,
+     "min_distance_m": 0.0,
+     "radius_m": 50.0,
+     "ring_area_sqm": 17841.3712,
+     "straddling_parcel_count": 1,
+     "union_area_in_ring_sqm": 150.0
+    },
+    {
+     "built_share_pct": 0.4867,
+     "count": 3,
+     "footprint_area_in_ring_sqm": 250.0,
+     "footprint_max_sqm": 100.0,
+     "footprint_median_sqm": 100.0,
+     "footprint_min_sqm": 100.0,
+     "min_distance_m": 0.0,
+     "radius_m": 100.0,
+     "ring_area_sqm": 51365.4849,
+     "straddling_parcel_count": 1,
+     "union_area_in_ring_sqm": 250.0
+    },
+    {
+     "built_share_pct": 0.1511,
+     "count": 3,
+     "footprint_area_in_ring_sqm": 250.0,
+     "footprint_max_sqm": 100.0,
+     "footprint_median_sqm": 100.0,
+     "footprint_min_sqm": 100.0,
+     "min_distance_m": 0.0,
+     "radius_m": 200.0,
+     "ring_area_sqm": 165461.9396,
+     "straddling_parcel_count": 1,
+     "union_area_in_ring_sqm": 250.0
+    }
+   ],
+   "buffers_m": [
+    50.0,
+    100.0,
+    200.0
+   ],
+   "buildings": [
+    {
+     "building_id": "B-0001",
+     "detailed_function": "budynek jednorodzinny",
+     "distance_m": 0.0,
+     "feature_version": "2026-01-22T00:00:00+00:00",
+     "floors": 2,
+     "footprint_sqm": 144.0,
+     "general_function": "budynki mieszkalne",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.922658207628746,
+          50.05968377613063
+         ],
+         [
+          19.922660278075853,
+          50.05979172204359
+         ],
+         [
+          19.922492600589482,
+          50.05979305482051
+         ],
+         [
+          19.922490530518516,
+          50.05968510890249
+         ],
+         [
+          19.922658207628746,
+          50.05968377613063
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "building_id": "B-0001",
+       "distance_m": 0.0,
+       "floors": 2,
+       "function": "budynki mieszkalne",
+       "layer": "neighbour_buildings",
+       "relation": "on_parcel"
+      },
+      "type": "Feature"
+     },
+     "geometry_source": "EGiB",
+     "overlap_with_parcel_sqm": 144.0,
+     "predominant_function": "budynek jednorodzinny",
+     "relation": "on_parcel"
+    },
+    {
+     "building_id": "B-0002",
+     "detailed_function": "budynek gospodarczy",
+     "distance_m": 0.0,
+     "feature_version": "2026-01-22T00:00:00+00:00",
+     "floors": 1,
+     "footprint_sqm": 100.0,
+     "general_function": "budynki produkcyjne, usługowe i gospodarcze dla rolnictwa",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.9232599137503,
+          50.05972397583251
+         ],
+         [
+          19.92326164024957,
+          50.05981393074426
+         ],
+         [
+          19.923121908970945,
+          50.05981504213275
+         ],
+         [
+          19.923120182732887,
+          50.05972508721749
+         ],
+         [
+          19.9232599137503,
+          50.05972397583251
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "building_id": "B-0002",
+       "distance_m": 0.0,
+       "floors": 1,
+       "function": "budynki produkcyjne, usługowe i gospodarcze dla rolnictwa",
+       "layer": "neighbour_buildings",
+       "relation": "straddling"
+      },
+      "type": "Feature"
+     },
+     "geometry_source": "EGiB",
+     "overlap_with_parcel_sqm": 50.0,
+     "predominant_function": "budynek gospodarczy",
+     "relation": "straddling"
+    },
+    {
+     "building_id": "B-0003",
+     "detailed_function": "budynek jednorodzinny",
+     "distance_m": 20.0,
+     "feature_version": "2026-01-22T00:00:00+00:00",
+     "floors": 2,
+     "footprint_sqm": 100.0,
+     "general_function": "budynki mieszkalne",
+     "geometry_geojson": {
+      "geometry": {
+       "coordinates": [
+        [
+         [
+          19.92207133768801,
+          50.05968843977254
+         ],
+         [
+          19.92207306196266,
+          50.059778394714925
+         ],
+         [
+          19.921933330740522,
+          50.05977950467211
+         ],
+         [
+          19.921931606727078,
+          50.05968954972621
+         ],
+         [
+          19.92207133768801,
+          50.05968843977254
+         ]
+        ]
+       ],
+       "type": "Polygon"
+      },
+      "properties": {
+       "building_id": "B-0003",
+       "distance_m": 20.0,
+       "floors": 2,
+       "function": "budynki mieszkalne",
+       "layer": "neighbour_buildings",
+       "relation": "neighbour"
+      },
+      "type": "Feature"
+     },
+     "geometry_source": "EGiB",
+     "overlap_with_parcel_sqm": 0.0,
+     "predominant_function": "budynek jednorodzinny",
+     "relation": "neighbour"
+    }
+   ],
+   "buildings_truncated": false,
+   "candidates_considered": 4,
+   "distance_reference": "parcel_polygon_to_building_footprint",
+   "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
+   "listed_radius_m": 50.0,
+   "on_parcel": {
+    "count": 2,
+    "coverage_pct": 8.0833,
+    "union_area_in_parcel_sqm": 194.0
+   },
+   "parcel_area_sqm": 2400.0,
+   "reason_code": null,
+   "release": {
+    "data_as_of": "2026-01-22",
+    "data_release_id": 21,
+    "imported_at": "2026-09-02T09:00:00Z",
+    "package_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
+    "teryt_powiat": "1261",
+    "version_label": "bdot10k-1261-1355c5a51538"
+   },
+   "ring_definition": "buffer(parcel, r) - parcel",
+   "schema_version": "1.0",
+   "search_area_within_coverage": true,
+   "source": {
+    "act_version": null,
+    "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
+    "confidence": 0.9,
+    "data_release_id": 21,
+    "fetched_at": "2026-09-02T09:00:00Z",
+    "manual_review_required": false,
+    "response_status": null,
+    "source_id": "bdot10k",
+    "source_name": "BDOT10k",
+    "source_url": "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/12/1261_GML.zip",
+    "source_version": "bdot10k-1261-1355c5a51538"
+   },
+   "status": "available",
+   "warnings": []
+  },
   "parcel": {
    "buildable_area_geojson": {
     "geometry": {
@@ -1008,6 +1249,104 @@
     "warnings": []
    }
   ],
+  "road_context": {
+   "candidate_limit": 25,
+   "distance_reference": "parcel_polygon_to_carriageway_axis",
+   "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
+   "intersecting_road_count": 0,
+   "max_search_radius_m": 500.0,
+   "nearest": {
+    "category": "gminna",
+    "distance_m": 12.0,
+    "feature_version": "2026-01-22T00:00:00+00:00",
+    "geometry_kind": "carriageway_axis",
+    "link_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        19.922768266789962,
+        50.05959293255529
+       ],
+       [
+        19.922766196115123,
+        50.0594849866419
+       ]
+      ],
+      "type": "LineString"
+     },
+     "properties": {
+      "category": "gminna",
+      "distance_m": 12.0,
+      "layer": "road_context_link",
+      "road_class": "droga lokalna",
+      "road_id": "28BA1C51-4E6D-8554-E053-CC2BA8C0F941"
+     },
+     "type": "Feature"
+    },
+    "position": "na powierzchni gruntu",
+    "relation": "disjoint",
+    "road_class": "droga lokalna",
+    "road_geojson": {
+     "geometry": {
+      "coordinates": [
+       [
+        19.922207274692028,
+        50.059489428780125
+       ],
+       [
+        19.923394982549304,
+        50.05947998601995
+       ]
+      ],
+      "type": "LineString"
+     },
+     "properties": {
+      "category": "gminna",
+      "distance_m": 12.0,
+      "layer": "road_context",
+      "road_class": "droga lokalna",
+      "road_id": "28BA1C51-4E6D-8554-E053-CC2BA8C0F941"
+     },
+     "type": "Feature"
+    },
+    "road_id": "28BA1C51-4E6D-8554-E053-CC2BA8C0F941",
+    "road_number": null,
+    "street_name": "ul. Przykładowa",
+    "surface_material": "masa bitumiczna",
+    "surface_width_m": 6.0
+   },
+   "reason_code": null,
+   "release": {
+    "data_as_of": "2026-01-22",
+    "data_release_id": 21,
+    "imported_at": "2026-09-02T09:00:00Z",
+    "package_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
+    "teryt_powiat": "1261",
+    "version_label": "bdot10k-1261-1355c5a51538"
+   },
+   "schema_version": "1.0",
+   "search_area_within_coverage": true,
+   "search_radius_m": 25.0,
+   "searched_radii_m": [
+    25.0
+   ],
+   "source": {
+    "act_version": null,
+    "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
+    "confidence": 0.9,
+    "data_release_id": 21,
+    "fetched_at": "2026-09-02T09:00:00Z",
+    "manual_review_required": false,
+    "response_status": null,
+    "source_id": "bdot10k",
+    "source_name": "BDOT10k",
+    "source_url": "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/12/1261_GML.zip",
+    "source_version": "bdot10k-1261-1355c5a51538"
+   },
+   "status": "available",
+   "touching_road_count": 0,
+   "warnings": []
+  },
   "sources": [
    {
     "confidence": 0.9,
@@ -1066,6 +1405,19 @@
     "source_id": "nmt",
     "source_name": "NMT GUGiK",
     "source_url": "https://nmt-gugik.example.test/usluga"
+   },
+   {
+    "act_version": null,
+    "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
+    "confidence": 0.9,
+    "data_release_id": 21,
+    "fetched_at": "2026-09-02T09:00:00Z",
+    "manual_review_required": false,
+    "response_status": null,
+    "source_id": "bdot10k",
+    "source_name": "BDOT10k",
+    "source_url": "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/12/1261_GML.zip",
+    "source_version": "bdot10k-1261-1355c5a51538"
    }
   ],
   "status": "partial",

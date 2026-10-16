@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.rate_limit import reset_all_rate_limiters
 from app.core.settings import settings
 from app.modules.analysis.infrastructure.terrain_raster import clear_native_grid_cache
+from app.modules.planning.composition import clear_ru_pog_query_cache
 
 _ALEMBIC_INI = Path(__file__).resolve().parent.parent / "alembic.ini"
 
@@ -41,6 +42,15 @@ def ru_mpzp_acts_offline(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def ru_pog_discovery_offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Testy nie odpytują WFS ``app-pog`` Rejestru Urbanistycznego (AU-105) — discovery RU jest wyłączone, dopóki
+    test nie włączy go jawnie i nie podstawi zamrożonych odpowiedzi (``tests/ru_pog_fixtures``). Cache zapytań
+    procesu jest czyszczony, żeby wynik jednego testu nie był trafieniem w następnym."""
+    monkeypatch.setattr(settings, "ru_pog_discovery_enabled", False)
+    clear_ru_pog_query_cache()
+
+
+@pytest.fixture(autouse=True)
 def enable_app_loggers() -> None:
     """``alembic/env.py`` woła ``fileConfig``, które domyślnie wyłącza istniejące loggery.
 
@@ -50,6 +60,21 @@ def enable_app_loggers() -> None:
     for name, logger in list(logging.root.manager.loggerDict.items()):
         if name.startswith("app.") and isinstance(logger, logging.Logger):
             logger.disabled = False
+
+
+@pytest.fixture(autouse=True)
+def reset_pog_state_caches() -> None:
+    """Cache zbioru wersji aktów per numer stanu (ADR-026) jest globalny w procesie, a numery stanów w bazach testów
+    (jednorazowe bazy testów migracji, baza aplikacji po ``down -v``) zaczynają się od 1 — bez resetu numer stanu z
+    jednej bazy trafiałby w cache innej i zwracał cudzy zbiór wersji. W produkcji rejestr nie jest odtwarzany, więc
+    numer stanu jednoznacznie wyznacza zbiór wersji."""
+    from app.modules.planning.composition import pog_tile_cache
+    from app.modules.planning.infrastructure.mvt import active_versions_cache, ready_map_versions, state_meta_cache
+
+    active_versions_cache.clear()
+    state_meta_cache.clear()
+    ready_map_versions.clear()
+    pog_tile_cache().clear()
 
 
 @pytest.fixture(autouse=True)
@@ -80,6 +105,9 @@ _MIGRATION_TEST_MODULES = frozenset(
         "test_migration_029",
         "test_migration_030",
         "test_migration_031",
+        "test_migration_036",
+        "test_migration_037",
+        "test_migration_037_data",
         "test_versioned_model",
     }
 )
@@ -164,3 +192,55 @@ def _isolated_migration_database(request: pytest.FixtureRequest):
                 cur.execute(f'DROP DATABASE IF EXISTS "{db_name}"')
         finally:
             admin_conn.close()
+
+
+# ADR-026: krajowy stan POG jest jeden na bazę, więc dane POG zatwierdzone (``commit``) przez jeden test byłyby
+# widoczne dla kolejnych. Testy integracyjne zaczynają od pustego stanu POG; testy zapisujące w transakcji wycofywanej po
+# teście nie zostawiają śladu i nie wymagają sprzątania.
+_POG_CLEANUP_STATEMENTS = (
+    "DELETE FROM import_jobs",
+    "DELETE FROM pog_ru_catalog",
+    "DELETE FROM import_runs WHERE importer_version = 'pog-national-v1'",
+    "DELETE FROM pog_area_summary_zones",
+    "DELETE FROM pog_area_summaries",
+    "DELETE FROM pog_map_acts",
+    "DELETE FROM pog_map_zones",
+    "DELETE FROM pog_map_overlays",
+    "DELETE FROM pog_registry_entries",
+    "DELETE FROM pog_registry_states",
+    "DELETE FROM pog_formal_documents WHERE planning_act_version_id IN "
+    "(SELECT pav.id FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id WHERE pa.kind = 'pog')",
+    "DELETE FROM pog_act_metadata_records WHERE planning_act_version_id IN "
+    "(SELECT pav.id FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id WHERE pa.kind = 'pog')",
+    "DELETE FROM planning_features WHERE planning_act_version_id IN "
+    "(SELECT pav.id FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id WHERE pa.kind = 'pog')",
+    "DELETE FROM plan_boundaries WHERE planning_act_version_id IN "
+    "(SELECT pav.id FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id WHERE pa.kind = 'pog')",
+    "DELETE FROM planning_act_versions WHERE planning_act_id IN (SELECT id FROM planning_acts WHERE kind = 'pog')",
+    "DELETE FROM planning_acts WHERE kind = 'pog'",
+)
+
+
+@pytest.fixture(autouse=True)
+def clean_pog_registry(request: pytest.FixtureRequest):
+    if request.node.get_closest_marker("integration") is None:
+        yield
+        return
+    from sqlalchemy import text
+
+    from app.db.session import SessionLocal
+
+    with SessionLocal() as db:
+        dirty = db.execute(
+            text(
+                "SELECT EXISTS (SELECT 1 FROM planning_acts WHERE kind = 'pog') "
+                "OR EXISTS (SELECT 1 FROM pog_registry_states) OR EXISTS (SELECT 1 FROM import_jobs) "
+                "OR EXISTS (SELECT 1 FROM pog_ru_catalog) "
+                "OR EXISTS (SELECT 1 FROM import_runs WHERE importer_version = 'pog-national-v1')"
+            )
+        ).scalar_one()
+        if dirty:
+            for statement in _POG_CLEANUP_STATEMENTS:
+                db.execute(text(statement))
+            db.commit()
+    yield

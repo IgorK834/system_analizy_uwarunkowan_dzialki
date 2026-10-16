@@ -24,12 +24,12 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from pyproj import Transformer
-from shapely.geometry import box, mapping
+from shapely.geometry import LineString, box, mapping
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
@@ -388,8 +388,109 @@ def _parcel() -> dict[str, Any]:
     }
 
 
+def _bdot_release() -> Any:
+    from app.modules.analysis.domain.bdot import BdotReleaseRef
+
+    return BdotReleaseRef(
+        data_release_id=21,
+        version_label="bdot10k-1261-1355c5a51538",
+        teryt_powiat="1261",
+        published_at=datetime(2026, 9, 2, 9, 0, tzinfo=timezone.utc),
+        package_sha256="d" * 63 + "4",
+        data_as_of=date(2026, 1, 22),
+    )
+
+
+def _road_context() -> dict[str, Any]:
+    """Droga 12 m na południe od działki (wynik rzeczywistych funkcji budujących sekcję, na geometrii syntetycznej)."""
+    from app.modules.analysis.application.roads import RoadContextOutcome
+    from app.modules.analysis.domain.roads import RoadCandidate
+    from app.services.bdot_context import build_road_context
+    from app.shared.provenance import Provenance
+
+    road = LineString([(565990.0, 243988.0), (566075.0, 243988.0)])
+    link = LineString([(566030.0, 244000.0), (566030.0, 243988.0)])
+    release = _bdot_release()
+    outcome = RoadContextOutcome(
+        status="available",
+        provenance=Provenance(source_id="bdot10k", fetched_at=ANALYZED_AT, data_release_id=release.data_release_id),
+        max_search_radius_m=500.0,
+        nearest=RoadCandidate(
+            road_id="28BA1C51-4E6D-8554-E053-CC2BA8C0F941",
+            distance_m=12.0,
+            intersects=False,
+            touches=False,
+            category="gminna",
+            road_class="droga lokalna",
+            street_name="ul. Przykładowa",
+            surface_material="masa bitumiczna",
+            surface_width_m=6.0,
+            position="na powierzchni gruntu",
+            road_wkt=road.wkt,
+            link_wkt=link.wkt,
+            feature_version="2026-01-22T00:00:00+00:00",
+        ),
+        search_radius_m=25.0,
+        searched_radii_m=(25.0,),
+        candidate_limit=25,
+        search_area_within_coverage=True,
+        intersecting_road_count=0,
+        touching_road_count=0,
+        release=release,
+    )
+    return build_road_context(outcome).model_dump(mode="json")
+
+
+def _neighbour_buildings() -> dict[str, Any]:
+    """Cztery budynki: dwa na działce (jeden wystaje poza granicę), sąsiad 20 m na zachód i jeden 80 m na północ."""
+    from app.modules.analysis.application.buildings import BuildingContextOutcome
+    from app.modules.analysis.domain.buildings import (
+        BuildingFootprint,
+        BuildingSearchPlan,
+        compute_building_metrics,
+    )
+    from app.services.bdot_context import build_neighbour_buildings
+    from app.shared.provenance import Provenance
+
+    version = datetime(2026, 1, 22, tzinfo=timezone.utc)
+
+    def footprint(identifier: str, geometry: BaseGeometry, floors: int, function: str) -> BuildingFootprint:
+        residential = "mieszkalne" in function
+        return BuildingFootprint(
+            building_id=identifier,
+            geometry=geometry,
+            area_sqm=geometry.area,
+            general_function=function,
+            detailed_function="budynek jednorodzinny" if residential else "budynek gospodarczy",
+            predominant_function="budynek jednorodzinny" if residential else "budynek gospodarczy",
+            floors=floors,
+            geometry_source="EGiB",
+            feature_version=version,
+        )
+
+    residential, farm = "budynki mieszkalne", "budynki produkcyjne, usługowe i gospodarcze dla rolnictwa"
+    buildings = [
+        footprint("B-0001", box(566010.0, 244010.0, 566022.0, 244022.0), 2, residential),
+        footprint("B-0002", box(566055.0, 244015.0, 566065.0, 244025.0), 1, farm),
+        footprint("B-0003", box(565970.0, 244010.0, 565980.0, 244020.0), 2, residential),
+        footprint("B-0004", box(566020.0, 244120.0, 566030.0, 244130.0), 1, farm),
+    ]
+    plan = BuildingSearchPlan()
+    metrics = compute_building_metrics(PARCEL_2180, buildings, plan)
+    outcome = BuildingContextOutcome(
+        status="available",
+        provenance=Provenance(source_id="bdot10k", fetched_at=ANALYZED_AT, data_release_id=21),
+        plan=plan,
+        metrics=metrics,
+        search_area_within_coverage=True,
+        release=_bdot_release(),
+    )
+    return build_neighbour_buildings(outcome).model_dump(mode="json")
+
+
 def _base(zones: list[dict[str, Any]], legal_status: str) -> dict[str, Any]:
     risks, sections = _risks()
+    road_context, neighbour_buildings = _road_context(), _neighbour_buildings()
     return {
         "analysis_id": None,
         "status": "partial",
@@ -413,6 +514,8 @@ def _base(zones: list[dict[str, Any]], legal_status: str) -> dict[str, Any]:
             "grid_size_m": 5.0, "sampled_points": 96, "source": _source("NMT GUGiK"),
             "warnings": [], "relief": None,
         },
+        "road_context": road_context,
+        "neighbour_buildings": neighbour_buildings,
         "buildable_area_sqm": 1664.0,
         "manual_zone_required": False,
         "manual_zone_context": None,
@@ -428,6 +531,7 @@ def _base(zones: list[dict[str, Any]], legal_status: str) -> dict[str, Any]:
             _source("ISOK WFS"),
             _source("GDOŚ WFS"),
             _source("NMT GUGiK"),
+            road_context["source"],
         ],
     }
 

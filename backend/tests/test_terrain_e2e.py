@@ -93,12 +93,27 @@ def relief_enabled(monkeypatch: pytest.MonkeyPatch) -> FakeWcsClient:
     wcs = FakeWcsClient(coverage=fixture_bytes("wcs_getcoverage_warszawa_parcel_window.tif"))
     monkeypatch.setattr(settings, "terrain_relief_enabled", True)
     monkeypatch.setattr(composition, "build_ogc_client", lambda **_: wcs)
+    from app.core.data_sources import ensure_source_runnable as real_ensure_source_runnable
+
+    # Kontrakt NMT/WCS pochodzi z katalogu testowego; BDOT10k (droga i zabudowa, Task 23.2–23.3) z katalogu repozytorium.
     monkeypatch.setattr(
         composition,
         "ensure_source_runnable",
-        lambda source_id, catalog=None: _catalog().get(source_id),
+        lambda source_id, catalog=None: (
+            real_ensure_source_runnable(source_id, catalog) if source_id == "bdot10k" else _catalog().get(source_id)
+        ),
     )
     return wcs
+
+
+@pytest.fixture
+def bdot_warsaw_release(tmp_path):
+    """Aktywne wydanie BDOT10k powiatu m. st. Warszawy (zamrożony wycinek prawdziwej paczki): działka kontrolna leży w jego
+    zasięgu, więc droga i zabudowa sąsiednia są sprawdzone (wycinek nie ma dróg ani budynków w pobliżu tej działki)."""
+    from tests.bdot_support import installed_releases
+
+    with installed_releases(tmp_path, "1465"):
+        yield
 
 
 def _source(name: str, url: str | None = None, **kwargs) -> SourceMetadata:
@@ -254,7 +269,9 @@ def _reread(analysis_id: int) -> dict:
 
 
 @requires_gdal
-def test_control_measurement_survives_api_db_cache_and_pdf(relief_enabled: FakeWcsClient) -> None:
+def test_control_measurement_survives_api_db_cache_and_pdf(
+    relief_enabled: FakeWcsClient, bdot_warsaw_release  # noqa: ANN001 - fixture pytest
+) -> None:
     identifier = f"{_PREFIX}{uuid4().hex[:6]}"
 
     response, nmt_calls = _post_analyze(identifier, CONTROL.wkt, _nmt("nmt_getminmaxbypolygon.txt"))
@@ -278,8 +295,19 @@ def test_control_measurement_survives_api_db_cache_and_pdf(relief_enabled: FakeW
     assert len(relief["profile"]["samples"]) == 101
     # Źródła WCS 1 m i GetMinMax 4 m różnią się o > 1 m — widoczne ostrzeżenie.
     assert any("różnią się od usługi" in item for item in relief["warnings"])
-    # NMT jest sekcją informacyjną: status nie zależy od rzeźby terenu.
-    assert body["status"] == "partial"
+    # AU-104: wszystkie sekcje w zakresie są sprawdzone (MPZP `no_match`, POG, ISOK, GDOŚ, NMT z rzeźbą), więc
+    # status nagłówkowy to ``complete`` — wynika z kompletności, a nie z wektora MPZP. Brak rzeźby terenu
+    # (WCS niedostępny) obniżyłby go do ``partial``: niesprawdzony teren jest na pasku kompletności.
+    assert body["status"] == "complete" and body["completeness"]["complete"] is True
+    terrain_section = next(item for item in body["completeness"]["sections"] if item["section"] == "terrain")
+    assert terrain_section["state"] == "checked"
+    # Poza zakresem: uzbrojenie (tylko podgląd KIUT) i relacja MPZP–POG (MPZP `no_match` — nie ma strefy do porównania
+    # z POG). Transport i zabudowa sąsiednia mają kontrakt źródła (BDOT10k, Task 23.2–23.3) i są sprawdzone.
+    assert [item["section"] for item in body["completeness"]["sections"] if item["state"] == "out_of_scope"] == [
+        "utilities",
+        "mpzp_pog_relation",
+    ]
+    assert (body["completeness"]["checked"], body["completeness"]["total"]) == (9, 9)
     analysis_id = body["analysis_id"]
     _write_evidence("bk-301-302/01-api-response.json", body)
 

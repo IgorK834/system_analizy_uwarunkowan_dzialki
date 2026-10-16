@@ -31,7 +31,6 @@ from app.schemas.analyze import MpzpZoneResult, ParcelIdAnalyzeRequest
 from app.schemas.source import SourceMetadata
 from app.services.analysis_orchestrator import (
     _analyze_mpzp_vector_zones,
-    _result_status,
     run_analysis,
 )
 from app.services.initiation import ParcelLookupResult
@@ -140,9 +139,8 @@ async def test_conflicting_values_are_kept_and_not_resolved() -> None:
     assert conflicts == ["max_building_height_m"]
     assert mapped.max_building_height_m is None  # brak automatycznego wyboru
     assert mapped.manual_review_required is True
-    assert _result_status(
-        context=_empty_context(), mpzp_zones=[mapped], pog=None, sources=[]
-    ) == "partial"
+    # Sprzeczność parametrów uniemożliwia ``complete`` — zob. ``tests/test_completeness.py``
+    # (``test_unresolved_parameter_conflict_is_not_a_checked_mpzp_section``).
 
 
 @pytest.mark.asyncio
