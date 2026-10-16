@@ -264,6 +264,8 @@ class PogFeaturePresentation:
     source_zone_type: str | None
     symbol: str | None
     label: str | None
+    # ``oznaczenie`` obiektu APP (np. ``9SK``), odrębne od symbolu strefy (``SK``); ``None`` — brak w źródle.
+    designation: str | None
     max_overground_floor_area_ratio: float | None
     max_building_height_m: float | None
     max_building_coverage_pct: float | None
@@ -290,6 +292,7 @@ def pog_feature_presentation(attributes: Mapping[str, object]) -> PogFeaturePres
         source_zone_type=source_zone_type,
         symbol=first_string_attribute(attributes, SYMBOL_KEYS),
         label=first_string_attribute(attributes, LABEL_KEYS),
+        designation=first_string_attribute(attributes, ("oznaczenie",)),
         max_overground_floor_area_ratio=float_parameter(
             parameters, "max_overground_floor_area_ratio"
         ),

@@ -3,8 +3,9 @@
 Kafel MVT niesie „chude” atrybuty (kody profili, skrócona etykieta), dzięki
 czemu inspektor pokazuje strefę natychmiast po kliknięciu. Szczegóły, których
 kafel nie mieści — pełna etykieta, nazwy profili ze słownika, dane aktu
-(nazwa, uchwała, okres obowiązywania, urzędowy kod statusu) — są pobierane
-osobnym, wersjonowanym żądaniem przypiętym do ``release_id``.
+(nazwa, uchwała, daty, dziennik urzędowy, link do aktu w RU, urzędowy kod
+statusu) — są pobierane osobnym, wersjonowanym żądaniem przypiętym do numeru
+stanu krajowego (ADR-026).
 
 Atrybuty kanoniczne (typ strefy, symbol, cztery parametry) liczy ta sama
 funkcja co analiza i kafel (``candidate_presentation``), więc inspektor, mapa
@@ -35,7 +36,7 @@ from app.shared.planning_status import canonical_legal_status
 # APP; ten sam zapis jest akceptowany przez endpoint szczegółów.
 FEATURE_PK_PREFIX: Final[str] = "planning_feature:"
 MAX_FEATURE_ID_LENGTH: Final[int] = 500
-INSPECTOR_SCHEMA_VERSION: Final[str] = "pog-inspector/1"
+INSPECTOR_SCHEMA_VERSION: Final[str] = "pog-inspector/2"
 
 
 class InvalidPogFeatureIdError(ValueError):
@@ -81,15 +82,27 @@ class PogActDetails:
     legal_valid_to: date | None
     publication_id: str | None
     manual_review_required: bool
+    # Wersja aktu jako rekord pochodzenia (ADR-026): klucz wersji, wydanie (audyt importu), skrót artefaktu GML.
+    act_version_id: int | None = None
+    data_release_id: int | None = None
+    release_label: str | None = None
+    artifact_sha256: str | None = None
+    artifact_fetched_at: object = None
+    content_hash: str | None = None
+    # Dane dokumentu uchwalającego (``DokumentFormalny``, relacja ``uchwala``) oraz identyfikator wersji w katalogu RU.
+    effective_date: date | None = None
+    official_journal: str | None = None
+    document_link: str | None = None
+    version_started_on: date | None = None
+    ru_published_act_id: int | None = None
 
 
 @dataclass(frozen=True)
-class PogReleaseHeader:
-    release_id: int
-    version_label: str
-    published_at: object
-    is_active: bool
-    artifact_sha256: str | None
+class PogStateHeader:
+    state_id: int
+    kind: str
+    created_at: object
+    is_current: bool
 
 
 @dataclass(frozen=True)
@@ -103,13 +116,14 @@ class PogFeatureDetailsRow:
 
 @dataclass(frozen=True)
 class PogFeatureDetails:
-    release: PogReleaseHeader
+    state: PogStateHeader
     feature_pk: int
     feature_id: str
     feature_version: str | None
     layer: PogTileLayer
     feature_type: str
     symbol: str | None
+    designation: str | None
     label: str | None
     zone_code: str | None
     source_zone_type: str | None
@@ -123,7 +137,7 @@ class PogFeatureDetails:
     tile_schema: str = POG_TILE_SCHEMA_VERSION
 
 
-def feature_details(row: PogFeatureDetailsRow, release: PogReleaseHeader) -> PogFeatureDetails:
+def feature_details(row: PogFeatureDetailsRow, state: PogStateHeader) -> PogFeatureDetails:
     """Pełne szczegóły obiektu — te same reguły atrybutów co kafel i analiza."""
     candidate = row.candidate
     layer = FEATURE_TYPE_LAYERS.get(candidate.feature_type)
@@ -132,13 +146,14 @@ def feature_details(row: PogFeatureDetailsRow, release: PogReleaseHeader) -> Pog
     presentation = candidate_presentation(candidate)
     is_zone = layer == "zones"
     return PogFeatureDetails(
-        release=release,
+        state=state,
         feature_pk=candidate.pk,
         feature_id=presentation.feature_id or f"{FEATURE_PK_PREFIX}{candidate.pk}",
         feature_version=presentation.feature_version,
         layer=layer,
         feature_type=candidate.feature_type,
         symbol=presentation.symbol,
+        designation=presentation.designation,
         label=presentation.label,
         zone_code=presentation.zone_code if is_zone else None,
         source_zone_type=presentation.source_zone_type if is_zone else None,
@@ -160,8 +175,8 @@ def feature_details(row: PogFeatureDetailsRow, release: PogReleaseHeader) -> Pog
 def payload_etag(kind: str, payload: object) -> str:
     """Silny ETag odpowiedzi wyliczony z jej kanonicznej postaci JSON.
 
-    Wydanie nie zmienia się po publikacji, więc ETag jest stały dla
-    ``release_id``; zmiana kontraktu odpowiedzi zmienia ``kind``.
+    Stan krajowy nie zmienia się po zatwierdzeniu, więc ETag jest stały dla
+    numeru stanu; zmiana kontraktu odpowiedzi zmienia ``kind``.
     """
     encoded = json.dumps(
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str

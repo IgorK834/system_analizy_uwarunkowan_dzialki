@@ -17,6 +17,7 @@ from app.modules.planning.domain.mpzp_acts import (
     RuDocumentRecord,
     RuDrawingRecord,
 )
+from app.modules.planning.domain.pog_discovery import Bbox, PogFeatureRecord, PogFeatureType
 from app.modules.planning.domain.rules import PlanningRuleCandidate
 from app.shared.provenance import Provenance
 
@@ -317,3 +318,52 @@ class RuMpzpActsSource(Protocol):
         self, document_paths: tuple[str, ...] | list[str], drawing_paths: tuple[str, ...] | list[str]
     ) -> RuRelatedResponse:
         """Dokumenty formalne i rysunki po identyfikatorach z ``xlink:href`` aktów."""
+
+
+# --- discovery POG w Rejestrze Urbanistycznym przez WFS (AU-105) -----------------------------------------------
+
+
+class RequestBudgetExceeded(Exception):
+    """Wyczerpano budżet żądań HTTP do usługi na jedną analizę; żądania nie wysłano."""
+
+
+@runtime_checkable
+class RequestBudget(Protocol):
+    """Licznik żądań HTTP jednej analizy. ``acquire`` jest wołane przed KAŻDYM żądaniem (także ponowieniem)."""
+
+    @property
+    def used(self) -> int: ...
+
+    def acquire(self) -> None:
+        """Rezerwuje jedno żądanie albo podnosi ``RequestBudgetExceeded`` (bez wysyłania)."""
+
+
+@dataclass(frozen=True)
+class RuPogFeaturesResponse:
+    """Obiekty jednego typu APP z kafla zapytania.
+
+    ``error_code`` jest ustawiony wyłącznie przy niepowodzeniu odczytu — wtedy ``features`` jest puste, ale odpowiedź
+    NIE jest „brakiem obiektów”. ``complete=False`` to wynik częściowy (przerwana paginacja, wyczerpany budżet).
+    ``requests`` to liczba żądań HTTP zużytych przez to wywołanie (0 dla trafienia cache); ``fetched_at`` to chwila
+    pobrania z usługi, nie chwila odczytu z cache.
+    """
+
+    features: tuple[PogFeatureRecord, ...]
+    complete: bool
+    fetched_at: datetime | None = None
+    source: Provenance | None = None
+    issues: tuple[str, ...] = ()
+    error_code: str | None = None
+    error_message: str | None = None
+    requests: int = 0
+    origin: str = "network"
+
+
+@runtime_checkable
+class RuPogFeaturesSource(Protocol):
+    """Port kanału ``pog_app``: obiekty APP z kafla ``bbox`` (blokujące wywołanie sieciowe)."""
+
+    def fetch_features(
+        self, feature_type: PogFeatureType, tile: Bbox, budget: RequestBudget | None = None
+    ) -> RuPogFeaturesResponse:
+        """Obiekty typu ``feature_type``, których obwiednia przecina ``tile`` (EPSG:2180, x = wschód)."""

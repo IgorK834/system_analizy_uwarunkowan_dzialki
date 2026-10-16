@@ -1,10 +1,10 @@
 """Kontrakt odczytu agregatów powierzchniowych stref POG (BK-405).
 
-Agregaty są liczone przy publikacji wydania (moduł ``imports``) i czytane tu
+Agregaty są liczone przy publikacji wersji aktu (moduł ``imports``) i czytane tu
 jako gotowe liczby — HTTP nie wykonuje żadnych operacji przestrzennych.
-Zakres wskazuje dokładnie jeden z parametrów: ``act_id`` (akt w wydaniu) albo
-``teryt`` (gmina, z edycją ``binding``/``project`` — nakładające się akty
-gminy nie są dublowane).
+Zakres wskazuje dokładnie jeden z parametrów: ``act_id`` (akt aktywny w stanie
+krajowym) albo ``teryt`` (gmina, z edycją ``binding``/``project`` — nakładające
+się akty gminy nie są dublowane).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-POG_SUMMARY_SCHEMA_VERSION: Final[str] = "pog-area-summary/1"
+POG_SUMMARY_SCHEMA_VERSION: Final[str] = "pog-area-summary/2"
 SUMMARY_EDITIONS: Final[tuple[str, ...]] = ("binding", "project")
 DEFAULT_SUMMARY_EDITION: Final[str] = "binding"
 _TERYT: Final[re.Pattern[str]] = re.compile(r"^\d{6,7}$")
@@ -26,7 +26,7 @@ class InvalidPogSummaryQueryError(ValueError):
 
 @dataclass(frozen=True)
 class PogAreaSummaryQuery:
-    release_id: int
+    state_id: int
     act_id: str | None = None
     teryt: str | None = None
     edition: str | None = None
@@ -35,8 +35,8 @@ class PogAreaSummaryQuery:
         act_id = (self.act_id or "").strip() or None
         teryt = (self.teryt or "").strip() or None
         edition = (self.edition or "").strip() or None
-        if self.release_id <= 0:
-            raise InvalidPogSummaryQueryError("Identyfikator wydania musi być dodatni.")
+        if self.state_id <= 0:
+            raise InvalidPogSummaryQueryError("Numer stanu krajowego musi być dodatni.")
         if (act_id is None) == (teryt is None):
             raise InvalidPogSummaryQueryError(
                 "Podaj dokładnie jeden zakres: act_id (akt) albo teryt (gmina)."
@@ -48,7 +48,7 @@ class PogAreaSummaryQuery:
                 )
             if len(act_id) > MAX_ACT_ID_LENGTH:
                 raise InvalidPogSummaryQueryError("Identyfikator aktu jest za długi.")
-            return PogAreaSummaryQuery(self.release_id, act_id=act_id)
+            return PogAreaSummaryQuery(self.state_id, act_id=act_id)
         assert teryt is not None
         if not _TERYT.match(teryt):
             raise InvalidPogSummaryQueryError("TERYT gminy musi mieć 6 lub 7 cyfr.")
@@ -58,7 +58,7 @@ class PogAreaSummaryQuery:
                 f"Nieznana edycja {edition!r}; dozwolone: {', '.join(SUMMARY_EDITIONS)}."
             )
         # Kod 7-cyfrowy (z rodzajem gminy) jest sprowadzany do 6 cyfr TERYT gminy.
-        return PogAreaSummaryQuery(self.release_id, teryt=teryt[:6], edition=edition)
+        return PogAreaSummaryQuery(self.state_id, teryt=teryt[:6], edition=edition)
 
     @property
     def scope(self) -> str:
@@ -76,9 +76,12 @@ class PogAreaSummaryZoneView:
 
 @dataclass(frozen=True)
 class PogAreaSummaryView:
+    state_id: int
+    # Numer stanu, w którym agregat powstał (gmina) albo wydanie wersji aktu (akt) — pochodzenie liczb.
+    computed_in_state_id: int | None
     release_id: int
     release_label: str
-    release_is_active: bool
+    state_is_current: bool
     artifact_sha256: str | None
     scope: str
     act_id: str | None

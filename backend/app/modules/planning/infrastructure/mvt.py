@@ -1,293 +1,240 @@
-"""Adapter PostGIS kafli wektorowych POG (BK-401).
+"""Adapter PostGIS kafli wektorowych POG z krajowego stanu rejestru (BK-401, ADR-026).
 
-Potok SQL: ``ST_TileEnvelope`` (EPSG:3857) → selekcja indeksem GiST na
-kanonicznych geometriach EPSG:2180 → ``ST_Transform`` do 3857 →
-``ST_AsMVTGeom(extent=4096, buffer=64)`` → ``ST_AsMVT`` osobno dla każdej z pięciu
-warstw logicznych, sklejonych w jeden kafel (konkatenacja warstw protobuf).
+Kafel powstaje jednym zapytaniem: tabele ``pog_map_*`` (kopie do wyświetlania w EPSG:3857, gotowe atrybuty,
+trzy stopnie uproszczenia zależne od zoomu) → selekcja indeksem GiST po obwiedni kafla z marginesem →
+``ST_AsMVTGeom(extent=4096, buffer=64)`` → ``ST_AsMVT`` osobno dla każdej z pięciu warstw logicznych, sklejonych w jeden
+protobuf. O widoczności wersji aktów decyduje rejestr: zbiór identyfikatorów wersji aktywnych w stanie ``N`` jest
+wyliczany raz i zapamiętywany (stan jest niezmienny po zatwierdzeniu), a zapytanie dostaje go jako tablicę.
 
-Selekcja ma dwa kroki: najpierw pobierane są kandydaci z wąskim podzbiorem
-atrybutów, a atrybuty kafla wylicza ta sama czysta funkcja domenowa, której
-używa analiza działki. Drugie zapytanie koduje geometrie z identyfikatorami
-cech i gotowymi atrybutami. Surowe ``raw_attributes`` nie trafiają do kafla.
+Atrybuty kafla liczy przy publikacji wersji ta sama funkcja co w analizie (``planning.domain.pog_tiles``), a ``NULL``
+nie jest kodowany w MVT: brak wartości parametru = brak klucza, nigdy 0. Etykiety i kody profili trafiają do kafla
+dopiero od z13 (``TEXT_ATTRIBUTES_MIN_ZOOM``) — przy małym zoomie nie są czytelne, a zwiększałyby kafel.
 """
 
 from __future__ import annotations
 
-import json
-import math
 import threading
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Final
 
-from sqlalchemy import text
+from sqlalchemy import RowMapping, text
 from sqlalchemy.orm import Session
 
-from app.modules.planning.application.pog_tiles import PogTileCache, PogTileRepository
-from app.modules.planning.domain.pog_features import RAW_ATTRIBUTE_KEYS
-from app.shared.planning_status import (
-    LEGAL_STATUS_ALIASES,
-    LEGAL_STATUS_VALUES,
-    canonical_legal_status,
-)
+from app.modules.planning.application.pog_tiles import EncodedTile, PogTileCache, PogTileRepository
 from app.modules.planning.domain.pog_tiles import (
-    FEATURE_TYPE_LAYERS,
+    LAYER_MIN_ZOOM,
     MVT_BUFFER,
     MVT_EXTENT,
-    POG_TILE_LAYERS,
+    TEXT_ATTRIBUTES_MIN_ZOOM,
+    FEATURE_TYPE_LAYERS,
     PogCoverageArea,
-    PogReleaseInfo,
+    PogStateInfo,
     PogTile,
-    PogTileCandidate,
     PogTileRequest,
+    geometry_column,
 )
+from app.shared.planning_status import canonical_legal_status
+from app.shared.pog_registry import ACTIVE_AT_STATE_SQL
 
-WEB_MERCATOR_WORLD_SIZE_M: Final[float] = 2 * math.pi * 6378137.0
-# Krawędź koperty 3857 jest dzielona przed transformacją do 2180, aby łuk
-# odwzorowania nie „ścinał” rogów kafla przy selekcji.
-ENVELOPE_SEGMENTS_PER_EDGE: Final[int] = 16
-
-_TILE_CTE: Final[str] = """
-    tile AS (
-        SELECT
-            ST_TileEnvelope(:z, :x, :y) AS env3857,
-            ST_Transform(
-                ST_Segmentize(
-                    ST_TileEnvelope(:z, :x, :y, margin => :margin), :segment
-                ),
-                2180
-            ) AS env2180
-    )
-"""
-
+_ZONE_ATTRIBUTES: Final[str] = (
+    "z.feature_ref AS feature_id, z.feature_version, z.symbol, z.designation, "
+    "CASE WHEN CAST(:with_text AS boolean) THEN z.label END AS label, z.legal_status, z.teryt, z.act_id, "
+    "z.zone_code, z.max_overground_floor_area_ratio, z.max_building_height_m, z.max_building_coverage_pct, "
+    "z.min_biologically_active_pct, z.parameters_informational, "
+    "CASE WHEN CAST(:with_text AS boolean) THEN z.primary_profiles END AS primary_profiles, "
+    "CASE WHEN CAST(:with_text AS boolean) THEN z.additional_profiles END AS additional_profiles"
+)
+_OVERLAY_ATTRIBUTES: Final[str] = (
+    "o.feature_ref AS feature_id, o.feature_version, o.symbol, "
+    "CASE WHEN CAST(:with_text AS boolean) THEN o.label END AS label, o.legal_status, o.teryt, o.act_id"
+)
+_ACT_ATTRIBUTES: Final[str] = (
+    "a.act_id, left(a.name, 200) AS label, a.legal_status, a.teryt, a.act_version, a.resolution_number, "
+    "CAST(a.resolution_date AS text) AS resolution_date, CAST(a.legal_valid_from AS text) AS valid_from, "
+    "CAST(a.effective_date AS text) AS effective_date, CAST(a.version_started_on AS text) AS version_started_on"
+)
 _STATUS_FILTER: Final[str] = (
-    "(CAST(:statuses AS text[]) IS NULL OR pav.legal_status = ANY(CAST(:statuses AS text[])))"
+    "(CAST(:statuses AS text[]) IS NULL OR {alias}.legal_status = ANY(CAST(:statuses AS text[])))"
 )
 
-_CANDIDATES_SQL: Final[str] = f"""
-    WITH {_TILE_CTE}
-    SELECT pf.id AS pk, pf.feature_type, pf.feature_identifier, pf.feature_version,
-           pf.symbol, pf.label, pf.parameters, pf.primary_profiles,
-           pf.additional_profiles,
-           (
-               SELECT jsonb_object_agg(attr.key, attr.value)
-               FROM jsonb_each(
-                   CASE WHEN jsonb_typeof(pf.raw_attributes) = 'object'
-                        THEN pf.raw_attributes ELSE '{{}}'::jsonb END
-               ) AS attr
-               WHERE lower(attr.key) = ANY(CAST(:raw_keys AS text[]))
-           ) AS raw_attributes,
-           pa.act_identifier, pa.teryt, pav.legal_status
-    FROM planning_features pf
-    JOIN planning_act_versions pav ON pav.id = pf.planning_act_version_id
-    JOIN planning_acts pa ON pa.id = pav.planning_act_id
-    CROSS JOIN tile
-    WHERE pa.kind = 'pog'
-      AND pav.data_release_id = :release_id
-      AND pf.feature_type = ANY(CAST(:feature_types AS text[]))
-      AND {_STATUS_FILTER}
-      AND pf.geometry && tile.env2180
-      AND ST_Intersects(pf.geometry, tile.env2180)
-    ORDER BY pf.id
-    LIMIT :limit
-"""
+_OVERLAY_LAYERS: Final[tuple[str, ...]] = ("ouz", "downtown", "social_infrastructure_standard")
 
-# Kolumny (atrybuty) każdej warstwy. ``NULL`` nie jest kodowany w MVT, więc
-# brak wartości parametru pozostaje brakiem, a nie zerem.
-_COMMON_COLUMNS: Final[tuple[str, ...]] = (
-    "feature_id", "feature_version", "symbol", "label", "legal_status", "teryt",
-    "act_id", "data_release_id",
+_ACTIVE_VERSIONS_SQL: Final[str] = (
+    "SELECT e.planning_act_version_id FROM pog_registry_entries e WHERE " + ACTIVE_AT_STATE_SQL
 )
-_ZONE_COLUMNS: Final[tuple[str, ...]] = (
-    *_COMMON_COLUMNS,
-    "zone_code",
-    "max_overground_floor_area_ratio",
-    "max_building_height_m",
-    "max_building_coverage_pct",
-    "min_biologically_active_pct",
-    "parameters_informational",
-    "primary_profiles",
-    "additional_profiles",
-)
-_PROPS_RECORD: Final[str] = """
-    pk bigint, layer text, feature_id text, feature_version text, symbol text,
-    label text, legal_status text, teryt text, act_id text, data_release_id bigint,
-    zone_code text, max_overground_floor_area_ratio double precision,
-    max_building_height_m double precision, max_building_coverage_pct double precision,
-    min_biologically_active_pct double precision, parameters_informational boolean,
-    primary_profiles text, additional_profiles text
-"""
 
 
-def _canonical_legal_status_sql(column: str) -> str:
-    """SQL-owe lustro ``canonical_legal_status`` generowane z tych samych stałych."""
-    values = ", ".join(f"'{value}'" for value in LEGAL_STATUS_VALUES)
-    aliases = " ".join(
-        f"WHEN {column} = '{alias}' THEN '{target}'"
-        for alias, target in LEGAL_STATUS_ALIASES.items()
+def _tile_ctes(z: int) -> tuple[str, list[str]]:
+    """CTE-y warstw dostępnych przy zoomie ``z`` oraz ich nazwy (kolejność = kolejność warstw w kaflu)."""
+    ctes: list[str] = []
+    names: list[str] = []
+    if z >= LAYER_MIN_ZOOM["zones"]:
+        col = geometry_column("zones", z)
+        ctes.append(
+            f"""zones AS MATERIALIZED (
+            SELECT z.feature_id AS pk, {_ZONE_ATTRIBUTES},
+                   ST_AsMVTGeom(z.{col}, tile.env, {MVT_EXTENT}, {MVT_BUFFER}, true) AS geom
+            FROM pog_map_zones z CROSS JOIN tile
+            WHERE z.planning_act_version_id = ANY(CAST(:versions AS int[]))
+              AND z.geom_full && tile.env_m AND {_STATUS_FILTER.format(alias="z")}
+            ORDER BY z.feature_id LIMIT :limit)"""
+        )
+        names.append("zones")
+    for layer in _OVERLAY_LAYERS:
+        if z < LAYER_MIN_ZOOM[layer]:
+            continue
+        col = geometry_column(layer, z)
+        ctes.append(
+            f"""{layer} AS MATERIALIZED (
+            SELECT o.feature_id AS pk, {_OVERLAY_ATTRIBUTES},
+                   ST_AsMVTGeom(o.{col}, tile.env, {MVT_EXTENT}, {MVT_BUFFER}, true) AS geom
+            FROM pog_map_overlays o CROSS JOIN tile
+            WHERE o.planning_act_version_id = ANY(CAST(:versions AS int[]))
+              AND o.layer = '{layer}' AND o.geom_full && tile.env_m AND {_STATUS_FILTER.format(alias="o")}
+            ORDER BY o.feature_id LIMIT :limit)"""
+        )
+        names.append(layer)
+    col = geometry_column("act_boundary", z)
+    ctes.append(
+        f"""act_boundary AS MATERIALIZED (
+            SELECT a.planning_act_version_id AS pk, {_ACT_ATTRIBUTES},
+                   ST_AsMVTGeom(a.{col}, tile.env, {MVT_EXTENT}, {MVT_BUFFER}, true) AS geom
+            FROM pog_map_acts a CROSS JOIN tile
+            WHERE a.planning_act_version_id = ANY(CAST(:versions AS int[]))
+              AND a.geom_full && tile.env_m AND {_STATUS_FILTER.format(alias="a")}
+            ORDER BY a.planning_act_version_id LIMIT :limit)"""
     )
-    return f"CASE WHEN {column} IN ({values}) THEN {column} {aliases} ELSE 'unknown' END"
+    names.append("act_boundary")
+    return ",\n    ".join(ctes), names
 
 
-def _layer_sql(layer: str) -> str:
-    if layer == "act_boundary":
-        columns = "pk, geom, act_id, label, legal_status, teryt, data_release_id, act_version"
-        source = "boundaries"
-        where = "geom IS NOT NULL"
-    else:
-        selected = _ZONE_COLUMNS if layer == "zones" else _COMMON_COLUMNS
-        columns = ", ".join(("pk", "geom", *selected))
-        source = "feats"
-        where = f"layer = '{layer}' AND geom IS NOT NULL"
-    return (
-        f"COALESCE((SELECT ST_AsMVT(q, '{layer}', {MVT_EXTENT}, 'geom', 'pk') "
-        f"FROM (SELECT {columns} FROM {source} WHERE {where} ORDER BY pk) AS q), "
-        "'\\x'::bytea)"
+def _tile_sql(z: int) -> tuple[str, list[str]]:
+    ctes, names = _tile_ctes(z)
+    counts = ", ".join(f"(SELECT count(*) FROM {name}) AS n_{name}" for name in names)
+    layers = " || ".join(
+        f"COALESCE((SELECT ST_AsMVT(q, '{name}', {MVT_EXTENT}, 'geom', 'pk') "
+        f"FROM (SELECT * FROM {name} WHERE geom IS NOT NULL ORDER BY pk) AS q), '\\x'::bytea)"
+        for name in names
     )
-
-
-_ENCODE_SQL: Final[str] = f"""
-    WITH {_TILE_CTE},
-    props AS (
-        SELECT * FROM jsonb_to_recordset(CAST(:features AS jsonb)) AS p({_PROPS_RECORD})
+    sql = f"""
+    WITH tile AS (
+        SELECT ST_TileEnvelope(:z, :x, :y) AS env,
+               ST_TileEnvelope(:z, :x, :y, margin => :margin) AS env_m
     ),
-    feats AS (
-        SELECT props.*,
-               ST_AsMVTGeom(
-                   ST_Transform(ST_ClipByBox2D(pf.geometry, ST_Envelope(tile.env2180)), 3857),
-                   tile.env3857, {MVT_EXTENT}, {MVT_BUFFER}, true
-               ) AS geom
-        FROM props
-        JOIN planning_features pf ON pf.id = props.pk
-        CROSS JOIN tile
-    ),
-    boundaries AS (
-        SELECT pb.id AS pk, pa.act_identifier AS act_id,
-               left(pav.name, 200) AS label,
-               {_canonical_legal_status_sql("pav.legal_status")} AS legal_status,
-               pa.teryt, CAST(:release_id AS bigint) AS data_release_id,
-               pav.object_version_id AS act_version,
-               ST_AsMVTGeom(
-                   ST_Transform(ST_ClipByBox2D(pb.geometry, ST_Envelope(tile.env2180)), 3857),
-                   tile.env3857, {MVT_EXTENT}, {MVT_BUFFER}, true
-               ) AS geom
-        FROM plan_boundaries pb
-        JOIN planning_act_versions pav ON pav.id = pb.planning_act_version_id
-        JOIN planning_acts pa ON pa.id = pav.planning_act_id
-        CROSS JOIN tile
-        WHERE pa.kind = 'pog'
-          AND pav.data_release_id = :release_id
-          AND {_STATUS_FILTER}
-          AND pb.geometry && tile.env2180
-          AND ST_Intersects(pb.geometry, tile.env2180)
-        ORDER BY pb.id
-        LIMIT :boundary_limit
-    )
-    SELECT {" || ".join(_layer_sql(layer) for layer in POG_TILE_LAYERS)} AS tile
+    {ctes}
+    SELECT {counts}, {layers} AS tile
+    """
+    return sql, names
+
+
+_STATE_SQL: Final[str] = """
+    SELECT s.id, s.kind, s.created_at, s.id = (SELECT max(id) FROM pog_registry_states) AS is_current
+    FROM pog_registry_states s WHERE s.id = :state_id
 """
 
-_RELEASE_SQL: Final[str] = """
-    SELECT dr.id, dr.version_label, dr.published_at, dr.is_active, ds.source_id,
-           (SELECT sa.content_hash
-              FROM planning_act_versions pav
-              JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
-             WHERE pav.data_release_id = dr.id
-             ORDER BY pav.id LIMIT 1) AS artifact_sha256
-    FROM data_releases dr
-    JOIN data_sources ds ON ds.id = dr.data_source_id
-    WHERE dr.id = :release_id
-      AND EXISTS (
-          SELECT 1 FROM planning_act_versions pav
-          JOIN planning_acts pa ON pa.id = pav.planning_act_id
-          WHERE pav.data_release_id = dr.id AND pa.kind = 'pog'
-      )
-"""
-
-_RELEASE_STATUS_SQL: Final[str] = """
+_STATE_STATUS_SQL: Final[str] = """
     SELECT COALESCE(pav.legal_status, 'unknown') AS legal_status, count(*) AS acts
-    FROM planning_act_versions pav
-    JOIN planning_acts pa ON pa.id = pav.planning_act_id
-    WHERE pav.data_release_id = :release_id AND pa.kind = 'pog'
-    GROUP BY 1
+    FROM planning_act_versions pav WHERE pav.id = ANY(CAST(:versions AS int[])) GROUP BY 1
 """
 
-_RELEASE_BOUNDS_SQL: Final[str] = """
-    WITH geoms AS (
-        SELECT pf.geometry AS geom
-        FROM planning_features pf
-        JOIN planning_act_versions pav ON pav.id = pf.planning_act_version_id
-        WHERE pav.data_release_id = :release_id
-        UNION ALL
-        SELECT pb.geometry
-        FROM plan_boundaries pb
-        JOIN planning_act_versions pav ON pav.id = pb.planning_act_version_id
-        WHERE pav.data_release_id = :release_id
-    ), extent AS (
-        SELECT ST_Transform(ST_SetSRID(ST_Extent(geom)::geometry, 2180), 4326) AS g
-        FROM geoms
-    )
-    SELECT ST_XMin(g) AS min_lon, ST_YMin(g) AS min_lat,
-           ST_XMax(g) AS max_lon, ST_YMax(g) AS max_lat
-    FROM extent WHERE g IS NOT NULL
+_STATE_BOUNDS_SQL: Final[str] = """
+    SELECT ST_XMin(g) AS min_lon, ST_YMin(g) AS min_lat, ST_XMax(g) AS max_lon, ST_YMax(g) AS max_lat
+    FROM (
+        SELECT ST_Transform(ST_SetSRID(ST_Extent(a.geom_full)::geometry, 3857), 4326) AS g
+        FROM pog_map_acts a WHERE a.planning_act_version_id = ANY(CAST(:versions AS int[]))
+    ) e WHERE g IS NOT NULL
 """
 
-# Zasięg danych każdego aktu (granica + obiekty) w 4326 oraz kompletność z
-# gotowego agregatu BK-405. Koperta jest segmentyzowana przed transformacją,
-# żeby łuk odwzorowania nie ścinał narożników zasięgu.
-_RELEASE_COVERAGE_SQL: Final[str] = """
+# Zasięg danych każdej aktywnej wersji aktu w 4326 + kompletność agregatu aktu (BK-405). Akt bez granicy ma zasięg
+# z obwiedni swoich stref. Koperta jest segmentyzowana przed transformacją, żeby łuk odwzorowania nie ścinał narożników.
+_STATE_COVERAGE_SQL: Final[str] = """
     WITH versions AS (
         SELECT pav.id, pa.act_identifier, pa.teryt, pav.legal_status
-        FROM planning_act_versions pav
-        JOIN planning_acts pa ON pa.id = pav.planning_act_id
-        WHERE pav.data_release_id = :release_id AND pa.kind = 'pog'
-    ), geoms AS (
-        SELECT pf.planning_act_version_id AS version_id, pf.geometry AS geom
-        FROM planning_features pf JOIN versions v ON v.id = pf.planning_act_version_id
-        UNION ALL
-        SELECT pb.planning_act_version_id, pb.geometry
-        FROM plan_boundaries pb JOIN versions v ON v.id = pb.planning_act_version_id
+        FROM planning_act_versions pav JOIN planning_acts pa ON pa.id = pav.planning_act_id
+        WHERE pav.id = ANY(CAST(:versions AS int[]))
     ), extents AS (
-        SELECT version_id,
-               ST_Transform(
-                   ST_Segmentize(ST_SetSRID(ST_Extent(geom)::geometry, 2180), 500), 4326
-               ) AS g
-        FROM geoms GROUP BY version_id
+        SELECT v.id AS version_id,
+               ST_Transform(ST_Segmentize(COALESCE(
+                   (SELECT ST_Envelope(a.geom_full) FROM pog_map_acts a WHERE a.planning_act_version_id = v.id),
+                   (SELECT ST_SetSRID(ST_Extent(z.geom_full)::geometry, 3857) FROM pog_map_zones z
+                     WHERE z.planning_act_version_id = v.id)), 50000), 4326) AS g
+        FROM versions v
     )
     SELECT v.act_identifier, v.teryt, v.legal_status,
-           ST_XMin(e.g) AS min_lon, ST_YMin(e.g) AS min_lat,
-           ST_XMax(e.g) AS max_lon, ST_YMax(e.g) AS max_lat,
-           EXISTS (
-               SELECT 1 FROM plan_boundaries pb WHERE pb.planning_act_version_id = v.id
-           ) AS has_boundary,
+           ST_XMin(e.g) AS min_lon, ST_YMin(e.g) AS min_lat, ST_XMax(e.g) AS max_lon, ST_YMax(e.g) AS max_lat,
+           EXISTS (SELECT 1 FROM plan_boundaries pb WHERE pb.planning_act_version_id = v.id) AS has_boundary,
            s.is_complete, s.incomplete_reasons
     FROM versions v
     LEFT JOIN extents e ON e.version_id = v.id
-    LEFT JOIN pog_area_summaries s
-           ON s.planning_act_version_id = v.id AND s.scope = 'act'
-          AND s.data_release_id = :release_id
+    LEFT JOIN pog_area_summaries s ON s.planning_act_version_id = v.id AND s.scope = 'act'
     ORDER BY v.act_identifier, v.id
 """
 
-_ACTIVE_RELEASE_SQL: Final[str] = """
-    SELECT dr.id
-    FROM data_releases dr
-    JOIN data_sources ds ON ds.id = dr.data_source_id
-    WHERE ds.source_id = :source_id AND dr.is_active
-    LIMIT 1
+# Brakujące wiersze mapy liczone przez porównanie liczności per wersja (indeksy po ``planning_act_version_id``) —
+# antyjoin po 500 tys. obiektów trwał ponad sekundę na stanie krajowym.
+_MISSING_MAP_ROWS_SQL: Final[str] = """
+    SELECT pav.id FROM planning_act_versions pav
+    WHERE pav.id = ANY(CAST(:versions AS int[]))
+      AND (
+        (EXISTS (SELECT 1 FROM plan_boundaries pb WHERE pb.planning_act_version_id = pav.id)
+         AND NOT EXISTS (SELECT 1 FROM pog_map_acts a WHERE a.planning_act_version_id = pav.id))
+        OR (SELECT count(*) FROM planning_features pf
+              WHERE pf.planning_act_version_id = pav.id AND pf.feature_type = ANY(CAST(:feature_types AS text[])))
+           > (SELECT count(*) FROM pog_map_zones z WHERE z.planning_act_version_id = pav.id)
+             + (SELECT count(*) FROM pog_map_overlays o WHERE o.planning_act_version_id = pav.id)
+      )
 """
 
+_STATE_CACHE_SIZE: Final[int] = 32
 
-def _tile_params(request: PogTileRequest) -> dict[str, Any]:
-    tile_size = WEB_MERCATOR_WORLD_SIZE_M / (1 << request.z)
-    return {
-        "z": request.z,
-        "x": request.x,
-        "y": request.y,
-        "margin": MVT_BUFFER / MVT_EXTENT,
-        "segment": tile_size / ENVELOPE_SEGMENTS_PER_EDGE,
-        "release_id": request.release_id,
-        "statuses": list(request.legal_statuses) if request.legal_statuses else None,
-    }
+
+class _StateCache:
+    """Pamięć procesu per numer stanu (LRU). Zbiór wersji aktywnych w stanie jest niezmienny po zatwierdzeniu."""
+
+    def __init__(self, capacity: int) -> None:
+        self._capacity = capacity
+        self._items: OrderedDict[int, Any] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, state_id: int) -> Any | None:
+        with self._lock:
+            value = self._items.get(state_id)
+            if value is not None:
+                self._items.move_to_end(state_id)
+            return value
+
+    def put(self, state_id: int, value: Any) -> None:
+        with self._lock:
+            self._items[state_id] = value
+            self._items.move_to_end(state_id)
+            while len(self._items) > self._capacity:
+                self._items.popitem(last=False)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._items.clear()
+
+
+@dataclass(frozen=True)
+class _StateMeta:
+    """Niezmienna część metadanych stanu (nie zależy od tego, czy stan jest jeszcze bieżący)."""
+
+    act_count: int
+    bounds: tuple[float, float, float, float] | None
+    acts_by_legal_status: Mapping[str, int]
+    coverage_areas: tuple[PogCoverageArea, ...]
+
+
+active_versions_cache = _StateCache(_STATE_CACHE_SIZE)
+# Statystyki, zasięg i kompletność stanu liczone raz na stan — wyłącznie gdy mapa jest kompletna (po ``pog-map-rebuild``
+# zasięgi brakujących wersji by się zmieniły, więc stanu z brakami nie zapamiętujemy).
+state_meta_cache = _StateCache(_STATE_CACHE_SIZE)
+# Wersje aktu, dla których sprawdzono kompletność wierszy mapy. Wiersze wersji powstają raz przy publikacji i się nie
+# zmieniają, więc po stwierdzeniu kompletności sprawdzenie nie jest powtarzane — nowy stan sprawdza tylko nowe wersje.
+ready_map_versions: set[int] = set()
+_ready_lock = threading.Lock()
 
 
 class SqlAlchemyPogTileRepository(PogTileRepository):
@@ -302,21 +249,38 @@ class SqlAlchemyPogTileRepository(PogTileRepository):
             {"value": str(self._statement_timeout_ms)},
         )
 
-    def release_info(self, release_id: int) -> PogReleaseInfo | None:
-        row = self._session.execute(
-            text(_RELEASE_SQL), {"release_id": release_id}
-        ).mappings().one_or_none()
+    def _versions(self, state_id: int) -> tuple[int, ...]:
+        cached = active_versions_cache.get(state_id)
+        if cached is not None:
+            return cached
+        versions = tuple(
+            sorted(
+                int(value)
+                for value in self._session.execute(
+                    text(_ACTIVE_VERSIONS_SQL), {"state_id": state_id}
+                ).scalars()
+            )
+        )
+        active_versions_cache.put(state_id, versions)
+        return versions
+
+    def current_state_id(self) -> int | None:
+        value = self._session.execute(text("SELECT max(id) FROM pog_registry_states")).scalar_one()
+        return int(value) if value is not None else None
+
+    def state_info(self, state_id: int) -> PogStateInfo | None:
+        row = self._session.execute(text(_STATE_SQL), {"state_id": state_id}).mappings().one_or_none()
         if row is None:
             return None
+        cached: _StateMeta | None = state_meta_cache.get(state_id)
+        if cached is not None:
+            return self._info(row, cached, missing=0)
+        versions = list(self._versions(state_id))
         statuses = {
             str(item["legal_status"]): int(item["acts"])
-            for item in self._session.execute(
-                text(_RELEASE_STATUS_SQL), {"release_id": release_id}
-            ).mappings()
+            for item in self._session.execute(text(_STATE_STATUS_SQL), {"versions": versions}).mappings()
         }
-        bounds_row = self._session.execute(
-            text(_RELEASE_BOUNDS_SQL), {"release_id": release_id}
-        ).mappings().one_or_none()
+        bounds_row = self._session.execute(text(_STATE_BOUNDS_SQL), {"versions": versions}).mappings().one_or_none()
         bounds = (
             (
                 float(bounds_row["min_lon"]),
@@ -324,7 +288,7 @@ class SqlAlchemyPogTileRepository(PogTileRepository):
                 float(bounds_row["max_lon"]),
                 float(bounds_row["max_lat"]),
             )
-            if bounds_row is not None
+            if bounds_row is not None and bounds_row["min_lon"] is not None
             else None
         )
         coverage = tuple(
@@ -343,82 +307,62 @@ class SqlAlchemyPogTileRepository(PogTileRepository):
                     else None
                 ),
                 has_boundary=bool(item["has_boundary"]),
-                is_complete=(
-                    bool(item["is_complete"]) if item["is_complete"] is not None else None
-                ),
+                is_complete=bool(item["is_complete"]) if item["is_complete"] is not None else None,
                 incomplete_reasons=tuple(str(r) for r in (item["incomplete_reasons"] or [])),
             )
-            for item in self._session.execute(
-                text(_RELEASE_COVERAGE_SQL), {"release_id": release_id}
-            ).mappings()
+            for item in self._session.execute(text(_STATE_COVERAGE_SQL), {"versions": versions}).mappings()
         )
-        return PogReleaseInfo(
-            release_id=int(row["id"]),
-            source_id=str(row["source_id"]),
-            version_label=str(row["version_label"]),
-            published_at=row["published_at"],
-            is_active=bool(row["is_active"]),
-            artifact_sha256=row["artifact_sha256"],
-            bounds=bounds,
-            acts_by_legal_status=statuses,
-            coverage_areas=coverage,
+        with _ready_lock:
+            unverified = [version for version in versions if version not in ready_map_versions]
+        missing_ids: set[int] = set()
+        if unverified:
+            missing_ids = {
+                int(value)
+                for value in self._session.execute(
+                    text(_MISSING_MAP_ROWS_SQL),
+                    {"versions": unverified, "feature_types": list(FEATURE_TYPE_LAYERS)},
+                ).scalars()
+            }
+            with _ready_lock:
+                ready_map_versions.update(version for version in unverified if version not in missing_ids)
+        missing = len(missing_ids)
+        meta = _StateMeta(len(versions), bounds, statuses, coverage)
+        if missing == 0:
+            state_meta_cache.put(state_id, meta)
+        return self._info(row, meta, missing=missing)
+
+    @staticmethod
+    def _info(row: RowMapping, meta: _StateMeta, *, missing: int) -> PogStateInfo:
+        return PogStateInfo(
+            state_id=int(row["id"]),
+            source_id="pog_app",
+            kind=str(row["kind"]),
+            created_at=row["created_at"],
+            is_current=bool(row["is_current"]),
+            act_count=meta.act_count,
+            bounds=meta.bounds,
+            acts_by_legal_status=meta.acts_by_legal_status,
+            coverage_areas=meta.coverage_areas,
+            versions_without_map_rows=missing,
         )
 
-    def active_release_id(self, source_id: str) -> int | None:
-        value = self._session.execute(
-            text(_ACTIVE_RELEASE_SQL), {"source_id": source_id}
-        ).scalar_one_or_none()
-        return int(value) if value is not None else None
-
-    def tile_candidates(
-        self, request: PogTileRequest, *, limit: int
-    ) -> list[PogTileCandidate]:
+    def encode_tile(self, request: PogTileRequest, *, max_features: int) -> EncodedTile:
         self._limit_statement_time()
-        rows = self._session.execute(
-            text(_CANDIDATES_SQL),
-            {
-                **_tile_params(request),
-                "raw_keys": sorted(RAW_ATTRIBUTE_KEYS),
-                "feature_types": list(FEATURE_TYPE_LAYERS),
-                "limit": limit,
-            },
-        ).mappings()
-        return [
-            PogTileCandidate(
-                pk=int(row["pk"]),
-                feature_type=str(row["feature_type"]),
-                feature_identifier=row["feature_identifier"],
-                feature_version=row["feature_version"],
-                symbol=row["symbol"],
-                label=row["label"],
-                parameters=row["parameters"],
-                primary_profiles=row["primary_profiles"],
-                additional_profiles=row["additional_profiles"],
-                raw_attributes=row["raw_attributes"],
-                act_identifier=str(row["act_identifier"]),
-                teryt=row["teryt"],
-                legal_status=row["legal_status"],
-            )
-            for row in rows
-        ]
-
-    def encode_tile(
-        self,
-        request: PogTileRequest,
-        features: Sequence[dict[str, object]],
-        *,
-        boundary_limit: int,
-    ) -> bytes:
-        self._limit_statement_time()
-        content = self._session.execute(
-            text(_ENCODE_SQL),
-            {
-                **_tile_params(request),
-                "features": json.dumps(list(features)),
-                "boundary_limit": boundary_limit,
-            },
-        ).scalar_one()
-        return bytes(content or b"")
+        versions = list(self._versions(request.state_id))
+        sql, names = _tile_sql(request.z)
+        params: dict[str, Any] = {
+            "z": request.z,
+            "x": request.x,
+            "y": request.y,
+            "margin": MVT_BUFFER / MVT_EXTENT,
+            "versions": versions,
+            "statuses": list(request.legal_statuses) if request.legal_statuses else None,
+            "with_text": request.z >= TEXT_ATTRIBUTES_MIN_ZOOM,
+            "limit": max_features + 1,
+        }
+        row = self._session.execute(text(sql), params).mappings().one()
+        counts = {name: int(row[f"n_{name}"]) for name in names}
+        return EncodedTile(content=bytes(row["tile"] or b""), counts=counts)
 
 
 class InMemoryPogTileCache(PogTileCache):

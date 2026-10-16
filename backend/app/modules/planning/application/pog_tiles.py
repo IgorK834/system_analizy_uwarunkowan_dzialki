@@ -1,23 +1,20 @@
-"""Przypadek użycia: kafle MVT POG przypięte do wydania danych (BK-401)."""
+"""Przypadek użycia: kafle MVT POG przypięte do stanu krajowego (BK-401, ADR-026)."""
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Protocol
 
 from app.modules.planning.domain.pog_tiles import (
-    PogReleaseInfo,
+    PogStateInfo,
     PogTile,
-    PogTileCandidate,
     PogTileRequest,
     tile_etag,
-    tile_feature_properties,
 )
 
 
-class PogReleaseNotFoundError(LookupError):
-    """Wydanie nie istnieje albo nie zawiera aktów POG (HTTP 404)."""
+class PogStateNotFoundError(LookupError):
+    """Stan krajowy POG nie istnieje (HTTP 404)."""
 
 
 class PogTileTooLargeError(RuntimeError):
@@ -28,26 +25,30 @@ class PogTileTooLargeError(RuntimeError):
         self.limit = limit
 
 
+@dataclass(frozen=True)
+class EncodedTile:
+    """Wynik kodowania w PostGIS: bajty protobuf i liczności warstw (do kontroli limitu)."""
+
+    content: bytes
+    counts: dict[str, int]
+
+    @property
+    def feature_count(self) -> int:
+        return sum(self.counts.values())
+
+
 class PogTileRepository(Protocol):
-    def release_info(self, release_id: int) -> PogReleaseInfo | None:
-        """Metadane wydania albo ``None``, gdy nie jest wydaniem POG."""
+    def state_info(self, state_id: int) -> PogStateInfo | None:
+        """Metadane stanu krajowego albo ``None``, gdy stan nie istnieje."""
 
-    def active_release_id(self, source_id: str) -> int | None:
-        """Identyfikator aktywnego wydania źródła POG."""
+    def current_state_id(self) -> int | None:
+        """Najnowszy numer stanu krajowego (``None`` — rejestr jest pusty)."""
 
-    def tile_candidates(
-        self, request: PogTileRequest, *, limit: int
-    ) -> list[PogTileCandidate]:
-        """Obiekty czterech warstw przecinające kafel (selekcja GiST w 2180)."""
+    def encode_tile(self, request: PogTileRequest, *, max_features: int) -> EncodedTile:
+        """Koduje warstwy kafla jednym zapytaniem ``ST_AsMVT`` z tabel ``pog_map_*`` (pusty kafel = ``b""``).
 
-    def encode_tile(
-        self,
-        request: PogTileRequest,
-        features: Sequence[dict[str, object]],
-        *,
-        boundary_limit: int,
-    ) -> bytes:
-        """Koduje warstwy kafla przez ``ST_AsMVT`` (pusty kafel = ``b""``)."""
+        Każda warstwa jest ograniczona do ``max_features + 1`` obiektów, żeby przekroczenie limitu było wykrywalne.
+        """
 
 
 class PogTileCache(Protocol):
@@ -82,25 +83,23 @@ class PogTileService:
     def limits(self) -> PogTileLimits:
         return self._limits
 
-    def active_release(self) -> PogReleaseInfo:
-        release_id = self._repository.active_release_id(self._source_id)
-        if release_id is None:
-            raise PogReleaseNotFoundError("Brak aktywnego lokalnego wydania POG.")
-        return self.release(release_id)
+    def current_state(self) -> PogStateInfo:
+        state_id = self._repository.current_state_id()
+        if state_id is None:
+            raise PogStateNotFoundError("Brak lokalnych danych POG: rejestr stanu krajowego jest pusty.")
+        return self.state(state_id)
 
-    def release(self, release_id: int) -> PogReleaseInfo:
-        info = self._repository.release_info(release_id)
+    def state(self, state_id: int) -> PogStateInfo:
+        info = self._repository.state_info(state_id)
         if info is None:
-            raise PogReleaseNotFoundError(
-                f"Wydanie {release_id} nie istnieje albo nie zawiera aktów POG."
-            )
+            raise PogStateNotFoundError(f"Stan krajowy POG {state_id} nie istnieje.")
         return info
 
     def get_tile(self, request: PogTileRequest) -> PogTile:
         """Zwraca kafel z cache albo koduje go z PostGIS.
 
-        Kafel jest deterministyczną funkcją wydania, edycji i adresu, więc
-        cache nie wymaga unieważniania — nowe wydanie ma inny ``release_id``.
+        Kafel jest deterministyczną funkcją numeru stanu, edycji i adresu, więc cache nie wymaga unieważniania —
+        każda zmiana rejestru tworzy nowy numer stanu (wariant „unieważnij całość”: klucz zawiera numer stanu).
         """
         request.validate(min_zoom=self._limits.min_zoom, max_zoom=self._limits.max_zoom)
         key = request.cache_key
@@ -108,35 +107,27 @@ class PogTileService:
         if cached is not None:
             return replace(cached, cache_status="HIT")
 
-        self.release(request.release_id)
-        candidates = self._repository.tile_candidates(
-            request, limit=self._limits.max_features + 1
-        )
-        if len(candidates) > self._limits.max_features:
+        if self._repository.state_info(request.state_id) is None:
+            raise PogStateNotFoundError(f"Stan krajowy POG {request.state_id} nie istnieje.")
+        encoded = self._repository.encode_tile(request, max_features=self._limits.max_features)
+        if any(count > self._limits.max_features for count in encoded.counts.values()):
             raise PogTileTooLargeError(
                 "Kafel zawiera więcej obiektów POG niż dozwolony limit "
-                f"({self._limits.max_features}); przybliż mapę.",
+                f"({self._limits.max_features} na warstwę); przybliż mapę.",
                 limit="features",
             )
-        features = [
-            tile_feature_properties(candidate, release_id=request.release_id)
-            for candidate in candidates
-        ]
-        content = self._repository.encode_tile(
-            request, features, boundary_limit=self._limits.max_features
-        )
-        if len(content) > self._limits.max_bytes:
+        if len(encoded.content) > self._limits.max_bytes:
             raise PogTileTooLargeError(
-                f"Kafel ma {len(content)} B i przekracza limit "
+                f"Kafel ma {len(encoded.content)} B i przekracza limit "
                 f"{self._limits.max_bytes} B; przybliż mapę.",
                 limit="bytes",
             )
         tile = PogTile(
-            content=content,
-            etag=tile_etag(key, content),
-            feature_count=len(features),
+            content=encoded.content,
+            etag=tile_etag(key, encoded.content),
+            feature_count=encoded.feature_count,
             cache_status="MISS",
-            release_id=request.release_id,
+            state_id=request.state_id,
             edition=request.edition,
         )
         self._cache.put(key, tile)

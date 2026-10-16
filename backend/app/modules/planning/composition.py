@@ -12,6 +12,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.core.data_sources import CatalogError, ensure_source_runnable
+from app.core.metrics import upstream_metrics
 from app.core.settings import Settings, settings
 from app.modules.imports.composition import build_ogc_client
 from app.modules.planning.application import llm_metrics
@@ -28,12 +29,19 @@ from app.modules.planning.application.llm_pipeline import BudgetTracker, LlmBudg
 from app.modules.planning.application.ports import (
     KimpzpFeatureInfoParser,
     RuMpzpActsSource,
+    RuPogFeaturesResponse,
+    RuPogFeaturesSource,
     StructuredExtractionError,
     StructuredExtractionErrorCode,
     StructuredExtractionProvider,
 )
-from app.modules.planning.application.pog_release_queries import PogReleaseQueryService
+from app.modules.planning.application.pog_state_queries import PogStateQueryService
 from app.modules.planning.application.pog_tiles import PogTileLimits, PogTileService
+from app.modules.planning.application.ru_pog_discovery import (
+    CachedRuPogFeaturesSource,
+    ThreadSafeRequestBudget,
+    TtlQueryCache,
+)
 from app.modules.planning.application.service import PlanningRuleService
 from app.modules.planning.infrastructure.llm.fake_provider import ReplayStructuredExtractionProvider
 from app.modules.planning.infrastructure.llm.gemini_provider import (
@@ -55,12 +63,13 @@ from app.modules.planning.domain import extraction_contract as contract
 from app.modules.planning.domain.candidate_verifier import VerifierPolicy
 from app.modules.planning.infrastructure.kimpzp_feature_info import parse_kimpzp_feature_info
 from app.modules.planning.infrastructure.ru_mpzp_acts import RuMpzpActsAdapter
+from app.modules.planning.infrastructure.ru_pog_features import BeforeRequest, RuPogFeaturesAdapter
 from app.modules.planning.infrastructure.mvt import (
     InMemoryPogTileCache,
     SqlAlchemyPogTileRepository,
 )
-from app.modules.planning.infrastructure.pog_release_queries import (
-    SqlAlchemyPogReleaseQueryRepository,
+from app.modules.planning.infrastructure.pog_state_queries import (
+    SqlAlchemyPogStateQueryRepository,
 )
 from app.modules.planning.infrastructure.repository import (
     SqlAlchemyPlanningRuleRepository,
@@ -110,6 +119,62 @@ def ru_mpzp_acts_source(app_settings: Settings | None = None) -> RuMpzpActsSourc
     return RuMpzpActsAdapter(wfs_url=url, client_factory=client_factory)
 
 
+@lru_cache(maxsize=1)
+def _ru_pog_query_cache() -> TtlQueryCache[RuPogFeaturesResponse]:
+    """Cache zapytań RU procesu API (AU-105): jeden na proces, wspólny dla wszystkich analiz."""
+    return TtlQueryCache(max_entries=settings.ru_pog_cache_max_entries)
+
+
+def clear_ru_pog_query_cache() -> None:
+    """Czyści cache zapytań RU (testy i obsługa operatora)."""
+    _ru_pog_query_cache().clear()
+
+
+def new_ru_pog_request_budget(app_settings: Settings | None = None) -> ThreadSafeRequestBudget:
+    """Budżet żądań HTTP do RU dla jednej analizy (``RU_POG_REQUEST_BUDGET``, domyślnie 6)."""
+    return ThreadSafeRequestBudget((app_settings or settings).ru_pog_request_budget)
+
+
+def ru_pog_features_source(app_settings: Settings | None = None) -> RuPogFeaturesSource | None:
+    """Kanał ``pog_app`` (AU-105): obiekty APP z Rejestru Urbanistycznego (WFS) za portem ``RuPogFeaturesSource``.
+
+    Adres WFS pochodzi z katalogu źródeł (zasób ``ru_wfs``), a źródło musi przejść guard uruchomienia. Wyłączony
+    kanał albo źródło niedozwolone w katalogu to ``None`` — discovery zwraca wtedy „brak potwierdzonego źródła”,
+    a nie brak POG. Zapytania są cache'owane per (typ, kafel) z TTL i deduplikowane (ADR-023).
+    """
+    active = app_settings or settings
+    if not active.ru_pog_discovery_enabled:
+        return None
+    try:
+        entry = ensure_source_runnable("pog_app")
+    except CatalogError:
+        logger.warning("ru_pog_features_source_not_runnable")
+        return None
+    resource = next((item for item in entry.resources if item.role == "ru_wfs"), None)
+    if resource is None:
+        logger.warning("ru_pog_features_wfs_resource_missing")
+        return None
+    url = resource.url
+
+    def client_factory(before_request: BeforeRequest | None):  # noqa: ANN202 - OgcClient jest typem publicznym modułu imports
+        return build_ogc_client(
+            source_id="pog_app",
+            urls=[url],
+            total_timeout_seconds=active.ru_pog_timeout_seconds,
+            max_response_bytes=active.ru_pog_max_response_bytes,
+            retries=1,
+            before_request=before_request,
+        )
+
+    return CachedRuPogFeaturesSource(
+        RuPogFeaturesAdapter(wfs_url=url, client_factory=client_factory),
+        cache=_ru_pog_query_cache(),
+        ttl_seconds=active.ru_pog_cache_ttl_seconds,
+        negative_ttl_seconds=active.ru_pog_cache_negative_ttl_seconds,
+        metrics=upstream_metrics.increment,
+    )
+
+
 def build_planning_rule_service(session: Session) -> PlanningRuleService:
     return PlanningRuleService(
         SqlAlchemyPlanningRuleRepository(session),
@@ -119,7 +184,7 @@ def build_planning_rule_service(session: Session) -> PlanningRuleService:
 
 @lru_cache(maxsize=1)
 def pog_tile_cache() -> InMemoryPogTileCache:
-    """Cache procesu API; kafle są niezmienne dla ``release_id`` i schematu."""
+    """Cache procesu API; kafle są niezmienne dla numeru stanu krajowego i schematu atrybutów."""
     return InMemoryPogTileCache(settings.pog_tile_cache_max_bytes)
 
 
@@ -139,9 +204,9 @@ def build_pog_tile_service(session: Session) -> PogTileService:
     )
 
 
-def build_pog_release_query_service(session: Session) -> PogReleaseQueryService:
-    """Inspektor obiektu (BK-404) i agregaty stref (BK-405) przypięte do wydania."""
-    return PogReleaseQueryService(SqlAlchemyPogReleaseQueryRepository(session))
+def build_pog_state_query_service(session: Session) -> PogStateQueryService:
+    """Inspektor obiektu (BK-404) i agregaty stref (BK-405) przypięte do numeru stanu krajowego."""
+    return PogStateQueryService(SqlAlchemyPogStateQueryRepository(session))
 
 
 def build_structured_extraction_provider(
