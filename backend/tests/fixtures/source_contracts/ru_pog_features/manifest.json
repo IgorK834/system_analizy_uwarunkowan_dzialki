@@ -1,0 +1,1687 @@
+{
+  "cases": {
+    "real-001-146510-8-0502-1-3": {
+      "requests": [
+        {
+          "bbox": "486700.000,637300.000,487000.000,638000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "fb4d5dbc7b991f4f.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "486700.000,637300.000,487000.000,638000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "8a0ce16009de31b0.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "486700.000,637300.000,487000.000,638000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "0adf6b1d163cbd2e.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "486700.000,637300.000,487000.000,638000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "83ce59a46fc72933.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1465108",
+      "tile": [
+        637300.0,
+        486700.0,
+        638000.0,
+        487000.0
+      ]
+    },
+    "real-002-146510-8-0310-82-2": {
+      "requests": [
+        {
+          "bbox": "487000.000,637500.000,487100.000,637650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "4e1a9a68db7a1557.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "487000.000,637500.000,487100.000,637650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "816d0ca50895c41f.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "487000.000,637500.000,487100.000,637650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "e137f748468904c6.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "487000.000,637500.000,487100.000,637650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "898d67de0ab14e1d.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1465108",
+      "tile": [
+        637500.0,
+        487000.0,
+        637650.0,
+        487100.0
+      ]
+    },
+    "real-003-146510-8-0504-1": {
+      "requests": [
+        {
+          "bbox": "486350.000,637500.000,486500.000,637800.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "2ac80bd17992c1b9.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "486350.000,637500.000,486500.000,637800.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "d25f1000e686d2aa.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "486350.000,637500.000,486500.000,637800.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "43c3fd6ca433f522.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "486350.000,637500.000,486500.000,637800.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "dc035955cf9949f5.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1465108",
+      "tile": [
+        637500.0,
+        486350.0,
+        637800.0,
+        486500.0
+      ]
+    },
+    "real-004-146510-8-0309-1-4": {
+      "requests": [
+        {
+          "bbox": "487100.000,637100.000,487350.000,637250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "ca0e39f9216aa332.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "487100.000,637100.000,487350.000,637250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "12edfb1636b2820b.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "487100.000,637100.000,487350.000,637250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "48962d49fae550a2.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "487100.000,637100.000,487350.000,637250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "fdc956791c1b04dd.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1465108",
+      "tile": [
+        637100.0,
+        487100.0,
+        637250.0,
+        487350.0
+      ]
+    },
+    "real-005-126105-9-0001-580-4": {
+      "requests": [
+        {
+          "bbox": "244100.000,566900.000,244400.000,567200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "c784f3b150735308.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "244100.000,566900.000,244400.000,567200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "a3575796aca39730.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "244100.000,566900.000,244400.000,567200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "48a8793ff5a2e97e.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "244100.000,566900.000,244400.000,567200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "af0b38a0bc9e5472.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1261059",
+      "tile": [
+        566900.0,
+        244100.0,
+        567200.0,
+        244400.0
+      ]
+    },
+    "real-006-126105-9-0001-49-2": {
+      "requests": [
+        {
+          "bbox": "244500.000,567300.000,244550.000,567400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "4e3de6dff1428525.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "244500.000,567300.000,244550.000,567400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3b218fff60eefce4.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "244500.000,567300.000,244550.000,567400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "5bb432b03bc4b441.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "244500.000,567300.000,244550.000,567400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "07dd3020d833d57b.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1261059",
+      "tile": [
+        567300.0,
+        244500.0,
+        567400.0,
+        244550.0
+      ]
+    },
+    "real-007-126105-9-0001-540-15": {
+      "requests": [
+        {
+          "bbox": "243400.000,567150.000,243950.000,567350.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "2d7c1f25c5fdf9f0.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "243400.000,567150.000,243950.000,567350.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "341815798010de44.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "243400.000,567150.000,243950.000,567350.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3e71492581a5d854.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "243400.000,567150.000,243950.000,567350.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "1726fe3f3a708879.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1261059",
+      "tile": [
+        567150.0,
+        243400.0,
+        567350.0,
+        243950.0
+      ]
+    },
+    "real-008-126105-9-0119-181-10": {
+      "requests": [
+        {
+          "bbox": "244700.000,566850.000,244800.000,566900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "572abaac4b20ea98.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "244700.000,566850.000,244800.000,566900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "52522201e3435fa2.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "244700.000,566850.000,244800.000,566900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "d166d9e77a917036.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "244700.000,566850.000,244800.000,566900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "7243bde73dff61c5.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "1261059",
+      "tile": [
+        566850.0,
+        244700.0,
+        566900.0,
+        244800.0
+      ]
+    },
+    "real-009-246101-1-0056-155-3": {
+      "requests": [
+        {
+          "bbox": "217200.000,503200.000,217350.000,503300.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "04eb219116a8a270.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "217200.000,503200.000,217350.000,503300.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "d7f5fec0a949b40d.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "217200.000,503200.000,217350.000,503300.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "a9104a2993f1c3e1.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "217200.000,503200.000,217350.000,503300.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "62a91bfee8f4f674.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        503200.0,
+        217200.0,
+        503300.0,
+        217350.0
+      ]
+    },
+    "real-010-246101-1-0055-68-13": {
+      "requests": [
+        {
+          "bbox": "217450.000,503400.000,217600.000,503500.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "145379d699baf5cb.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "217450.000,503400.000,217600.000,503500.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "064497e3f53afd74.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "217450.000,503400.000,217600.000,503500.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "334eda74810ab9bb.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "217450.000,503400.000,217600.000,503500.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "e416dbacec2d4e93.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        503400.0,
+        217450.0,
+        503500.0,
+        217600.0
+      ]
+    },
+    "real-011-246101-1-0081-7": {
+      "requests": [
+        {
+          "bbox": "216800.000,503350.000,216900.000,503450.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "8e26f878ebffe9ea.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "216800.000,503350.000,216900.000,503450.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "8bc101a39b38c573.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "216800.000,503350.000,216900.000,503450.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "56b9eafbcda7ad2b.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "216800.000,503350.000,216900.000,503450.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "767d29c57130f221.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        503350.0,
+        216800.0,
+        503450.0,
+        216900.0
+      ]
+    },
+    "real-012-246101-1-0056-110-1": {
+      "requests": [
+        {
+          "bbox": "217700.000,502750.000,217900.000,503000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "e13ed377dbc9186b.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "217700.000,502750.000,217900.000,503000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3fb0932180d1c307.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "217700.000,502750.000,217900.000,503000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "f7c6e06ed2d33afe.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "217700.000,502750.000,217900.000,503000.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "9a821e73b3323b1e.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        502750.0,
+        217700.0,
+        503000.0,
+        217900.0
+      ]
+    },
+    "real-013-026201-1-0009-1319-4": {
+      "requests": [
+        {
+          "bbox": "374950.000,301100.000,375050.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "263ec97f26651b64.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "374950.000,301100.000,375050.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "5a710b700df91b75.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "374950.000,301100.000,375050.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "237b93f746b500bf.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "374950.000,301100.000,375050.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "c3b12e5a768a1821.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        },
+        {
+          "bbox": "374950.000,301100.000,375050.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "1c7732aefc34b48f.xml.gz",
+          "start_index": 10,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0262011",
+      "tile": [
+        301100.0,
+        374950.0,
+        301400.0,
+        375050.0
+      ]
+    },
+    "real-014-026201-1-0010-410-1": {
+      "requests": [
+        {
+          "bbox": "375200.000,301450.000,375350.000,301600.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "127a8126ffc8c0f3.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "375200.000,301450.000,375350.000,301600.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "913ff8b479e3af07.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "375200.000,301450.000,375350.000,301600.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "925f4d849816b875.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "375200.000,301450.000,375350.000,301600.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "551d824e7fcd1d81.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0262011",
+      "tile": [
+        301450.0,
+        375200.0,
+        301600.0,
+        375350.0
+      ]
+    },
+    "real-015-026201-1-0015-530": {
+      "requests": [
+        {
+          "bbox": "374450.000,301400.000,374650.000,301550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "7d97f046f3c9127a.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "374450.000,301400.000,374650.000,301550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "cf722ea7b4842e69.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "374450.000,301400.000,374650.000,301550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3f69ca4a987c208a.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "374450.000,301400.000,374650.000,301550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "6d1ff388a77d5642.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0262011",
+      "tile": [
+        301400.0,
+        374450.0,
+        301550.0,
+        374650.0
+      ]
+    },
+    "real-016-026201-1-0009-579-9": {
+      "requests": [
+        {
+          "bbox": "375400.000,301000.000,375550.000,301150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3a3b671ba9854a63.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "375400.000,301000.000,375550.000,301150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "f038ba392a1ca8ba.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "375400.000,301000.000,375550.000,301150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "6fe76a1a32cdeb6e.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "375400.000,301000.000,375550.000,301150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "e9bb82cc74750de9.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0262011",
+      "tile": [
+        301000.0,
+        375400.0,
+        301150.0,
+        375550.0
+      ]
+    },
+    "real-017-281603-4-0001-496-5": {
+      "requests": [
+        {
+          "bbox": "643300.000,685900.000,644150.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "72dbc90afbfb77a0.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "643300.000,685900.000,644150.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "94373d2863e689bb.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "643300.000,685900.000,644150.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "db28b5c1a7a858ce.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "643300.000,685900.000,644150.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "07f395a82d5d9aae.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816034",
+      "tile": [
+        685900.0,
+        643300.0,
+        686150.0,
+        644150.0
+      ]
+    },
+    "real-018-281603-4-0001-358": {
+      "requests": [
+        {
+          "bbox": "644250.000,686050.000,644300.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "0c07d8771c18a163.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "644250.000,686050.000,644300.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "cb386ff310b5804f.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "644250.000,686050.000,644300.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "ea1e39eec61dd267.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "644250.000,686050.000,644300.000,686150.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3f2e57b3d51e5bb0.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816034",
+      "tile": [
+        686050.0,
+        644250.0,
+        686150.0,
+        644300.0
+      ]
+    },
+    "real-019-281603-4-0001-740": {
+      "requests": [
+        {
+          "bbox": "643550.000,686050.000,643600.000,686100.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "40de43efe981f74c.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "643550.000,686050.000,643600.000,686100.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "80a01d2123c4242d.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "643550.000,686050.000,643600.000,686100.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "669681de9f60da40.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "643550.000,686050.000,643600.000,686100.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "49c2a308b7ddca08.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816034",
+      "tile": [
+        686050.0,
+        643550.0,
+        686100.0,
+        643600.0
+      ]
+    },
+    "real-020-281603-4-0002-130": {
+      "requests": [
+        {
+          "bbox": "644450.000,685550.000,644600.000,685750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "2bceb9eb20c9ba4f.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "644450.000,685550.000,644600.000,685750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "66b35ffae1ff393a.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "644450.000,685550.000,644600.000,685750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "999316236b673620.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "644450.000,685550.000,644600.000,685750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "fb0cbc5de0eb34e3.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816034",
+      "tile": [
+        685550.0,
+        644450.0,
+        685750.0,
+        644600.0
+      ]
+    },
+    "real-021-022104-2-0002-352": {
+      "requests": [
+        {
+          "bbox": "326450.000,297650.000,326550.000,297750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "4dbea61ca5de89b2.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "326450.000,297650.000,326550.000,297750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "51aa4a3480bc064e.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "326450.000,297650.000,326550.000,297750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "b5af3ca05f20f837.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "326450.000,297650.000,326550.000,297750.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "7fe1aba6df64c775.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0221042",
+      "tile": [
+        297650.0,
+        326450.0,
+        297750.0,
+        326550.0
+      ]
+    },
+    "real-022-022104-2-0002-288-20": {
+      "requests": [
+        {
+          "bbox": "326550.000,297900.000,326800.000,298200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "943b74b6b3a010c6.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "326550.000,297900.000,326800.000,298200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "8eb2df33a2860deb.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "326550.000,297900.000,326800.000,298200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "2553772059436c9a.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "326550.000,297900.000,326800.000,298200.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "87eefa4cccf30f80.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0221042",
+      "tile": [
+        297900.0,
+        326550.0,
+        298200.0,
+        326800.0
+      ]
+    },
+    "real-023-022104-2-0002-776": {
+      "requests": [
+        {
+          "bbox": "326050.000,297800.000,326150.000,297900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "6c6a66d0e8c53886.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "326050.000,297800.000,326150.000,297900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "189e9d61e7d7122e.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "326050.000,297800.000,326150.000,297900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "42fd171ef3b5d5dc.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "326050.000,297800.000,326150.000,297900.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "ceeea555a9c894cf.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0221042",
+      "tile": [
+        297800.0,
+        326050.0,
+        297900.0,
+        326150.0
+      ]
+    },
+    "real-024-022104-2-0002-230-2": {
+      "requests": [
+        {
+          "bbox": "326950.000,297400.000,327100.000,297550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "bf6a8832b5403027.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "326950.000,297400.000,327100.000,297550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "74c1fa971e240c9a.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "326950.000,297400.000,327100.000,297550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "807439d79c8a0a70.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "326950.000,297400.000,327100.000,297550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "06a6e362d15e56dd.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0221042",
+      "tile": [
+        297400.0,
+        326950.0,
+        297550.0,
+        327100.0
+      ]
+    },
+    "real-025-281603-4-0001-431-66": {
+      "requests": [
+        {
+          "bbox": "642600.000,685350.000,643600.000,685850.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "6c684fd51f7260bf.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "642600.000,685350.000,643600.000,685850.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "83c488c03ec48c34.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "642600.000,685350.000,643600.000,685850.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "0c92b3e1d2ae9682.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "642600.000,685350.000,643600.000,685850.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "be364dbfac464bf7.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816034",
+      "tile": [
+        685350.0,
+        642600.0,
+        685850.0,
+        643600.0
+      ]
+    },
+    "real-026-281604-5-0011-107": {
+      "requests": [
+        {
+          "bbox": "639450.000,673900.000,640150.000,674550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "54754f558ccc4fc2.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "639450.000,673900.000,640150.000,674550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "1b5a4334d5b36a42.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "639450.000,673900.000,640150.000,674550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "6bee11871d82fe88.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "639450.000,673900.000,640150.000,674550.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "63837e21100b6924.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2816045",
+      "tile": [
+        673900.0,
+        639450.0,
+        674550.0,
+        640150.0
+      ]
+    },
+    "real-027-246101-1-0001-1043": {
+      "requests": [
+        {
+          "bbox": "216700.000,501550.000,216900.000,501650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "7c2f6715e48395e4.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "216700.000,501550.000,216900.000,501650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "86640aa198633eb1.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "216700.000,501550.000,216900.000,501650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "7118bc561f779a52.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "216700.000,501550.000,216900.000,501650.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "3c127c9160c4fab8.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        501550.0,
+        216700.0,
+        501650.0,
+        216900.0
+      ]
+    },
+    "real-028-246101-1-0004-737-26": {
+      "requests": [
+        {
+          "bbox": "217750.000,501850.000,217850.000,501950.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "c082b768cf55e70e.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "217750.000,501850.000,217850.000,501950.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "ba7bb9cc8c3c4c05.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "217750.000,501850.000,217850.000,501950.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "9edfe22d329e1363.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "217750.000,501850.000,217850.000,501950.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "793710227457a124.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        501850.0,
+        217750.0,
+        501950.0,
+        217850.0
+      ]
+    },
+    "real-029-246101-1-0004-741-132": {
+      "requests": [
+        {
+          "bbox": "217850.000,502100.000,218000.000,502250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "af26d7a9e1532d4e.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "217850.000,502100.000,218000.000,502250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "b8649f20adaa58ed.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "217850.000,502100.000,218000.000,502250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "b0f06ae2b27265e8.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "217850.000,502100.000,218000.000,502250.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "d31f616d9196fbef.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "2461011",
+      "tile": [
+        502100.0,
+        217850.0,
+        502250.0,
+        218000.0
+      ]
+    },
+    "real-030-026201-1-0009-578-2": {
+      "requests": [
+        {
+          "bbox": "375500.000,300900.000,375600.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "e164a754d6ff7018.xml.gz",
+          "start_index": 0,
+          "type_name": "AktPlanowaniaPrzestrzennego"
+        },
+        {
+          "bbox": "375500.000,300900.000,375600.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "cb7d5f95f39c31f7.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarZabudowySrodmiejskiej"
+        },
+        {
+          "bbox": "375500.000,300900.000,375600.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "ed578bf341ae2f59.xml.gz",
+          "start_index": 0,
+          "type_name": "ObszarUzupelnieniaZabudowy"
+        },
+        {
+          "bbox": "375500.000,300900.000,375600.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "09fb0eb1680fc27f.xml.gz",
+          "start_index": 0,
+          "type_name": "StrefaPlanistyczna"
+        },
+        {
+          "bbox": "375500.000,300900.000,375600.000,301400.000,urn:ogc:def:crs:EPSG::2180",
+          "file": "226bb9672677e405.xml.gz",
+          "start_index": 10,
+          "type_name": "StrefaPlanistyczna"
+        }
+      ],
+      "teryt": "0262011",
+      "tile": [
+        300900.0,
+        375500.0,
+        301400.0,
+        375600.0
+      ]
+    }
+  },
+  "files": {
+    "04eb219116a8a270.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "04eb219116a8a27003cd75d7d92084b9ed291b6f3a088b4ddff0c10622d8e651",
+      "size_bytes": 303350
+    },
+    "064497e3f53afd74.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "064497e3f53afd7442681007975386cff1db3bc99d6694946611303e11c822f0",
+      "size_bytes": 38735
+    },
+    "06a6e362d15e56dd.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "06a6e362d15e56dd648d98e88eb299e0b3451dbf10f4f16b13f53a9355df391a",
+      "size_bytes": 884
+    },
+    "07dd3020d833d57b.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "07dd3020d833d57bab4b2da125e73b86786253ee483e985e539723bc4eb1f416",
+      "size_bytes": 884
+    },
+    "07f395a82d5d9aae.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "07f395a82d5d9aaeb560f363b5e48762ae0832bccb8710cfaf857612bfa50c80",
+      "size_bytes": 884
+    },
+    "09fb0eb1680fc27f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "09fb0eb1680fc27f80757d7c14f1b17508427b6beb531a87caa1ae58b8969744",
+      "size_bytes": 233347
+    },
+    "0adf6b1d163cbd2e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "0adf6b1d163cbd2e9311ad623139db6bdb29c90e23af745b4c269725df3cd0e3",
+      "size_bytes": 884
+    },
+    "0c07d8771c18a163.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "0c07d8771c18a16369fbe405916294900ee454283795e1414f4085885c53c18d",
+      "size_bytes": 884
+    },
+    "0c92b3e1d2ae9682.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "0c92b3e1d2ae968225ea41406b3690a7d043fc26c10af12f1ef5e08c608ba8ac",
+      "size_bytes": 884
+    },
+    "127a8126ffc8c0f3.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "127a8126ffc8c0f3d1a36cca3d35ac9c9c82ed6207838accb1eb062c3f99035c",
+      "size_bytes": 188983
+    },
+    "12edfb1636b2820b.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "12edfb1636b2820bc4f716ffbe4ef26128a4fa8df553bdf0158fbfefee9c2bbc",
+      "size_bytes": 884
+    },
+    "145379d699baf5cb.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "145379d699baf5cb49bd817ae7ef26433b8215329013caeaeadb64f4a370f7fa",
+      "size_bytes": 303350
+    },
+    "1726fe3f3a708879.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "1726fe3f3a708879b82b7f4aeb8de6c20ecfc78d70f1e561522a1cfb98469231",
+      "size_bytes": 884
+    },
+    "189e9d61e7d7122e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "189e9d61e7d7122e7e4a41aea909710492e2aa7d0ac0ca2bd668a1e77f9bcbd8",
+      "size_bytes": 884
+    },
+    "1b5a4334d5b36a42.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "1b5a4334d5b36a425d6e9ad7b145e4580bb65ed79dc26c1cc8059198dfc42f26",
+      "size_bytes": 884
+    },
+    "1c7732aefc34b48f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "1c7732aefc34b48fe27d90afa45d641f871e0bbf12718578324f2d4d130a5154",
+      "size_bytes": 31445
+    },
+    "226bb9672677e405.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "226bb9672677e405dad71f0858ee43392d4d918b2325ebda8c1e0b56b1533799",
+      "size_bytes": 31445
+    },
+    "237b93f746b500bf.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "237b93f746b500bf2195ea6e5390412aeaa10db735a95d0b525ecbcf68df5c93",
+      "size_bytes": 884
+    },
+    "2553772059436c9a.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "2553772059436c9a8417f9a087437e1b4c5f276af7e43afee9a7c000731cb8b1",
+      "size_bytes": 884
+    },
+    "263ec97f26651b64.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "263ec97f26651b642ce4936f24c5da19e23e52e12cbe488c3293574753151189",
+      "size_bytes": 188983
+    },
+    "2ac80bd17992c1b9.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "2ac80bd17992c1b92fbef7f53f56a448c60118f8bc0e5f46228fa73757528718",
+      "size_bytes": 884
+    },
+    "2bceb9eb20c9ba4f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "2bceb9eb20c9ba4f257e8a1d94ec2c3de96938a968d7ee72d8f18ad2c705860a",
+      "size_bytes": 884
+    },
+    "2d7c1f25c5fdf9f0.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "2d7c1f25c5fdf9f0172f2bea78858f8806df58af56e2f57b77be0a66a43f262c",
+      "size_bytes": 884
+    },
+    "334eda74810ab9bb.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "334eda74810ab9bbff1ea6ec48e9a85d9fdaf76e7610b1381044c9bcb9a99f02",
+      "size_bytes": 42062
+    },
+    "341815798010de44.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "341815798010de44ffbef41575e92bcfbd785cad09c1ff1ff9198ce9e6bf6603",
+      "size_bytes": 884
+    },
+    "3a3b671ba9854a63.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3a3b671ba9854a63e9837279341f9631c36452c4d89e35c4ee1c4983b2990b81",
+      "size_bytes": 188983
+    },
+    "3b218fff60eefce4.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3b218fff60eefce4b52c32dc1153617d356b1d88894fd5a99a7e5893b82e4cf2",
+      "size_bytes": 884
+    },
+    "3c127c9160c4fab8.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3c127c9160c4fab8995dca8c58dd952f82872eb373fa4eada6611565a99f1b0b",
+      "size_bytes": 109075
+    },
+    "3e71492581a5d854.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3e71492581a5d85432f031dd867c3c8c898842399606e326eb7559491c6bac53",
+      "size_bytes": 884
+    },
+    "3f2e57b3d51e5bb0.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3f2e57b3d51e5bb02a2278d3eeb7f0afdaf946061b636ec842f4274efcd333c5",
+      "size_bytes": 884
+    },
+    "3f69ca4a987c208a.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3f69ca4a987c208a7e07d4a319ec1d7d2caea5ea5f9204bd5da92e0eb53fd6ee",
+      "size_bytes": 884
+    },
+    "3fb0932180d1c307.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "3fb0932180d1c30738188c68503d878742c469c6019e3197cabd5d590d1bbe2d",
+      "size_bytes": 4874
+    },
+    "40de43efe981f74c.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "40de43efe981f74c1e944186c0d450a10504dd862871cb37cb017940f7d67a9c",
+      "size_bytes": 884
+    },
+    "42fd171ef3b5d5dc.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "42fd171ef3b5d5dc717072ddbb18913de2a168e8b7ab78e95b40793ef28406ca",
+      "size_bytes": 884
+    },
+    "43c3fd6ca433f522.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "43c3fd6ca433f522b43e445e9f558943907960879217fe1fc279162afe3ff5bc",
+      "size_bytes": 884
+    },
+    "48962d49fae550a2.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "48962d49fae550a2ebf6977070ef8015e1cf8a6d33ecb934c2f4ed6809691399",
+      "size_bytes": 884
+    },
+    "48a8793ff5a2e97e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "48a8793ff5a2e97e46880eebe76f9d62db07c791c3902ffdf5137e19b2e702e2",
+      "size_bytes": 884
+    },
+    "49c2a308b7ddca08.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "49c2a308b7ddca08c61a2453ad4c7fbe7a8d8223264326b1b60fcd33f0035d5b",
+      "size_bytes": 884
+    },
+    "4dbea61ca5de89b2.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "4dbea61ca5de89b23da942b5381518501e702d266315a22bc1bf0697c5bd23ae",
+      "size_bytes": 884
+    },
+    "4e1a9a68db7a1557.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "4e1a9a68db7a1557be8d14065ef56fe13b6fd6741575884d44590407efb5192a",
+      "size_bytes": 884
+    },
+    "4e3de6dff1428525.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "4e3de6dff1428525cbcdc7eb0b48963487f9cc17294ab01bf1c7c8c445e67a64",
+      "size_bytes": 884
+    },
+    "51aa4a3480bc064e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "51aa4a3480bc064eb6b76ed878a881c466d52eb697a40f5ca0e7d5ec0bc293ef",
+      "size_bytes": 884
+    },
+    "52522201e3435fa2.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "52522201e3435fa256e01f08ffecc3b7fe084fe763c93f0f615ea721e9f9412e",
+      "size_bytes": 884
+    },
+    "54754f558ccc4fc2.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "54754f558ccc4fc2505d2b6f4319e34de19ae509a5e581ddbee1a620b7867785",
+      "size_bytes": 884
+    },
+    "551d824e7fcd1d81.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "551d824e7fcd1d8185f729b89c49047a18160930489ed8148fc4d0328e9ae00f",
+      "size_bytes": 260631
+    },
+    "56b9eafbcda7ad2b.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "56b9eafbcda7ad2b65b448683ffe9cfd60e36083589753f9c20e5e98ac049242",
+      "size_bytes": 35692
+    },
+    "572abaac4b20ea98.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "572abaac4b20ea98252f8da5a1cf6c69d933c883da36b3a95dda50aae300a24a",
+      "size_bytes": 884
+    },
+    "5a710b700df91b75.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "5a710b700df91b75c8fd75df40b8cdb603f2b96f9139f7d7f1ba140414ea4c70",
+      "size_bytes": 21509
+    },
+    "5bb432b03bc4b441.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "5bb432b03bc4b441c3f488f6beafead691db52d35a15e2ecd04dbad9c51843ba",
+      "size_bytes": 884
+    },
+    "62a91bfee8f4f674.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "62a91bfee8f4f674973fdfab4cf3ff5953e7a86bce461cdee144ffa0fb2fb384",
+      "size_bytes": 61435
+    },
+    "63837e21100b6924.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "63837e21100b692434fb48e9b250892becdfcbbf6f36f3895daa079b25de2c39",
+      "size_bytes": 884
+    },
+    "669681de9f60da40.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "669681de9f60da40b7a701281ee79b124d0703034db899667b460cfaa3aaa0b4",
+      "size_bytes": 884
+    },
+    "66b35ffae1ff393a.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "66b35ffae1ff393a15c3b1cb929d5305982433a79788a88dd09cb77366852edb",
+      "size_bytes": 884
+    },
+    "6bee11871d82fe88.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "6bee11871d82fe88f9735ef05592cfe107c188323d443bde77568c02505e4600",
+      "size_bytes": 884
+    },
+    "6c684fd51f7260bf.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "6c684fd51f7260bf3a5aaa2568865c894ee1b07d7cbe7e23017466350ad5af66",
+      "size_bytes": 884
+    },
+    "6c6a66d0e8c53886.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "6c6a66d0e8c5388675582e6152a2322560e32ac78d39e2fecc86a90145e75a4a",
+      "size_bytes": 884
+    },
+    "6d1ff388a77d5642.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "6d1ff388a77d5642b6edf1de7b4e3e60127ec3d9c7563a96debf0674e0f1ef61",
+      "size_bytes": 218361
+    },
+    "6fe76a1a32cdeb6e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "6fe76a1a32cdeb6e1a873715923d0bd86cdb8b1bd7cb6bb60f512eb0f13aacea",
+      "size_bytes": 884
+    },
+    "7118bc561f779a52.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "7118bc561f779a52cde6e21b28c411c03d3f1bf34b538bb3b9ec9f05e0cfe97d",
+      "size_bytes": 35692
+    },
+    "7243bde73dff61c5.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "7243bde73dff61c5c4a818c8b0c868de1cdcb35aa7171ec6956ec5652f6f8040",
+      "size_bytes": 884
+    },
+    "72dbc90afbfb77a0.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "72dbc90afbfb77a0b94dab3211d681923d70bde971173b5ed04e200dc6b2c02a",
+      "size_bytes": 884
+    },
+    "74c1fa971e240c9a.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "74c1fa971e240c9a187202fbb348a41121264654fd0933904eb73ee84b729150",
+      "size_bytes": 884
+    },
+    "767d29c57130f221.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "767d29c57130f22172945392aa5109988fdd5abac4cf9f381a4cf7232c7e8d82",
+      "size_bytes": 72113
+    },
+    "793710227457a124.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "793710227457a1240a5f6870ee1fa0df67f80a6789b6f484af00c846e9e15a49",
+      "size_bytes": 90933
+    },
+    "7c2f6715e48395e4.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "7c2f6715e48395e4a3317b11525e9677cf653056bad6ccaff5b70352187d0776",
+      "size_bytes": 303350
+    },
+    "7d97f046f3c9127a.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "7d97f046f3c9127a3ff6e9a14ba82516a5a6607d51879bb52c58ab2e6b97de2d",
+      "size_bytes": 188983
+    },
+    "7fe1aba6df64c775.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "7fe1aba6df64c775e73e372edc799c057c05198ab96b0c91f78812b4e3807b96",
+      "size_bytes": 884
+    },
+    "807439d79c8a0a70.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "807439d79c8a0a70fb27ee996ccd9981028fa510cc4c06e156a77549587888b5",
+      "size_bytes": 884
+    },
+    "80a01d2123c4242d.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "80a01d2123c4242d9aca2e7bf64e96a280a3f77a940e4c05b1e3549356e16ca0",
+      "size_bytes": 884
+    },
+    "816d0ca50895c41f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "816d0ca50895c41f6dc10007760127ab8f55a4a33db0f4296baa2e2166d564f2",
+      "size_bytes": 884
+    },
+    "83c488c03ec48c34.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "83c488c03ec48c3493bda7d2c23c4ab74304342b83568a2effaccc4bb8075497",
+      "size_bytes": 884
+    },
+    "83ce59a46fc72933.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "83ce59a46fc7293378fddd9220782936aeb8d280633a0077b723fef43c25a477",
+      "size_bytes": 884
+    },
+    "86640aa198633eb1.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "86640aa198633eb1382b09a9bba8a15f54a33fa5e3b821828db53d2351297942",
+      "size_bytes": 884
+    },
+    "87eefa4cccf30f80.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "87eefa4cccf30f809ce3d624ab83b311efefeec57bb44d70d64740826d7c7299",
+      "size_bytes": 884
+    },
+    "898d67de0ab14e1d.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "898d67de0ab14e1d95792eb048c858b2da96b1f724d10a03b47a5dc94a61c5f8",
+      "size_bytes": 884
+    },
+    "8a0ce16009de31b0.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "8a0ce16009de31b0c222ba9463d0d5469226504537d78153da2a5f876990c7c1",
+      "size_bytes": 884
+    },
+    "8bc101a39b38c573.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "8bc101a39b38c573675d6f71b917cb363209dc8f73632bb6610ba22ddd6d8c51",
+      "size_bytes": 18939
+    },
+    "8e26f878ebffe9ea.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "8e26f878ebffe9ead38ddd809f39792715b7bb7cbf43a883fcb97e0ead3dac19",
+      "size_bytes": 303350
+    },
+    "8eb2df33a2860deb.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "8eb2df33a2860deb058fca7ea6169a100c0fd17c825abf1a3a6d876341bfd0bf",
+      "size_bytes": 884
+    },
+    "913ff8b479e3af07.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "913ff8b479e3af073fbc70897672a77b116fedd5124fd57c5b9833542be3f2e1",
+      "size_bytes": 21509
+    },
+    "925f4d849816b875.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "925f4d849816b8751759e3f4fe6e76cf42153dc82288f09bd426d7510f1baca4",
+      "size_bytes": 884
+    },
+    "94373d2863e689bb.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "94373d2863e689bba81066f084067ac4db57abf2d623a22873881da25570a98f",
+      "size_bytes": 884
+    },
+    "943b74b6b3a010c6.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "943b74b6b3a010c6bfff6e7b103f809def677fd6107e3f77d321582f5bd1e060",
+      "size_bytes": 884
+    },
+    "999316236b673620.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "999316236b673620197854f317536f3598586e096bd2f593093a4bc1e9509071",
+      "size_bytes": 884
+    },
+    "9a821e73b3323b1e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "9a821e73b3323b1e145c8c27ce95fb7c59e1e54ffa1a3622fcc8da5a0069b005",
+      "size_bytes": 97430
+    },
+    "9edfe22d329e1363.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "9edfe22d329e1363995e292f12eaffc1e8d6fc87d09f76e037ff342453208b8f",
+      "size_bytes": 49313
+    },
+    "a3575796aca39730.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "a3575796aca39730d07eac89cc5c558fb935e8efb2971010ff69bcd8f11c4b2d",
+      "size_bytes": 884
+    },
+    "a9104a2993f1c3e1.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "a9104a2993f1c3e1a3e07f1e5993256f52146419cd5bfc50b4ae412150e94f8b",
+      "size_bytes": 35692
+    },
+    "af0b38a0bc9e5472.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "af0b38a0bc9e54729167512b1eda58d60f0cb86a92d4fb8efbf4c4a00687dbb5",
+      "size_bytes": 884
+    },
+    "af26d7a9e1532d4e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "af26d7a9e1532d4efce54e9b69ae2e0923cf663eb625683b0eee54ebae606a51",
+      "size_bytes": 303350
+    },
+    "b0f06ae2b27265e8.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "b0f06ae2b27265e87048f7651152e401e0804d6a3ea75e001d39b8fbfd79fa82",
+      "size_bytes": 49313
+    },
+    "b5af3ca05f20f837.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "b5af3ca05f20f8375b20d2b9af5a96c6cbffb1a6f2dc609351ab7718b9fd34b0",
+      "size_bytes": 884
+    },
+    "b8649f20adaa58ed.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "b8649f20adaa58ed1f6ce9f801996e88b18ad278d724ba001e78bcb4dcac699e",
+      "size_bytes": 884
+    },
+    "ba7bb9cc8c3c4c05.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "ba7bb9cc8c3c4c056b45bb57b8b103ad37503b17fe31b5d2b1abd89c708a4df3",
+      "size_bytes": 884
+    },
+    "be364dbfac464bf7.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "be364dbfac464bf779b5a6066601d781a6852ba9c9308202c7dc84229a66995e",
+      "size_bytes": 884
+    },
+    "bf6a8832b5403027.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "bf6a8832b5403027031e47f5feb6f2e4869e46e8eda1fa5eb6d4a611882b3ae9",
+      "size_bytes": 884
+    },
+    "c082b768cf55e70e.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "c082b768cf55e70e7243ee2f4d3220a0a4ebd982299ccd86d9437ea8e8d5c2ca",
+      "size_bytes": 303350
+    },
+    "c3b12e5a768a1821.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "c3b12e5a768a1821f4fa005fb2b0a24a180a1173b3f2f61c0de437b3475b344b",
+      "size_bytes": 227186
+    },
+    "c784f3b150735308.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "c784f3b150735308512c41383b2cb898727b064275eb459099bcf07621a70b3e",
+      "size_bytes": 884
+    },
+    "ca0e39f9216aa332.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "ca0e39f9216aa33253d3becbabb64a860e6d9ce342f8ff3308db342d74f7647a",
+      "size_bytes": 884
+    },
+    "cb386ff310b5804f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "cb386ff310b5804f0ab5eb43c70b5721f79f49c96745dd00d1f8cd43ac0d28de",
+      "size_bytes": 884
+    },
+    "cb7d5f95f39c31f7.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "cb7d5f95f39c31f7c7d8d9570310a7d65ef596c07cf41d542f498847bcd63f25",
+      "size_bytes": 21509
+    },
+    "ceeea555a9c894cf.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "ceeea555a9c894cfb8aec6de84169cc07b3c0ec34e8f55397ecc93b5d6a5b72a",
+      "size_bytes": 884
+    },
+    "cf722ea7b4842e69.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "cf722ea7b4842e69b775aa320c47a6b6dabef87d678f4c70a3877cf0ef1479d4",
+      "size_bytes": 21509
+    },
+    "d166d9e77a917036.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "d166d9e77a9170364114275fa49182b8806e3cfc6dc34cded9e21ce224c887eb",
+      "size_bytes": 884
+    },
+    "d25f1000e686d2aa.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "d25f1000e686d2aa8e14b08e5a5406f488e2897db8c8b6091842e69c2d13c78f",
+      "size_bytes": 884
+    },
+    "d31f616d9196fbef.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "d31f616d9196fbef4612fb3347a562c9467594234b4572d8aa7147d6d8d146b3",
+      "size_bytes": 100317
+    },
+    "d7f5fec0a949b40d.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "d7f5fec0a949b40de0424f6bf42ed775c62ca4c665d8cfc9a2beecc3b5f44934",
+      "size_bytes": 26461
+    },
+    "db28b5c1a7a858ce.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "db28b5c1a7a858cebaeb94ee44e1713e3751882a9e5769a9f1bb7dbddf277cea",
+      "size_bytes": 884
+    },
+    "dc035955cf9949f5.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "dc035955cf9949f584de975e9dc102f028d33cf2ce87489e3636667400690778",
+      "size_bytes": 884
+    },
+    "e137f748468904c6.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "e137f748468904c6d2cc930f0a3af60a3b10faaacf2025a6b7f8eb3a51c3300f",
+      "size_bytes": 884
+    },
+    "e13ed377dbc9186b.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "e13ed377dbc9186b3516931a2fdbbdef78c2c92f2fe1e343b9b3c248a7dcfd1b",
+      "size_bytes": 303350
+    },
+    "e164a754d6ff7018.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "e164a754d6ff7018c6f7071f1d1a9667a9fe7fb57abbbe97cdf75097afa70e3c",
+      "size_bytes": 188983
+    },
+    "e416dbacec2d4e93.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "e416dbacec2d4e93600251001258fd99c3ceccb6c17e9cfb459f4f7412596925",
+      "size_bytes": 48877
+    },
+    "e9bb82cc74750de9.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "e9bb82cc74750de90493e7786b715e0e48886a9df7a377daba712859c5b699d2",
+      "size_bytes": 214435
+    },
+    "ea1e39eec61dd267.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "ea1e39eec61dd267d79efc33aef924110c9474d480fdf390203bcb87c38ad45a",
+      "size_bytes": 884
+    },
+    "ed578bf341ae2f59.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "ed578bf341ae2f595f3bdf06e56fd8002f23f7918866a6e037de49c1f13ee0a2",
+      "size_bytes": 884
+    },
+    "f038ba392a1ca8ba.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "f038ba392a1ca8ba9563457ffdc2bc5aead0121c042d86ef050e1197c2f84297",
+      "size_bytes": 21509
+    },
+    "f7c6e06ed2d33afe.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "f7c6e06ed2d33afe834e1b44ec30f5bddbe505cdfeb3d31e402e8e617d676fb6",
+      "size_bytes": 45667
+    },
+    "fb0cbc5de0eb34e3.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "fb0cbc5de0eb34e38c29269e677f93b0704ebc78dda0ce284c86a2ba72c85559",
+      "size_bytes": 884
+    },
+    "fb4d5dbc7b991f4f.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "fb4d5dbc7b991f4f106ba81bbe1a625401a27b921634b18810a4853b46407728",
+      "size_bytes": 884
+    },
+    "fdc956791c1b04dd.xml.gz": {
+      "content_type": "application/gml+xml; version=3.2",
+      "sha256": "fdc956791c1b04dd6e24c7083cb0693dc75d6b9900fde49bb69dc509521f11c4",
+      "size_bytes": 884
+    }
+  },
+  "schema_version": "ru-pog-features/1",
+  "source": {
+    "axis_order": "north,east (urn:ogc:def:crs:EPSG::2180)",
+    "capture": "scripts/capture_ru_pog_fixtures.py (produkcyjny RuPogFeaturesAdapter)",
+    "fetched_at": "2026-10-12T11:16:44+00:00",
+    "service": "Rejestr Urbanistyczny, WFS 2.0.0 app-pog",
+    "tile_size_m": 50.0,
+    "url": "https://rejestr-urbanistyczny.gov.pl/uslugi-sieciowe/app-pog/wfs"
+  }
+}

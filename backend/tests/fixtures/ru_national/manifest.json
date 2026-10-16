@@ -1,0 +1,109 @@
+{
+  "source": "Rejestr Urbanistyczny — publiczne API (frontend), zasób ru_published katalogu pog_app",
+  "captured_at": "2026-10-13T15:17:02+00:00",
+  "files": [
+    {
+      "file": "listing_current_page_1.json",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/query",
+      "method": "POST",
+      "status": 200,
+      "bytes": 39165,
+      "sha256": "56bd334dfe7326c3f8d82fe2a549afb2de2a5f577ed14422092e3d1ba9012d2e",
+      "total_elements": 465,
+      "total_pages": 5,
+      "fetched_at": "2026-10-13T15:17:02+00:00"
+    },
+    {
+      "file": "listing_current_page_2.json",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/query",
+      "method": "POST",
+      "status": 200,
+      "bytes": 39192,
+      "sha256": "7994dad7c3a0bfc17695489183f7e17b666f29145a18e696af3f67a26b3986d1",
+      "total_elements": 465,
+      "total_pages": 5,
+      "fetched_at": "2026-10-13T15:17:04+00:00"
+    },
+    {
+      "file": "listing_current_page_3.json",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/query",
+      "method": "POST",
+      "status": 200,
+      "bytes": 39525,
+      "sha256": "8f9749c3b63e1d349a77cd124f7fcea480d24ca07f22c34aa1badc081f158cf3",
+      "total_elements": 465,
+      "total_pages": 5,
+      "fetched_at": "2026-10-13T15:17:05+00:00"
+    },
+    {
+      "file": "listing_current_page_4.json",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/query",
+      "method": "POST",
+      "status": 200,
+      "bytes": 39689,
+      "sha256": "a4480f5a78930fa30a5cc75849f70354bd6eb96bf69543e34bfd20d55a306d6d",
+      "total_elements": 465,
+      "total_pages": 5,
+      "fetched_at": "2026-10-13T15:17:07+00:00"
+    },
+    {
+      "file": "listing_current_page_5.json",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/query",
+      "method": "POST",
+      "status": 200,
+      "bytes": 25632,
+      "sha256": "9ad71d5a105ecb1b81d88ba8d8fd525524778a39a03a85528416e7d193e6c451",
+      "total_elements": 465,
+      "total_pages": 5,
+      "fetched_at": "2026-10-13T15:17:08+00:00"
+    },
+    {
+      "file": "act_1152.gml",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/1152/download",
+      "method": "GET",
+      "status": 200,
+      "bytes": 565596,
+      "sha256": "7b8988525c37931dd16fe5045ae796359d4eeae3e50ed254b1aafd182e02ff0f",
+      "head_content_length": "565596",
+      "content_disposition": "attachment; filename=\"PL.ZIPPZP.10169_241203-POG_1POG_20260102T120826.gml\"; filename*=UTF-8''PL.ZIPPZP.10169_241203-POG_1POG_20260102T120826.gml",
+      "content_type": "application/octet-stream",
+      "fetched_at": "2026-10-13T15:17:12+00:00"
+    },
+    {
+      "file": "act_1735.gml",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/1735/download",
+      "method": "GET",
+      "status": 200,
+      "bytes": 768987,
+      "sha256": "3292b34b58b6fa693a55706d76bd6df97a9cfb7f95f7568156af0d3a6c3c8724",
+      "head_content_length": "768987",
+      "content_disposition": "attachment; filename=\"PL.ZIPPZP.11530_200901-POG_1POG_20260514T084915.gml\"; filename*=UTF-8''PL.ZIPPZP.11530_200901-POG_1POG_20260514T084915.gml",
+      "content_type": "application/octet-stream",
+      "fetched_at": "2026-10-13T15:17:15+00:00"
+    },
+    {
+      "file": "act_1894.gml",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/1894/download",
+      "method": "GET",
+      "status": 200,
+      "bytes": 8375,
+      "sha256": "28a5999929ca791598d380dcdb3ce2ea77a876d7cd32d064ac0c081558e1542f",
+      "head_content_length": "8375",
+      "content_disposition": "attachment; filename=\"PL.ZIPPZP.10963_281401-POG_2POG_20260625T000000.gml\"; filename*=UTF-8''PL.ZIPPZP.10963_281401-POG_2POG_20260625T000000.gml",
+      "content_type": "application/octet-stream",
+      "fetched_at": "2026-10-13T15:17:19+00:00"
+    },
+    {
+      "file": "act_295.gml",
+      "url": "https://rejestr-urbanistyczny.gov.pl/api/public/published/295/download",
+      "method": "GET",
+      "status": 200,
+      "bytes": 41929,
+      "sha256": "8bc95a1ce90cdf82c7e94f4abc537508dfbe8acfafe579f8bfe8ed7419c9f8a7",
+      "head_content_length": "41929",
+      "content_disposition": "attachment; filename=\"PL.ZIPPZP.10072_226301-POG_2POG_20260720T114851.gml\"; filename*=UTF-8''PL.ZIPPZP.10072_226301-POG_2POG_20260720T114851.gml",
+      "content_type": "application/octet-stream",
+      "fetched_at": "2026-10-13T15:17:22+00:00"
+    }
+  ]
+}
