@@ -146,6 +146,8 @@ class OverlayStyle(_Strict):
 class LegalStatusStyle(_Strict):
     status: Literal["binding", "project", "in_progress", "superseded", "unknown"]
     label: str
+    # Kolor wypełnienia granicy aktu w przeglądzie krajowym (z6–z12): status prawny, nie typ strefy.
+    overview_color: str
     fill_opacity: float = Field(ge=0.0, le=1.0)
     line_dasharray: tuple[float, ...] | None
     # BK-406: dane niewiążące mają oprócz koloru także wzór i stały tekst
@@ -153,6 +155,11 @@ class LegalStatusStyle(_Strict):
     pattern: str | None = None
     badge: str | None = None
     description: str
+
+    @field_validator("overview_color")
+    @classmethod
+    def _overview_color_is_hex(cls, value: str) -> str:
+        return _hex(value)
 
     @model_validator(mode="after")
     def _non_binding_is_marked(self) -> LegalStatusStyle:

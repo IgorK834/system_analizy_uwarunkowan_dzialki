@@ -1,6 +1,6 @@
 {
   "schema": "pog-presentation/1",
-  "style_version": "2026.09.29-1",
+  "style_version": "2026.10.14-1",
   "description": "Jedno źródło prawdy prezentacji POG (BK-403): kody i etykiety stref, kolejność, paleta, progi tematów z jednostkami i domknięciem przedziałów, styl braku wartości, wzory OUZ/OZS/OSDIS oraz styl i plakietka statusu prawnego (BK-406). Plik czytają frontend (lib/pogZones.ts, lib/pogThemes.ts) i backend (app/core/pog_presentation.py). Paleta jest autorska — nie jest kopią palety serwisu referencyjnego.",
   "zone_dictionary": {
     "codelist": "RodzajStrefyPlanistycznejKod",
@@ -172,10 +172,10 @@
     }
   ],
   "legal_statuses": [
-    { "status": "binding", "label": "akt obowiązujący", "fill_opacity": 0.6, "line_dasharray": null, "pattern": null, "badge": null, "description": "Pełne krycie, ciągły obrys i opis „akt obowiązujący” — bez wzoru." },
-    { "status": "project", "label": "projekt — dane niewiążące", "fill_opacity": 0.35, "line_dasharray": [2, 2], "pattern": "horizontal-lines", "badge": "projekt / dane niewiążące", "description": "Słabsze krycie, obrys przerywany, poziome kreskowanie i stała plakietka „projekt / dane niewiążące”." },
-    { "status": "in_progress", "label": "w trakcie sporządzania — dane niewiążące", "fill_opacity": 0.35, "line_dasharray": [2, 2], "pattern": "horizontal-lines", "badge": "projekt / dane niewiążące", "description": "Słabsze krycie, obrys przerywany, poziome kreskowanie i plakietka „projekt / dane niewiążące”." },
-    { "status": "superseded", "label": "akt nieaktualny", "fill_opacity": 0.2, "line_dasharray": [0.5, 2], "pattern": null, "badge": "akt nieaktualny", "description": "Blade krycie, obrys kropkowany i plakietka „akt nieaktualny”." },
-    { "status": "unknown", "label": "status prawny nieustalony", "fill_opacity": 0.35, "line_dasharray": [0.5, 2], "pattern": null, "badge": "status nieustalony", "description": "Słabsze krycie, obrys kropkowany i plakietka „status nieustalony”." }
+    { "status": "binding", "label": "akt obowiązujący", "overview_color": "#1b7f3b", "fill_opacity": 0.6, "line_dasharray": null, "pattern": null, "badge": null, "description": "Pełne krycie, ciągły obrys i opis „akt obowiązujący” — bez wzoru." },
+    { "status": "project", "label": "projekt — dane niewiążące", "overview_color": "#e0a100", "fill_opacity": 0.35, "line_dasharray": [2, 2], "pattern": "horizontal-lines", "badge": "projekt / dane niewiążące", "description": "Słabsze krycie, obrys przerywany, poziome kreskowanie i stała plakietka „projekt / dane niewiążące”." },
+    { "status": "in_progress", "label": "w trakcie sporządzania — dane niewiążące", "overview_color": "#d9822b", "fill_opacity": 0.35, "line_dasharray": [2, 2], "pattern": "horizontal-lines", "badge": "projekt / dane niewiążące", "description": "Słabsze krycie, obrys przerywany, poziome kreskowanie i plakietka „projekt / dane niewiążące”." },
+    { "status": "superseded", "label": "akt nieaktualny", "overview_color": "#8a8a8a", "fill_opacity": 0.2, "line_dasharray": [0.5, 2], "pattern": null, "badge": "akt nieaktualny", "description": "Blade krycie, obrys kropkowany i plakietka „akt nieaktualny”." },
+    { "status": "unknown", "label": "status prawny nieustalony", "overview_color": "#6b6b6b", "fill_opacity": 0.35, "line_dasharray": [0.5, 2], "pattern": null, "badge": "status nieustalony", "description": "Słabsze krycie, obrys kropkowany i plakietka „status nieustalony”." }
   ]
 }
