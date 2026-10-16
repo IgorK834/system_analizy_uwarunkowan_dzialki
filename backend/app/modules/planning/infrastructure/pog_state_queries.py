@@ -1,8 +1,10 @@
-"""Adapter PostGIS odczytu wydania POG: inspektor (BK-404) i agregaty (BK-405).
+"""Adapter PostGIS odczytu stanu krajowego POG: inspektor (BK-404) i agregaty (BK-405).
 
 Zapytania czytają wyłącznie kolumny i gotowe agregaty — nie wykonują
 ``ST_Intersection``, ``ST_Area`` ani innych obliczeń przestrzennych (dowód:
-test przechwytujący SQL w ``tests/test_pog_aggregates.py``).
+test przechwytujący SQL w ``tests/test_pog_aggregates.py``). Zbiór wersji aktów
+wyznacza rejestr w stanie ``:state_id`` (ADR-026), więc odpowiedzi są stałe dla
+numeru stanu mimo późniejszych importów innych gmin.
 """
 
 from __future__ import annotations
@@ -12,9 +14,7 @@ from typing import Any, Final
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.modules.planning.application.pog_release_queries import (
-    PogReleaseQueryRepository,
-)
+from app.modules.planning.application.pog_state_queries import PogStateQueryRepository
 from app.modules.planning.domain.pog_area_summary import (
     PogAreaSummaryQuery,
     PogAreaSummaryView,
@@ -25,27 +25,19 @@ from app.modules.planning.domain.pog_inspector import (
     PogActDetails,
     PogFeatureDetailsRow,
     PogFeatureRef,
-    PogReleaseHeader,
+    PogStateHeader,
 )
 from app.modules.planning.domain.pog_tiles import FEATURE_TYPE_LAYERS, PogTileCandidate
+from app.shared.pog_registry import active_versions_join
 
-_RELEASE_HEADER_SQL: Final[str] = """
-    SELECT dr.id, dr.version_label, dr.published_at, dr.is_active,
-           (SELECT sa.content_hash
-              FROM planning_act_versions pav
-              JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
-             WHERE pav.data_release_id = dr.id
-             ORDER BY pav.id LIMIT 1) AS artifact_sha256
-    FROM data_releases dr
-    WHERE dr.id = :release_id
-      AND EXISTS (
-          SELECT 1 FROM planning_act_versions pav
-          JOIN planning_acts pa ON pa.id = pav.planning_act_id
-          WHERE pav.data_release_id = dr.id AND pa.kind = 'pog'
-      )
+_STATE_HEADER_SQL: Final[str] = """
+    SELECT s.id, s.kind, s.created_at,
+           s.id = (SELECT max(id) FROM pog_registry_states) AS is_current
+    FROM pog_registry_states s
+    WHERE s.id = :state_id
 """
 
-_FEATURE_SQL: Final[str] = """
+_FEATURE_SQL: Final[str] = f"""
     SELECT pf.id AS pk, pf.feature_type, pf.feature_identifier, pf.feature_version,
            pf.symbol, pf.label, pf.parameters, pf.primary_profiles,
            pf.additional_profiles, pf.source_reference,
@@ -53,19 +45,36 @@ _FEATURE_SQL: Final[str] = """
                SELECT jsonb_object_agg(attr.key, attr.value)
                FROM jsonb_each(
                    CASE WHEN jsonb_typeof(pf.raw_attributes) = 'object'
-                        THEN pf.raw_attributes ELSE '{}'::jsonb END
+                        THEN pf.raw_attributes ELSE '{{}}'::jsonb END
                ) AS attr
                WHERE lower(attr.key) = ANY(CAST(:raw_keys AS text[]))
            ) AS raw_attributes,
-           pa.act_identifier, pa.teryt, pav.legal_status, pav.raw_legal_status,
-           pav.object_version_id, pav.name, pav.resolution_number,
-           pav.resolution_date, pav.legal_valid_from, pav.legal_valid_to,
-           pav.publication_id, pav.manual_review_required
+           pa.act_identifier, pa.teryt, pav.id AS act_version_id, pav.legal_status,
+           pav.raw_legal_status, pav.object_version_id, pav.name,
+           COALESCE(pav.resolution_number, doc.identification_number) AS resolution_number,
+           COALESCE(pav.resolution_date, doc.document_date) AS resolution_date,
+           pav.legal_valid_from, pav.legal_valid_to, pav.publication_id, pav.manual_review_required,
+           pav.content_hash, pav.data_release_id, dr.version_label AS release_label,
+           sa.content_hash AS artifact_sha256, sa.fetched_at AS artifact_fetched_at,
+           CAST(pav.version_started_at AS date) AS version_started_on,
+           doc.effective_date, left(doc.journal, 200) AS official_journal, doc.link AS document_link,
+           e.ru_published_act_id
     FROM planning_features pf
     JOIN planning_act_versions pav ON pav.id = pf.planning_act_version_id
     JOIN planning_acts pa ON pa.id = pav.planning_act_id
+    {active_versions_join()}
+    JOIN data_releases dr ON dr.id = pav.data_release_id
+    JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
+    LEFT JOIN LATERAL (
+        SELECT d.identification_number, d.document_date, d.effective_date, d.link,
+               d.raw_attributes -> 'dziennikUrzedowy' ->> 'label' AS journal
+        FROM pog_formal_documents d
+        WHERE d.planning_act_version_id = pav.id AND d.relation = 'uchwala'
+          AND d.resolution_status = 'resolved'
+        ORDER BY d.effective_date DESC NULLS LAST, d.id
+        LIMIT 1
+    ) doc ON true
     WHERE pa.kind = 'pog'
-      AND pav.data_release_id = :release_id
       AND pf.feature_type = ANY(CAST(:feature_types AS text[]))
       AND (
           (CAST(:feature_id AS text) IS NOT NULL AND pf.feature_identifier = CAST(:feature_id AS text))
@@ -75,21 +84,29 @@ _FEATURE_SQL: Final[str] = """
     LIMIT 2
 """
 
+# Agregat aktu: wiersz wersji aktywnej w stanie. Agregat gminy: najnowszy wiersz z numerem stanu ≤ przypiętemu;
+# wiersz ``act_count = 0`` („brak aktywnych aktów”) zasłania starsze agregaty i daje 404.
 _SUMMARY_SQL: Final[str] = """
-    SELECT s.*, dr.version_label, dr.is_active,
-           (SELECT sa.content_hash
-              FROM planning_act_versions pav
+    SELECT s.*, dr.version_label,
+           (SELECT sa.content_hash FROM planning_act_versions pav
               JOIN source_artifacts sa ON sa.id = pav.source_artifact_id
-             WHERE pav.data_release_id = dr.id
-             ORDER BY pav.id LIMIT 1) AS artifact_sha256
+             WHERE pav.data_release_id = dr.id ORDER BY pav.id LIMIT 1) AS artifact_sha256
     FROM pog_area_summaries s
     JOIN data_releases dr ON dr.id = s.data_release_id
-    WHERE s.data_release_id = :release_id
-      AND (
-          (:scope = 'act' AND s.scope = 'act' AND s.act_identifier = CAST(:act_id AS text))
-          OR (:scope = 'municipality' AND s.scope = 'municipality'
-              AND s.teryt = CAST(:teryt AS text) AND s.edition = CAST(:edition AS text))
-      )
+    WHERE s.act_count > 0 AND (
+        (:scope = 'act' AND s.scope = 'act' AND s.act_identifier = CAST(:act_id AS text)
+         AND EXISTS (
+             SELECT 1 FROM pog_registry_entries e
+             WHERE e.planning_act_version_id = s.planning_act_version_id
+               AND e.state_from_id <= :state_id AND (e.state_to_id IS NULL OR e.state_to_id > :state_id)))
+        OR (:scope = 'municipality' AND s.scope = 'municipality'
+            AND s.teryt = CAST(:teryt AS text) AND s.edition = CAST(:edition AS text)
+            AND s.id = (
+                SELECT s3.id FROM pog_area_summaries s3
+                WHERE s3.scope = 'municipality' AND s3.teryt = s.teryt AND s3.edition = s.edition
+                  AND s3.registry_state_id <= :state_id
+                ORDER BY s3.registry_state_id DESC LIMIT 1))
+    )
     ORDER BY s.id
     LIMIT 1
 """
@@ -101,8 +118,13 @@ _SUMMARY_ZONES_SQL: Final[str] = """
     ORDER BY order_index
 """
 
-_HAS_SUMMARIES_SQL: Final[str] = """
-    SELECT EXISTS (SELECT 1 FROM pog_area_summaries WHERE data_release_id = :release_id)
+_HAS_SUMMARIES_SQL: Final[str] = f"""
+    SELECT EXISTS (
+        SELECT 1 FROM pog_area_summaries s
+        JOIN planning_act_versions pav ON pav.id = s.planning_act_version_id
+        {active_versions_join()}
+        WHERE s.scope = 'act'
+    )
 """
 
 
@@ -110,29 +132,26 @@ def _optional_float(value: Any) -> float | None:
     return float(value) if value is not None else None
 
 
-class SqlAlchemyPogReleaseQueryRepository(PogReleaseQueryRepository):
+class SqlAlchemyPogStateQueryRepository(PogStateQueryRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def release_header(self, release_id: int) -> PogReleaseHeader | None:
-        row = self._session.execute(
-            text(_RELEASE_HEADER_SQL), {"release_id": release_id}
-        ).mappings().one_or_none()
+    def state_header(self, state_id: int) -> PogStateHeader | None:
+        row = self._session.execute(text(_STATE_HEADER_SQL), {"state_id": state_id}).mappings().one_or_none()
         if row is None:
             return None
-        return PogReleaseHeader(
-            release_id=int(row["id"]),
-            version_label=str(row["version_label"]),
-            published_at=row["published_at"],
-            is_active=bool(row["is_active"]),
-            artifact_sha256=row["artifact_sha256"],
+        return PogStateHeader(
+            state_id=int(row["id"]),
+            kind=str(row["kind"]),
+            created_at=row["created_at"],
+            is_current=bool(row["is_current"]),
         )
 
-    def feature_rows(self, release_id: int, ref: PogFeatureRef) -> list[PogFeatureDetailsRow]:
+    def feature_rows(self, state_id: int, ref: PogFeatureRef) -> list[PogFeatureDetailsRow]:
         rows = self._session.execute(
             text(_FEATURE_SQL),
             {
-                "release_id": release_id,
+                "state_id": state_id,
                 "feature_id": ref.feature_id,
                 "pk": ref.pk,
                 "raw_keys": sorted(RAW_ATTRIBUTE_KEYS),
@@ -169,6 +188,19 @@ class SqlAlchemyPogReleaseQueryRepository(PogReleaseQueryRepository):
                     legal_valid_to=row["legal_valid_to"],
                     publication_id=row["publication_id"],
                     manual_review_required=bool(row["manual_review_required"]),
+                    act_version_id=int(row["act_version_id"]),
+                    data_release_id=int(row["data_release_id"]),
+                    release_label=row["release_label"],
+                    artifact_sha256=row["artifact_sha256"],
+                    artifact_fetched_at=row["artifact_fetched_at"],
+                    content_hash=row["content_hash"],
+                    effective_date=row["effective_date"],
+                    official_journal=row["official_journal"],
+                    document_link=row["document_link"],
+                    version_started_on=row["version_started_on"],
+                    ru_published_act_id=(
+                        int(row["ru_published_act_id"]) if row["ru_published_act_id"] is not None else None
+                    ),
                 ),
                 source_reference=row["source_reference"],
             )
@@ -179,7 +211,7 @@ class SqlAlchemyPogReleaseQueryRepository(PogReleaseQueryRepository):
         row = self._session.execute(
             text(_SUMMARY_SQL),
             {
-                "release_id": query.release_id,
+                "state_id": query.state_id,
                 "scope": query.scope,
                 "act_id": query.act_id,
                 "teryt": query.teryt,
@@ -200,10 +232,13 @@ class SqlAlchemyPogReleaseQueryRepository(PogReleaseQueryRepository):
                 text(_SUMMARY_ZONES_SQL), {"summary_id": row["id"]}
             ).mappings()
         )
+        current = self._session.execute(text("SELECT max(id) FROM pog_registry_states")).scalar_one()
         return PogAreaSummaryView(
+            state_id=query.state_id,
+            computed_in_state_id=row["registry_state_id"],
             release_id=int(row["data_release_id"]),
             release_label=str(row["version_label"]),
-            release_is_active=bool(row["is_active"]),
+            state_is_current=current is not None and int(current) == query.state_id,
             artifact_sha256=row["artifact_sha256"],
             scope=str(row["scope"]),
             act_id=row["act_identifier"],
@@ -231,9 +266,5 @@ class SqlAlchemyPogReleaseQueryRepository(PogReleaseQueryRepository):
             computed_at=row["computed_at"],
         )
 
-    def release_has_area_summaries(self, release_id: int) -> bool:
-        return bool(
-            self._session.execute(
-                text(_HAS_SUMMARIES_SQL), {"release_id": release_id}
-            ).scalar_one()
-        )
+    def state_has_area_summaries(self, state_id: int) -> bool:
+        return bool(self._session.execute(text(_HAS_SUMMARIES_SQL), {"state_id": state_id}).scalar_one())
