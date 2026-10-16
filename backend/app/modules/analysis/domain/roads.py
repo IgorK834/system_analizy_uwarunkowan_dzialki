@@ -11,10 +11,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Literal
 
+# Kody przyczyn wspólne dla dróg i zabudowy są w ``domain.bdot``; tu zostają dostępne pod dawnymi nazwami.
+from app.modules.analysis.domain.bdot import (  # noqa: F401
+    REASON_DATABASE_ERROR,
+    REASON_NO_ACTIVE_RELEASE,
+    REASON_OUTSIDE_COVERAGE,
+    REASON_QUERY_TIMEOUT,
+    REASON_SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE,
+    REASON_SOURCE_NOT_RUNNABLE,
+    REASON_UNEXPECTED_ERROR,
+)
+
 RoadRelation = Literal["intersects", "touches", "disjoint"]
-RoadContextStatus = Literal[
-    "available", "not_found_within_radius", "no_coverage", "unavailable"
-]
+# Statusy rozłączne (zgodne z resztą systemu): ``no_match`` to pusty OGRANICZONY zasięg wyszukiwania — nie dowód, że
+# drogi w ogóle nie ma; ``no_coverage`` — brak wydania danych dla obszaru; ``unavailable`` — timeout, błąd bazy.
+RoadContextStatus = Literal["available", "no_match", "no_coverage", "unavailable"]
 RoadGeometryKind = Literal["carriageway_axis"]
 
 # Jawne określenie, co jest mierzone: od poligonu działki (0, gdy oś przecina
@@ -22,17 +33,11 @@ RoadGeometryKind = Literal["carriageway_axis"]
 DISTANCE_REFERENCE: Final[str] = "parcel_polygon_to_carriageway_axis"
 CARRIAGEWAY_AXIS: Final[RoadGeometryKind] = "carriageway_axis"
 
-# Kody przyczyn statusów innych niż ``available``.
-REASON_SEARCH_RADIUS_EXHAUSTED: Final[str] = "SEARCH_RADIUS_EXHAUSTED"
-REASON_SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE: Final[str] = (
-    "SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE"
+ROAD_ACCESS_DISCLAIMER: Final[str] = (
+    "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej."
 )
-REASON_NO_ACTIVE_RELEASE: Final[str] = "NO_ACTIVE_RELEASE"
-REASON_OUTSIDE_COVERAGE: Final[str] = "OUTSIDE_COVERAGE"
-REASON_QUERY_TIMEOUT: Final[str] = "QUERY_TIMEOUT"
-REASON_DATABASE_ERROR: Final[str] = "DATABASE_ERROR"
-REASON_SOURCE_NOT_RUNNABLE: Final[str] = "SOURCE_NOT_RUNNABLE"
-REASON_UNEXPECTED_ERROR: Final[str] = "UNEXPECTED_ERROR"
+
+REASON_SEARCH_RADIUS_EXHAUSTED: Final[str] = "SEARCH_RADIUS_EXHAUSTED"
 
 # Tolerancja porównań odległości (m) — wynik jest raportowany z dokładnością
 # do 1 cm, więc różnice poniżej 1 mm traktujemy jako remis.
@@ -87,7 +92,11 @@ class RoadSearchPlan:
 
 @dataclass(frozen=True)
 class RoadCandidate:
-    """Obiekt drogowy z pomiarem względem działki (EPSG:2180)."""
+    """Obiekt drogowy z pomiarem względem działki (EPSG:2180).
+
+    ``category`` to kategoria zarządzania ze źródła (np. gminna, powiatowa, wewnętrzna), a ``road_class`` — klasa
+    drogi ze źródła. Oba pola są opisem z BDOT10k, nie oceną prawnego charakteru drogi.
+    """
 
     road_id: str
     distance_m: float
@@ -97,6 +106,10 @@ class RoadCandidate:
     category: str | None = None
     road_class: str | None = None
     road_number: str | None = None
+    street_name: str | None = None
+    surface_material: str | None = None
+    surface_width_m: float | None = None
+    position: str | None = None
     road_wkt: str | None = None
     link_wkt: str | None = None
     feature_version: str | None = None

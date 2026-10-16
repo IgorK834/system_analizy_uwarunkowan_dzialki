@@ -7,11 +7,13 @@ kolejności KNN. Wynik zawsze niesie metadane wyszukiwania i provenance, także
 gdy drogi nie znaleziono albo zapytanie się nie powiodło:
 
 * ``available`` — znaleziono obiekt w promieniu ``search_radius_m``;
-* ``not_found_within_radius`` — pusty ograniczony zasięg; to NIE jest dowód,
-  że w ogóle nie ma drogi;
-* ``no_coverage`` — działka leży poza zasięgiem aktywnego wydania albo wydania
-  brak (dane nie zostały zaimportowane dla obszaru);
+* ``no_match`` — pusty ograniczony zasięg (``SEARCH_RADIUS_EXHAUSTED``); to NIE jest
+  dowód, że w ogóle nie ma drogi;
+* ``no_coverage`` — działka leży poza zasięgiem aktywnych wydań (powiaty) albo
+  żadnego wydania nie zaimportowano — dane nie zostały zaimportowane dla obszaru;
 * ``unavailable`` — timeout, błąd bazy albo niepotwierdzone źródło.
+
+Wydanie wybiera port po położeniu działki: zasięgiem wydania jest granica powiatu paczki.
 """
 
 from __future__ import annotations
@@ -20,12 +22,20 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Protocol
 
-from app.modules.analysis.domain.roads import (
-    REASON_DATABASE_ERROR,
+from app.modules.analysis.application.bdot_ports import (
+    BdotIndexError,
+    BdotIndexTimeout,
+    BdotReleaseLocator,
+)
+from app.modules.analysis.domain.bdot import (
+    BDOT10K_SOURCE_ID,
     REASON_NO_ACTIVE_RELEASE,
     REASON_OUTSIDE_COVERAGE,
-    REASON_QUERY_TIMEOUT,
     REASON_SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE,
+    BdotReleaseRef,
+    CoverageCheck,
+)
+from app.modules.analysis.domain.roads import (
     REASON_SEARCH_RADIUS_EXHAUSTED,
     RoadCandidate,
     RoadContextStatus,
@@ -34,61 +44,24 @@ from app.modules.analysis.domain.roads import (
 )
 from app.shared.provenance import Provenance
 
-ROAD_SOURCE_ID = "bdot10k_roads"
-_OPERATION = "PostGIS:KNN(road_segments)"
+ROAD_SOURCE_ID = BDOT10K_SOURCE_ID
+_OPERATION = "PostGIS:ST_DWithin+ST_Distance(bdot_roads)"
+
+# Dawne nazwy typów (z czasów pojedynczego wydania) — wydanie jest teraz wyznaczane po położeniu działki.
+RoadRelease = BdotReleaseRef
+RoadIndexError = BdotIndexError
+RoadIndexTimeout = BdotIndexTimeout
+__all__ = ["BdotIndexError", "BdotIndexTimeout", "CoverageCheck", "RoadRelease", "RoadIndexError", "RoadIndexTimeout"]
 
 
-@dataclass(frozen=True)
-class RoadRelease:
-    """Aktywne wydanie danych drogowych przypięte do jednego zapytania."""
-
-    data_release_id: int
-    version_label: str
-    published_at: datetime | None
-    source_id: str = ROAD_SOURCE_ID
-
-
-@dataclass(frozen=True)
-class CoverageCheck:
-    """Czy działka i obszar wyszukiwania leżą w zasięgu wydania."""
-
-    parcel_covered: bool
-    search_area_covered: bool
-
-
-class RoadIndexError(RuntimeError):
-    """Kontrolowana niedostępność indeksu dróg (baza, konfiguracja)."""
-
-    reason_code: str = REASON_DATABASE_ERROR
-
-    def __init__(self, message: str, reason_code: str | None = None) -> None:
-        super().__init__(message)
-        if reason_code is not None:
-            self.reason_code = reason_code
-
-
-class RoadIndexTimeout(RoadIndexError):
-    """Zapytanie przestrzenne przekroczyło limit czasu."""
-
-    reason_code = REASON_QUERY_TIMEOUT
-
-
-class RoadNetworkIndex(Protocol):
+class RoadNetworkIndex(BdotReleaseLocator, Protocol):
     """Port indeksu przestrzennego osi jezdni (EPSG:2180)."""
 
-    def active_release(self) -> RoadRelease | None: ...
-
-    def coverage(
-        self, release: RoadRelease, parcel_wkt: str, radius_m: float
-    ) -> CoverageCheck: ...
-
     def nearest(
-        self, release: RoadRelease, parcel_wkt: str, radius_m: float, limit: int
+        self, release: BdotReleaseRef, parcel_wkt: str, radius_m: float, limit: int
     ) -> list[RoadCandidate]: ...
 
-    def adjacency_counts(
-        self, release: RoadRelease, parcel_wkt: str
-    ) -> tuple[int, int]: ...
+    def adjacency_counts(self, release: BdotReleaseRef, parcel_wkt: str) -> tuple[int, int]: ...
 
 
 @dataclass(frozen=True)
@@ -106,7 +79,7 @@ class RoadContextOutcome:
     search_area_within_coverage: bool | None = None
     intersecting_road_count: int | None = None
     touching_road_count: int | None = None
-    release: RoadRelease | None = None
+    release: BdotReleaseRef | None = None
     warnings: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -118,22 +91,22 @@ def find_road_context(
     """Wyszukuje najbliższą oś jezdni rosnącym buforem z maksymalnym promieniem."""
     started = datetime.now(timezone.utc)
     searched: list[float] = []
-    release: RoadRelease | None = None
+    release: BdotReleaseRef | None = None
     try:
-        release = index.active_release()
+        release = index.release_for(parcel_wkt)
         if release is None:
-            return _outcome(
-                "no_coverage",
-                plan,
-                started,
-                release,
-                reason_code=REASON_NO_ACTIVE_RELEASE,
-                warnings=(
-                    "Brak aktywnego wydania danych drogowych BDOT10k — kontekstu "
-                    "drogowego nie sprawdzono. Nie oznacza to braku drogi.",
-                ),
-            )
-        if not index.coverage(release, parcel_wkt, 0.0).parcel_covered:
+            if not index.has_active_releases():
+                return _outcome(
+                    "no_coverage",
+                    plan,
+                    started,
+                    release,
+                    reason_code=REASON_NO_ACTIVE_RELEASE,
+                    warnings=(
+                        "Brak aktywnego wydania danych BDOT10k — kontekstu drogowego nie sprawdzono. "
+                        "Nie oznacza to braku drogi.",
+                    ),
+                )
             return _outcome(
                 "no_coverage",
                 plan,
@@ -141,8 +114,8 @@ def find_road_context(
                 release,
                 reason_code=REASON_OUTSIDE_COVERAGE,
                 warnings=(
-                    "Działka leży poza zasięgiem zaimportowanych danych drogowych "
-                    "BDOT10k. Nie oznacza to braku drogi.",
+                    "Działka leży poza zasięgiem zaimportowanych powiatów BDOT10k — kontekstu drogowego "
+                    "nie sprawdzono. Nie oznacza to braku drogi.",
                 ),
             )
 
@@ -152,17 +125,15 @@ def find_road_context(
             best = select_nearest(candidates)
             if best is None:
                 continue
-            # Bliższa droga poza zasięgiem wydania mogłaby leżeć w promieniu
-            # znalezionej odległości — flaga mówi, czy ten obszar był pokryty.
+            # Bliższa droga poza zasięgiem wydania mogłaby leżeć w promieniu znalezionej odległości — flaga mówi,
+            # czy ten obszar był pokryty (a także, czy sama działka leży w całości w powiecie wydania).
             covered = index.coverage(release, parcel_wkt, best.distance_m).search_area_covered
             intersecting, touching = (
-                index.adjacency_counts(release, parcel_wkt)
-                if best.distance_m <= 0.0
-                else (0, 0)
+                index.adjacency_counts(release, parcel_wkt) if best.distance_m <= 0.0 else (0, 0)
             )
             warnings = () if covered else (
-                "Obszar do znalezionej drogi wykracza poza zasięg zaimportowanych "
-                "danych — bliższa droga poza zasięgiem nie została sprawdzona.",
+                "Obszar do znalezionej drogi wykracza poza zasięg zaimportowanego powiatu — bliższa droga "
+                "poza zasięgiem nie została sprawdzona.",
             )
             return _outcome(
                 "available",
@@ -180,14 +151,12 @@ def find_road_context(
 
         covered = index.coverage(release, parcel_wkt, plan.max_radius_m).search_area_covered
         return _outcome(
-            "not_found_within_radius",
+            "no_match",
             plan,
             started,
             release,
             reason_code=(
-                REASON_SEARCH_RADIUS_EXHAUSTED
-                if covered
-                else REASON_SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE
+                REASON_SEARCH_RADIUS_EXHAUSTED if covered else REASON_SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE
             ),
             search_radius_m=plan.max_radius_m,
             searched=tuple(searched),
@@ -197,7 +166,7 @@ def find_road_context(
                 "Brak kandydata w ograniczonym zasięgu nie dowodzi braku drogi.",
             ),
         )
-    except RoadIndexError as exc:
+    except BdotIndexError as exc:
         return _outcome(
             "unavailable",
             plan,
@@ -207,8 +176,7 @@ def find_road_context(
             searched=tuple(searched),
             error_code=exc.reason_code,
             warnings=(
-                "Zapytanie o kontekst drogowy nie powiodło się "
-                f"({exc.reason_code}) — odległości nie policzono.",
+                f"Zapytanie o kontekst drogowy nie powiodło się ({exc.reason_code}) — odległości nie policzono.",
             ),
         )
 
@@ -217,7 +185,7 @@ def _outcome(
     status: RoadContextStatus,
     plan: RoadSearchPlan,
     started: datetime,
-    release: RoadRelease | None,
+    release: BdotReleaseRef | None,
     *,
     reason_code: str | None = None,
     nearest: RoadCandidate | None = None,
@@ -237,7 +205,7 @@ def _outcome(
             fetched_at=started,
             data_release_id=release.data_release_id if release else None,
             operation=_OPERATION,
-            complete=status in {"available", "not_found_within_radius"},
+            complete=status in {"available", "no_match"},
             error_code=error_code,
         ),
         max_search_radius_m=plan.max_radius_m,

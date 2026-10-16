@@ -14,6 +14,7 @@ import logging
 from datetime import datetime, timezone
 
 from shapely.geometry.base import BaseGeometry
+from sqlalchemy.orm import Session
 
 from app.core.data_sources import (
     AccessType,
@@ -22,6 +23,8 @@ from app.core.data_sources import (
     ensure_source_runnable,
 )
 from app.core.settings import settings
+from app.modules.analysis.application.buildings import BuildingContextOutcome, find_building_context
+from app.modules.analysis.application.roads import RoadContextOutcome, find_road_context
 from app.modules.analysis.application.terrain import (
     REASON_SERVICE_TIMEOUT,
     REASON_SOURCE_NOT_RUNNABLE,
@@ -30,6 +33,14 @@ from app.modules.analysis.application.terrain import (
     ReliefOutcome,
     analyze_parcel_relief,
 )
+from app.modules.analysis.domain.bdot import (
+    BDOT10K_SOURCE_ID,
+    REASON_SOURCE_NOT_RUNNABLE as BDOT_REASON_SOURCE_NOT_RUNNABLE,
+    REASON_UNEXPECTED_ERROR as BDOT_REASON_UNEXPECTED_ERROR,
+)
+from app.modules.analysis.domain.buildings import BuildingSearchPlan
+from app.modules.analysis.domain.roads import RoadSearchPlan
+from app.modules.analysis.infrastructure.bdot_repository import PostgisBdotIndex
 from app.modules.analysis.infrastructure.terrain_raster import (
     WCS_SOURCE_ID,
     ShapelyParcelFootprint,
@@ -156,3 +167,87 @@ def _attempt_provenance(error_code: str) -> Provenance:
         complete=False,
         error_code=error_code,
     )
+
+
+# --- Kontekst z lokalnego wydania BDOT10k: drogi (BK-305) i zabudowa sąsiednia (BK-304) -----------------------------
+
+
+def _bdot_unavailable_provenance(operation: str, error_code: str) -> Provenance:
+    return Provenance(
+        source_id=BDOT10K_SOURCE_ID,
+        fetched_at=datetime.now(timezone.utc),
+        operation=operation,
+        complete=False,
+        error_code=error_code,
+    )
+
+
+def _bdot_runnable(catalog: DataSourceCatalog | None = None) -> bool:
+    try:
+        ensure_source_runnable(BDOT10K_SOURCE_ID, catalog)
+    except CatalogError as exc:
+        logger.warning("Źródło %s nie jest uruchamialne: %s", BDOT10K_SOURCE_ID, exc)
+        return False
+    return True
+
+
+def analyze_road_context(
+    session: Session, parcel_geometry: BaseGeometry, *, catalog: DataSourceCatalog | None = None
+) -> RoadContextOutcome:
+    """Najbliższa droga z lokalnego wydania BDOT10k; każdy błąd to jawny wynik ``unavailable``, nigdy wyjątek."""
+    plan = RoadSearchPlan(
+        radii_m=tuple(settings.road_context_search_radii_m), candidate_limit=settings.road_context_candidate_limit
+    )
+    if not _bdot_runnable(catalog):
+        return RoadContextOutcome(
+            status="unavailable",
+            reason_code=BDOT_REASON_SOURCE_NOT_RUNNABLE,
+            provenance=_bdot_unavailable_provenance("PostGIS:bdot_roads", BDOT_REASON_SOURCE_NOT_RUNNABLE),
+            max_search_radius_m=plan.max_radius_m,
+            candidate_limit=plan.candidate_limit,
+            warnings=("Kontrakt źródła BDOT10k nie jest potwierdzony w katalogu — drogi nie sprawdzono.",),
+        )
+    try:
+        index = PostgisBdotIndex(session, statement_timeout_ms=settings.road_context_statement_timeout_ms)
+        return find_road_context(parcel_geometry.wkt, index, plan)
+    except Exception as exc:  # noqa: BLE001 - granica sekcji informacyjnej
+        logger.exception("Nieoczekiwany błąd kontekstu drogowego")
+        return RoadContextOutcome(
+            status="unavailable",
+            reason_code=BDOT_REASON_UNEXPECTED_ERROR,
+            provenance=_bdot_unavailable_provenance("PostGIS:bdot_roads", type(exc).__name__),
+            max_search_radius_m=plan.max_radius_m,
+            candidate_limit=plan.candidate_limit,
+            warnings=("Wystąpił nieoczekiwany błąd kontekstu drogowego — odległości nie policzono.",),
+        )
+
+
+def analyze_building_context(
+    session: Session, parcel_geometry: BaseGeometry, *, catalog: DataSourceCatalog | None = None
+) -> BuildingContextOutcome:
+    """Zabudowa na działce i w buforach z lokalnego wydania BDOT10k; błąd to ``unavailable``, nie „brak budynków”."""
+    plan = BuildingSearchPlan(
+        buffers_m=tuple(settings.building_context_buffers_m),
+        listed_limit=settings.building_context_listed_limit,
+        candidate_limit=settings.building_context_candidate_limit,
+    )
+    if not _bdot_runnable(catalog):
+        return BuildingContextOutcome(
+            status="unavailable",
+            reason_code=BDOT_REASON_SOURCE_NOT_RUNNABLE,
+            provenance=_bdot_unavailable_provenance("PostGIS:bdot_buildings", BDOT_REASON_SOURCE_NOT_RUNNABLE),
+            plan=plan,
+            warnings=("Kontrakt źródła BDOT10k nie jest potwierdzony w katalogu — zabudowy nie sprawdzono.",),
+        )
+    try:
+        index = PostgisBdotIndex(session, statement_timeout_ms=settings.building_context_statement_timeout_ms)
+        return find_building_context(parcel_geometry.wkt, index, plan)
+    except Exception as exc:  # noqa: BLE001 - granica sekcji informacyjnej
+        logger.exception("Nieoczekiwany błąd kontekstu zabudowy")
+        return BuildingContextOutcome(
+            status="unavailable",
+            reason_code=BDOT_REASON_UNEXPECTED_ERROR,
+            provenance=_bdot_unavailable_provenance("PostGIS:bdot_buildings", type(exc).__name__),
+            plan=plan,
+            warnings=("Wystąpił nieoczekiwany błąd kontekstu zabudowy — statystyk nie policzono.",),
+        )
