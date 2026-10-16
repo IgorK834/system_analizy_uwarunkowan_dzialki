@@ -5,6 +5,7 @@ import type * as maplibregl from "maplibre-gl";
 
 import { ManualZonePanel } from "@/components/ManualZonePanel";
 import { MapViewLoader } from "@/components/MapViewLoader";
+import { PogCoveragePanel } from "@/components/PogCoveragePanel";
 import { PogFeatureInspector } from "@/components/PogFeatureInspector";
 import { PogMapPanel, STATUS_FILTER_LABELS } from "@/components/PogMapPanel";
 import { PreviewOverlays } from "@/components/PreviewOverlays";
@@ -12,7 +13,7 @@ import { ResultPanel } from "@/components/ResultPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { useAnalyzeParcel } from "@/hooks/useAnalyzeParcel";
 import { usePogTileActivity } from "@/hooks/usePogTileActivity";
-import { usePogMapPreferences, usePogTileRelease } from "@/hooks/usePogTileRelease";
+import { usePogMapPreferences, usePogTileState } from "@/hooks/usePogTileState";
 import { useResumeAnalysis } from "@/hooks/useResumeAnalysis";
 import { derivePogLayerStatus } from "@/lib/pogLayerState";
 import type { PogPointQuery } from "@/lib/types";
@@ -21,29 +22,29 @@ export default function HomePage() {
   const { loading, error, result, run, reset, setResult } = useAnalyzeParcel();
   const resumeAnalysis = useResumeAnalysis();
   const [map, setMap] = useState<maplibregl.Map | null>(null);
-  // Wydanie POG jest pobierane raz na sesję mapy i przypina URL kafli (BK-401);
-  // nowsze wydanie pojawia się tylko po jawnym ponowieniu (BK-406).
-  const pogRelease = usePogTileRelease();
+  // Stan krajowy POG jest pobierany raz na sesję mapy i przypina URL-e kafli (BK-401, ADR-026);
+  // nowszy stan (import kolejnych gmin) pojawia się tylko po jawnym ponowieniu (BK-406).
+  const pogState = usePogTileState();
   const pogPreferences = usePogMapPreferences();
-  const pogTiles = usePogTileActivity(map, pogRelease.release?.release_id ?? null);
+  const pogTiles = usePogTileActivity(map, pogState.state?.state_id ?? null);
   const pogLayerStatus = useMemo(
     () =>
       derivePogLayerStatus({
-        release: pogRelease,
+        state: pogState,
         tiles: pogTiles.tiles,
         viewport: pogTiles.viewport,
       }),
-    [pogRelease, pogTiles.tiles, pogTiles.viewport],
+    [pogState, pogTiles.tiles, pogTiles.viewport],
   );
   // BK-404: kliknięcie mapy otwiera inspektor obiektu — nie uruchamia analizy.
   const [inspection, setInspection] = useState<PogPointQuery | null>(null);
 
-  const { retry: retryRelease } = pogRelease;
+  const { retry: retryState } = pogState;
   const { retry: retryTiles } = pogTiles;
   const handlePogRetry = useCallback(() => {
-    retryRelease();
+    retryState();
     retryTiles();
-  }, [retryRelease, retryTiles]);
+  }, [retryState, retryTiles]);
 
   const handleAnalyzePoint = useCallback(
     (lon: number, lat: number) => {
@@ -85,7 +86,7 @@ export default function HomePage() {
         <MapViewLoader
           onMapReady={handleMapReady}
           onPogInspect={setInspection}
-          pogRelease={pogRelease.release}
+          pogState={pogState.state}
           pogTheme={pogPreferences.theme}
           pogStatusFilter={pogPreferences.statusFilter}
         />
@@ -98,8 +99,9 @@ export default function HomePage() {
             statusFilter={pogPreferences.statusFilter}
             onStatusFilterChange={pogPreferences.setStatusFilter}
             onRetry={handlePogRetry}
-            retrying={pogRelease.retrying}
+            retrying={pogState.retrying}
           />
+          <PogCoveragePanel />
           <PreviewOverlays result={result} map={map} />
         </div>
 
@@ -160,8 +162,9 @@ export default function HomePage() {
       </div>
       <footer className="preview-legal-footer">
         Warstwy MPZP, POG i uzbrojenia są podglądem oficjalnych usług
-        publicznych, a wektorowa mapa POG pokazuje zapisane lokalne wydanie
-        danych. Brak obiektów na mapie nie potwierdza braku planu ani sieci.
+        publicznych, a wektorowa mapa POG pokazuje zapisany lokalny stan
+        danych zaimportowanych gmin. Brak obiektów na mapie nie potwierdza
+        braku planu ani sieci.
       </footer>
     </main>
   );

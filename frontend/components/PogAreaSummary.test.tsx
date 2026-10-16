@@ -31,7 +31,7 @@ describe("PogAreaSummary", () => {
 
   it("akt 1 km² 60/40: wykres i tabela pokazują identyczne liczby", async () => {
     summaryMock.mockResolvedValue(buildPogAreaSummary());
-    render(<PogAreaSummary releaseId={42} actId={ACT} teryt="226401" legalStatus="binding" />);
+    render(<PogAreaSummary stateId={42} actId={ACT} teryt="226401" legalStatus="binding" />);
 
     expect(await screen.findByTestId("pog-area-table")).toBeInTheDocument();
     expect(chartValues()).toEqual(["60,0%", "40,0%"]);
@@ -41,7 +41,7 @@ describe("PogAreaSummary", () => {
     expect(screen.getByRole("img", { name: `Udziały stref w powierzchni aktu ${ACT}` })).toBeInTheDocument();
     expect(screen.getByText(/Mianownik: 1,000 km² \(granica aktu ze źródła\)/)).toBeInTheDocument();
     expect(screen.queryByTestId("pog-area-partial")).not.toBeInTheDocument();
-    expect(screen.getByText(/Wydanie #42 \(pog-0123456789ab\), metoda pog-aggregates\/1, policzono 29\.09\.2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Stan krajowy #42, wydanie danych #7 \(pog-0123456789ab\), metoda pog-aggregates\/1, policzono 29\.09\.2026/)).toBeInTheDocument();
     const footer = within(screen.getByTestId("pog-area-table")).getByRole("row", { name: /Suma udziałów/ });
     expect(footer).toHaveTextContent("100,0%");
     expect(summaryMock).toHaveBeenCalledWith(42, { actId: ACT }, expect.anything());
@@ -63,7 +63,7 @@ describe("PogAreaSummary", () => {
         share_sum_pct: 90,
       }),
     );
-    render(<PogAreaSummary releaseId={42} actId={ACT} legalStatus="binding" />);
+    render(<PogAreaSummary stateId={42} actId={ACT} legalStatus="binding" />);
 
     const partial = await screen.findByTestId("pog-area-partial");
     expect(partial).toHaveTextContent("Dane niepełne.");
@@ -92,7 +92,7 @@ describe("PogAreaSummary", () => {
         ],
       }),
     );
-    render(<PogAreaSummary releaseId={42} actId={ACT} legalStatus="unknown" />);
+    render(<PogAreaSummary stateId={42} actId={ACT} legalStatus="unknown" />);
 
     expect(await screen.findByTestId("pog-area-partial")).toHaveTextContent(
       "brak granicy aktu w źródle — udziałów nie obliczono (to nie jest 100%)",
@@ -122,7 +122,7 @@ describe("PogAreaSummary", () => {
           denominator_source: "act_boundaries_union",
         }),
       );
-    render(<PogAreaSummary releaseId={42} actId={ACT} teryt="226401" legalStatus="project" />);
+    render(<PogAreaSummary stateId={42} actId={ACT} teryt="226401" legalStatus="project" />);
     await screen.findByTestId("pog-area-table");
     await user.click(screen.getByRole("radio", { name: /Gmina 226401 \(projekty\)/ }));
     expect(summaryMock).toHaveBeenLastCalledWith(
@@ -138,16 +138,16 @@ describe("PogAreaSummary", () => {
   it("odrębne komunikaty: ładowanie, brak agregatu (nie brak planu) i błąd", async () => {
     let resolve: (value: null) => void = () => undefined;
     summaryMock.mockReturnValueOnce(new Promise((done) => (resolve = done)));
-    const { unmount } = render(<PogAreaSummary releaseId={7} actId={ACT} legalStatus="binding" />);
+    const { unmount } = render(<PogAreaSummary stateId={7} actId={ACT} legalStatus="binding" />);
     expect(screen.getByText("Wczytywanie gotowego agregatu stref…")).toBeInTheDocument();
     resolve(null);
-    expect(await screen.findByText(/nie jest dostępny dla tego zakresu w wydaniu #7/)).toHaveTextContent(
+    expect(await screen.findByText(/nie jest dostępny dla tego zakresu w stanie #7/)).toHaveTextContent(
       "Nie oznacza to braku stref ani planu.",
     );
     unmount();
 
     summaryMock.mockRejectedValueOnce(new Error("503"));
-    render(<PogAreaSummary releaseId={7} actId={ACT} legalStatus="binding" />);
+    render(<PogAreaSummary stateId={7} actId={ACT} legalStatus="binding" />);
     expect(await screen.findByText("Nie udało się pobrać agregatu stref — spróbuj ponownie.")).toBeInTheDocument();
   });
 
@@ -163,5 +163,11 @@ describe("PogAreaSummary", () => {
       }),
     );
     expect(unknown[0]).toMatchObject({ pattern: "cross-hatch", barFraction: 1 });
+  });
+
+  it("agregat gminy policzony we wcześniejszym stanie ma jawnie wskazane pochodzenie", async () => {
+    summaryMock.mockResolvedValue(buildPogAreaSummary({ state_id: 50, computed_in_state_id: 44 }));
+    render(<PogAreaSummary stateId={50} actId={ACT} teryt="226401" legalStatus="binding" />);
+    expect(await screen.findByText(/Stan krajowy #50 \(agregat policzony w stanie #44\)/)).toBeInTheDocument();
   });
 });

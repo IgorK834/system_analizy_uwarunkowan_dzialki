@@ -9,8 +9,11 @@ import type {
   GeocodeResponse,
   PogAreaSummary,
   PogAreaSummaryScope,
+  PogCommuneLookup,
+  PogCommuneStatus,
+  PogCoverage,
   PogFeatureDetails,
-  PogTileRelease,
+  PogTileState,
   PreviewSource,
 } from "@/lib/types";
 
@@ -256,18 +259,17 @@ export async function getPreviewSources(
 }
 
 /**
- * Metadane aktywnego lokalnego wydania POG (BK-401) z URL-em kafli przypiętym
- * do `release_id`. Zwraca `null`, gdy backend nie ma aktywnego wydania (404) —
- * to brak lokalnych danych, a nie brak planu ogólnego w gminie.
+ * Metadane bieżącego stanu krajowego POG (BK-401, ADR-026) z URL-ami kafli przypiętymi do `state_id`. Zwraca `null`,
+ * gdy backend nie ma lokalnych danych POG (404) — to brak zaimportowanych gmin, a nie brak planów ogólnych.
  */
-export async function getActivePogTileRelease(
+export async function getCurrentPogTileState(
   options: { signal?: AbortSignal } = {},
-): Promise<PogTileRelease | null> {
+): Promise<PogTileState | null> {
   try {
-    return await requestJson<PogTileRelease>(
-      `${getApiBaseUrl()}/api/v1/map/pog/releases/active`,
-      { method: "GET", signal: options.signal },
-    );
+    return await requestJson<PogTileState>(`${getApiBaseUrl()}/api/v1/map/pog/state`, {
+      method: "GET",
+      signal: options.signal,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
@@ -275,28 +277,62 @@ export async function getActivePogTileRelease(
 }
 
 /**
+ * Pokrycie krajowe POG (issue 301): które gminy są zaimportowane (data, wersja) i które mają plan w RU bez importu.
+ * Filtry są opcjonalne i wykonywane po stronie serwera.
+ */
+export async function getPogCoverage(
+  options: {
+    status?: PogCommuneStatus;
+    q?: string;
+    voivodeship?: string;
+    signal?: AbortSignal;
+  } = {},
+): Promise<PogCoverage> {
+  const parameters = new URLSearchParams();
+  if (options.status) parameters.set("status", options.status);
+  if (options.q?.trim()) parameters.set("q", options.q.trim());
+  if (options.voivodeship) parameters.set("voivodeship", options.voivodeship);
+  const query = parameters.toString();
+  return requestJson<PogCoverage>(
+    `${getApiBaseUrl()}/api/v1/coverage/pog${query ? `?${query}` : ""}`,
+    { method: "GET", signal: options.signal },
+  );
+}
+
+/** Stan jednej gminy po kodzie TERC (6 cyfr): zaimportowana, plan w RU, brak aktu w wykazie RU albo nieustalone. */
+export async function getPogCommuneState(
+  terc: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<PogCommuneLookup> {
+  return requestJson<PogCommuneLookup>(
+    `${getApiBaseUrl()}/api/v1/coverage/pog/commune/${encodeURIComponent(terc.trim())}`,
+    { method: "GET", signal: options.signal },
+  );
+}
+
+/**
  * Szczegóły obiektu POG, których kafel MVT nie mieści (BK-404) — przypięte do
- * wydania, z którego pochodzi kliknięta cecha. Identyfikator APP zawiera
+ * stanu krajowego, z którego pochodzi kliknięta cecha. Identyfikator APP zawiera
  * ukośniki, więc jest kodowany jako jeden segment ścieżki.
  */
 export async function getPogFeatureDetails(
-  releaseId: number,
+  stateId: number,
   featureId: string,
   options: { signal?: AbortSignal } = {},
 ): Promise<PogFeatureDetails> {
   return requestJson<PogFeatureDetails>(
-    `${getApiBaseUrl()}/api/v1/map/pog/releases/${releaseId}/features/${encodeURIComponent(featureId)}`,
+    `${getApiBaseUrl()}/api/v1/map/pog/states/${stateId}/features/${encodeURIComponent(featureId)}`,
     { method: "GET", signal: options.signal },
   );
 }
 
 /**
  * Gotowy agregat powierzchniowy stref aktu albo gminy (BK-405) policzony przy
- * imporcie wydania. Zwraca `null`, gdy agregatu nie ma (404) — np. wydanie
- * sprzed BK-405 — co nie oznacza braku stref ani planu.
+ * imporcie. Zwraca `null`, gdy agregatu nie ma (404) — np. dane sprzed BK-405 albo wycofany akt — co nie oznacza
+ * braku stref ani planu.
  */
 export async function getPogAreaSummary(
-  releaseId: number,
+  stateId: number,
   scope: PogAreaSummaryScope,
   options: { signal?: AbortSignal } = {},
 ): Promise<PogAreaSummary | null> {
@@ -307,7 +343,7 @@ export async function getPogAreaSummary(
   );
   try {
     return await requestJson<PogAreaSummary>(
-      `${getApiBaseUrl()}/api/v1/map/pog/releases/${releaseId}/summary?${parameters.toString()}`,
+      `${getApiBaseUrl()}/api/v1/map/pog/states/${stateId}/summary?${parameters.toString()}`,
       { method: "GET", signal: options.signal },
     );
   } catch (error) {

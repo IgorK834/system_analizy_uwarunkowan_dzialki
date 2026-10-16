@@ -1,12 +1,15 @@
 import { vi } from "vitest";
 
 import type {
+  PogActTileProperties,
   PogAreaSummary,
+  PogCommuneCoverage,
+  PogCoverage,
   PogCoverageArea,
   PogFeatureDetails,
   PogInspectorHit,
   PogOverlayTileProperties,
-  PogTileRelease,
+  PogTileState,
   PogZoneTileProperties,
 } from "@/lib/types";
 
@@ -24,19 +27,31 @@ export function buildCoverageArea(overrides: Partial<PogCoverageArea> = {}): Pog
   };
 }
 
-/** Metadane wydania POG zgodne z odpowiedzią GET /api/v1/map/pog/releases/active. */
-export function buildPogRelease(overrides: Partial<PogTileRelease> = {}): PogTileRelease {
+/** Metadane stanu krajowego POG zgodne z odpowiedzią GET /api/v1/map/pog/state. */
+export function buildPogState(overrides: Partial<PogTileState> = {}): PogTileState {
   return {
-    release_id: 42,
+    state_id: 42,
     source_id: "pog_app",
-    version_label: "pog-0123456789ab",
-    published_at: "2026-09-28T00:00:00Z",
-    is_active: true,
-    artifact_sha256: "a".repeat(64),
-    tile_url_template: "/api/v1/map/pog/releases/42/{z}/{x}/{y}.mvt",
-    tile_schema: "pog-mvt/1",
+    kind: "import",
+    created_at: "2026-09-28T00:00:00Z",
+    is_current: true,
+    act_count: 2,
+    tile_url_template: "/api/v1/map/pog/states/42/{z}/{x}/{y}.mvt",
+    editions_sources: [
+      { edition: "binding", tile_url_template: "/api/v1/map/pog/states/42/{z}/{x}/{y}.mvt?edition=binding" },
+      { edition: "project", tile_url_template: "/api/v1/map/pog/states/42/{z}/{x}/{y}.mvt?edition=project" },
+    ],
+    tile_schema: "pog-mvt/2",
     tile_format: "application/vnd.mapbox-vector-tile",
     layers: ["zones", "ouz", "downtown", "social_infrastructure_standard", "act_boundary"],
+    layer_min_zoom: {
+      zones: 11,
+      ouz: 12,
+      downtown: 12,
+      social_infrastructure_standard: 12,
+      act_boundary: 0,
+    },
+    text_attributes_min_zoom: 13,
     editions: ["all", "binding", "project"],
     default_edition: "all",
     min_zoom: 0,
@@ -53,9 +68,11 @@ export function buildPogRelease(overrides: Partial<PogTileRelease> = {}): PogTil
         bounds: [18.55, 54.42, 18.62, 54.47],
       }),
     ],
-    style_version: "2026.09.29-1",
+    map_ready: true,
+    versions_without_map_rows: 0,
+    style_version: "2026.10.14-1",
     style_sha256: "b".repeat(64),
-    attribution: "Rejestr Urbanistyczny (APP POG) — lokalne wydanie danych",
+    attribution: "Rejestr Urbanistyczny (APP POG) — lokalny stan danych",
     legal_note: "Projekt aktu nie jest wiążący.",
     ...overrides,
   };
@@ -70,10 +87,10 @@ export function buildPogZoneProperties(
     feature_version: "20260819T010000",
     symbol: "SU",
     label: "strefa usługowa",
+    designation: "100SU",
     legal_status: "binding",
     teryt: "226401",
     act_id: "PL.ZIPPZP.10011/226401-POG/1POG",
-    data_release_id: 42,
     zone_code: "SU",
     max_overground_floor_area_ratio: 0.9,
     max_building_height_m: 4,
@@ -95,7 +112,6 @@ export function buildPogOverlayProperties(
     legal_status: "binding",
     teryt: "226401",
     act_id: "PL.ZIPPZP.10011/226401-POG/1POG",
-    data_release_id: 42,
     ...overrides,
   };
 }
@@ -107,7 +123,7 @@ export function buildZoneHit(
 ): PogInspectorHit {
   const properties = buildPogZoneProperties(overrides);
   return {
-    key: `zones:${properties.data_release_id}:${featurePk}`,
+    key: `zones:${featurePk}`,
     layer: "zones",
     featurePk,
     properties,
@@ -120,7 +136,25 @@ export function buildOverlayHit(
   featurePk = 201,
 ): PogInspectorHit {
   const properties = buildPogOverlayProperties(overrides);
-  return { key: `${layer}:${properties.data_release_id}:${featurePk}`, layer, featurePk, properties };
+  return { key: `${layer}:${featurePk}`, layer, featurePk, properties };
+}
+
+/** Atrybuty granicy aktu z kafla (przegląd krajowy). */
+export function buildActHit(overrides: Partial<PogActTileProperties> = {}, featurePk = 7): PogInspectorHit {
+  const properties: PogActTileProperties = {
+    act_id: "PL.ZIPPZP.10011/226401-POG/1POG",
+    label: "Plan ogólny Miasta Sopotu",
+    legal_status: "binding",
+    teryt: "226401",
+    act_version: "20260819T010000",
+    resolution_number: "XV/123/2026",
+    resolution_date: "2026-08-19",
+    valid_from: "2026-09-01",
+    effective_date: "2026-09-01",
+    version_started_on: "2026-08-19",
+    ...overrides,
+  };
+  return { key: `act_boundary:${featurePk}`, layer: "act_boundary", featurePk, properties };
 }
 
 /** Odpowiedź GET …/features/{feature_id} (szczegóły spoza kafla). */
@@ -130,12 +164,11 @@ export function buildPogFeatureDetails(
   return {
     schema: "pog-inspector/1",
     tile_schema: "pog-mvt/1",
-    release: {
-      release_id: 42,
-      version_label: "pog-0123456789ab",
-      published_at: "2026-09-28T00:00:00Z",
-      is_active: true,
-      artifact_sha256: "a".repeat(64),
+    state: {
+      state_id: 42,
+      kind: "import",
+      created_at: "2026-09-28T00:00:00Z",
+      is_current: true,
     },
     feature_pk: 101,
     feature_id: "PL.ZIPPZP.10011/226401-POG/1POG-100SU",
@@ -143,6 +176,7 @@ export function buildPogFeatureDetails(
     layer: "zones",
     feature_type: "planning_zone",
     symbol: "SU",
+    designation: "100SU",
     label: "strefa usługowa — pełna etykieta z aktu",
     zone_code: "SU",
     source_zone_type: "strefa usługowa",
@@ -166,8 +200,18 @@ export function buildPogFeatureDetails(
       resolution_date: "2026-08-19",
       legal_valid_from: "2026-09-01",
       legal_valid_to: null,
+      effective_date: "2026-09-01",
+      version_started_on: "2026-08-19",
+      official_journal: "Dziennik Urzędowy Województwa Pomorskiego",
+      document_link: "https://dziennik.example.gov.pl/akt/123",
+      ru_act_url: "https://rejestr-urbanistyczny.gov.pl/plany-ogolne/1735",
       publication_id: "pub-1",
       manual_review_required: false,
+      act_version_id: 9,
+      data_release_id: 42,
+      release_label: "pog-0123456789ab",
+      artifact_sha256: "a".repeat(64),
+      content_hash: "c".repeat(64),
     },
     source_reference: "fixture",
     ...overrides,
@@ -177,10 +221,12 @@ export function buildPogFeatureDetails(
 /** Agregat stref aktu 1 km² podzielonego 60/40 (BK-405). */
 export function buildPogAreaSummary(overrides: Partial<PogAreaSummary> = {}): PogAreaSummary {
   return {
-    schema: "pog-area-summary/1",
-    release_id: 42,
+    schema: "pog-area-summary/2",
+    state_id: 42,
+    computed_in_state_id: 42,
+    state_is_current: true,
+    release_id: 7,
     release_label: "pog-0123456789ab",
-    release_is_active: true,
     artifact_sha256: "a".repeat(64),
     scope: "act",
     act_id: "PL.ZIPPZP.10011/226401-POG/1POG",
@@ -237,7 +283,94 @@ export function createPogMapMock() {
       images.add(id);
     }),
     setPaintProperty: vi.fn(),
+    setLayoutProperty: vi.fn(),
     setFilter: vi.fn(),
   };
   return { map, sources, layers, images };
+}
+
+/** Gmina z listy pokrycia krajowego (issue 301). */
+export function buildCommuneCoverage(overrides: Partial<PogCommuneCoverage> = {}): PogCommuneCoverage {
+  return {
+    terc: "226401",
+    name: "Sopot",
+    district: "Sopot",
+    voivodeship: "pomorskie",
+    status: "imported",
+    ru_acts: [
+      {
+        published_act_id: 1735,
+        status_text: "prawnie wiążący lub realizowany",
+        legal_status: "binding",
+        publish_date: "2026-08-19",
+        valid_from: "2026-09-01",
+      },
+    ],
+    imported_acts: [
+      {
+        act_identifier: "PL.ZIPPZP.10011/226401-POG/1POG",
+        act_version: "20260819T010000",
+        legal_status: "binding",
+        name: "Plan ogólny Miasta Sopotu",
+        state_id: 42,
+        imported_at: "2026-09-28T10:00:00Z",
+        fetched_at: "2026-09-28T09:58:00Z",
+        release_id: 7,
+        release_label: "pog-national-1",
+        content_hash: "d".repeat(64),
+        ru_published_act_id: 1735,
+        up_to_date: true,
+        zone_count: 12,
+        overlay_count: 3,
+      },
+    ],
+    import_job: null,
+    ...overrides,
+  };
+}
+
+export function buildPogCoverage(overrides: Partial<PogCoverage> = {}): PogCoverage {
+  return {
+    source_id: "pog_app",
+    checked_at: "2026-10-13T12:00:00Z",
+    catalog_synced_at: "2026-10-13T11:00:00Z",
+    catalog_fresh: true,
+    summary: {
+      ru_communes: 3,
+      imported_communes: 1,
+      in_ru_not_imported: 2,
+      imported_without_ru_entry: 0,
+      outdated_versions: 0,
+      state_id: 42,
+    },
+    communes: [
+      buildCommuneCoverage(),
+      buildCommuneCoverage({
+        terc: "246101",
+        name: "Bielsko-Biała",
+        district: "Bielsko-Biała",
+        voivodeship: "śląskie",
+        status: "in_ru_not_imported",
+        imported_acts: [],
+        import_job: {
+          job_id: 5,
+          status: "queued",
+          attempts: 0,
+          requested_at: "2026-10-13T11:30:00Z",
+          finished_at: null,
+          last_error: null,
+        },
+      }),
+      buildCommuneCoverage({
+        terc: "126101",
+        name: "Kraków",
+        district: "Kraków",
+        voivodeship: "małopolskie",
+        status: "in_ru_not_imported",
+        imported_acts: [],
+      }),
+    ],
+    note: "Stan wynika z wykazu RU.",
+    ...overrides,
+  };
 }

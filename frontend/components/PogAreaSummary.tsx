@@ -106,7 +106,8 @@ type LoadState =
   | { status: "error" };
 
 export type PogAreaSummaryProps = {
-  releaseId: number;
+  /** Numer stanu krajowego, z którego pochodzi kliknięty obiekt — agregat jest odczytywany z tego samego stanu. */
+  stateId: number;
   actId: string;
   teryt?: string | null;
   legalStatus: PogLegalStatus;
@@ -179,7 +180,7 @@ function SummaryChart({ rows, title, relative }: { rows: SummaryRow[]; title: st
  * (`is_complete = false`) są zawsze oznaczone wraz z przyczyną, a brak
  * mianownika nie jest pokazywany jako 100%.
  */
-export function PogAreaSummary({ releaseId, actId, teryt = null, legalStatus }: PogAreaSummaryProps) {
+export function PogAreaSummary({ stateId, actId, teryt = null, legalStatus }: PogAreaSummaryProps) {
   const edition = editionForStatus(legalStatus);
   const [scope, setScope] = useState<"act" | "municipality">("act");
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -192,7 +193,7 @@ export function PogAreaSummary({ releaseId, actId, teryt = null, legalStatus }: 
       scope === "act" || !teryt || !edition
         ? { actId }
         : { teryt, edition };
-    void getPogAreaSummary(releaseId, request, { signal: controller.signal })
+    void getPogAreaSummary(stateId, request, { signal: controller.signal })
       .then((summary) => {
         if (controller.signal.aborted) return;
         setState(summary ? { status: "ready", summary } : { status: "not_found" });
@@ -201,7 +202,7 @@ export function PogAreaSummary({ releaseId, actId, teryt = null, legalStatus }: 
         if (!controller.signal.aborted) setState({ status: "error" });
       });
     return () => controller.abort();
-  }, [actId, edition, releaseId, scope, teryt]);
+  }, [actId, edition, stateId, scope, teryt]);
 
   const municipalityAvailable = Boolean(teryt && edition);
   return (
@@ -239,8 +240,8 @@ export function PogAreaSummary({ releaseId, actId, teryt = null, legalStatus }: 
         {state.status === "loading" && <p className="layer-toggle-status">Wczytywanie gotowego agregatu stref…</p>}
         {state.status === "not_found" && (
           <p className="layer-toggle-status">
-            Agregat stref nie jest dostępny dla tego zakresu w wydaniu #{releaseId} (np. wydanie
-            sprzed obliczania agregatów). Nie oznacza to braku stref ani planu.
+            Agregat stref nie jest dostępny dla tego zakresu w stanie #{stateId} (np. dane sprzed
+            obliczania agregatów albo akt wycofany). Nie oznacza to braku stref ani planu.
           </p>
         )}
         {state.status === "error" && (
@@ -311,7 +312,11 @@ function SummaryBody({ summary }: { summary: PogAreaSummaryValue }) {
         </tfoot>
       </table>
       <p className="pog-area-summary-meta">
-        Wydanie #{summary.release_id} ({summary.release_label}), metoda {summary.method_version},
+        Stan krajowy #{summary.state_id}
+        {summary.computed_in_state_id !== null && summary.computed_in_state_id !== summary.state_id
+          ? ` (agregat policzony w stanie #${summary.computed_in_state_id})`
+          : ""}
+        , wydanie danych #{summary.release_id} ({summary.release_label}), metoda {summary.method_version},
         policzono {formatPlDate(summary.computed_at)} przy imporcie; tolerancja sumy udziałów ±
         {SHARE.format(summary.share_tolerance_pct)} pp.
         {summary.deduplicated_area_sqm

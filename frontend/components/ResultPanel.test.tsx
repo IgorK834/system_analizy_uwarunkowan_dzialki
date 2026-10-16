@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as maplibregl from "maplibre-gl";
 
 import { ResultPanel } from "@/components/ResultPanel";
+import { BUILDINGS_CASES, ROAD_CASES } from "@/test/bdotFixtures";
+import { COMPLETENESS_CASES } from "@/test/completenessFixtures";
 import { buildAnalyzeResponse, buildPogResult, buildQualityMatrix } from "@/test/fixtures";
 
 function createMapMock() {
@@ -50,6 +52,28 @@ describe("ResultPanel", () => {
     expect(screen.getByTestId("quality-legend")).toBeInTheDocument();
     // Status analizy nie zastępuje ocen sekcji.
     expect(screen.getByText(result.status)).toBeVisible();
+  });
+
+  it("pokazuje pasek kompletności zamiast sztywnej plakietki statusu (AU-104)", () => {
+    const completeness = COMPLETENESS_CASES.partial_pog;
+    const result = buildAnalyzeResponse({ status: "partial", completeness, headline: completeness.headline });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getByTestId("completeness-headline")).toHaveTextContent(completeness.headline);
+    expect(screen.getByRole("progressbar", { name: "Kompletność analizy" })).toHaveAttribute(
+      "aria-valuenow",
+      String(completeness.checked),
+    );
+    expect(screen.queryByText("partial")).toBeNull();
+  });
+
+  it("odpowiedź sprzed AU-104 zachowuje plakietkę statusu i nie udaje paska", () => {
+    render(<ResultPanel result={buildAnalyzeResponse({ status: "partial" })} map={null} />);
+
+    expect(screen.getByText("partial")).toBeVisible();
+    expect(screen.getByTestId("completeness-missing")).toBeVisible();
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
   it("nie udaje kompletności, gdy odpowiedź nie ma macierzy jakości", () => {
@@ -444,6 +468,68 @@ describe("ResultPanel", () => {
     );
   });
 
+  it("pokazuje karty drogi i zabudowy sąsiedniej z odpowiedzi API wraz ze zdaniem o dostępie prawnym", () => {
+    const result = buildAnalyzeResponse({
+      road_context: ROAD_CASES.available,
+      neighbour_buildings: BUILDINGS_CASES.available,
+    });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getByRole("heading", { name: "Droga i dostęp do drogi" })).toBeVisible();
+    expect(screen.getByTestId("road-distance")).toHaveTextContent("12 m");
+    expect(screen.getByTestId("road-note")).toHaveTextContent(
+      "nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej",
+    );
+    expect(screen.getByRole("heading", { name: "Zabudowa sąsiednia" })).toBeVisible();
+    expect(screen.getByTestId("buildings-count-50")).toHaveTextContent("2");
+  });
+
+  it("odpowiedź sprzed sekcji drogi i zabudowy pokazuje stan nieznany, a nie brak drogi ani budynków", () => {
+    render(<ResultPanel result={buildAnalyzeResponse()} map={null} />);
+
+    expect(screen.getByTestId("road-status")).toHaveAttribute("data-status", "unknown");
+    expect(screen.getByTestId("buildings-status")).toHaveAttribute("data-status", "unknown");
+    expect(screen.getByTestId("road-note")).toBeVisible();
+  });
+
+  it("dodaje warstwy osi drogi, odcinka działka → oś i budynków oraz obsługuje ich przełączniki", async () => {
+    const { default: userEvent } = await import("@testing-library/user-event");
+    const user = userEvent.setup();
+    const result = buildAnalyzeResponse({
+      road_context: ROAD_CASES.available,
+      neighbour_buildings: BUILDINGS_CASES.available,
+    });
+
+    render(<ResultPanel result={result} map={map} />);
+
+    for (const id of ["road-context-source", "road-link-source", "neighbour-buildings-source"]) {
+      expect(map.addSource).toHaveBeenCalledWith(id, expect.objectContaining({ type: "geojson" }));
+    }
+    const order = map.addLayer.mock.calls.map(([layer]) => (layer as { id: string }).id);
+    expect(order.indexOf("neighbour-buildings-fill-layer")).toBeLessThan(order.indexOf("road-context-line-layer"));
+
+    await user.click(screen.getByRole("switch", { name: /Najbliższa droga/ }));
+    await user.click(screen.getByRole("switch", { name: /Budynki w sąsiedztwie/ }));
+
+    expect(map.setLayoutProperty).toHaveBeenCalledWith("road-context-line-layer", "visibility", "none");
+    expect(map.setLayoutProperty).toHaveBeenCalledWith("road-link-line-layer", "visibility", "none");
+    expect(map.setLayoutProperty).toHaveBeenCalledWith("neighbour-buildings-fill-layer", "visibility", "none");
+  });
+
+  it("bez pokrycia BDOT10k przełączniki dróg i budynków są wyłączone z powodem", () => {
+    const result = buildAnalyzeResponse({
+      road_context: ROAD_CASES.no_coverage,
+      neighbour_buildings: BUILDINGS_CASES.no_coverage,
+    });
+
+    render(<ResultPanel result={result} map={map} />);
+
+    expect(screen.getByRole("switch", { name: /Najbliższa droga/ })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: /Budynki w sąsiedztwie/ })).toBeDisabled();
+    expect(map.addSource).not.toHaveBeenCalledWith("road-context-source", expect.anything());
+  });
+
   it("ConfidenceBadge pokazuje komunikat braku metadanych, gdy źródło POG jest null", () => {
     const result = buildAnalyzeResponse({
       pog: {
@@ -530,6 +616,54 @@ describe("ResultPanel", () => {
     expect(screen.getByText("280.0 m²")).toBeVisible();
     expect(screen.getByText("100.0 m²")).toBeVisible();
     expect(screen.getByText("0 m")).toBeVisible();
+  });
+
+  it("AU-110: artefakty styku stref nie wchodzą do tabeli, a nota podaje ich liczbę, pole i udział", () => {
+    const zone = (id: string, symbol: string, area_sqm: number, area_pct: number, topological_sliver = false) => ({
+      id, symbol, type: symbol, label: null, area_sqm, area_pct,
+      max_overground_floor_area_ratio: null, max_building_height_m: null,
+      max_building_coverage_pct: null, min_biologically_active_pct: null,
+      primary_profile: [], additional_profiles: [], source: null, topological_sliver,
+    });
+    const withSlivers = buildAnalyzeResponse({
+      pog: buildPogResult({
+        legal_status: "binding",
+        coverage_status: "available",
+        zones: [zone("sk", "SK", 1_000, 99.99)],
+        topological_slivers: [zone("sw", "SW", 0.1, 0.01, true), zone("su", "SU", 0.08, 0.01, true)],
+        dominant_zone_id: "sk",
+      }),
+    });
+
+    const { unmount } = render(<ResultPanel result={withSlivers} map={null} />);
+
+    const table = screen.getByRole("table", { name: "Strefy POG przecinające działkę" });
+    expect(table).toHaveTextContent("SK");
+    expect(table).not.toHaveTextContent("SW");
+    expect(table).not.toHaveTextContent("SU");
+    const note = screen.getByTestId("pog-sliver-note");
+    expect(note).toHaveTextContent("Pominięto 2 artefakty styku sąsiednich stref (łącznie 0,18 m², 0,02% działki)");
+    expect(note).toHaveTextContent("zachowano je w zapisie analizy");
+    unmount();
+
+    // Pojedynczy okruch i brak okruchów (odpowiedź sprzed AU-110 nie ma pola).
+    const single = buildAnalyzeResponse({
+      pog: buildPogResult({ zones: [zone("sk", "SK", 1_000, 99.9)], topological_slivers: [zone("sw", "SW", 0.1, 0.01, true)] }),
+    });
+    const second = render(<ResultPanel result={single} map={null} />);
+    expect(screen.getByTestId("pog-sliver-note")).toHaveTextContent("Pominięto 1 artefakt styku");
+    second.unmount();
+    const manyBase = Array.from({ length: 5 }, (_, index) => zone(`s${index}`, "SW", 0.1, 0.01, true));
+    const many = render(
+      <ResultPanel
+        result={buildAnalyzeResponse({ pog: buildPogResult({ zones: [zone("sk", "SK", 1_000, 99.9)], topological_slivers: manyBase }) })}
+        map={null}
+      />,
+    );
+    expect(screen.getByTestId("pog-sliver-note")).toHaveTextContent("Pominięto 5 artefaktów styku");
+    many.unmount();
+    render(<ResultPanel result={buildAnalyzeResponse({ pog: buildPogResult({ zones: [zone("sk", "SK", 1_000, 100)] }) })} map={null} />);
+    expect(screen.queryByTestId("pog-sliver-note")).not.toBeInTheDocument();
   });
 
   describe("status prawny i pokrycie POG (BK-106)", () => {

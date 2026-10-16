@@ -1577,3 +1577,160 @@ input:disabled {
 .mpzp-discovery details {
   margin-top: 0.25rem;
 }
+
+/* Pasek kompletności analizy (AU-104): segment na każdą sekcję w zakresie; znaczenie niesie też tekst. */
+.completeness {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.completeness-headline {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.completeness-bar {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+}
+
+.completeness-segment {
+  flex: 1 1 0;
+  border: 1px solid var(--accent-dark);
+  border-radius: 3px;
+  background: transparent;
+}
+
+.completeness-segment-checked {
+  background: var(--accent-dark);
+}
+
+.completeness-segment-missing {
+  border-color: #7a4300;
+  background: repeating-linear-gradient(135deg, transparent 0 3px, #f0d9b8 3px 5px);
+}
+
+.completeness-counter {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.completeness-details summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.completeness-list {
+  margin: 6px 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.completeness-state {
+  font-weight: 700;
+}
+
+.completeness-source {
+  color: var(--muted);
+}
+
+/* Issue 301: pokrycie krajowego importu planów ogólnych (lista gmin, stan, wersja, data). */
+.pog-coverage-panel {
+  padding: 13px;
+  border: 1px solid rgba(33, 53, 43, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(22, 41, 31, 0.13);
+  font-size: 0.82rem;
+}
+
+.pog-coverage-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pog-coverage-panel summary:focus-visible,
+.pog-coverage-panel input:focus-visible,
+.pog-coverage-panel button:focus-visible {
+  outline: 2px solid #1f5f8b;
+  outline-offset: 2px;
+}
+
+.pog-coverage-filters,
+.pog-coverage-lookup {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.pog-coverage-filters fieldset {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.pog-coverage-filters fieldset label {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.pog-coverage-list {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.pog-coverage-item {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.pog-coverage-place,
+.pog-coverage-detail {
+  color: var(--muted);
+}
+
+/* Stan gminy niesie tekst; kolor i obrys są tylko dodatkiem (kolor nie jest jedynym nośnikiem znaczenia). */
+.pog-coverage-chip {
+  justify-self: start;
+  padding: 1px 8px;
+  border: 1px solid #3d3d3d;
+  border-radius: 999px;
+  background: #ffffff;
+  font-weight: 650;
+}
+
+.pog-coverage-chip-imported {
+  border-style: solid;
+  background: #e3f1e6;
+}
+
+.pog-coverage-chip-in_ru_not_imported {
+  border-style: dashed;
+  background: #fff4dc;
+}
+
+.pog-coverage-chip-no_act_in_ru,
+.pog-coverage-chip-unknown {
+  border-style: dotted;
+  background: #eceff1;
+}

@@ -7,9 +7,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { configureMapLibreWorker } from "@/lib/maplibreWorker";
 import {
-  OSM_RASTER_STYLE,
   POLAND_CENTER,
   POLAND_ZOOM,
+  mapStyleWithGlyphs,
 } from "@/lib/mapStyle";
 import {
   type PogStatusFilter,
@@ -21,7 +21,7 @@ import {
   removePogLayers,
 } from "@/lib/pogLayers";
 import { DEFAULT_POG_THEME, type PogThemeId } from "@/lib/pogThemes";
-import type { PogPointQuery, PogTileRelease } from "@/lib/types";
+import type { PogPointQuery, PogTileState } from "@/lib/types";
 
 export type MapViewProps = {
   /** Surowe kliknięcie mapy (lon/lat). Nie uruchamia analizy — decyduje rodzic. */
@@ -34,10 +34,10 @@ export type MapViewProps = {
    */
   onMapReady?: (map: maplibregl.Map) => void;
   /**
-   * Wydanie POG przypięte na starcie sesji (BK-401). Źródło wektorowe jest
-   * tworzone raz dla tego wydania; zmiana trybu nie zmienia jego URL-a.
+   * Stan krajowy POG przypięty na starcie sesji (BK-401, ADR-026). Źródła wektorowe (obowiązujące i projekty) są
+   * tworzone raz dla tego stanu; zmiana trybu ani filtra nie zmienia ich URL-i.
    */
-  pogRelease?: PogTileRelease | null;
+  pogState?: PogTileState | null;
   /** Tryb tematyczny POG (BK-402) — przełączany wyłącznie przez `setPaintProperty`. */
   pogTheme?: PogThemeId;
   /** Filtr projekt / akt wiążący na już pobranych kaflach. */
@@ -53,7 +53,7 @@ export type MapViewProps = {
 export function MapView({
   onMapClick,
   onMapReady,
-  pogRelease = null,
+  pogState = null,
   pogTheme = DEFAULT_POG_THEME,
   pogStatusFilter = "all",
   onPogInspect,
@@ -64,6 +64,7 @@ export function MapView({
   const onPogInspectRef = useRef(onPogInspect);
   const pogThemeRef = useRef(pogTheme);
   const pogStatusFilterRef = useRef(pogStatusFilter);
+  const pogStateIdRef = useRef<number | null>(pogState?.state_id ?? null);
   const mapRemovedRef = useRef(false);
   const [readyMap, setReadyMap] = useState<maplibregl.Map | null>(null);
 
@@ -86,7 +87,7 @@ export function MapView({
     configureMapLibreWorker();
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: OSM_RASTER_STYLE,
+      style: mapStyleWithGlyphs(window.location.origin),
       center: POLAND_CENTER,
       zoom: POLAND_ZOOM,
       // Wprost utrwalamy zachowanie ważne dla wolnych WMS-ów: kafle ze
@@ -105,7 +106,14 @@ export function MapView({
         const layers = presentInspectLayers(map);
         const features =
           layers.length > 0 ? map.queryRenderedFeatures(event.point, { layers }) : [];
-        inspect({ lon, lat, hits: pogInspectorHits(features), queried: layers.length > 0 });
+        inspect({
+          lon,
+          lat,
+          hits: pogInspectorHits(features),
+          queried: layers.length > 0,
+          stateId: pogStateIdRef.current,
+          zoom: map.getZoom(),
+        });
       }
       onMapClickRef.current?.(lon, lat);
     };
@@ -126,17 +134,18 @@ export function MapView({
     };
   }, []);
 
-  // Źródło kafli POG powstaje raz na (mapę, wydanie). Po remoncie mapy warstwy
+  // Źródła kafli POG powstają raz na (mapę, stan krajowy). Po remoncie mapy warstwy
   // są odtwarzane z bieżącym trybem i filtrem — wybór użytkownika nie ginie.
   useEffect(() => {
-    if (!readyMap || !pogRelease) return;
-    addPogLayers(readyMap, pogRelease, pogThemeRef.current, pogStatusFilterRef.current);
+    pogStateIdRef.current = pogState?.state_id ?? null;
+    if (!readyMap || !pogState) return;
+    addPogLayers(readyMap, pogState, pogThemeRef.current, pogStatusFilterRef.current);
     return () => {
       if (!mapRemovedRef.current) removePogLayers(readyMap);
     };
-  }, [readyMap, pogRelease]);
+  }, [readyMap, pogState]);
 
-  const hasPogLayers = Boolean(readyMap && pogRelease);
+  const hasPogLayers = Boolean(readyMap && pogState);
 
   useEffect(() => {
     pogThemeRef.current = pogTheme;

@@ -22,3 +22,15 @@ export const OSM_RASTER_STYLE: StyleSpecification = {
     },
   ],
 };
+
+/** Ścieżka glifów serwowanych lokalnie z `public/map-fonts` (etykiety stref POG od z14). */
+export const MAP_GLYPHS_PATH = "/map-fonts/{fontstack}/{range}.pbf";
+
+/**
+ * Styl bazowy z glifami hostowanymi przez własną aplikację. MapLibre pobiera glify w workerze, więc adres musi być
+ * bezwzględny — budujemy go z origin strony; bez origin (SSR/testy) zwracany jest styl bez glifów.
+ */
+export function mapStyleWithGlyphs(origin: string | null | undefined): StyleSpecification {
+  if (!origin) return OSM_RASTER_STYLE;
+  return { ...OSM_RASTER_STYLE, glyphs: `${origin.replace(/\/$/, "")}${MAP_GLYPHS_PATH}` };
+}

@@ -7,7 +7,7 @@ import {
   type PogLayerStatus as PogLayerStatusValue,
   formatCheckedAt,
   pogLayerStatusMessage,
-  releaseDescription,
+  stateDescription,
 } from "@/lib/pogLayerState";
 import { legalStatusStyle } from "@/lib/pogZones";
 
@@ -18,24 +18,25 @@ export type PogLayerStatusProps = {
 };
 
 // Ponowienie ma sens tylko przy awarii metadanych/kafli albo nieaktualnym
-// wydaniu — niepełne dane importu (BK-405) czy limit kafla nie znikną po nim.
+// stanie — niepełne dane importu (BK-405) czy limit kafla nie znikną po nim.
 const RETRYABLE: ReadonlySet<PogLayerReason> = new Set([
-  "release_error",
+  "state_error",
   "refresh_failed",
-  "release_not_active",
+  "state_not_current",
+  "map_incomplete",
   "tiles_failed",
   "tile_errors",
 ]);
 
 /**
  * Stan warstwy POG (BK-406): sześć stanów z odrębnym komunikatem, opis
- * przypiętego wydania z datą oraz stałe plakietki statusu prawnego. Plakietka
- * „projekt / dane niewiążące” zależy od aktów w wydaniu, a nie od stanu
- * warstwy — pozostaje widoczna również przy awarii kafli i danych `stale`.
+ * przypiętego stanu krajowego z datą oraz stałe plakietki statusu prawnego.
+ * Plakietka „projekt / dane niewiążące” zależy od aktów w stanie, a nie od
+ * stanu warstwy — pozostaje widoczna również przy awarii kafli i danych `stale`.
  */
 export function PogLayerStatus({ status, onRetry, retrying = false }: PogLayerStatusProps) {
   const { title, detail } = pogLayerStatusMessage(status);
-  const release = status.release;
+  const registry = status.registry;
   const canRetry = Boolean(onRetry) && RETRYABLE.has(status.reason);
   return (
     <section
@@ -53,9 +54,9 @@ export function PogLayerStatus({ status, onRetry, retrying = false }: PogLayerSt
         {title}
       </p>
       <p className="pog-layer-status-detail">{detail}</p>
-      {release && (
-        <p className="pog-layer-status-release" data-testid="pog-release-line">
-          {releaseDescription(release)}, styl {release.style_version}
+      {registry && (
+        <p className="pog-layer-status-release" data-testid="pog-state-line">
+          {stateDescription(registry)}, styl {registry.style_version}
           {status.state === "stale" && (
             <strong>
               {" "}
@@ -63,7 +64,7 @@ export function PogLayerStatus({ status, onRetry, retrying = false }: PogLayerSt
               {formatCheckedAt(status.checkedAt) ?? "w nieznanej chwili"}
             </strong>
           )}
-          . {release.legal_note}
+          . {registry.legal_note}
         </p>
       )}
       {status.badges.map(({ status: legalStatus, badge }) => {

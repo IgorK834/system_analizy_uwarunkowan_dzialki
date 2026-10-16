@@ -4,17 +4,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type * as maplibregl from "maplibre-gl";
 
 import { CompatibilityAssessmentCard } from "@/components/CompatibilityAssessmentCard";
+import { CompletenessBar } from "@/components/CompletenessBar";
 import { LayerToggle, type LayerToggleItem } from "@/components/LayerToggle";
 import { MpzpActsList } from "@/components/MpzpActsList";
 import { MpzpDiscoveryCard } from "@/components/MpzpDiscoveryCard";
 import { MpzpStatusBanner } from "@/components/MpzpStatusBanner";
 import { MpzpZoneCard } from "@/components/MpzpZoneCard";
+import { BuildingsCard } from "@/components/BuildingsCard";
 import { PogOfficialSources } from "@/components/PogOfficialSources";
 import { PogZoneShareChart } from "@/components/PogZoneShareChart";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
+import { RoadContextCard } from "@/components/RoadContextCard";
 import { SectionQualityMatrix } from "@/components/SectionQualityMatrix";
 import { TerrainCard } from "@/components/TerrainCard";
 import {
+  BUILDINGS_FILL_COLOR,
+  BUILDINGS_FILL_LAYER_ID,
+  BUILDINGS_FILL_OPACITY,
+  BUILDINGS_LINE_COLOR,
+  BUILDINGS_LINE_LAYER_ID,
+  BUILDINGS_LINE_WIDTH,
+  BUILDINGS_SOURCE_ID,
   BUILDABLE_AREA_FILL_COLOR,
   BUILDABLE_AREA_FILL_LAYER_ID,
   BUILDABLE_AREA_FILL_OPACITY,
@@ -62,7 +72,19 @@ import {
   RISK_LINE_LAYER_ID,
   RISK_LINE_WIDTH,
   RISK_SOURCE_ID,
+  ROAD_FILL_LAYER_ID,
+  ROAD_LINE_COLOR,
+  ROAD_LINE_LAYER_ID,
+  ROAD_LINE_WIDTH,
+  ROAD_LINK_FILL_LAYER_ID,
+  ROAD_LINK_LINE_COLOR,
+  ROAD_LINK_LINE_DASH,
+  ROAD_LINK_LINE_LAYER_ID,
+  ROAD_LINK_LINE_WIDTH,
+  ROAD_LINK_SOURCE_ID,
+  ROAD_SOURCE_ID,
 } from "@/lib/layerStyles";
+import { buildingMapFeatures, roadMapLayers } from "@/lib/bdot";
 import {
   coverageStatusLabel,
   dataAvailabilityLabel,
@@ -79,6 +101,7 @@ import type {
   MpzpDiscoverySection,
   MpzpStatus,
   MpzpZoneResult,
+  PogZoneResult,
   RiskResult,
   SourceMetadata,
   WarningMessage,
@@ -103,6 +126,8 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
   const [protectionZonesVisible, setProtectionZonesVisible] = useState(true);
   const [risksVisible, setRisksVisible] = useState(true);
   const [mpzpActsVisible, setMpzpActsVisible] = useState(true);
+  const [roadVisible, setRoadVisible] = useState(true);
+  const [buildingsVisible, setBuildingsVisible] = useState(true);
   const layersReadyRef = useRef(false);
   const fittedResultRef = useRef<{
     map: maplibregl.Map;
@@ -140,6 +165,15 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     [mpzpActLayers],
   );
 
+  // Droga i zabudowa sąsiednia z BDOT10k (Task 23.2–23.3): oś najbliższej drogi, odcinek działka → oś i obrysy budynków.
+  const roadLayers = useMemo(() => roadMapLayers(result.road_context), [result.road_context]);
+  const roadAxisGeojson = useMemo(() => toFeatureCollection(roadLayers.axes), [roadLayers]);
+  const roadLinkGeojson = useMemo(() => toFeatureCollection(roadLayers.links), [roadLayers]);
+  const buildingsGeojson = useMemo(
+    () => toFeatureCollection(buildingMapFeatures(result.neighbour_buildings)),
+    [result.neighbour_buildings],
+  );
+
   // Warstwy GeoJSON (obrys działki, obszar zabudowy) są dodawane/usuwane na
   // istniejącej instancji mapy przekazanej z page.tsx — nigdy nie tworzymy
   // tu drugiej instancji MapLibre, zgodnie ze wzorcem z MapView.tsx.
@@ -158,6 +192,33 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       fillOpacity: RISK_FILL_OPACITY,
       lineColor: RISK_LINE_COLOR,
       lineWidth: RISK_LINE_WIDTH,
+    });
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: BUILDINGS_SOURCE_ID,
+      fillLayerId: BUILDINGS_FILL_LAYER_ID,
+      lineLayerId: BUILDINGS_LINE_LAYER_ID,
+      geojson: buildingsGeojson,
+      fillColor: BUILDINGS_FILL_COLOR,
+      fillOpacity: BUILDINGS_FILL_OPACITY,
+      lineColor: BUILDINGS_LINE_COLOR,
+      lineWidth: BUILDINGS_LINE_WIDTH,
+    });
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: ROAD_LINK_SOURCE_ID,
+      fillLayerId: ROAD_LINK_FILL_LAYER_ID,
+      lineLayerId: ROAD_LINK_LINE_LAYER_ID,
+      geojson: roadLinkGeojson,
+      lineColor: ROAD_LINK_LINE_COLOR,
+      lineWidth: ROAD_LINK_LINE_WIDTH,
+      lineDasharray: ROAD_LINK_LINE_DASH,
+    });
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: ROAD_SOURCE_ID,
+      fillLayerId: ROAD_FILL_LAYER_ID,
+      lineLayerId: ROAD_LINE_LAYER_ID,
+      geojson: roadAxisGeojson,
+      lineColor: ROAD_LINE_COLOR,
+      lineWidth: ROAD_LINE_WIDTH,
     });
     addOrUpdateGeojsonLayer(map, {
       sourceId: MPZP_ACT_BOUNDARY_SOURCE_ID,
@@ -246,6 +307,21 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         lineLayerId: RISK_LINE_LAYER_ID,
       });
       removeGeojsonLayer(map, {
+        sourceId: BUILDINGS_SOURCE_ID,
+        fillLayerId: BUILDINGS_FILL_LAYER_ID,
+        lineLayerId: BUILDINGS_LINE_LAYER_ID,
+      });
+      removeGeojsonLayer(map, {
+        sourceId: ROAD_LINK_SOURCE_ID,
+        fillLayerId: ROAD_LINK_FILL_LAYER_ID,
+        lineLayerId: ROAD_LINK_LINE_LAYER_ID,
+      });
+      removeGeojsonLayer(map, {
+        sourceId: ROAD_SOURCE_ID,
+        fillLayerId: ROAD_FILL_LAYER_ID,
+        lineLayerId: ROAD_LINE_LAYER_ID,
+      });
+      removeGeojsonLayer(map, {
         sourceId: MPZP_ACT_SOURCE_ID,
         fillLayerId: MPZP_ACT_FILL_LAYER_ID,
         lineLayerId: MPZP_ACT_LINE_LAYER_ID,
@@ -266,6 +342,9 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     risksGeojson,
     mpzpActGeojson,
     mpzpActBoundaryGeojson,
+    roadAxisGeojson,
+    roadLinkGeojson,
+    buildingsGeojson,
   ]);
 
   useEffect(() => {
@@ -337,6 +416,16 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     );
   }, [map, mpzpActsVisible]);
 
+  useEffect(() => {
+    if (!map || !layersReadyRef.current) return;
+    setLayerVisibility(map, [ROAD_LINE_LAYER_ID, ROAD_LINK_LINE_LAYER_ID], roadVisible);
+  }, [map, roadVisible]);
+
+  useEffect(() => {
+    if (!map || !layersReadyRef.current) return;
+    setLayerVisibility(map, [BUILDINGS_FILL_LAYER_ID, BUILDINGS_LINE_LAYER_ID], buildingsVisible);
+  }, [map, buildingsVisible]);
+
   const toggleItems: LayerToggleItem[] = [
     {
       id: "parcel",
@@ -388,6 +477,26 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
           : undefined,
     },
     {
+      id: "road_context",
+      label: LAYER_LEGEND.road_context.label,
+      color: LAYER_LEGEND.road_context.color,
+      checked: Boolean(roadAxisGeojson) && roadVisible,
+      disabled: !roadAxisGeojson,
+      disabledReason: !roadAxisGeojson
+        ? "Brak osi najbliższej drogi dla tej analizy (brak pokrycia danymi BDOT10k, pusty zasięg albo awaria zapytania)."
+        : undefined,
+    },
+    {
+      id: "neighbour_buildings",
+      label: LAYER_LEGEND.neighbour_buildings.label,
+      color: LAYER_LEGEND.neighbour_buildings.color,
+      checked: Boolean(buildingsGeojson) && buildingsVisible,
+      disabled: !buildingsGeojson,
+      disabledReason: !buildingsGeojson
+        ? "Brak obrysów budynków dla tej analizy (brak pokrycia danymi BDOT10k albo brak budynków w sąsiedztwie)."
+        : undefined,
+    },
+    {
       id: "risks",
       label: LAYER_LEGEND.risks.label,
       color: LAYER_LEGEND.risks.color,
@@ -406,8 +515,9 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
           <span className="eyebrow">Wynik analizy</span>
           <h2>{result.parcel?.parcel_identifier ?? "Działka"}</h2>
         </div>
-        <span className="status-badge">{result.status}</span>
       </div>
+
+      <CompletenessBar completeness={result.completeness} status={result.status} />
 
       <p className="result-disclaimer">
         Wynik ma charakter informacyjny i nie zastępuje dokumentów planistycznych
@@ -443,6 +553,8 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <InfrastructureSection items={result.infrastructure} />
       <RisksSection items={result.risks} />
       <TerrainCard terrain={result.terrain} />
+      <RoadContextCard road={result.road_context} />
+      <BuildingsCard buildings={result.neighbour_buildings} />
       <SectionQualityMatrix matrix={result.section_quality} />
       <SourcesSection sources={result.sources} />
       <WarningsSection warnings={result.warnings} />
@@ -456,6 +568,8 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     if (id === "protection_zones") setProtectionZonesVisible(checked);
     if (id === "risks") setRisksVisible(checked);
     if (id === "mpzp_acts") setMpzpActsVisible(checked);
+    if (id === "road_context") setRoadVisible(checked);
+    if (id === "neighbour_buildings") setBuildingsVisible(checked);
   }
 }
 
@@ -636,6 +750,11 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
               </table>
             </div>
           )}
+          {(pog.topological_slivers?.length ?? 0) > 0 && (
+            <p className="field-hint pog-sliver-note" data-testid="pog-sliver-note">
+              {sliverNote(pog.topological_slivers ?? [])}
+            </p>
+          )}
           {pog.social_infrastructure_standard_areas.length > 0 && (
             <p className="result-preview">
               Standardy dostępności infrastruktury społecznej: {pog.social_infrastructure_standard_areas.length}
@@ -655,6 +774,20 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
         </>
       )}
     </section>
+  );
+}
+
+const SLIVER_FORMAT = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Nota o pominiętych artefaktach styku stref: liczba, łączne pole i udział (zachowane w zapisie analizy). */
+function sliverNote(slivers: PogZoneResult[]): string {
+  const area = slivers.reduce((sum, zone) => sum + zone.area_sqm, 0);
+  const share = slivers.reduce((sum, zone) => sum + zone.area_pct, 0);
+  const noun = slivers.length === 1 ? "artefakt" : slivers.length < 5 ? "artefakty" : "artefaktów";
+  return (
+    `Pominięto ${slivers.length} ${noun} styku sąsiednich stref (łącznie ${SLIVER_FORMAT.format(area)} m², ` +
+    `${SLIVER_FORMAT.format(share)}% działki) — nie są strefami planistycznymi działki i nie wchodzą do tabeli; ` +
+    "zachowano je w zapisie analizy."
   );
 }
 

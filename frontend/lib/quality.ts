@@ -25,6 +25,7 @@ export const QUALITY_SECTION_LABELS: Record<SectionQualityKey, string> = {
   terrain: "Teren (NMT)",
   utilities: "Uzbrojenie terenu (KIUT)",
   transport: "Transport i dostęp do drogi",
+  buildings: "Zabudowa sąsiednia",
   mpzp_pog_relation: "Relacja MPZP–POG",
 };
 

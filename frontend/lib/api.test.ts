@@ -8,10 +8,12 @@ import {
   ANALYSIS_TOKEN_HEADER,
   createAnalysisLinks,
   getAddressSuggestions,
-  getActivePogTileRelease,
+  getCurrentPogTileState,
   getAnalysisAuditPackage,
   getAnalysisReport,
   getPogAreaSummary,
+  getPogCommuneState,
+  getPogCoverage,
   getPogFeatureDetails,
   getPreviewSources,
   parseRetryAfter,
@@ -22,8 +24,9 @@ import {
 import { buildAnalyzeResponse } from "@/test/fixtures";
 import {
   buildPogAreaSummary,
+  buildPogCoverage,
   buildPogFeatureDetails,
-  buildPogRelease,
+  buildPogState,
 } from "@/test/pogFixtures";
 
 const fetchMock = vi.fn<typeof fetch>();
@@ -153,33 +156,33 @@ describe("klient API", () => {
     );
   });
 
-  it("pobiera metadane aktywnego wydania POG, a 404 zamienia na brak wydania", async () => {
-    const release = buildPogRelease();
-    fetchMock.mockResolvedValueOnce(jsonResponse(release));
-    await expect(getActivePogTileRelease()).resolves.toEqual(release);
+  it("pobiera metadane bieżącego stanu krajowego POG, a 404 zamienia na brak danych", async () => {
+    const state = buildPogState();
+    fetchMock.mockResolvedValueOnce(jsonResponse(state));
+    await expect(getCurrentPogTileState()).resolves.toEqual(state);
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/v1/map/pog/releases/active",
+      "https://api.example.test/api/v1/map/pog/state",
       expect.objectContaining({ method: "GET" }),
     );
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Brak aktywnego wydania." }, 404));
-    await expect(getActivePogTileRelease()).resolves.toBeNull();
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Brak zaimportowanych planów ogólnych." }, 404));
+    await expect(getCurrentPogTileState()).resolves.toBeNull();
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "awaria" }, 500));
-    await expect(getActivePogTileRelease()).rejects.toMatchObject({ status: 500 });
+    await expect(getCurrentPogTileState()).rejects.toMatchObject({ status: 500 });
   });
 
-  it("BK-404: pobiera szczegóły obiektu z wydania, kodując identyfikator APP jako jeden segment", async () => {
+  it("BK-404: pobiera szczegóły obiektu ze stanu krajowego, kodując identyfikator APP jako jeden segment", async () => {
     const details = buildPogFeatureDetails();
     fetchMock.mockResolvedValueOnce(jsonResponse(details));
     await expect(getPogFeatureDetails(42, "PL.ZIPPZP.10011/226401-POG/1POG-100SU")).resolves.toEqual(
       details,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/v1/map/pog/releases/42/features/PL.ZIPPZP.10011%2F226401-POG%2F1POG-100SU",
+      "https://api.example.test/api/v1/map/pog/states/42/features/PL.ZIPPZP.10011%2F226401-POG%2F1POG-100SU",
       expect.objectContaining({ method: "GET" }),
     );
-    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Obiekt nie należy do wydania." }, 404));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Obiekt nie należy do stanu." }, 404));
     await expect(getPogFeatureDetails(42, "x")).rejects.toMatchObject({ status: 404 });
   });
 
@@ -190,19 +193,44 @@ describe("klient API", () => {
       summary,
     );
     expect(fetchMock).toHaveBeenLastCalledWith(
-      "https://api.example.test/api/v1/map/pog/releases/42/summary?act_id=PL.ZIPPZP.10011%2F226401-POG%2F1POG",
+      "https://api.example.test/api/v1/map/pog/states/42/summary?act_id=PL.ZIPPZP.10011%2F226401-POG%2F1POG",
       expect.objectContaining({ method: "GET" }),
     );
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "brak" }, 404));
     await expect(getPogAreaSummary(42, { teryt: "226401", edition: "project" })).resolves.toBeNull();
     expect(fetchMock).toHaveBeenLastCalledWith(
-      "https://api.example.test/api/v1/map/pog/releases/42/summary?teryt=226401&edition=project",
+      "https://api.example.test/api/v1/map/pog/states/42/summary?teryt=226401&edition=project",
       expect.anything(),
     );
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "awaria" }, 500));
     await expect(getPogAreaSummary(42, { actId: "A" })).rejects.toMatchObject({ status: 500 });
+  });
+
+  it("issue 301: pokrycie krajowe z filtrami i stan jednej gminy po kodzie TERC", async () => {
+    const coverage = buildPogCoverage();
+    fetchMock.mockResolvedValueOnce(jsonResponse(coverage));
+    await expect(getPogCoverage()).resolves.toEqual(coverage);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/api/v1/coverage/pog",
+      expect.objectContaining({ method: "GET" }),
+    );
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(coverage));
+    await getPogCoverage({ status: "in_ru_not_imported", q: " Bielsko ", voivodeship: "śląskie" });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/api/v1/coverage/pog?status=in_ru_not_imported&q=Bielsko&voivodeship=%C5%9Bl%C4%85skie",
+      expect.anything(),
+    );
+
+    const lookup = { terc: "246101", status: "in_ru_not_imported", catalog_synced_at: null, detail: "x" };
+    fetchMock.mockResolvedValueOnce(jsonResponse(lookup));
+    await expect(getPogCommuneState(" 246101 ")).resolves.toEqual(lookup);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.example.test/api/v1/coverage/pog/commune/246101",
+      expect.objectContaining({ method: "GET" }),
+    );
   });
 
   it("pobiera i weryfikuje raport PDF zapisanej analizy", async () => {

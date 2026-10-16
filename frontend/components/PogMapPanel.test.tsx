@@ -8,18 +8,18 @@ import {
   type PogTileActivity,
   derivePogLayerStatus,
 } from "@/lib/pogLayerState";
-import type { PogReleaseState } from "@/lib/types";
-import { buildPogRelease } from "@/test/pogFixtures";
+import type { PogStateStatus } from "@/lib/types";
+import { buildPogState } from "@/test/pogFixtures";
 
 const LOADED: PogTileActivity = { ...INITIAL_TILE_ACTIVITY, sourceLoaded: true, anyTileLoaded: true };
 const VIEW: [number, number, number, number] = [18.52, 54.42, 18.58, 54.46];
 
-function status(release: PogReleaseState, tiles: PogTileActivity = LOADED) {
-  return derivePogLayerStatus({ release, tiles, viewport: VIEW });
+function status(state: PogStateStatus, tiles: PogTileActivity = LOADED) {
+  return derivePogLayerStatus({ state, tiles, viewport: VIEW });
 }
 
-function available(overrides = {}): PogReleaseState {
-  return { status: "available", release: buildPogRelease(overrides), checkedAt: "2026-09-28T10:00:00Z" };
+function available(overrides = {}): PogStateStatus {
+  return { status: "available", state: buildPogState(overrides), checkedAt: "2026-09-28T10:00:00Z" };
 }
 
 function renderPanel(overrides: Partial<PogMapPanelProps> = {}) {
@@ -37,10 +37,10 @@ function renderPanel(overrides: Partial<PogMapPanelProps> = {}) {
 }
 
 describe("PogMapPanel", () => {
-  it("opisuje przypięte wydanie z datą, stan warstwy, plakietkę projektu i legendę", () => {
+  it("opisuje przypięty stan krajowy z datą, stan warstwy, plakietkę projektu i legendę", () => {
     renderPanel();
     expect(
-      screen.getByText(/Wydanie pog-0123456789ab \(#42\) z dnia 28\.09\.2026, styl 2026\.09\.29-1/),
+      screen.getByText(/Stan krajowy #42 \(import, 28\.09\.2026\), 2 aktów, styl 2026\.10\.14-1/),
     ).toBeInTheDocument();
     expect(screen.getByTestId("pog-layer-state")).toHaveTextContent("dostępna");
     expect(screen.getByTestId("pog-status-badge")).toHaveTextContent("projekt / dane niewiążące");
@@ -50,11 +50,11 @@ describe("PogMapPanel", () => {
   });
 
   it.each([
-    [{ status: "loading", release: null }, /Ładowanie lokalnego wydania/, "ładowanie"],
-    [{ status: "no_release", release: null }, /Nie oznacza to braku planu ogólnego/, "brak pokrycia danymi"],
-    [{ status: "error", release: null }, /chwilowo niedostępna/, "awaria warstwy"],
-  ] as const)("stan %o ma własny komunikat i blokuje kontrolki", (releaseState, message, chip) => {
-    renderPanel({ layerStatus: status(releaseState) });
+    [{ status: "loading", state: null }, /Ładowanie lokalnego stanu/, "ładowanie"],
+    [{ status: "no_data", state: null }, /Nie oznacza to braku planu ogólnego/, "brak pokrycia danymi"],
+    [{ status: "error", state: null }, /chwilowo niedostępna/, "awaria warstwy"],
+  ] as const)("stan %o ma własny komunikat i blokuje kontrolki", (stateStatus, message, chip) => {
+    renderPanel({ layerStatus: status(stateStatus) });
     expect(screen.getByText(message)).toBeInTheDocument();
     expect(screen.getByTestId("pog-layer-state")).toHaveTextContent(chip);
     expect(screen.queryByLabelText(/Legenda:/)).not.toBeInTheDocument();
@@ -88,20 +88,20 @@ describe("PogMapPanel", () => {
     expect(props.onRetry).toHaveBeenCalledOnce();
   });
 
-  it("stale zachowuje wydanie, datę i plakietkę; ponawianie nie usuwa danych", () => {
-    const release = buildPogRelease();
+  it("stale zachowuje stan, datę i plakietkę; ponawianie nie usuwa danych", () => {
+    const state = buildPogState();
     renderPanel({
       layerStatus: status({
         status: "stale",
-        release,
+        state,
         checkedAt: "2026-09-28T10:15:00Z",
         reason: "refresh_failed",
       }),
       retrying: true,
     });
     expect(screen.getByTestId("pog-layer-state")).toHaveTextContent("dane nieaktualne");
-    expect(screen.getByTestId("pog-release-line")).toHaveTextContent(
-      /#42\) z dnia 28\.09\.2026.*ostatnio potwierdzone 28\.09\.2026, 12:15/,
+    expect(screen.getByTestId("pog-state-line")).toHaveTextContent(
+      /#42 \(import, 28\.09\.2026\).*ostatnio potwierdzone 28\.09\.2026, 12:15/,
     );
     expect(screen.getByTestId("pog-status-badge")).toHaveTextContent("projekt / dane niewiążące");
     expect(screen.getByRole("button", { name: /Ponawianie… \(dotychczasowe dane pozostają\)/ })).toBeDisabled();
@@ -128,14 +128,30 @@ describe("PogMapPanel", () => {
       ),
     });
     expect(screen.getByTestId("pog-layer-state")).toHaveTextContent("dane niepełne");
-    expect(screen.getByText(/Akty z brakiem granicy albo luką/)).toHaveTextContent("A.");
+    expect(screen.getByText(/1 z 1 aktów w widoku ma brak granicy albo lukę/)).toHaveTextContent("A.");
     expect(screen.queryByRole("button", { name: /Ponów/ })).not.toBeInTheDocument();
   });
 
-  it("wydanie z aktem o nieustalonym statusie ma własną plakietkę", () => {
+  it("stan z aktem o nieustalonym statusie ma własną plakietkę", () => {
     renderPanel({ layerStatus: status(available({ acts_by_legal_status: { unknown: 1, binding: 1 } })) });
     const badges = screen.getAllByTestId("pog-status-badge");
     expect(badges.map((badge) => badge.textContent?.trim())).toEqual(["status nieustalony"]);
     expect(badges[0]).toHaveAttribute("data-status", "unknown");
+  });
+
+  it("tytuł panelu mówi o mapie krajowej, a edycje danych to obowiązujące i projekty", () => {
+    renderPanel();
+    expect(screen.getByRole("heading", { name: /mapa krajowa/ })).toBeInTheDocument();
+    const edition = screen.getByRole("group", { name: "Edycja danych (status prawny aktu)" });
+    expect(within(edition).getAllByRole("radio")).toHaveLength(3);
+  });
+
+  it("mapa niepełna po migracji to partial z ponowieniem", () => {
+    renderPanel({
+      layerStatus: status(available({ map_ready: false, versions_without_map_rows: 4 })),
+    });
+    expect(screen.getByTestId("pog-layer-state")).toHaveTextContent("dane niepełne");
+    expect(screen.getByText(/Mapa niepełna/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ponów wczytanie warstwy" })).toBeInTheDocument();
   });
 });

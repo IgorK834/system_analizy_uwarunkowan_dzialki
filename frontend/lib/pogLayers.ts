@@ -1,10 +1,15 @@
 /**
- * Warstwy MapLibre wektorowych kafli POG (BK-401/402/403).
+ * Warstwy MapLibre wektorowych kafli POG dla całego kraju (BK-401/402/403, ADR-026).
  *
- * Źródło wektorowe jest dodawane raz, z URL-em przypiętym do `release_id`
- * wydania pobranego na starcie sesji mapy. Zmiana trybu tematycznego to wyłącznie
- * `setPaintProperty` (bez `addSource`, `setTiles`, `setData` ani żądań sieciowych),
- * a filtr statusu prawnego to `setFilter` na tych samych, już pobranych kaflach.
+ * Dane obowiązujące i projekty to **dwa osobne źródła wektorowe** (`binding` i `project` — osobne adresy kafli,
+ * osobny cache i ETag), z identycznym zestawem warstw. Przełącznik „obowiązujące / projekty / oba” zmienia wyłącznie
+ * widoczność warstw danego źródła — źródło nieużywane przez żadną widoczną warstwę nie pobiera kafli.
+ *
+ * Progi zoomu pochodzą z metadanych stanu (`layer_min_zoom`, jedno źródło prawdy: serwer):
+ * granice aktów w kolorze statusu od z0 (przegląd krajowy, wypełnienie do z13), strefy od z11, OUZ/OZS/OSDIS od z12;
+ * etykiety stref od z14, etykiety OUZ/OZS/OSDIS od z16. Zmiana trybu tematycznego to wyłącznie `setPaintProperty`.
+ *
+ * Źródła są dodawane raz, z URL-ami przypiętymi do `state_id` stanu pobranego na starcie sesji mapy.
  */
 import type * as maplibregl from "maplibre-gl";
 
@@ -21,6 +26,7 @@ import {
   themePatternOpacityExpression,
 } from "@/lib/pogThemes";
 import {
+  POG_LEGAL_STATUS_STYLES,
   POG_NULL_STYLE,
   POG_UNKNOWN_ZONE,
   type PogOverlayId,
@@ -32,13 +38,29 @@ import {
 import type {
   PogFeatureLayer,
   PogInspectorHit,
+  PogTileEdition,
   PogTileLayerName,
-  PogTileRelease,
+  PogTileState,
 } from "@/lib/types";
 
-export const POG_SOURCE_ID = "pog-mvt-source";
+export type PogEdition = Exclude<PogTileEdition, "all">;
 
+/** Edycje danych jako osobne źródła; kolejność = kolejność rysowania (projekty nad obowiązującymi). */
+export const POG_EDITIONS: readonly PogEdition[] = ["binding", "project"];
+
+/** Źródło obowiązujących zachowuje dotychczasowy identyfikator; projekty mają własne. */
+export const POG_SOURCE_ID = "pog-mvt-source";
+export const POG_PROJECT_SOURCE_ID = "pog-mvt-project-source";
+
+export function pogSourceId(edition: PogEdition): string {
+  return edition === "binding" ? POG_SOURCE_ID : POG_PROJECT_SOURCE_ID;
+}
+
+export const POG_SOURCE_IDS: readonly string[] = POG_EDITIONS.map(pogSourceId);
+
+/** Identyfikatory warstw źródła obowiązujących; warstwy projektów mają ten sam id z sufiksem edycji. */
 export const POG_LAYER_IDS = {
+  actFill: "pog-act-fill",
   zonesFill: "pog-zones-fill",
   zonesPattern: "pog-zones-pattern",
   zonesStatusPattern: "pog-zones-status-pattern",
@@ -51,37 +73,74 @@ export const POG_LAYER_IDS = {
   socialPattern: "pog-social-infrastructure-standard-pattern",
   socialLine: "pog-social-infrastructure-standard-line",
   actBoundary: "pog-act-boundary-line",
+  zoneLabels: "pog-zone-labels",
+  ouzLabels: "pog-ouz-labels",
+  downtownLabels: "pog-downtown-labels",
+  socialLabels: "pog-social-infrastructure-standard-labels",
 } as const;
 
 export type PogStatusFilter = "all" | "binding" | "non_binding";
 
 export const POG_STATUS_FILTERS: readonly PogStatusFilter[] = ["all", "binding", "non_binding"];
 
-const NON_BINDING_STATUSES = ["project", "in_progress"];
+/** Które edycje (źródła) są widoczne przy danym filtrze: „oba” = obowiązujące i projekty. */
+export function visibleEditions(filter: PogStatusFilter): readonly PogEdition[] {
+  if (filter === "binding") return ["binding"];
+  if (filter === "non_binding") return ["project"];
+  return POG_EDITIONS;
+}
+
+export function pogLayerId(base: string, edition: PogEdition): string {
+  return edition === "binding" ? base : `${base}--${edition}`;
+}
+
+/** Nazwa bazowa warstwy (bez sufiksu edycji) i jej edycja. */
+export function parsePogLayerId(id: string): { base: string; edition: PogEdition } {
+  const marker = id.indexOf("--");
+  if (marker < 0) return { base: id, edition: "binding" };
+  return { base: id.slice(0, marker), edition: id.slice(marker + 2) as PogEdition };
+}
 
 const OVERLAY_LAYERS: ReadonlyArray<{
   overlay: Exclude<PogOverlayId, "act_boundary">;
-  sourceLayer: PogTileLayerName;
+  sourceLayer: Exclude<PogTileLayerName, "zones" | "act_boundary">;
   pattern: string;
   line: string;
+  labels: string;
 }> = [
-  { overlay: "ouz", sourceLayer: "ouz", pattern: POG_LAYER_IDS.ouzPattern, line: POG_LAYER_IDS.ouzLine },
+  {
+    overlay: "ouz",
+    sourceLayer: "ouz",
+    pattern: POG_LAYER_IDS.ouzPattern,
+    line: POG_LAYER_IDS.ouzLine,
+    labels: POG_LAYER_IDS.ouzLabels,
+  },
   {
     overlay: "downtown",
     sourceLayer: "downtown",
     pattern: POG_LAYER_IDS.downtownPattern,
     line: POG_LAYER_IDS.downtownLine,
+    labels: POG_LAYER_IDS.downtownLabels,
   },
   {
     overlay: "social_infrastructure_standard",
     sourceLayer: "social_infrastructure_standard",
     pattern: POG_LAYER_IDS.socialPattern,
     line: POG_LAYER_IDS.socialLine,
+    labels: POG_LAYER_IDS.socialLabels,
   },
 ];
 
-/** Warstwy w kolejności rysowania (od spodu). */
-export const POG_LAYER_ORDER: readonly string[] = [
+/** Etykiety OUZ/OZS/OSDIS pojawiają się od z16 (jak we wzorcu UX); strefy od z14. */
+export const POG_ZONE_LABEL_MIN_ZOOM = 14;
+export const POG_OVERLAY_LABEL_MIN_ZOOM = 16;
+/** Wypełnienie granic aktów w kolorze statusu znika przy z13 — wtedy rysowane są strefy. */
+export const POG_ACT_FILL_MAX_ZOOM = 13;
+export const POG_LABEL_FONT = "Open Sans Semibold";
+
+/** Warstwy jednej edycji w kolejności rysowania (od spodu). */
+const EDITION_LAYER_BASES: readonly string[] = [
+  POG_LAYER_IDS.actFill,
   POG_LAYER_IDS.zonesFill,
   POG_LAYER_IDS.zonesPattern,
   POG_LAYER_IDS.zonesStatusPattern,
@@ -89,31 +148,45 @@ export const POG_LAYER_ORDER: readonly string[] = [
   POG_LAYER_IDS.zonesOutlineNonBinding,
   ...OVERLAY_LAYERS.flatMap((item) => [item.pattern, item.line]),
   POG_LAYER_IDS.actBoundary,
+  POG_LAYER_IDS.zoneLabels,
+  ...OVERLAY_LAYERS.map((item) => item.labels),
 ];
 
+/** Warstwy w kolejności rysowania (od spodu): najpierw wszystkie obowiązujące, potem projekty. */
+export const POG_LAYER_ORDER: readonly string[] = POG_EDITIONS.flatMap((edition) =>
+  EDITION_LAYER_BASES.map((base) => pogLayerId(base, edition)),
+);
+
 /**
- * Warstwy odpytywane przez inspektor (BK-404) → warstwa logiczna obiektu.
- * Wyłącznie warstwy wypełnień BK-401: strefy i OUZ/OZS/OSDIS (linie obrysu i
- * wzory statusu pokazują te same cechy, więc nie są odpytywane).
+ * Warstwy odpytywane przez inspektor (BK-404) → warstwa logiczna obiektu. Wypełnienia stref i nakładek oraz — przy
+ * małym zoomie, gdy stref jeszcze nie ma w kaflach — wypełnienie granicy aktu (informacja o akcie i jego statusie).
  */
-export const POG_INSPECT_LAYERS: Readonly<Record<string, PogFeatureLayer>> = {
-  [POG_LAYER_IDS.zonesFill]: "zones",
-  [POG_LAYER_IDS.ouzPattern]: "ouz",
-  [POG_LAYER_IDS.downtownPattern]: "downtown",
-  [POG_LAYER_IDS.socialPattern]: "social_infrastructure_standard",
-};
+export const POG_INSPECT_LAYERS: Readonly<Record<string, PogFeatureLayer>> = Object.fromEntries(
+  POG_EDITIONS.flatMap((edition) => [
+    [pogLayerId(POG_LAYER_IDS.zonesFill, edition), "zones"],
+    [pogLayerId(POG_LAYER_IDS.ouzPattern, edition), "ouz"],
+    [pogLayerId(POG_LAYER_IDS.downtownPattern, edition), "downtown"],
+    [pogLayerId(POG_LAYER_IDS.socialPattern, edition), "social_infrastructure_standard"],
+    [pogLayerId(POG_LAYER_IDS.actFill, edition), "act_boundary"],
+  ]),
+) as Record<string, PogFeatureLayer>;
 
 const INSPECT_ORDER: readonly PogFeatureLayer[] = [
   "zones",
   "ouz",
   "downtown",
   "social_infrastructure_standard",
+  "act_boundary",
 ];
 
-/** Pełny URL kafli z metadanych wydania — jedyne miejsce budowania źródła. */
-export function pogTileUrl(release: PogTileRelease): string {
-  return getApiResourceUrl(release.tile_url_template);
+/** Pełny URL kafli edycji ze stanu — jedyne miejsce budowania źródła. */
+export function pogTileUrl(state: PogTileState, edition: PogEdition = "binding"): string {
+  const source = state.editions_sources?.find((item) => item.edition === edition);
+  const template = source?.tile_url_template ?? `${state.tile_url_template}?edition=${edition}`;
+  return getApiResourceUrl(template);
 }
+
+const NON_BINDING_STATUSES = ["project", "in_progress"];
 
 function statusFilterExpression(filter: PogStatusFilter): unknown[] | null {
   if (filter === "binding") return ["==", ["get", "legal_status"], "binding"];
@@ -129,9 +202,9 @@ const BASE_FILTERS: Readonly<Record<string, unknown[]>> = {
   [POG_LAYER_IDS.zonesStatusPattern]: legalStatusPatternFilter(),
 };
 
-/** Filtr warstwy: stały filtr warstwy (np. obrys projektu) ∧ filtr statusu. */
+/** Filtr warstwy: stały filtr warstwy (np. obrys projektu) ∧ filtr statusu (używany w testach i wyrażeniach). */
 export function layerFilter(layerId: string, filter: PogStatusFilter): unknown[] | null {
-  const parts = [BASE_FILTERS[layerId], statusFilterExpression(filter)].filter(
+  const parts = [BASE_FILTERS[parsePogLayerId(layerId).base], statusFilterExpression(filter)].filter(
     (item): item is unknown[] => Array.isArray(item),
   );
   if (parts.length === 0) return null;
@@ -157,73 +230,100 @@ export function overlayImageId(overlay: PogOverlayId): string {
   return `pog-overlay-${overlay}`;
 }
 
-function withFilter<T extends { id: string }>(layer: T, filter: PogStatusFilter): T {
-  const expression = layerFilter(layer.id, filter);
-  return (expression ? { ...layer, filter: expression } : layer) as T;
+/** Kolor przeglądu krajowego wg statusu prawnego aktu (wyrażenie `match` z artefaktu prezentacji). */
+export function actStatusFillColorExpression(): unknown[] {
+  const unknown = legalStatusStyle("unknown");
+  return [
+    "match",
+    ["get", "legal_status"],
+    ...POG_LEGAL_STATUS_STYLES.filter((item) => item.status !== "unknown").flatMap((item) => [
+      item.status,
+      item.overview_color,
+    ]),
+    unknown.overview_color,
+  ];
 }
 
-/** Dodaje źródło i warstwy POG (idempotentnie) z trybem i filtrem statusu. */
-export function addPogLayers(
-  map: maplibregl.Map,
-  release: PogTileRelease,
+function minZoomOf(state: PogTileState, layer: PogTileLayerName): number {
+  return state.layer_min_zoom?.[layer] ?? 0;
+}
+
+function textField(sourceLayer: "zones" | "ouz" | "downtown" | "social_infrastructure_standard", fallback: string): unknown[] {
+  return sourceLayer === "zones"
+    ? ["coalesce", ["get", "designation"], ["get", "symbol"], ["get", "zone_code"]]
+    : ["coalesce", ["get", "symbol"], fallback];
+}
+
+function buildEditionLayers(
+  state: PogTileState,
+  edition: PogEdition,
   themeId: PogThemeId,
-  filter: PogStatusFilter,
-): void {
-  ensureImages(map);
-  if (!map.getSource(POG_SOURCE_ID)) {
-    map.addSource(POG_SOURCE_ID, {
-      type: "vector",
-      tiles: [pogTileUrl(release)],
-      minzoom: release.min_zoom,
-      maxzoom: release.max_zoom,
-      ...(release.bounds ? { bounds: release.bounds } : {}),
-      attribution: release.attribution,
-    });
-  }
-  const theme = themeById(themeId);
+): maplibregl.LayerSpecification[] {
+  const source = pogSourceId(edition);
+  const id = (base: string) => pogLayerId(base, edition);
   const nonBinding = legalStatusStyle("project");
+  const theme = themeById(themeId);
   const layers: maplibregl.LayerSpecification[] = [
     {
-      id: POG_LAYER_IDS.zonesFill,
+      // Przegląd krajowy: granica aktu w kolorze statusu prawnego, widoczna od najmniejszego zoomu.
+      id: id(POG_LAYER_IDS.actFill),
       type: "fill",
-      source: POG_SOURCE_ID,
+      source,
+      "source-layer": "act_boundary",
+      maxzoom: POG_ACT_FILL_MAX_ZOOM,
+      paint: {
+        "fill-color": actStatusFillColorExpression() as never,
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 11, 0.4, POG_ACT_FILL_MAX_ZOOM, 0.05] as never,
+      },
+    },
+    {
+      id: id(POG_LAYER_IDS.zonesFill),
+      type: "fill",
+      source,
       "source-layer": "zones",
+      minzoom: minZoomOf(state, "zones"),
       paint: {
         "fill-color": themeFillColorExpression(theme) as never,
         "fill-opacity": legalStatusOpacityExpression() as never,
       },
     },
     {
-      id: POG_LAYER_IDS.zonesPattern,
+      id: id(POG_LAYER_IDS.zonesPattern),
       type: "fill",
-      source: POG_SOURCE_ID,
+      source,
       "source-layer": "zones",
+      minzoom: minZoomOf(state, "zones"),
       paint: {
         "fill-pattern": themePatternImage(theme),
         "fill-opacity": themePatternOpacityExpression(theme) as never,
       },
     },
     {
-      // BK-406: projekt ma oprócz słabszego krycia i obrysu przerywanego także
-      // własny wzór — rozróżnienie nie zależy wyłącznie od percepcji barwy.
-      id: POG_LAYER_IDS.zonesStatusPattern,
+      // BK-406: projekt ma oprócz słabszego krycia i obrysu przerywanego także własny wzór.
+      id: id(POG_LAYER_IDS.zonesStatusPattern),
       type: "fill",
-      source: POG_SOURCE_ID,
+      source,
       "source-layer": "zones",
+      minzoom: minZoomOf(state, "zones"),
+      filter: BASE_FILTERS[POG_LAYER_IDS.zonesStatusPattern] as never,
       paint: { "fill-pattern": legalStatusPatternImage() },
     },
     {
-      id: POG_LAYER_IDS.zonesOutlineBinding,
+      id: id(POG_LAYER_IDS.zonesOutlineBinding),
       type: "line",
-      source: POG_SOURCE_ID,
+      source,
       "source-layer": "zones",
+      minzoom: minZoomOf(state, "zones"),
+      filter: BASE_FILTERS[POG_LAYER_IDS.zonesOutlineBinding] as never,
       paint: { "line-color": "#3d3d3d", "line-width": 0.8 },
     },
     {
-      id: POG_LAYER_IDS.zonesOutlineNonBinding,
+      id: id(POG_LAYER_IDS.zonesOutlineNonBinding),
       type: "line",
-      source: POG_SOURCE_ID,
+      source,
       "source-layer": "zones",
+      minzoom: minZoomOf(state, "zones"),
+      filter: BASE_FILTERS[POG_LAYER_IDS.zonesOutlineNonBinding] as never,
       paint: {
         "line-color": "#3d3d3d",
         "line-width": 1.2,
@@ -234,17 +334,19 @@ export function addPogLayers(
       const style = overlayStyle(overlay);
       return [
         {
-          id: pattern,
+          id: id(pattern),
           type: "fill",
-          source: POG_SOURCE_ID,
+          source,
           "source-layer": sourceLayer,
+          minzoom: minZoomOf(state, sourceLayer),
           paint: { "fill-pattern": overlayImageId(overlay) },
         },
         {
-          id: line,
+          id: id(line),
           type: "line",
-          source: POG_SOURCE_ID,
+          source,
           "source-layer": sourceLayer,
+          minzoom: minZoomOf(state, sourceLayer),
           paint: {
             "line-color": style.outline,
             "line-width": style.line_width,
@@ -254,44 +356,109 @@ export function addPogLayers(
       ] as maplibregl.LayerSpecification[];
     }),
     {
-      id: POG_LAYER_IDS.actBoundary,
+      id: id(POG_LAYER_IDS.actBoundary),
       type: "line",
-      source: POG_SOURCE_ID,
+      source,
       "source-layer": "act_boundary",
       paint: {
         "line-color": overlayStyle("act_boundary").outline,
-        "line-width": overlayStyle("act_boundary").line_width,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 12, overlayStyle("act_boundary").line_width] as never,
       },
     },
+    {
+      id: id(POG_LAYER_IDS.zoneLabels),
+      type: "symbol",
+      source,
+      "source-layer": "zones",
+      minzoom: POG_ZONE_LABEL_MIN_ZOOM,
+      layout: {
+        "text-field": textField("zones", "") as never,
+        "text-font": [POG_LABEL_FONT],
+        "text-size": ["interpolate", ["linear"], ["zoom"], POG_ZONE_LABEL_MIN_ZOOM, 10, 18, 14] as never,
+        "text-allow-overlap": false,
+        "text-padding": 2,
+      },
+      paint: { "text-color": "#1d1d1d", "text-halo-color": "#ffffff", "text-halo-width": 1.4 },
+    },
+    ...OVERLAY_LAYERS.map(({ overlay, sourceLayer, labels }): maplibregl.LayerSpecification => ({
+      id: id(labels),
+      type: "symbol",
+      source,
+      "source-layer": sourceLayer,
+      minzoom: Math.max(POG_OVERLAY_LABEL_MIN_ZOOM, minZoomOf(state, sourceLayer)),
+      layout: {
+        "text-field": textField(sourceLayer, overlayStyle(overlay).short_label) as never,
+        "text-font": [POG_LABEL_FONT],
+        "text-size": 11,
+        "text-allow-overlap": false,
+      },
+      paint: {
+        "text-color": overlayStyle(overlay).outline,
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.4,
+      },
+    })),
   ];
-  for (const layer of layers) {
-    if (!map.getLayer(layer.id)) map.addLayer(withFilter(layer, filter));
+  return layers;
+}
+
+/** Dodaje źródła i warstwy POG (idempotentnie) z trybem i filtrem edycji; niewidoczna edycja nie pobiera kafli. */
+export function addPogLayers(
+  map: maplibregl.Map,
+  state: PogTileState,
+  themeId: PogThemeId,
+  filter: PogStatusFilter,
+): void {
+  ensureImages(map);
+  const visible = new Set(visibleEditions(filter));
+  for (const edition of POG_EDITIONS) {
+    const sourceId = pogSourceId(edition);
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: "vector",
+        tiles: [pogTileUrl(state, edition)],
+        minzoom: state.min_zoom,
+        maxzoom: state.max_zoom,
+        ...(state.bounds ? { bounds: state.bounds } : {}),
+        attribution: state.attribution,
+      });
+    }
+    for (const layer of buildEditionLayers(state, edition, themeId)) {
+      if (map.getLayer(layer.id)) continue;
+      map.addLayer({
+        ...layer,
+        layout: {
+          ...(layer.layout ?? {}),
+          visibility: visible.has(edition) ? "visible" : "none",
+        } as never,
+      } as maplibregl.LayerSpecification);
+    }
   }
 }
 
-// Wyrażenia motywów są budowane jako `unknown[]` (wspólny kod z testami kontrastu); MapLibre 6 ma
-// przeciążone, ścisłe typy `setPaintProperty`, więc wartość zawężamy do `never` (jak `setFilter` niżej).
-/** BK-402: zmiana trybu to wyłącznie `setPaintProperty` na istniejących warstwach. */
+/** BK-402: zmiana trybu to wyłącznie `setPaintProperty` na istniejących warstwach (obu edycji). */
 export function applyPogTheme(map: maplibregl.Map, themeId: PogThemeId): void {
-  if (!map.getLayer(POG_LAYER_IDS.zonesFill)) return;
   const theme = themeById(themeId);
-  map.setPaintProperty(
-    POG_LAYER_IDS.zonesFill,
-    "fill-color",
-    themeFillColorExpression(theme) as never,
-  );
-  map.setPaintProperty(POG_LAYER_IDS.zonesPattern, "fill-pattern", themePatternImage(theme));
-  map.setPaintProperty(
-    POG_LAYER_IDS.zonesPattern,
-    "fill-opacity",
-    themePatternOpacityExpression(theme) as never,
-  );
+  for (const edition of POG_EDITIONS) {
+    const fill = pogLayerId(POG_LAYER_IDS.zonesFill, edition);
+    if (!map.getLayer(fill)) continue;
+    map.setPaintProperty(fill, "fill-color", themeFillColorExpression(theme) as never);
+    const pattern = pogLayerId(POG_LAYER_IDS.zonesPattern, edition);
+    map.setPaintProperty(pattern, "fill-pattern", themePatternImage(theme));
+    map.setPaintProperty(pattern, "fill-opacity", themePatternOpacityExpression(theme) as never);
+  }
 }
 
-/** Filtr projekt / akt wiążący na już pobranych kaflach (bez nowego źródła). */
+/** Przełącznik obowiązujące / projekty / oba: widoczność warstw źródeł, bez zmiany ich definicji. */
 export function applyPogStatusFilter(map: maplibregl.Map, filter: PogStatusFilter): void {
-  for (const layerId of POG_LAYER_ORDER) {
-    if (map.getLayer(layerId)) map.setFilter(layerId, layerFilter(layerId, filter) as never);
+  const visible = new Set(visibleEditions(filter));
+  for (const edition of POG_EDITIONS) {
+    for (const base of EDITION_LAYER_BASES) {
+      const layerId = pogLayerId(base, edition);
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", visible.has(edition) ? "visible" : "none");
+      }
+    }
   }
 }
 
@@ -299,7 +466,9 @@ export function removePogLayers(map: maplibregl.Map): void {
   for (const layerId of [...POG_LAYER_ORDER].reverse()) {
     if (map.getLayer(layerId)) map.removeLayer(layerId);
   }
-  if (map.getSource(POG_SOURCE_ID)) map.removeSource(POG_SOURCE_ID);
+  for (const sourceId of POG_SOURCE_IDS) {
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+  }
 }
 
 type RenderedFeature = {
@@ -309,9 +478,9 @@ type RenderedFeature = {
 };
 
 /**
- * Trafienia inspektora z `queryRenderedFeatures` (BK-404): tylko warstwy POG,
- * bez duplikatów tej samej cechy z sąsiednich kafli (ten sam identyfikator MVT
- * = klucz wiersza wydania, a zapasowo `feature_id`), strefy przed nakładkami.
+ * Trafienia inspektora z `queryRenderedFeatures` (BK-404): tylko warstwy POG, bez duplikatów tej samej cechy z
+ * sąsiednich kafli (ten sam identyfikator MVT = klucz wiersza w tabeli mapy, a zapasowo `feature_id`), strefy przed
+ * nakładkami, a granica aktu na końcu. Stan krajowy jest jeden na sesję mapy, więc klucz go nie zawiera.
  */
 export function pogInspectorHits(features: ReadonlyArray<RenderedFeature>): PogInspectorHit[] {
   const hits = new Map<string, PogInspectorHit>();
@@ -321,8 +490,8 @@ export function pogInspectorHits(features: ReadonlyArray<RenderedFeature>): PogI
     if (!layer || !properties) continue;
     const featurePk =
       typeof feature.id === "number" && Number.isFinite(feature.id) ? feature.id : null;
-    const identity = featurePk ?? String(properties.feature_id ?? "");
-    const key = `${layer}:${properties.data_release_id ?? ""}:${identity}`;
+    const identity = featurePk ?? String(properties.feature_id ?? properties.act_id ?? "");
+    const key = `${layer}:${identity}`;
     if (hits.has(key)) continue;
     hits.set(key, { key, layer, featurePk, properties } as PogInspectorHit);
   }
@@ -331,7 +500,7 @@ export function pogInspectorHits(features: ReadonlyArray<RenderedFeature>): PogI
   );
 }
 
-/** Identyfikatory warstw odpytywanych przez inspektor, które są na mapie. */
+/** Identyfikatory warstw odpytywanych przez inspektor, które są na mapie (widoczne i niewidoczne — filtruje MapLibre). */
 export function presentInspectLayers(map: Pick<maplibregl.Map, "getLayer">): string[] {
   return Object.keys(POG_INSPECT_LAYERS).filter((layerId) => Boolean(map.getLayer(layerId)));
 }

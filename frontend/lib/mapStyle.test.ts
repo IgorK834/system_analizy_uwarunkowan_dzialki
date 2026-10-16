@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MAP_GLYPHS_PATH,
   OSM_RASTER_STYLE,
   POLAND_CENTER,
   POLAND_ZOOM,
+  mapStyleWithGlyphs,
 } from "@/lib/mapStyle";
 
 describe("styl mapy", () => {
@@ -21,5 +23,14 @@ describe("styl mapy", () => {
       type: "raster",
       source: "osm",
     });
+  });
+
+  it("dodaje glify z własnej aplikacji (bezwzględny adres) albo zwraca styl bazowy bez origin", () => {
+    expect(MAP_GLYPHS_PATH).toBe("/map-fonts/{fontstack}/{range}.pbf");
+    expect(mapStyleWithGlyphs("https://app.example.pl/").glyphs).toBe(
+      "https://app.example.pl/map-fonts/{fontstack}/{range}.pbf",
+    );
+    expect(mapStyleWithGlyphs(null)).toBe(OSM_RASTER_STYLE);
+    expect(OSM_RASTER_STYLE.glyphs).toBeUndefined();
   });
 });

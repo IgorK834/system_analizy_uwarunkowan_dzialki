@@ -74,6 +74,28 @@ export const MPZP_ACT_BOUNDARY_DASH: [number, number] = [3, 2];
 export const MPZP_ACT_BOUNDARY_SOURCE_ID = "mpzp-act-boundary-source";
 export const MPZP_ACT_BOUNDARY_LAYER_ID = "mpzp-act-boundary-layer";
 
+// --- Droga i zabudowa sąsiednia z lokalnego wydania BDOT10k (Task 23.2–23.3) ---
+// Oś najbliższej drogi jest linią (brąz), odcinek działka → oś — cienką linią przerywaną, a obrysy budynków —
+// szarym wypełnieniem. Kolory różnią się od stref planistycznych i ryzyk.
+export const ROAD_LINE_COLOR = "#8a5a00";
+export const ROAD_LINE_WIDTH = 3.5;
+export const ROAD_SOURCE_ID = "road-context-source";
+export const ROAD_FILL_LAYER_ID = "road-context-unused-fill";
+export const ROAD_LINE_LAYER_ID = "road-context-line-layer";
+export const ROAD_LINK_LINE_COLOR = "#8a5a00";
+export const ROAD_LINK_LINE_WIDTH = 1.5;
+export const ROAD_LINK_LINE_DASH: [number, number] = [2, 2];
+export const ROAD_LINK_SOURCE_ID = "road-link-source";
+export const ROAD_LINK_FILL_LAYER_ID = "road-link-unused-fill";
+export const ROAD_LINK_LINE_LAYER_ID = "road-link-line-layer";
+export const BUILDINGS_FILL_COLOR = "#6b7280";
+export const BUILDINGS_LINE_COLOR = "#374151";
+export const BUILDINGS_FILL_OPACITY = 0.45;
+export const BUILDINGS_LINE_WIDTH = 1;
+export const BUILDINGS_SOURCE_ID = "neighbour-buildings-source";
+export const BUILDINGS_FILL_LAYER_ID = "neighbour-buildings-fill-layer";
+export const BUILDINGS_LINE_LAYER_ID = "neighbour-buildings-line-layer";
+
 // --- Nakładka WMS MPZP (KIMPZP) ---
 export const MPZP_WMS_SOURCE_ID = "mpzp-wms-source";
 export const MPZP_WMS_LAYER_ID = "mpzp-wms-layer";
@@ -111,6 +133,8 @@ export type LayerId =
   | "protection_zones"
   | "risks"
   | "mpzp_acts"
+  | "road_context"
+  | "neighbour_buildings"
   | "mpzp_wms"
   | "pog_wms"
   | "kiut_wms";
@@ -150,6 +174,16 @@ export const LAYER_LEGEND: Record<LayerId, LayerLegendEntry> = {
     id: "mpzp_acts",
     label: "Granice aktów MPZP (Rejestr Urbanistyczny)",
     color: MPZP_ACT_FILL_COLOR,
+  },
+  road_context: {
+    id: "road_context",
+    label: "Najbliższa droga (oś jezdni, BDOT10k)",
+    color: ROAD_LINE_COLOR,
+  },
+  neighbour_buildings: {
+    id: "neighbour_buildings",
+    label: "Budynki w sąsiedztwie (BDOT10k)",
+    color: BUILDINGS_FILL_COLOR,
   },
   mpzp_wms: {
     id: "mpzp_wms",

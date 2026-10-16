@@ -3,7 +3,7 @@ import type * as maplibregl from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
 import { usePogTileActivity } from "@/hooks/usePogTileActivity";
-import { POG_SOURCE_ID } from "@/lib/pogLayers";
+import { POG_PROJECT_SOURCE_ID, POG_SOURCE_ID } from "@/lib/pogLayers";
 import { INITIAL_TILE_ACTIVITY } from "@/lib/pogLayerState";
 
 function createMap() {
@@ -22,7 +22,7 @@ function createMap() {
       getEast: () => bounds[2],
       getNorth: () => bounds[3],
     })),
-    getSource: vi.fn((id: string) => (id === POG_SOURCE_ID ? {} : undefined)),
+    getSource: vi.fn((id: string) => ([POG_SOURCE_ID, POG_PROJECT_SOURCE_ID].includes(id) ? {} : undefined)),
     refreshTiles: vi.fn(),
   };
   const fire = (name: string, event?: unknown) =>
@@ -35,7 +35,7 @@ function createMap() {
 }
 
 describe("usePogTileActivity", () => {
-  it("śledzi ładowanie, wczytane kafle, błędy i 413 wyłącznie dla źródła POG", () => {
+  it("śledzi ładowanie, wczytane kafle, błędy i 413 wyłącznie dla źródeł POG", () => {
     const { map, fire, move } = createMap();
     const { result } = renderHook(() =>
       usePogTileActivity(map as unknown as maplibregl.Map, 42),
@@ -67,19 +67,40 @@ describe("usePogTileActivity", () => {
     act(() => result.current.retry());
     expect(result.current.tiles).toMatchObject({ tileErrors: 0, tileLimitHit: false });
     expect(map.refreshTiles).toHaveBeenCalledWith(POG_SOURCE_ID);
+    expect(map.refreshTiles).toHaveBeenCalledWith(POG_PROJECT_SOURCE_ID);
   });
 
-  it("resetuje stan dla nowego wydania i odpina zdarzenia", () => {
+  it("źródło obowiązujących i projektów: wczytane dopiero, gdy żadne z aktywnych źródeł nie czeka na kafle", () => {
+    const { map, fire } = createMap();
+    const { result } = renderHook(() => usePogTileActivity(map as unknown as maplibregl.Map, 42));
+
+    fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true, tile: {} });
+    expect(result.current.tiles.sourceLoaded).toBe(true);
+
+    fire("sourcedataloading", { sourceId: POG_PROJECT_SOURCE_ID });
+    expect(result.current.tiles.sourceLoaded).toBe(false);
+    // Zdarzenie z drugiego źródła nie może „odwołać” trwającego ładowania pierwszego.
+    fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true });
+    expect(result.current.tiles.sourceLoaded).toBe(false);
+    fire("sourcedata", { sourceId: POG_PROJECT_SOURCE_ID, isSourceLoaded: true });
+    expect(result.current.tiles.sourceLoaded).toBe(true);
+
+    // Błąd kafla projektów też liczy się do awarii warstwy.
+    fire("error", { sourceId: POG_PROJECT_SOURCE_ID, isSourceLoaded: true, error: { status: 503 } });
+    expect(result.current.tiles).toMatchObject({ tileErrors: 1, sourceLoaded: true });
+  });
+
+  it("resetuje stan dla nowego stanu krajowego i odpina zdarzenia", () => {
     const { map, fire, handlers } = createMap();
     const { result, rerender, unmount } = renderHook(
-      ({ release }) => usePogTileActivity(map as unknown as maplibregl.Map, release),
-      { initialProps: { release: 42 as number | null } },
+      ({ state }) => usePogTileActivity(map as unknown as maplibregl.Map, state),
+      { initialProps: { state: 42 as number | null } },
     );
     fire("error", { sourceId: POG_SOURCE_ID, error: null });
     expect(result.current.tiles.tileErrors).toBe(1);
-    rerender({ release: 43 });
+    rerender({ state: 43 });
     expect(result.current.tiles).toEqual(INITIAL_TILE_ACTIVITY);
-    rerender({ release: null });
+    rerender({ state: null });
     expect([...handlers.values()].every((list) => list.length === 0)).toBe(true);
     unmount();
   });

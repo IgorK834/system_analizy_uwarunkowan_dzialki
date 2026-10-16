@@ -127,6 +127,10 @@ export function PogLegend({ theme }: PogLegendProps) {
       </ul>
 
       <h4>Status prawny aktu</h4>
+      <p className="pog-legend-caption">
+        Na przeglądzie krajowym (do przybliżenia 13) granica gminy ma kolor statusu aktu; po przybliżeniu pojawiają się
+        strefy (od 11), obszary OUZ/OZS/OSDIS (od 12), symbole stref (od 14) i symbole obszarów (od 16).
+      </p>
       <ul className="pog-legend-list">
         {POG_LEGAL_STATUS_STYLES.map((status) => (
           <li
@@ -137,7 +141,7 @@ export function PogLegend({ theme }: PogLegendProps) {
             data-pattern={status.pattern ?? ""}
           >
             <PogSwatch
-              color="#9aa5b1"
+              color={status.overview_color}
               outline="#3d3d3d"
               pattern={status.pattern}
               dash={status.line_dasharray}

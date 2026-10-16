@@ -337,6 +337,8 @@ export type PogResult = {
   coverage_evidence: PogStatusEvidence | null;
   act: PogActResult | null;
   zones: PogZoneResult[];
+  /** Artefakty styku sąsiednich stref (poza `zones`, z flagą `topological_sliver`). */
+  topological_slivers?: PogZoneResult[];
   dominant_zone_id: string | null;
   ouz: PogAreaResult[];
   downtown_areas: PogAreaResult[];
@@ -368,7 +370,21 @@ export type PogResult = {
   touches_ouz_boundary: boolean;
   /** Wersja stylu POG użyta przy analizie; brak = snapshot sprzed BK-403. */
   presentation_style?: PogPresentationStyleSnapshot | null;
+  /** Numer stanu krajowego POG, z którego policzono wynik (ADR-026); `null` — wynik nie pochodzi z lokalnego rejestru. */
+  registry_state_id?: number | null;
+  /** Wersje aktów użyte w analizie (identyfikatory i `content_hash`) — pozwalają odtworzyć raport. */
+  pinned_act_versions?: PogPinnedActVersion[];
   source: SourceMetadata | null;
+};
+
+export type PogPinnedActVersion = {
+  act_version_id: number;
+  act_identifier: string;
+  object_version_id: string | null;
+  content_hash: string;
+  legal_status: PogLegalStatus;
+  data_release_id: number | null;
+  artifact_sha256: string | null;
 };
 
 // --- Wektorowe kafle POG (BK-401) -------------------------------------------
@@ -382,19 +398,36 @@ export type PogTileLayerName =
   | "social_infrastructure_standard"
   | "act_boundary";
 
-/** Metadane wydania POG z URL-em kafli MVT przypiętym do `release_id`. */
-export type PogTileRelease = {
-  release_id: number;
-  source_id: string;
-  version_label: string;
-  published_at: string | null;
-  is_active: boolean;
-  artifact_sha256: string | null;
-  /** Względny szablon URL kafli, np. /api/v1/map/pog/releases/7/{z}/{x}/{y}.mvt */
+/** Szablon URL kafli jednej edycji danych (obowiązujące / projekty) — osobne źródła wektorowe (ADR-026). */
+export type PogTileEditionSource = {
+  edition: Exclude<PogTileEdition, "all">;
   tile_url_template: string;
+};
+
+/**
+ * Metadane stanu krajowego POG z URL-ami kafli MVT przypiętymi do `state_id` (ADR-026).
+ *
+ * Stan krajowy to zbiór wersji aktów aktywnych w rejestrze; numer rośnie przy każdej zmianie (import, wycofanie).
+ * URL przypięty do numeru odtwarza zawsze ten sam zbiór — także po późniejszych importach innych gmin.
+ */
+export type PogTileState = {
+  state_id: number;
+  source_id: string;
+  /** import | withdrawal | rollback | migration */
+  kind: string;
+  created_at: string | null;
+  /** `false` — zatwierdzono już nowszy stan; mapa pozostaje przypięta do tego numeru. */
+  is_current: boolean;
+  act_count: number;
+  /** Względny szablon URL kafli wszystkich edycji, np. /api/v1/map/pog/states/7/{z}/{x}/{y}.mvt */
+  tile_url_template: string;
+  editions_sources: PogTileEditionSource[];
   tile_schema: string;
   tile_format: string;
   layers: PogTileLayerName[];
+  /** Najmniejszy zoom, od którego warstwa jest w kaflach (jedno źródło prawdy: serwer). */
+  layer_min_zoom: Record<PogTileLayerName, number>;
+  text_attributes_min_zoom: number;
   editions: PogTileEdition[];
   default_edition: PogTileEdition;
   min_zoom: number;
@@ -404,11 +437,11 @@ export type PogTileRelease = {
   /** [min_lon, min_lat, max_lon, max_lat] w EPSG:4326. */
   bounds: [number, number, number, number] | null;
   acts_by_legal_status: Partial<Record<PogLegalStatus, number>>;
-  /**
-   * Zasięg danych każdego aktu (BK-406). Pokrycie widoku jest oceniane z tych
-   * metadanych, a nie z pustego kafla; brak pola = wydanie sprzed BK-406.
-   */
+  /** Zasięg danych każdego aktu (BK-406). Pokrycie widoku jest oceniane z tych metadanych, a nie z pustego kafla. */
   coverage_areas?: PogCoverageArea[];
+  /** `false` — część aktywnych wersji nie ma jeszcze wierszy mapy (np. po migracji); mapa jest niepełna. */
+  map_ready: boolean;
+  versions_without_map_rows: number;
   style_version: string;
   style_sha256: string;
   attribution: string;
@@ -423,11 +456,13 @@ export type PogZoneTileProperties = {
   feature_id: string;
   feature_version?: string;
   symbol?: string;
+  /** Oznaczenie strefy w akcie (np. `9SK`), odrębne od symbolu (`SK`). */
+  designation?: string;
+  /** Nazwa strefy — w kaflu dopiero od z13 (`text_attributes_min_zoom`); pełna w szczegółach. */
   label?: string;
   legal_status: PogLegalStatus;
   teryt?: string;
   act_id: string;
-  data_release_id: number;
   zone_code: string;
   max_overground_floor_area_ratio?: number;
   max_building_height_m?: number;
@@ -459,25 +494,44 @@ export type PogOverlayTileProperties = {
   legal_status: PogLegalStatus;
   teryt?: string;
   act_id: string;
-  data_release_id: number;
 };
 
-/** Warstwy obiektów POG, które inspektor odczytuje z wyrenderowanych kafli. */
+/** Atrybuty granicy aktu z warstwy `act_boundary` kafla MVT (przegląd krajowy; od z0). */
+export type PogActTileProperties = {
+  act_id: string;
+  /** Tytuł aktu (przycięty do 200 znaków); pełny w szczegółach. */
+  label?: string;
+  legal_status: PogLegalStatus;
+  teryt?: string;
+  act_version?: string;
+  resolution_number?: string;
+  resolution_date?: string;
+  valid_from?: string;
+  effective_date?: string;
+  version_started_on?: string;
+};
+
+/** Strefy, nakładki i granica aktu: warstwy, które inspektor odczytuje z wyrenderowanych kafli. */
 export type PogFeatureLayer =
   | "zones"
   | "ouz"
   | "downtown"
-  | "social_infrastructure_standard";
+  | "social_infrastructure_standard"
+  | "act_boundary";
+
+/** Warstwy obiektów (bez granicy aktu), których szczegóły pobiera `getPogFeatureDetails`. */
+export type PogObjectLayer = Exclude<PogFeatureLayer, "act_boundary">;
 
 /** Jedno trafienie inspektora — po deduplikacji cech z sąsiednich kafli. */
 export type PogInspectorHit =
   | { key: string; layer: "zones"; featurePk: number | null; properties: PogZoneTileProperties }
   | {
       key: string;
-      layer: Exclude<PogFeatureLayer, "zones">;
+      layer: Exclude<PogObjectLayer, "zones">;
       featurePk: number | null;
       properties: PogOverlayTileProperties;
-    };
+    }
+  | { key: string; layer: "act_boundary"; featurePk: number | null; properties: PogActTileProperties };
 
 /**
  * Wynik kliknięcia mapy dla inspektora (BK-404). `queried = false`, gdy warstwy
@@ -488,6 +542,10 @@ export type PogPointQuery = {
   lat: number;
   hits: PogInspectorHit[];
   queried: boolean;
+  /** Numer stanu krajowego, do którego przypięta jest mapa — szczegóły obiektów są pobierane z tego samego stanu. */
+  stateId: number | null;
+  /** Poziom przybliżenia w chwili kliknięcia: warstwy stref i obszarów są w kaflach dopiero od progów `layer_min_zoom`. */
+  zoom?: number | null;
 };
 
 /**
@@ -502,19 +560,19 @@ export type LayerState =
   | "error"
   | "stale";
 
-/** Stan pobrania metadanych przypiętego wydania POG. */
-export type PogReleaseState =
-  | { status: "loading"; release: null }
-  | { status: "available"; release: PogTileRelease; checkedAt: string }
+/** Stan pobrania metadanych przypiętego stanu krajowego POG. */
+export type PogStateStatus =
+  | { status: "loading"; state: null }
+  | { status: "available"; state: PogTileState; checkedAt: string }
   | {
       status: "stale";
-      release: PogTileRelease;
-      /** Chwila ostatniego udanego sprawdzenia wydania. */
+      state: PogTileState;
+      /** Chwila ostatniego udanego sprawdzenia stanu. */
       checkedAt: string;
-      reason: "refresh_failed" | "release_not_active";
+      reason: "refresh_failed" | "state_not_current";
     }
-  | { status: "no_release"; release: null }
-  | { status: "error"; release: null };
+  | { status: "no_data"; state: null }
+  | { status: "error"; state: null };
 
 export type PogProfileDetails = {
   code: string;
@@ -526,19 +584,20 @@ export type PogProfileDetails = {
 export type PogFeatureDetails = {
   schema: string;
   tile_schema: string;
-  release: {
-    release_id: number;
-    version_label: string;
-    published_at: string | null;
-    is_active: boolean;
-    artifact_sha256: string | null;
+  state: {
+    state_id: number;
+    kind: string;
+    created_at: string | null;
+    is_current: boolean;
   };
   feature_pk: number;
   feature_id: string;
   feature_version: string | null;
-  layer: PogFeatureLayer;
+  layer: PogObjectLayer;
   feature_type: string;
   symbol: string | null;
+  /** Oznaczenie obiektu w akcie (np. `9SK`). */
+  designation: string | null;
   label: string | null;
   zone_code: string | null;
   source_zone_type: string | null;
@@ -558,8 +617,21 @@ export type PogFeatureDetails = {
     resolution_date: string | null;
     legal_valid_from: string | null;
     legal_valid_to: string | null;
+    /** Data wejścia w życie uchwały i początek wersji aktu w rejestrze (APP). */
+    effective_date: string | null;
+    version_started_on: string | null;
+    /** Dziennik urzędowy uchwały (etykieta słownika RU) i odnośnik do tekstu uchwały (tylko zweryfikowany HTTPS). */
+    official_journal: string | null;
+    document_link: string | null;
+    /** Karta aktu w Rejestrze Urbanistycznym. */
+    ru_act_url: string | null;
     publication_id: string | null;
     manual_review_required: boolean;
+    act_version_id: number | null;
+    data_release_id: number | null;
+    release_label: string | null;
+    artifact_sha256: string | null;
+    content_hash: string | null;
   };
   source_reference: string | null;
 };
@@ -576,9 +648,12 @@ export type PogAreaSummaryZone = {
 /** Agregat powierzchniowy stref aktu albo gminy (BK-405). */
 export type PogAreaSummary = {
   schema: string;
+  state_id: number;
+  /** Numer stanu, w którym agregat powstał (gmina) — pochodzenie liczb. */
+  computed_in_state_id: number | null;
+  state_is_current: boolean;
   release_id: number;
   release_label: string;
-  release_is_active: boolean;
   artifact_sha256: string | null;
   scope: "act" | "municipality";
   act_id: string | null;
@@ -699,6 +774,8 @@ export type PogZoneResult = {
   primary_profile: PogProfileResult[];
   additional_profiles: PogProfileResult[];
   source: SourceMetadata | null;
+  /** Artefakt styku sąsiednich stref (AU-110): zachowany w zapisie, poza tabelą główną. */
+  topological_sliver?: boolean;
   feature_version?: string | null;
   /** Oficjalny URL GML obiektu strefy — źródło parametrów. */
   gml_url?: string | null;
@@ -940,6 +1017,122 @@ export type TerrainResult = {
   relief: TerrainReliefResult | null;
 };
 
+/** Statusy sekcji z lokalnego wydania BDOT10k (droga, zabudowa sąsiednia) — rozłączne; `no_coverage` ≠ brak obiektów. */
+export type BdotContextStatus = "available" | "no_match" | "no_coverage" | "unavailable" | "unknown";
+
+/** Wydanie danych (paczka powiatowa) przypięte do wyniku. */
+export type BdotReleaseInfo = {
+  data_release_id: number;
+  version_label: string;
+  teryt_powiat: string;
+  /** Najnowsza wersja obiektu w paczce — data, na którą dane są aktualne (nie data pobrania). */
+  data_as_of: string | null;
+  package_sha256: string | null;
+  imported_at: string | null;
+};
+
+export type RoadRelation = "intersects" | "touches" | "disjoint";
+
+/** Najbliższa oś jezdni: fakty geometryczne i opis ze źródła, bez oceny prawnej. */
+export type RoadNearestResult = {
+  road_id: string;
+  distance_m: number;
+  relation: RoadRelation;
+  geometry_kind: "carriageway_axis";
+  /** Kategoria zarządzania ze źródła (np. gminna, wewnętrzna). */
+  category: string | null;
+  road_class: string | null;
+  road_number: string | null;
+  street_name: string | null;
+  surface_material: string | null;
+  surface_width_m: number | null;
+  position: string | null;
+  feature_version: string | null;
+  road_geojson: Record<string, unknown> | null;
+  link_geojson: Record<string, unknown> | null;
+};
+
+/** Kontekst drogowy działki (Task 23.2). Bliskość geometryczna nie jest potwierdzeniem prawnego dostępu do drogi. */
+export type RoadContextResult = {
+  schema_version: string;
+  status: BdotContextStatus;
+  reason_code: string | null;
+  distance_reference: string;
+  nearest: RoadNearestResult | null;
+  search_radius_m: number | null;
+  searched_radii_m: number[];
+  max_search_radius_m: number | null;
+  candidate_limit: number | null;
+  search_area_within_coverage: boolean | null;
+  intersecting_road_count: number | null;
+  touching_road_count: number | null;
+  release: BdotReleaseInfo | null;
+  /** Obowiązkowa uwaga interpretacyjna — ta sama w API, UI, PDF i pakiecie audytowym. */
+  interpretation_note: string;
+  source: SourceMetadata | null;
+  warnings: string[];
+};
+
+export type BuildingRelation = "on_parcel" | "straddling" | "adjacent" | "neighbour";
+
+export type BuildingBufferResult = {
+  radius_m: number;
+  ring_area_sqm: number;
+  count: number;
+  straddling_parcel_count: number;
+  footprint_area_in_ring_sqm: number;
+  union_area_in_ring_sqm: number;
+  built_share_pct: number;
+  /** null, gdy w pierścieniu nie ma budynków (null ≠ 0). */
+  min_distance_m: number | null;
+  footprint_min_sqm: number | null;
+  footprint_median_sqm: number | null;
+  footprint_max_sqm: number | null;
+};
+
+export type ParcelBuildingsResult = {
+  count: number;
+  union_area_in_parcel_sqm: number;
+  coverage_pct: number;
+};
+
+export type NeighbourBuildingItem = {
+  building_id: string;
+  distance_m: number;
+  relation: BuildingRelation;
+  overlap_with_parcel_sqm: number;
+  footprint_sqm: number;
+  general_function: string | null;
+  detailed_function: string | null;
+  predominant_function: string | null;
+  floors: number | null;
+  geometry_source: string | null;
+  feature_version: string | null;
+  geometry_geojson: Record<string, unknown> | null;
+};
+
+/** Kontekst istniejącej zabudowy w otoczeniu działki (Task 23.3) — nie „możliwość zabudowy”. */
+export type NeighbourBuildingsResult = {
+  schema_version: string;
+  status: BdotContextStatus;
+  reason_code: string | null;
+  ring_definition: string;
+  distance_reference: string;
+  buffers_m: number[];
+  parcel_area_sqm: number | null;
+  on_parcel: ParcelBuildingsResult | null;
+  buffers: BuildingBufferResult[];
+  buildings: NeighbourBuildingItem[];
+  buildings_truncated: boolean;
+  listed_radius_m: number | null;
+  candidates_considered: number | null;
+  search_area_within_coverage: boolean | null;
+  release: BdotReleaseInfo | null;
+  interpretation_note: string;
+  source: SourceMetadata | null;
+  warnings: string[];
+};
+
 /** Status sekcji według kontraktu źródła (BK-504) — niezależny od świeżości. */
 export type SectionQualityStatus =
   | "available"
@@ -964,6 +1157,7 @@ export type SectionQualityKey =
   | "terrain"
   | "utilities"
   | "transport"
+  | "buildings"
   | "mpzp_pog_relation";
 
 export type FreshnessAssessment = {
@@ -1172,6 +1366,36 @@ export type MpzpStatus = {
   source: SourceMetadata | null;
 };
 
+/** Stan sekcji na pasku kompletności (AU-104): sprawdzona, brak wiarygodnego wyniku albo poza zakresem analizy. */
+export type CompletenessState = "checked" | "missing" | "out_of_scope";
+
+export type CompletenessSection = {
+  section: SectionQualityKey;
+  label: string;
+  short_label: string;
+  report_section: string;
+  state: CompletenessState;
+  /** Status z macierzy jakości (kontrakt źródła) — rozłączny od stanu kompletności. */
+  quality_status: SectionQualityStatus;
+  /** MPZP: `vector_intersection` (lokalny wektor), `document_candidate` (akt + dokument) albo `no_match`. */
+  basis: string | null;
+  manual_review_required: boolean;
+  reason_codes: string[];
+};
+
+export type Completeness = {
+  schema_version: string;
+  rule_version: string;
+  checked: number;
+  /** Liczba sekcji W ZAKRESIE analizy (bez `out_of_scope`). */
+  total: number;
+  complete: boolean;
+  headline: string;
+  notes: string[];
+  sections: CompletenessSection[];
+  origin: "stored" | "reconstructed";
+};
+
 export type AnalyzeResponse = {
   analysis_id: number | null;
   /**
@@ -1197,8 +1421,16 @@ export type AnalyzeResponse = {
   risk_sections?: RiskSectionResult[];
   /** Sekcja NMT; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
   terrain?: TerrainResult | null;
+  /** Najbliższa droga z BDOT10k; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
+  road_context?: RoadContextResult | null;
+  /** Zabudowa sąsiednia z BDOT10k; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
+  neighbour_buildings?: NeighbourBuildingsResult | null;
   /** Macierz kompletności i świeżości sekcji; brak pola = odpowiedź sprzed BK-504. */
   section_quality?: SectionQualityMatrix | null;
+  /** Kompletność analizy (AU-104); brak pola = odpowiedź sprzed AU-104 (UI pokazuje wtedy sam status). */
+  completeness?: Completeness | null;
+  /** Komunikat nagłówkowy kompletności; ten sam tekst jest w UI i na stronie 1 raportu PDF. */
+  headline?: string | null;
   buildable_area_sqm: number | null;
   manual_zone_required: boolean;
   /** Plan, kandydaci i przypięty dokument pokazywane przed podaniem symbolu. */
@@ -1273,4 +1505,83 @@ export type AnalysisLinks = {
   /** Ścieżki względem adresu API z tokenem w query-stringu; użyj `getApiResourceUrl`. */
   report_url: string;
   audit_package_url: string;
+};
+
+// --- Pokrycie krajowe POG (issue 301, ADR-026) --------------------------------
+
+/** Rozłączne stany gminy; „brak aktu w RU” wynika z wykazu i nie dowodzi braku planu. */
+export type PogCommuneStatus = "imported" | "in_ru_not_imported" | "no_act_in_ru" | "unknown";
+
+export type PogImportedActCoverage = {
+  act_identifier: string;
+  act_version: string | null;
+  legal_status: PogLegalStatus;
+  name: string | null;
+  state_id: number;
+  imported_at: string;
+  fetched_at: string | null;
+  release_id: number;
+  release_label: string;
+  content_hash: string;
+  ru_published_act_id: number | null;
+  /** `true` — wersja zgadza się z wykazem RU; `false` — RU ma nowszą (czeka na import); `null` — brak tokenu RU. */
+  up_to_date: boolean | null;
+  zone_count: number;
+  overlay_count: number;
+};
+
+export type PogCommuneCoverage = {
+  terc: string;
+  name: string | null;
+  district: string | null;
+  voivodeship: string | null;
+  status: PogCommuneStatus;
+  ru_acts: Array<{
+    published_act_id: number;
+    status_text: string | null;
+    legal_status: PogLegalStatus;
+    publish_date: string | null;
+    valid_from: string | null;
+  }>;
+  imported_acts: PogImportedActCoverage[];
+  import_job: {
+    job_id: number;
+    status: string;
+    attempts: number;
+    requested_at: string | null;
+    finished_at: string | null;
+    last_error: string | null;
+  } | null;
+  /** Ostatnia nieudana próba importu aktu tej gminy w przebiegu krajowym (np. wada danych źródła). */
+  last_import_failure?: {
+    published_act_id: number;
+    code: string;
+    message: string | null;
+    run_id: number | null;
+  } | null;
+};
+
+export type PogCoverage = {
+  source_id: string;
+  checked_at: string;
+  catalog_synced_at: string | null;
+  catalog_fresh: boolean;
+  summary: {
+    ru_communes: number;
+    imported_communes: number;
+    in_ru_not_imported: number;
+    imported_without_ru_entry: number;
+    outdated_versions: number;
+    state_id: number | null;
+  };
+  communes: PogCommuneCoverage[];
+  note: string;
+};
+
+/** Stan jednej gminy (kod TERC) — jedyne miejsce, które rozróżnia „brak aktu w RU” od „nieustalone” (wykaz nieświeży). */
+export type PogCommuneLookup = {
+  terc: string;
+  status: PogCommuneStatus;
+  catalog_synced_at: string | null;
+  detail: string;
 };

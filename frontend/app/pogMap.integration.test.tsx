@@ -2,10 +2,12 @@
  * Scenariusz końcowy BK-401–406 na prawdziwej stronie: page.tsx + MapView +
  * PogMapPanel + PogFeatureInspector + PogAreaSummary + adaptery stylu i stanu
  * warstwy. Atrapą są wyłącznie MapLibre (brak WebGL w jsdom) i klient HTTP.
- * Test sprawdza przypięcie URL-a kafli do wydania, pięć trybów bez żądań,
- * filtr projekt/wiążący, zachowanie trybu po remoncie mapy, inspektor obiektów
- * bez uruchamiania analizy (BK-404) oraz stany warstwy z awarią kafla i
- * danymi nieaktualnymi (BK-406).
+ * Test sprawdza przypięcie URL-i kafli do stanu krajowego (dwa źródła:
+ * obowiązujące i projekty), pięć trybów bez żądań, przełącznik
+ * obowiązujące/projekty (widoczność warstw), zachowanie trybu po remoncie
+ * mapy, inspektor obiektów bez uruchamiania analizy (BK-404), stany warstwy z
+ * awarią kafla i danymi nieaktualnymi (BK-406) oraz panel pokrycia importu
+ * (issue 301).
  */
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -15,20 +17,26 @@ import HomePage from "@/app/page";
 import { MapView, type MapViewProps } from "@/components/MapView";
 import {
   analyzeParcel,
-  getActivePogTileRelease,
+  getCurrentPogTileState,
   getPogAreaSummary,
+  getPogCommuneState,
+  getPogCoverage,
   getPogFeatureDetails,
   getPreviewSources,
 } from "@/lib/api";
-import { POG_LAYER_IDS, POG_SOURCE_ID } from "@/lib/pogLayers";
+import { POG_LAYER_IDS, POG_PROJECT_SOURCE_ID, POG_SOURCE_ID, pogLayerId } from "@/lib/pogLayers";
 import { POG_THEMES, themeById, themeFillColorExpression } from "@/lib/pogThemes";
 import {
   buildPogAreaSummary,
+  buildPogCoverage,
   buildPogFeatureDetails,
   buildPogOverlayProperties,
-  buildPogRelease,
+  buildPogState,
   buildPogZoneProperties,
 } from "@/test/pogFixtures";
+
+const BINDING = (base: string) => pogLayerId(base, "binding");
+const PROJECT = (base: string) => pogLayerId(base, "project");
 
 const mapState = vi.hoisted(() => {
   const sources = new Map<string, Record<string, unknown>>();
@@ -45,6 +53,7 @@ const mapState = vi.hoisted(() => {
       sources.set(id, source);
     }),
     setPaintProperty: vi.fn(),
+    setLayoutProperty: vi.fn(),
     setFilter: vi.fn(),
     queryRenderedFeatures: vi.fn(() => [] as unknown[]),
     refreshTiles: vi.fn(),
@@ -75,6 +84,7 @@ vi.mock("maplibre-gl", () => {
       mapState.images.add(id);
     };
     setPaintProperty = mapState.setPaintProperty;
+    setLayoutProperty = mapState.setLayoutProperty;
     setFilter = mapState.setFilter;
     queryRenderedFeatures = mapState.queryRenderedFeatures;
     getZoom = () => 14;
@@ -85,7 +95,6 @@ vi.mock("maplibre-gl", () => {
       getNorth: () => 54.46,
     });
     refreshTiles = mapState.refreshTiles;
-    setLayoutProperty = vi.fn();
     fitBounds = vi.fn();
     flyTo = vi.fn();
   }
@@ -103,9 +112,11 @@ vi.mock("@/lib/api", async () => {
     ...actual,
     analyzeParcel: vi.fn(),
     getPreviewSources: vi.fn(),
-    getActivePogTileRelease: vi.fn(),
+    getCurrentPogTileState: vi.fn(),
     getPogFeatureDetails: vi.fn(),
     getPogAreaSummary: vi.fn(),
+    getPogCoverage: vi.fn(),
+    getPogCommuneState: vi.fn(),
     resumeAnalysis: vi.fn(),
   };
 });
@@ -125,25 +136,31 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     mapState.instances = 0;
     mapState.addSource.mockClear();
     mapState.setPaintProperty.mockClear();
+    mapState.setLayoutProperty.mockClear();
     mapState.setFilter.mockClear();
     mapState.refreshTiles.mockClear();
     mapState.queryRenderedFeatures.mockReset().mockReturnValue([]);
     vi.mocked(getPogFeatureDetails).mockReset().mockResolvedValue(buildPogFeatureDetails());
     vi.mocked(getPogAreaSummary).mockReset().mockResolvedValue(buildPogAreaSummary());
-    vi.mocked(getActivePogTileRelease).mockReset().mockResolvedValue(buildPogRelease());
+    vi.mocked(getCurrentPogTileState).mockReset().mockResolvedValue(buildPogState());
+    vi.mocked(getPogCoverage).mockReset().mockResolvedValue(buildPogCoverage());
+    vi.mocked(getPogCommuneState).mockReset();
     vi.mocked(getPreviewSources).mockReset().mockResolvedValue([]);
     vi.mocked(analyzeParcel).mockReset().mockReturnValue(new Promise(() => undefined));
   });
 
-  it("5 trybów klawiaturą i myszą: 0 requestów, ten sam URL źródła, tylko setPaintProperty", async () => {
+  it("5 trybów klawiaturą i myszą: 0 requestów, te same URL-e źródeł, tylko setPaintProperty", async () => {
     const user = userEvent.setup();
     render(<HomePage />);
     fire("load");
-    await screen.findByText(/Wydanie pog-0123456789ab \(#42\)/);
-    await waitFor(() => expect(mapState.addSource).toHaveBeenCalledOnce());
-    const source = JSON.stringify(mapState.sources.get(POG_SOURCE_ID));
+    await screen.findByText(/Stan krajowy #42/);
+    await waitFor(() => expect(mapState.addSource).toHaveBeenCalledTimes(2));
+    const source = JSON.stringify([...mapState.sources.entries()]);
     expect(mapState.sources.get(POG_SOURCE_ID)?.tiles).toEqual([
-      "http://api.example.test/api/v1/map/pog/releases/42/{z}/{x}/{y}.mvt",
+      "http://api.example.test/api/v1/map/pog/states/42/{z}/{x}/{y}.mvt?edition=binding",
+    ]);
+    expect(mapState.sources.get(POG_PROJECT_SOURCE_ID)?.tiles).toEqual([
+      "http://api.example.test/api/v1/map/pog/states/42/{z}/{x}/{y}.mvt?edition=project",
     ]);
 
     const fetchSpy = vi.spyOn(globalThis, "fetch");
@@ -152,7 +169,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     for (const theme of POG_THEMES.slice(1)) {
       await user.click(within(panel).getByRole("radio", { name: new RegExp(theme.label) }));
       expect(mapState.setPaintProperty).toHaveBeenCalledWith(
-        POG_LAYER_IDS.zonesFill,
+        BINDING(POG_LAYER_IDS.zonesFill),
         "fill-color",
         themeFillColorExpression(themeById(theme.id)),
       );
@@ -162,9 +179,10 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     expect(within(panel).getByRole("radio", { name: /Strefy planistyczne/ })).toBeChecked();
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(getActivePogTileRelease).toHaveBeenCalledOnce();
-    expect(mapState.addSource).toHaveBeenCalledOnce();
-    expect(JSON.stringify(mapState.sources.get(POG_SOURCE_ID))).toBe(source);
+    expect(getCurrentPogTileState).toHaveBeenCalledOnce();
+    expect(getPogCoverage).not.toHaveBeenCalled();
+    expect(mapState.addSource).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify([...mapState.sources.entries()])).toBe(source);
     expect(analyzeParcel).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
@@ -173,33 +191,31 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     const user = userEvent.setup();
     render(<HomePage />);
     fire("load");
-    await screen.findByText(/Wydanie pog-0123456789ab \(#42\)/);
+    await screen.findByText(/Stan krajowy #42/);
     fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true, tile: {} });
 
     await user.click(screen.getByRole("radio", { name: "Tylko akty obowiązujące" }));
-    expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
-      "==",
-      ["get", "legal_status"],
-      "binding",
-    ]);
-    expect(mapState.addSource).toHaveBeenCalledOnce();
+    expect(mapState.setLayoutProperty).toHaveBeenCalledWith(BINDING(POG_LAYER_IDS.zonesFill), "visibility", "visible");
+    expect(mapState.setLayoutProperty).toHaveBeenCalledWith(PROJECT(POG_LAYER_IDS.zonesFill), "visibility", "none");
+    expect(mapState.addSource).toHaveBeenCalledTimes(2);
     await user.click(screen.getByRole("radio", { name: "Wszystkie akty" }));
 
     const zone = buildPogZoneProperties();
     const project = buildPogZoneProperties({
       feature_id: "PL.ZIPPZP.99999/226401-POG/2POG-1SJ",
       symbol: "SJ",
+      designation: "1SJ",
       zone_code: "SJ",
       legal_status: "project",
       max_building_height_m: undefined,
     });
     const ouz = buildPogOverlayProperties();
     mapState.queryRenderedFeatures.mockReturnValueOnce([
-      { id: 1, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
-      { id: 1, layer: { id: POG_LAYER_IDS.zonesFill }, properties: zone },
-      { id: 2, layer: { id: POG_LAYER_IDS.zonesFill }, properties: project },
-      { id: 3, layer: { id: POG_LAYER_IDS.ouzPattern }, properties: ouz },
-      { id: 3, layer: { id: POG_LAYER_IDS.ouzPattern }, properties: ouz },
+      { id: 1, layer: { id: BINDING(POG_LAYER_IDS.zonesFill) }, properties: zone },
+      { id: 1, layer: { id: BINDING(POG_LAYER_IDS.zonesFill) }, properties: zone },
+      { id: 2, layer: { id: PROJECT(POG_LAYER_IDS.zonesFill) }, properties: project },
+      { id: 3, layer: { id: BINDING(POG_LAYER_IDS.ouzPattern) }, properties: ouz },
+      { id: 3, layer: { id: BINDING(POG_LAYER_IDS.ouzPattern) }, properties: ouz },
     ]);
     fire("click", { point: { x: 5, y: 5 }, lngLat: { lng: 18.538, lat: 54.456 } });
 
@@ -213,7 +229,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     );
     expect(within(zones[1]).getByTestId("pog-inspector-badge")).toHaveTextContent("projekt / dane niewiążące");
     expect(within(inspector).getAllByTestId("pog-inspector-overlay")).toHaveLength(1);
-    expect(within(inspector).getByText(/Dane z kafli mapy — wydanie #42/)).toBeInTheDocument();
+    expect(within(inspector).getByText(/Dane z kafli mapy — stan krajowy #42/)).toBeInTheDocument();
     expect(await within(zones[0]).findByText(/Plan ogólny Miasta Sopotu/)).toBeInTheDocument();
     expect(getPogFeatureDetails).toHaveBeenCalledWith(42, zone.feature_id, expect.anything());
     expect(analyzeParcel).not.toHaveBeenCalled();
@@ -239,7 +255,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     const user = userEvent.setup();
     render(<HomePage />);
     fire("load");
-    await screen.findByText(/Wydanie pog-0123456789ab \(#42\)/);
+    await screen.findByText(/Stan krajowy #42/);
     const state = () => screen.getByTestId("pog-layer-state");
     const badge = () => screen.getByTestId("pog-status-badge");
     expect(state()).toHaveTextContent("ładowanie");
@@ -248,16 +264,14 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     fire("sourcedata", { sourceId: POG_SOURCE_ID, isSourceLoaded: true, tile: {} });
     expect(state()).toHaveTextContent("dostępna");
 
-    // Jawna zmiana edycji klawiaturą — ten sam źródłowy URL, tylko setFilter.
+    // Jawna zmiana edycji klawiaturą — te same źródłowe URL-e, tylko widoczność warstw.
     const edition = screen.getByRole("group", { name: "Edycja danych (status prawny aktu)" });
     within(edition).getByRole("radio", { name: "Wszystkie akty" }).focus();
     await user.keyboard("{ArrowDown}{ArrowDown}");
     expect(within(edition).getByRole("radio", { name: "Tylko projekty (niewiążące)" })).toBeChecked();
-    expect(mapState.setFilter).toHaveBeenCalledWith(POG_LAYER_IDS.zonesFill, [
-      "in",
-      ["get", "legal_status"],
-      ["literal", ["project", "in_progress"]],
-    ]);
+    expect(mapState.setLayoutProperty).toHaveBeenCalledWith(BINDING(POG_LAYER_IDS.zonesFill), "visibility", "none");
+    expect(mapState.setLayoutProperty).toHaveBeenCalledWith(PROJECT(POG_LAYER_IDS.zonesFill), "visibility", "visible");
+    expect(mapState.setFilter).not.toHaveBeenCalled();
 
     // Awaria kafla (np. 503 z serwera kafli): stan partial, plakietka zostaje.
     fire("error", { sourceId: POG_SOURCE_ID, error: { status: 503 } });
@@ -266,27 +280,28 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     expect(badge()).toBeVisible();
     expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
 
-    // Ponowienie: metadane wydania niedostępne → stale z datą i tym samym wydaniem.
-    vi.mocked(getActivePogTileRelease).mockRejectedValueOnce(new Error("503"));
+    // Ponowienie: metadane stanu niedostępne → stale z datą i tym samym stanem.
+    vi.mocked(getCurrentPogTileState).mockRejectedValueOnce(new Error("503"));
     await user.click(screen.getByRole("button", { name: "Ponów wczytanie warstwy" }));
     expect(mapState.refreshTiles).toHaveBeenCalledWith(POG_SOURCE_ID);
+    expect(mapState.refreshTiles).toHaveBeenCalledWith(POG_PROJECT_SOURCE_ID);
     await waitFor(() => expect(state()).toHaveTextContent("dane nieaktualne"));
-    expect(screen.getByTestId("pog-release-line")).toHaveTextContent(
-      /Wydanie pog-0123456789ab \(#42\) z dnia 28\.09\.2026.*ostatnio potwierdzone \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/,
+    expect(screen.getByTestId("pog-state-line")).toHaveTextContent(
+      /Stan krajowy #42 \(import, 28\.09\.2026\).*ostatnio potwierdzone \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/,
     );
     expect(badge()).toHaveTextContent("projekt / dane niewiążące");
     // Ostatnie dane nie zostały usunięte z mapy.
     expect(mapState.sources.has(POG_SOURCE_ID)).toBe(true);
-    expect(mapState.addSource).toHaveBeenCalledOnce();
+    expect(mapState.addSource).toHaveBeenCalledTimes(2);
     expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
     expect(analyzeParcel).not.toHaveBeenCalled();
   });
 
-  it("po remoncie mapy tryb i filtr są odtwarzane, a mapa działa bez wydania RU", async () => {
+  it("po remoncie mapy tryb i filtr są odtwarzane", async () => {
     const user = userEvent.setup();
     const first = render(<HomePage />);
     fire("load");
-    await screen.findByText(/Wydanie pog-0123456789ab/);
+    await screen.findByText(/Stan krajowy #42/);
     await user.click(screen.getByRole("radio", { name: /Maksymalna wysokość zabudowy/ }));
     first.unmount();
     mapState.sources.clear();
@@ -295,7 +310,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     render(<HomePage />);
     fire("load");
     await waitFor(() =>
-      expect(mapState.layers.get(POG_LAYER_IDS.zonesFill)).toMatchObject({
+      expect(mapState.layers.get(BINDING(POG_LAYER_IDS.zonesFill))).toMatchObject({
         paint: { "fill-color": themeFillColorExpression(themeById("height")) },
       }),
     );
@@ -303,11 +318,41 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     expect(mapState.instances).toBe(2);
   });
 
-  it("brak lokalnego wydania nie jest opisany jako brak planu", async () => {
-    vi.mocked(getActivePogTileRelease).mockResolvedValue(null);
+  it("brak zaimportowanych gmin nie jest opisany jako brak planu", async () => {
+    vi.mocked(getCurrentPogTileState).mockResolvedValue(null);
     render(<HomePage />);
     fire("load");
     expect(await screen.findByText(/Nie oznacza to braku planu ogólnego/)).toBeInTheDocument();
     expect(mapState.addSource).not.toHaveBeenCalled();
+  });
+
+  it("issue 301: panel pokrycia pobiera listę dopiero po rozwinięciu i rozróżnia stany gmin bez „brak planu”", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getPogCommuneState).mockResolvedValue({
+      terc: "246101",
+      status: "in_ru_not_imported",
+      catalog_synced_at: "2026-10-13T11:00:00Z",
+      detail: "x",
+    });
+    render(<HomePage />);
+    fire("load");
+    await screen.findByText(/Stan krajowy #42/);
+    expect(getPogCoverage).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText("Pokrycie importu planów ogólnych (gminy)"));
+    const summary = await screen.findByTestId("pog-coverage-summary");
+    expect(summary).toHaveTextContent("zaimportowane: 1; czekają na import: 2");
+    const items = screen.getAllByTestId("pog-coverage-item");
+    expect(items.map((item) => item.dataset.status)).toEqual(["imported", "in_ru_not_imported", "in_ru_not_imported"]);
+    expect(items[0]).toHaveTextContent("Zaimportowana");
+    expect(items[1]).toHaveTextContent("Plan w RU — jeszcze niezaimportowany");
+    expect(items[1]).toHaveTextContent("zlecenie importu w kolejce");
+
+    await user.type(screen.getByLabelText("Sprawdź gminę po kodzie TERC (6 cyfr)"), "246101");
+    await user.click(screen.getByRole("button", { name: "Sprawdź" }));
+    expect(await screen.findByTestId("pog-coverage-lookup")).toHaveTextContent(/Plan w RU — jeszcze niezaimportowany/);
+    expect(getPogCommuneState).toHaveBeenCalledWith("246101");
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu(?! ogólnego| w gminie| —| w RU)/i);
+    expect(analyzeParcel).not.toHaveBeenCalled();
   });
 });

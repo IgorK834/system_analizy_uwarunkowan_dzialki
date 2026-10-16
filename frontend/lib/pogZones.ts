@@ -57,6 +57,8 @@ export type PogOverlayStyle = {
 export type PogLegalStatusStyle = {
   status: PogLegalStatus;
   label: string;
+  /** Kolor wypełnienia granicy aktu w przeglądzie krajowym (z6–z12) — status prawny, nie typ strefy. */
+  overview_color: string;
   fill_opacity: number;
   line_dasharray: number[] | null;
   /** BK-406: wzór danych niewiążących — informacja nie zależy tylko od barwy. */
@@ -145,6 +147,9 @@ export function validatePresentation(config: PogPresentationConfig): PogPresenta
     }
   }
   for (const status of config.legal_statuses) {
+    if (!/^#[0-9a-f]{6}$/.test(status.overview_color)) {
+      errors.push(`status ${status.status} ma niepoprawny kolor przeglądu`);
+    }
     const nonBinding = status.status === "project" || status.status === "in_progress";
     if (nonBinding && !(status.pattern && status.badge)) {
       errors.push(`status ${status.status} bez wzoru i plakietki`);

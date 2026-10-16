@@ -6,8 +6,14 @@ import { PogAreaSummary } from "@/components/PogAreaSummary";
 import { PogSwatch } from "@/components/PogLegend";
 import { getPogFeatureDetails } from "@/lib/api";
 import type { PogStatusFilter } from "@/lib/pogLayers";
-import { type PogLayerStatus, inspectorEmptyMessage } from "@/lib/pogLayerState";
+import {
+  type PogLayerStatus,
+  inspectorEmptyMessage,
+  layerMinZoom,
+  layersLoadedAtZoom,
+} from "@/lib/pogLayerState";
 import { formatPlDate, legalStatusShort } from "@/lib/pogStatus";
+import { verifiedHttpsHref } from "@/lib/safeLink";
 import {
   POG_PARAMETER_BY_THEME,
   type PogParameterName,
@@ -17,12 +23,15 @@ import {
 } from "@/lib/pogThemes";
 import { legalStatusStyle, overlayStyle, zoneLabel } from "@/lib/pogZones";
 import type {
+  PogActTileProperties,
   PogFeatureDetails,
   PogInspectorHit,
-  PogOverlayTileProperties,
   PogPointQuery,
   PogZoneTileProperties,
 } from "@/lib/types";
+
+type ObjectHit = Exclude<PogInspectorHit, { layer: "act_boundary" }>;
+type ActHit = Extract<PogInspectorHit, { layer: "act_boundary" }>;
 
 type DetailsEntry =
   | { status: "loading" }
@@ -30,18 +39,22 @@ type DetailsEntry =
   | { status: "error" };
 
 /**
- * Szczegóły spoza kafla MVT dla wszystkich trafień punktu — pobierane w tle.
- * Panel pokazuje dane z kafla natychmiast; błąd szczegółów niczego nie zeruje.
+ * Szczegóły spoza kafla MVT dla trafień obiektów (strefy, OUZ/OZS/OSDIS) — pobierane w tle ze stanu krajowego, z
+ * którego pochodzi mapa. Panel pokazuje dane z kafla natychmiast; błąd szczegółów niczego nie zeruje. Granica aktu
+ * (przegląd krajowy) nie ma osobnych szczegółów — jej atrybuty są w kaflu.
  */
-function useFeatureDetails(hits: PogInspectorHit[]): Record<string, DetailsEntry> {
+function useFeatureDetails(hits: PogInspectorHit[], stateId: number | null): Record<string, DetailsEntry> {
   const [entries, setEntries] = useState<Record<string, DetailsEntry>>({});
   useEffect(() => {
     const controller = new AbortController();
-    setEntries(Object.fromEntries(hits.map((hit) => [hit.key, { status: "loading" }])));
-    for (const hit of hits) {
-      void getPogFeatureDetails(hit.properties.data_release_id, hit.properties.feature_id, {
-        signal: controller.signal,
-      })
+    const objects = hits.filter((hit): hit is ObjectHit => hit.layer !== "act_boundary");
+    if (stateId === null) {
+      setEntries({});
+      return () => controller.abort();
+    }
+    setEntries(Object.fromEntries(objects.map((hit) => [hit.key, { status: "loading" }])));
+    for (const hit of objects) {
+      void getPogFeatureDetails(stateId, hit.properties.feature_id, { signal: controller.signal })
         .then((details) => {
           if (controller.signal.aborted) return;
           setEntries((current) => ({ ...current, [hit.key]: { status: "ready", details } }));
@@ -52,7 +65,7 @@ function useFeatureDetails(hits: PogInspectorHit[]): Record<string, DetailsEntry
         });
     }
     return () => controller.abort();
-  }, [hits]);
+  }, [hits, stateId]);
   return entries;
 }
 
@@ -71,37 +84,113 @@ function LegalStatusLine({ status }: { status: PogZoneTileProperties["legal_stat
   );
 }
 
-function profileText(codes: string | undefined, details: PogFeatureDetails["primary_profiles"] | undefined) {
+/**
+ * Profile funkcjonalne jako etykiety słownika (np. „teren usług”), nie surowe kody `KPT-*` (issue 335). Do czasu pobrania
+ * szczegółów pokazujemy komunikat ładowania; kody są ostatecznością, gdy szczegóły są niedostępne albo słownik nie zna
+ * kodu — wtedy z jawnym dopiskiem.
+ */
+function profileText(
+  codes: string | undefined,
+  details: PogFeatureDetails["primary_profiles"] | undefined,
+  state: DetailsEntry["status"] | "unavailable",
+) {
   if (details && details.length > 0) {
-    return details.map((profile) => (profile.label ? `${profile.code} — ${profile.label}` : profile.code)).join("; ");
+    return details.map((profile) => profile.label ?? `${profile.code} (brak etykiety w słowniku)`).join("; ");
   }
-  return codes ? codes.split(",").join(", ") : "brak w danych";
+  if (!codes) return "brak w danych";
+  if (state === "loading") return "Wczytywanie nazw profili…";
+  return `${codes.split(",").join(", ")} (nazwy profili niedostępne)`;
 }
 
-function DetailsNote({ entry, releaseId }: { entry: DetailsEntry | undefined; releaseId: number }) {
+function DetailsNote({ entry, stateId }: { entry: DetailsEntry | undefined; stateId: number | null }) {
   if (!entry || entry.status === "ready") return null;
   return (
     <p className="layer-toggle-status" data-testid="pog-inspector-details-state">
       {entry.status === "loading"
-        ? `Pobieranie szczegółów z wydania #${releaseId}…`
-        : `Szczegóły niedostępne — powyżej dane z kafla wydania #${releaseId}.`}
+        ? `Pobieranie szczegółów ze stanu #${stateId}…`
+        : `Szczegóły niedostępne — powyżej dane z kafla stanu #${stateId}.`}
     </p>
   );
 }
 
-function ActDetails({ zone, entry }: { zone: PogZoneTileProperties | PogOverlayTileProperties; entry?: DetailsEntry }) {
+function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  );
+}
+
+/** Akt, uchwała, dziennik urzędowy, daty i odnośniki — z kafla (identyfikator) i ze szczegółów (reszta). */
+function ActDetails({
+  actId,
+  entry,
+}: {
+  actId: string;
+  entry?: DetailsEntry;
+}) {
   const act = entry?.status === "ready" ? entry.details.act : null;
   const resolution = act?.resolution_number
-    ? `uchwała ${act.resolution_number}${act.resolution_date ? ` z ${formatPlDate(act.resolution_date)}` : ""}`
+    ? `${act.resolution_number}${act.resolution_date ? ` z dnia ${formatPlDate(act.resolution_date)}` : ""}`
     : null;
+  const validFrom = formatPlDate(act?.legal_valid_from);
+  const validTo = formatPlDate(act?.legal_valid_to);
+  const effective = formatPlDate(act?.effective_date);
+  const versionStarted = formatPlDate(act?.version_started_on);
+  const cardHref = verifiedHttpsHref(act?.ru_act_url, true);
+  const documentHref = verifiedHttpsHref(act?.document_link, true);
   return (
     <>
       <dt>Akt</dt>
       <dd>
-        <span className="pog-inspector-id">{zone.act_id}</span>
+        <span className="pog-inspector-id">{actId}</span>
         {act?.name && <span>. {act.name}</span>}
-        {resolution && <span>; {resolution}</span>}
       </dd>
+      {resolution && (
+        <>
+          <dt>Uchwała</dt>
+          <dd data-testid="pog-inspector-resolution">{resolution}</dd>
+        </>
+      )}
+      {act?.official_journal && (
+        <>
+          <dt>Dziennik Urzędowy</dt>
+          <dd data-testid="pog-inspector-journal">{act.official_journal}</dd>
+        </>
+      )}
+      {(effective || validFrom || versionStarted) && (
+        <>
+          <dt>Daty</dt>
+          <dd data-testid="pog-inspector-dates">
+            {[
+              effective ? `wejście w życie ${effective}` : null,
+              validFrom ? `obowiązuje od ${validFrom}${validTo ? ` do ${validTo}` : ""}` : null,
+              versionStarted ? `wersja aktu od ${versionStarted}` : null,
+            ]
+              .filter(Boolean)
+              .join("; ")}
+          </dd>
+        </>
+      )}
+      {(cardHref || documentHref) && (
+        <>
+          <dt>Źródło</dt>
+          <dd data-testid="pog-inspector-links">
+            {cardHref && <ExternalLink href={cardHref}>Karta aktu w Rejestrze Urbanistycznym</ExternalLink>}
+            {cardHref && documentHref && " · "}
+            {documentHref && <ExternalLink href={documentHref}>Tekst uchwały</ExternalLink>}
+          </dd>
+        </>
+      )}
+      {act?.data_release_id != null && (
+        <>
+          <dt>Wydanie danych</dt>
+          <dd data-testid="pog-inspector-release">
+            #{act.data_release_id}
+            {act.release_label ? ` (${act.release_label})` : ""}
+          </dd>
+        </>
+      )}
     </>
   );
 }
@@ -109,11 +198,11 @@ function ActDetails({ zone, entry }: { zone: PogZoneTileProperties | PogOverlayT
 function ZoneHit({
   hit,
   entry,
-  releaseLabel,
+  stateId,
 }: {
   hit: Extract<PogInspectorHit, { layer: "zones" }>;
   entry?: DetailsEntry;
-  releaseLabel: string | null;
+  stateId: number | null;
 }) {
   const zone = hit.properties;
   const headingId = useId();
@@ -122,7 +211,7 @@ function ZoneHit({
   return (
     <article className="pog-inspector-hit" aria-labelledby={headingId} data-testid="pog-inspector-zone">
       <h3 id={headingId}>
-        {zone.symbol ? `${zone.symbol}: ` : ""}
+        {zone.designation ?? zone.symbol ? `${zone.designation ?? zone.symbol}: ` : ""}
         {zoneLabel(zone.zone_code)}
       </h3>
       {(details?.label ?? zone.label) && <p className="pog-inspector-label">{details?.label ?? zone.label}</p>}
@@ -141,22 +230,22 @@ function ZoneHit({
         )}
         <dt>Profil podstawowy</dt>
         <dd data-testid="pog-inspector-primary-profiles">
-          {profileText(zone.primary_profiles, details?.primary_profiles)}
+          {profileText(zone.primary_profiles, details?.primary_profiles, entry?.status ?? "unavailable")}
         </dd>
         <dt>Profil dodatkowy</dt>
-        <dd>{profileText(zone.additional_profiles, details?.additional_profiles)}</dd>
-        <ActDetails zone={zone} entry={entry} />
-        <dt>Wydanie danych</dt>
-        <dd data-testid="pog-inspector-release">
-          #{zone.data_release_id}
-          {releaseLabel ? ` (${releaseLabel})` : ""}
-          {zone.feature_version ? `, wersja obiektu ${zone.feature_version}` : ""}
-        </dd>
+        <dd>{profileText(zone.additional_profiles, details?.additional_profiles, entry?.status ?? "unavailable")}</dd>
+        <ActDetails actId={zone.act_id} entry={entry} />
+        {zone.feature_version && (
+          <>
+            <dt>Wersja obiektu</dt>
+            <dd>{zone.feature_version}</dd>
+          </>
+        )}
       </dl>
       {zone.parameters_informational && (
         <p className="layer-toggle-status">Parametry mają charakter informacyjny (PDF/uzasadnienie).</p>
       )}
-      <DetailsNote entry={entry} releaseId={zone.data_release_id} />
+      <DetailsNote entry={entry} stateId={stateId} />
       <button
         type="button"
         className="secondary-button"
@@ -165,9 +254,9 @@ function ZoneHit({
       >
         {showSummary ? "Ukryj strukturę stref" : "Struktura stref aktu i gminy"}
       </button>
-      {showSummary && (
+      {showSummary && stateId !== null && (
         <PogAreaSummary
-          releaseId={zone.data_release_id}
+          stateId={stateId}
           actId={zone.act_id}
           teryt={zone.teryt ?? null}
           legalStatus={zone.legal_status}
@@ -177,7 +266,7 @@ function ZoneHit({
   );
 }
 
-function OverlayHit({ hit, entry }: { hit: Exclude<PogInspectorHit, { layer: "zones" }>; entry?: DetailsEntry }) {
+function OverlayHit({ hit, entry }: { hit: Exclude<ObjectHit, { layer: "zones" }>; entry?: DetailsEntry }) {
   const style = overlayStyle(hit.layer);
   const overlay = hit.properties;
   const details = entry?.status === "ready" ? entry.details : null;
@@ -188,9 +277,86 @@ function OverlayHit({ hit, entry }: { hit: Exclude<PogInspectorHit, { layer: "zo
         <strong>{style.short_label}</strong> — {style.label}
         {overlay.symbol ? ` (${overlay.symbol})` : ""}
         {(details?.label ?? overlay.label) ? `: ${details?.label ?? overlay.label}` : ""}.{" "}
-        Status: {legalStatusShort(overlay.legal_status)}; wydanie #{overlay.data_release_id}.
+        Status: {legalStatusShort(overlay.legal_status)}
+        {details?.act.resolution_number ? `; uchwała ${details.act.resolution_number}` : ""}.
       </span>
     </li>
+  );
+}
+
+/** Granica aktu z przeglądu krajowego: status, uchwała i daty z kafla; strefy pojawiają się po przybliżeniu. */
+function ActBoundaryHit({
+  hit,
+  stateId,
+  zonesMinZoom,
+}: {
+  hit: ActHit;
+  stateId: number | null;
+  zonesMinZoom: number | null;
+}) {
+  const act: PogActTileProperties = hit.properties;
+  const headingId = useId();
+  const [showSummary, setShowSummary] = useState(false);
+  const resolution = act.resolution_number
+    ? `${act.resolution_number}${act.resolution_date ? ` z dnia ${formatPlDate(act.resolution_date)}` : ""}`
+    : null;
+  const effective = formatPlDate(act.effective_date);
+  const validFrom = formatPlDate(act.valid_from);
+  const versionStarted = formatPlDate(act.version_started_on);
+  return (
+    <article className="pog-inspector-hit" aria-labelledby={headingId} data-testid="pog-inspector-act">
+      <h3 id={headingId}>{act.label ?? act.act_id}</h3>
+      <LegalStatusLine status={act.legal_status} />
+      <dl className="pog-inspector-list">
+        <dt>Akt</dt>
+        <dd>
+          <span className="pog-inspector-id">{act.act_id}</span>
+          {act.act_version ? `, wersja ${act.act_version}` : ""}
+        </dd>
+        {resolution && (
+          <>
+            <dt>Uchwała</dt>
+            <dd data-testid="pog-inspector-resolution">{resolution}</dd>
+          </>
+        )}
+        {(effective || validFrom || versionStarted) && (
+          <>
+            <dt>Daty</dt>
+            <dd data-testid="pog-inspector-dates">
+              {[
+                effective ? `wejście w życie ${effective}` : null,
+                validFrom ? `obowiązuje od ${validFrom}` : null,
+                versionStarted ? `wersja aktu od ${versionStarted}` : null,
+              ]
+                .filter(Boolean)
+                .join("; ")}
+            </dd>
+          </>
+        )}
+      </dl>
+      <p className="layer-toggle-status">
+        Przybliż mapę{zonesMinZoom !== null ? ` (od ${zonesMinZoom})` : ""}, aby zobaczyć strefy planistyczne tego aktu i ich
+        parametry.
+      </p>
+      {stateId !== null && (
+        <button
+          type="button"
+          className="secondary-button"
+          aria-expanded={showSummary}
+          onClick={() => setShowSummary((value) => !value)}
+        >
+          {showSummary ? "Ukryj strukturę stref" : "Struktura stref aktu i gminy"}
+        </button>
+      )}
+      {showSummary && stateId !== null && (
+        <PogAreaSummary
+          stateId={stateId}
+          actId={act.act_id}
+          teryt={act.teryt ?? null}
+          legalStatus={act.legal_status}
+        />
+      )}
+    </article>
   );
 }
 
@@ -208,8 +374,9 @@ const COORDINATE = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 5, ma
 
 /**
  * Inspektor wskazanego punktu mapy POG (BK-404). Pokazuje natychmiast dane
- * wszystkich wyrenderowanych obiektów w punkcie (strefy, OUZ/OZS/OSDIS) z
- * przypiętego wydania — bez uruchamiania analizy. Pełną analizę działki
+ * wszystkich wyrenderowanych obiektów w punkcie (strefy, OUZ/OZS/OSDIS, a na
+ * przeglądzie krajowym granica aktu) z przypiętego stanu krajowego — bez
+ * uruchamiania analizy. Pełną analizę działki
  * uruchamia wyłącznie osobny przycisk. Brak trafień jest opisany w kontekście
  * stanu warstwy i pokrycia, nigdy jako „brak planu”.
  */
@@ -225,7 +392,7 @@ export function PogFeatureInspector({
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const returnFocus = useRef<Element | null>(null);
   const headingId = useId();
-  const entries = useFeatureDetails(query.hits);
+  const entries = useFeatureDetails(query.hits, query.stateId);
 
   useEffect(() => {
     if (returnFocus.current === null && typeof document !== "undefined") {
@@ -244,11 +411,17 @@ export function PogFeatureInspector({
     (hit): hit is Extract<PogInspectorHit, { layer: "zones" }> => hit.layer === "zones",
   );
   const overlays = query.hits.filter(
-    (hit): hit is Exclude<PogInspectorHit, { layer: "zones" }> => hit.layer !== "zones",
+    (hit): hit is Exclude<ObjectHit, { layer: "zones" }> => hit.layer !== "zones" && hit.layer !== "act_boundary",
   );
-  const releaseIds = [...new Set(query.hits.map((hit) => hit.properties.data_release_id))];
-  const release = layerStatus.release;
-  const releaseLabel = (id: number) => (release && release.release_id === id ? release.version_label : null);
+  // Granica aktu jest pokazywana osobno tylko wtedy, gdy w punkcie nie ma stref (przegląd krajowy, mały zoom).
+  const acts = zones.length === 0 ? query.hits.filter((hit): hit is ActHit => hit.layer === "act_boundary") : [];
+  const stateId = query.stateId;
+  // Strefy i obszary OUZ/OZS/OSDIS są w kaflach dopiero od progów zoomu ze stanu — poniżej nich pusta lista nie jest „brakiem”.
+  const registry = layerStatus.registry;
+  const zonesLoaded = layersLoadedAtZoom(registry, ["zones"], query.zoom);
+  const overlaysLoaded = layersLoadedAtZoom(registry, ["ouz", "downtown", "social_infrastructure_standard"], query.zoom);
+  const zonesMinZoom = layerMinZoom(registry, ["zones"]);
+  const overlaysMinZoom = layerMinZoom(registry, ["ouz", "downtown", "social_infrastructure_standard"]);
   const empty = inspectorEmptyMessage(
     layerStatus,
     query,
@@ -280,14 +453,9 @@ export function PogFeatureInspector({
         </button>
       </header>
       <p className="pog-inspector-source">
-        Dane z kafli mapy{releaseIds.length === 1 ? ` — wydanie #${releaseIds[0]}` : ""}; podgląd bez
+        Dane z kafli mapy{stateId !== null ? ` — stan krajowy #${stateId}` : ""}; podgląd bez
         uruchamiania analizy działki.
       </p>
-      {releaseIds.length > 1 && (
-        <p className="pog-area-summary-partial" role="note">
-          Obiekty pochodzą z różnych wydań ({releaseIds.map((id) => `#${id}`).join(", ")}) — odśwież mapę.
-        </p>
-      )}
 
       {query.hits.length === 0 ? (
         <p className="pog-inspector-empty" data-testid="pog-inspector-empty" data-kind={empty.kind}>
@@ -298,16 +466,25 @@ export function PogFeatureInspector({
           {zones.length > 1 && (
             <p className="layer-toggle-status">W punkcie nakłada się {zones.length} stref — pokazano wszystkie.</p>
           )}
-          {zones.length === 0 && (
-            <p className="pog-inspector-empty" data-testid="pog-inspector-no-zone" data-kind={empty.kind}>
+          {zones.length === 0 && acts.length === 0 && (
+            <p
+              className="pog-inspector-empty"
+              data-testid="pog-inspector-no-zone"
+              data-kind={empty.kind === "no_object" && !zonesLoaded ? "zoom" : empty.kind}
+            >
               {empty.kind === "no_object"
-                ? `W tym punkcie wydanie #${releaseIds[0]} nie zawiera strefy planistycznej (luka w danych wydania). ` +
-                  "To nie jest urzędowe potwierdzenie braku planu."
+                ? zonesLoaded
+                  ? `W tym punkcie stan #${stateId} nie zawiera strefy planistycznej (luka w danych aktu). ` +
+                    "To nie jest urzędowe potwierdzenie braku planu."
+                  : `Strefy planistyczne są w kaflach od przybliżenia ${zonesMinZoom} — przybliż mapę, aby je sprawdzić w tym punkcie.`
                 : empty.text}
             </p>
           )}
+          {acts.map((hit) => (
+            <ActBoundaryHit key={hit.key} hit={hit} stateId={stateId} zonesMinZoom={zonesMinZoom} />
+          ))}
           {zones.map((hit) => (
-            <ZoneHit key={hit.key} hit={hit} entry={entries[hit.key]} releaseLabel={releaseLabel(hit.properties.data_release_id)} />
+            <ZoneHit key={hit.key} hit={hit} entry={entries[hit.key]} stateId={stateId} />
           ))}
           <section className="pog-inspector-overlays" aria-label="OUZ, OZS i OSDIS w punkcie">
             <h3>OUZ / OZS / OSDIS w punkcie</h3>
@@ -318,9 +495,15 @@ export function PogFeatureInspector({
                 ))}
               </ul>
             ) : (
-              <p className="layer-toggle-status" data-testid="pog-inspector-no-overlays">
+              <p
+                className="layer-toggle-status"
+                data-testid="pog-inspector-no-overlays"
+                data-kind={empty.kind === "no_object" && !overlaysLoaded ? "zoom" : empty.kind}
+              >
                 {empty.kind === "no_object"
-                  ? `W tym punkcie wydanie #${releaseIds[0]} nie zawiera obszarów OUZ, OZS ani OSDIS.`
+                  ? overlaysLoaded
+                    ? `W tym punkcie stan #${stateId} nie zawiera obszarów OUZ, OZS ani OSDIS.`
+                    : `Obszary OUZ, OZS i OSDIS są w kaflach od przybliżenia ${overlaysMinZoom} — przybliż mapę, aby je sprawdzić w tym punkcie.`
                   : empty.text}
               </p>
             )}

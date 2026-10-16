@@ -24,7 +24,7 @@ export type PogMapPanelProps = {
 };
 
 /**
- * Panel warstwy wektorowej POG: stan warstwy i plakietki statusu (BK-406) są
+ * Panel warstwy wektorowej POG dla całego kraju: stan warstwy i plakietki statusu (BK-406) są
  * zawsze widoczne w nagłówku; tryby (BK-402), jawna edycja danych (projekt /
  * akt wiążący, obsługa klawiaturą) i legenda (BK-403) są w rozwijanej części.
  */
@@ -37,15 +37,15 @@ export function PogMapPanel({
   onRetry,
   retrying = false,
 }: PogMapPanelProps) {
-  const hasRelease = Boolean(layerStatus.release);
+  const hasState = Boolean(layerStatus.registry);
   return (
     <section className="pog-map-panel" aria-label="Plan ogólny gminy — mapa analityczna">
-      <h2 className="pog-map-panel-title">Plan ogólny — mapa analityczna (lokalne wydanie)</h2>
+      <h2 className="pog-map-panel-title">Plan ogólny — mapa krajowa (lokalny stan)</h2>
       <PogLayerStatus status={layerStatus} onRetry={onRetry} retrying={retrying} />
       <details className="pog-map-panel-controls" open>
         <summary>Tryb mapy, edycja danych i legenda</summary>
-        <PogThemeSelector value={theme} onChange={onThemeChange} disabled={!hasRelease} />
-        <fieldset className="pog-status-filter" disabled={!hasRelease}>
+        <PogThemeSelector value={theme} onChange={onThemeChange} disabled={!hasState} />
+        <fieldset className="pog-status-filter" disabled={!hasState}>
           <legend>Edycja danych (status prawny aktu)</legend>
           {(Object.keys(STATUS_FILTER_LABELS) as PogStatusFilter[]).map((filter) => (
             <label key={filter}>
@@ -60,7 +60,7 @@ export function PogMapPanel({
             </label>
           ))}
         </fieldset>
-        {hasRelease && <PogLegend theme={theme} />}
+        {hasState && <PogLegend theme={theme} />}
       </details>
     </section>
   );

@@ -12,7 +12,7 @@ vi.mock("@/components/MapViewLoader", () => ({
   MapViewLoader: ({ onPogInspect }: MapViewProps) => (
     <button
       type="button"
-      onClick={() => onPogInspect?.({ lon: 21.01, lat: 52.23, queried: false, hits: [] })}
+      onClick={() => onPogInspect?.({ lon: 21.01, lat: 52.23, queried: false, hits: [], stateId: null })}
     >
       Testowy punkt mapy
     </button>
@@ -25,7 +25,7 @@ vi.mock("@/lib/api", async () => {
     ...actual,
     analyzeParcel: vi.fn(),
     getPreviewSources: vi.fn(),
-    getActivePogTileRelease: vi.fn().mockResolvedValue(null),
+    getCurrentPogTileState: vi.fn().mockResolvedValue(null),
     resumeAnalysis: vi.fn(),
   };
 });
