@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import re
 import ipaddress
 import socket
+import threading
 import time
-from dataclasses import dataclass
+from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Iterable, Mapping, Sequence, cast
+from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence, cast
 from urllib.parse import urljoin, urlsplit
 from xml.etree import ElementTree
 
@@ -27,10 +30,14 @@ from app.shared.provenance import Provenance
 _REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 _XML_MEDIA_TYPES = {"application/xml", "text/xml", "application/gml+xml"}
 _TIFF_MAGIC = (b"II*\x00", b"MM\x00*", b"II+\x00", b"MM\x00+")
+# Kolejność osi `bbox` w WMS 1.3.0 wynika z definicji układu: EPSG:4326 i EPSG:2180 podają współrzędne w
+# kolejności (szerokość/północ, długość/wschód) → "yx" w zapisie (x = wschód, y = północ); CRS:84 jest
+# wyjątkiem (długość, szerokość). Dla EPSG:2180 wcześniej było "xy", co wysyłało lustrzane współrzędne — Rejestr
+# Urbanistyczny odpowiadał wtedy POG innej gminy (zmierzone 2026-10-12, ADR-023).
 _WMS_AXIS_ORDER = {
     "EPSG:4326": "yx",
     "CRS:84": "xy",
-    "EPSG:2180": "xy",
+    "EPSG:2180": "yx",
 }
 
 
@@ -91,6 +98,53 @@ class OgcExceptionReportError(OgcContractError):
         self.http_status = http_status
 
 
+class OgcCancelled(OgcError):
+    """Operacja przerwana na żądanie operatora (sygnał, ``cancel``); pobrane strony zostają w magazynie stron."""
+
+
+# Atrybuty odpowiedzi WFS, które opisują chwilę i sposób jej wydania, a nie dane. Artefakt złożony z wielu stron ma
+# być treścią (ten sam zbiór obiektów = te same bajty = ten sam skrót), więc nie niesie ich dalej: ``timeStamp``
+# różni się w każdej odpowiedzi, a ``next``/``previous`` wskazują strony pojedynczego zapytania.
+VOLATILE_WFS_ATTRIBUTES = frozenset({"timeStamp", "next", "previous"})
+
+
+@dataclass(frozen=True)
+class WfsPageEvent:
+    """Postęp pobierania WFS po każdej stronie (pobranej z sieci albo odczytanej z magazynu stron)."""
+
+    type_name: str
+    start_index: int
+    returned: int
+    fetched: int
+    matched: int | None
+    pages_done: int
+    pages_total: int | None
+    from_store: bool
+
+
+class WfsPageStore(Protocol):
+    """Magazyn stron dla wznawiania pobierania (implementacja plikowa: ``infrastructure/page_store.py``).
+
+    ``prepare`` dostaje token zapytania (typ, filtr, ``numberMatched``, identyfikatory pierwszej strony): zapisane strony
+    z innym tokenem pochodzą z innego stanu usługi i muszą zostać odrzucone.
+    """
+
+    def prepare(self, token: str) -> None: ...
+
+    def load(self, start_index: int) -> bytes | None: ...
+
+    def save(self, start_index: int, content: bytes) -> None: ...
+
+
+@dataclass(frozen=True)
+class _WfsPage:
+    start: int
+    payload: "_HttpPayload"
+    root: ElementTree.Element
+    members: list[ElementTree.Element]
+    from_store: bool = False
+
+
 @dataclass(frozen=True)
 class OgcClientConfig:
     """Limity jednego klienta; wszystkie wartości mają bezpieczne granice."""
@@ -135,6 +189,18 @@ class _HttpPayload:
     content_type: str
     url: str
     status_code: int = 200
+    headers: Mapping[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class HttpResult:
+    """Odpowiedź ogólnego zasobu HTTP (np. publiczne API Rejestru Urbanistycznego) z provenance."""
+
+    content: bytes
+    status_code: int
+    content_type: str
+    headers: Mapping[str, str]
+    source: Provenance
 
 
 Resolver = Callable[[str], Iterable[str]]
@@ -152,9 +218,16 @@ class OgcClient:
         resolver: Resolver | None = None,
         sleep: Callable[[float], None] = time.sleep,
         monotonic: Callable[[], float] = time.monotonic,
+        before_request: Callable[[], None] | None = None,
     ) -> None:
+        """``before_request`` jest wołane przed KAŻDYM żądaniem HTTP (także ponowieniem i przekierowaniem).
+
+        Wyjątek z tej funkcji przerywa operację bez wysłania żądania i nie jest przechwytywany przez klienta —
+        służy to egzekwowaniu budżetu żądań na analizę (AU-105).
+        """
         self._source_id = source_id
         self._config = config
+        self._before_request = before_request
         timeout = httpx.Timeout(
             connect=config.connect_timeout_seconds,
             read=config.read_timeout_seconds,
@@ -208,13 +281,34 @@ class OgcClient:
         type_name: str,
         srs_name: str,
         extra_params: Mapping[str, str] | None = None,
+        concurrency: int = 1,
+        page_store: WfsPageStore | None = None,
+        on_page: Callable[[WfsPageEvent], None] | None = None,
+        cancel: threading.Event | None = None,
     ) -> OgcResult:
         """Pobiera wszystkie strony WFS przy jawnym ``count=100``.
 
         Serwery mogą zwracać strony krótsze niż zamówione (np. RU: zawsze 10),
         więc ``startIndex`` wynika z liczby już pobranych obiektów, a koniec
         paginacji z ``numberMatched``, a nie z rozmiaru strony.
+
+        Domyślnie strony są pobierane po kolei. Gdy podano ``concurrency`` > 1, ``page_store``
+        (wznawianie), ``on_page`` (postęp) albo ``cancel``, działa tryb stronicowany
+        (``_fetch_wfs_paged``): pierwsza strona ujawnia ``numberMatched`` i rozmiar strony, a reszta jest
+        pobierana równolegle (limit grzeczności ``concurrency``) i składana w kolejności ``startIndex``.
         """
+
+        if concurrency > 1 or page_store is not None or on_page is not None or cancel is not None:
+            return self._fetch_wfs_paged(
+                url,
+                type_name=type_name,
+                srs_name=srs_name,
+                extra_params=extra_params,
+                concurrency=concurrency,
+                page_store=page_store,
+                on_page=on_page,
+                cancel=cancel,
+            )
 
         operation = "WFS:GetFeature"
         started_at = datetime.now(timezone.utc)
@@ -404,6 +498,315 @@ class OgcClient:
 
         raise AssertionError("Nieosiągalna gałąź paginacji WFS.")
 
+    # --- tryb stronicowany: równoległe strony, wznawianie i postęp (AU-106) ---------------------------------
+
+    def _wfs_page(
+        self,
+        url: str,
+        params: Mapping[str, str],
+        *,
+        start: int,
+        operation: str,
+        started_at: datetime,
+        deadline: float,
+        byte_limit: int,
+        cancel: threading.Event | None,
+    ) -> _WfsPage:
+        """Jedna strona z siecią: ponowienia przejściowego HTTP 4xx, parsowanie i spójność ``numberReturned``."""
+        if cancel is not None and cancel.is_set():
+            raise OgcCancelled(
+                "Pobieranie przerwane na żądanie operatora.",
+                source=self._error_provenance(url, operation, started_at, "cancelled"),
+            )
+        payload: _HttpPayload | None = None
+        # RU sporadycznie odpowiada przejściowym HTTP 400 „Invalid request” na poprawne zapytanie; ta sama strona
+        # przy ponowieniu przechodzi, więc błędy transportu ponawiamy per strona (timeouty i 5xx ponawia ``_request``).
+        for attempt in range(self._config.retries + 1):
+            try:
+                payload = self._request(
+                    url,
+                    params=params,
+                    operation=operation,
+                    started_at=started_at,
+                    deadline=deadline,
+                    byte_limit=byte_limit,
+                )
+                break
+            except OgcTransportError as exc:
+                if attempt >= self._config.retries or not re.search(r"HTTP 4\d\d", str(exc)):
+                    raise
+                self._backoff(attempt, deadline, url, operation, started_at)
+        assert payload is not None
+        return self._parse_wfs_page(payload, start, operation, started_at)
+
+    def _parse_wfs_page(
+        self, payload: _HttpPayload, start: int, operation: str, started_at: datetime, *, from_store: bool = False
+    ) -> _WfsPage:
+        root = self._xml_root(payload, operation, started_at)
+        members = self._feature_members(root)
+        raw_returned = root.attrib.get("numberReturned")
+        try:
+            returned = len(members) if raw_returned is None else int(raw_returned)
+        except ValueError as exc:
+            raise self._contract_error(
+                f"WFS zwrócił niepoprawne numberReturned={raw_returned!r}.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            ) from exc
+        if returned != len(members):
+            raise self._contract_error(
+                "WFS numberReturned nie zgadza się z liczbą elementów member.",
+                payload.url,
+                operation,
+                started_at,
+                content=payload.content,
+            )
+        return _WfsPage(start=start, payload=payload, root=root, members=members, from_store=from_store)
+
+    def _fetch_wfs_paged(
+        self,
+        url: str,
+        *,
+        type_name: str,
+        srs_name: str,
+        extra_params: Mapping[str, str] | None,
+        concurrency: int,
+        page_store: WfsPageStore | None,
+        on_page: Callable[[WfsPageEvent], None] | None,
+        cancel: threading.Event | None,
+    ) -> OgcResult:
+        operation = "WFS:GetFeature"
+        started_at = datetime.now(timezone.utc)
+        deadline = self._monotonic() + self._config.total_timeout_seconds
+        workers = max(1, min(int(concurrency), 8))
+        lock = threading.Lock()
+        state = {"bytes": 0, "pages_done": 0, "fetched": 0}
+
+        def params_for(start: int) -> dict[str, str]:
+            params = {
+                "service": "WFS",
+                "version": "2.0.0",
+                "request": "GetFeature",
+                "typeNames": type_name,
+                "outputFormat": "application/gml+xml; version=3.2",
+                "srsName": srs_name,
+                "count": "100",
+                "startIndex": str(start),
+            }
+            if extra_params:
+                params.update(extra_params)
+            return params
+
+        def byte_limit() -> int:
+            with lock:
+                return min(self._config.max_response_bytes, self._config.max_total_bytes - state["bytes"])
+
+        def account(page: _WfsPage, matched: int | None, pages_total: int | None) -> None:
+            with lock:
+                state["bytes"] += len(page.payload.content)
+                state["pages_done"] += 1
+                state["fetched"] += len(page.members)
+                event = WfsPageEvent(
+                    type_name=type_name,
+                    start_index=page.start,
+                    returned=len(page.members),
+                    fetched=state["fetched"],
+                    matched=matched,
+                    pages_done=state["pages_done"],
+                    pages_total=pages_total,
+                    from_store=page.from_store,
+                )
+            if on_page is not None:
+                on_page(event)
+
+        first = self._wfs_page(
+            url,
+            params_for(0),
+            start=0,
+            operation=operation,
+            started_at=started_at,
+            deadline=deadline,
+            byte_limit=byte_limit(),
+            cancel=cancel,
+        )
+        matched_raw = first.root.attrib.get("numberMatched")
+        if not (matched_raw and matched_raw.isdigit()):
+            # Brak deklaracji liczby wyników: nie da się zaplanować stron z góry — stary tryb sekwencyjny.
+            return self.fetch_wfs(url, type_name=type_name, srs_name=srs_name, extra_params=extra_params)
+        matched = int(matched_raw)
+        page_size = len(first.members)
+        first_ids = sorted(filter(None, (self._feature_id(item) for item in first.members)))
+        starts = list(range(page_size, matched, page_size)) if page_size > 0 else []
+        pages_total = 1 + len(starts)
+        if page_store is not None:
+            token = hashlib.sha256(
+                "\n".join(
+                    [
+                        type_name,
+                        srs_name,
+                        json.dumps(dict(extra_params or {}), sort_keys=True),
+                        str(matched),
+                        str(page_size),
+                        *first_ids,
+                    ]
+                ).encode("utf-8")
+            ).hexdigest()
+            page_store.prepare(token)
+            page_store.save(0, first.payload.content)
+        account(first, matched, pages_total)
+        pages: dict[int, _WfsPage] = {0: first}
+
+        def load(start: int) -> _WfsPage:
+            if page_store is not None:
+                stored = page_store.load(start)
+                if stored is not None:
+                    try:
+                        page = self._parse_wfs_page(
+                            _HttpPayload(stored, "application/gml+xml", url), start, operation, started_at, from_store=True
+                        )
+                        if len(page.members) == min(page_size, matched - start):
+                            return page
+                    except OgcContractError:
+                        pass  # uszkodzona strona z magazynu — pobierz ponownie
+            page = self._wfs_page(
+                url,
+                params_for(start),
+                start=start,
+                operation=operation,
+                started_at=started_at,
+                deadline=deadline,
+                byte_limit=byte_limit(),
+                cancel=cancel,
+            )
+            if page_store is not None:
+                page_store.save(start, page.payload.content)
+            return page
+
+        def work(start: int) -> _WfsPage:
+            page = load(start)
+            account(page, matched, pages_total)
+            return page
+
+        if starts:
+            abort = threading.Event()
+
+            def guarded(start: int) -> _WfsPage:
+                if abort.is_set():
+                    raise OgcCancelled(
+                        "Pobieranie przerwane po błędzie innej strony.",
+                        source=self._error_provenance(url, operation, started_at, "cancelled"),
+                    )
+                return work(start)
+
+            with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="wfs-page") as pool:
+                futures = {pool.submit(guarded, start): start for start in starts}
+                done, pending = wait(futures, return_when=FIRST_EXCEPTION)
+                failure = next((f.exception() for f in done if f.exception() is not None), None)
+                if failure is not None:
+                    abort.set()
+                    for future in pending:
+                        future.cancel()
+                    pool.shutdown(wait=True, cancel_futures=True)
+                    # Najpierw prawdziwa przyczyna (np. limit bajtów), dopiero potem wtórne przerwania.
+                    primary = next(
+                        (
+                            f.exception()
+                            for f in futures
+                            if f.done() and not f.cancelled() and f.exception() is not None
+                            and not isinstance(f.exception(), OgcCancelled)
+                        ),
+                        failure,
+                    )
+                    raise cast(BaseException, primary)
+                for future, start in futures.items():
+                    pages[start] = future.result()
+
+        # Składanie w kolejności startIndex: wynik nie zależy od kolejności zakończenia równoległych żądań.
+        features: list[bytes] = []
+        members: list[ElementTree.Element] = []
+        seen_ids: set[str] = set()
+        seen_hashes: set[str] = set()
+        complete = True
+        fetched = 0
+        for start in sorted(pages):
+            page = pages[start]
+            if start != fetched:
+                break  # luka po krótkiej stronie — reszta w trybie sekwencyjnym poniżej
+            page_ids = tuple(filter(None, (self._feature_id(item) for item in page.members)))
+            page_hash = hashlib.sha256(page.payload.content).hexdigest()
+            if page_hash in seen_hashes or set(page_ids) & seen_ids:
+                return self._wfs_result(
+                    url, operation, started_at, first.root, members, features, False
+                )
+            seen_hashes.add(page_hash)
+            seen_ids.update(page_ids)
+            page_features = [
+                ElementTree.tostring(next(iter(member)), encoding="utf-8")
+                for member in page.members
+                if next(iter(member), None) is not None
+            ]
+            if len(features) + len(page_features) > self._config.max_features:
+                partial = self._wfs_result(url, operation, started_at, first.root, members, features, False)
+                raise self._limit_error(
+                    "WFS przekroczył limit liczby cech.", url, operation, started_at, partial=partial
+                )
+            members.extend(copy.deepcopy(member) for member in page.members)
+            features.extend(page_features)
+            fetched += len(page.members)
+            if len(page.members) < min(page_size, matched - start):
+                break  # serwer skrócił stronę — dalej według faktycznej liczby obiektów
+
+        pages_used = state["pages_done"]
+        while fetched < matched:
+            if pages_used >= self._config.max_pages:
+                partial = self._wfs_result(url, operation, started_at, first.root, members, features, False)
+                raise self._limit_error(
+                    "WFS przekroczył limit liczby stron.", url, operation, started_at, partial=partial
+                )
+            page = self._wfs_page(
+                url,
+                params_for(fetched),
+                start=fetched,
+                operation=operation,
+                started_at=started_at,
+                deadline=deadline,
+                byte_limit=byte_limit(),
+                cancel=cancel,
+            )
+            pages_used += 1
+            if page_store is not None and fetched in set(starts):
+                page_store.save(fetched, page.payload.content)
+            account(page, matched, None)
+            if not page.members:
+                complete = False
+                break
+            page_ids = tuple(filter(None, (self._feature_id(item) for item in page.members)))
+            page_hash = hashlib.sha256(page.payload.content).hexdigest()
+            if page_hash in seen_hashes or set(page_ids) & seen_ids:
+                complete = False
+                break
+            seen_hashes.add(page_hash)
+            seen_ids.update(page_ids)
+            page_features = [
+                ElementTree.tostring(next(iter(member)), encoding="utf-8")
+                for member in page.members
+                if next(iter(member), None) is not None
+            ]
+            if len(features) + len(page_features) > self._config.max_features:
+                partial = self._wfs_result(url, operation, started_at, first.root, members, features, False)
+                raise self._limit_error(
+                    "WFS przekroczył limit liczby cech.", url, operation, started_at, partial=partial
+                )
+            members.extend(copy.deepcopy(member) for member in page.members)
+            features.extend(page_features)
+            fetched += len(page.members)
+
+        return self._wfs_result(
+            url, operation, started_at, first.root, members, features, complete and fetched >= matched
+        )
+
     def fetch_csw(
         self,
         url: str,
@@ -542,6 +945,45 @@ class OgcClient:
             start_position = next_record
 
         raise AssertionError("Nieosiągalna gałąź paginacji CSW.")
+
+    def fetch_resource(
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        params: Mapping[str, str] | None = None,
+        json_body: Any = None,
+        operation: str = "HTTP",
+        byte_limit: int | None = None,
+        total_timeout_seconds: float | None = None,
+        readable_error_statuses: frozenset[int] = frozenset(),
+    ) -> HttpResult:
+        """Ogólne żądanie HTTPS (GET albo POST JSON) przez te same zabezpieczenia co usługi OGC.
+
+        Allowlista hostów, sprawdzenie DNS/IP, brak automatycznych przekierowań, limity bajtów i czasu oraz
+        ponowienia dla 5xx/timeoutów obowiązują także tutaj. Status z ``readable_error_statuses`` (np. 429) jest
+        zwracany do wołającego zamiast błędu — to on decyduje o odczekaniu.
+        """
+        started_at = datetime.now(timezone.utc)
+        payload = self._request(
+            url,
+            params=dict(params or {}),
+            operation=operation,
+            started_at=started_at,
+            deadline=self._monotonic() + (total_timeout_seconds or self._config.total_timeout_seconds),
+            byte_limit=byte_limit or self._config.max_response_bytes,
+            readable_error_statuses=readable_error_statuses,
+            method=method,
+            json_body=json_body,
+        )
+        result = self._plain_result(payload.content, (), payload.url, operation, started_at, True)
+        return HttpResult(
+            content=payload.content,
+            status_code=payload.status_code,
+            content_type=payload.content_type,
+            headers=dict(payload.headers),
+            source=result.source,
+        )
 
     def fetch_wms(
         self,
@@ -846,6 +1288,8 @@ class OgcClient:
         deadline: float,
         byte_limit: int,
         readable_error_statuses: frozenset[int] = frozenset(),
+        method: str = "GET",
+        json_body: Any = None,
     ) -> _HttpPayload:
         if byte_limit <= 0:
             raise self._limit_error(
@@ -859,9 +1303,14 @@ class OgcClient:
             last_error: Exception | None = None
             for attempt in range(self._config.retries + 1):
                 self._check_deadline(deadline, current_url, operation, started_at)
+                if self._before_request is not None:
+                    self._before_request()
                 try:
                     with self._client.stream(
-                        "GET", current_url, params=cast(Any, current_params)
+                        method,
+                        current_url,
+                        params=cast(Any, current_params),
+                        **({"json": json_body} if json_body is not None else {}),
                     ) as response:
                         if response.status_code >= 500:
                             last_error = RuntimeError(f"HTTP {response.status_code}")
@@ -944,6 +1393,11 @@ class OgcClient:
                             content_type=response.headers.get("content-type", ""),
                             url=str(response.request.url),
                             status_code=response.status_code,
+                            headers={
+                                key: response.headers[key]
+                                for key in ("content-disposition", "retry-after", "content-length")
+                                if key in response.headers
+                            },
                         )
                 except OgcError:
                     raise
@@ -1131,6 +1585,8 @@ class OgcClient:
                     merged.remove(child)
             for member in members:
                 merged.append(copy.deepcopy(member))
+            for attribute in VOLATILE_WFS_ATTRIBUTES:
+                merged.attrib.pop(attribute, None)
             merged.set("numberReturned", str(len(features)))
             if complete:
                 merged.set("numberMatched", str(len(features)))

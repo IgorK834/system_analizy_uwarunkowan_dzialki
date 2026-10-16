@@ -20,6 +20,9 @@ class ImportRelease:
     publication_allowed: bool
     dry_run: bool = False
     teryt_scope: tuple[str, ...] = ()
+    # ADR-026: kontrola regresji liczby obiektów (spadek > 50% względem aktywnej wersji TEGO SAMEGO aktu) odrzuca import;
+    # operator może ją świadomie pominąć (np. akt zastąpiony wersją o węższym zakresie).
+    allow_regression: bool = False
 
 
 @dataclass(frozen=True)

@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import io
+import threading
 import zipfile
 from contextlib import nullcontext
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Protocol
 
 from app.modules.imports.infrastructure.ogc_client import (
+    OgcCancelled,
     OgcClient,
     OgcError,
     OgcResult,
+    WfsPageEvent,
 )
+from app.modules.imports.infrastructure.page_store import FilePageStore
 from app.shared.provenance import Provenance
 
 
@@ -30,6 +36,20 @@ class WfsFetchError(RuntimeError):
         self.partial = partial
 
 
+class WfsFetchInterrupted(WfsFetchError):
+    """Pobieranie przerwane na żądanie operatora; pobrane strony zostały w magazynie i pozwalają wznowić import."""
+
+
+class FetchObserver(Protocol):
+    """Odbiorca postępu pobierania (``application.progress.ImportProgress``)."""
+
+    def type_started(self, name: str) -> None: ...
+
+    def type_finished(self, name: str) -> None: ...
+
+    def on_page(self, event: WfsPageEvent) -> None: ...
+
+
 @dataclass(frozen=True)
 class WfsResource:
     role: str
@@ -42,14 +62,29 @@ class WfsResource:
 
 
 class WfsFetcher:
+    """Pobiera zasoby WFS i pakuje je w deterministyczny ZIP.
+
+    ``concurrency`` > 1 włącza równoległe pobieranie stron jednego typu (limit grzeczności wobec usługi),
+    ``resume_directory`` — magazyn stron do wznawiania po przerwaniu (podkatalog na każdy zasób),
+    ``observer`` — postęp, ``cancel`` — przerwanie na żądanie operatora (SIGINT/SIGTERM).
+    """
+
     def __init__(
         self,
         timeout_seconds: float = 60.0,
         *,
         ogc_client: OgcClient | None = None,
+        concurrency: int = 1,
+        resume_directory: Path | None = None,
+        observer: FetchObserver | None = None,
+        cancel: threading.Event | None = None,
     ) -> None:
         self._timeout = timeout_seconds
         self._ogc_client = ogc_client
+        self._concurrency = concurrency
+        self._resume_directory = resume_directory
+        self._observer = observer
+        self._cancel = cancel
 
     def fetch(self, resources: tuple[WfsResource, ...]) -> bytes:
         """Pobiera zasoby w kolejności katalogowej i pakuje je deterministycznie."""
@@ -70,19 +105,39 @@ class WfsFetcher:
         context = client if managed else nullcontext(client)
         with context:
             for index, resource in enumerate(resources):
+                options: dict[str, Any] = {}
+                if self._concurrency > 1:
+                    options["concurrency"] = self._concurrency
+                if self._resume_directory is not None:
+                    options["page_store"] = FilePageStore(
+                        self._resume_directory / f"{index:02d}-{resource.role}"
+                    )
+                if self._observer is not None:
+                    options["on_page"] = self._observer.on_page
+                    self._observer.type_started(resource.type_name)
+                if self._cancel is not None:
+                    options["cancel"] = self._cancel
                 try:
                     result = client.fetch_wfs(
                         resource.url,
                         type_name=resource.type_name,
                         srs_name=resource.source_crs,
                         extra_params=resource.extra_params,
+                        **options,
                     )
+                except OgcCancelled as exc:
+                    raise WfsFetchInterrupted(
+                        f"Pobieranie zasobu {resource.type_name!r} przerwane na żądanie operatora.",
+                        source=exc.source,
+                    ) from exc
                 except OgcError as exc:
                     raise WfsFetchError(
                         f"WFS nie zwrócił zasobu {resource.type_name!r}: {exc}",
                         source=exc.source,
                         partial=exc.partial,
                     ) from exc
+                if self._observer is not None:
+                    self._observer.type_finished(resource.type_name)
                 if not result.complete:
                     raise WfsFetchError(
                         f"WFS zwrócił niekompletny zasób {resource.type_name!r}.",

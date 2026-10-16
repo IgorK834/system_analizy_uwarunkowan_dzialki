@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -39,6 +40,35 @@ class LocalArtifactStore:
         try:
             with os.fdopen(descriptor, "wb") as temporary:
                 temporary.write(content)
+                temporary.flush()
+                os.fsync(temporary.fileno())
+            os.replace(temporary_name, target)
+        finally:
+            if os.path.exists(temporary_name):
+                os.unlink(temporary_name)
+        return str(target)
+
+    def save_file(
+        self,
+        *,
+        source_id: str,
+        content_hash: str,
+        filename: str,
+        path: str | os.PathLike[str],
+    ) -> str:
+        """Jak ``save``, ale kopiuje plik strumieniowo (paczki BDOT10k mają dziesiątki MB)."""
+        safe_source = _SAFE_NAME.sub("_", source_id)
+        safe_name = _SAFE_NAME.sub("_", Path(filename).name) or "artifact.bin"
+        target_dir = self._root / safe_source / content_hash
+        target = target_dir / safe_name
+        target_dir.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            return str(target)
+
+        descriptor, temporary_name = tempfile.mkstemp(prefix=".import-", dir=target_dir)
+        try:
+            with os.fdopen(descriptor, "wb") as temporary, open(path, "rb") as source:
+                shutil.copyfileobj(source, temporary, 1024 * 1024)
                 temporary.flush()
                 os.fsync(temporary.fileno())
             os.replace(temporary_name, target)

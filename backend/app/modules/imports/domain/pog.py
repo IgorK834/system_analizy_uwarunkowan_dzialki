@@ -161,9 +161,9 @@ class PogNumericValue:
 
     def validate(self, *, percentage: bool = False) -> None:
         if self.value < 0:
-            raise PogValidationError("Parametr POG nie może być ujemny.")
+            raise PogValidationError(f"Parametr POG nie może być ujemny (wartość: {self.value:g}).")
         if percentage and self.value > 100:
-            raise PogValidationError("Parametr procentowy POG musi należeć do 0–100.")
+            raise PogValidationError(f"Parametr procentowy POG musi należeć do 0–100 (wartość: {self.value:g}).")
         if not self.unit.strip():
             raise PogValidationError("Parametr POG wymaga jednostki.")
 
@@ -322,7 +322,11 @@ class PogActRecord:
         for document in self.documents:
             document.validate()
         for feature in self.features:
-            feature.validate()
+            try:
+                feature.validate()
+            except PogValidationError as exc:
+                # Operator musi wiedzieć, który obiekt aktu ma wadę danych (np. udział > 100% w źródle).
+                raise PogValidationError(f"{feature.stable_id or feature.feature_type}: {exc}") from exc
 
     @property
     def is_binding(self) -> bool:

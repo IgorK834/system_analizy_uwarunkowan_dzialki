@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, replace
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from typing import Any, Protocol
 
@@ -43,6 +44,9 @@ class PogSourceBatch(SourceBatch):
     # Ostrzeżenia czytnika (np. niedostępne CSW, dokument nierozstrzygnięty);
     # nie blokują publikacji, ale trafiają do wyniku importu i ImportRun.
     warnings: tuple[str, ...] = ()
+    # ADR-026: identyfikator wersji aktu w katalogu RU (``publishedActId``) per ``act_identifier`` — token porównania
+    # w trybie przyrostowym, zapisywany we wpisie rejestru.
+    source_tokens: Mapping[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -61,6 +65,8 @@ class PogPublicationResult:
     # utrwalony z ``is_complete=false`` i jawną przyczyną.
     area_summaries: int = 0
     aggregate_warnings: tuple[str, ...] = ()
+    # Numer stanu krajowego nadany tą publikacją (``None`` — nic się nie zmieniło, rejestr bez zmian).
+    registry_state_id: int | None = None
 
 
 class PogSourceReader(Protocol):
@@ -81,7 +87,7 @@ class PogImportRepository(Protocol):
         warnings: tuple[str, ...],
     ) -> PogPublicationResult: ...
 
-    def previous_pog_feature_count(self) -> int | None: ...
+    def previous_pog_feature_counts(self, act_identifiers: Sequence[str]) -> dict[str, int]: ...
 
 
 def _stable_json_value(value: Any) -> Any:
@@ -189,8 +195,12 @@ def run_pog_import(
     db: PogImportRepository,
     *,
     release: ImportRelease,
+    progress: Any = None,
 ) -> ImportOutcome:
-    """Naprawia i waliduje cały akt POG, a następnie publikuje go atomowo."""
+    """Naprawia i waliduje cały akt POG, a następnie publikuje go atomowo.
+
+    ``progress`` (opcjonalny ``ImportProgress``) dostaje fazy ``validate`` i ``publish`` (AU-106).
+    """
     if gmina_source_id != release.source_id:
         raise ValueError("source_id czytnika i wydania muszą być zgodne.")
     if not release.publication_allowed and not release.dry_run:
@@ -199,6 +209,8 @@ def run_pog_import(
         )
 
     batch = reader.read()
+    if progress is not None:
+        progress.set_phase("validate")
     if not batch.complete:
         raise PogValidationError(
             "Źródło POG nie potwierdziło kompletności wszystkich stron; publikacja przerwana."
@@ -214,7 +226,7 @@ def run_pog_import(
             act.validate()
         except PogValidationError as exc:
             stats.rejected += 1
-            critical_errors.append(str(exc))
+            critical_errors.append(f"{act.act_identifier}: {exc}")
             continue
 
         act_stable_id = act.object_id.stable_id if act.object_id else act.act_identifier
@@ -299,16 +311,33 @@ def run_pog_import(
             + "; ".join(dict.fromkeys(critical_errors))
         )
 
-    previous_count_method = getattr(db, "previous_pog_feature_count", None)
-    previous_count = previous_count_method() if callable(previous_count_method) else None
+    # Kontrola regresji liczby obiektów jest liczona PER AKT (ADR-026): spadek > 50% względem aktywnej wersji tego
+    # samego aktu odrzuca import; inne gminy w rejestrze nie wpływają na wynik.
+    previous_counts_method = getattr(db, "previous_pog_feature_counts", None)
+    previous_counts: dict[str, int] = (
+        previous_counts_method([act.act_identifier for act, _hash in prepared])
+        if callable(previous_counts_method)
+        else {}
+    )
     current_count = sum(len(act.features) for act, _hash in prepared)
     stats.extra["feature_count"] = current_count
-    if previous_count is not None:
-        stats.extra["previous_feature_count"] = previous_count
-        if previous_count > 0 and current_count < previous_count * 0.5:
-            raise PogValidationError(
-                f"Krytyczne QA POG: liczba cech spadła z {previous_count} do {current_count} (>50%)."
+    previous_total = 0
+    regressions: list[str] = []
+    for act, _hash in prepared:
+        previous = previous_counts.get(act.act_identifier)
+        if previous is None:
+            continue
+        previous_total += previous
+        if previous > 0 and len(act.features) < previous * 0.5:
+            regressions.append(
+                f"{act.act_identifier}: liczba cech spadła z {previous} do {len(act.features)} (>50%)"
             )
+    if previous_counts:
+        stats.extra["previous_feature_count"] = previous_total
+    if regressions:
+        if not release.allow_regression:
+            raise PogValidationError("Krytyczne QA POG: " + "; ".join(regressions))
+        warnings.extend(f"pog_regression_accepted:{item}" for item in regressions)
 
     if release.dry_run or not release.publication_allowed:
         stats.extra["publishable"] = len(prepared)
@@ -318,6 +347,8 @@ def run_pog_import(
             warnings=tuple(dict.fromkeys(warnings)),
         )
 
+    if progress is not None:
+        progress.set_phase("publish")
     result = db.publish_pog(
         release=release,
         batch=batch,
@@ -332,6 +363,7 @@ def run_pog_import(
         result.unchanged,
     )
     stats.extra["carried_forward"] = result.carried_forward
+    stats.extra["registry_state_id"] = result.registry_state_id if result.registry_state_id is not None else "unchanged"
     stats.extra["area_summaries"] = result.area_summaries
     stats.extra["area_summaries_incomplete"] = len(result.aggregate_warnings)
     warnings.extend(result.aggregate_warnings)

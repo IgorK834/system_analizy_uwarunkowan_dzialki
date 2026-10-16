@@ -1,9 +1,10 @@
-"""Obliczanie i zapis agregatów powierzchniowych stref POG w PostGIS (BK-405).
+"""Obliczanie i zapis agregatów powierzchniowych stref POG w PostGIS (BK-405, ADR-026).
 
-Wywoływane przez ``SqlAlchemyImportRepository.publish_pog`` po zapisaniu
-wszystkich aktów wydania i PRZED jego aktywacją — w tej samej transakcji.
-Aktywne wydanie i jego agregaty przełączają się więc atomowo, a endpoint HTTP
-czyta wyłącznie gotowe liczby (bez ``ST_Intersection``/``ST_Area``).
+Wywoływane przez ``SqlAlchemyImportRepository.publish_pog`` w tej samej
+transakcji co zmiana rejestru: agregaty aktu (zależą tylko od wersji) powstają
+PRZED aktywacją wersji, agregaty gminy — po niej, dla stanu krajowego, który ta
+zmiana tworzy. Endpoint HTTP czyta wyłącznie gotowe liczby (bez
+``ST_Intersection``/``ST_Area``).
 
 Wszystkie pola liczone są na kanonicznych geometriach EPSG:2180. Typ strefy
 wyznacza ta sama czysta funkcja co w analizie i kaflach MVT
@@ -20,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Final
 
-from sqlalchemy import delete, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.orm import Session
 
 from app.models.versioned import PogAreaSummary, PogAreaSummaryZone
@@ -35,6 +36,7 @@ from app.modules.imports.domain.pog_aggregates import (
     edition_for_status,
     priority_ordered,
 )
+from app.shared.pog_registry import active_versions_join
 from app.modules.planning.domain.pog_features import (
     RAW_ATTRIBUTE_KEYS,
     pog_feature_presentation,
@@ -56,7 +58,7 @@ _ZONE_FEATURES_SQL: Final[str] = """
     FROM planning_features pf
     JOIN planning_act_versions pav ON pav.id = pf.planning_act_version_id
     JOIN planning_acts pa ON pa.id = pav.planning_act_id
-    WHERE pav.data_release_id = :release_id
+    WHERE pav.id = ANY(CAST(:ids AS int[]))
       AND pa.kind = 'pog'
       AND pf.feature_type = 'planning_zone'
     ORDER BY pf.id
@@ -67,7 +69,17 @@ _ACT_VERSIONS_SQL: Final[str] = """
            pav.object_version_id, pav.version_started_at, pav.legal_valid_from
     FROM planning_act_versions pav
     JOIN planning_acts pa ON pa.id = pav.planning_act_id
-    WHERE pav.data_release_id = :release_id AND pa.kind = 'pog'
+    WHERE pav.id = ANY(CAST(:ids AS int[])) AND pa.kind = 'pog'
+    ORDER BY pav.id
+"""
+
+_ACTIVE_ACT_VERSIONS_SQL: Final[str] = f"""
+    SELECT pav.id AS version_id, pa.act_identifier, pa.teryt, pav.legal_status,
+           pav.object_version_id, pav.version_started_at, pav.legal_valid_from
+    FROM planning_act_versions pav
+    JOIN planning_acts pa ON pa.id = pav.planning_act_id
+    {active_versions_join()}
+    WHERE pa.kind = 'pog' AND pa.teryt = ANY(CAST(:teryts AS text[]))
     ORDER BY pav.id
 """
 
@@ -144,11 +156,11 @@ def _iso(value: object) -> str:
     return value.isoformat() if hasattr(value, "isoformat") else ""
 
 
-def _zone_codes(session: Session, release_id: int) -> dict[int, list[dict[str, Any]]]:
-    """Kody stref wydania wg wersji aktu: ta sama funkcja co analiza i MVT."""
+def _zone_codes(session: Session, version_ids: Sequence[int]) -> dict[int, list[dict[str, Any]]]:
+    """Kody stref wg wersji aktu: ta sama funkcja co analiza i MVT."""
     rows = session.execute(
         text(_ZONE_FEATURES_SQL),
-        {"release_id": release_id, "raw_keys": sorted(RAW_ATTRIBUTE_KEYS)},
+        {"ids": list(version_ids), "raw_keys": sorted(RAW_ATTRIBUTE_KEYS)},
     ).mappings()
     by_version: dict[int, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
@@ -168,22 +180,33 @@ def _zone_codes(session: Session, release_id: int) -> dict[int, list[dict[str, A
     return by_version
 
 
-def _acts(session: Session, release_id: int) -> list[ActForAggregation]:
+def _act_from_row(row: Any) -> ActForAggregation:
+    return ActForAggregation(
+        version_id=int(row["version_id"]),
+        act_identifier=str(row["act_identifier"]),
+        act_version=row["object_version_id"],
+        teryt=row["teryt"],
+        legal_status=row["legal_status"],
+        priority_key=(
+            _iso(row["version_started_at"]),
+            _iso(row["legal_valid_from"]),
+            int(row["version_id"]),
+        ),
+    )
+
+
+def _acts(session: Session, version_ids: Sequence[int]) -> list[ActForAggregation]:
     return [
-        ActForAggregation(
-            version_id=int(row["version_id"]),
-            act_identifier=str(row["act_identifier"]),
-            act_version=row["object_version_id"],
-            teryt=row["teryt"],
-            legal_status=row["legal_status"],
-            priority_key=(
-                _iso(row["version_started_at"]),
-                _iso(row["legal_valid_from"]),
-                int(row["version_id"]),
-            ),
-        )
+        _act_from_row(row)
+        for row in session.execute(text(_ACT_VERSIONS_SQL), {"ids": list(version_ids)}).mappings()
+    ]
+
+
+def _active_acts(session: Session, state_id: int, teryts: Sequence[str]) -> list[ActForAggregation]:
+    return [
+        _act_from_row(row)
         for row in session.execute(
-            text(_ACT_VERSIONS_SQL), {"release_id": release_id}
+            text(_ACTIVE_ACT_VERSIONS_SQL), {"state_id": state_id, "teryts": list(teryts)}
         ).mappings()
     ]
 
@@ -251,9 +274,11 @@ def _summary_row(
     act: ActForAggregation | None = None,
     teryt: str | None = None,
     edition: str | None = None,
+    registry_state_id: int | None = None,
 ) -> PogAreaSummary:
     return PogAreaSummary(
         data_release_id=release_id,
+        registry_state_id=registry_state_id,
         scope=scope,
         planning_act_version_id=act.version_id if act else None,
         act_identifier=act.act_identifier if act else None,
@@ -302,55 +327,203 @@ def _store(session: Session, summary: PogAreaSummary, aggregate: AreaAggregate) 
         )
 
 
-def compute_pog_area_summaries(
-    session: Session, release_id: int, *, computed_at: datetime | None = None
+def compute_act_summaries(
+    session: Session,
+    release_id: int,
+    version_ids: Sequence[int],
+    *,
+    computed_at: datetime | None = None,
 ) -> tuple[StoredAggregate, ...]:
-    """Przelicza od nowa wszystkie agregaty wydania (deterministycznie).
+    """Agregaty aktu dla podanych wersji (deterministycznie; ponowne wywołanie zastępuje wiersze wersji).
 
-    Ponowny import identycznego artefaktu trafia w to samo wydanie — agregaty
-    są wtedy usuwane i liczone ponownie w tej samej transakcji, więc wydanie
-    sprzed BK-405 zostaje uzupełnione bez zmiany danych źródłowych.
+    Agregat aktu zależy wyłącznie od zapisanej wersji aktu (granica i strefy), nie od stanu rejestru.
     """
+    ids = sorted({int(item) for item in version_ids})
+    if not ids:
+        return ()
     now = computed_at or datetime.now(timezone.utc)
-    session.execute(delete(PogAreaSummary).where(PogAreaSummary.data_release_id == release_id))
-    codes = _zone_codes(session, release_id)
-    acts = _acts(session, release_id)
+    session.execute(
+        delete(PogAreaSummary).where(
+            PogAreaSummary.scope == "act", PogAreaSummary.planning_act_version_id.in_(ids)
+        )
+    )
+    codes = _zone_codes(session, ids)
     stored: list[StoredAggregate] = []
-
-    for act in acts:
+    for act in _acts(session, ids):
         aggregate = aggregate_areas(measure_group(session, [act], codes.get(act.version_id, [])))
         _store(
             session,
-            _summary_row(
-                release_id, aggregate, scope="act", acts=[act], computed_at=now, act=act
-            ),
+            _summary_row(release_id, aggregate, scope="act", acts=[act], computed_at=now, act=act),
             aggregate,
         )
         stored.append(StoredAggregate("act", act.act_identifier, aggregate))
+    session.flush()
+    return tuple(stored)
 
+
+def _tombstone(
+    release_id: int, state_id: int, teryt: str, edition: str, now: datetime
+) -> PogAreaSummary:
+    """Wiersz „brak aktywnych aktów”: zasłania starszy agregat gminy w stanach po wycofaniu aktu."""
+    return PogAreaSummary(
+        data_release_id=release_id,
+        registry_state_id=state_id,
+        scope="municipality",
+        teryt=teryt,
+        edition=edition,
+        zones_area_sqm=0.0,
+        overlap_area_sqm=0.0,
+        outside_area_sqm=0.0,
+        zone_count=0,
+        act_count=0,
+        is_complete=False,
+        incomplete_reasons=["no_active_acts"],
+        act_identifiers=[],
+        area_tolerance_sqm=0.0,
+        share_tolerance_pct=0.0,
+        method_version=AGGREGATE_METHOD_VERSION,
+        computed_at=now,
+    )
+
+
+def _copy_act_summary(
+    session: Session,
+    act: ActForAggregation,
+    release_id: int,
+    state_id: int,
+    teryt: str,
+    edition: str,
+    now: datetime,
+) -> AreaAggregate | None:
+    """Agregat gminy z jednego aktu = agregat tego aktu (bez ponownych obliczeń przestrzennych)."""
+    source = session.execute(
+        select(PogAreaSummary).where(
+            PogAreaSummary.scope == "act", PogAreaSummary.planning_act_version_id == act.version_id
+        )
+    ).scalar_one_or_none()
+    if source is None:
+        return None
+    zones = session.execute(
+        select(PogAreaSummaryZone)
+        .where(PogAreaSummaryZone.summary_id == source.id)
+        .order_by(PogAreaSummaryZone.order_index)
+    ).scalars().all()
+    summary = PogAreaSummary(
+        data_release_id=release_id,
+        registry_state_id=state_id,
+        scope="municipality",
+        planning_act_version_id=None,
+        act_identifier=None,
+        act_version=None,
+        teryt=teryt,
+        edition=edition,
+        legal_status=None,
+        denominator_area_sqm=source.denominator_area_sqm,
+        denominator_source=None if source.denominator_area_sqm is None else "act_boundaries_union",
+        zones_area_sqm=source.zones_area_sqm,
+        missing_area_sqm=source.missing_area_sqm,
+        overlap_area_sqm=source.overlap_area_sqm,
+        outside_area_sqm=source.outside_area_sqm,
+        deduplicated_area_sqm=source.deduplicated_area_sqm,
+        share_sum_pct=source.share_sum_pct,
+        zone_count=source.zone_count,
+        act_count=1,
+        is_complete=source.is_complete,
+        incomplete_reasons=list(source.incomplete_reasons),
+        act_identifiers=[act.act_identifier],
+        area_tolerance_sqm=source.area_tolerance_sqm,
+        share_tolerance_pct=source.share_tolerance_pct,
+        method_version=source.method_version,
+        computed_at=now,
+    )
+    session.add(summary)
+    session.flush()
+    for zone in zones:
+        session.add(
+            PogAreaSummaryZone(
+                summary_id=summary.id,
+                zone_code=zone.zone_code,
+                area_sqm=zone.area_sqm,
+                area_sqkm=zone.area_sqkm,
+                share_pct=zone.share_pct,
+                zone_count=zone.zone_count,
+                order_index=zone.order_index,
+            )
+        )
+    return AreaAggregate(
+        denominator_area_sqm=source.denominator_area_sqm,
+        zones_area_sqm=source.zones_area_sqm,
+        missing_area_sqm=source.missing_area_sqm,
+        overlap_area_sqm=source.overlap_area_sqm,
+        outside_area_sqm=source.outside_area_sqm,
+        deduplicated_area_sqm=source.deduplicated_area_sqm,
+        share_sum_pct=source.share_sum_pct,
+        zone_count=source.zone_count,
+        is_complete=source.is_complete,
+        incomplete_reasons=tuple(source.incomplete_reasons),
+        zones=(),
+        area_tolerance_sqm=source.area_tolerance_sqm,
+        share_tolerance_pct=source.share_tolerance_pct,
+    )
+
+
+def compute_municipality_summaries(
+    session: Session,
+    release_id: int,
+    state_id: int,
+    teryts: Sequence[str] | set[str],
+    *,
+    computed_at: datetime | None = None,
+) -> tuple[StoredAggregate, ...]:
+    """Agregaty gmin i edycji dla stanu ``state_id`` (po zmianie rejestru), tylko dla podanych TERYT.
+
+    Grupa z jednym aktem kopiuje pomiar z agregatu aktu (bez ponownych obliczeń przestrzennych); grupa z kilkoma
+    aktami jest mierzona z kolejnością priorytetu, żeby nakładające się akty nie były liczone podwójnie. Gmina i
+    edycja, które po zmianie nie mają aktywnych aktów, dostają wiersz ``no_active_acts`` (zasłania starszy agregat).
+    """
+    scope = sorted({str(item) for item in teryts if item})
+    if not scope:
+        return ()
+    now = computed_at or datetime.now(timezone.utc)
+    acts = _active_acts(session, state_id, scope)
     groups: dict[tuple[str, str], list[ActForAggregation]] = defaultdict(list)
     for act in acts:
         edition = edition_for_status(act.legal_status)
         if act.teryt and edition:
             groups[(act.teryt, edition)].append(act)
-    for (teryt, edition), members in sorted(groups.items()):
-        ordered = priority_ordered(members)
-        group_codes = [code for act in ordered for code in codes.get(act.version_id, [])]
-        aggregate = aggregate_areas(measure_group(session, ordered, group_codes))
-        _store(
-            session,
-            _summary_row(
-                release_id,
+    version_ids = sorted({act.version_id for members in groups.values() for act in members})
+    codes = _zone_codes(session, version_ids) if version_ids else {}
+    stored: list[StoredAggregate] = []
+    editions = ("binding", "project")
+    for teryt in scope:
+        for edition in editions:
+            members = groups.get((teryt, edition))
+            if not members:
+                session.add(_tombstone(release_id, state_id, teryt, edition, now))
+                continue
+            ordered = priority_ordered(members)
+            if len(ordered) == 1:
+                copied = _copy_act_summary(session, ordered[0], release_id, state_id, teryt, edition, now)
+                if copied is not None:
+                    stored.append(StoredAggregate("municipality", f"{teryt}:{edition}", copied))
+                    continue
+            group_codes = [code for act in ordered for code in codes.get(act.version_id, [])]
+            aggregate = aggregate_areas(measure_group(session, ordered, group_codes))
+            _store(
+                session,
+                _summary_row(
+                    release_id,
+                    aggregate,
+                    scope="municipality",
+                    acts=ordered,
+                    computed_at=now,
+                    teryt=teryt,
+                    edition=edition,
+                    registry_state_id=state_id,
+                ),
                 aggregate,
-                scope="municipality",
-                acts=ordered,
-                computed_at=now,
-                teryt=teryt,
-                edition=edition,
-            ),
-            aggregate,
-        )
-        stored.append(StoredAggregate("municipality", f"{teryt}:{edition}", aggregate))
+            )
+            stored.append(StoredAggregate("municipality", f"{teryt}:{edition}", aggregate))
     session.flush()
     return tuple(stored)
 

@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
+import shutil
+import tempfile
+import threading
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -19,10 +27,18 @@ from app.core.data_sources import (
     get_catalog,
 )
 from app.core.settings import settings
-from app.modules.imports.application.common import ImportRelease
+from app.db.session import SessionLocal
+from app.modules.imports.application.bdot10k_import import run_bdot10k_import
+from app.modules.imports.application.common import ImportOutcome, ImportRelease
 from app.modules.imports.application.mpzp_import import (
     MpzpSourceReader,
     run_mpzp_import,
+)
+from app.modules.imports.application.national_import import (
+    NationalImportOptions,
+    NationalImportResult,
+    NationalProgress,
+    run_national_import,
 )
 from app.modules.imports.application.parcels_import import (
     ParcelSourceReader,
@@ -34,7 +50,17 @@ from app.modules.imports.application.pog_import import (
 )
 from app.modules.imports.domain.mpzp import PlanningActRecord
 from app.modules.imports.domain.pog import normalize_legal_status
+from app.modules.imports.domain.bdot10k import Bdot10kValidationError, validate_powiat_teryt
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
+from app.modules.imports.infrastructure.bdot10k.download import (
+    Bdot10kDownloadError,
+    allowed_hosts_from,
+    download_package,
+    package_url,
+)
+from app.modules.imports.infrastructure.bdot10k.geometry import ShapelyGeometryTools
+from app.modules.imports.infrastructure.bdot10k.reader import Bdot10kReadError, ZipBdot10kReader
+from app.modules.imports.infrastructure.bdot10k.repository import SqlAlchemyBdot10kRepository
 from app.modules.imports.infrastructure.mpzp.reader import (
     PyogrioMpzpReader,
     RasterOnlyMpzpReader,
@@ -73,12 +99,68 @@ from app.modules.imports.infrastructure.raster.gdal import (
 from app.modules.imports.infrastructure.raster.repository import (
     SqlAlchemyRasterRepository,
 )
+from app.modules.imports.infrastructure.job_queue import (
+    claim_next_job,
+    complete_job,
+    fail_job,
+    worker_identity,
+)
+from app.modules.imports.infrastructure.pog_map_tables import rebuild_missing_map_tables
 from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
-from app.modules.imports.infrastructure.wfs import WfsResource
+from app.modules.imports.infrastructure.sync_status import pog_sync_status
+from app.modules.imports.infrastructure.national_runtime import (
+    HttpActsGateway,
+    NationalRunRecorder,
+    SqlActPublisher,
+    SqlRegistryGateway,
+)
+from app.modules.imports.infrastructure.ru_catalog_store import SqlAlchemyRuCatalogStore
+from app.modules.imports.infrastructure.ru_published import RuPublishedClient, Throttle
+from app.modules.imports.infrastructure.run_checkpoint import ImportRunCheckpoints
+from app.modules.imports.infrastructure.wfs import WfsFetcher, WfsFetchInterrupted, WfsResource
+from app.modules.imports.application.progress import ImportProgress
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PogImportOptions:
+    """Opcje długiego importu POG z WFS (AU-106): równoległość, wznawianie, postęp i przerwanie.
+
+    Wszystkie pola są opcjonalne — bez nich import działa jak dotąd (pobieranie sekwencyjne, bez magazynu stron).
+    ``save_checkpoint`` jest ustawiane przez ``run_pog_command`` po założeniu wiersza checkpointu i służy
+    wołającemu (CLI) do okresowego zapisu postępu.
+    """
+
+    concurrency: int = 1
+    resume: bool = False
+    fresh: bool = False
+    progress: ImportProgress | None = None
+    cancel: threading.Event | None = None
+    checkpoints: ImportRunCheckpoints | None = None
+    resume_key: str | None = None
+    resumed: bool = False
+    save_checkpoint: Callable[..., None] | None = None
+
+
+def pog_resume_key(*parts: object) -> str:
+    """Klucz wznowienia: ten sam import (źródło, TERYT, akt, usługa, typy, filtr) = ten sam klucz."""
+    encoded = json.dumps(parts, sort_keys=True, default=str, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
 
 # Kompozycja jest fasadą dla innych modułów (analysis/terrain, testy): te nazwy
 # są celowym re-eksportem, nie nieużywanymi importami.
 __all__ = [
+    "claim_next_job",
+    "complete_job",
+    "fail_job",
+    "pog_sync_status",
+    "rebuild_missing_map_tables",
+    "worker_identity",
+    "Bdot10kDownloadError",
+    "Bdot10kReadError",
+    "Bdot10kValidationError",
     "DecodedFloatBand",
     "OgcClient",
     "OgcContractError",
@@ -289,7 +371,9 @@ def run_pog_command(
     legal_status: str | None = None,
     name_label: str | None = None,
     boundary_path: str | None = None,
+    options: PogImportOptions | None = None,
 ):
+    options = options or PogImportOptions()
     source = get_catalog().get(source_id)
     effective_teryt = teryt or next(
         (item for item in source.teryt_scope if item != "*"), ""
@@ -311,6 +395,7 @@ def run_pog_command(
         name=name_label or source.name,
     )
     reader: PogSourceReader
+    resume_dir: Path | None = None
     if local_resources:
         # Kontrakt CRS/pól per warstwa pochodzi z katalogu; lokalna ścieżka jest
         # jawnym wejściem operatora, a nie alternatywnym źródłem URL.
@@ -398,10 +483,32 @@ def run_pog_command(
             (item for item in source.resources if item.role == "ru_csw"),
             None,
         )
+        resume_key = pog_resume_key(
+            source.source_id,
+            effective_teryt,
+            act_identifier,
+            wfs_contract.url,
+            [resource.type_name for _role, resource in remote_resources],
+            filter_xml,
+        )
+        resume_dir = _prepare_resume_directory(options, resume_key)
         reader = WfsPogReader(
             remote_resources,
             metadata=metadata,
             csw_url=csw_resource.url if csw_resource else None,
+            fetcher=WfsFetcher(
+                concurrency=options.concurrency,
+                resume_directory=resume_dir,
+                observer=options.progress,
+                cancel=options.cancel,
+            ),
+            progress=options.progress,
+        )
+        _begin_checkpoint(
+            options,
+            resume_key,
+            resume_dir,
+            {"source_id": source.source_id, "teryt": effective_teryt, "act_identifier": act_identifier},
         )
     release = _release(source, dry_run=dry_run)
     try:
@@ -410,15 +517,68 @@ def run_pog_command(
             source_id,
             _repository(session, source),
             release=release,
+            **({"progress": options.progress} if options.progress is not None else {}),
         )
         if outcome.status == "succeeded":
             session.commit()
         else:
             session.rollback()
+        _finish_checkpoint(options, resume_dir, outcome.status)
         return outcome
-    except Exception:
+    except BaseException as exc:
         session.rollback()
+        if options.save_checkpoint is not None:
+            interrupted = isinstance(exc, (WfsFetchInterrupted, KeyboardInterrupt))
+            options.save_checkpoint(status="interrupted" if interrupted else "failed")
         raise
+
+
+def _prepare_resume_directory(options: PogImportOptions, resume_key: str) -> Path | None:
+    """Katalog magazynu stron tego importu (``None`` bez wznawiania); ``fresh`` czyści poprzednie strony."""
+    if not (options.resume or options.fresh):
+        return None
+    directory = Path(settings.import_artifact_storage_dir) / "resume" / resume_key[:32]
+    if options.fresh:
+        shutil.rmtree(directory, ignore_errors=True)
+    return directory
+
+
+def _begin_checkpoint(
+    options: PogImportOptions, resume_key: str, resume_dir: Path | None, identity: dict[str, Any]
+) -> None:
+    """Zakłada albo wznawia wiersz checkpointu i podpina ``save_checkpoint`` do opcji."""
+    options.resume_key = resume_key
+    if options.checkpoints is None:
+        return
+    checkpoints = options.checkpoints
+    run = checkpoints.begin(resume_key, fresh=options.fresh)
+    options.resumed = run.resumed
+
+    def save_checkpoint(status: str | None = None) -> None:
+        payload: dict[str, Any] = {
+            "resume_key": resume_key,
+            "resume_dir": str(resume_dir) if resume_dir is not None else None,
+            "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            **identity,
+        }
+        if options.progress is not None:
+            payload["progress"] = options.progress.snapshot()
+        checkpoints.save(run.run_id, payload, status=status)
+
+    options.save_checkpoint = save_checkpoint
+    save_checkpoint()
+
+
+def _finish_checkpoint(options: PogImportOptions, resume_dir: Path | None, outcome_status: str) -> None:
+    """Po udanym imporcie magazyn stron jest zbędny; po próbie bez publikacji zostaje do wznowienia."""
+    if outcome_status == "succeeded":
+        if resume_dir is not None:
+            shutil.rmtree(resume_dir, ignore_errors=True)
+        status = "succeeded"
+    else:
+        status = "fetched"  # pobrano komplet stron, ale nic nie opublikowano (np. --dry-run)
+    if options.save_checkpoint is not None:
+        options.save_checkpoint(status=status)
 
 
 def _raster_media_type(path: Path) -> str:
@@ -483,6 +643,63 @@ def run_raster_command(
         raise
 
 
+def run_bdot10k_command(
+    session: Session,
+    *,
+    source_id: str,
+    dry_run: bool,
+    powiat: str,
+    package: str | None = None,
+) -> ImportOutcome:
+    """Import paczki powiatowej BDOT10k: plik lokalny, adres z allowlisty albo adres z katalogu źródeł."""
+    teryt = validate_powiat_teryt(powiat)
+    source = get_catalog().get(source_id)
+    templates = [
+        item.url for item in source.resources if item.role == "county_package"
+    ] or ([source.file_url] if source.file_url else [])
+    if not templates:
+        raise Bdot10kValidationError("Katalog źródeł nie zawiera adresu paczek powiatowych BDOT10k.")
+    with tempfile.TemporaryDirectory(prefix="dzialki-bdot10k-download-") as download_dir:
+        location = package or package_url(templates[0], teryt)
+        if location.lower().startswith(("http://", "https://")):
+            downloaded = download_package(
+                location,
+                Path(download_dir),
+                allowed_hosts=allowed_hosts_from(templates),
+                max_bytes=settings.bdot10k_max_package_bytes,
+                timeout_seconds=settings.bdot10k_download_timeout_seconds,
+            )
+            package_path = downloaded.path
+        else:
+            package_path = Path(location)
+        reader = ZipBdot10kReader(package_path, teryt_powiat=teryt, mapping=source.field_mapping)
+        release = _release(source, dry_run=dry_run)
+        repository = (
+            None
+            if dry_run
+            else SqlAlchemyBdot10kRepository(
+                session, source, LocalArtifactStore(settings.import_artifact_storage_dir)
+            )
+        )
+        try:
+            outcome = run_bdot10k_import(
+                reader,
+                release,
+                ShapelyGeometryTools(),
+                repository,
+                source.field_mapping,
+                teryt_powiat=teryt,
+            )
+            if outcome.status == "succeeded":
+                session.commit()
+            else:
+                session.rollback()
+            return outcome
+        except Exception:
+            session.rollback()
+            raise
+
+
 # --- Publiczne fabryki adapterów współdzielonych z innymi modułami (BK-302) ---
 #
 # Moduł ``analysis`` potrzebuje bezpiecznego klienta OGC (BK-102) i dekodera
@@ -497,8 +714,12 @@ def build_ogc_client(
     total_timeout_seconds: float,
     max_response_bytes: int,
     retries: int = 1,
+    before_request: Callable[[], None] | None = None,
 ) -> OgcClient:
-    """Klient OGC z allowlistą hostów wyprowadzoną z przekazanych adresów."""
+    """Klient OGC z allowlistą hostów wyprowadzoną z przekazanych adresów.
+
+    ``before_request`` jest wołane przed każdym żądaniem HTTP (budżet żądań na analizę, AU-105).
+    """
     return OgcClient.for_urls(
         source_id=source_id,
         urls=urls,
@@ -509,6 +730,7 @@ def build_ogc_client(
             "max_total_bytes": max_response_bytes * 2,
             "retries": retries,
         },
+        before_request=before_request,
     )
 
 
@@ -516,3 +738,110 @@ def build_raster_decoder(command_timeout_s: float) -> GdalRasterProcessor:
     """Dekoder GeoTIFF oparty o ``gdal-bin`` z twardym limitem czasu procesu."""
     return GdalRasterProcessor(command_timeout_s=command_timeout_s)
 
+
+
+# --- Import krajowy POG z GML Rejestru Urbanistycznego (ADR-026) ---------------------------------------------------
+
+
+def build_ru_published_client(source: DataSourceEntry) -> tuple[RuPublishedClient, str]:
+    """Klient wykazu i plików GML RU z adresem z katalogu (zasób ``ru_published``); zwraca też adres bazowy."""
+    resource = next((item for item in source.resources if item.role == "ru_published"), None)
+    if resource is None:
+        raise ValueError("Katalog źródła pog_app nie deklaruje zasobu ru_published (import krajowy z GML).")
+    http = OgcClient.for_urls(
+        source_id=source.source_id,
+        urls=(resource.url,),
+        config_overrides={
+            "connect_timeout_seconds": 10.0,
+            "read_timeout_seconds": 120.0,
+            "total_timeout_seconds": settings.ru_published_timeout_seconds,
+            "max_response_bytes": settings.ru_published_max_gml_bytes,
+            "max_total_bytes": settings.ru_published_max_gml_bytes * 2,
+            "retries": 2,
+            "backoff_seconds": 2.0,
+        },
+    )
+    client = RuPublishedClient(
+        http,
+        base_url=resource.url,
+        min_interval_seconds=settings.ru_published_min_interval_seconds,
+        max_gml_bytes=settings.ru_published_max_gml_bytes,
+        timeout_seconds=settings.ru_published_timeout_seconds,
+    )
+    return client, resource.url
+
+
+@dataclass
+class NationalRuntime:
+    gateway: HttpActsGateway
+    registry: SqlRegistryGateway
+    publisher: SqlActPublisher
+    recorder: NationalRunRecorder
+    client: RuPublishedClient
+
+
+def build_national_runtime(
+    *, source_id: str = "pog_app", with_csw: bool = True, allow_regression: bool = False
+) -> NationalRuntime:
+    source = get_catalog().get(source_id)
+    by_role = {resource.role: resource for resource in source.resources}
+    client, _base = build_ru_published_client(source)
+    artifact_store = LocalArtifactStore(settings.import_artifact_storage_dir)
+    csw_resource = by_role.get("ru_csw") if with_csw else None
+    csw_gate = Throttle(settings.ru_published_min_interval_seconds)
+    csw_factory: Callable[[], Any] | None = None
+    if csw_resource is not None:
+        csw_url = csw_resource.url
+
+        def csw_factory() -> OgcClient:
+            return OgcClient.for_urls(
+                source_id=source.source_id,
+                urls=(csw_url,),
+                config_overrides={"read_timeout_seconds": 30.0, "total_timeout_seconds": 60.0},
+            )
+
+    catalog = SqlAlchemyRuCatalogStore(SessionLocal)
+    return NationalRuntime(
+        gateway=HttpActsGateway(client),
+        registry=SqlRegistryGateway(SessionLocal, source, artifact_store, catalog),
+        publisher=SqlActPublisher(
+            SessionLocal,
+            source,
+            artifact_store,
+            wfs_url=by_role["ru_wfs"].url if "ru_wfs" in by_role else None,
+            csw_url=csw_resource.url if csw_resource is not None else None,
+            csw_client_factory=csw_factory,
+            csw_gate=csw_gate,
+            xml_max_nodes=settings.pog_national_xml_max_nodes,
+            publication_allowed=_publication_allowed(source.source_id),
+            allow_regression=allow_regression,
+        ),
+        recorder=NationalRunRecorder(SessionLocal, source, artifact_store),
+        client=client,
+    )
+
+
+def run_pog_national_command(
+    options: NationalImportOptions,
+    *,
+    source_id: str = "pog_app",
+    with_csw: bool = True,
+    allow_regression: bool = False,
+    progress: NationalProgress | None = None,
+    cancel: threading.Event | None = None,
+) -> NationalImportResult:
+    runtime = build_national_runtime(source_id=source_id, with_csw=with_csw, allow_regression=allow_regression)
+    try:
+        result = run_national_import(
+            runtime.gateway,
+            runtime.registry,
+            runtime.publisher,
+            runtime.recorder,
+            options,
+            progress=progress,
+            cancel=cancel,
+        )
+    finally:
+        runtime.client.close()
+    result.catalog.setdefault("ru_requests", runtime.client.stats)
+    return result

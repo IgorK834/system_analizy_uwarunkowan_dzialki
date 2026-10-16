@@ -58,6 +58,10 @@ from app.services.gml import GmlResponseError, parse_feature_collection
 
 
 APP3_NAMESPACE = "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/3.0"
+# Pliki GML starszych aktów w RU są zapisane w schemacie APP 2.0: te same nazwy elementów, inna przestrzeń nazw
+# (zmierzone 2026-10-13 na plikach pobranych z ``/api/public/published/{id}/download``; WFS serwuje 3.0).
+APP2_NAMESPACE = "https://www.gov.pl/static/zagospodarowanieprzestrzenne/schemas/app/2.0"
+APP_NAMESPACES = frozenset({APP2_NAMESPACE, APP3_NAMESPACE})
 XLINK_NAMESPACE = "http://www.w3.org/1999/xlink"
 _XLINK_HREF = f"{{{XLINK_NAMESPACE}}}href"
 _XLINK_TITLE = f"{{{XLINK_NAMESPACE}}}title"
@@ -203,6 +207,7 @@ class WfsPogReader:
         fetcher: WfsFetcher | None = None,
         csw_url: str | None = None,
         csw_client: OgcClient | None = None,
+        progress: Any = None,
     ) -> None:
         # Każdy element to (feature_type, zasób WFS). Kolejność == kolejność
         # plików GML w rozpakowanym artefakcie.
@@ -211,10 +216,18 @@ class WfsPogReader:
         self._fetcher = fetcher or WfsFetcher()
         self._csw_url = csw_url
         self._csw_client = csw_client
+        # ``ImportProgress`` (AU-106): fazy pobierania, parsowania i metadanych dla komunikatów postępu.
+        self._progress = progress
+
+    def _phase(self, name: str) -> None:
+        if self._progress is not None:
+            self._progress.set_phase(name)
 
     def read(self) -> PogSourceBatch:
         wfs_resources = tuple(resource for _feature_type, resource in self._resources)
+        self._phase("download")
         content = self._fetcher.fetch(wfs_resources)
+        self._phase("parse")
         layers: list[tuple[PogLayerResource, tuple[VectorFeature, ...]]] = []
         ru_parts: list[RuPogObjects] = []
         with tempfile.TemporaryDirectory(prefix="pog-wfs-") as temporary:
@@ -253,6 +266,7 @@ class WfsPogReader:
                         "Odpowiedź RU zawiera obiekty zależne bez AktPlanowaniaPrzestrzennego."
                     )
                 if self._csw_url:
+                    self._phase("metadata")
                     acts, content, warnings = self._with_catalog_metadata(acts, content)
             else:
                 acts = (_build_act(self._metadata, layers, None),)
@@ -386,16 +400,19 @@ def parse_ru_app_feature_collection(
     *,
     expected_type: str | None = None,
     source_reference: str | None = None,
+    reproject: bool = False,
+    max_nodes: int = 300_000,
 ) -> RuPogObjects:
     """Mapuje oficjalny WFS APP 3.0 bez heurystyk zależnych od gminy.
 
     Namespace i typ cechy są częścią kontraktu. Geometria bez jawnego CRS jest
-    odrzucana: adapter nie może zgadywać EPSG:2180. Wartości procentowe mają
+    odrzucana: adapter nie może zgadywać EPSG:2180. ``reproject=True`` (plik GML aktu z RU, ADR-026) dopuszcza
+    jawnie zadeklarowane układy PL-2000/WGS 84 i przelicza je do EPSG:2180. Wartości procentowe mają
     jednostkę ``%`` zdefiniowaną w oficjalnym XSD, intensywność jest
     bezwymiarowa (``1``), a wysokość musi jawnie zawierać ``uom=\"m\"``.
     """
     try:
-        root = parse_xml_root(content, max_nodes=300_000)
+        root = parse_xml_root(content, max_nodes=max_nodes)
     except RuContractError as exc:
         raise PogValidationError(str(exc)) from exc
 
@@ -409,7 +426,7 @@ def parse_ru_app_feature_collection(
             continue
         for element in list(member):
             namespace, local = _split_tag(element.tag)
-            if namespace != APP3_NAMESPACE:
+            if namespace not in APP_NAMESPACES:
                 raise PogValidationError(
                     f"Nieobsługiwany namespace APP: {namespace or '<brak>'}."
                 )
@@ -431,7 +448,7 @@ def parse_ru_app_feature_collection(
             if not any(node.get("srsName") for node in container.iter()):
                 raise PogValidationError("Geometria APP nie ma jawnego srsName; CRS nie będzie zgadywany.")
         try:
-            geometries = parse_feature_collection(content.decode("utf-8"))
+            geometries = parse_feature_collection(content.decode("utf-8"), reproject=reproject)
         except (UnicodeDecodeError, GmlResponseError) as exc:
             raise PogValidationError(f"Niepoprawna geometria APP: {exc}") from exc
 
@@ -515,7 +532,11 @@ def parse_ru_app_feature_collection(
         status = _child(element, "status")
         raw_status = _reference_value(status)
         plan = _child(element, "plan")
-        parameters = _parse_parameters(element) if feature_type == "planning_zone" else None
+        try:
+            parameters = _parse_parameters(element) if feature_type == "planning_zone" else None
+        except PogValidationError as exc:
+            # Wada danych źródła (np. udział > 100%) ma wskazać obiekt — operator zgłasza ją wydawcy aktu.
+            raise PogValidationError(f"{object_id.stable_id if object_id else local}: {exc}") from exc
         features.append(PogFeatureRecord(
             feature_type=feature_type,
             geometry=geometry,
@@ -548,7 +569,24 @@ def assemble_ru_pog_acts(objects: RuPogObjects) -> tuple[PogActRecord, ...]:
             if f.act_reference and references_act(f.act_reference.href, act)
         )
         documents = resolve_act_documents(act, objects.documents)
-        assembled.append(replace(act, features=features, documents=documents))
+        # Numer i data uchwały pochodzą z dokumentu uchwalającego (relacja ``uchwala``): sam akt APP ich nie niesie.
+        resolution = next(
+            (
+                item
+                for item in documents
+                if item.relation == "uchwala" and item.resolution_status == "resolved"
+            ),
+            None,
+        )
+        assembled.append(
+            replace(
+                act,
+                features=features,
+                documents=documents,
+                resolution_number=resolution.identification_number if resolution else act.resolution_number,
+                resolution_date=resolution.document_date if resolution else act.resolution_date,
+            )
+        )
     return tuple(assembled)
 
 
