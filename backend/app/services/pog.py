@@ -1,10 +1,12 @@
 """Best-effort discovery Planu Ogólnego Gminy ze źródeł per gmina i RU.
 
-Adresy gminne są przekazywane przez wywołującego, a potwierdzony krajowy WMS
-Rejestru Urbanistycznego jest odczytywany wyłącznie z katalogu źródeł.
+Adresy gminne są przekazywane przez wywołującego, a krajowy Rejestr Urbanistyczny
+jest odczytywany wyłącznie z katalogu źródeł — przez WFS ``app-pog`` (cztery
+zapytania z ``bbox`` kafla, budżet żądań, cache i deduplikacja; AU-105, ADR-023).
+WMS RU służy wyłącznie do podglądu mapy i nie bierze udziału w discovery.
 
-WMS służy wyłącznie do rozpoznania dostępności aktu i odnośników. Wynik nie
-jest precyzyjną geometrią stref, OUZ ani obszaru zabudowy śródmiejskiej.
+Discovery wskazuje obecność aktu, stref, OUZ i obszaru zabudowy śródmiejskiej na
+działce oraz ich urzędowy status; nie liczy udziałów powierzchniowych.
 
 Status prawny (BK-106) pochodzi wyłącznie z urzędowego kodu: jawnego atrybutu
 statusu albo nazwy warstwy RU kodującej krok procesu (np.
@@ -26,7 +28,21 @@ from bs4 import BeautifulSoup
 from shapely.geometry.base import BaseGeometry
 
 from app.core.data_sources import AccessType, CatalogError, ensure_source_runnable
+from app.core.logging import log_analysis_event
+from app.core.metrics import upstream_metrics
+from app.core.settings import settings
 from app.modules.imports.infrastructure.ogc_client import OgcClient, OgcError
+from app.modules.planning.application.ports import RuPogFeaturesResponse
+from app.modules.planning.composition import new_ru_pog_request_budget, ru_pog_features_source
+from app.modules.planning.domain.pog_discovery import (
+    ERROR_BUDGET_EXCEEDED,
+    FEATURE_TYPE_BY_LAYER,
+    POG_FEATURE_TYPES,
+    LayerObservation,
+    PogFeatureType,
+    observe_layer,
+    snap_bbox_outward,
+)
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.mpzp import _build_sample_points
 from app.services.mpzp_fetch import (
@@ -108,6 +124,8 @@ class PogLayerSection:
     matched_wms_layer: str | None = None
     feature_count: int = 0
     raw_legal_status: str | None = None
+    # Typ obiektu APP z WFS RU, który wskazał obecność na działce (AU-105); ``matched_wms_layer`` dotyczy wyłącznie WMS gminy.
+    matched_wfs_type: str | None = None
 
 
 @dataclass(frozen=True)
@@ -612,15 +630,16 @@ async def _discover_from_catalog(
     parcel_geometry: BaseGeometry,
     teryt: str | None,
 ) -> PogDiscoveryResult:
-    """Uruchamia krajowy WMS wyłącznie po przejściu guardu katalogu."""
+    """Discovery POG w Rejestrze Urbanistycznym przez WFS ``app-pog`` — budżet ≤ ``RU_POG_REQUEST_BUDGET`` żądań.
 
+    Zastępuje pętlę „punkt próbki × ~48 warstw ``APP.POG.*`` WMS” (AU-105, ADR-023). WMS służy wyłącznie do podglądu
+    mapy. Cztery typy obiektów (akt, obszar zabudowy śródmiejskiej, OUZ, strefy) są pobierane równolegle po jednym
+    zapytaniu z ``bbox`` kafla, a przynależność do działki rozstrzyga lokalne przecięcie w EPSG:2180. Źródło musi
+    przejść guard katalogu; błąd źródła daje ``unknown``/``source_responded=False``, nigdy „brak POG”.
+    """
     try:
         source = ensure_source_runnable("pog_app")
-        resource = next(
-            item
-            for item in source.resources
-            if item.role == "ru_wms_preview" and item.access_type is AccessType.WMS
-        )
+        resource = next(item for item in source.resources if item.role == "ru_wfs" and item.access_type is AccessType.WFS)
     except (CatalogError, StopIteration):
         return _unknown_result(
             None,
@@ -631,43 +650,181 @@ async def _discover_from_catalog(
                 "Nie oznacza to braku POG."
             ),
         )
+    features_source = ru_pog_features_source()
+    if features_source is None:
+        return _unknown_result(
+            resource.url,
+            "REJESTR_URBANISTYCZNY_WFS",
+            code="POG_NO_CONFIRMED_SOURCE",
+            message="Discovery POG w Rejestrze Urbanistycznym jest wyłączone. Nie oznacza to braku POG.",
+        )
 
-    layer_names = tuple(resource.layers)
-    catalog_source = PogGminaSources(
-        wms_url=resource.url,
-        teryt=teryt,
-        layer_names=PogLayerNames(
-            planning_act=tuple(layer for layer in layer_names if layer.count(".") == 2),
-            downtown_area=tuple(
-                layer
-                for layer in layer_names
-                if ".ObszarZabudowySrodmiejskiej." in layer
-            ),
-            ouz=tuple(
-                layer
-                for layer in layer_names
-                if ".ObszarUzupelnieniaZabudowy." in layer
-            ),
-            planning_zones=tuple(
-                layer
-                for layer in layer_names
-                if layer.startswith("APP.POG.S") and ".ObszarStandardow" not in layer
-            ),
+    tile = snap_bbox_outward(parcel_geometry.bounds, settings.ru_pog_tile_size_m)
+    budget = new_ru_pog_request_budget()
+    outcomes = await asyncio.gather(
+        *(
+            asyncio.to_thread(features_source.fetch_features, feature_type, tile, budget)
+            for feature_type in POG_FEATURE_TYPES
         ),
+        return_exceptions=True,
     )
-    result = await _discover_from_wms(
-        parcel_geometry, catalog_source, source_name="REJESTR_URBANISTYCZNY_WMS"
+    responses: dict[PogFeatureType, RuPogFeaturesResponse | None] = {
+        feature_type: outcome if isinstance(outcome, RuPogFeaturesResponse) else None
+        for feature_type, outcome in zip(POG_FEATURE_TYPES, outcomes, strict=True)
+    }
+    observations = {
+        layer: _observe(layer, responses[feature_type], parcel_geometry)
+        for layer, feature_type in FEATURE_TYPE_BY_LAYER.items()
+    }
+    _report_query_stats(responses, budget.used, budget.denied, budget.limit)
+    return _result_from_observations(observations, responses, resource.url)
+
+
+def _observe(
+    layer: str, response: RuPogFeaturesResponse | None, parcel_geometry: BaseGeometry
+) -> LayerObservation:
+    records = list(response.features) if response is not None and response.error_code is None else None
+    return observe_layer(
+        layer,  # type: ignore[arg-type]
+        records,
+        parcel_geometry,
+        complete=response is not None and response.complete,
     )
-    result.warnings.insert(
-        0,
+
+
+def _report_query_stats(
+    responses: dict[PogFeatureType, RuPogFeaturesResponse | None], used: int, denied: int, limit: int
+) -> None:
+    """Zdarzenie diagnostyczne analizy i alarm w metrykach przy próbie przekroczenia budżetu żądań."""
+    cache_hits = sum(1 for item in responses.values() if item is not None and item.origin != "network")
+    log_analysis_event(
+        "pog_ru_discovery",
+        status="budget_exceeded" if denied else "ok",
+        requests=used,
+        budget=limit,
+        cache_hits=cache_hits,
+    )
+    if denied:
+        upstream_metrics.increment("ru_pog.budget_exceeded")
+
+
+def _result_from_observations(
+    observations: dict[PogLogicalLayer, LayerObservation],
+    responses: dict[PogFeatureType, RuPogFeaturesResponse | None],
+    wfs_url: str,
+) -> PogDiscoveryResult:
+    source_name = "REJESTR_URBANISTYCZNY_WFS"
+    fetched = [item.fetched_at for item in responses.values() if item is not None and item.fetched_at is not None]
+    fetched_at = min(fetched) if fetched else datetime.now(timezone.utc)
+    sections = {
+        layer: PogLayerSection(
+            logical_layer=layer,
+            status=observation.state,
+            feature_count=observation.feature_count,
+            raw_legal_status=observation.raw_legal_status,
+            matched_wfs_type=observation.feature_type if observation.state == "found" else None,
+        )
+        for layer, observation in observations.items()
+    }
+    any_found = any(section.status == "found" for section in sections.values())
+    unavailable = [layer for layer, section in sections.items() if section.status == "unavailable"]
+    # Warstwa niedostępna nie unieważnia tego, co znaleziono, ale bez znaleziska nie wolno uznać, że usługa
+    # „odpowiedziała pusto”: brak odpowiedzi choćby jednej warstwy to brak odpowiedzi źródła.
+    responded = any_found or not unavailable
+    raw_status = _first_raw_status(sections)
+    legal_status = normalize_official_legal_status(raw_status)
+
+    warnings: list[WarningMessage] = [
         _warning(
             "POG_RU_CATALOG_SOURCE",
-            "Discovery użyło potwierdzonego endpointu WMS z katalogu źródeł.",
+            "Discovery użyło potwierdzonego endpointu WFS z katalogu źródeł.",
             "info",
             source_name="Rejestr Urbanistyczny",
-        ),
+        )
+    ]
+    budget_exceeded = any(
+        item is not None and item.error_code == ERROR_BUDGET_EXCEEDED for item in responses.values()
     )
-    return result
+    if not responded:
+        warnings.append(
+            _warning(
+                "POG_SOURCE_UNAVAILABLE",
+                "Nie udało się potwierdzić danych POG w Rejestrze Urbanistycznym"
+                + (" (wyczerpano budżet żądań na analizę)." if budget_exceeded else "."),
+                "error",
+            )
+        )
+    elif unavailable:
+        warnings.append(
+            _warning(
+                "POG_RU_LAYER_UNAVAILABLE",
+                "Rejestr Urbanistyczny nie odpowiedział dla warstw: " + ", ".join(sorted(unavailable))
+                + ". Wynik dotyczy pozostałych warstw; brak obiektu w niedostępnej warstwie nie jest dowodem braku.",
+                "warning",
+            )
+        )
+    if responded and not any_found:
+        warnings.append(
+            _warning(
+                "POG_NOT_FOUND_IN_SOURCE",
+                "Rejestr Urbanistyczny odpowiedział, ale nie zwrócił obiektów POG dla działki. "
+                "Pusta odpowiedź nie oznacza braku planu.",
+                "warning",
+            )
+        )
+    elif any_found and (raw_status is None or official_status_code(raw_status) is None):
+        warnings.append(
+            _warning(
+                "POG_STATUS_NOT_OFFICIAL",
+                "Obiekty POG nie niosą urzędowego kodu statusu; status prawny pozostaje nieustalony.",
+                "warning",
+            )
+        )
+    for issue in sorted({code for observation in observations.values() for code in observation.issues}):
+        warnings.append(
+            _warning(
+                issue,
+                "Odpowiedź Rejestru Urbanistycznego była niepełna albo zawierała obiekt bez użytecznej geometrii; "
+                "brak obiektu w tej warstwie nie jest dowodem braku.",
+                "warning",
+            )
+        )
+    warnings.append(_discovery_only_warning(wfs=True))
+
+    evidence = (
+        StatusEvidence(
+            source_name=source_name,
+            official=True,
+            reference=wfs_url,
+            raw_value=raw_status,
+            confirmed_at=fetched_at,
+        )
+        if official_status_code(raw_status) is not None
+        else None
+    )
+    return PogDiscoveryResult(
+        legal_status=legal_status,
+        uchwala_nr=None,
+        uchwala_date=None,
+        links=[],
+        planning_act=sections["planning_act"],
+        downtown_area=sections["downtown_area"],
+        ouz=sections["ouz"],
+        planning_zones=sections["planning_zones"],
+        is_discovery_only=True,
+        source_metadata=SourceMetadata(
+            source_id="pog_app",
+            source_name=source_name,
+            source_url=wfs_url,
+            fetched_at=fetched_at,
+            confidence=0.65 if legal_status != "unknown" else 0.3,
+            manual_review_required=True,
+        ),
+        warnings=warnings,
+        source_responded=responded,
+        raw_legal_status=raw_status,
+        legal_evidence=evidence,
+    )
 
 
 _LEGAL_RANK: Final[dict[str, int]] = {
@@ -797,9 +954,14 @@ def _warning(
     )
 
 
-def _discovery_only_warning() -> WarningMessage:
+def _discovery_only_warning(*, wfs: bool = False) -> WarningMessage:
     return _warning(
         "POG_DISCOVERY_ONLY",
-        "WMS/BIP służy tylko do rozpoznania POG; obliczenia wymagają danych wektorowych APP/GML.",
+        (
+            "Rejestr Urbanistyczny (WFS) posłużył tu tylko do rozpoznania POG na działce; "
+            "obliczenia powierzchniowe wymagają odnośnika do pełnych danych APP/GML."
+            if wfs
+            else "WMS/BIP służy tylko do rozpoznania POG; obliczenia wymagają danych wektorowych APP/GML."
+        ),
         "info",
     )

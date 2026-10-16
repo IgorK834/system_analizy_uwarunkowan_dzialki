@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Final
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, text
 from sqlalchemy.orm import Session
 
 from app.core.settings import Settings, settings
@@ -21,7 +22,8 @@ from app.schemas.analyze import (
     RISK_RESULT_SCHEMA_VERSION,
     TERRAIN_RESULT_SCHEMA_VERSION,
 )
-from app.schemas.source import QUALITY_RESULT_SCHEMA_VERSION
+from app.schemas.bdot_context import BUILDINGS_RESULT_SCHEMA_VERSION, ROAD_RESULT_SCHEMA_VERSION
+from app.schemas.source import COMPLETENESS_RESULT_SCHEMA_VERSION, QUALITY_RESULT_SCHEMA_VERSION
 from app.modules.planning.domain.extraction_contract import PROMPT_VERSION, SCHEMA_VERSION
 from app.services.mpzp_parser import MPZP_PARSER_VERSION
 from app.services.mpzp_parser_blocks import MPZP_PARSER_VERSION_BLOCKS
@@ -38,7 +40,10 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # semantyki statusu (BK-106), provenance (BK-107), przypisania stref MPZP z
 # wektora i evidence parametrów (BK-202/203) albo przed sekcją rzeźby terenu
 # (BK-301/302), przed strukturalnymi sekcjami ryzyka (BK-303) albo przed
-# trwałą macierzą jakości sekcji (BK-504) nie jest serwowany jako trafienie,
+# trwałą macierzą jakości sekcji (BK-504) albo przed nową definicją statusu nagłówkowego i kompletnością
+# analizy (AU-104: ``completeness-v1.0``; stary ``complete`` wymagał wektora MPZP) albo przed sekcjami drogi i zabudowy
+# sąsiedniej z BDOT10k (Task 23.2–23.3: ``road-v1.0``, ``buildings-v1.0``, ``quality-v1.1``, ``completeness-v1.1``) nie jest
+# serwowany jako trafienie,
 # nawet gdy aktywne wydania danych się nie zmieniły. Każda zmiana wartości zwracanych przez parser
 # (silnik PV3-07, warunki PV3-08, kalibracja pewności PV3-09, silnik opisowy PV3-21) podnosi
 # ``MPZP_RESULT_SCHEMA_VERSION``; od PV3-14 sygnatura zawiera też tryb i wersję parsera
@@ -46,8 +51,11 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 RESULT_CONTRACT_VERSION: Final[str] = (
     f"pog-v{POG_RESULT_SCHEMA_VERSION}+mpzp-v{MPZP_RESULT_SCHEMA_VERSION}"
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"
+    f"+road-v{ROAD_RESULT_SCHEMA_VERSION}"
+    f"+buildings-v{BUILDINGS_RESULT_SCHEMA_VERSION}"
     f"+risk-v{RISK_RESULT_SCHEMA_VERSION}"
     f"+quality-v{QUALITY_RESULT_SCHEMA_VERSION}"
+    f"+completeness-v{COMPLETENESS_RESULT_SCHEMA_VERSION}"
 )
 
 
@@ -71,8 +79,38 @@ def mpzp_parser_signature(app_settings: Settings | None = None) -> dict[str, obj
     }
 
 
-def current_cache_signature(db: Session) -> tuple[str, list[int]]:
-    """Hashuje kontrakt odpowiedzi, tryb parsera MPZP i pełny zestaw aktywnych wydań danych."""
+_PARCEL_TERYT = re.compile(r"^(\d{6})")
+
+
+def pog_scope_version(db: Session, parcel_identifier: str | None) -> int:
+    """Wersja krajowego stanu POG właściwa dla działki (ADR-026): numer ostatniej zmiany rejestru w jej gminie.
+
+    Import innej gminy nie unieważnia cache analiz tej działki; zmiana (nowa wersja, wycofanie, cofnięcie) aktu
+    gminy działki — tak. Bez rozpoznanego TERYT (np. identyfikator spoza ULDK) używany jest numer globalny.
+    """
+    match = _PARCEL_TERYT.match(parcel_identifier or "")
+    if match is None:
+        value = db.execute(text("SELECT COALESCE(max(id), 0) FROM pog_registry_states")).scalar_one()
+        return int(value)
+    value = db.execute(
+        text(
+            """
+            SELECT COALESCE(max(GREATEST(e.state_from_id, COALESCE(e.state_to_id, 0))), 0)
+            FROM pog_registry_entries e
+            JOIN planning_acts pa ON pa.id = e.planning_act_id
+            WHERE pa.kind = 'pog' AND pa.teryt LIKE :prefix
+            """
+        ),
+        {"prefix": f"{match.group(1)}%"},
+    ).scalar_one()
+    return int(value)
+
+
+def current_cache_signature(db: Session, parcel_identifier: str | None = None) -> tuple[str, list[int]]:
+    """Hashuje kontrakt odpowiedzi, tryb parsera MPZP, aktywne wydania danych i stan POG gminy działki.
+
+    Wydania źródła ``pog_app`` są rekordami audytowymi (nie są „aktywne”); o POG decyduje ``pog_scope_version``.
+    """
     rows = db.execute(
         select(DataSource.source_id, DataRelease.id, DataRelease.version_label)
         .join(DataRelease, DataRelease.data_source_id == DataSource.id)
@@ -84,7 +122,12 @@ def current_cache_signature(db: Session) -> tuple[str, list[int]]:
         for source_id, release_id, version in rows
     ]
     encoded = json.dumps(
-        {"contract": RESULT_CONTRACT_VERSION, "mpzp_parser": mpzp_parser_signature(), "releases": releases},
+        {
+            "contract": RESULT_CONTRACT_VERSION,
+            "mpzp_parser": mpzp_parser_signature(),
+            "releases": releases,
+            "pog_state": pog_scope_version(db, parcel_identifier),
+        },
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
@@ -113,7 +156,7 @@ def get_cached_analysis(
     now = datetime.now(timezone.utc)
     complete_cutoff = now - timedelta(days=max_age_days)
     partial_cutoff = now - timedelta(minutes=partial_max_age_minutes)
-    signature, _release_ids = current_cache_signature(db)
+    signature, _release_ids = current_cache_signature(db, parcel_identifier)
     statement = (
         select(Analysis)
         .join(Parcel, Analysis.parcel_id == Parcel.id)
@@ -155,7 +198,7 @@ def get_analysis_completed_since(
     tak aktualny, jak żądał użytkownik, więc nie liczymy drugi raz. Obowiązuje ta sama sygnatura
     cache (kontrakt, tryb parsera, aktywne wydania danych) co w ``get_cached_analysis``.
     """
-    signature, _release_ids = current_cache_signature(db)
+    signature, _release_ids = current_cache_signature(db, parcel_identifier)
     statement = (
         select(Analysis)
         .join(Parcel, Analysis.parcel_id == Parcel.id)

@@ -140,6 +140,23 @@ def health_upstream(operator: AdminOperator) -> UpstreamMetricsResponse:
 
 
 @router.get(
+    "/health/imports",
+    responses={401: {"description": "Brak klucza administracyjnego."}, 403: {"description": "Klucz niepoprawny."}},
+    description=(
+        "Stan importu krajowego POG dla operatora (klucz `X-Admin-Key`, ADR-026): rejestr (stan, aktywne akty, gminy), "
+        "ostatni przebieg krajowy z `import_runs` i jego wynik, opóźnienie od ostatniego udanego przebiegu (`stale` po "
+        "dwukrotności interwału harmonogramu), wykaz RU, kolejka zleceń i liczba wersji bez wierszy mapy."
+    ),
+)
+def health_imports(operator: AdminOperator) -> dict[str, Any]:
+    del operator  # klucz uwierzytelnia; operator nie jest tu potrzebny
+    from app.modules.imports.infrastructure.sync_status import pog_sync_status
+
+    with SessionLocal() as db:
+        return pog_sync_status(db, interval_seconds=settings.pog_sync_interval_seconds)
+
+
+@router.get(
     "/health/live",
     response_model=HealthResponse,
     description="Potwierdza działanie procesu backendu bez sprawdzania bazy.",

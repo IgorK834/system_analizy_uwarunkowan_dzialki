@@ -56,6 +56,7 @@ from app.schemas.analyze import (
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata
+from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.services.context import ContextResult
 from app.services.geojson import (
     buildable_area_geometry_to_geojson,
@@ -70,6 +71,11 @@ from app.services.mpzp_zones import ZONE_SYMBOL_ALLOWED_PATTERN, ZONE_SYMBOL_MAX
 from app.shared.act_identifier import bounded_act_identifier
 from app.shared.zone_symbol import ZONE_SYMBOL_RULES_VERSION
 from app.services.report_map_snapshot import build_report_map_snapshot
+from app.services.completeness import (
+    build_completeness,
+    completeness_from_snapshot,
+    completeness_to_snapshot,
+)
 from app.services.section_quality import (
     build_section_quality,
     quality_from_snapshot,
@@ -263,6 +269,7 @@ def collect_source_records(
         records.append(_source_record_data(result.utilities_preview.source, result))
     records.extend(_source_record_data(item.source, result) for item in result.risks)
     records.extend(_terrain_source_records(result))
+    records.extend(_bdot_source_records(result))
     records.extend(_risk_section_source_records(result))
 
     if context_result is not None:
@@ -330,11 +337,25 @@ def save_analysis(
     """
     try:
         parcel = get_or_create_parcel(db, parcel_identifier, parcel_geometry)
-        cache_signature, data_release_ids = current_cache_signature(db)
+        cache_signature, data_release_ids = current_cache_signature(db, parcel_identifier)
+        # ADR-026: wydania wersji aktów POG użytych w analizie (rekordy audytowe importu) trafiają do jej śladu.
+        if result.pog is not None:
+            data_release_ids = sorted(
+                {
+                    *data_release_ids,
+                    *(
+                        item.data_release_id
+                        for item in result.pog.pinned_act_versions
+                        if item.data_release_id is not None
+                    ),
+                }
+            )
         # BK-504: macierz jakości jest wystawiana raz, z punktem odniesienia
         # ``analyzed_at``; orkiestrator dołącza ją do odpowiedzi przed zapisem,
         # a wywołania bezpośrednie dostają ją tutaj.
         section_quality = result.section_quality or build_section_quality(result)
+        # AU-104: kompletność liczona z tej samej macierzy, którą zapisujemy (bez drugiej oceny).
+        completeness = result.completeness or build_completeness(result, matrix=section_quality)
         analysis = Analysis(
             parcel_id=parcel.id,
             analyzed_at=result.analyzed_at,
@@ -359,6 +380,15 @@ def save_analysis(
                 [section.model_dump(mode="json") for section in result.risk_sections]
                 or None
             ),
+            # ``None`` tylko, gdy wynik nie zawiera sekcji (wywołanie bezpośrednie): odczyt da ``unknown``.
+            road_context=(
+                result.road_context.model_dump(mode="json") if result.road_context is not None else None
+            ),
+            neighbour_buildings=(
+                result.neighbour_buildings.model_dump(mode="json")
+                if result.neighbour_buildings is not None
+                else None
+            ),
             mpzp_discovery=(
                 result.mpzp_discovery.model_dump(mode="json")
                 if result.mpzp_discovery is not None
@@ -379,6 +409,7 @@ def save_analysis(
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
             section_quality=quality_to_snapshot(section_quality),
+            completeness=completeness_to_snapshot(completeness),
             data_release_ids=data_release_ids,
             result_contract_version=RESULT_CONTRACT_VERSION,
             cache_signature=cache_signature,
@@ -564,8 +595,10 @@ def refresh_report_map_snapshot(analysis: Analysis, db: Session) -> None:
     db.expire(analysis)
     response = build_analyze_response_from_analysis(analysis, db)
     analysis.report_map_snapshot = freeze_report_map_snapshot(response, analysis.parcel)
-    analysis.section_quality = quality_to_snapshot(
-        build_section_quality(response.model_copy(update={"section_quality": None}))
+    matrix = build_section_quality(response.model_copy(update={"section_quality": None}))
+    analysis.section_quality = quality_to_snapshot(matrix)
+    analysis.completeness = completeness_to_snapshot(
+        build_completeness(response.model_copy(update={"section_quality": matrix, "completeness": None}), matrix=matrix)
     )
 
 
@@ -887,6 +920,8 @@ def build_analyze_response_from_analysis(
         risks=risks,
         risk_sections=risk_sections_from_snapshot(loaded.risk_sections),
         terrain=terrain_from_snapshot(loaded.terrain),
+        road_context=road_context_from_snapshot(loaded.road_context),
+        neighbour_buildings=neighbour_buildings_from_snapshot(loaded.neighbour_buildings),
         buildable_area_sqm=loaded.buildable_area_sqm,
         manual_zone_required=waiting,
         manual_zone_context=build_manual_zone_context(loaded) if waiting else None,
@@ -895,12 +930,17 @@ def build_analyze_response_from_analysis(
     )
     # Ocena jakości pochodzi z zapisu (historyczny stan); stary zapis bez macierzy
     # jest odtwarzany z ``origin=reconstructed`` i nie jest zapisywany wstecz.
-    return response.model_copy(
+    with_quality = response.model_copy(
         update={
             "section_quality": quality_from_snapshot(
                 loaded.section_quality, response, loaded.analyzed_at
             )
         }
+    )
+    # AU-104: zapisana kompletność albo, dla zapisu sprzed zmiany, odtworzona z macierzy (status zostaje zapisany).
+    completeness = completeness_from_snapshot(loaded.completeness, with_quality)
+    return with_quality.model_copy(
+        update={"completeness": completeness, "headline": completeness.headline}
     )
 
 
@@ -1021,6 +1061,19 @@ def _terrain_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
         record = _source_record_data(source, result)
         if status != "available":
             record = replace(record, response_status=status)
+        records.append(record)
+    return records
+
+
+def _bdot_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
+    """Źródła sekcji drogi i zabudowy (BDOT10k) z jawnym statusem — także brak pokrycia i porażka."""
+    records: list[SourceRecordData] = []
+    for section in (result.road_context, result.neighbour_buildings):
+        if section is None or section.source is None:
+            continue
+        record = _source_record_data(section.source, result)
+        if section.status != "available":
+            record = replace(record, response_status=section.status)
         records.append(record)
     return records
 

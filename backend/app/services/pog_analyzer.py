@@ -18,6 +18,7 @@ from shapely.ops import unary_union
 
 from app.core.planning_compatibility import PogPlanningZoneType
 from app.core.pog_presentation import PogPresentationError, style_snapshot
+from app.core.settings import settings
 from app.modules.planning.domain.pog_features import (
     FEATURE_ID_KEYS,
     LABEL_KEYS,
@@ -114,6 +115,26 @@ class PogAnalysisResult:
     downtown_areas: list[PogAreaIntersection] = field(default_factory=list)
     social_infrastructure_standard_areas: list[PogAreaIntersection] = field(default_factory=list)
     act_metadata: dict[str, object] = field(default_factory=dict)
+    # Artefakty styku sąsiednich stref (AU-110): poza ``zones``, zachowane w wyniku z flagą ``topological_sliver``.
+    topological_slivers: list[PogZoneIntersection] = field(default_factory=list)
+
+
+def is_topological_sliver(zone: PogZoneIntersection) -> bool:
+    """Okruch na styku sąsiednich stref: udział < ``pog_sliver_min_pct`` ORAZ pole < ``pog_sliver_min_sqm`` (oba progi)."""
+    return (
+        zone.area_ratio * 100.0 < settings.pog_sliver_min_pct and zone.area_sqm < settings.pog_sliver_min_sqm
+    )
+
+
+def split_topological_slivers(
+    zones: list[PogZoneIntersection],
+) -> tuple[list[PogZoneIntersection], list[PogZoneIntersection]]:
+    """Dzieli strefy na właściwe i okruchy. Gdy wszystkie przecięcia są okruchami, żadnego nie odrzuca — jedyne
+    dane o strefie działki nie mogą zostać nazwane artefaktem."""
+    slivers = [zone for zone in zones if is_topological_sliver(zone)]
+    if not slivers or len(slivers) == len(zones):
+        return zones, []
+    return [zone for zone in zones if zone not in slivers], slivers
 
 
 def analyze_pog_vectors(
@@ -203,7 +224,22 @@ def analyze_pog_vectors(
         )
 
     zone_intersections.sort(key=lambda zone: zone.area_sqm, reverse=True)
+    zone_intersections, slivers = split_topological_slivers(zone_intersections)
     dominant_zone = zone_intersections[0] if zone_intersections else None
+    if slivers:
+        sliver_area = sum(item.area_sqm for item in slivers)
+        warnings.append(
+            WarningMessage(
+                code="POG_TOPOLOGICAL_SLIVERS_OMITTED",
+                message=(
+                    f"Pominięto w tabeli stref {len(slivers)} {'artefakt' if len(slivers) == 1 else 'artefakty'} styku "
+                    f"sąsiednich stref (łącznie {sliver_area:.2f} m²; każdy poniżej {settings.pog_sliver_min_pct:g}% "
+                    f"działki i poniżej {settings.pog_sliver_min_sqm:g} m²). Są zachowane w zapisie analizy."
+                ),
+                severity="info",
+                source_name="pog",
+            )
+        )
     if not zone_intersections:
         warnings.append(
             _warning(
@@ -212,7 +248,7 @@ def analyze_pog_vectors(
             )
         )
     if (
-        sum(zone.area_ratio for zone in zone_intersections)
+        sum(zone.area_ratio for zone in (*zone_intersections, *slivers))
         > 1 + ZONE_RATIO_SUM_TOLERANCE
     ):
         warnings.append(
@@ -265,18 +301,20 @@ def analyze_pog_vectors(
         downtown_areas=downtown_areas,
         social_infrastructure_standard_areas=social_areas,
         act_metadata=pog_vector_data.app_metadata,
+        topological_slivers=slivers,
     )
 
 
 def zones_cover_parcel(analysis: PogAnalysisResult) -> bool:
-    """Czy strefy planistyczne pokrywają całą działkę (w tolerancji)."""
-    covered = sum(zone.area_ratio for zone in analysis.zones)
+    """Czy strefy planistyczne pokrywają całą działkę (w tolerancji); okruchy też zajmują powierzchnię."""
+    covered = sum(zone.area_ratio for zone in (*analysis.zones, *analysis.topological_slivers))
     return covered >= 1 - ZONE_COVERAGE_TOLERANCE
 
 
 def spatial_feature_count(analysis: PogAnalysisResult) -> int:
     return (
         len(analysis.zones)
+        + len(analysis.topological_slivers)
         + len(analysis.ouz_areas)
         + len(analysis.downtown_areas)
         + len(analysis.social_infrastructure_standard_areas)
@@ -323,6 +361,10 @@ def to_pog_result(
         coverage_evidence=evidence_result(decision.coverage_evidence),
         act=_act_result(analysis),
         zones=[_zone_result(zone, analysis.source_metadata) for zone in analysis.zones],
+        topological_slivers=[
+            _zone_result(zone, analysis.source_metadata).model_copy(update={"topological_sliver": True})
+            for zone in analysis.topological_slivers
+        ],
         dominant_zone_id=(analysis.dominant_zone.zone_id if analysis.dominant_zone else None),
         ouz=[_area_result(item, analysis.source_metadata) for item in analysis.ouz_areas],
         downtown_areas=[_area_result(item, analysis.source_metadata) for item in analysis.downtown_areas],

@@ -203,7 +203,8 @@ def warnings_from_domain_messages(
 
 # --- Macierz kompletności i świeżości sekcji (BK-504, ADR-011) ---------------------
 
-QUALITY_RESULT_SCHEMA_VERSION = "1.0"
+# 1.1 (Task 23.3): nowa sekcja ``buildings`` (zabudowa sąsiednia) w macierzy; ``transport`` ma teraz źródło (BDOT10k).
+QUALITY_RESULT_SCHEMA_VERSION = "1.1"
 
 SectionKey = Literal[
     "parcel",
@@ -215,6 +216,7 @@ SectionKey = Literal[
     "terrain",
     "utilities",
     "transport",
+    "buildings",
     "mpzp_pog_relation",
 ]
 
@@ -407,3 +409,62 @@ class SectionQualityMatrix(BaseModel):
             ],
             reasons=[QualityLegendReason(code=code, label=reason_label_pl(code)) for code in codes],
         )
+
+
+# --- Kompletność analizy i status nagłówkowy (AU-104, ADR-022) -----------------------------
+
+# 1.1: transport i zabudowa sąsiednia wchodzą do zakresu kompletności (``completeness/1.1``).
+COMPLETENESS_RESULT_SCHEMA_VERSION = "1.1"
+
+# ``checked`` — sekcja sprawdzona w źródle (``available`` albo potwierdzone ``no_match``); ``missing`` — brak
+# wiarygodnego wyniku (częściowy, niedostępny, brak pokrycia, nieustalony…); ``out_of_scope`` — sekcja poza zakresem
+# analizy w tej wersji reguły (brak kontraktu źródła albo wynik pochodny bez danych wejściowych).
+CompletenessState = Literal["checked", "missing", "out_of_scope"]
+
+
+class CompletenessSection(BaseModel):
+    """Jedna sekcja paska kompletności: stan, status z macierzy jakości i podstawa ustalenia."""
+
+    section: SectionKey
+    label: str = Field(description="Pełna etykieta sekcji (jak w macierzy jakości).")
+    short_label: str = Field(description="Krótka nazwa do komunikatu nagłówkowego.")
+    report_section: str
+    state: CompletenessState
+    quality_status: SectionQualityStatus = Field(
+        description="Status sekcji w macierzy jakości (BK-504) — kontrakt źródła, rozłączny od stanu kompletności."
+    )
+    basis: str | None = Field(
+        default=None,
+        description=(
+            "Podstawa uznania sekcji za sprawdzoną: dla MPZP vector_intersection (lokalny wektor — wyższa jakość), "
+            "document_candidate (akt + dokument, bez wektora) albo no_match (źródła odpowiedziały i nie wskazały planu)."
+        ),
+    )
+    manual_review_required: bool = False
+    reason_codes: list[str] = Field(default_factory=list)
+
+
+class Completeness(BaseModel):
+    """Kompletność analizy: ile sekcji w zakresie sprawdzono i których brakuje.
+
+    ``total`` liczy wyłącznie sekcje w zakresie analizy (bez ``out_of_scope``); ``complete`` oznacza, że wszystkie
+    sekcje w zakresie są sprawdzone. Nie jest to ocena prawna ani jakościowa: status prawny POG, ręczna
+    weryfikacja i świeżość to osobne fakty (ADR-011, ADR-022).
+    """
+
+    schema_version: str = COMPLETENESS_RESULT_SCHEMA_VERSION
+    rule_version: str = Field(description="Wersja reguły kompletności (zmiana definicji = nowa wersja).")
+    checked: int = Field(ge=0)
+    total: int = Field(ge=0)
+    complete: bool
+    headline: str = Field(description="Komunikat nagłówkowy — ten sam w API, UI i PDF.")
+    notes: list[str] = Field(
+        default_factory=list,
+        description="Zastrzeżenia, które nie obniżają kompletności (np. MPZP bez lokalnego wektora, POG niewiążący).",
+    )
+    sections: list[CompletenessSection]
+    origin: Literal["stored", "reconstructed"] = Field(
+        default="stored",
+        description="stored — policzone i zapisane z analizą; reconstructed — zapis sprzed AU-104, policzony przy odczycie.",
+    )
+

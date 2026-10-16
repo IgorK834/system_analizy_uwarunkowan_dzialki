@@ -187,17 +187,21 @@ class DataRelease(Base):
         Boolean, nullable=False, server_default=sql_text("false")
     )
     importer_version: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    # Zakres wydania (migracja 036): źródła importowane partiami (np. paczki powiatowe BDOT10k) mają jedno aktywne
+    # wydanie na zakres, np. ``powiat:1261``. NULL = jedno wydanie na całe źródło (dotychczasowe źródła).
+    scope_key: Mapped[str | None] = mapped_column(String(40), nullable=True)
     created_at: Mapped[datetime] = _created_at()
 
     __table_args__ = (
         UniqueConstraint(
             "data_source_id", "version_label", name="uq_data_releases_version"
         ),
-        # Najwyżej jedno aktywne wydanie na źródło (rollback zmienia aktywne
-        # wydanie, nie usuwa poprzedniego).
+        # Najwyżej jedno aktywne wydanie na źródło i zakres (rollback zmienia
+        # aktywne wydanie, nie usuwa poprzedniego).
         Index(
             "uq_data_releases_active",
             "data_source_id",
+            sql_text("COALESCE(scope_key, '')"),
             unique=True,
             postgresql_where=sql_text("is_active"),
         ),
@@ -595,6 +599,11 @@ class PogAreaSummary(Base):
     share_tolerance_pct: Mapped[float] = mapped_column(Float, nullable=False)
     method_version: Mapped[str] = mapped_column(String(40), nullable=False)
     computed_at: Mapped[datetime] = _timestamp_column()
+    # ADR-026: agregat gminy powstaje przy zmianie rejestru; czytany jest najnowszy z ``registry_state_id`` ≤ stanu
+    # przypiętego przez klienta. ``NULL`` — agregat aktu (zależy od wersji, nie od stanu) albo wiersz sprzed ADR-026.
+    registry_state_id: Mapped[int | None] = mapped_column(
+        ForeignKey("pog_registry_states.id"), nullable=True, index=True
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -627,11 +636,12 @@ class PogAreaSummary(Base):
             unique=True,
             postgresql_where=sql_text("scope = 'act'"),
         ),
+        # ADR-026: jeden agregat gminy i edycji na numer stanu rejestru (wiersze sprzed ADR-026 mają NULL).
         Index(
             "uq_pog_area_summaries_municipality",
-            "data_release_id",
             "teryt",
             "edition",
+            "registry_state_id",
             unique=True,
             postgresql_where=sql_text("scope = 'municipality'"),
         ),

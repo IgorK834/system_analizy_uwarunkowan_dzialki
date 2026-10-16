@@ -12,6 +12,7 @@ from pydantic import (
     model_validator,
 )
 
+from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
 from app.schemas.mpzp import LLM_PROVENANCE_FIELDS
 
 from app.core.access_control import make_analysis_token
@@ -19,6 +20,7 @@ from app.core.request_id import get_request_id
 
 from app.schemas.source import (
     CatalogMetadataSource,
+    Completeness,
     FormalDocumentSource,
     SectionQualityMatrix,
     SourceMetadata,
@@ -48,7 +50,17 @@ from app.shared.planning_status import (
     upgrade_legacy_legal_status,
 )
 
-POG_RESULT_SCHEMA_VERSION = "2.4"
+# 2.5 (AU-105, ADR-023): discovery POG w Rejestrze Urbanistycznym przez WFS ``app-pog`` (4 zapytania z ``bbox`` kafla, budżet
+# ≤ 6 żądań) zamiast WMS GetFeatureInfo punkt × warstwa. Poprzedni silnik czytał ``bbox`` WMS w osiach wschód,północ, a RU
+# oczekuje północ,wschód — odpytywał lustrzane współrzędne, więc wyniki zapisane w 2.4 bywały fałszywe (``binding`` poza
+# gminami z POG, przeoczony POG) i nie są serwowane z cache jako trafienie. ``raw_attributes.discovery.layers[*]`` niesie
+# ``matched_wfs_type`` (``matched_wms_layer`` jest ``null``), a ``raw_legal_status`` to URI kodu INSPIRE z atrybutu ``status``.
+# 2.6 (ADR-026): krajowy stan POG — ``registry_state_id`` (numer stanu rejestru, z którego policzono wynik) i
+# ``pinned_act_versions`` (identyfikator i ``content_hash`` każdej wersji aktu użytej w analizie); wyniki sprzed zmiany nie mają
+# przypięcia i nie są serwowane z cache jako trafienie.
+# 2.7 (AU-110, issue 303): ``topological_slivers`` — artefakty styku sąsiednich stref (udział < ``POG_SLIVER_MIN_PCT`` ORAZ pole <
+# ``POG_SLIVER_MIN_SQM``) są poza ``zones``, zachowane z flagą ``topological_sliver``; wcześniejsze wyniki mają je w ``zones``.
+POG_RESULT_SCHEMA_VERSION = "2.7"
 
 
 class MapAnalyzeRequest(BaseModel):
@@ -1110,6 +1122,10 @@ class PogZoneResult(BaseModel):
     primary_profile: list[PogProfileResult] = Field(default_factory=list)
     additional_profiles: list[PogProfileResult] = Field(default_factory=list)
     source: SourceMetadata | None = None
+    topological_sliver: bool = Field(
+        default=False,
+        description="Artefakt styku sąsiednich stref (AU-110): zachowany w zapisie, poza tabelą główną i obliczeniami.",
+    )
     feature_version: str | None = Field(default=None, description="wersjaId obiektu strefy.")
     gml_url: str | None = Field(
         default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów."
@@ -1193,6 +1209,22 @@ class PogStatusEvidence(BaseModel):
     confirmed_at: datetime | None = None
 
 
+class PogPinnedActVersion(BaseModel):
+    """Wersja aktu POG użyta w analizie (ADR-026): identyfikatory i skrót treści pozwalają odtworzyć raport.
+
+    Analiza zapisuje ten zestaw w snapshocie, więc zmiana rejestru po analizie (nowa wersja aktu, wycofanie gminy)
+    nie zmienia tego, z czego policzono zapisany wynik.
+    """
+
+    act_version_id: int = Field(description="Klucz wersji aktu w bazie (``planning_act_versions.id``).")
+    act_identifier: str = Field(description="Stabilny idIIP aktu (przestrzeń nazw/lokalnyId).")
+    object_version_id: str | None = Field(default=None, description="wersjaId idIIP aktu.")
+    content_hash: str = Field(min_length=64, max_length=64, description="SHA-256 snapshotu wersji aktu.")
+    legal_status: str = Field(description="Kanoniczny status prawny wersji w chwili analizy.")
+    data_release_id: int | None = Field(default=None, description="Wydanie (rekord audytowy importu) wersji.")
+    artifact_sha256: str | None = Field(default=None, description="SHA-256 artefaktu źródłowego (GML) wersji.")
+
+
 class PogResult(BaseModel):
     """Wynik POG v2 z rozdzielonym statusem prawnym i pokryciem (BK-106).
 
@@ -1225,6 +1257,13 @@ class PogResult(BaseModel):
     coverage_evidence: PogStatusEvidence | None = None
     act: PogActResult | None = None
     zones: list[PogZoneResult] = Field(default_factory=list)
+    topological_slivers: list[PogZoneResult] = Field(
+        default_factory=list,
+        description=(
+            "Artefakty styku sąsiednich stref (udział < POG_SLIVER_MIN_PCT i pole < POG_SLIVER_MIN_SQM): poza `zones`, "
+            "zachowane z flagą `topological_sliver`; suma udziałów `zones` + okruchów odpowiada pokryciu działki."
+        ),
+    )
     dominant_zone_id: str | None = None
     ouz: list[PogAreaResult] = Field(default_factory=list)
     downtown_areas: list[PogAreaResult] = Field(default_factory=list)
@@ -1302,6 +1341,17 @@ class PogResult(BaseModel):
     touches_ouz_boundary: bool = Field(
         description="Czy działka jedynie dotyka granicy OUZ.",
         json_schema_extra={"example": False},
+    )
+    registry_state_id: int | None = Field(
+        default=None,
+        description=(
+            "Numer stanu krajowego POG (ADR-026), z którego policzono wynik; null — wynik nie pochodzi z lokalnego "
+            "rejestru (discovery RU, błąd źródła) albo zapis sprzed ADR-026."
+        ),
+    )
+    pinned_act_versions: list[PogPinnedActVersion] = Field(
+        default_factory=list,
+        description="Wersje aktów POG użyte w analizie (identyfikatory i ``content_hash``) — pozwalają odtworzyć raport.",
     )
     presentation_style: PogPresentationStyle | None = Field(
         default=None,
@@ -2055,7 +2105,11 @@ class AnalyzeResponse(BaseModel):
         json_schema_extra={"example": 123},
     )
     status: str = Field(
-        description="Status wykonania analizy.",
+        description=(
+            "Status nagłówkowy analizy, zachowany dla zgodności wstecznej: complete, gdy wszystkie sekcje w zakresie "
+            "są sprawdzone (completeness.complete, AU-104), w przeciwnym razie partial; waiting_for_user_input przy "
+            "wstrzymaniu. Treść niesie completeness/headline, nie ta etykieta."
+        ),
         json_schema_extra={"example": "partial"},
     )
     analyzed_at: datetime = Field(
@@ -2108,6 +2162,22 @@ class AnalyzeResponse(BaseModel):
         ),
         json_schema_extra={"example": None},
     )
+    road_context: RoadContextResult | None = Field(
+        default=None,
+        description=(
+            "Najbliższa droga z lokalnego wydania BDOT10k (Task 23.1–23.2): odległość od działki do osi jezdni w EPSG:2180, "
+            "relacja geometryczna, kategoria i klasa ze źródła oraz metadane wyszukiwania. Bliskość geometryczna nie "
+            "jest potwierdzeniem prawnego dostępu do drogi publicznej. null — odpowiedź sprzed tej sekcji."
+        ),
+    )
+    neighbour_buildings: NeighbourBuildingsResult | None = Field(
+        default=None,
+        description=(
+            "Kontekst istniejącej zabudowy z obrysów BDOT10k (Task 23.3): budynki na działce i w buforach 50/100/200 m "
+            "(pierścień buffer(działka, r) − działka), bez danych osobowych. To opis otoczenia, nie ocena możliwości "
+            "zabudowy. null — odpowiedź sprzed tej sekcji."
+        ),
+    )
     section_quality: SectionQualityMatrix | None = Field(
         default=None,
         description=(
@@ -2117,6 +2187,24 @@ class AnalyzeResponse(BaseModel):
             "macierz trafia do UI i raportu PDF. null tylko dla wyniku jeszcze "
             "niezapisanego."
         ),
+    )
+    completeness: Completeness | None = Field(
+        default=None,
+        description=(
+            "Kompletność analizy (AU-104): liczba sprawdzonych sekcji w zakresie, lista sekcji ze stanem "
+            "(checked, missing, out_of_scope) i zastrzeżeniami. complete wymaga, by wszystkie sekcje w zakresie były "
+            "sprawdzone (available albo potwierdzone no_match); MPZP może być ustalone z aktu i dokumentu "
+            "(assignment_method), a lokalny wektor stref jest wyższą jakością, nie warunkiem. Zapis sprzed AU-104 "
+            "jest odtwarzany przy odczycie (origin=reconstructed)."
+        ),
+    )
+    headline: str | None = Field(
+        default=None,
+        description=(
+            "Komunikat nagłówkowy kompletności, np. „6 z 8 sekcji sprawdzono; brak: MPZP, strefy POG”. "
+            "Ten sam tekst jest w UI i na stronie 1 raportu PDF."
+        ),
+        json_schema_extra={"example": "6 z 8 sekcji sprawdzono; brak: MPZP, strefy POG."},
     )
     buildable_area_sqm: float | None = Field(
         default=None,

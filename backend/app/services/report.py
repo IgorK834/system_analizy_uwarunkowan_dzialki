@@ -72,6 +72,8 @@ from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.section_quality import build_section_quality
 from app.services.terrain import terrain_from_snapshot
+from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
+from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.shared.mpzp_status_text import MPZP_STATUS_MISSING_MESSAGE
 from app.shared.model_reading import (
     EXTRACTION_METHOD_LLM_VERIFIED,
@@ -213,6 +215,7 @@ def _build_report_context(
         "analysis_id": response.analysis_id,
         "status": response.status,
         "status_label": _ANALYSIS_STATUS_LABELS.get(response.status, response.status),
+        "completeness": _completeness_context(response),
         "analyzed_at": _format_datetime(response.analyzed_at),
         "parcel_identifier": parcel.parcel_identifier if parcel else None,
         "manual_zone_declared": any(
@@ -232,6 +235,8 @@ def _build_report_context(
         ),
         "risk_sections": _risk_sections_context(response),
         "terrain": _terrain_context(response.terrain),
+        "road": _road_context(response.road_context),
+        "buildings": _buildings_context(response.neighbour_buildings),
         "utilities_preview": _utilities_preview_context(response),
         "infrastructure": [_infrastructure_context(item) for item in response.infrastructure],
         "quality": _quality_context(response, quality, domains, export_time),
@@ -243,12 +248,51 @@ def _build_report_context(
 
 
 _ANALYSIS_STATUS_LABELS: dict[str, str] = {
-    "complete": "analiza kompletna",
-    "partial": "analiza częściowa — część sekcji ma status inny niż „sprawdzono”",
+    "complete": "analiza kompletna — wszystkie sekcje w zakresie sprawdzono",
+    "partial": "analiza częściowa — nie wszystkie sekcje w zakresie sprawdzono (szczegóły: pasek kompletności)",
     "waiting_for_user_input": "analiza wstrzymana — wymaga symbolu strefy MPZP",
     "waiting_for_zone_symbol": "analiza wstrzymana — wymaga symbolu strefy MPZP",
     "failed": "analiza zakończona błędem",
 }
+
+
+_COMPLETENESS_STATE_LABELS: Final[dict[str, str]] = {
+    "checked": "sprawdzono",
+    "missing": "brak",
+    "out_of_scope": "poza zakresem",
+}
+_COMPLETENESS_BASIS_LABELS: Final[dict[str, str]] = {
+    "vector_intersection": "przecięcie z lokalnym wektorem stref",
+    "document_candidate": "akt i dokument, bez lokalnego wektora",
+    "no_match": "kanały odpowiedziały i nie wskazały planu",
+}
+
+
+def _completeness_context(response: AnalyzeResponse) -> dict[str, Any] | None:
+    """Pasek kompletności ze strony 1 raportu — ten sam komunikat i te same stany co w API i UI (AU-104)."""
+    completeness = response.completeness
+    if completeness is None:
+        return None
+    return {
+        "headline": completeness.headline,
+        "checked": completeness.checked,
+        "total": completeness.total,
+        "complete": completeness.complete,
+        "rule_version": completeness.rule_version,
+        "origin": completeness.origin,
+        "notes": list(completeness.notes),
+        "sections": [
+            {
+                "label": item.label,
+                "state": item.state,
+                "state_label": _COMPLETENESS_STATE_LABELS[item.state],
+                "quality_label": SECTION_STATUS_LABELS[item.quality_status],
+                "basis": _COMPLETENESS_BASIS_LABELS.get(item.basis or "", None),
+                "manual_review": item.manual_review_required,
+            }
+            for item in completeness.sections
+        ],
+    }
 
 
 def _maps_context(maps: ReportMaps | None) -> dict[str, Any]:
@@ -350,10 +394,8 @@ def _domain_assessments(
         },
         "terrain": _terrain_finding(response.terrain),
         "utilities": _utilities_finding(response),
-        "transport": (
-            "Nie analizowano — brak potwierdzonego kontraktu źródła (BK-305).",
-            None,
-        ),
+        "transport": _road_finding(response.road_context),
+        "buildings": _buildings_finding(response.neighbour_buildings),
         "mpzp_pog_relation": _compatibility_finding(response.pog),
     }
     by_key = {item.section: item for item in quality.sections}
@@ -1224,6 +1266,7 @@ def _pog_context(pog: PogResult | None) -> dict[str, Any] | None:
         "confidence": _confidence_context(pog.source),
         "zones": [_pog_zone_row(zone, pog) for zone in pog.zones],
         "zones_sum": _shares_sum([zone.area_pct for zone in pog.zones]),
+        "slivers_note": _slivers_note(pog),
         "zones_empty_reason": (
             None
             if pog.zones
@@ -1245,6 +1288,21 @@ def _pog_context(pog: PogResult | None) -> dict[str, Any] | None:
         ],
         "act": _pog_act_context(pog.act, binding),
     }
+
+
+def _slivers_note(pog: PogResult) -> str | None:
+    """Nota pod tabelą stref: ile artefaktów styku sąsiednich stref pominięto (zachowane w zapisie analizy)."""
+    slivers = pog.topological_slivers
+    if not slivers:
+        return None
+    area = sum(zone.area_sqm for zone in slivers)
+    share = sum(zone.area_pct for zone in slivers)
+    noun = "artefakt" if len(slivers) == 1 else "artefakty" if len(slivers) < 5 else "artefaktów"
+    return (
+        f"Pominięto {len(slivers)} {noun} styku sąsiednich stref (łącznie {area:.2f} m², {share:.2f}% działki) — "
+        "nie są strefami planistycznymi działki i nie wchodzą do tabeli ani do sumy udziałów wierszy; "
+        "zachowano je w zapisie analizy z flagą `topological_sliver`."
+    )
 
 
 def _pog_zone_row(zone: Any, pog: PogResult) -> dict[str, Any]:
@@ -1828,6 +1886,210 @@ def _infrastructure_context(item: Any) -> dict[str, Any]:
     }
 
 
+# --- 7. Droga i zabudowa sąsiednia (BDOT10k, Task 23.2–23.3) -----------------------------------------------------
+
+
+_BDOT_STATUS_LABELS: Final[dict[str, str]] = {
+    "available": "obliczono z lokalnego wydania BDOT10k",
+    "no_match": "nic nie znaleziono w ograniczonym zasięgu",
+    "no_coverage": "brak pokrycia — działka poza zaimportowanymi powiatami BDOT10k",
+    "unavailable": "źródło niedostępne",
+    "unknown": "zapis sprzed tej sekcji — brak informacji",
+}
+_ROAD_RELATION_LABELS: Final[dict[str, str]] = {
+    "intersects": "oś jezdni przecina działkę",
+    "touches": "oś jezdni styka się z granicą działki",
+    "disjoint": "oś jezdni leży poza działką",
+}
+_BUILDING_RELATION_LABELS: Final[dict[str, str]] = {
+    "on_parcel": "na działce",
+    "straddling": "zachodzi na działkę",
+    "adjacent": "przylega do działki",
+    "neighbour": "sąsiedni",
+}
+_PDF_BUILDING_ROWS: Final[int] = 25
+
+
+def _road_finding(road: RoadContextResult | None) -> tuple[str, str | None]:
+    road = road or road_context_from_snapshot(None)
+    if road.status == "available" and road.nearest is not None:
+        nearest = road.nearest
+        kind = ", ".join(item for item in (nearest.category, nearest.road_class) if item) or "droga bez opisu w źródle"
+        return (
+            f"Najbliższa oś jezdni BDOT10k: {_meters(nearest.distance_m, 2)} ({_ROAD_RELATION_LABELS[nearest.relation]}; "
+            f"{kind}). {road.interpretation_note}",
+            "computed",
+        )
+    if road.status == "no_match":
+        return (
+            f"W promieniu {_meters(road.search_radius_m)} nie znaleziono osi jezdni BDOT10k — nie dowodzi to braku drogi. "
+            f"{road.interpretation_note}",
+            "computed",
+        )
+    return f"{_BDOT_STATUS_LABELS[road.status]} — nie oznacza braku drogi. {road.interpretation_note}", None
+
+
+def _buildings_finding(buildings: NeighbourBuildingsResult | None) -> tuple[str, str | None]:
+    buildings = buildings or neighbour_buildings_from_snapshot(None)
+    if buildings.status in {"available", "no_match"} and buildings.on_parcel is not None:
+        first = buildings.buffers[0] if buildings.buffers else None
+        text = f"Budynki na działce: {buildings.on_parcel.count} (pokrycie {_format_percent(buildings.on_parcel.coverage_pct)})"
+        if first is not None:
+            text += f"; w buforze {_meters(first.radius_m)}: {first.count}"
+        if buildings.search_area_within_coverage is False:
+            text += "; bufor wykracza poza zasięg danych — liczby mogą być zaniżone"
+        return text + ". Kontekst istniejącej zabudowy, nie ocena możliwości zabudowy.", "computed"
+    return f"{_BDOT_STATUS_LABELS[buildings.status]} — nie oznacza braku budynków.", None
+
+
+def _bdot_release_context(release: Any) -> dict[str, Any] | None:
+    if release is None:
+        return None
+    return {
+        "id": release.data_release_id,
+        "label": release.version_label,
+        "powiat": release.teryt_powiat,
+        "data_as_of": _format_date(release.data_as_of) if release.data_as_of else None,
+        "imported_at": _format_datetime(release.imported_at) if release.imported_at else None,
+        "sha256": release.package_sha256,
+    }
+
+
+def _road_context(road: RoadContextResult | None) -> dict[str, Any]:
+    road = road or road_context_from_snapshot(None)
+    nearest = road.nearest
+    return {
+        "status": road.status,
+        "status_label": _BDOT_STATUS_LABELS[road.status],
+        "reason_code": road.reason_code,
+        "reason": reason_label_pl(road.reason_code) if road.reason_code else None,
+        "note": road.interpretation_note,
+        "distance_reference": road.distance_reference,
+        "search_radius": _meters(road.search_radius_m) if road.search_radius_m else None,
+        "max_radius": _meters(road.max_search_radius_m) if road.max_search_radius_m else None,
+        "searched_radii": ", ".join(_meters(item) for item in road.searched_radii_m) or None,
+        "coverage_complete": road.search_area_within_coverage,
+        "nearest": (
+            {
+                "id": nearest.road_id,
+                "distance": _meters(nearest.distance_m, 2),
+                "relation": _ROAD_RELATION_LABELS[nearest.relation],
+                "category": nearest.category,
+                "road_class": nearest.road_class,
+                "number": nearest.road_number,
+                "street": nearest.street_name,
+                "surface": nearest.surface_material,
+                "width": _meters(nearest.surface_width_m, 1) if nearest.surface_width_m else None,
+                "position": nearest.position,
+                "version": nearest.feature_version,
+            }
+            if nearest is not None
+            else None
+        ),
+        "intersecting": road.intersecting_road_count,
+        "touching": road.touching_road_count,
+        "release": _bdot_release_context(road.release),
+        "source": _source_brief(road.source),
+        "warnings": list(road.warnings),
+    }
+
+
+def _buildings_context(buildings: NeighbourBuildingsResult | None) -> dict[str, Any]:
+    buildings = buildings or neighbour_buildings_from_snapshot(None)
+    on_parcel = buildings.on_parcel
+    rows = [
+        {
+            "radius": _meters(item.radius_m),
+            "count": item.count,
+            "straddling": item.straddling_parcel_count,
+            "footprints": _area(item.footprint_area_in_ring_sqm),
+            "union": _area(item.union_area_in_ring_sqm),
+            "share": _format_percent(item.built_share_pct),
+            "min_distance": _meters(item.min_distance_m, 2),
+            "size": (
+                f"{_format_number(item.footprint_min_sqm, 1)} / {_format_number(item.footprint_median_sqm, 1)} / "
+                f"{_format_number(item.footprint_max_sqm, 1)} m²"
+                if item.footprint_median_sqm is not None
+                else NOT_SPECIFIED
+            ),
+        }
+        for item in buildings.buffers
+    ]
+    return {
+        "status": buildings.status,
+        "status_label": _BDOT_STATUS_LABELS[buildings.status],
+        "reason_code": buildings.reason_code,
+        "reason": reason_label_pl(buildings.reason_code) if buildings.reason_code else None,
+        "note": buildings.interpretation_note,
+        "ring_definition": buildings.ring_definition,
+        "coverage_complete": buildings.search_area_within_coverage,
+        "parcel_area": _area(buildings.parcel_area_sqm),
+        "on_parcel": (
+            {
+                "count": on_parcel.count,
+                "area": _area(on_parcel.union_area_in_parcel_sqm),
+                "coverage": _format_percent(on_parcel.coverage_pct),
+            }
+            if on_parcel is not None
+            else None
+        ),
+        "buffers": rows,
+        "listed": [
+            {
+                "id": item.building_id,
+                "distance": _meters(item.distance_m, 2),
+                "relation": _BUILDING_RELATION_LABELS[item.relation],
+                "area": _area(item.footprint_sqm),
+                "function": item.general_function or NOT_SPECIFIED,
+                "detail": item.predominant_function or item.detailed_function,
+                "floors": item.floors if item.floors is not None else NOT_SPECIFIED,
+            }
+            for item in buildings.buildings[:_PDF_BUILDING_ROWS]
+        ],
+        "items_total": len(buildings.buildings),
+        "items_shown": min(len(buildings.buildings), _PDF_BUILDING_ROWS),
+        "items_truncated": buildings.buildings_truncated,
+        "listed_radius": _meters(buildings.listed_radius_m) if buildings.listed_radius_m else None,
+        "candidates": buildings.candidates_considered,
+        "release": _bdot_release_context(buildings.release),
+        "source": _source_brief(buildings.source),
+        "warnings": list(buildings.warnings),
+    }
+
+
+def _bdot_limitations(road: RoadContextResult | None, buildings: NeighbourBuildingsResult | None) -> list[str]:
+    road = road or road_context_from_snapshot(None)
+    buildings = buildings or neighbour_buildings_from_snapshot(None)
+    limitations = [road.interpretation_note, buildings.interpretation_note]
+    if road.status in {"no_coverage", "unavailable", "unknown"}:
+        limitations.append(
+            f"Droga: {_BDOT_STATUS_LABELS[road.status]} — brak danych nie oznacza braku drogi ani braku dostępu do niej."
+        )
+    elif road.status == "no_match":
+        limitations.append(
+            f"Droga: w promieniu {_meters(road.search_radius_m)} nie znaleziono osi jezdni; ograniczony zasięg "
+            "wyszukiwania nie dowodzi braku drogi."
+        )
+    if buildings.status in {"no_coverage", "unavailable", "unknown"}:
+        limitations.append(
+            f"Zabudowa sąsiednia: {_BDOT_STATUS_LABELS[buildings.status]} — brak danych nie oznacza braku budynków."
+        )
+    for section in (road, buildings):
+        if section.search_area_within_coverage is False:
+            limitations.append(
+                "Obszar wyszukiwania wykracza poza zasięg zaimportowanego powiatu BDOT10k — wynik dotyczy wyłącznie "
+                "pokrytej części otoczenia."
+            )
+            break
+    data_as_of = [item.release.data_as_of for item in (road, buildings) if item.release and item.release.data_as_of]
+    if data_as_of:
+        limitations.append(
+            f"Dane BDOT10k są migawką lokalnego wydania (stan na {_format_date(min(data_as_of))}); mogą nie "
+            "odzwierciedlać późniejszych zmian w terenie."
+        )
+    return list(dict.fromkeys(limitations))
+
+
 # --- 9. Źródła i provenance --------------------------------------------------------
 
 
@@ -1891,8 +2153,19 @@ def _provenance_context(
             ", ".join(sorted({section.schema_version for section in response.risk_sections})) or None,
         ),
         ("Macierz jakości sekcji", quality.schema_version if quality else None),
+        (
+            "Kompletność analizy (reguła)",
+            f"{response.completeness.schema_version} / {response.completeness.rule_version}"
+            if response.completeness
+            else None,
+        ),
         ("Polityka jakości (wersja)", quality.policy_version if quality else None),
         ("Teren (NMT)", response.terrain.schema_version if response.terrain else None),
+        ("Droga i dostęp do drogi (BDOT10k)", response.road_context.schema_version if response.road_context else None),
+        (
+            "Zabudowa sąsiednia (BDOT10k)",
+            response.neighbour_buildings.schema_version if response.neighbour_buildings else None,
+        ),
         (
             "Discovery MPZP (KIMPZP)",
             response.mpzp_discovery.schema_version if response.mpzp_discovery else None,
@@ -2125,6 +2398,7 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
 
     limitations.extend(_risk_section_limitations(response))
     limitations.extend(_terrain_limitations(response.terrain))
+    limitations.extend(_bdot_limitations(response.road_context, response.neighbour_buildings))
     return limitations
 
 

@@ -313,7 +313,21 @@ QUALITY_REASON_LABELS_PL: Final[dict[str, str]] = {
     "KIUT_COVERAGE_UNKNOWN": "nie rozstrzygnięto pokrycia KIUT",
     "KIUT_PREVIEW_ONLY": "podgląd nie jest geometrią sieci — brak odległości i liczby sieci",
     # Transport, relacja
-    "NO_SOURCE_CONTRACT": "brak potwierdzonego kontraktu źródła danych (BK-305)",
+    "NO_SOURCE_CONTRACT": "brak potwierdzonego kontraktu źródła danych",
+    # BDOT10k: droga i zabudowa sąsiednia (Task 23.2–23.3)
+    "SEARCH_RADIUS_EXHAUSTED": "w największym sprawdzonym promieniu nic nie znaleziono (nie dowodzi braku obiektu)",
+    "SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE": "obszar wyszukiwania wykracza poza zasięg zaimportowanego powiatu",
+    "BDOT_AREA_PARTIALLY_COVERED": "obszar wyszukiwania wykracza poza zasięg zaimportowanego powiatu — wynik częściowy",
+    "NO_ACTIVE_RELEASE": "nie zaimportowano żadnego wydania BDOT10k",
+    "QUERY_TIMEOUT": "zapytanie do lokalnych danych przekroczyło limit czasu",
+    "DATABASE_ERROR": "błąd zapytania do lokalnych danych",
+    "TOO_MANY_CANDIDATES": "zbyt wiele obiektów w otoczeniu, by policzyć statystyki poprawnie",
+    "FEATURE_DISABLED": "sekcja wyłączona w konfiguracji",
+    "SECTION_NOT_RECORDED": "zapis sprzed tej sekcji — brak informacji (nie oznacza braku obiektów)",
+    "ROAD_CONTEXT_NOT_RECORDED": "zapis sprzed sekcji drogowej — brak informacji o drodze",
+    "ROAD_CONTEXT_UNAVAILABLE": "nie ustalono kontekstu drogowego",
+    "NEIGHBOUR_BUILDINGS_NOT_RECORDED": "zapis sprzed sekcji zabudowy — brak informacji o budynkach",
+    "NEIGHBOUR_BUILDINGS_UNAVAILABLE": "nie ustalono zabudowy sąsiedniej",
     "COMPATIBILITY_NOT_ASSESSED": "nie wykonano oceny relacji MPZP–POG",
     "COMPATIBILITY_REVIEW_REQUIRED": "relacja MPZP–POG wymaga weryfikacji",
     # Ścieżki decyzji oceny relacji MPZP–POG (services/pog_scenarios.py)

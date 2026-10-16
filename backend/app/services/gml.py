@@ -43,6 +43,7 @@ from dataclasses import dataclass, field
 from typing import Final
 from xml.etree import ElementTree
 
+from pyproj import CRS, Transformer
 from shapely.geometry import MultiPolygon, Polygon, shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 
@@ -134,26 +135,31 @@ def local_name(tag: str) -> str:
     return tag.split("}")[-1] if "}" in tag else tag
 
 
-def parse_feature_collection(text: str) -> list[GmlFeature]:
+def parse_feature_collection(text: str, *, reproject: bool = False) -> list[GmlFeature]:
     """Parsuje odpowiedź WFS (GML albo GeoJSON) na listę cech powierzchniowych.
 
     Pusta lista oznacza poprawną odpowiedź bez cech. Każdy problem z odczytem —
     ``ows:ExceptionReport``, nieparsowalny XML/JSON, nieobsługiwany układ
     współrzędnych — podnosi ``GmlResponseError``, aby wywołujący adapter mógł
     odróżnić „sprawdzono, brak cech” od „nie udało się sprawdzić”.
+
+    ``reproject=True`` (pliki GML aktów pobrane z Rejestru Urbanistycznego, ADR-026) przyjmuje jawnie zadeklarowane
+    układy z listy ``REPROJECTABLE_EPSG`` — RU zapisuje akt w układzie strefy PL-2000 gminy (2176–2179) — i przelicza
+    je do EPSG:2180 z uwzględnieniem kolejności osi z rejestru EPSG. Domyślnie (usługi ISOK/GDOŚ, WFS z 2180) parser
+    nadal nie reprojektuje.
     """
     stripped = text.strip()
     if not stripped:
         return []
     if stripped.startswith("{"):
         return _parse_geojson(stripped)
-    return _parse_gml(stripped)
+    return _parse_gml(stripped, reproject=reproject)
 
 
 # --- GML ---------------------------------------------------------------------
 
 
-def _parse_gml(text: str) -> list[GmlFeature]:
+def _parse_gml(text: str, *, reproject: bool = False) -> list[GmlFeature]:
     try:
         root = ElementTree.fromstring(text)
     except ElementTree.ParseError as exc:
@@ -162,11 +168,12 @@ def _parse_gml(text: str) -> list[GmlFeature]:
     _raise_if_exception_report(root)
 
     features: list[GmlFeature] = []
+    transforms = _TransformCache() if reproject else None
     for member in root.iter():
         if local_name(member.tag) not in _FEATURE_MEMBER_NAMES:
             continue
         for feature_elem in list(member):
-            geometry = _extract_geometry(feature_elem, None)
+            geometry = _extract_geometry(feature_elem, None, transforms)
             if geometry is None:
                 continue
             features.append(
@@ -209,7 +216,7 @@ def _raise_if_exception_report(root: ElementTree.Element) -> None:
 
 
 def _extract_geometry(
-    elem: ElementTree.Element, inherited_srs: str | None
+    elem: ElementTree.Element, inherited_srs: str | None, transforms: "_TransformCache | None" = None
 ) -> BaseGeometry | None:
     """Zbiera geometrię powierzchniową cechy, dziedziczą ``srsName`` w dół drzewa.
 
@@ -217,7 +224,7 @@ def _extract_geometry(
     ``gml:MultiSurface``, a ISOK na ``gml:Polygon``. ElementTree nie ma wskaźnika
     na rodzica, więc kolejność osi trzeba przekazywać podczas zejścia w dół.
     """
-    polygons = _collect_polygons(elem, inherited_srs)
+    polygons = _collect_polygons(elem, inherited_srs, transforms)
     if not polygons:
         return None
     if len(polygons) == 1:
@@ -226,32 +233,37 @@ def _extract_geometry(
 
 
 def _collect_polygons(
-    elem: ElementTree.Element, inherited_srs: str | None
+    elem: ElementTree.Element, inherited_srs: str | None, transforms: "_TransformCache | None" = None
 ) -> list[Polygon]:
     srs = elem.get("srsName") or inherited_srs
     if local_name(elem.tag) == "Polygon":
-        polygon = _parse_polygon(elem, srs)
+        polygon = _parse_polygon(elem, srs, transforms)
         return [polygon] if polygon is not None else []
 
     polygons: list[Polygon] = []
     for child in elem:
-        polygons.extend(_collect_polygons(child, srs))
+        polygons.extend(_collect_polygons(child, srs, transforms))
     return polygons
 
 
 def _parse_polygon(
-    polygon_elem: ElementTree.Element, srs_name: str | None
+    polygon_elem: ElementTree.Element, srs_name: str | None, transforms: "_TransformCache | None" = None
 ) -> Polygon | None:
-    swap_axes = _requires_axis_swap(srs_name)
+    swap_axes = False
+    transform = None
+    if transforms is not None:
+        swap_axes, transform = transforms.resolve(srs_name)
+    else:
+        swap_axes = _requires_axis_swap(srs_name)
     shell: list[tuple[float, float]] | None = None
     holes: list[list[tuple[float, float]]] = []
 
     for child in polygon_elem:
         role = local_name(child.tag)
         if role == "exterior":
-            shell = _ring_coordinates(child, swap_axes)
+            shell = _ring_coordinates(child, swap_axes, transform)
         elif role == "interior":
-            hole = _ring_coordinates(child, swap_axes)
+            hole = _ring_coordinates(child, swap_axes, transform)
             if hole is not None:
                 holes.append(hole)
 
@@ -261,7 +273,7 @@ def _parse_polygon(
 
 
 def _ring_coordinates(
-    ring_parent: ElementTree.Element, swap_axes: bool
+    ring_parent: ElementTree.Element, swap_axes: bool, transform: "Transformer | None" = None
 ) -> list[tuple[float, float]] | None:
     for elem in ring_parent.iter():
         if local_name(elem.tag) != "posList" or not elem.text:
@@ -276,8 +288,57 @@ def _ring_coordinates(
         pairs = (
             list(zip(second, first)) if swap_axes else list(zip(first, second))
         )
+        if transform is not None and pairs:
+            easting, northing = transform.transform([x for x, _y in pairs], [y for _x, y in pairs])
+            pairs = list(zip(easting, northing))
         return pairs if len(pairs) >= _MIN_RING_VERTICES else None
     return None
+
+
+# Układy, które parser przyjmuje przy ``reproject=True``: PL-2000 (strefy 15°, 18°, 21°, 24°), PL-1992 (kanoniczny),
+# ETRS89 geograficzny, WGS 84 i Web Mercator. Każdy inny kod jest błędem kontraktu, nie powodem do zgadywania.
+REPROJECTABLE_EPSG: Final[frozenset[int]] = frozenset({2176, 2177, 2178, 2179, 2180, 4258, 4326, 3857})
+_ANY_CRS_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(?:urn:ogc:def:crs:EPSG:[^:]*:(\d+)|https?://(?:www\.)?opengis\.net/def/crs/EPSG/[^/]*/(\d+)"
+    r"|EPSG:+(\d+)|https?://(?:www\.)?opengis\.net/gml/srs/epsg\.xml#(\d+))$",
+    re.IGNORECASE,
+)
+
+
+class _TransformCache:
+    """Przeliczenie do EPSG:2180 per ``srsName`` (jeden ``Transformer`` na układ w obrębie jednego parsowania)."""
+
+    def __init__(self) -> None:
+        self._items: dict[str, tuple[bool, Transformer | None]] = {}
+
+    def resolve(self, srs_name: str | None) -> tuple[bool, "Transformer | None"]:
+        if not srs_name:
+            raise UnsupportedCrsError("Geometria APP nie ma jawnego srsName; CRS nie będzie zgadywany.")
+        key = srs_name.strip()
+        cached = self._items.get(key)
+        if cached is not None:
+            return cached
+        match = _ANY_CRS_RE.match(key)
+        if match is None:
+            raise UnsupportedCrsError(f"Nierozpoznany zapis układu współrzędnych srsName={srs_name!r}.")
+        code = int(next(group for group in match.groups() if group))
+        if code not in REPROJECTABLE_EPSG:
+            raise UnsupportedCrsError(
+                f"Geometria jest w EPSG:{code}, którego parser nie przyjmuje "
+                f"(dozwolone: {sorted(REPROJECTABLE_EPSG)})."
+            )
+        # Skrót ``EPSG:code`` oznacza kolejność „GIS” (x = wschód); formy URN i HTTP — kolejność z rejestru EPSG.
+        short_form = key.upper().startswith("EPSG:")
+        source = CRS.from_epsg(code)
+        first_axis = source.axis_info[0].direction.lower()
+        swap = (not short_form) and first_axis == "north"
+        transformer = (
+            None
+            if code == CANONICAL_EPSG_CODE
+            else Transformer.from_crs(source, CRS.from_epsg(CANONICAL_EPSG_CODE), always_xy=True)
+        )
+        self._items[key] = (swap, transformer)
+        return swap, transformer
 
 
 def _requires_axis_swap(srs_name: str | None) -> bool:

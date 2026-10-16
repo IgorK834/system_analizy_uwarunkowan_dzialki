@@ -1,10 +1,10 @@
 """Publiczny, wersjonowany kontrakt kafelków mapowych.
 
 Rastrowe kafle PNG (``/tiles/{source}/…png``) są wyłącznie podglądem WMS.
-Wektorowe kafle POG (``/pog/releases/{release_id}/…mvt``, BK-401) pochodzą z
-lokalnego, wersjonowanego wydania PostGIS i mają te same atrybuty co analiza.
+Wektorowe kafle POG (``/pog/states/{state_id}/…mvt``, BK-401, ADR-026) pochodzą z
+krajowego stanu rejestru wersji aktów w PostGIS i mają te same atrybuty co analiza.
 Szczegóły obiektu dla inspektora (BK-404) i gotowe agregaty stref aktu/gminy
-(BK-405) są przypięte do tego samego ``release_id``.
+(BK-405) są przypięte do tego samego ``state_id``.
 """
 
 import asyncio
@@ -18,19 +18,19 @@ from sqlalchemy.orm import Session
 from app.core.rate_limit import rate_limit
 from app.core.pog_presentation import load_pog_presentation
 from app.db.session import get_db
-from app.modules.planning.application.pog_release_queries import (
+from app.modules.planning.application.pog_state_queries import (
     PogAreaSummaryNotFoundError,
     PogFeatureAmbiguousError,
     PogFeatureNotFoundError,
-    PogReleaseQueryService,
+    PogStateQueryService,
 )
 from app.modules.planning.application.pog_tiles import (
-    PogReleaseNotFoundError,
+    PogStateNotFoundError,
     PogTileService,
     PogTileTooLargeError,
 )
 from app.modules.planning.composition import (
-    build_pog_release_query_service,
+    build_pog_state_query_service,
     build_pog_tile_service,
 )
 from app.modules.planning.domain.pog_area_summary import (
@@ -45,19 +45,22 @@ from app.modules.planning.domain.pog_inspector import (
 )
 from app.modules.planning.domain.pog_tiles import (
     DEFAULT_POG_TILE_EDITION,
+    LAYER_MIN_ZOOM,
     MVT_BUFFER,
     MVT_EXTENT,
     POG_TILE_EDITIONS,
     POG_TILE_LAYERS,
     POG_TILE_MEDIA_TYPE,
     POG_TILE_SCHEMA_VERSION,
+    TEXT_ATTRIBUTES_MIN_ZOOM,
     InvalidPogTileRequestError,
     PogCoverageArea,
-    PogReleaseInfo,
+    PogStateInfo,
     PogTileRequest,
 )
 from app.core.settings import settings
 from app.schemas.analyze import UtilitiesPreviewResult
+from app.shared.provenance import is_verified_https_url
 from app.services.kiut_coverage import check_kiut_coverage_wgs84
 from app.services.wms_tiles import (
     InvalidTileCoordinatesError,
@@ -212,13 +215,14 @@ async def get_wms_tile(
     return Response(content=result.content, media_type="image/png", headers=headers)
 
 
-# --- Wektorowe kafle POG z wersjonowanego wydania (BK-401) --------------------
+# --- Wektorowe kafle POG z krajowego stanu rejestru (BK-401, ADR-026) ----------
 
-POG_TILE_URL_TEMPLATE = "/api/v1/map/pog/releases/{release_id}/{{z}}/{{x}}/{{y}}.mvt"
+POG_TILE_URL_TEMPLATE = "/api/v1/map/pog/states/{state_id}/{{z}}/{{x}}/{{y}}.mvt"
+_POG_EDITION_QUERY = {"binding": "binding", "project": "project"}
 
 
 class PogCoverageAreaResponse(BaseModel):
-    """Zasięg danych aktu w wydaniu — podstawa stanu pokrycia mapy (BK-406)."""
+    """Zasięg danych aktu w stanie krajowym — podstawa stanu pokrycia mapy (BK-406)."""
 
     act_id: str
     teryt: str | None
@@ -234,25 +238,39 @@ class PogCoverageAreaResponse(BaseModel):
     incomplete_reasons: list[str] = Field(default_factory=list)
 
 
-class PogTileReleaseResponse(BaseModel):
-    """Metadane wydania POG z URL-em kafli przypiętym do ``release_id``.
+class PogTileEditionSource(BaseModel):
+    """Szablon URL kafli jednej edycji (źródła wektorowe obowiązujących i projektów są rozdzielone)."""
 
-    Klient pobiera je raz na sesję mapy i nie podmienia źródła, gdy w tle
-    zostanie aktywowane nowsze wydanie — URL zawsze odtwarza to samo wydanie.
+    edition: str
+    tile_url_template: str
+
+
+class PogTileStateResponse(BaseModel):
+    """Metadane stanu krajowego POG z URL-ami kafli przypiętymi do ``state_id``.
+
+    Klient pobiera je raz na sesję mapy i nie podmienia źródła, gdy w tle zostanie zatwierdzony nowszy stan —
+    URL zawsze odtwarza ten sam zbiór wersji aktów, także po późniejszych importach innych gmin.
     """
 
-    release_id: int
+    state_id: int
     source_id: str
-    version_label: str
-    published_at: datetime | None
-    is_active: bool
-    artifact_sha256: str | None
+    kind: str
+    created_at: datetime | None
+    is_current: bool
+    act_count: int
     tile_url_template: str = Field(
-        description="Względny szablon URL kafli MVT przypiętych do wydania."
+        description="Względny szablon URL kafli MVT przypiętych do stanu (wszystkie edycje)."
+    )
+    editions_sources: list[PogTileEditionSource] = Field(
+        description="Osobne szablony URL dla obowiązujących (binding) i projektów (project)."
     )
     tile_schema: str
     tile_format: str = POG_TILE_MEDIA_TYPE
     layers: list[str]
+    layer_min_zoom: dict[str, int] = Field(
+        description="Najmniejszy zoom, od którego warstwa jest w kaflach (jedno źródło prawdy dla klienta)."
+    )
+    text_attributes_min_zoom: int
     editions: list[str]
     default_edition: str
     min_zoom: int
@@ -260,10 +278,14 @@ class PogTileReleaseResponse(BaseModel):
     extent: int = MVT_EXTENT
     buffer: int = MVT_BUFFER
     bounds: list[float] | None = Field(
-        default=None, description="Zasięg wydania [min_lon, min_lat, max_lon, max_lat] w EPSG:4326."
+        default=None, description="Zasięg stanu [min_lon, min_lat, max_lon, max_lat] w EPSG:4326."
     )
     acts_by_legal_status: dict[str, int]
     coverage_areas: list[PogCoverageAreaResponse] = Field(default_factory=list)
+    map_ready: bool = Field(
+        description="false — część aktywnych wersji nie ma jeszcze wierszy mapy (np. po migracji); mapa jest niepełna."
+    )
+    versions_without_map_rows: int = 0
     style_version: str
     style_sha256: str
     attribution: str
@@ -286,19 +308,26 @@ def _coverage_response(area: PogCoverageArea) -> PogCoverageAreaResponse:
     )
 
 
-def _release_response(info: PogReleaseInfo, service: PogTileService) -> PogTileReleaseResponse:
+def _state_response(info: PogStateInfo, service: PogTileService) -> PogTileStateResponse:
     presentation = load_pog_presentation()
-    published_at = info.published_at if isinstance(info.published_at, datetime) else None
-    return PogTileReleaseResponse(
-        release_id=info.release_id,
+    created_at = info.created_at if isinstance(info.created_at, datetime) else None
+    template = POG_TILE_URL_TEMPLATE.format(state_id=info.state_id)
+    return PogTileStateResponse(
+        state_id=info.state_id,
         source_id=info.source_id,
-        version_label=info.version_label,
-        published_at=published_at,
-        is_active=info.is_active,
-        artifact_sha256=info.artifact_sha256,
-        tile_url_template=POG_TILE_URL_TEMPLATE.format(release_id=info.release_id),
+        kind=info.kind,
+        created_at=created_at,
+        is_current=info.is_current,
+        act_count=info.act_count,
+        tile_url_template=template,
+        editions_sources=[
+            PogTileEditionSource(edition=edition, tile_url_template=f"{template}?edition={edition}")
+            for edition in _POG_EDITION_QUERY
+        ],
         tile_schema=POG_TILE_SCHEMA_VERSION,
         layers=list(POG_TILE_LAYERS),
+        layer_min_zoom=dict(LAYER_MIN_ZOOM),
+        text_attributes_min_zoom=TEXT_ATTRIBUTES_MIN_ZOOM,
         editions=list(POG_TILE_EDITIONS),
         default_edition=DEFAULT_POG_TILE_EDITION,
         min_zoom=service.limits.min_zoom,
@@ -306,46 +335,48 @@ def _release_response(info: PogReleaseInfo, service: PogTileService) -> PogTileR
         bounds=list(info.bounds) if info.bounds else None,
         acts_by_legal_status=dict(info.acts_by_legal_status),
         coverage_areas=[_coverage_response(area) for area in info.coverage_areas],
+        map_ready=info.versions_without_map_rows == 0,
+        versions_without_map_rows=info.versions_without_map_rows,
         style_version=presentation.style_version,
         style_sha256=presentation.sha256,
-        attribution="Rejestr Urbanistyczny (APP POG) — lokalne wydanie danych",
+        attribution="Rejestr Urbanistyczny (APP POG) — lokalny stan danych",
         legal_note=(
-            "Mapa prezentuje zapisane wydanie danych POG. Projekt aktu nie jest "
-            "wiążący, a brak obiektu na mapie nie potwierdza braku planu."
+            "Mapa prezentuje zapisany stan danych POG zaimportowanych z Rejestru Urbanistycznego. Projekt aktu nie "
+            "jest wiążący, a brak obiektu na mapie nie potwierdza braku planu (gmina może nie być zaimportowana)."
         ),
     )
 
 
 @router.get(
-    "/pog/releases/active",
+    "/pog/state",
     dependencies=[Depends(_map_data_limit)],
-    response_model=PogTileReleaseResponse,
-    responses={404: {"description": "Brak aktywnego lokalnego wydania POG."}},
-    description="Metadane aktywnego wydania POG i URL kafli MVT przypięty do niego.",
+    response_model=PogTileStateResponse,
+    responses={404: {"description": "Brak lokalnych danych POG (rejestr stanu krajowego jest pusty)."}},
+    description="Metadane bieżącego stanu krajowego POG i URL-e kafli MVT przypięte do jego numeru.",
 )
-def get_active_pog_release(
+def get_current_pog_state(
     service: Annotated[PogTileService, Depends(get_pog_tile_service)],
-) -> PogTileReleaseResponse:
+) -> PogTileStateResponse:
     try:
-        return _release_response(service.active_release(), service)
-    except PogReleaseNotFoundError as exc:
+        return _state_response(service.current_state(), service)
+    except PogStateNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get(
-    "/pog/releases/{release_id}",
+    "/pog/states/{state_id}",
     dependencies=[Depends(_map_data_limit)],
-    response_model=PogTileReleaseResponse,
-    responses={404: {"description": "Wydanie nie istnieje albo nie zawiera aktów POG."}},
-    description="Metadane konkretnego (także historycznego) wydania POG.",
+    response_model=PogTileStateResponse,
+    responses={404: {"description": "Stan krajowy POG nie istnieje."}},
+    description="Metadane konkretnego (także historycznego) stanu krajowego POG.",
 )
-def get_pog_release(
-    release_id: int,
+def get_pog_state(
+    state_id: int,
     service: Annotated[PogTileService, Depends(get_pog_tile_service)],
-) -> PogTileReleaseResponse:
+) -> PogTileStateResponse:
     try:
-        return _release_response(service.release(release_id), service)
-    except PogReleaseNotFoundError as exc:
+        return _state_response(service.state(state_id), service)
+    except PogStateNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
@@ -378,16 +409,27 @@ class PogFeatureActResponse(BaseModel):
     resolution_date: date | None
     legal_valid_from: date | None
     legal_valid_to: date | None
+    effective_date: date | None = Field(default=None, description="Data wejścia w życie uchwały (dokument formalny).")
+    version_started_on: date | None = Field(default=None, description="Początek wersji aktu w rejestrze (APP).")
+    official_journal: str | None = Field(default=None, description="Dziennik urzędowy uchwały (etykieta słownika RU).")
+    document_link: str | None = Field(default=None, description="Odnośnik do tekstu uchwały (dokument formalny).")
+    ru_act_url: str | None = Field(
+        default=None, description="Karta aktu w Rejestrze Urbanistycznym (gdy znany identyfikator wersji w katalogu RU)."
+    )
     publication_id: str | None
     manual_review_required: bool
+    act_version_id: int | None = None
+    data_release_id: int | None = None
+    release_label: str | None = None
+    artifact_sha256: str | None = None
+    content_hash: str | None = None
 
 
-class PogFeatureReleaseResponse(BaseModel):
-    release_id: int
-    version_label: str
-    published_at: datetime | None
-    is_active: bool
-    artifact_sha256: str | None
+class PogFeatureStateResponse(BaseModel):
+    state_id: int
+    kind: str
+    created_at: datetime | None
+    is_current: bool
 
 
 class PogFeatureDetailsResponse(BaseModel):
@@ -401,13 +443,14 @@ class PogFeatureDetailsResponse(BaseModel):
 
     schema_: str = Field(alias="schema")
     tile_schema: str
-    release: PogFeatureReleaseResponse
+    state: PogFeatureStateResponse
     feature_pk: int
     feature_id: str
     feature_version: str | None
     layer: str
     feature_type: str
     symbol: str | None
+    designation: str | None
     label: str | None
     zone_code: str | None
     source_zone_type: str | None
@@ -430,14 +473,16 @@ class PogAreaSummaryZoneResponse(BaseModel):
 
 
 class PogAreaSummaryResponse(BaseModel):
-    """Struktura powierzchniowa stref aktu albo gminy w wydaniu (BK-405)."""
+    """Struktura powierzchniowa stref aktu albo gminy w stanie krajowym (BK-405)."""
 
     model_config = ConfigDict(populate_by_name=True)
 
     schema_: str = Field(alias="schema")
+    state_id: int
+    computed_in_state_id: int | None
+    state_is_current: bool
     release_id: int
     release_label: str
-    release_is_active: bool
     artifact_sha256: str | None
     scope: Literal["act", "municipality"]
     act_id: str | None
@@ -468,25 +513,26 @@ class PogAreaSummaryResponse(BaseModel):
     computed_at: datetime
 
 
-def get_pog_release_query_service(
+def get_pog_state_query_service(
     db: Annotated[Session, Depends(get_db)],
-) -> PogReleaseQueryService:
-    return build_pog_release_query_service(db)
+) -> PogStateQueryService:
+    return build_pog_state_query_service(db)
+
+
+RU_ACT_URL_TEMPLATE = "https://rejestr-urbanistyczny.gov.pl/published/details/pog/{ru_id}"
 
 
 def _details_response(details: PogFeatureDetails) -> PogFeatureDetailsResponse:
-    release = details.release
+    state = details.state
+    act = details.act
     return PogFeatureDetailsResponse(
         schema_=details.schema,
         tile_schema=details.tile_schema,
-        release=PogFeatureReleaseResponse(
-            release_id=release.release_id,
-            version_label=release.version_label,
-            published_at=(
-                release.published_at if isinstance(release.published_at, datetime) else None
-            ),
-            is_active=release.is_active,
-            artifact_sha256=release.artifact_sha256,
+        state=PogFeatureStateResponse(
+            state_id=state.state_id,
+            kind=state.kind,
+            created_at=state.created_at if isinstance(state.created_at, datetime) else None,
+            is_current=state.is_current,
         ),
         feature_pk=details.feature_pk,
         feature_id=details.feature_id,
@@ -494,6 +540,7 @@ def _details_response(details: PogFeatureDetails) -> PogFeatureDetailsResponse:
         layer=details.layer,
         feature_type=details.feature_type,
         symbol=details.symbol,
+        designation=details.designation,
         label=details.label,
         zone_code=details.zone_code,
         source_zone_type=details.source_zone_type,
@@ -505,7 +552,34 @@ def _details_response(details: PogFeatureDetails) -> PogFeatureDetailsResponse:
         additional_profiles=[
             PogProfileResponse.model_validate(item) for item in details.additional_profiles
         ],
-        act=PogFeatureActResponse.model_validate(details.act, from_attributes=True),
+        act=PogFeatureActResponse(
+            act_id=act.act_id,
+            act_version=act.act_version,
+            name=act.name,
+            teryt=act.teryt,
+            legal_status=act.legal_status,
+            legal_status_code=act.legal_status_code,
+            resolution_number=act.resolution_number,
+            resolution_date=act.resolution_date,
+            legal_valid_from=act.legal_valid_from,
+            legal_valid_to=act.legal_valid_to,
+            effective_date=act.effective_date,
+            version_started_on=act.version_started_on,
+            official_journal=act.official_journal,
+            document_link=act.document_link if is_verified_https_url(act.document_link) else None,
+            ru_act_url=(
+                RU_ACT_URL_TEMPLATE.format(ru_id=act.ru_published_act_id)
+                if act.ru_published_act_id is not None
+                else None
+            ),
+            publication_id=act.publication_id,
+            manual_review_required=act.manual_review_required,
+            act_version_id=act.act_version_id,
+            data_release_id=act.data_release_id,
+            release_label=act.release_label,
+            artifact_sha256=act.artifact_sha256,
+            content_hash=act.content_hash,
+        ),
         source_reference=details.source_reference,
     )
 
@@ -517,9 +591,11 @@ def _sqkm(value: float | None) -> float | None:
 def _summary_response(summary: PogAreaSummaryView) -> PogAreaSummaryResponse:
     return PogAreaSummaryResponse(
         schema_=summary.schema,
+        state_id=summary.state_id,
+        computed_in_state_id=summary.computed_in_state_id,
+        state_is_current=summary.state_is_current,
         release_id=summary.release_id,
         release_label=summary.release_label,
-        release_is_active=summary.release_is_active,
         artifact_sha256=summary.artifact_sha256,
         scope=cast(Literal["act", "municipality"], summary.scope),
         act_id=summary.act_id,
@@ -555,7 +631,7 @@ def _summary_response(summary: PogAreaSummaryView) -> PogAreaSummaryResponse:
 
 
 def _cached_json(request: Request, kind: str, model: BaseModel) -> Response:
-    """JSON z ETag i ``Cache-Control``; wydanie jest niezmienne → 304 bez treści."""
+    """JSON z ETag i ``Cache-Control``; stan krajowy jest niezmienny → 304 bez treści."""
     payload = model.model_dump(mode="json", by_alias=True)
     etag = payload_etag(kind, payload)
     headers = {
@@ -572,32 +648,32 @@ def _cached_json(request: Request, kind: str, model: BaseModel) -> Response:
 
 
 @router.get(
-    "/pog/releases/{release_id}/features/{feature_id:path}",
+    "/pog/states/{state_id}/features/{feature_id:path}",
     dependencies=[Depends(_map_data_limit)],
     response_model=PogFeatureDetailsResponse,
     responses={
         304: {"description": "Szczegóły nie zmieniły się od podanego ETag."},
-        404: {"description": "Wydanie albo obiekt nie istnieje w tym wydaniu."},
-        409: {"description": "Identyfikator wskazuje więcej niż jeden obiekt wydania."},
+        404: {"description": "Stan albo obiekt nie istnieje w tym stanie."},
+        409: {"description": "Identyfikator wskazuje więcej niż jeden obiekt stanu."},
         422: {"description": "Niepoprawny identyfikator obiektu."},
     },
     description=(
-        "Szczegóły obiektu POG (strefa, OUZ, OZS, OSDIS) z przypiętego wydania, "
-        "których kafel MVT nie mieści: pełna etykieta, nazwy profili, dane aktu i "
-        "urzędowy kod statusu. Identyfikator to atrybut feature_id z kafla."
+        "Szczegóły obiektu POG (strefa, OUZ, OZS, OSDIS) z przypiętego stanu krajowego, "
+        "których kafel MVT nie mieści: pełna etykieta, nazwy profili, dane aktu (uchwała, daty, dziennik "
+        "urzędowy, link do aktu w RU) i urzędowy kod statusu. Identyfikator to atrybut feature_id z kafla."
     ),
 )
 def get_pog_feature_details(
-    release_id: int,
+    state_id: int,
     feature_id: str,
     request: Request,
-    service: Annotated[PogReleaseQueryService, Depends(get_pog_release_query_service)],
+    service: Annotated[PogStateQueryService, Depends(get_pog_state_query_service)],
 ) -> Response:
     try:
-        details = service.feature_details(release_id, feature_id)
+        details = service.feature_details(state_id, feature_id)
     except InvalidPogFeatureIdError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except (PogReleaseNotFoundError, PogFeatureNotFoundError) as exc:
+    except (PogStateNotFoundError, PogFeatureNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except PogFeatureAmbiguousError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
@@ -605,41 +681,41 @@ def get_pog_feature_details(
 
 
 @router.get(
-    "/pog/releases/{release_id}/summary",
+    "/pog/states/{state_id}/summary",
     dependencies=[Depends(_map_data_limit)],
     response_model=PogAreaSummaryResponse,
     responses={
         304: {"description": "Agregat nie zmienił się od podanego ETag."},
-        404: {"description": "Brak wydania albo agregatu dla zakresu."},
+        404: {"description": "Brak stanu albo agregatu dla zakresu."},
         422: {"description": "Podaj dokładnie jeden zakres: act_id albo teryt."},
     },
     description=(
         "Struktura powierzchniowa stref aktu (act_id) albo gminy (teryt + edition) "
-        "policzona przy imporcie wydania w EPSG:2180. Odczyt nie wykonuje obliczeń "
+        "policzona przy imporcie w EPSG:2180. Odczyt nie wykonuje obliczeń "
         "przestrzennych; is_complete=false oznacza dane niepełne, a brak granicy "
         "aktu daje share_pct=null (nie 100%)."
     ),
 )
 def get_pog_area_summary(
-    release_id: int,
+    state_id: int,
     request: Request,
-    service: Annotated[PogReleaseQueryService, Depends(get_pog_release_query_service)],
+    service: Annotated[PogStateQueryService, Depends(get_pog_state_query_service)],
     act_id: Annotated[str | None, Query(max_length=200)] = None,
     teryt: Annotated[str | None, Query(max_length=7)] = None,
     edition: Annotated[str | None, Query(max_length=20)] = None,
 ) -> Response:
-    query = PogAreaSummaryQuery(release_id, act_id=act_id, teryt=teryt, edition=edition)
+    query = PogAreaSummaryQuery(state_id, act_id=act_id, teryt=teryt, edition=edition)
     try:
         summary = service.area_summary(query)
     except InvalidPogSummaryQueryError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except (PogReleaseNotFoundError, PogAreaSummaryNotFoundError) as exc:
+    except (PogStateNotFoundError, PogAreaSummaryNotFoundError) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return _cached_json(request, "pog-summary", _summary_response(summary))
 
 
 @router.get(
-    "/pog/releases/{release_id}/{z}/{x}/{y}.mvt",
+    "/pog/states/{state_id}/{z}/{x}/{y}.mvt",
     dependencies=[Depends(_pog_tiles_limit)],
     responses={
         429: {"description": "Przekroczono limit zapytań o kafle (Retry-After)."},
@@ -648,17 +724,18 @@ def get_pog_area_summary(
             "description": "Kafel MVT; pusty kafel to poprawny, pusty protobuf.",
         },
         304: {"description": "Kafel nie zmienił się od podanego ETag."},
-        404: {"description": "Wydanie nie istnieje albo nie zawiera aktów POG."},
+        404: {"description": "Stan krajowy nie istnieje."},
         413: {"description": "Kafel przekracza limit liczby obiektów albo bajtów."},
         422: {"description": "Nieprawidłowe z/x/y albo edycja."},
     },
     description=(
         "Wektorowy kafel POG (warstwy zones, ouz, downtown, "
-        "social_infrastructure_standard, act_boundary) z przypiętego wydania."
+        "social_infrastructure_standard, act_boundary) z przypiętego stanu krajowego. "
+        "Przy małym zoomie dostępne są tylko granice aktów (kolor statusu); strefy od z11, OUZ/OZS/OSDIS od z12."
     ),
 )
 def get_pog_tile(
-    release_id: int,
+    state_id: int,
     z: int,
     x: int,
     y: int,
@@ -666,12 +743,12 @@ def get_pog_tile(
     service: Annotated[PogTileService, Depends(get_pog_tile_service)],
     edition: Annotated[str, Query(max_length=20)] = DEFAULT_POG_TILE_EDITION,
 ) -> Response:
-    tile_request = PogTileRequest(release_id=release_id, z=z, x=x, y=y, edition=edition)
+    tile_request = PogTileRequest(state_id=state_id, z=z, x=x, y=y, edition=edition)
     try:
         tile = service.get_tile(tile_request)
     except InvalidPogTileRequestError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except PogReleaseNotFoundError as exc:
+    except PogStateNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except PogTileTooLargeError as exc:
         raise HTTPException(
@@ -684,7 +761,7 @@ def get_pog_tile(
         "ETag": tile.etag,
         "Cache-Control": f"public, max-age={settings.pog_tile_browser_ttl_seconds}",
         "X-Tile-Cache": tile.cache_status,
-        "X-Pog-Release": str(tile.release_id),
+        "X-Pog-State": str(tile.state_id),
         "X-Pog-Edition": tile.edition,
         "X-Pog-Tile-Schema": POG_TILE_SCHEMA_VERSION,
         "X-Pog-Tile-Features": str(tile.feature_count),

@@ -39,12 +39,24 @@ from app.schemas.analyze import (
     ParcelGeometryResponse,
     ParcelIdAnalyzeRequest,
     PogActResult,
+    PogPinnedActVersion,
     PogResult,
     RiskResult,
     UtilitiesPreviewResult,
     WarningMessage,
 )
+from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
 from app.schemas.source import SourceMetadata, warnings_from_domain_messages
+from app.services.bdot_context import (
+    bdot_sources,
+    bdot_warnings,
+    build_neighbour_buildings,
+    build_road_context,
+    disabled_neighbour_buildings,
+    disabled_road_context,
+    failed_neighbour_buildings,
+    failed_road_context,
+)
 from app.services.cache import (
     get_analysis_completed_since,
     get_cached_analysis,
@@ -87,7 +99,6 @@ from app.services.uldk import ParcelLookupResult
 from app.services.mpzp_fetch import DocumentBlob, fetch_mpzp_document
 from app.schemas.mpzp import MpzpParseResult
 from app.services.mpzp_parser import parse_mpzp_document
-from app.services.mpzp_parser_hybrid import WARNING_LLM_CANDIDATES_REJECTED, WARNING_LLM_UNAVAILABLE
 from app.services.mpzp_parser_options import build_mpzp_parser_options
 from app.modules.planning.application.llm_pipeline import BudgetTracker
 from app.modules.planning.composition import new_analysis_llm_budget
@@ -114,6 +125,7 @@ from app.services.pog_analyzer import (
 from app.services.pog_fetch import fetch_pog_vector_data
 from app.services.pog_fetch import PogVectorData, PogVectorFeature
 from app.modules.planning.domain.pog_features import release_feature_attributes
+from app.services.pog_on_demand import request_commune_import
 from app.services.pog_provenance import act_result_from_provenance, feature_gml_url
 from app.services.pog_scenarios import build_pog_scenario_result
 from app.services.risks import (
@@ -132,20 +144,25 @@ from app.services.persistence import (
     build_manual_zone_context,
     save_analysis,
 )
+from app.services.completeness import with_completeness
 from app.services.section_quality import with_section_quality
 from app.modules.analysis.application.terrain import ReliefOutcome
-from app.modules.analysis.composition import analyze_terrain_relief
+from app.modules.analysis.composition import (
+    analyze_building_context,
+    analyze_road_context,
+    analyze_terrain_relief,
+)
 from app.modules.documents.composition import (
     build_ocr_provider,
     persist_parser_audit,
 )
 from app.modules.imports.infrastructure.repository import (
-    active_pog_release,
+    active_pog_state,
     find_mpzp_zone_intersections,
     find_pog_acts_for_parcel,
     last_confirmed_pog_status,
     load_pog_act_provenance,
-    load_pog_release_features,
+    load_pog_state_features,
 )
 from app.shared.act_identifier import bounded_act_identifier
 from app.shared.geometry import GeometryPayload
@@ -159,9 +176,6 @@ from app.shared.planning_status import (
     is_official_status_code,
     resolve_pog_status,
 )
-
-
-_LLM_DEGRADATION_CODES = frozenset({WARNING_LLM_UNAVAILABLE, WARNING_LLM_CANDIDATES_REJECTED})
 
 
 async def run_analysis(
@@ -324,6 +338,12 @@ async def _analyze_uncached(
     # ale jej provenance — także nieudanej próby — trafia do rejestru źródeł.
     terrain = build_terrain_result(context.nmt, relief)
     warnings.extend(terrain_warnings(terrain))
+    # Droga i zabudowa sąsiednia z lokalnego wydania BDOT10k (Task 23.2–23.3): zapytania PostGIS na sesji ``db`` biegną
+    # sekwencyjnie w wątku roboczym (sesja nie jest bezpieczna współbieżnie), a ich porażka to jawne ``unavailable``.
+    road_context, neighbour_buildings = await asyncio.to_thread(
+        _analyze_bdot_context_safely, db, parcel_geometry
+    )
+    warnings.extend(bdot_warnings(road_context, neighbour_buildings))
     # Status i provenance sekcji ryzyka niezależnie od listy obiektów (BK-303).
     risk_sections = [
         build_risk_section("flood", context.isok, parcel_geometry),
@@ -404,14 +424,19 @@ async def _analyze_uncached(
             risks=risks,
             risk_sections=risk_sections,
             terrain=terrain,
+            road_context=road_context,
+            neighbour_buildings=neighbour_buildings,
             buildable_area_sqm=buildable_area_sqm,
             manual_zone_required=True,
             warnings=warnings,
-            sources=_unique_sources([*sources, *terrain_sources(terrain)]),
+            sources=_unique_sources(
+                [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings)]
+            ),
         )
         # BK-504: ocena jakości z punktem odniesienia analyzed_at trafia do
         # odpowiedzi i do zapisu w tej samej postaci.
-        response = with_section_quality(response)
+        # Analiza wstrzymana zachowuje własny status; kompletność pokazuje, których sekcji jeszcze brakuje.
+        response = with_completeness(with_section_quality(response), update_status=False)
         saved = await asyncio.to_thread(
             save_analysis,
             response,
@@ -443,7 +468,6 @@ async def _analyze_uncached(
         mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
             await _analyze_mpzp_vector_zones(vector, discovery, parcel_identifier, db, llm_budget=llm_budget)
         )
-        mpzp_complete = vector.complete_coverage and vector.overlap_pct <= 0.1
     else:
         mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
             await _analyze_mpzp_best_effort(
@@ -454,7 +478,6 @@ async def _analyze_uncached(
                 llm_budget=llm_budget,
             )
         )
-        mpzp_complete = False
         if mpzp_zones:
             mpzp_zones = [
                 cap_fallback_zone(zone, assignment_method="document_candidate")
@@ -481,9 +504,6 @@ async def _analyze_uncached(
                     source_name="mpzp",
                 )
             )
-    if any(warning.code in _LLM_DEGRADATION_CODES for warning in mpzp_warnings):
-        # Tryb ``hybrid`` bez modelu albo z odrzuceniami bramek (PV3-14/15): wynik deterministyczny, nigdy ``complete``.
-        mpzp_complete = False
     warnings.extend(mpzp_warnings)
     sources.extend(mpzp_sources)
     pog, scenario_warnings = _apply_pog_scenario(
@@ -491,15 +511,9 @@ async def _analyze_uncached(
     )
     pog = with_presentation_style(pog)
     warnings.extend(scenario_warnings)
-    status = _result_status(
-        context=context,
-        mpzp_zones=mpzp_zones,
-        pog=pog,
-        sources=_unique_sources(sources),
-        mpzp_complete=mpzp_complete,
-    )
     response = AnalyzeResponse(
-        status=status,
+        # Status nagłówkowy wynika z kompletności sekcji (AU-104, ADR-022) i jest ustawiany niżej.
+        status="partial",
         analyzed_at=datetime.now(timezone.utc),
         parcel=parcel_response,
         mpzp_zones=mpzp_zones,
@@ -516,12 +530,16 @@ async def _analyze_uncached(
         risks=risks,
         risk_sections=risk_sections,
         terrain=terrain,
+        road_context=road_context,
+        neighbour_buildings=neighbour_buildings,
         buildable_area_sqm=buildable_area_sqm,
         manual_zone_required=False,
         warnings=warnings,
-        sources=_unique_sources([*sources, *terrain_sources(terrain)]),
+        sources=_unique_sources(
+            [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings)]
+        ),
     )
-    response = with_section_quality(response)
+    response = with_completeness(with_section_quality(response))
     saved = await asyncio.to_thread(
         save_analysis,
         response,
@@ -662,6 +680,32 @@ async def _analyze_terrain_relief_safely(
                 "ekspozycji nie policzono.",
             ),
         )
+
+
+def _analyze_bdot_context_safely(
+    db: Session, parcel_geometry: BaseGeometry
+) -> tuple[RoadContextResult, NeighbourBuildingsResult]:
+    """Droga i zabudowa sąsiednia z BDOT10k; żaden błąd nie przerywa analizy ani nie staje się „brakiem”."""
+    buffers = list(settings.building_context_buffers_m)
+    try:
+        road = (
+            build_road_context(analyze_road_context(db, parcel_geometry))
+            if settings.road_context_enabled
+            else disabled_road_context()
+        )
+    except Exception as exc:  # noqa: BLE001 - granica sekcji informacyjnej
+        log_analysis_event("section_error", section="road_context", status=type(exc).__name__)
+        road = failed_road_context(type(exc).__name__)
+    try:
+        buildings = (
+            build_neighbour_buildings(analyze_building_context(db, parcel_geometry))
+            if settings.building_context_enabled
+            else disabled_neighbour_buildings(buffers)
+        )
+    except Exception as exc:  # noqa: BLE001 - granica sekcji informacyjnej
+        log_analysis_event("section_error", section="neighbour_buildings", status=type(exc).__name__)
+        buildings = failed_neighbour_buildings(type(exc).__name__, buffers)
+    return road, buildings
 
 
 async def _check_kiut_coverage_safely(
@@ -1395,9 +1439,14 @@ async def _analyze_pog_best_effort(
         discovery = None
 
     if discovery is None or not discovery.source_responded:
-        return await asyncio.to_thread(
+        failure = await asyncio.to_thread(
             _pog_upstream_failure, parcel_geometry, teryt, db, discovery
         )
+        # Wykaz RU (``pog_ru_catalog``) może wskazywać plan gminy mimo awarii discovery — import jest zlecany w tle.
+        queued = await asyncio.to_thread(request_commune_import, db, teryt, discovery_found_act=False)
+        if queued is not None:
+            failure[2].append(queued.warning())
+        return failure
 
     warnings = list(discovery.warnings)
     sources = [discovery.source_metadata]
@@ -1414,8 +1463,9 @@ async def _analyze_pog_best_effort(
         legal_evidence=discovery.legal_evidence,
         act_found=discovery.act_found,
         act_has_spatial_data=discovery.preview_features_found > 0,
-        # WMS jest podglądem: obiekty z obrazu nie są wektorami do obliczeń,
-        # więc pokrycie z samego discovery nigdy nie jest „available”.
+        # Discovery (WFS RU lub WMS gminy) wskazuje obecność obiektów na działce, ale nie jest
+        # analizą powierzchniową stref (to wektory APP/GML z odnośnika), więc pokrycie z samego
+        # discovery nigdy nie jest „available”.
         spatial_features_on_parcel=discovery.preview_features_found,
         zones_cover_parcel=False,
     )
@@ -1493,6 +1543,12 @@ async def _analyze_pog_best_effort(
 
     if parsed_date is not None and pog.uchwala_date is None:
         pog = pog.model_copy(update={"uchwala_date": parsed_date})
+    # Issue 300 / ADR-026: RU ma plan tej gminy, a lokalnego stanu brak → import w tle, jawnie w odpowiedzi.
+    queued = await asyncio.to_thread(
+        request_commune_import, db, teryt, discovery_found_act=bool(discovery.act_found)
+    )
+    if queued is not None:
+        warnings.append(queued.warning())
     return pog, ouz_status, warnings, _unique_sources(sources)
 
 
@@ -1592,14 +1648,18 @@ def _analyze_pog_local_release(
     parcel_geometry: BaseGeometry,
     teryt: str | None,
 ) -> tuple[PogResult, OuzStatusResult, list[WarningMessage], list[SourceMetadata]] | None:
-    """Analiza z przypiętego lokalnego wydania; ``None`` gdy wydanie nie obejmuje działki."""
-    pinned = active_pog_release(db)
-    if pinned is None:
+    """Analiza z krajowego stanu POG (ADR-026); ``None`` gdy żaden aktywny akt nie obejmuje działki.
+
+    Stan krajowy jest przypinany raz, przed odczytem cech: późniejsze importy innych gmin ani nowych wersji aktów
+    nie zmieniają numeru stanu ani zestawu wersji użytych w tej analizie (zapisanych w ``pinned_act_versions``).
+    """
+    pinned_state = active_pog_state(db)
+    if pinned_state is None:
         return None
-    release_id = int(pinned["id"])
+    state_id = int(pinned_state["id"])
     parcel_payload = GeometryPayload(parcel_geometry.wkt)
     acts = find_pog_acts_for_parcel(
-        db, parcel_payload, data_release_id=release_id, teryt=teryt
+        db, parcel_payload, state_id=state_id, teryt=teryt
     )
     if not acts:
         return None
@@ -1613,10 +1673,27 @@ def _analyze_pog_local_release(
     primary = acts[0]
     rows = [
         row
-        for row in load_pog_release_features(
-            db, parcel_payload, data_release_id=release_id
-        )
+        for row in load_pog_state_features(db, parcel_payload, state_id=state_id)
         if row.get("act_version_id") == primary["act_version_id"]
+    ]
+    pinned = {
+        "id": primary["data_release_id"],
+        "version_label": primary["release_label"],
+        "content_hash": primary["artifact_sha256"],
+        "fetched_at": primary.get("status_confirmed_at"),
+    }
+    release_id = int(pinned["id"])  # type: ignore[call-overload]
+    pinned_versions = [
+        PogPinnedActVersion(
+            act_version_id=int(act["act_version_id"]),
+            act_identifier=str(act["act_identifier"]),
+            object_version_id=act.get("object_version_id"),
+            content_hash=str(act["content_hash"]),
+            legal_status=canonical_legal_status(act.get("legal_status")),
+            data_release_id=int(act["data_release_id"]),
+            artifact_sha256=act.get("artifact_sha256"),
+        )
+        for act in sorted(acts, key=lambda item: str(item["act_identifier"]))
     ]
     vector_data = _local_pog_vector_data(rows, pinned, primary)
     provenance = load_pog_act_provenance(db, int(primary["act_version_id"]))
@@ -1624,7 +1701,7 @@ def _analyze_pog_local_release(
     raw_status = primary.get("raw_legal_status")
     confirmed_at = primary.get("status_confirmed_at") or pinned.get("fetched_at")
     evidence = StatusEvidence(
-        source_name="Rejestr Urbanistyczny (lokalne wydanie)",
+        source_name="Rejestr Urbanistyczny (krajowy stan POG)",
         source_id="pog_app",
         official=is_official_status_code(raw_status),
         reference=f"data_release:{release_id};sha256:{pinned['content_hash']}",
@@ -1637,7 +1714,7 @@ def _analyze_pog_local_release(
             WarningMessage(
                 code="POG_MULTIPLE_ACTS",
                 message=(
-                    "Działki dotyczy więcej niż jeden akt POG w wydaniu (np. "
+                    "Działki dotyczy więcej niż jeden akt POG w stanie krajowym (np. "
                     "obowiązujący i projekt zmiany); wynik przedstawia akt "
                     f"{primary['act_identifier']}, pozostałe wymagają weryfikacji."
                 ),
@@ -1666,7 +1743,9 @@ def _analyze_pog_local_release(
                 response_complete=True,
             )
         )
-        pog = to_pog_result(analysis, decision)
+        pog = to_pog_result(analysis, decision).model_copy(
+            update={"registry_state_id": state_id, "pinned_act_versions": pinned_versions}
+        )
         if act_result is not None:
             pog = pog.model_copy(update={"act": act_result})
         warnings.extend(analysis.warnings)
@@ -1691,7 +1770,11 @@ def _analyze_pog_local_release(
         update={"confidence": 0.5, "manual_review_required": True}
     )
     pog = _pog_from_decision(decision, None, source).model_copy(
-        update={"act": act_result}
+        update={
+            "act": act_result,
+            "registry_state_id": state_id,
+            "pinned_act_versions": pinned_versions,
+        }
     )
     warnings.extend(ouz_status.warnings)
     warnings.extend(_status_warnings(decision))
@@ -1897,6 +1980,7 @@ def _pog_raw_attributes(
                     "status": section.status,
                     "raw_legal_status": section.raw_legal_status,
                     "matched_wms_layer": section.matched_wms_layer,
+                    "matched_wfs_type": section.matched_wfs_type,
                     "feature_count": section.feature_count,
                 }
                 for name, section in (
@@ -1919,8 +2003,9 @@ def _pog_raw_attributes(
                 "area_ratio": zone.area_ratio,
                 "parameters": zone.parameters,
                 "parameters_informational": zone.parameters_informational,
+                "topological_sliver": zone in analysis.topological_slivers,
             }
-            for zone in analysis.zones
+            for zone in (*analysis.zones, *analysis.topological_slivers)
         ]
         payload["ouz"] = {
             "status": analysis.ouz_status.status,
@@ -1985,38 +2070,6 @@ def _geometry_warnings(
             )
         )
     return warnings
-
-
-def _result_status(
-    *,
-    context: ContextResult,
-    mpzp_zones: list[MpzpZoneResult],
-    pog: PogResult | None,
-    sources: list[SourceMetadata],
-    mpzp_complete: bool = True,
-) -> str:
-    # NMT jest pominięty świadomie: brak danych o rzeźbie terenu nie oznacza,
-    # że analiza ograniczeń prawnych jest niepełna (patrz ContextResult).
-    critical_context_available = all(
-        section.status == "available" for section in context.critical_sections()
-    )
-    if not mpzp_zones or pog is None:
-        return "partial"
-    if not mpzp_complete or any(zone.manual_review_required for zone in mpzp_zones):
-        return "partial"
-    # Strefa bez przecięcia wektorowego (discovery albo symbol podany ręcznie)
-    # nigdy nie daje ``complete`` — niezależnie od kompletności parametrów.
-    if any(zone.assignment_method != "vector_intersection" for zone in mpzp_zones):
-        return "partial"
-    if pog.legal_status != "binding" or pog.coverage_status != "available":
-        return "partial"
-    if pog.data_availability != "current":
-        return "partial"
-    if not critical_context_available:
-        return "partial"
-    if any(source.manual_review_required for source in sources):
-        return "partial"
-    return "complete"
 
 
 def _unique_sources(

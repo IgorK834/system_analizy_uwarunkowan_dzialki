@@ -24,6 +24,8 @@ magicznych liczbach ukrytych w kodzie (context.md pkt 12.10).
 from __future__ import annotations
 
 import io
+import os
+import shutil
 import zipfile
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -165,8 +167,15 @@ def _normalize_suffixes(
     return tuple(suffix.lower() for suffix in allowed_suffixes)
 
 
+def _open_zip(content: bytes | str | os.PathLike[str]) -> zipfile.ZipFile:
+    """Archiwum z pamięci (bajty) albo z pliku na dysku (duże paczki nie muszą być wczytywane w całości)."""
+    if isinstance(content, (bytes, bytearray)):
+        return zipfile.ZipFile(io.BytesIO(content))
+    return zipfile.ZipFile(content)
+
+
 def extract_zip(
-    content: bytes,
+    content: bytes | str | os.PathLike[str],
     destination: str | Path,
     *,
     limits: ArchiveLimits = DEFAULT_LIMITS,
@@ -187,7 +196,7 @@ def extract_zip(
     suffixes = _normalize_suffixes(allowed_suffixes)
     extracted: list[Path] = []
     try:
-        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+        with _open_zip(content) as archive:
             for info, safe_name in _iter_safe_infos(archive, limits, suffixes):
                 target = (destination_root / safe_name).resolve()
                 # Druga linia obrony: nawet po walidacji ścieżki upewniamy się,
@@ -201,7 +210,7 @@ def extract_zip(
                     )
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with archive.open(info) as source, open(target, "wb") as handle:
-                    handle.write(source.read())
+                    shutil.copyfileobj(source, handle, 1024 * 1024)
                 extracted.append(target)
     except zipfile.BadZipFile as exc:
         raise BadArchiveError("Zawartość nie jest poprawnym archiwum ZIP.") from exc

@@ -52,6 +52,8 @@ GEOMETRY_KEYS: Final[frozenset[str]] = frozenset(
         "network_geometry_geojson",
         "protection_zone_geojson",
         "line_geojson",
+        "road_geojson",
+        "link_geojson",
     }
 )
 GEOMETRY_MOVED: Final[dict[str, bool]] = {"moved_to_geojson_files": True}
@@ -221,6 +223,11 @@ def _all_sources(response: AnalyzeResponse) -> list[SourceMetadata]:
             found.append(response.terrain.source)
         if response.terrain.relief and response.terrain.relief.source:
             found.append(response.terrain.relief.source)
+    found.extend(
+        section.source
+        for section in (response.road_context, response.neighbour_buildings)
+        if section is not None and section.source is not None
+    )
     return found
 
 
@@ -464,6 +471,33 @@ def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> lis
             "Linia, wzdłuż której próbkowano profil wysokościowy z rastra NMT.",
             _features(relief.profile.line_geojson, {"layer": "terrain_profile"}),
             [relief.source or terrain.source])
+    road = response.road_context
+    if road is not None and road.nearest is not None:
+        properties = {
+            "layer": "road_context",
+            "road_id": road.nearest.road_id,
+            "distance_m": road.nearest.distance_m,
+            "relation": road.nearest.relation,
+            "category": road.nearest.category,
+            "road_class": road.nearest.road_class,
+        }
+        add("road_context", "Najbliższa oś jezdni (BDOT10k) i odcinek działka → oś",
+            "Oś jezdni OT_SKJZ_L najbliższa działce oraz najkrótszy odcinek łączący (odległość liczona w EPSG:2180). "
+            + road.interpretation_note,
+            _features(road.nearest.road_geojson, {**properties, "part": "road_axis"})
+            + _features(road.nearest.link_geojson, {**properties, "part": "shortest_link"}),
+            [road.source])
+    buildings = response.neighbour_buildings
+    if buildings is not None and buildings.buildings:
+        add("neighbour_buildings", "Budynki na działce i w najbliższym buforze (BDOT10k)",
+            "Obrysy istniejących budynków (OT_BUBD_A) na działce i w najbliższym buforze, bez nazw i właścicieli; "
+            "położenie względem działki obliczono w EPSG:2180. " + buildings.interpretation_note,
+            [f for item in buildings.buildings
+             for f in _features(item.geometry_geojson,
+                                {"layer": "neighbour_buildings", "building_id": item.building_id,
+                                 "distance_m": item.distance_m, "relation": item.relation,
+                                 "floors": item.floors, "general_function": item.general_function})],
+            [buildings.source])
     return layers
 
 

@@ -41,6 +41,7 @@ from app.schemas.source import (
     SectionQualityMatrix,
     SourceMetadata,
 )
+from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
 from app.shared.data_quality import (
@@ -277,7 +278,8 @@ def _drafts(response: AnalyzeResponse) -> dict[str, _Draft]:
         "nature": _risk(risk["nature"]),
         "terrain": _terrain(response),
         "utilities": _utilities(response),
-        "transport": _Draft("out_of_scope", None, False, ["NO_SOURCE_CONTRACT"]),
+        "transport": _transport(response),
+        "buildings": _buildings(response),
         "mpzp_pog_relation": _relation(response.pog),
     }
 
@@ -427,6 +429,39 @@ def _terrain(response: AnalyzeResponse) -> _Draft:
         if relief.reason_code:
             codes.append(relief.reason_code)
     return _Draft(status, terrain.source, False, codes)
+
+
+def _bdot_draft(section: Any, not_recorded_code: str, empty_code: str) -> _Draft:
+    """Wspólna ocena sekcji z BDOT10k: ``available`` tylko dla pełnego pokrycia obszaru wyszukiwania.
+
+    ``no_match`` w pokrytym zasięgu to sprawdzony wynik (nic nie znaleziono w ograniczonym promieniu) z kodem
+    przyczyny; wynik na obszarze wykraczającym poza zasięg wydania jest ``partial`` — nie wiadomo, co leży dalej.
+    """
+    codes = [section.reason_code] if section.reason_code else []
+    status = section.status
+    covered = section.search_area_within_coverage
+    if status in {"available", "no_match"}:
+        quality: SectionQualityStatus = "partial" if covered is False else "available"
+        if covered is False:
+            codes.append("BDOT_AREA_PARTIALLY_COVERED")
+        return _Draft(quality, section.source, quality == "partial", list(dict.fromkeys(codes)))
+    if status == "unknown":
+        return _Draft("unknown", section.source, False, [not_recorded_code])
+    return _Draft(status, section.source, status == "unavailable", list(dict.fromkeys(codes or [empty_code])))
+
+
+def _transport(response: AnalyzeResponse) -> _Draft:
+    return _bdot_draft(
+        response.road_context or road_context_from_snapshot(None), "ROAD_CONTEXT_NOT_RECORDED", "ROAD_CONTEXT_UNAVAILABLE"
+    )
+
+
+def _buildings(response: AnalyzeResponse) -> _Draft:
+    return _bdot_draft(
+        response.neighbour_buildings or neighbour_buildings_from_snapshot(None),
+        "NEIGHBOUR_BUILDINGS_NOT_RECORDED",
+        "NEIGHBOUR_BUILDINGS_UNAVAILABLE",
+    )
 
 
 def _utilities(response: AnalyzeResponse) -> _Draft:

@@ -7,11 +7,13 @@ błąd jednego źródła nie usuwa poprawnych wyników pozostałych źródeł.
 
 Sekcje nie są równorzędne pod względem wpływu na wynik analizy:
 
-* KIUT, ISOK i GDOŚ opisują ograniczenia istotne prawnie albo bezpieczeństwowo,
-  dlatego ich niedostępność obniża status całej analizy (``critical_sections``).
+* KIUT, ISOK i GDOŚ opisują ograniczenia istotne prawnie albo bezpieczeństwowo
+  (``critical_sections``). Od AU-104 status nagłówkowy analizy nie jest liczony z tej listy, tylko z kompletności
+  sekcji (``services/completeness.py``, ADR-022): ISOK, GDOŚ i NMT muszą być ``available``, a uzbrojenie terenu
+  (tylko podgląd KIUT) jest poza zakresem. Metoda ``critical_sections`` zostaje jako opis krytyczności źródeł.
 * NMT opisuje rzeźbę terenu — informację kosztową i projektową, nie zakaz.
-  Brak danych wysokościowych nie może więc degradować statusu analizy, ale musi
-  być widoczny jako ostrzeżenie sekcji.
+  Brak danych wysokościowych musi być widoczny jako ostrzeżenie sekcji; od AU-104 niesprawdzony teren jest
+  też widoczny na pasku kompletności (nie jest już pomijany w statusie).
 
 KIUT stosuje ten sam kontrakt co ISOK i GDOŚ: ``fetch_kiut_network_section``
 zwraca sekcję z provenance zapytania (także przy braku sieci) albo podnosi
@@ -21,8 +23,9 @@ zablokował źródło przed wysłaniem żądania). Oba wyjątki są finalizowane
 ``unavailable`` z ``reason_code`` i provenance próby — nigdy jako ``available``
 z pustą listą, bo pusta lista oznacza wyłącznie sprawdzony brak sieci.
 
-Awaria KIUT (timeout, błąd HTTP, odpowiedź niepoprawna) obniża status analizy,
-bo sieć mogła istnieć. Zablokowanie źródła przez guard katalogu
+Awaria KIUT (timeout, błąd HTTP, odpowiedź niepoprawna) jest jawnym ``unavailable``
+sekcji — sieć mogła istnieć. Do czasu potwierdzenia kontraktu wektorowego uzbrojenie terenu jest poza zakresem
+kompletności (ADR-022), więc nie wpływa na status nagłówkowy. Zablokowanie źródła przez guard katalogu
 (``VECTOR_SOURCE_NOT_CONFIRMED``) jest natomiast znaną, stałą luką: geometria
 KIUT nie bierze wtedy udziału w obliczeniach, a podgląd i pokrycie zapewnia
 osobny wskaźnik WMS. Ta luka jest widoczna jako ostrzeżenie i ``unavailable``

@@ -538,8 +538,15 @@ def _readme(
         f"- Data analizy (UTC): {_iso(source.analyzed_at)} — chwila wykonania analizy. "
         "Pakiet nie zawiera czasu eksportu, dzięki czemu ten sam snapshot daje identyczny pakiet.",
         f"- Status analizy: {source.status}.",
-        f"- Format: {AUDIT_PACKAGE_SCHEMA_VERSION}; eksporter: {AUDIT_EXPORTER_VERSION}.",
     ]
+    completeness = source.analysis.get("completeness") if isinstance(source.analysis, dict) else None
+    if isinstance(completeness, dict) and completeness.get("headline"):
+        lines.append(
+            f"- Kompletność analizy ({completeness.get('rule_version')}): {completeness['headline']} "
+            "Status nagłówkowy `complete` oznacza, że wszystkie sekcje w zakresie analizy są sprawdzone — "
+            "nie wiąże się z obowiązywaniem planów ani z brakiem ograniczeń (`analysis.json`: `completeness`)."
+        )
+    lines.append(f"- Format: {AUDIT_PACKAGE_SCHEMA_VERSION}; eksporter: {AUDIT_EXPORTER_VERSION}.")
     if source.quality is not None:
         lines.append(
             f"- Polityka jakości: {source.quality.get('policy_version')}; suma kontrolna macierzy "

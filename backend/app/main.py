@@ -10,10 +10,12 @@ from app.core.settings import settings
 from app.modules.location.api.router import router as address_search_router
 from app.modules.documents.api.router import router as documents_router
 from app.routers.analyze import router as analyze_router
+from app.routers.coverage import router as coverage_router
 from app.routers.error_handlers import EXPOSED_RESPONSE_HEADERS, register_error_handlers
 from app.routers.geocode import router as geocode_router
 from app.routers.health import router as health_router
 from app.routers.map_tiles import router as map_tiles_router
+from app.routers.pog_coverage import router as pog_coverage_router
 from app.routers.raster_admin import router as raster_admin_router
 from app.routers.report import router as report_router
 from app.services.wms_tiles import wms_tile_registry
@@ -66,6 +68,8 @@ register_error_handlers(app)
 
 
 app.include_router(analyze_router)
+app.include_router(coverage_router)
+app.include_router(pog_coverage_router)
 app.include_router(health_router)
 app.include_router(geocode_router)
 app.include_router(map_tiles_router)

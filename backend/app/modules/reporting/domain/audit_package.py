@@ -32,7 +32,13 @@ AUDIT_PACKAGE_SCHEMA_VERSION: Final[str] = "audit-package/1"
 # 1.3.0 (AU-101, AU-103): ``analysis.json`` ma ``mpzp_acts`` i ``mpzp_status`` (jeden z sześciu rozłącznych stanów,
 # kanały, akty odrzucone), warstwa ``layers/mpzp_acts.geojson`` (granice aktów z Rejestru Urbanistycznego,
 # ``redistribution: allowed``) i sekcja README o stanach MPZP; akt tylko z KIMPZP nie ma geometrii.
-AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.3.0"
+# 1.4.0 (AU-104): ``analysis.json`` ma ``completeness`` (sekcje w zakresie, stan każdej, podstawa ustalenia MPZP,
+# zastrzeżenia) i ``headline``; README podaje komunikat nagłówkowy. Status nagłówkowy wynika z kompletności.
+# 1.5.0 (Task 23.2–23.3): warstwy ``layers/road_context.geojson`` (najbliższa oś jezdni i odcinek działka → oś) i
+# ``layers/neighbour_buildings.geojson`` (obrysy budynków na działce i w najbliższym buforze) oraz sekcje
+# ``road_context`` i ``neighbour_buildings`` w ``analysis.json``; warstwy trafiają do pakietu wyłącznie, gdy
+# ``redistribution`` źródła ``bdot10k`` w katalogu pozwala na dane pochodne (``allowed`` albo ``derived_only``).
+AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.5.0"
 MANIFEST_NAME: Final[str] = "manifest.json"
 README_NAME: Final[str] = "README.md"
 

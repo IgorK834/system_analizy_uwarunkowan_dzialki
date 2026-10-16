@@ -65,8 +65,16 @@ class Analysis(Base):
     # polityki. NULL = zapis sprzed migracji 026: odczyt odtwarza ocenę bieżącą
     # polityką, oznacza ją ``origin=reconstructed`` i nie zapisuje wstecz.
     section_quality: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Kompletność analizy i komunikat nagłówkowy (AU-104, migracja 035): ile sekcji w zakresie sprawdzono i których
+    # brakuje, według reguły ``completeness/1.0``. NULL = zapis sprzed AU-104: odczyt odtwarza kompletność z macierzy
+    # jakości (``origin=reconstructed``) i nie zmienia zapisanego ``status``.
+    completeness: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Kontekst drogowy i zabudowa sąsiednia z lokalnego wydania BDOT10k (migracja 036). NULL = zapis sprzed wydania
+    # sekcji: odczyt zwraca status ``unknown`` (nie „brak drogi”, nie „brak budynków”).
+    road_context: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    neighbour_buildings: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     data_release_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
-    result_contract_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    result_contract_version: Mapped[str | None] = mapped_column(String(256), nullable=True)
     cache_signature: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
 
     # Pola trybu ręcznego wznowienia (status='waiting_for_zone_symbol'), gdy

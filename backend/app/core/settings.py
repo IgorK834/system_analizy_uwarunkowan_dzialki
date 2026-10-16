@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     road_context_candidate_limit: int = 25
     road_context_statement_timeout_ms: int = 3_000
     road_context_timeout_seconds: float = 10.0
+    # BK-304: zabudowa sąsiednia z lokalnego wydania BDOT10k. Bufory (od obrysu działki) są jawną konfiguracją;
+    # statystyki są kumulatywne (pierścień buffer(działka, r) − działka). Lista budynków w tabeli i na mapie jest
+    # ograniczona do najbliższego promienia i do ``building_context_listed_limit`` obiektów.
+    building_context_enabled: bool = True
+    building_context_buffers_m: tuple[float, ...] = (50.0, 100.0, 200.0)
+    building_context_listed_limit: int = 100
+    building_context_candidate_limit: int = 20_000
+    building_context_statement_timeout_ms: int = 5_000
+    building_context_timeout_seconds: float = 15.0
+    # Import paczek powiatowych BDOT10k (Task 23.1): limit rozmiaru ZIP i czas pobierania.
+    bdot10k_max_package_bytes: int = 512 * 1024 * 1024
+    bdot10k_download_timeout_seconds: float = 300.0
     # Usługa pobierania INSPIRE Map Zagrożenia i Ryzyka Powodziowego (MZP/MRP)
     # prowadzona przez PGW Wody Polskie. Kontrakt (WFS 2.0.0, typeNames
     # nz-core:HazardArea, wymagane srsName w formie URN) potwierdzono realnym
@@ -80,6 +92,17 @@ class Settings(BaseSettings):
     ru_mpzp_acts_enabled: bool = True
     ru_mpzp_timeout_seconds: float = 30.0
     ru_mpzp_max_response_bytes: int = 8 * 1024 * 1024
+    # Discovery POG w Rejestrze Urbanistycznym (AU-105, ADR-023): cztery zapytania WFS ``app-pog`` z ``bbox`` kafla
+    # zamiast pętli „punkt × ~48 warstw WMS”. Adres i typy obiektów to kontrakt katalogu (``pog_app``, zasób
+    # ``ru_wfs``); tutaj są wyłącznie wyłącznik, budżet żądań HTTP na analizę i parametry cache zapytań.
+    ru_pog_discovery_enabled: bool = True
+    ru_pog_timeout_seconds: float = 20.0
+    ru_pog_max_response_bytes: int = 16 * 1024 * 1024
+    ru_pog_request_budget: int = 6
+    ru_pog_tile_size_m: float = 50.0
+    ru_pog_cache_ttl_seconds: int = 24 * 3600
+    ru_pog_cache_negative_ttl_seconds: int = 60
+    ru_pog_cache_max_entries: int = 1024
     # Warstwy używane przez serwerowy proxy kafelków. Frontend nie przekazuje
     # nazw warstw ani adresu upstreamu, dzięki czemu endpoint nie staje się
     # otwartym proxy SSRF.
@@ -297,6 +320,30 @@ class Settings(BaseSettings):
     analysis_singleflight_poll_seconds: float = Field(default=0.25, gt=0)
     analysis_singleflight_cross_process: bool = True
     import_artifact_storage_dir: str = "/tmp/dzialki-import-artifacts"
+    # Import z WFS (AU-106, ADR-024): liczba równoległych żądań stron (limit grzeczności wobec Rejestru
+    # Urbanistycznego, który zwraca strony po 10 obiektów i nie honoruje większego ``count``) oraz odstęp
+    # komunikatów postępu na stderr.
+    import_wfs_concurrency: int = 4
+    import_progress_interval_seconds: float = 10.0
+    # Import krajowy POG z GML Rejestru Urbanistycznego (ADR-026). Adres bazowy to kontrakt katalogu (``pog_app``, zasób
+    # ``ru_published``); tutaj są limity grzeczności i zasobów. RU odpowiada HTTP 429 przy > kilku żądaniach na sekundę,
+    # dlatego żądania są rozstawiane w czasie niezależnie od współbieżności przetwarzania.
+    ru_published_min_interval_seconds: float = 1.2
+    ru_published_timeout_seconds: float = 180.0
+    ru_published_max_gml_bytes: int = 160 * 1024 * 1024
+    pog_national_concurrency: int = 3
+    pog_national_xml_max_nodes: int = 8_000_000
+    pog_national_memory_budget_bytes: int = 160 * 1024 * 1024
+    pog_national_max_withdraw_fraction: float = 0.1
+    # Harmonogram (usługa ``pog-sync``): odstęp przebiegów przyrostowych i pętla kolejki zleceń na żądanie.
+    pog_sync_interval_seconds: int = 24 * 3600
+    pog_sync_queue_poll_seconds: int = 15
+    pog_on_demand_import_enabled: bool = True
+    pog_import_job_max_attempts: int = 3
+    # Strefy-okruchy w wynikach POG (AU-110, issue 303): strefa z udziałem w działce poniżej ``pog_sliver_min_pct`` [%]
+    # ORAZ polem poniżej ``pog_sliver_min_sqm`` [m²] jest artefaktem styku sąsiednich stref — poza tabelą główną.
+    pog_sliver_min_pct: float = Field(default=0.5, ge=0.0, le=100.0)
+    pog_sliver_min_sqm: float = Field(default=1.0, ge=0.0)
     import_area_tolerance_ratio: float = 0.02
     import_overlap_tolerance_sqm: float = 0.01
     import_topology_tolerance_m: float = 0.05

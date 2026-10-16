@@ -146,8 +146,23 @@
     <tr><th>Identyfikator analizy</th><td>{{ analysis_id if analysis_id is not none else not_specified }}</td></tr>
     <tr><th>Data analizy (stan danych)</th><td>{{ analyzed_at or not_specified }}</td></tr>
     <tr><th>Status analizy</th><td><span class="status-badge">{{ status }}</span> — {{ status_label }}</td></tr>
+    {% if completeness %}<tr><th>Kompletność analizy</th><td data-completeness="{{ 'complete' if completeness.complete else 'partial' }}"><strong>{{ completeness.headline }}</strong></td></tr>{% endif %}
     <tr><th>Raport wygenerowano</th><td>{{ generated_at or not_specified }} — wyłącznie z zapisanego snapshotu analizy, bez ponownego pobierania źródeł; mapy renderowane lokalnie.</td></tr>
   </table>
+  {% if completeness %}
+  <table class="data completeness-bar" data-table="completeness">
+    <colgroup><col style="width: 32%"><col style="width: 17%"><col style="width: 51%"></colgroup>
+    <thead><tr><th>Sekcja</th><th>Kompletność</th><th>Podstawa i status źródła</th></tr></thead>
+    <tbody>
+    {% for row in completeness.sections %}
+      <tr><td>{{ row.label }}</td>
+          <td><span class="st st-{{ 'available' if row.state == 'checked' else ('no_coverage' if row.state == 'out_of_scope' else 'unavailable') }}">{{ row.state_label }}</span>{% if row.manual_review %} <span class="tag tag-review">weryfikacja</span>{% endif %}</td>
+          <td><small>{% if row.basis %}{{ row.basis }}; {% endif %}status źródła: {{ row.quality_label }}</small></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% for note in completeness.notes %}<p class="note">{{ note }}</p>{% endfor %}
+  {% endif %}
   {% if manual_zone_declared %}
   <div class="manual-banner">UWAGA: symbol strefy podano ręcznie (odczyt użytkownika z podglądu rastrowego), bez wektorowej granicy strefy. Udział strefy w powierzchni działki jest nieustalony, a wszystkie zależne parametry wymagają weryfikacji.</div>
   {% endif %}
@@ -422,6 +437,9 @@
   </table>
   {% if pog.zones_sum %}
   <p class="note shares-sum">Suma udziałów wierszy: {{ pog.zones_sum.total }} (odchylenie od 100%: {{ pog.zones_sum.deviation }}; bez korekty zaokrągleń).</p>
+  {% endif %}
+  {% if pog.slivers_note %}
+  <p class="note slivers-note">{{ pog.slivers_note }}</p>
   {% endif %}
 
   <h3>Tabela 4.3. Parametry i profile stref (każda strefa osobno — bez średnich)</h3>
@@ -715,8 +733,62 @@
   {% else %}
   <p class="empty">Dane niedostępne — nie wyznaczono buforów sieci (brak potwierdzonej geometrii sieci). Nie oznacza to braku sieci.</p>
   {% endif %}
-  <h3>Transport i dostęp do drogi</h3>
-  <p class="empty">Nie analizowano — brak potwierdzonego kontraktu źródła danych drogowych (BK-305). Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.</p>
+  <h3 id="sec-road">Transport i dostęp do drogi</h3>
+  <p class="informational" data-block="road-note">{{ road.note }}</p>
+  {% if road.status == "available" and road.nearest %}
+  <h4>Tabela 7.3. Najbliższa oś jezdni (BDOT10k) {{ kind("computed") }}</h4>
+  <table class="kv" data-block="road-nearest">
+    <tr><th>Odległość</th><td><strong>{{ road.nearest.distance }}</strong> — {{ road.nearest.relation }}<br><small>Pomiar: od poligonu działki do osi jezdni w EPSG:2180 ({{ road.distance_reference }}); nie do granicy pasa drogowego.</small></td></tr>
+    <tr><th>Kategoria zarządzania (źródło)</th><td>{{ na(road.nearest.category) }}</td></tr>
+    <tr><th>Klasa drogi (źródło)</th><td>{{ na(road.nearest.road_class) }}</td></tr>
+    {% if road.nearest.number or road.nearest.street %}<tr><th>Numer / ulica</th><td>{{ na(road.nearest.number) }} / {{ na(road.nearest.street) }}</td></tr>{% endif %}
+    <tr><th>Nawierzchnia, szerokość, położenie</th><td>{{ na(road.nearest.surface) }}; {{ na(road.nearest.width) }}; {{ na(road.nearest.position) }}</td></tr>
+    <tr><th>Promień wyszukiwania</th><td>{{ road.search_radius }} (sprawdzone: {{ road.searched_radii }}; maksymalnie {{ road.max_radius }})</td></tr>
+    {% if road.nearest.distance == "0 m" %}<tr><th>Osie w kontakcie z działką</th><td>przecinające: {{ na(road.intersecting) }}; stykające się: {{ na(road.touching) }}</td></tr>{% endif %}
+    <tr><th>Identyfikator obiektu</th><td class="mono">{{ road.nearest.id }}{% if road.nearest.version %} (wersja {{ road.nearest.version }}){% endif %}</td></tr>
+  </table>
+  {% else %}
+  <p class="empty" data-block="road-empty">{{ road.status_label|capitalize }}{% if road.reason %} ({{ road.reason }}){% endif %}.
+    {% if road.status == "no_match" %}W promieniu {{ road.search_radius }} nie znaleziono osi jezdni; ograniczony zasięg wyszukiwania nie dowodzi braku drogi.
+    {% else %}Brak danych nie oznacza braku drogi.{% endif %}</p>
+  {% endif %}
+  {% if road.release %}<p class="note">Wydanie danych: powiat {{ road.release.powiat }}, <span class="mono">{{ road.release.label }}</span> (#{{ road.release.id }}), stan danych na {{ na(road.release.data_as_of) }}, zaimportowano {{ na(road.release.imported_at) }}<br><span class="mono">SHA-256 paczki: {{ road.release.sha256 }}</span></p>{% endif %}
+  {% if road.source %}<p class="note">Źródło: {{ source_line(road.source) }}</p>{% endif %}
+  {% for warning in road.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
+
+  <h3 id="sec-buildings">Zabudowa sąsiednia</h3>
+  <p class="informational" data-block="buildings-note">{{ buildings.note }}</p>
+  {% if buildings.on_parcel %}
+  <h4>Tabela 7.4. Zabudowa na działce i w buforach {{ kind("computed") }}</h4>
+  <p>Na działce ({{ buildings.parcel_area }}): <strong>{{ buildings.on_parcel.count }}</strong> {{ "budynek" if buildings.on_parcel.count == 1 else "budynków" }}, pole zabudowy {{ buildings.on_parcel.area }}, pokrycie działki {{ buildings.on_parcel.coverage }} <small>(wynik obliczenia, nie ocena prawna)</small>.</p>
+  <table class="data" data-block="buildings-buffers">
+    <colgroup><col style="width: 9%"><col style="width: 9%"><col style="width: 11%"><col style="width: 15%"><col style="width: 15%"><col style="width: 10%"><col style="width: 12%"><col style="width: 19%"></colgroup>
+    <thead><tr><th>Bufor</th><th class="num">Budynki</th><th class="num">w tym zachodzące na działkę</th><th class="num">Pole obrysów w pierścieniu</th><th class="num">Pole sumy (bez podwójnego liczenia)</th><th class="num">Udział pierścienia</th><th class="num">Min. odległość</th><th>Pole obrysu min / mediana / maks.</th></tr></thead>
+    <tbody>
+    {% for row in buildings.buffers %}
+      <tr><td>{{ row.radius }}</td><td class="num">{{ row.count }}</td><td class="num">{{ row.straddling }}</td><td class="num">{{ row.footprints }}</td><td class="num">{{ row.union }}</td><td class="num">{{ row.share }}</td><td class="num">{{ row.min_distance }}</td><td>{{ row.size }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note">Sąsiedztwo o promieniu r to pierścień <span class="mono">{{ buildings.ring_definition }}</span> mierzony od obrysu działki w EPSG:2180; statystyki są kumulatywne (bufor 100 m zawiera bufor 50 m). Unikalny budynek liczy się raz.</p>
+  {% if buildings.listed %}
+  <h4>Tabela 7.5. Najbliższe budynki (do {{ buildings.listed_radius }} oraz na działce) {{ kind("source_fact") }}</h4>
+  <table class="data" data-block="buildings-list">
+    <thead><tr><th>Budynek</th><th class="num">Odległość</th><th>Położenie</th><th class="num">Pole obrysu</th><th>Funkcja</th><th class="num">Kondygnacje</th></tr></thead>
+    <tbody>
+    {% for item in buildings.listed %}
+      <tr><td class="mono">{{ item.id[:13] }}…</td><td class="num">{{ item.distance }}</td><td>{{ item.relation }}</td><td class="num">{{ item.area }}</td><td>{{ item.function }}{% if item.detail %}<br><small>{{ item.detail }}</small>{% endif %}</td><td class="num">{{ item.floors }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if buildings.items_total > buildings.items_shown or buildings.items_truncated %}<p class="note">Pokazano {{ buildings.items_shown }} z {{ buildings.items_total }} najbliższych budynków; pełna lista jest w pakiecie audytowym.</p>{% endif %}
+  {% endif %}
+  {% else %}
+  <p class="empty" data-block="buildings-empty">{{ buildings.status_label|capitalize }}{% if buildings.reason %} ({{ buildings.reason }}){% endif %}. Brak danych nie oznacza braku budynków.</p>
+  {% endif %}
+  {% if buildings.release %}<p class="note">Wydanie danych: powiat {{ buildings.release.powiat }}, <span class="mono">{{ buildings.release.label }}</span> (#{{ buildings.release.id }}), stan danych na {{ na(buildings.release.data_as_of) }}</p>{% endif %}
+  {% if buildings.source %}<p class="note">Źródło: {{ source_line(buildings.source) }}</p>{% endif %}
+  {% for warning in buildings.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
 </section>
 
 {# ---------- 8. Jakość i kompletność ---------- #}

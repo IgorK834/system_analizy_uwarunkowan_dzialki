@@ -28,6 +28,10 @@ _ALLOWED_ANALYSIS_FIELDS: Final[frozenset[str]] = frozenset(
         "singleflight",
         "waited_ms",
         "scope",
+        # AU-105: liczba żądań HTTP do Rejestru Urbanistycznego w analizie, ich budżet i trafienia cache zapytań.
+        "requests",
+        "budget",
+        "cache_hits",
     }
 )
 
