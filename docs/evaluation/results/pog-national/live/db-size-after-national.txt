@@ -1,0 +1,18 @@
+3964 MB|4156543459
+planning_features|2679 MB|2809651200
+pog_map_zones|786 MB|824500224
+pog_map_overlays|434 MB|455049216
+pog_map_acts|19 MB|19529728
+plan_boundaries|16 MB|16629760
+spatial_ref_sys|7144 kB|7315456
+pog_area_summary_zones|1424 kB|1458176
+pog_formal_documents|1368 kB|1400832
+464
+518338
+441537
+76801
+464
+464
+3072	/a
+state: 111966 B 6.034810s
+/dev/disk3s5   460Gi   391Gi    13Gi    97%    3.1M  136M    2%   /System/Volumes/Data

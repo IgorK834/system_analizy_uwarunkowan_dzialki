@@ -1,0 +1,117 @@
+{
+  "measured_at": "2026-10-12",
+  "host": "macOS (Docker Desktop, Apple Silicon), połączenie domowe -> rejestr-urbanistyczny.gov.pl",
+  "method": "python -m app.modules.imports pog --source pog_app --dry-run --act-id <TERYT>-POG --teryt <TERYT> w kontenerze backend-test; czas ścienny polecenia (z uruchomieniem kontenera ok. 2-3 s); przebiegi starego (HEAD fcf6a9b) i nowego kodu naprzemiennie",
+  "runs": [
+    {
+      "gmina": "Bielsko-Biała",
+      "teryt": "246101",
+      "code": "old",
+      "concurrency": 1,
+      "seconds": 359,
+      "label": "baseline-1",
+      "objects_in_registry": 1397,
+      "features": 1397
+    },
+    {
+      "gmina": "Bielsko-Biała",
+      "teryt": "246101",
+      "code": "old",
+      "concurrency": 1,
+      "seconds": 359,
+      "label": "old-2",
+      "objects_in_registry": 1397,
+      "features": 1397
+    },
+    {
+      "gmina": "Bielsko-Biała",
+      "teryt": "246101",
+      "code": "new",
+      "concurrency": 4,
+      "seconds": 187,
+      "label": "new-1",
+      "download_seconds": 182.2,
+      "progress_lines_stderr": 20,
+      "status": "dry_run_only",
+      "exit_code": 0,
+      "objects_in_registry": 1397,
+      "features": 1397
+    },
+    {
+      "gmina": "Bielsko-Biała",
+      "teryt": "246101",
+      "code": "new",
+      "concurrency": 4,
+      "seconds": 123,
+      "label": "new-2 (--fresh)",
+      "download_seconds": 117.8,
+      "progress_lines_stderr": 14,
+      "status": "dry_run_only",
+      "exit_code": 0,
+      "objects_in_registry": 1397,
+      "features": 1397
+    },
+    {
+      "gmina": "Bielsko-Biała",
+      "teryt": "246101",
+      "code": "new",
+      "concurrency": 8,
+      "seconds": 123,
+      "label": "new-c8 (--fresh)",
+      "download_seconds": 118.9,
+      "progress_lines_stderr": 14,
+      "status": "dry_run_only",
+      "exit_code": 0,
+      "objects_in_registry": 1397,
+      "features": 1397
+    },
+    {
+      "gmina": "Legnica",
+      "teryt": "026201",
+      "code": "old",
+      "concurrency": 1,
+      "seconds": 213,
+      "label": "old",
+      "objects_in_registry": 986,
+      "features": 983
+    },
+    {
+      "gmina": "Legnica",
+      "teryt": "026201",
+      "code": "new",
+      "concurrency": 4,
+      "seconds": 105,
+      "label": "new (--fresh)",
+      "download_seconds": 77.1,
+      "progress_lines_stderr": 12,
+      "status": "dry_run_only",
+      "exit_code": 0,
+      "objects_in_registry": 986,
+      "features": 983
+    },
+    {
+      "gmina": "Sopot",
+      "teryt": "226401",
+      "code": "old",
+      "concurrency": 1,
+      "seconds": 205,
+      "label": "old",
+      "objects_in_registry": 788,
+      "features": 785
+    },
+    {
+      "gmina": "Sopot",
+      "teryt": "226401",
+      "code": "new",
+      "concurrency": 4,
+      "seconds": 68,
+      "label": "new (--fresh)",
+      "download_seconds": 64.2,
+      "progress_lines_stderr": 8,
+      "status": "dry_run_only",
+      "exit_code": 0,
+      "objects_in_registry": 788,
+      "features": 785
+    }
+  ]
+}

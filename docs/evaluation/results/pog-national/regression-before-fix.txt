@@ -1,0 +1,13 @@
+# Test regresyjny 'import gminy B ukrywa gmine A' — przebieg na kodzie PRZED zmiana modelu (2026-10-13)
+# polecenie: backend-test pytest tests/test_pog_multi_commune.py (PostGIS, projekt Compose pogred)
+E       AssertionError: gmina A zniknęła z analizy po imporcie gminy B
+E       assert None is not None
+E           AssertionError: kafel tile_a jest pusty — gmina niewidoczna na mapie
+E           assert (None is not None)
+E       AssertionError: obiekt gminy A nie jest dostępny w inspektorze po imporcie gminy B
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+FAILED tests/test_pog_multi_commune.py::test_importing_commune_b_keeps_commune_a_in_parcel_analysis
+FAILED tests/test_pog_multi_commune.py::test_importing_commune_b_keeps_commune_a_on_the_map
+FAILED tests/test_pog_multi_commune.py::test_importing_commune_b_keeps_commune_a_in_feature_inspector
+3 failed, 1 warning in 1.00s

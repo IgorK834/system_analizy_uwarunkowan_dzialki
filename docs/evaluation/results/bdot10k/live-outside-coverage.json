@@ -1,0 +1,27 @@
+{
+  "completeness_headline": "4 z 10 sekcji sprawdzono; brak: MPZP, strefy POG, OUZ, OZS, OSDIS, droga i dostęp, zabudowa sąsiednia, relacja MPZP–POG. Poza zakresem: uzbrojenie terenu.",
+  "neighbour_buildings": {
+    "buffers": [],
+    "buildings": [],
+    "on_parcel": null,
+    "reason_code": "OUTSIDE_COVERAGE",
+    "release": null,
+    "search_area_within_coverage": null,
+    "status": "no_coverage"
+  },
+  "note": "Działka poza zaimportowanymi powiatami (aktywne wydania: 0221, 0262, 1261, 1465, 2461, 2816) — odpowiedź żywego stosu z 2026-10-13; wycinek bez tokenu dostępu.",
+  "parcel_identifier": "141801_4.0701.23/8",
+  "road_context": {
+    "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
+    "nearest": null,
+    "reason_code": "OUTSIDE_COVERAGE",
+    "release": null,
+    "search_area_within_coverage": null,
+    "status": "no_coverage"
+  },
+  "status": "partial",
+  "warning_codes": [
+    "ROAD_CONTEXT_OUTSIDE_COVERAGE",
+    "NEIGHBOUR_BUILDINGS_OUTSIDE_COVERAGE"
+  ]
+}

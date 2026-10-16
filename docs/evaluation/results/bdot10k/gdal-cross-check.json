@@ -1,0 +1,1115 @@
+{
+  "gdal": "GDAL 3.10.3, released 2025/04/01",
+  "results": [
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 4311.42348211783,
+            "count": 45,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 13914.4489215217,
+            "count": 103,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 1238.35950585104,
+            "count": 16,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 97.6321785380736,
+          "count": 3
+        }
+      },
+      "case_id": "real-021-022104-2-0002-352",
+      "powiat": "0221",
+      "problems": [],
+      "road": {
+        "distance_m": 6.57,
+        "management_category": "powiatowa",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "2B016A16-05E1-946C-E053-CC2BA8C0BCFA",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 2556.85822331266,
+            "count": 24,
+            "min_distance_m": 16.7548348602774
+          },
+          "200": {
+            "clipped_sqm": 6571.95626683664,
+            "count": 49,
+            "min_distance_m": 16.7548348602774
+          },
+          "50": {
+            "clipped_sqm": 902.739071707527,
+            "count": 12,
+            "min_distance_m": 16.7548348602774
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-022-022104-2-0002-288-20",
+      "powiat": "0221",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "wewnętrzna",
+        "relation": "intersects",
+        "road_class": "droga wewnętrzna",
+        "road_id": "2B016A15-F255-946C-E053-CC2BA8C0BCFA",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 2622.58672037959,
+            "count": 24,
+            "min_distance_m": 4.10072861661356
+          },
+          "200": {
+            "clipped_sqm": 9670.50482953529,
+            "count": 63,
+            "min_distance_m": 4.10072861661356
+          },
+          "50": {
+            "clipped_sqm": 1087.40229358367,
+            "count": 10,
+            "min_distance_m": 4.10072861661356
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 86.7168000001151,
+          "count": 1
+        }
+      },
+      "case_id": "real-023-022104-2-0002-776",
+      "powiat": "0221",
+      "problems": [],
+      "road": {
+        "distance_m": 4.47,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "2B016A15-EAA5-946C-E053-CC2BA8C0BCFA",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 1063.39384887298,
+            "count": 8,
+            "min_distance_m": 6.94709835964843
+          },
+          "200": {
+            "clipped_sqm": 2123.13296637304,
+            "count": 18,
+            "min_distance_m": 6.94709835964843
+          },
+          "50": {
+            "clipped_sqm": 636.222500001081,
+            "count": 4,
+            "min_distance_m": 6.94709835964843
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 267.234850000452,
+          "count": 1
+        }
+      },
+      "case_id": "real-024-022104-2-0002-230-2",
+      "powiat": "0221",
+      "problems": [],
+      "road": {
+        "distance_m": 3.17,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "2B016A15-F53D-946C-E053-CC2BA8C0BCFA",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 25832.0842360409,
+            "count": 66,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 61696.6009749703,
+            "count": 238,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 12955.0348245325,
+            "count": 27,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.127658691642234,
+          "count": 1
+        }
+      },
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "powiat": "0262",
+      "problems": [],
+      "road": {
+        "distance_m": 5.36,
+        "management_category": "krajowa",
+        "relation": "disjoint",
+        "road_class": "droga zbiorcza",
+        "road_id": "28C08C6A-C982-CDC0-E053-CA2BA8C07CE4",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 16865.1685014745,
+            "count": 75,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 50605.3671192454,
+            "count": 201,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 4601.68777324809,
+            "count": 28,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 2201.19767966338,
+          "count": 4
+        }
+      },
+      "case_id": "real-014-026201-1-0010-410-1",
+      "powiat": "0262",
+      "problems": [],
+      "road": {
+        "distance_m": 4.41,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "28C08C6A-C6E1-CDC0-E053-CA2BA8C07CE4",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 15164.4504421455,
+            "count": 61,
+            "min_distance_m": 1.95933326491538
+          },
+          "200": {
+            "clipped_sqm": 46395.5252594717,
+            "count": 202,
+            "min_distance_m": 1.95933326491538
+          },
+          "50": {
+            "clipped_sqm": 5809.19511758568,
+            "count": 23,
+            "min_distance_m": 1.95933326491538
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-015-026201-1-0015-530",
+      "powiat": "0262",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "28C08C6A-C58C-CDC0-E053-CA2BA8C07CE4",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 8681.31087689174,
+            "count": 33,
+            "min_distance_m": 13.9969518189088
+          },
+          "200": {
+            "clipped_sqm": 38317.8166484613,
+            "count": 126,
+            "min_distance_m": 13.9969518189088
+          },
+          "50": {
+            "clipped_sqm": 3190.19341160177,
+            "count": 10,
+            "min_distance_m": 13.9969518189088
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-016-026201-1-0009-579-9",
+      "powiat": "0262",
+      "problems": [],
+      "road": {
+        "distance_m": 6.1,
+        "management_category": "wewnętrzna",
+        "relation": "disjoint",
+        "road_class": "droga wewnętrzna",
+        "road_id": "31cd3d1e-8276-41bf-8a98-5fd5aaf45914",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 22569.500188055,
+            "count": 54,
+            "min_distance_m": 1.0294632719378
+          },
+          "200": {
+            "clipped_sqm": 52724.4975606083,
+            "count": 161,
+            "min_distance_m": 1.0294632719378
+          },
+          "50": {
+            "clipped_sqm": 6975.39039045729,
+            "count": 27,
+            "min_distance_m": 1.0294632719378
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-030-026201-1-0009-578-2",
+      "powiat": "0262",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "28C08C6A-C721-CDC0-E053-CA2BA8C07CE4",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 69477.9835796021,
+            "count": 178,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 157072.439767168,
+            "count": 411,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 28598.4099652327,
+            "count": 68,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.152982204798327,
+          "count": 3
+        }
+      },
+      "case_id": "real-005-126105-9-0001-580-4",
+      "powiat": "1261",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "28BA1C51-4E6D-8554-E053-CC2BA8C0F941",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 17230.1859804115,
+            "count": 59,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 52742.6138077864,
+            "count": 163,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 6951.61457895653,
+            "count": 29,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 105.478663742272,
+          "count": 3
+        }
+      },
+      "case_id": "real-006-126105-9-0001-49-2",
+      "powiat": "1261",
+      "problems": [],
+      "road": {
+        "distance_m": 30.21,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga dojazdowa",
+        "road_id": "28BA1C51-75F6-8554-E053-CC2BA8C0F941",
+        "search_radius_m": 50.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 57122.1377279719,
+            "count": 147,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 137748.478489923,
+            "count": 345,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 26714.2783896503,
+            "count": 70,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.548528215803548,
+          "count": 10
+        }
+      },
+      "case_id": "real-007-126105-9-0001-540-15",
+      "powiat": "1261",
+      "problems": [],
+      "road": {
+        "distance_m": 3.73,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga dojazdowa",
+        "road_id": "28BA1C51-7AF7-8554-E053-CC2BA8C0F941",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 15872.9682411994,
+            "count": 47,
+            "min_distance_m": 0.000277487626236599
+          },
+          "200": {
+            "clipped_sqm": 46025.9828775301,
+            "count": 159,
+            "min_distance_m": 0.000277487626236599
+          },
+          "50": {
+            "clipped_sqm": 5951.01319913889,
+            "count": 17,
+            "min_distance_m": 0.000277487626236599
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-008-126105-9-0119-181-10",
+      "powiat": "1261",
+      "problems": [],
+      "road": {
+        "distance_m": 8.65,
+        "management_category": "powiatowa",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "28BA1C51-5963-8554-E053-CC2BA8C0F941",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 53431.5219656652,
+            "count": 69,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 139657.981388614,
+            "count": 245,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 26417.8213825229,
+            "count": 32,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 5.246967077527,
+          "count": 10
+        }
+      },
+      "case_id": "real-001-146510-8-0502-1-3",
+      "powiat": "1465",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "powiatowa",
+        "relation": "intersects",
+        "road_class": "droga zbiorcza",
+        "road_id": "38F6222B-6155-F520-E053-CA2BA8C0BE14",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 23968.8216590962,
+            "count": 65,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 68631.1190259929,
+            "count": 145,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 8485.96182044946,
+            "count": 31,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.037454155056175,
+          "count": 1
+        }
+      },
+      "case_id": "real-002-146510-8-0310-82-2",
+      "powiat": "1465",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "0fdaf302-8a13-4316-af32-75659660c73c",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 26179.2839888631,
+            "count": 50,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 76748.037226917,
+            "count": 160,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 10218.8915470313,
+            "count": 24,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0949086526244536,
+          "count": 4
+        }
+      },
+      "case_id": "real-003-146510-8-0504-1",
+      "powiat": "1465",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "38F6222B-61B6-F520-E053-CA2BA8C0BE14",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 16955.7636754275,
+            "count": 20,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 48647.0131550504,
+            "count": 82,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 8169.55894729882,
+            "count": 7,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 73.4105609846117,
+          "count": 1
+        }
+      },
+      "case_id": "real-004-146510-8-0309-1-4",
+      "powiat": "1465",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "powiatowa",
+        "relation": "intersects",
+        "road_class": "droga zbiorcza",
+        "road_id": "276f58eb-5dfb-4018-8a92-dbd3bfd698d3",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 21875.1529396387,
+            "count": 106,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 68891.7879342832,
+            "count": 341,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 7481.34771520984,
+            "count": 34,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0453710450844196,
+          "count": 2
+        }
+      },
+      "case_id": "real-009-246101-1-0056-155-3",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "powiatowa",
+        "relation": "intersects",
+        "road_class": "droga zbiorcza",
+        "road_id": "30FC18D1-5F7C-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 26568.5355627154,
+            "count": 58,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 66272.2945578386,
+            "count": 186,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 10766.3250931538,
+            "count": 18,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 4493.21366911898,
+          "count": 2
+        }
+      },
+      "case_id": "real-010-246101-1-0055-68-13",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 21.12,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-6DF4-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 11474.5316289807,
+            "count": 99,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 44827.4685522542,
+            "count": 229,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 2460.43339883092,
+            "count": 33,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 156.485620538318,
+          "count": 2
+        }
+      },
+      "case_id": "real-011-246101-1-0081-7",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 4.64,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-6283-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 17935.9448800465,
+            "count": 89,
+            "min_distance_m": 14.9023618828775
+          },
+          "200": {
+            "clipped_sqm": 52031.4168586273,
+            "count": 282,
+            "min_distance_m": 14.9023618828775
+          },
+          "50": {
+            "clipped_sqm": 7373.07589869862,
+            "count": 21,
+            "min_distance_m": 14.9023618828775
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 6208.77860000048,
+          "count": 17
+        }
+      },
+      "case_id": "real-012-246101-1-0056-110-1",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 5.21,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-6E14-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 6525.18505650402,
+            "count": 49,
+            "min_distance_m": 2.70192715606493
+          },
+          "200": {
+            "clipped_sqm": 19350.0363815732,
+            "count": 129,
+            "min_distance_m": 2.70192715606493
+          },
+          "50": {
+            "clipped_sqm": 2140.40367366143,
+            "count": 18,
+            "min_distance_m": 2.70192715606493
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-027-246101-1-0001-1043",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-643A-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 3856.76442080974,
+            "count": 64,
+            "min_distance_m": 9.02532400771985
+          },
+          "200": {
+            "clipped_sqm": 15303.2039757989,
+            "count": 144,
+            "min_distance_m": 9.02532400771985
+          },
+          "50": {
+            "clipped_sqm": 1522.63370666598,
+            "count": 35,
+            "min_distance_m": 9.02532400771985
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 131.09235000003,
+          "count": 1
+        }
+      },
+      "case_id": "real-028-246101-1-0004-737-26",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 3.06,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-6943-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 6388.53148494509,
+            "count": 43,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 19705.0256186424,
+            "count": 140,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 1268.9044487256,
+            "count": 14,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 429.907379178518,
+          "count": 3
+        }
+      },
+      "case_id": "real-029-246101-1-0004-741-132",
+      "powiat": "2461",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "30FC18D1-7685-EA7A-E053-CA2BA8C0FD21",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 29910.6603429854,
+            "count": 177,
+            "min_distance_m": 0.79192976872013
+          },
+          "200": {
+            "clipped_sqm": 64162.9368094973,
+            "count": 366,
+            "min_distance_m": 0.79192976872013
+          },
+          "50": {
+            "clipped_sqm": 15066.4163506634,
+            "count": 98,
+            "min_distance_m": 0.79192976872013
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-017-281603-4-0001-496-5",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "832b618c-6fa5-11ef-aa1d-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 4700.6918859784,
+            "count": 56,
+            "min_distance_m": 0.0
+          },
+          "200": {
+            "clipped_sqm": 12973.1854460204,
+            "count": 136,
+            "min_distance_m": 0.0
+          },
+          "50": {
+            "clipped_sqm": 1610.50828508186,
+            "count": 23,
+            "min_distance_m": 0.0
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 140.124103130068,
+          "count": 2
+        }
+      },
+      "case_id": "real-018-281603-4-0001-358",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 5.48,
+        "management_category": "wewnętrzna",
+        "relation": "disjoint",
+        "road_class": "droga wewnętrzna",
+        "road_id": "8aa830bd-6fa5-11ef-9661-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 5899.16596186388,
+            "count": 59,
+            "min_distance_m": 8.50670992378769
+          },
+          "200": {
+            "clipped_sqm": 22822.0169214377,
+            "count": 195,
+            "min_distance_m": 8.50670992378769
+          },
+          "50": {
+            "clipped_sqm": 1839.88155645016,
+            "count": 18,
+            "min_distance_m": 8.50670992378769
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-019-281603-4-0001-740",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 6.92,
+        "management_category": "gminna",
+        "relation": "disjoint",
+        "road_class": "droga lokalna",
+        "road_id": "837c67be-6fa5-11ef-8f2d-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 4770.31627708076,
+            "count": 14,
+            "min_distance_m": 9.02976679541839
+          },
+          "200": {
+            "clipped_sqm": 16559.7481893654,
+            "count": 42,
+            "min_distance_m": 9.02976679541839
+          },
+          "50": {
+            "clipped_sqm": 1859.40489356415,
+            "count": 6,
+            "min_distance_m": 9.02976679541839
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-020-281603-4-0002-130",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "wewnętrzna",
+        "relation": "intersects",
+        "road_class": "droga wewnętrzna",
+        "road_id": "85890097-6fa5-11ef-8d7d-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 4840.80528429183,
+            "count": 15,
+            "min_distance_m": 35.9017948831253
+          },
+          "200": {
+            "clipped_sqm": 31775.7384136909,
+            "count": 50,
+            "min_distance_m": 35.9017948831253
+          },
+          "50": {
+            "clipped_sqm": 270.455167274026,
+            "count": 6,
+            "min_distance_m": 35.9017948831253
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-025-281603-4-0001-431-66",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 21.43,
+        "management_category": "krajowa",
+        "relation": "disjoint",
+        "road_class": "droga główna ruchu przyśpieszonego",
+        "road_id": "857e7940-6fa5-11ef-9d4f-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    },
+    {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "clipped_sqm": 0.0,
+            "count": 0,
+            "min_distance_m": null
+          },
+          "200": {
+            "clipped_sqm": 0.0,
+            "count": 0,
+            "min_distance_m": null
+          },
+          "50": {
+            "clipped_sqm": 0.0,
+            "count": 0,
+            "min_distance_m": null
+          }
+        },
+        "on_parcel": {
+          "area_sqm": 0.0,
+          "count": 0
+        }
+      },
+      "case_id": "real-026-281604-5-0011-107",
+      "powiat": "2816",
+      "problems": [],
+      "road": {
+        "distance_m": 0.0,
+        "management_category": "wewnętrzna",
+        "relation": "intersects",
+        "road_class": "droga wewnętrzna",
+        "road_id": "837dee65-6fa5-11ef-b2a5-480fcf3c9bd7",
+        "search_radius_m": 25.0,
+        "status": "available"
+      }
+    }
+  ]
+}

@@ -1,0 +1,275 @@
+{
+  "results": [
+    {
+      "case_id": "real-001-146510-8-0502-1-3",
+      "expected_buildings_on_parcel": 10,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 10,
+      "live_distance_m": 0.0,
+      "powiat": "1465",
+      "problems": []
+    },
+    {
+      "case_id": "real-002-146510-8-0310-82-2",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 0.0,
+      "powiat": "1465",
+      "problems": []
+    },
+    {
+      "case_id": "real-003-146510-8-0504-1",
+      "expected_buildings_on_parcel": 4,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 4,
+      "live_distance_m": 0.0,
+      "powiat": "1465",
+      "problems": []
+    },
+    {
+      "case_id": "real-004-146510-8-0309-1-4",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 0.0,
+      "powiat": "1465",
+      "problems": []
+    },
+    {
+      "case_id": "real-005-126105-9-0001-580-4",
+      "expected_buildings_on_parcel": 3,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 3,
+      "live_distance_m": 0.0,
+      "powiat": "1261",
+      "problems": []
+    },
+    {
+      "case_id": "real-006-126105-9-0001-49-2",
+      "expected_buildings_on_parcel": 3,
+      "expected_distance_m": 30.21,
+      "live_buildings_on_parcel": 3,
+      "live_distance_m": 30.21,
+      "powiat": "1261",
+      "problems": []
+    },
+    {
+      "case_id": "real-007-126105-9-0001-540-15",
+      "expected_buildings_on_parcel": 10,
+      "expected_distance_m": 3.73,
+      "live_buildings_on_parcel": 10,
+      "live_distance_m": 3.73,
+      "powiat": "1261",
+      "problems": []
+    },
+    {
+      "case_id": "real-008-126105-9-0119-181-10",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 8.65,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 8.65,
+      "powiat": "1261",
+      "problems": []
+    },
+    {
+      "case_id": "real-009-246101-1-0056-155-3",
+      "expected_buildings_on_parcel": 2,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 2,
+      "live_distance_m": 0.0,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-010-246101-1-0055-68-13",
+      "expected_buildings_on_parcel": 2,
+      "expected_distance_m": 21.12,
+      "live_buildings_on_parcel": 2,
+      "live_distance_m": 21.12,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-011-246101-1-0081-7",
+      "expected_buildings_on_parcel": 2,
+      "expected_distance_m": 4.64,
+      "live_buildings_on_parcel": 2,
+      "live_distance_m": 4.64,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-012-246101-1-0056-110-1",
+      "expected_buildings_on_parcel": 17,
+      "expected_distance_m": 5.21,
+      "live_buildings_on_parcel": 17,
+      "live_distance_m": 5.21,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-013-026201-1-0009-1319-4",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 5.36,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 5.36,
+      "powiat": "0262",
+      "problems": []
+    },
+    {
+      "case_id": "real-014-026201-1-0010-410-1",
+      "expected_buildings_on_parcel": 4,
+      "expected_distance_m": 4.41,
+      "live_buildings_on_parcel": 4,
+      "live_distance_m": 4.41,
+      "powiat": "0262",
+      "problems": []
+    },
+    {
+      "case_id": "real-015-026201-1-0015-530",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "0262",
+      "problems": []
+    },
+    {
+      "case_id": "real-016-026201-1-0009-579-9",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 6.1,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 6.1,
+      "powiat": "0262",
+      "problems": []
+    },
+    {
+      "case_id": "real-017-281603-4-0001-496-5",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-018-281603-4-0001-358",
+      "expected_buildings_on_parcel": 2,
+      "expected_distance_m": 5.48,
+      "live_buildings_on_parcel": 2,
+      "live_distance_m": 5.48,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-019-281603-4-0001-740",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 6.92,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 6.92,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-020-281603-4-0002-130",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-021-022104-2-0002-352",
+      "expected_buildings_on_parcel": 3,
+      "expected_distance_m": 6.57,
+      "live_buildings_on_parcel": 3,
+      "live_distance_m": 6.57,
+      "powiat": "0221",
+      "problems": []
+    },
+    {
+      "case_id": "real-022-022104-2-0002-288-20",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "0221",
+      "problems": []
+    },
+    {
+      "case_id": "real-023-022104-2-0002-776",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 4.47,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 4.47,
+      "powiat": "0221",
+      "problems": []
+    },
+    {
+      "case_id": "real-024-022104-2-0002-230-2",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 3.17,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 3.17,
+      "powiat": "0221",
+      "problems": []
+    },
+    {
+      "case_id": "real-025-281603-4-0001-431-66",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 21.43,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 21.43,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-026-281604-5-0011-107",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "2816",
+      "problems": []
+    },
+    {
+      "case_id": "real-027-246101-1-0001-1043",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-028-246101-1-0004-737-26",
+      "expected_buildings_on_parcel": 1,
+      "expected_distance_m": 3.06,
+      "live_buildings_on_parcel": 1,
+      "live_distance_m": 3.06,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-029-246101-1-0004-741-132",
+      "expected_buildings_on_parcel": 3,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 3,
+      "live_distance_m": 0.0,
+      "powiat": "2461",
+      "problems": []
+    },
+    {
+      "case_id": "real-030-026201-1-0009-578-2",
+      "expected_buildings_on_parcel": 0,
+      "expected_distance_m": 0.0,
+      "live_buildings_on_parcel": 0,
+      "live_distance_m": 0.0,
+      "powiat": "0262",
+      "problems": []
+    }
+  ],
+  "source": "2026-10-13.json"
+}

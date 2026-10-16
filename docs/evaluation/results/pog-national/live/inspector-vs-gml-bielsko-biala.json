@@ -1,0 +1,244 @@
+[
+ {
+  "feature": "PL.ZIPPZP.9995/246101-POG/1POG-4SW",
+  "symbol": [
+   "SW",
+   "SW"
+  ],
+  "name": [
+   "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną",
+   "strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną"
+  ],
+  "far": [
+   "2.0",
+   2.0
+  ],
+  "height": [
+   "18.0",
+   18.0
+  ],
+  "coverage": [
+   "40.0",
+   40.0
+  ],
+  "bio": [
+   "30.0",
+   30.0
+  ],
+  "profiles_gml": [
+   "teren zabudowy mieszkaniowej wielorodzinnej",
+   "teren usług",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "profiles_api": [
+   "teren zabudowy mieszkaniowej wielorodzinnej",
+   "teren usług",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "act": "PL.ZIPPZP.9995/246101-POG/1POG",
+  "resolution": "XXV/529/2026",
+  "resolution_date": "2026-06-25",
+  "journal": "Dziennik Urzędowy Woj. Śląskiego",
+  "valid_from": "2026-08-15",
+  "effective": "2026-08-15",
+  "ru_url": "https://rejestr-urbanistyczny.gov.pl/published/details/pog/1175"
+ },
+ {
+  "feature": "PL.ZIPPZP.9995/246101-POG/1POG-260SU",
+  "symbol": [
+   "SU",
+   "SU"
+  ],
+  "name": [
+   "strefa usługowa",
+   "strefa usługowa"
+  ],
+  "far": [
+   "3.0",
+   3.0
+  ],
+  "height": [
+   "16.0",
+   16.0
+  ],
+  "coverage": [
+   "60.0",
+   60.0
+  ],
+  "bio": [
+   "30.0",
+   30.0
+  ],
+  "profiles_gml": [
+   "teren usług",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "profiles_api": [
+   "teren usług",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "act": "PL.ZIPPZP.9995/246101-POG/1POG",
+  "resolution": "XXV/529/2026",
+  "resolution_date": "2026-06-25",
+  "journal": "Dziennik Urzędowy Woj. Śląskiego",
+  "valid_from": "2026-08-15",
+  "effective": "2026-08-15",
+  "ru_url": "https://rejestr-urbanistyczny.gov.pl/published/details/pog/1175"
+ },
+ {
+  "feature": "PL.ZIPPZP.9995/246101-POG/1POG-25SP",
+  "symbol": [
+   "SP",
+   "SP"
+  ],
+  "name": [
+   "strefa gospodarcza",
+   "strefa gospodarcza"
+  ],
+  "far": [
+   "2.0",
+   2.0
+  ],
+  "height": [
+   "15.0",
+   15.0
+  ],
+  "coverage": [
+   "50.0",
+   50.0
+  ],
+  "bio": [
+   "20.0",
+   20.0
+  ],
+  "profiles_gml": [
+   "teren produkcji",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "profiles_api": [
+   "teren produkcji",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "act": "PL.ZIPPZP.9995/246101-POG/1POG",
+  "resolution": "XXV/529/2026",
+  "resolution_date": "2026-06-25",
+  "journal": "Dziennik Urzędowy Woj. Śląskiego",
+  "valid_from": "2026-08-15",
+  "effective": "2026-08-15",
+  "ru_url": "https://rejestr-urbanistyczny.gov.pl/published/details/pog/1175"
+ },
+ {
+  "feature": "PL.ZIPPZP.9995/246101-POG/1POG-25SI",
+  "symbol": [
+   "SI",
+   "SI"
+  ],
+  "name": [
+   "strefa infrastrukturalna",
+   "strefa infrastrukturalna"
+  ],
+  "far": [
+   "0.6",
+   0.6
+  ],
+  "height": [
+   "15.0",
+   15.0
+  ],
+  "coverage": [
+   "40.0",
+   40.0
+  ],
+  "bio": [
+   "20.0",
+   20.0
+  ],
+  "profiles_gml": [
+   "teren infrastruktury technicznej",
+   "teren komunikacji",
+   "teren ogrodów działkowych"
+  ],
+  "profiles_api": [
+   "teren infrastruktury technicznej",
+   "teren komunikacji",
+   "teren ogrodów działkowych"
+  ],
+  "act": "PL.ZIPPZP.9995/246101-POG/1POG",
+  "resolution": "XXV/529/2026",
+  "resolution_date": "2026-06-25",
+  "journal": "Dziennik Urzędowy Woj. Śląskiego",
+  "valid_from": "2026-08-15",
+  "effective": "2026-08-15",
+  "ru_url": "https://rejestr-urbanistyczny.gov.pl/published/details/pog/1175"
+ },
+ {
+  "feature": "PL.ZIPPZP.9995/246101-POG/1POG-6SZ",
+  "symbol": [
+   "SZ",
+   "SZ"
+  ],
+  "name": [
+   "strefa wielofunkcyjna z zabudową zagrodową",
+   "strefa wielofunkcyjna z zabudową zagrodową"
+  ],
+  "far": [
+   "0.6",
+   0.6
+  ],
+  "height": [
+   "9.0",
+   9.0
+  ],
+  "coverage": [
+   "60.0",
+   60.0
+  ],
+  "bio": [
+   "30.0",
+   30.0
+  ],
+  "profiles_gml": [
+   "teren zabudowy zagrodowej",
+   "teren produkcji w gospodarstwach rolnych",
+   "teren akwakultury i obsługi rybactwa",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "profiles_api": [
+   "teren zabudowy zagrodowej",
+   "teren produkcji w gospodarstwach rolnych",
+   "teren akwakultury i obsługi rybactwa",
+   "teren komunikacji",
+   "teren zieleni urządzonej",
+   "teren ogrodów działkowych",
+   "teren infrastruktury technicznej"
+  ],
+  "act": "PL.ZIPPZP.9995/246101-POG/1POG",
+  "resolution": "XXV/529/2026",
+  "resolution_date": "2026-06-25",
+  "journal": "Dziennik Urzędowy Woj. Śląskiego",
+  "valid_from": "2026-08-15",
+  "effective": "2026-08-15",
+  "ru_url": "https://rejestr-urbanistyczny.gov.pl/published/details/pog/1175"
+ }
+]
