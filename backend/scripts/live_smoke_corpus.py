@@ -150,6 +150,44 @@ def _count(value: object) -> int | None:
     return len(value) if isinstance(value, list) else None
 
 
+def _summarize_completeness(summary: dict[str, Any], completeness: object) -> None:
+    """Kompletność analizy (AU-104): ile sekcji sprawdzono, których brakuje i na jakiej podstawie ustalono MPZP."""
+    if not isinstance(completeness, dict):
+        return
+    checked, total = completeness.get("checked"), completeness.get("total")
+    summary["completeness_checked"] = checked if isinstance(checked, int) else None
+    summary["completeness_total"] = total if isinstance(total, int) else None
+    headline = completeness.get("headline")
+    summary["completeness_headline"] = headline if isinstance(headline, str) else None
+    sections = completeness.get("sections")
+    if not isinstance(sections, list):
+        return
+    items = [item for item in sections if isinstance(item, dict) and isinstance(item.get("section"), str)]
+    summary["completeness_missing"] = sorted(item["section"] for item in items if item.get("state") == "missing")
+    summary["completeness_out_of_scope"] = sorted(item["section"] for item in items if item.get("state") == "out_of_scope")
+    mpzp = next((item for item in items if item["section"] == "mpzp"), None)
+    basis = mpzp.get("basis") if mpzp and mpzp.get("state") == "checked" else None
+    summary["mpzp_basis"] = basis if isinstance(basis, str) else None
+
+
+def _summarize_bdot(summary: dict[str, Any], road: object, buildings: object) -> None:
+    """Droga i zabudowa sąsiednia z BDOT10k (Task 23.2–23.3): status, powód i wartości pochodne (null ≠ 0)."""
+    if isinstance(road, dict):
+        status, reason = road.get("status"), road.get("reason_code")
+        summary["road_status"] = status if isinstance(status, str) else None
+        summary["road_reason"] = reason if isinstance(reason, str) else None
+        nearest = road.get("nearest")
+        distance = nearest.get("distance_m") if isinstance(nearest, dict) else None
+        summary["road_distance_m"] = distance if isinstance(distance, (int, float)) else None
+    if isinstance(buildings, dict):
+        status, reason = buildings.get("status"), buildings.get("reason_code")
+        summary["buildings_status"] = status if isinstance(status, str) else None
+        summary["buildings_reason"] = reason if isinstance(reason, str) else None
+        on_parcel = buildings.get("on_parcel")
+        count = on_parcel.get("count") if isinstance(on_parcel, dict) else None
+        summary["buildings_on_parcel"] = count if isinstance(count, int) else None
+
+
 def summarize_response(status_code: int, body: object) -> dict[str, Any]:
     """Pola pochodne odpowiedzi: nigdy ``access_token`` ani pełna treść."""
     summary: dict[str, Any] = {
@@ -163,6 +201,18 @@ def summarize_response(status_code: int, body: object) -> dict[str, Any]:
         "mpzp_discovery_status": None,
         "manual_zone_required": None,
         "warning_codes": [],
+        "completeness_checked": None,
+        "completeness_total": None,
+        "completeness_missing": [],
+        "completeness_out_of_scope": [],
+        "completeness_headline": None,
+        "mpzp_basis": None,
+        "road_status": None,
+        "road_reason": None,
+        "road_distance_m": None,
+        "buildings_status": None,
+        "buildings_reason": None,
+        "buildings_on_parcel": None,
         "body_valid": isinstance(body, dict),
     }
     if not isinstance(body, dict):
@@ -187,6 +237,8 @@ def summarize_response(status_code: int, body: object) -> dict[str, Any]:
         summary["mpzp_discovery_status"] = discovery["status"]
     required = body.get("manual_zone_required")
     summary["manual_zone_required"] = required if isinstance(required, bool) else None
+    _summarize_completeness(summary, body.get("completeness"))
+    _summarize_bdot(summary, body.get("road_context"), body.get("neighbour_buildings"))
     warnings = body.get("warnings")
     if isinstance(warnings, list):
         summary["warning_codes"] = sorted(
@@ -337,6 +389,13 @@ def _zone_stats(results: Sequence[Mapping[str, Any]], key: str) -> dict[str, int
     }
 
 
+def _bdot_label(status: object, reason: object) -> str:
+    """Etykieta histogramu: status (a przy braku wyniku także powód); brak sekcji w odpowiedzi to ``brak sekcji``."""
+    if not isinstance(status, str):
+        return "brak sekcji"
+    return f"{status} ({reason})" if isinstance(reason, str) and status != "available" else status
+
+
 def build_summary(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     http_hist = Counter(
         "brak odpowiedzi" if result["http_status"] is None else str(result["http_status"])
@@ -351,12 +410,30 @@ def build_summary(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     durations = [float(result["duration_ms"]) for result in results if result.get("duration_ms") is not None]
     five_xx = sum(1 for result in results if result["http_class"] == "5xx")
     transport = sum(1 for result in results if result["http_class"] == "transport")
+    missing_hist: Counter[str] = Counter()
+    basis_hist: Counter[str] = Counter()
+    checked_hist: Counter[str] = Counter()
+    road_hist: Counter[str] = Counter()
+    buildings_hist: Counter[str] = Counter()
+    for result in ok:
+        road_hist[_bdot_label(result.get("road_status"), result.get("road_reason"))] += 1
+        buildings_hist[_bdot_label(result.get("buildings_status"), result.get("buildings_reason"))] += 1
+        missing_hist.update(result.get("completeness_missing") or [])
+        if result.get("mpzp_basis"):
+            basis_hist[str(result["mpzp_basis"])] += 1
+        if result.get("completeness_checked") is not None and result.get("completeness_total") is not None:
+            checked_hist[f"{result['completeness_checked']} z {result['completeness_total']}"] += 1
     return {
         "cases": len(results),
         "http_status_histogram": _sorted_counts(http_hist),
         "analysis_status_histogram": _sorted_counts(status_hist),
         "error_code_histogram": _sorted_counts(error_hist),
         "warning_code_histogram": _sorted_counts(warning_hist),
+        "completeness_missing_histogram": _sorted_counts(missing_hist),
+        "completeness_checked_histogram": _sorted_counts(checked_hist),
+        "mpzp_basis_histogram": _sorted_counts(basis_hist),
+        "road_status_histogram": _sorted_counts(road_hist),
+        "buildings_status_histogram": _sorted_counts(buildings_hist),
         "five_xx": five_xx,
         "transport_errors": transport,
         "client_errors": sum(1 for result in results if result["http_class"] == "4xx"),
@@ -476,6 +553,16 @@ def compare_runs(previous: Mapping[str, Any] | None, current: Mapping[str, Any])
             "latency_p50_ms": delta(["latency_ms", "p50"]),
             "latency_p95_ms": delta(["latency_ms", "p95"]),
         },
+        # Rozkłady (histogramy) przed i po: kompletność analizy oraz statusy drogi i zabudowy (Task 23.2–23.3).
+        "histogram_deltas": {
+            key: delta([key])
+            for key in (
+                "completeness_checked_histogram",
+                "completeness_missing_histogram",
+                "road_status_histogram",
+                "buildings_status_histogram",
+            )
+        },
     }
 
 
@@ -570,6 +657,32 @@ def _histogram_table(title_columns: tuple[str, str], histogram: Mapping[str, int
     return lines
 
 
+_HISTOGRAM_DELTA_TITLES: dict[str, str] = {
+    "completeness_checked_histogram": "Kompletność: liczba sprawdzonych sekcji (z liczby sekcji w zakresie)",
+    "completeness_missing_histogram": "Kompletność: sekcje, których brakowało",
+    "road_status_histogram": "Droga (`road_context.status`)",
+    "buildings_status_histogram": "Zabudowa sąsiednia (`neighbour_buildings.status`)",
+}
+
+
+def _histogram_delta_rows(deltas: Mapping[str, Any]) -> list[str]:
+    """Tabele „poprzednio / teraz” dla rozkładów; klucz nieobecny w jednym z przebiegów to ``0`` (nie brak sekcji)."""
+    lines: list[str] = []
+    for key, title in _HISTOGRAM_DELTA_TITLES.items():
+        pair = deltas.get(key)
+        if not isinstance(pair, Mapping):
+            continue
+        before = pair.get("before") if isinstance(pair.get("before"), Mapping) else {}
+        after = pair.get("after") if isinstance(pair.get("after"), Mapping) else {}
+        labels = sorted(set(before) | set(after))
+        if not labels:
+            continue
+        lines += [f"**{title}**", "", "| wartość | Poprzednio | Teraz |", "|---|---:|---:|"]
+        lines += [f"| `{label}` | {before.get(label, 0)} | {after.get(label, 0)} |" for label in labels]
+        lines.append("")
+    return lines
+
+
 def _change_rows(items: Sequence[Mapping[str, Any]]) -> list[str]:
     if not items:
         return ["_brak_", ""]
@@ -638,6 +751,28 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         "Brak sekcji (`null`) nie jest zerem stref, a brak stref nie dowodzi braku ograniczenia — zob. statusy źródeł "
         "w odpowiedzi API.",
         "",
+        "### Kompletność analizy (`completeness`, HTTP 2xx; AU-104)",
+        "",
+        "Liczba sprawdzonych sekcji w zakresie analizy (status `complete` ⇔ wszystkie):",
+        "",
+        *_histogram_table(("sprawdzono", "Przypadki"), summary.get("completeness_checked_histogram", {})),
+        "Sekcje, których brakowało (liczba analiz):",
+        "",
+        *_histogram_table(("sekcja", "Przypadki"), summary.get("completeness_missing_histogram", {})),
+        "Podstawa ustalenia MPZP (analizy ze sprawdzoną sekcją MPZP):",
+        "",
+        *_histogram_table(("podstawa", "Przypadki"), summary.get("mpzp_basis_histogram", {})),
+        "### Droga i zabudowa sąsiednia (`road_context`, `neighbour_buildings`; BDOT10k, HTTP 2xx)",
+        "",
+        "Statusy rozłączne: `available`, `no_match` (pusty ograniczony zasięg — nie dowód braku drogi), `no_coverage` "
+        "(powiat bez zaimportowanego wydania — nie brak drogi ani budynków) i `unavailable` (awaria zapytania).",
+        "",
+        "Droga (`road_context.status`):",
+        "",
+        *_histogram_table(("status", "Przypadki"), summary.get("road_status_histogram", {})),
+        "Zabudowa sąsiednia (`neighbour_buildings.status`):",
+        "",
+        *_histogram_table(("status", "Przypadki"), summary.get("buildings_status_histogram", {})),
         "### Ostrzeżenia (`warnings[].code`, HTTP 2xx)",
         "",
         *_histogram_table(("kod", "Przypadki"), summary["warning_code_histogram"]),
@@ -668,6 +803,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
                 )
             ),
             "",
+            *_histogram_delta_rows(comparison.get("histogram_deltas", {})),
             f"### Nowe regresje ({len(comparison['regressions'])})",
             "",
             *_change_rows(comparison["regressions"]),

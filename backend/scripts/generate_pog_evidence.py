@@ -26,10 +26,7 @@ from app.db.session import SessionLocal  # noqa: E402
 from app.modules.imports.application.common import ImportRelease  # noqa: E402
 from app.modules.imports.application.pog_import import run_pog_import  # noqa: E402
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore  # noqa: E402
-from app.modules.imports.infrastructure.repository import (  # noqa: E402
-    SqlAlchemyImportRepository,
-    active_pog_release,
-)
+from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository  # noqa: E402
 from app.schemas.analyze import AnalyzeResponse  # noqa: E402
 from app.services.analysis_orchestrator import _analyze_pog_best_effort  # noqa: E402
 from app.services.persistence import build_analyze_response_from_analysis, save_analysis  # noqa: E402
@@ -58,12 +55,8 @@ async def main() -> None:
                 publication_allowed=True, dry_run=False, teryt_scope=("226401",),
             ),
         )
-        pinned = active_pog_release(session, source_id=source_id)
         parcel = _parcel_inside_zone()
-        with (
-            patch("app.services.analysis_orchestrator.active_pog_release", return_value=pinned),
-            patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()),
-        ):
+        with patch("app.services.analysis_orchestrator.discover_pog", new=AsyncMock()):
             pog, _ouz, warnings, sources = await _analyze_pog_best_effort(parcel, "226401", session)
         response = AnalyzeResponse(
             status="partial", analyzed_at=datetime.now(timezone.utc), mpzp_zones=[], pog=pog,
