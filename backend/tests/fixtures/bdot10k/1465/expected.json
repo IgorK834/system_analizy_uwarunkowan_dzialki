@@ -1,0 +1,280 @@
+{
+  "area_epsilon_sqm": 0.01,
+  "buffer_quad_segs": 16,
+  "building_buffers_m": [
+    50.0,
+    100.0,
+    200.0
+  ],
+  "building_feature_count": 541,
+  "building_radius_m": 200.0,
+  "cases": {
+    "real-001-146510-8-0502-1-3": {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "built_share_pct": 32.05,
+            "count": 69,
+            "footprint_area_in_ring_sqm": 53431.522,
+            "footprint_max_sqm": 4446.3626,
+            "footprint_median_sqm": 553.3457,
+            "footprint_min_sqm": 56.6948,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 166713.2442,
+            "straddling_parcel_count": 10,
+            "union_area_in_ring_sqm": 53431.522
+          },
+          "200": {
+            "built_share_pct": 35.2887,
+            "count": 245,
+            "footprint_area_in_ring_sqm": 139657.9814,
+            "footprint_max_sqm": 8522.7077,
+            "footprint_median_sqm": 438.5942,
+            "footprint_min_sqm": 14.8251,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 395758.6993,
+            "straddling_parcel_count": 10,
+            "union_area_in_ring_sqm": 139657.9814
+          },
+          "50": {
+            "built_share_pct": 34.9076,
+            "count": 32,
+            "footprint_area_in_ring_sqm": 26417.8214,
+            "footprint_max_sqm": 4446.3626,
+            "footprint_median_sqm": 821.3534,
+            "footprint_min_sqm": 56.6948,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 75679.182,
+            "straddling_parcel_count": 10,
+            "union_area_in_ring_sqm": 26417.8214
+          }
+        },
+        "on_parcel": {
+          "count": 10,
+          "coverage_pct": 0.033,
+          "union_area_in_parcel_sqm": 5.247
+        }
+      },
+      "parcel_area_sqm": 15893.4586,
+      "roads": {
+        "distance_m": 0.0,
+        "intersecting_road_count": 10,
+        "management_category": "powiatowa",
+        "relation": "intersects",
+        "road_class": "droga zbiorcza",
+        "road_id": "38F6222B-6155-F520-E053-CA2BA8C0BE14",
+        "road_number": "5503W",
+        "search_radius_m": 25.0,
+        "status": "available",
+        "touching_road_count": 0
+      }
+    },
+    "real-002-146510-8-0310-82-2": {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "built_share_pct": 46.3454,
+            "count": 65,
+            "footprint_area_in_ring_sqm": 23968.8217,
+            "footprint_max_sqm": 3331.2545,
+            "footprint_median_sqm": 380.2839,
+            "footprint_min_sqm": 43.2111,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 51717.7882,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 23968.8217
+          },
+          "200": {
+            "built_share_pct": 41.33,
+            "count": 145,
+            "footprint_area_in_ring_sqm": 68631.119,
+            "footprint_max_sqm": 3331.2545,
+            "footprint_median_sqm": 412.7018,
+            "footprint_min_sqm": 32.128,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 166056.2485,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 68631.119
+          },
+          "50": {
+            "built_share_pct": 47.0186,
+            "count": 31,
+            "footprint_area_in_ring_sqm": 8485.9618,
+            "footprint_max_sqm": 1328.458,
+            "footprint_median_sqm": 369.3469,
+            "footprint_min_sqm": 51.6115,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 18048.1064,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 8485.9618
+          }
+        },
+        "on_parcel": {
+          "count": 1,
+          "coverage_pct": 0.0025,
+          "union_area_in_parcel_sqm": 0.0375
+        }
+      },
+      "parcel_area_sqm": 1477.9783,
+      "roads": {
+        "distance_m": 0.0,
+        "intersecting_road_count": 4,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "0fdaf302-8a13-4316-af32-75659660c73c",
+        "road_number": "630016W",
+        "search_radius_m": 25.0,
+        "status": "available",
+        "touching_road_count": 0
+      }
+    },
+    "real-003-146510-8-0504-1": {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "built_share_pct": 30.2911,
+            "count": 50,
+            "footprint_area_in_ring_sqm": 26179.284,
+            "footprint_max_sqm": 1697.8177,
+            "footprint_median_sqm": 639.2865,
+            "footprint_min_sqm": 40.2553,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 86425.5289,
+            "straddling_parcel_count": 4,
+            "union_area_in_ring_sqm": 26179.284
+          },
+          "200": {
+            "built_share_pct": 32.5789,
+            "count": 160,
+            "footprint_area_in_ring_sqm": 76748.0372,
+            "footprint_max_sqm": 4960.8197,
+            "footprint_median_sqm": 395.4279,
+            "footprint_min_sqm": 20.301,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 235575.9048,
+            "straddling_parcel_count": 4,
+            "union_area_in_ring_sqm": 76748.0372
+          },
+          "50": {
+            "built_share_pct": 28.8885,
+            "count": 24,
+            "footprint_area_in_ring_sqm": 10218.8915,
+            "footprint_max_sqm": 1697.8177,
+            "footprint_median_sqm": 541.7217,
+            "footprint_min_sqm": 65.1934,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 35373.5952,
+            "straddling_parcel_count": 4,
+            "union_area_in_ring_sqm": 10218.8915
+          }
+        },
+        "on_parcel": {
+          "count": 4,
+          "coverage_pct": 0.0053,
+          "union_area_in_parcel_sqm": 0.0949
+        }
+      },
+      "parcel_area_sqm": 1780.9077,
+      "roads": {
+        "distance_m": 0.0,
+        "intersecting_road_count": 1,
+        "management_category": "gminna",
+        "relation": "intersects",
+        "road_class": "droga lokalna",
+        "road_id": "38F6222B-61B6-F520-E053-CA2BA8C0BE14",
+        "road_number": "630135W",
+        "search_radius_m": 25.0,
+        "status": "available",
+        "touching_road_count": 0
+      }
+    },
+    "real-004-146510-8-0309-1-4": {
+      "buildings": {
+        "buffers": {
+          "100": {
+            "built_share_pct": 20.9843,
+            "count": 20,
+            "footprint_area_in_ring_sqm": 16955.7637,
+            "footprint_max_sqm": 4157.3695,
+            "footprint_median_sqm": 920.3707,
+            "footprint_min_sqm": 45.9232,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 80801.954,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 16955.7637
+          },
+          "200": {
+            "built_share_pct": 21.685,
+            "count": 82,
+            "footprint_area_in_ring_sqm": 48647.0132,
+            "footprint_max_sqm": 24633.6644,
+            "footprint_median_sqm": 489.8356,
+            "footprint_min_sqm": 32.128,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 224334.7033,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 48647.0132
+          },
+          "50": {
+            "built_share_pct": 25.0911,
+            "count": 7,
+            "footprint_area_in_ring_sqm": 8169.5589,
+            "footprint_max_sqm": 4157.3695,
+            "footprint_median_sqm": 1819.1061,
+            "footprint_min_sqm": 105.8287,
+            "min_distance_m": 0.0,
+            "ring_area_sqm": 32559.6276,
+            "straddling_parcel_count": 1,
+            "union_area_in_ring_sqm": 8169.5589
+          }
+        },
+        "on_parcel": {
+          "count": 1,
+          "coverage_pct": 1.1272,
+          "union_area_in_parcel_sqm": 73.4106
+        }
+      },
+      "parcel_area_sqm": 6512.8715,
+      "roads": {
+        "distance_m": 0.0,
+        "intersecting_road_count": 8,
+        "management_category": "powiatowa",
+        "relation": "intersects",
+        "road_class": "droga zbiorcza",
+        "road_id": "276f58eb-5dfb-4018-8a92-dbd3bfd698d3",
+        "road_number": "5502W",
+        "search_radius_m": 25.0,
+        "status": "available",
+        "touching_road_count": 0
+      }
+    }
+  },
+  "fixture_package": {
+    "name": "1465_GML.zip",
+    "sha256": "174c28c985b56703f5a9bda4a9be5a62624ddcda4312de1ebf17a9935b8c9a58",
+    "size_bytes": 227002
+  },
+  "latest_version_in_fixture": "2025-06-01T12:00:00",
+  "members": [
+    "PL.PZGiK.330.1465/BDOT10k/PL.PZGiK.330.1465__OT_ADJA_A.xml",
+    "PL.PZGiK.330.1465/BDOT10k/PL.PZGiK.330.1465__OT_BUBD_A.xml",
+    "PL.PZGiK.330.1465/BDOT10k/PL.PZGiK.330.1465__OT_SKJZ_L.xml"
+  ],
+  "method": "gml:posList czytane bez GDAL i bez kodu aplikacji; odległość/relacja/pola liczone Shapely (GEOS) w EPSG:2180. Drogi: OT_SKJZ_L o kategoriaIstnienia=eksploatowany, odległość od poligonu działki do osi, wyszukiwanie rosnącym promieniem. Budynki: OT_BUBD_A o kategoriaIstnienia=eksploatowany, pierścień buffer(działka, r, quad_segs=16) − działka; budynek liczony, gdy pole jego części w pierścieniu > 0,01 m².",
+  "road_feature_count": 583,
+  "road_radius_m": 500.0,
+  "road_search_radii_m": [
+    25.0,
+    50.0,
+    100.0,
+    250.0,
+    500.0
+  ],
+  "source_package": {
+    "name": "1465_GML.zip",
+    "sha256": "8cad94ae40048903aeb5217916accf293edb9615b26a7f483c03828f0b5aa110",
+    "size_bytes": 89020411
+  },
+  "teryt_powiat": "1465"
+}
