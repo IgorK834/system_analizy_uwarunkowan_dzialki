@@ -249,6 +249,9 @@ FIELD_MAPPINGS: Final[tuple[FieldMapping, ...]] = (
        "Tabela 5.x — status sekcji, relacja, liczność obiektów, powód, ostrzeżenia; macierz 8.1",
        "computed"),
     # --- 6. Teren ------------------------------------------------------------
+    _m("terrain.elevation_method", "terrain", "Tabela 6.1 — nadrzędny produkt wysokościowy WCS lub usługa zastępcza", "metadata"),
+    _m("terrain.elevation_note", "terrain", "Nota tabeli 6.1 — siatka, produkty i układy wysokości", "metadata"),
+    _m("terrain.crosscheck.*", "terrain", "Kontrola krzyżowa w snapshocie; ostrzeżenie NMT_CROSSCHECK_DIFF powyżej 0,5 m; jeden zakres w tabeli 6.1", "metadata"),
     _m("terrain.schema_version", "sources", "Tabela 9.3 — wersje kontraktów", "metadata"),
     _m("terrain.relief.schema_version", "sources", "Tabela 9.3 — wersje kontraktów", "metadata"),
     _omit("terrain.relief.profile.line_geojson", "terrain",
@@ -320,7 +323,7 @@ FIELD_MAPPINGS: Final[tuple[FieldMapping, ...]] = (
     _m("section_quality.legend", "quality",
        "Tabela 8.2 — legenda statusów, świeżości i kodów powodów", "metadata"),
     _m("section_quality.sections[].*", "quality",
-       "Tabela 8.1 — macierz sekcji: status, źródło, pobranie, wydanie, weryfikacja, "
+       "Tabela 8.1 — macierz sekcji: status, źródło, pobranie, Stan na (data lub jawny powód braku), wydanie, weryfikacja, "
        "świeżość, powody; tabela 8.3 — wiek na dzień eksportu", "metadata"),
     _m("section_quality.*", "quality",
        "Tabele 8.1 i 9.3 — wersja polityki, punkt odniesienia, pochodzenie i suma "

@@ -75,6 +75,8 @@ def bdot_source_metadata(
 ) -> SourceMetadata:
     """Provenance sekcji: wydanie (jeśli ustalono), adres paczki, czas importu i pewność."""
     return SourceMetadata(
+        data_as_of=release.data_as_of if release else None,
+        data_as_of_basis="BDOT10k: data wersji obiektów w paczce" if release and release.data_as_of else None,
         source_id=BDOT10K_SOURCE_ID,
         source_name=SOURCE_NAME,
         source_version=release.version_label if release else None,

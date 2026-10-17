@@ -26,6 +26,7 @@ from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
+from app.services.dataset_dates import aggregate_dataset_dates, dataset_date
 from app.modules.planning.composition import kimpzp_feature_info_parser
 from app.modules.planning.domain.kimpzp_discovery import (
     KIMPZP_NO_SERVICE_FOR_AREA,
@@ -148,6 +149,7 @@ async def discover_mpzp(parcel_geometry: BaseGeometry) -> MpzpDiscoveryResult:
         status=status,
         is_discovery_only=True,
         source_metadata=SourceMetadata(
+            **aggregate_dataset_dates(dataset_date(act.resolution_date, "data uchwały KIMPZP") for act in summary.acts),
             source_id="kimpzp",
             source_name="KIMPZP",
             source_url=settings.kimpzp_wms_base_url,

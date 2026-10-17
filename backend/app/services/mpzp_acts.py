@@ -23,6 +23,7 @@ from shapely.geometry.base import BaseGeometry
 
 from app.core.data_sources import CatalogError, ensure_source_runnable
 from app.core.settings import settings
+from app.services.dataset_dates import aggregate_dataset_dates, dataset_date
 from app.modules.planning.application.ports import RuMpzpActsSource
 from app.modules.planning.composition import ru_mpzp_acts_source
 from app.modules.planning.domain.mpzp_acts import (
@@ -219,7 +220,8 @@ def _fetch_ru_channel_sync(
         records=tuple(records),
         rejected=tuple(rejected),
         source=_source_metadata(RU_SOURCE_ID, "Rejestr Urbanistyczny (MPZP)", url, response.source,
-                                status=status_value, review=review),
+                                status=status_value, review=review).model_copy(update=aggregate_dataset_dates(
+                                    dataset_date(record.resolution_date, "data uchwały RU") for record in records)),
         parcel=parcel,
     )
 

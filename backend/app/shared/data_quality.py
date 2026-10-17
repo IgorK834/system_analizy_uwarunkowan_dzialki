@@ -141,6 +141,7 @@ class FreshnessRule:
     max_age_days: int
     basis: FreshnessBasis
     rationale: str
+    date_basis: Literal["fetched_at", "data_as_of"] = "fetched_at"
 
     def __post_init__(self) -> None:
         if not 1 <= self.max_age_days <= MAX_POLICY_AGE_DAYS:
@@ -235,6 +236,7 @@ def format_age_pl(age_seconds: int | None) -> str:
 # pojawić. Nieznany kod jest pokazywany dosłownie (bez zgadywania znaczenia).
 QUALITY_REASON_LABELS_PL: Final[dict[str, str]] = {
     # Świeżość
+    "FRESHNESS_NO_DATA_AS_OF": "źródło nie podało daty zestawu wymaganej przez regułę wieku",
     FRESHNESS_OLDER_THAN_POLICY: "dane starsze niż reguła wieku źródła",
     FRESHNESS_FUTURE_TIME: "czas pobrania późniejszy niż punkt odniesienia (nieprawidłowy)",
     FRESHNESS_INVALID_TIME: "czas pobrania bez strefy czasowej (nieprawidłowy)",

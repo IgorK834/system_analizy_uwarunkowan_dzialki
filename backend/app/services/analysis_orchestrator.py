@@ -133,6 +133,7 @@ from app.services.risks import (
     flood_risk_result,
     nature_risk_result,
 )
+from app.services.dataset_dates import dataset_date
 from app.services.terrain import (
     REASON_UNEXPECTED_ERROR,
     build_terrain_result,
@@ -1412,6 +1413,7 @@ async def _analyze_pog_best_effort(
     """
     # Wydanie jest przypinane raz przed odczytem cech. Kolejne publikacje nie
     # zmieniają release_id ani SHA historycznego wyniku tej analizy.
+    local_error = False
     if db is not None:
         try:
             local = await asyncio.to_thread(
@@ -1422,6 +1424,7 @@ async def _analyze_pog_best_effort(
                 "section_error", section="pog_local_release", status=type(exc).__name__
             )
             local = None
+            local_error = True
         if local is not None:
             return local
 
@@ -1438,17 +1441,24 @@ async def _analyze_pog_best_effort(
         )
         discovery = None
 
+    local_warning = WarningMessage(
+        code="POG_LOCAL_RELEASE_UNAVAILABLE" if local_error else "NO_LOCAL_RELEASE",
+        message=("Nie udało się sprawdzić lokalnego wydania POG." if local_error else
+                 "Brak lokalnych danych POG (≠ brak planu). Sprawdź pokrycie danych lub poproś o import gminy."),
+        severity="warning", source_name="pog",
+    )
     if discovery is None or not discovery.source_responded:
         failure = await asyncio.to_thread(
             _pog_upstream_failure, parcel_geometry, teryt, db, discovery
         )
+        failure[2].append(local_warning)
         # Wykaz RU (``pog_ru_catalog``) może wskazywać plan gminy mimo awarii discovery — import jest zlecany w tle.
         queued = await asyncio.to_thread(request_commune_import, db, teryt, discovery_found_act=False)
         if queued is not None:
             failure[2].append(queued.warning())
         return failure
 
-    warnings = list(discovery.warnings)
+    warnings = [*discovery.warnings, local_warning]
     sources = [discovery.source_metadata]
     parsed_date, date_warning = _parse_pog_date(discovery.uchwala_date)
     if date_warning is not None:
@@ -1698,6 +1708,12 @@ def _analyze_pog_local_release(
     vector_data = _local_pog_vector_data(rows, pinned, primary)
     provenance = load_pog_act_provenance(db, int(primary["act_version_id"]))
     act_result = act_result_from_provenance(provenance) if provenance else None
+    if act_result is not None and act_result.metadata is not None:
+        metadata = act_result.metadata
+        day = metadata.revision_date or metadata.publication_date or metadata.creation_date
+        basis = "ISO19139:revision" if metadata.revision_date else "ISO19139:publication" if metadata.publication_date else "ISO19139:creation"
+        if day is not None:
+            vector_data = replace(vector_data, source_metadata=vector_data.source_metadata.model_copy(update=dataset_date(day, basis)))
     raw_status = primary.get("raw_legal_status")
     confirmed_at = primary.get("status_confirmed_at") or pinned.get("fetched_at")
     evidence = StatusEvidence(
@@ -1874,6 +1890,7 @@ def _local_pog_vector_data(
         artifact_sha256=str(pinned["content_hash"]),
         data_release_id=release_id,
         act_version=(str(app_metadata["act_version"]) if app_metadata.get("act_version") else None),
+        **dataset_date(app_metadata.get("resolution_date"), "data uchwały APP/GML"),
         source_name="POG_APP_LOCAL_POSTGIS",
         source_url=None,
         fetched_at=pinned.get("fetched_at"),  # type: ignore[arg-type]

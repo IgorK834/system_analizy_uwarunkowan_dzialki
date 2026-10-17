@@ -622,10 +622,11 @@
     <tr><th>Najwyższa wysokość (Hmax)</th><td>{{ terrain.max_height }} {{ kind("computed") }}</td></tr>
     <tr><th>Deniwelacja (Hmax − Hmin)</th><td><strong>{{ terrain.height_difference }}</strong> {{ kind("computed") }}</td></tr>
     {% endif %}
-    <tr><th>Siatka próbkowania usługi</th><td>{{ na(terrain.grid_size) }}</td></tr>
+    <tr><th>Siatka źródła wysokości</th><td>{{ na(terrain.grid_size) }}</td></tr>
     <tr><th>Liczba punktów siatki</th><td>{{ na(terrain.sampled_points) }}</td></tr>
     <tr><th>Źródło</th><td>{% if terrain.source %}{{ terrain.source.name }}{% if terrain.source.fetched_at %} — pobrano {{ terrain.source.fetched_at }}{% endif %}{% if terrain.source.response_status %} (HTTP {{ terrain.source.response_status }}){% endif %}{% if terrain.source.sha256 %}<br><span class="mono">SHA-256 odpowiedzi: {{ terrain.source.sha256 }}</span>{% endif %}{% else %}{{ not_specified }}{% endif %}</td></tr>
   </table>
+  {% if terrain.elevation_note %}<p class="note">{{ terrain.elevation_note }}</p>{% endif %}
   {% if terrain.note %}<p class="{{ 'note' if terrain.status == 'available' else 'empty' }}">{{ terrain.note }}</p>{% endif %}
   {% for warning in terrain.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
 
@@ -639,7 +640,6 @@
     <tr><th>Rozdzielczość danych źródłowych</th><td>{{ na(relief.resolution) }}</td></tr>
     {% if relief.status == "available" %}
     <tr><th>Zmierzona część działki</th><td>{{ relief.valid_share }} ({{ na(relief.valid_pixel_count) }} z {{ na(relief.parcel_pixel_count) }} pikseli; NoData: {{ na(relief.nodata_pixel_count) }})</td></tr>
-    <tr><th>Wysokości z rastra (min / śr. / max)</th><td>{{ relief.min_height }} / {{ relief.mean_height }} / {{ relief.max_height }}</td></tr>
     {% endif %}
     <tr><th>Algorytm</th><td class="mono">{{ relief.algorithm_version }}; klasy {{ relief.slope_classes_version }}</td></tr>
   </table>
@@ -798,14 +798,15 @@
   <p class="informational">Status kompletności i świeżość dotyczą <em>każdej sekcji osobno</em> — żaden zbiorczy status nie gwarantuje kompletności całego raportu. Ocena została wystawiona i zapisana razem z analizą (punkt odniesienia: {{ quality.reference_at }}; polityka <span class="mono">{{ quality.policy_version }}</span>){% if quality.origin == "reconstructed" %}; <strong>zapis sprzed BK-504 nie zawierał oceny — została odtworzona przy odczycie bieżącą polityką i nie odzwierciedla oceny z chwili analizy</strong>{% endif %}. Brak pokrycia źródła, błąd źródła i stary pomiar są odrębnymi stanami; brak danych nie oznacza braku ograniczenia.</p>
   <h3>Tabela 8.1. Macierz kompletności i świeżości sekcji (ocena historyczna)</h3>
   <table class="data">
-    <colgroup><col style="width: 14%"><col style="width: 14%"><col style="width: 14%"><col style="width: 11%"><col style="width: 9%"><col style="width: 16%"><col style="width: 22%"></colgroup>
-    <thead><tr><th>Sekcja (§)</th><th>Status</th><th>Źródło</th><th>Pobrano</th><th>Wydanie / wersja</th><th>Świeżość</th><th>Powód (kody)</th></tr></thead>
+    <colgroup><col style="width: 12%"><col style="width: 14%"><col style="width: 12%"><col style="width: 12%"><col style="width: 14%"><col style="width: 8%"><col style="width: 12%"><col style="width: 16%"></colgroup>
+    <thead><tr><th>Sekcja (§)</th><th>Status</th><th>Źródło</th><th>Pobrano</th><th>Stan na</th><th>Wydanie / wersja</th><th>Świeżość</th><th>Powód (kody)</th></tr></thead>
     <tbody>
     {% for row in quality.rows %}
       <tr data-row="quality" data-section="{{ row.key }}"><td>{{ row.domain }} <small>(§{{ row.section }})</small></td>
         <td><span class="st st-{{ row.status }}">{{ row.status_label }}</span>{% if row.manual_review %}<br><span class="tag tag-review">wymaga weryfikacji</span>{% endif %}</td>
         <td>{% if row.source_name %}{{ row.source_name }}{% if row.source_id %}<br><small class="mono">{{ row.source_id }}</small>{% endif %}{% else %}brak źródła{% endif %}</td>
         <td>{{ row.fetched_at or not_specified }}</td>
+        <td>{{ row.data_as_of or ("Nieznany — " ~ (row.data_as_of_reason or "brak daty zestawu w zapisie")) }}</td>
         <td>{% if row.release %}#{{ row.release }}{% else %}—{% endif %}{% if row.version %}<br><small>{{ row.version }}</small>{% endif %}</td>
         <td><span class="fr-{{ row.freshness_state }}">{{ row.freshness_label }}</span><br><small>{{ row.freshness_detail }}</small></td>
         <td>{% if row.reason_codes %}{% for item in row.reason_codes %}{{ item.label }} <small class="mono">[{{ item.code }}]</small>{% if not loop.last %}<br>{% endif %}{% endfor %}{% else %}—{% endif %}</td></tr>
@@ -827,7 +828,7 @@
     </tbody>
   </table>
   <h3>Tabela 8.3. Wiek danych na dzień eksportu (ostrzeżenie dodatkowe)</h3>
-  <p class="note">Eksport: {{ quality.export_at }}. Tabela porównuje czas pobrania z dniem eksportu według reguły źródła zapisanej z oceną. Jest to osobne ostrzeżenie — <strong>nie zmienia oceny historycznej z tabeli 8.1</strong> ani sumy kontrolnej macierzy.</p>
+  <p class="note">Eksport: {{ quality.export_at }}. Tabela porównuje czas pobrania albo datę zestawu (według zapisanej podstawy reguły) z dniem eksportu według reguły źródła zapisanej z oceną. Jest to osobne ostrzeżenie — <strong>nie zmienia oceny historycznej z tabeli 8.1</strong> ani sumy kontrolnej macierzy.</p>
   {% if quality.export_stale %}
   <p class="empty">Ostrzeżenie: na dzień eksportu dane sekcji: {{ quality.export_stale|join(", ") }} są starsze niż reguła wieku ich źródeł. Aby uzyskać bieżący stan, wykonaj nową analizę.</p>
   {% endif %}

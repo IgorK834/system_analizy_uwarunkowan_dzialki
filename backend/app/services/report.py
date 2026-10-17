@@ -89,6 +89,7 @@ from app.shared.data_quality import (
     FRESHNESS_NO_POLICY,
     FreshnessRule,
     evaluate_freshness,
+    unknown_freshness,
     format_age_pl,
     reason_label_pl,
 )
@@ -399,9 +400,12 @@ def _domain_assessments(
         "mpzp_pog_relation": _compatibility_finding(response.pog),
     }
     by_key = {item.section: item for item in quality.sections}
+    # Stary snapshot może nie mieć później dodanej sekcji (np. buildings). Nie zmieniamy historycznej macierzy.
+    missing = any(spec.key not in by_key for spec in QUALITY_SECTIONS)
+    fallbacks = {item.section: item for item in build_section_quality(response, origin="reconstructed").sections} if missing else {}
     rows: list[dict[str, Any]] = []
     for spec in QUALITY_SECTIONS:
-        item = by_key[spec.key]
+        item = by_key.get(spec.key) or fallbacks[spec.key]
         finding, kind = findings[spec.key]
         rows.append(
             {
@@ -416,6 +420,8 @@ def _domain_assessments(
                 "source_id": item.source_id,
                 "source_name": item.source_name,
                 "fetched_at": _format_datetime(item.fetched_at) if item.fetched_at else None,
+                "data_as_of": item.data_as_of.isoformat() if item.data_as_of else None,
+                "data_as_of_reason": item.data_as_of_reason,
                 "release": item.data_release_id,
                 "version": item.source_version,
                 "manual_review": item.manual_review_required,
@@ -458,7 +464,12 @@ def _export_age(item: SectionQuality, export_at: datetime) -> dict[str, Any]:
         if freshness.max_age_days is not None
         else None
     )
-    verdict = evaluate_freshness(item.fetched_at, export_at, rule)
+    timestamp = item.fetched_at
+    if freshness.date_basis == "data_as_of":
+        timestamp = datetime.combine(item.data_as_of, datetime.min.time(), timezone.utc) if item.data_as_of else None
+    verdict = evaluate_freshness(timestamp, export_at, rule)
+    if timestamp is None and freshness.date_basis == "data_as_of":
+        verdict = unknown_freshness("FRESHNESS_NO_DATA_AS_OF", rule)
     return {
         "state": verdict.state,
         "label": FRESHNESS_LABELS_PL[verdict.state],
@@ -1692,6 +1703,7 @@ def _terrain_context(terrain: TerrainResult | None) -> dict[str, Any]:
         "status_label": _TERRAIN_STATUS_LABELS[terrain.status],
         "note": note,
         "reason_code": terrain.reason_code,
+        "elevation_note": terrain.elevation_note,
         "min_height": _meters(terrain.min_height_m),
         "max_height": _meters(terrain.max_height_m),
         "height_difference": _meters(terrain.height_difference_m),

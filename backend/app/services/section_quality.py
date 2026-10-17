@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 from typing import Any, Final, Literal
 
 from app.core.data_sources import (
@@ -209,7 +209,12 @@ def _finish(
     if source is None:
         verdict: FreshnessVerdict = unknown_freshness(FRESHNESS_NO_SOURCE)
     else:
-        verdict = evaluate_freshness(source.fetched_at, reference, rule)
+        timestamp = source.fetched_at
+        if rule is not None and rule.date_basis == "data_as_of":
+            timestamp = datetime.combine(source.data_as_of, time.min, timezone.utc) if source.data_as_of else None
+        verdict = evaluate_freshness(timestamp, reference, rule)
+        if timestamp is None and rule is not None and rule.date_basis == "data_as_of":
+            verdict = unknown_freshness("FRESHNESS_NO_DATA_AS_OF", rule)
 
     manual = draft.manual or bool(source and source.manual_review_required)
     codes = list(draft.codes)
@@ -230,8 +235,12 @@ def _finish(
         fetched_at=source.fetched_at if source else None,
         data_release_id=source.data_release_id if source else None,
         source_version=source.source_version if source else None,
+        data_as_of=source.data_as_of if source else None,
+        data_as_of_basis=source.data_as_of_basis if source else None,
+        data_as_of_reason=source.data_as_of_reason if source else "Sekcja nie ma źródła z datą zestawu danych.",
         manual_review_required=manual,
         freshness=FreshnessAssessment(
+            date_basis=rule.date_basis if rule else "fetched_at",
             state=verdict.state,
             reason_code=verdict.reason_code,
             reference_at=reference,
