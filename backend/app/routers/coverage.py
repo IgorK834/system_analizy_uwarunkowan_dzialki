@@ -6,17 +6,22 @@ metadane wydań (liczności, stan danych, SHA-256 paczki, obwiednia w WGS84) —
 """
 
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.rate_limit import rate_limit
 from app.core.settings import settings
 from app.db.session import get_db
 from app.modules.analysis.domain.bdot import BDOT10K_SOURCE_ID
+from app.modules.planning.application.pog_release_queries import coverage_features
+from app.modules.planning.infrastructure.commune_boundaries import PrgCommuneBoundaries
+from app.routers.pog_coverage import PogCoverageResponse, get_pog_coverage
+from app.services.pog_on_demand import request_commune_import
 
 router = APIRouter(prefix="/api/v1/coverage", tags=["coverage"])
 _coverage_limit = rate_limit(settings.rate_limit_coverage_per_minute)
@@ -117,3 +122,46 @@ def get_bdot10k_coverage(
         found = db.execute(_POINT, {"source_id": BDOT10K_SOURCE_ID, "lon": lon, "lat": lat}).scalar_one_or_none()
         point = Bdot10kPointCoverage(lon=lon, lat=lat, covered=found is not None, teryt_powiat=found)
     return Bdot10kCoverageResponse(counties=counties, point=point)
+
+
+# Wspólny widok POG + BDOT10k. Zachowujemy istniejące endpointy szczegółowe.
+class CoverageResponse(BaseModel):
+    pog: PogCoverageResponse
+    bdot10k: Bdot10kCoverageResponse
+    communes: dict[str, Any]
+    boundaries_note: str = "Granice PRG pobrano 16.10.2026; geometria uproszczona wyłącznie do podglądu pokrycia. Źródło: GUGiK."
+
+
+@router.get("", response_model=CoverageResponse, dependencies=[Depends(_coverage_limit)])
+def get_coverage(db: Annotated[Session, Depends(get_db)]) -> CoverageResponse:
+    try:
+        pog = get_pog_coverage(db, status=None, q=None, voivodeship=None)
+        return CoverageResponse(
+            pog=pog, bdot10k=get_bdot10k_coverage(db, lon=None, lat=None),
+            communes=coverage_features(PrgCommuneBoundaries(), [item.model_dump() for item in pog.communes],
+                                       catalog_fresh=pog.catalog_fresh),
+        )
+    except (SQLAlchemyError, OSError, ValueError, KeyError, TypeError) as exc:
+        db.rollback()
+        raise HTTPException(503, "Pokrycie danych jest chwilowo niedostępne — stan nieustalony.") from exc
+
+
+class CoverageImportResponse(BaseModel):
+    terc: str
+    job_id: int | None
+    status: str
+    detail: str
+
+
+@router.post("/pog/commune/{terc}/import", response_model=CoverageImportResponse,
+             dependencies=[Depends(rate_limit(settings.rate_limit_refresh_per_minute))])
+def request_coverage_import(
+    terc: str, db: Annotated[Session, Depends(get_db)],
+) -> CoverageImportResponse:
+    if len(terc) != 6 or not terc.isdigit():
+        raise HTTPException(422, "Kod TERC musi mieć 6 cyfr.")
+    request = request_commune_import(db, terc, discovery_found_act=False)
+    if request is None:
+        raise HTTPException(409, "Nie zlecono importu: gmina ma dane lokalne, RU nie potwierdził aktu lub kolejka jest niedostępna.")
+    return CoverageImportResponse(terc=terc, job_id=request.job_id, status=request.job_status,
+                                  detail=request.warning().message)

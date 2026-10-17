@@ -38,7 +38,7 @@ _CATALOG = text(
 _IMPORTED = text(
     """
     SELECT left(pa.teryt, 6) AS terc6, pa.act_identifier, pa.teryt, pav.id AS act_version_id, pav.legal_status,
-           pav.object_version_id, pav.content_hash, pav.name, pav.legal_valid_from,
+           pav.object_version_id, pav.content_hash, pav.name, pav.legal_valid_from, pav.resolution_date,
            e.ru_published_act_id, e.state_from_id, s.created_at AS state_created_at,
            dr.id AS release_id, dr.version_label AS release_label, sa.fetched_at AS fetched_at,
            (SELECT count(*) FROM pog_map_zones z WHERE z.planning_act_version_id = pav.id) AS zone_count,
@@ -82,6 +82,7 @@ _POINT = text(
 class ImportedActResponse(BaseModel):
     act_identifier: str
     act_version: str | None
+    data_as_of: date | None = None
     legal_status: str
     name: str | None
     state_id: int = Field(description="Numer stanu krajowego, w którym wersja stała się aktywna.")
@@ -154,7 +155,7 @@ class PogCoverageResponse(BaseModel):
     communes: list[PogCommuneResponse]
     note: str = (
         "Stan „brak aktu POG w RU” wynika z wykazu Rejestru Urbanistycznego z podanej daty i nie dowodzi braku planu w gminie. "
-        "Gmina „w RU, niezaimportowana” nie ma jeszcze lokalnych danych — analiza korzysta wtedy z podglądu RU, a import jest zlecany."
+        "Brak lokalnych danych (≠ brak planu). Gmina „w RU, niezaimportowana” nie ma jeszcze lokalnych danych — analiza korzysta wtedy z podglądu RU, a import jest zlecany."
     )
 
 
@@ -236,6 +237,7 @@ def get_pog_coverage(
         entry["imported_acts"].append(
             ImportedActResponse(
                 act_identifier=row["act_identifier"], act_version=row["object_version_id"],
+                data_as_of=row["resolution_date"],
                 legal_status=row["legal_status"] or "unknown", name=row["name"], state_id=int(row["state_from_id"]),
                 imported_at=row["state_created_at"], fetched_at=row["fetched_at"], release_id=int(row["release_id"]),
                 release_label=row["release_label"], content_hash=row["content_hash"],
@@ -264,7 +266,7 @@ def get_pog_coverage(
                 **entry,
             )
         )
-    if status is not None and status not in {"no_act_in_ru"}:
+    if status is not None:
         result = [item for item in result if item.status == status]
     if q:
         needle = q.casefold()
