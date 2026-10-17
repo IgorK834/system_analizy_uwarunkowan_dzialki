@@ -42,7 +42,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace, field
 from datetime import datetime, timezone
 from typing import Final
 
@@ -51,6 +51,7 @@ from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
 from app.schemas.analyze import SourceMetadata
+from app.services.dataset_dates import response_dataset_date
 from app.services.gml import GmlFeature, GmlResponseError, parse_feature_collection
 from app.services.kiut import bbox_from_geometry
 
@@ -229,10 +230,10 @@ async def fetch_flood_risk_section(
     }
 
     if client is not None:
-        response_text, source_url = await _fetch_isok_response_text(client, params)
+        response_text, source_url, dates = await _fetch_isok_response_text(client, params)
     else:
         async with httpx.AsyncClient() as owned_client:
-            response_text, source_url = await _fetch_isok_response_text(
+            response_text, source_url, dates = await _fetch_isok_response_text(
                 owned_client, params
             )
 
@@ -259,10 +260,11 @@ async def fetch_flood_risk_section(
             feature_id=zone.feature_id,
         )
         if risk is not None:
+            risk = replace(risk, source_metadata=risk.source_metadata.model_copy(update=dates))
             results.append(risk)
     return FloodRiskSection(
         features=results,
-        source_metadata=_section_source(source_url, fetched_at, artifact_sha256),
+        source_metadata=_section_source(source_url, fetched_at, artifact_sha256).model_copy(update=dates),
     )
 
 
@@ -291,7 +293,7 @@ def _section_source(
 async def _fetch_isok_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
-) -> tuple[str, str]:
+) -> tuple[str, str, dict]:
     request_url = str(httpx.URL(settings.isok_wfs_base_url, params=params))
     attempted_at = datetime.now(timezone.utc)
     try:
@@ -330,7 +332,7 @@ async def _fetch_isok_response_text(
             ),
         ) from exc
 
-    return response.text, str(response.url)
+    return response.text, str(response.url), response_dataset_date(response)
 
 
 def _parse_zone_response(

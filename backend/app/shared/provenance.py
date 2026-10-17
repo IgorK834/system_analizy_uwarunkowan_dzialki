@@ -8,7 +8,7 @@ danych oraz moment pobrania. Typ używa wyłącznie biblioteki standardowej.
 from __future__ import annotations
 
 import ipaddress
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from urllib.parse import urlsplit
 
@@ -26,20 +26,12 @@ class Provenance:
     operation: str | None = None
     complete: bool | None = None
     error_code: str | None = None
+    data_as_of: date | None = None
+    data_as_of_basis: str | None = None
 
     def with_release(self, data_release_id: int) -> "Provenance":
         """Zwraca kopię provenance powiązaną z konkretnym wydaniem danych."""
-        return Provenance(
-            source_id=self.source_id,
-            fetched_at=self.fetched_at,
-            data_release_id=data_release_id,
-            source_artifact_id=self.source_artifact_id,
-            content_hash=self.content_hash,
-            request_url=self.request_url,
-            operation=self.operation,
-            complete=self.complete,
-            error_code=self.error_code,
-        )
+        return replace(self, data_release_id=data_release_id)
 
 
 # --- Provenance aktu planistycznego (BK-107) ----------------------------------

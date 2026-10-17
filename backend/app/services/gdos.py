@@ -38,7 +38,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, replace, field
 from datetime import datetime, timezone
 from typing import Final
 
@@ -47,6 +47,7 @@ from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
 from app.schemas.analyze import SourceMetadata
+from app.services.dataset_dates import aggregate_dataset_dates, response_dataset_date
 from app.services.gml import GmlFeature, GmlResponseError, parse_feature_collection
 from app.services.kiut import bbox_from_geometry
 
@@ -230,7 +231,7 @@ async def _fetch_all_layers(
     results: list[NatureProtectionFeature] = []
     seen_ids: set[str] = set()
     layer_digests: list[str] = []
-    for type_name, (features, source_url, digest) in zip(GDOS_PROTECTION_LAYERS, per_layer):
+    for type_name, (features, source_url, digest, dates) in zip(GDOS_PROTECTION_LAYERS, per_layer):
         layer_digests.append(f"{type_name}:{digest}")
         default_type = GDOS_PROTECTION_LAYERS[type_name]
         for gml_feature in features:
@@ -248,6 +249,7 @@ async def _fetch_all_layers(
                 feature_id=gml_feature.feature_id,
             )
             if feature is not None:
+                feature = replace(feature, source_metadata=feature.source_metadata.model_copy(update=dates))
                 results.append(feature)
     # Skrót sekcji: SHA-256 z uporządkowanej listy skrótów odpowiedzi warstw.
     section_digest = hashlib.sha256("\n".join(layer_digests).encode("utf-8")).hexdigest()
@@ -257,7 +259,7 @@ async def _fetch_all_layers(
             str(httpx.URL(settings.gdos_wfs_base_url, params={"bbox": bbox})),
             fetched_at,
             section_digest,
-        ),
+        ).model_copy(update=aggregate_dataset_dates(item[3] for item in per_layer)),
     )
 
 
@@ -298,7 +300,7 @@ async def _fetch_layer(
     client: httpx.AsyncClient,
     type_name: str,
     bbox: str,
-) -> tuple[list[GmlFeature], str, str]:
+) -> tuple[list[GmlFeature], str, str, dict]:
     params = {
         "service": "WFS",
         "version": "2.0.0",
@@ -306,16 +308,16 @@ async def _fetch_layer(
         "typeNames": type_name,
         "bbox": bbox,
     }
-    response_text, source_url = await _fetch_gdos_response_text(client, params)
+    response_text, source_url, dates = await _fetch_gdos_response_text(client, params)
     digest = hashlib.sha256(response_text.encode("utf-8")).hexdigest()
     failure = _section_source(source_url, datetime.now(timezone.utc), digest, failed=True)
-    return _parse_layer_response(response_text, type_name, failure), source_url, digest
+    return _parse_layer_response(response_text, type_name, failure), source_url, digest, dates
 
 
 async def _fetch_gdos_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
-) -> tuple[str, str]:
+) -> tuple[str, str, dict]:
     request_url = str(httpx.URL(settings.gdos_wfs_base_url, params=params))
     attempted_at = datetime.now(timezone.utc)
     try:
@@ -354,7 +356,7 @@ async def _fetch_gdos_response_text(
             ),
         ) from exc
 
-    return response.text, str(response.url)
+    return response.text, str(response.url), response_dataset_date(response)
 
 
 def _parse_layer_response(

@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Final
 
@@ -48,6 +48,7 @@ from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
 from app.schemas.analyze import SourceMetadata
+from app.services.dataset_dates import response_dataset_date
 
 logger = logging.getLogger(__name__)
 
@@ -159,17 +160,16 @@ async def fetch_terrain_extremes(
     )
 
     if client is not None:
-        response_text = await _fetch_nmt_response_text(client, params, source_url)
+        response_text, dates = await _fetch_nmt_response_text(client, params, source_url)
     else:
         async with httpx.AsyncClient() as owned_client:
-            response_text = await _fetch_nmt_response_text(
+            response_text, dates = await _fetch_nmt_response_text(
                 owned_client, params, source_url
             )
 
     fetched_at = datetime.now(timezone.utc)
-    return _build_terrain_extremes(
-        response_text, parcel_geometry, source_url, fetched_at
-    )
+    result = _build_terrain_extremes(response_text, parcel_geometry, source_url, fetched_at)
+    return replace(result, source_metadata=result.source_metadata.model_copy(update=dates))
 
 
 def _provenance_url(parcel_geometry: BaseGeometry, polygon_wkt: str) -> str:
@@ -195,7 +195,7 @@ async def _fetch_nmt_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
     request_url: str,
-) -> str:
+) -> tuple[str, dict]:
     attempted_at = datetime.now(timezone.utc)
     try:
         response = await client.get(
@@ -226,7 +226,7 @@ async def _fetch_nmt_response_text(
             source_metadata=_failure_source(request_url, attempted_at, None),
         ) from exc
 
-    return response.text
+    return response.text, response_dataset_date(response)
 
 
 def _failure_source(

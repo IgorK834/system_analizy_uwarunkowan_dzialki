@@ -27,7 +27,7 @@ from datetime import date
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml  # type: ignore[import-untyped]  # brak types-PyYAML
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -212,6 +212,7 @@ class FreshnessPolicyEntry(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    date_basis: Literal["fetched_at", "data_as_of"] = "fetched_at"
     max_age_days: int = Field(ge=1, le=MAX_POLICY_AGE_DAYS)
     basis: FreshnessBasis
     rationale: str = Field(min_length=10)
@@ -221,6 +222,7 @@ class FreshnessPolicyEntry(BaseModel):
             max_age_days=self.max_age_days,
             basis=self.basis,
             rationale=self.rationale.strip(),
+            date_basis=self.date_basis,
         )
 
 
@@ -509,7 +511,7 @@ class DataSourceCatalog(BaseModel):
         """
         rules = {
             entry.source_id: (
-                [entry.freshness_policy.max_age_days, entry.freshness_policy.basis]
+                [entry.freshness_policy.max_age_days, entry.freshness_policy.basis, entry.freshness_policy.date_basis]
                 if entry.freshness_policy is not None
                 else None
             )

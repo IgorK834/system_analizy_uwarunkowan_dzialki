@@ -48,6 +48,7 @@ _CACHEABLE_STATUSES: Final[tuple[str, ...]] = ("complete", "partial")
 # (silnik PV3-07, warunki PV3-08, kalibracja pewności PV3-09, silnik opisowy PV3-21) podnosi
 # ``MPZP_RESULT_SCHEMA_VERSION``; od PV3-14 sygnatura zawiera też tryb i wersję parsera
 # (``mpzp_parser_signature``), więc zmiana trybu albo wersji parsera sama w sobie jest chybieniem.
+# AU-109/AU-111: terrain 1.1 (WCS nadrzędny), quality 1.2 (stan danych + podstawa wieku).
 RESULT_CONTRACT_VERSION: Final[str] = (
     f"pog-v{POG_RESULT_SCHEMA_VERSION}+mpzp-v{MPZP_RESULT_SCHEMA_VERSION}"
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"

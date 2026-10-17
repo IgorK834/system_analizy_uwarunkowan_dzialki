@@ -11,7 +11,7 @@ import socket
 import threading
 import time
 from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterable, Mapping, Protocol, Sequence, cast
 from urllib.parse import urljoin, urlsplit
@@ -49,6 +49,7 @@ class OgcResult:
     features: tuple[bytes, ...]
     source: Provenance
     complete: bool
+    headers: Mapping[str, str] = field(default_factory=dict)
 
 
 class OgcError(RuntimeError):
@@ -1203,9 +1204,9 @@ class OgcClient:
                 started_at,
                 content=payload.content,
             )
-        return self._plain_result(
+        return replace(self._plain_result(
             payload.content, (), payload.url, operation, started_at, True
-        )
+        ), headers=payload.headers)
 
     def _exception_report_error(
         self, payload: _HttpPayload, operation: str, started_at: datetime
@@ -1395,7 +1396,7 @@ class OgcClient:
                             status_code=response.status_code,
                             headers={
                                 key: response.headers[key]
-                                for key in ("content-disposition", "retry-after", "content-length")
+                                for key in ("content-disposition", "retry-after", "content-length", "last-modified")
                                 if key in response.headers
                             },
                         )

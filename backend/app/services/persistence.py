@@ -180,6 +180,7 @@ class SourceRecordData:
     artifact_sha256: str | None = None
     data_release_id: int | None = None
     act_version: str | None = None
+    dataset_metadata: dict | None = None
 
 
 _NUMERIC_ZONE_PARAMETERS: tuple[str, ...] = (
@@ -549,6 +550,7 @@ def save_analysis(
                     artifact_sha256=source_data.artifact_sha256,
                     data_release_id=source_data.data_release_id,
                     act_version=source_data.act_version,
+                    dataset_metadata=source_data.dataset_metadata,
                 )
             )
 
@@ -992,6 +994,7 @@ def _source_record_data(
         artifact_sha256=source.artifact_sha256,
         data_release_id=source.data_release_id,
         act_version=source.act_version,
+        dataset_metadata=source.model_dump(mode="json", include={"data_as_of", "data_as_of_basis", "data_as_of_reason"}),
     )
 
 
@@ -1053,6 +1056,8 @@ def _terrain_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
         return []
     records: list[SourceRecordData] = []
     sections = [(terrain.status, terrain.source)]
+    if terrain.crosscheck is not None:
+        sections.append(("available", terrain.crosscheck.source))
     if terrain.relief is not None:
         sections.append((terrain.relief.status, terrain.relief.source))
     for status, source in sections:
@@ -1118,6 +1123,7 @@ def _deduplicate_source_records(
             artifact_sha256=existing.artifact_sha256 or record.artifact_sha256,
             data_release_id=existing.data_release_id or record.data_release_id,
             act_version=existing.act_version or record.act_version,
+            dataset_metadata=existing.dataset_metadata or record.dataset_metadata,
         )
     return unique
 
@@ -1274,6 +1280,7 @@ def _source_metadata_from_record(record: SourceRecord) -> SourceMetadata:
         else None
     )
     return SourceMetadata(
+        **(record.dataset_metadata or {}),
         source_id=record.source_id,
         source_version=record.source_version,
         artifact_sha256=record.artifact_sha256 or record.checksum,

@@ -1805,7 +1805,7 @@ class RiskSectionResult(BaseModel):
         return self
 
 
-TERRAIN_RESULT_SCHEMA_VERSION = "1.0"
+TERRAIN_RESULT_SCHEMA_VERSION = "1.1"
 # Tolerancja spójności ``height_difference_m == max - min``. Usługa podaje
 # wysokości z dokładnością 0,1 m, a różnica jest zaokrąglana do 1 mm, więc
 # tolerancja pokrywa wyłącznie szum zmiennoprzecinkowy, nie inną wartość.
@@ -2026,6 +2026,18 @@ class TerrainReliefResult(BaseModel):
         return self
 
 
+class TerrainCrosscheck(BaseModel):
+    """Pomiar kontrolny; nie jest drugim nadrzędnym zakresem wysokości."""
+
+    min_height_m: float
+    max_height_m: float
+    grid_size_m: float | None = None
+    source: SourceMetadata
+    max_difference_m: float = Field(ge=0)
+    threshold_m: float = Field(default=0.5, ge=0)
+    warning_code: Literal["NMT_CROSSCHECK_DIFF"] | None = None
+
+
 class TerrainResult(BaseModel):
     """Rzeźba terenu działki jako pierwszoklasowa sekcja wyniku (BK-301)."""
 
@@ -2071,6 +2083,9 @@ class TerrainResult(BaseModel):
         ),
     )
     warnings: list[str] = Field(default_factory=list)
+    elevation_method: Literal["wcs_raster", "polygon_service"] | None = None
+    elevation_note: str | None = None
+    crosscheck: TerrainCrosscheck | None = None
     relief: TerrainReliefResult | None = Field(
         default=None,
         description="Spadek, ekspozycja i profil z rastra NMT (BK-302), jeżeli liczone.",

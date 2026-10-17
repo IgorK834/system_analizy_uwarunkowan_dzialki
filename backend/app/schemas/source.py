@@ -30,6 +30,23 @@ from app.shared.provenance import is_verified_https_url
 
 
 class SourceMetadata(BaseModel):
+    data_as_of: date | None = Field(default=None, description="Stan zestawu danych, nigdy czas pobrania.")
+    data_as_of_basis: str | None = Field(default=None, description="Pole lub metadane źródła potwierdzające datę.")
+    data_as_of_reason: str | None = "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+
+    @model_validator(mode="after")
+    def dataset_date_reason(self) -> "SourceMetadata":
+        if self.data_as_of is not None:
+            self.data_as_of_reason = None
+        elif not self.data_as_of_reason or not self.data_as_of_reason.strip():
+            self.data_as_of_reason = "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+        return self
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def data_as_of_status(self) -> Literal["known", "unknown"]:
+        return "known" if self.data_as_of is not None else "unknown"
+
     source_id: str | None = Field(
         default=None, description="Stabilny identyfikator źródła z katalogu."
     )
@@ -204,7 +221,7 @@ def warnings_from_domain_messages(
 # --- Macierz kompletności i świeżości sekcji (BK-504, ADR-011) ---------------------
 
 # 1.1 (Task 23.3): nowa sekcja ``buildings`` (zabudowa sąsiednia) w macierzy; ``transport`` ma teraz źródło (BDOT10k).
-QUALITY_RESULT_SCHEMA_VERSION = "1.1"
+QUALITY_RESULT_SCHEMA_VERSION = "1.2"
 
 SectionKey = Literal[
     "parcel",
@@ -233,6 +250,7 @@ def _iso_utc(value: datetime | None) -> str | None:
 class FreshnessAssessment(BaseModel):
     """Świeżość danych sekcji względem jawnej reguły źródła i punktu odniesienia."""
 
+    date_basis: Literal["fetched_at", "data_as_of"] = "fetched_at"
     state: FreshnessState = Field(
         description=(
             "fresh — wiek mieści się w regule źródła; stale — przekracza regułę; "
@@ -297,6 +315,9 @@ class SectionQuality(BaseModel):
     )
     data_release_id: int | None = Field(default=None, gt=0)
     source_version: str | None = None
+    data_as_of: date | None = None
+    data_as_of_basis: str | None = None
+    data_as_of_reason: str | None = "Zapis nie zawiera daty zestawu danych."
     manual_review_required: bool
     freshness: FreshnessAssessment
     policy_version: str = Field(
@@ -368,12 +389,21 @@ class SectionQualityMatrix(BaseModel):
     matrix_sha256: str = Field(min_length=64, max_length=64)
 
     def compute_sha256(self) -> str:
+        sections = [item.canonical() for item in self.sections]
+        # Historyczne macierze zachowują odcisk i nie zyskują dopisanych metadanych.
+        if self.schema_version not in {"1.0", "1.1"}:
+            for value, item in zip(sections, self.sections):
+                value.update(data_as_of=item.data_as_of.isoformat() if item.data_as_of else None,
+                             data_as_of_basis=item.data_as_of_basis, data_as_of_reason=item.data_as_of_reason)
+                freshness_values = value["freshness"]
+                if isinstance(freshness_values, dict):
+                    freshness_values["date_basis"] = item.freshness.date_basis
         return canonical_sha256(
             {
                 "schema_version": self.schema_version,
                 "policy_version": self.policy_version,
                 "reference_at": _iso_utc(self.reference_at),
-                "sections": [item.canonical() for item in self.sections],
+                "sections": sections,
             }
         )
 
