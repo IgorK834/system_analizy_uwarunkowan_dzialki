@@ -57,6 +57,14 @@ def test_coverage_lists_imported_communes_with_dates_versions_and_marks_the_rest
         db.commit()
     session.expire_all()
 
+    combined = client.get("/api/v1/coverage")
+    assert combined.status_code == 200
+    common = combined.json()
+    assert len(common["communes"]["features"]) == 2479 and common["bdot10k"]["counties"] == []
+    assert common["pog"]["summary"]["imported_communes"] == 3
+    for commune in common["pog"]["communes"]:
+        if commune["status"] == "imported":
+            assert all(a["release_label"] and a["act_version"] and a["imported_at"] for a in commune["imported_acts"])
     body = client.get("/api/v1/coverage/pog").json()
 
     assert body["catalog_fresh"] is True and body["catalog_synced_at"]

@@ -24,7 +24,7 @@ def test_migration_follows_head_021_and_fits_version_column() -> None:
     # Upgrade nie wypełnia starych wierszy wartościami wysokości.
     assert "UPDATE analyses SET terrain" not in migration
     assert len(RESULT_CONTRACT_VERSION) <= 224  # String(256) od migracji 036 (zapas 32 znaków)
-    assert "+terrain-v1.0" in RESULT_CONTRACT_VERSION
+    assert "+terrain-v1.1" in RESULT_CONTRACT_VERSION
 
 
 @pytest.mark.integration

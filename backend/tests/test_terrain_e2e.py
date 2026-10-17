@@ -281,9 +281,9 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
     body = response.json()
     terrain = body["terrain"]
     assert terrain["status"] == "available"
-    assert (terrain["min_height_m"], terrain["max_height_m"], terrain["height_difference_m"]) == (112.3, 115.7, 3.4)
-    assert (terrain["grid_size_m"], terrain["sampled_points"]) == (4.0, 676)
-    assert terrain["source"]["source_id"] == "nmt"
+    assert (terrain["min_height_m"], terrain["max_height_m"], terrain["height_difference_m"]) == (105.19, 116.22, 11.03)
+    assert (terrain["grid_size_m"], terrain["sampled_points"]) == (1.0, 10000)
+    assert terrain["source"]["source_id"] == "nmt_wcs"
     assert terrain["source"]["response_status"] == 200
     assert len(terrain["source"]["artifact_sha256"]) == 64
     relief = terrain["relief"]
@@ -294,7 +294,7 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
     assert [item["share_pct"] for item in relief["slope_classes"]] == [36.48, 38.58, 11.28, 3.16, 4.35, 6.15]
     assert len(relief["profile"]["samples"]) == 101
     # Źródła WCS 1 m i GetMinMax 4 m różnią się o > 1 m — widoczne ostrzeżenie.
-    assert any("różnią się od usługi" in item for item in relief["warnings"])
+    assert terrain["crosscheck"]["warning_code"] == "NMT_CROSSCHECK_DIFF"
     # AU-104: wszystkie sekcje w zakresie są sprawdzone (MPZP `no_match`, POG, ISOK, GDOŚ, NMT z rzeźbą), więc
     # status nagłówkowy to ``complete`` — wynika z kompletności, a nie z wektora MPZP. Brak rzeźby terenu
     # (WCS niedostępny) obniżyłby go do ``partial``: niesprawdzony teren jest na pasku kompletności.
@@ -318,7 +318,7 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
         records = db.scalars(select(SourceRecord).where(SourceRecord.analysis_id == analysis_id)).all()
     by_name = {record.source_name: record for record in records}
     assert by_name["NMT"].response_status == "200"
-    assert by_name["NMT"].artifact_sha256 == terrain["source"]["artifact_sha256"]
+    assert by_name["NMT"].artifact_sha256 == terrain["crosscheck"]["source"]["artifact_sha256"]
     assert by_name["NMT_WCS"].artifact_sha256 == relief["source"]["artifact_sha256"]
 
     # Odczyt historyczny: identyczny wynik NMT (w tym klasy, profil, rozdzielczość).
@@ -338,11 +338,11 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
     pdf_text = _pdf_text(report.content)
     for expected in (
         "6. Teren (NMT)",
-        "Najniższa wysokość (Hmin) 112,3 m",
-        "Najwyższa wysokość (Hmax) 115,7 m",
-        "Deniwelacja (Hmax − Hmin) 3,4 m",
-        "Siatka próbkowania usługi 4 m",
-        "Liczba punktów siatki 676",
+        "Najniższa wysokość (Hmin) 105,19 m",
+        "Najwyższa wysokość (Hmax) 116,22 m",
+        "Deniwelacja (Hmax − Hmin) 11,03 m",
+        "Siatka źródła wysokości 1 m",
+        "Liczba punktów siatki 10000",
         "Rozdzielczość danych źródłowych 1 m",
         "Spadek, ekspozycja i profil (raster NMT)",
         "umiarkowany (5–10%)",
@@ -468,7 +468,7 @@ def test_manual_zone_resume_keeps_terrain_snapshot(relief_enabled: FakeWcsClient
     body = waiting.json()
     assert body["status"] == "waiting_for_user_input"
     terrain = body["terrain"]
-    assert terrain["height_difference_m"] == 3.4
+    assert terrain["height_difference_m"] == 11.03
     assert terrain["relief"]["status"] == "available"
 
     resumed = client.post("/analyze/resume", json={"analysis_id": body["analysis_id"], "access_token": make_analysis_token(body["analysis_id"]), "zone_symbol": "1MN"})

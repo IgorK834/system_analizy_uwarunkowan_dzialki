@@ -492,7 +492,7 @@ def test_record_from_before_au104_is_reconstructed_and_labelled() -> None:
 
 def test_result_contract_version_changes_the_cache_signature() -> None:
     assert "+completeness-v1.1" in RESULT_CONTRACT_VERSION and "+road-v1.0" in RESULT_CONTRACT_VERSION
-    assert "+buildings-v1.0" in RESULT_CONTRACT_VERSION and "+quality-v1.1" in RESULT_CONTRACT_VERSION
+    assert "+buildings-v1.0" in RESULT_CONTRACT_VERSION and "+quality-v1.2" in RESULT_CONTRACT_VERSION
     assert RESULT_CONTRACT_VERSION.endswith("completeness-v1.1")
 
 

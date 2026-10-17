@@ -110,7 +110,7 @@ def test_save_analysis_stores_the_matrix_it_was_given_or_issues_one(clean_rows: 
         assert matrix.origin == "stored" and matrix.integrity_ok()
         assert matrix.reference_at == issued.analyzed_at  # punkt odniesienia = chwila analizy
         assert [item.section for item in matrix.sections][:3] == ["parcel", "mpzp", "pog"]
-        assert saved.result_contract_version and "+quality-v1.1" in saved.result_contract_version
+        assert saved.result_contract_version and "+quality-v1.2" in saved.result_contract_version
         read = build_analyze_response_from_analysis(saved, db)
         assert read.section_quality == matrix
 

@@ -363,3 +363,37 @@ def test_sliver_thresholds_come_from_settings(monkeypatch: pytest.MonkeyPatch) -
 
     monkeypatch.setattr(settings, "pog_sliver_min_pct", 0.0)  # przy 0% żaden udział nie jest „poniżej”
     assert analyze_pog_vectors(parcel, _vector_data(zones=features)).topological_slivers == []
+
+
+@pytest.mark.parametrize("area,pct,sliver", [(0.9999, 0.4999, True), (1.0, 0.4999, False), (0.9999, 0.5, False), (1.0, 0.5, False), (0, 0, True)])
+def test_sliver_thresholds_are_strict_in_both_dimensions(area, pct, sliver):
+    from app.services.pog_analyzer import PogZoneIntersection, is_topological_sliver
+    zone = PogZoneIntersection(PogPlanningZoneType.MULTIFUNCTIONAL_MULTI_FAMILY, "SW", area, pct / 100, {}, False, False)
+    assert is_topological_sliver(zone) is sliver
+
+
+def test_real_bielsko_parcel_slivers_from_frozen_audit_geometry():
+    import json
+    import zipfile
+    from pyproj import Transformer
+    from shapely.geometry import shape
+    from shapely.ops import transform
+    from tests.repo_structure import find_repo_root
+    path = find_repo_root() / "docs/evaluation/results/pog-national/live/audit-246101_1.0056.155-3.zip"
+    with zipfile.ZipFile(path) as archive:
+        parcel_json = json.loads(archive.read("parcel.geojson"))["features"][0]["geometry"]
+        main_json = json.loads(archive.read("layers/pog_zones.geojson"))["features"][0]["geometry"]
+    project = Transformer.from_crs(4326, 2180, always_xy=True).transform
+    parcel = transform(project, shape(parcel_json))
+    main = transform(project, shape(main_json))
+    # Eksport ma geometrię strefy głównej i działki; okruch jest ich rzeczywistą różnicą,
+    # nie ręcznie skonstruowanym prostokątem. Surowy zapis podaje SW i pole 0,1080956 m².
+    zones = [
+        PogVectorFeature(main, {"zone_type": "SK", "symbol": "SK"}, "EPSG:2180", "planning_zone"),
+        PogVectorFeature(parcel.difference(main), {"zone_type": "SW", "symbol": "SW"}, "EPSG:2180", "planning_zone"),
+    ]
+    analysis = analyze_pog_vectors(parcel, _vector_data(zones=zones))
+    assert [zone.zone_type for zone in analysis.zones] == [PogPlanningZoneType.TRANSPORT]
+    assert len(analysis.topological_slivers) == 1  # Wersja RU 20260901T095300; zmiana względem audytu: 1 okruch 0,11 m².
+    assert analysis.topological_slivers[0].area_sqm == pytest.approx(0.1080956, abs=0.0001)
+    assert zones_cover_parcel(analysis)

@@ -108,7 +108,10 @@ _MIGRATION_TEST_MODULES = frozenset(
         "test_migration_036",
         "test_migration_037",
         "test_migration_037_data",
+        "test_migration_038",
         "test_versioned_model",
+        # Równoległe transakcje rejestrują KIMPZP od zera; zatwierdzonych danych nie wolno współdzielić z innymi testami.
+        "test_document_concurrency",
     }
 )
 

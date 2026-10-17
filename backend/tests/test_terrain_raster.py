@@ -454,3 +454,19 @@ def test_profile_line_square_prefers_west_east_and_concave_is_clipped() -> None:
 
 def test_profile_line_is_none_for_degenerate_geometry() -> None:
     assert ShapelyParcelFootprint(Polygon()).profile_line() is None
+
+
+@requires_gdal
+@pytest.mark.parametrize("header,expected", [("Wed, 14 Oct 2026 12:00:00 GMT", "2026-10-14"), ("bad", None)])
+def test_wcs_dataset_date_is_preserved_independently_of_download_time(header, expected):
+    from dataclasses import replace
+    from app.services.terrain import relief_result_from_outcome
+    class WithMetadata(FakeWcsClient):
+        def fetch_wcs_coverage(self, *args, **kwargs):
+            return replace(super().fetch_wcs_coverage(*args, **kwargs), headers={"last-modified": header})
+    client = WithMetadata(coverage=fixture_bytes("wcs_getcoverage_warszawa_parcel_window.tif"))
+    outcome = _run(box(637000, 486000, 637100, 486100), client)
+    source = relief_result_from_outcome(outcome).source
+    assert (source.data_as_of.isoformat() if source.data_as_of else None) == expected
+    assert (source.data_as_of_status == "known") is (expected is not None)
+    assert (source.data_as_of_reason is not None) is (expected is None)

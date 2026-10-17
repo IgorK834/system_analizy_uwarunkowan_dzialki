@@ -173,7 +173,7 @@ def test_matrix_is_the_same_in_api_db_reread_cache_and_pdf() -> None:
         "parcel", "mpzp", "pog", "pog_overlays", "flood", "nature", "terrain",
         "utilities", "transport", "buildings", "mpzp_pog_relation",
     ]
-    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.1"
+    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.2"
     assert matrix["policy_version"].startswith("quality-policy/1+")
     assert len(matrix["matrix_sha256"]) == 64
     assert matrix["reference_at"] == body["analyzed_at"]  # punkt odniesienia = chwila analizy

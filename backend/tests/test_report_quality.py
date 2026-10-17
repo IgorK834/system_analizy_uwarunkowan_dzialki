@@ -46,20 +46,21 @@ def test_matrix_has_one_row_per_section_with_source_time_release_and_freshness()
     assert "sprawdzono" in flood[1]
     assert "ISOK WFS" in flood[2] and "isok" in flood[2]
     assert "2026-09-20" in flood[3] or "20.09.2026" in flood[3]
-    assert "aktualne wg reguły" in flood[5] and "reguła źródła: 7 dni" in flood[5]
+    assert "aktualne wg reguły" in flood[6] and "reguła źródła: 7 dni" in flood[6]
+    assert "Nieznany" in flood[4] and "zestawu" in flood[4]
     pog = by_label["POG — strefy planistyczne"]
-    assert "#12" in pog[4]
+    assert "#12" in pog[5]
     # Źródło bez reguły wieku: świeżość nieustalona, a wiek pokazany faktograficznie.
-    assert "świeżość nieustalona" in pog[5] and "brak reguły wieku" in pog[5]
+    assert "świeżość nieustalona" in pog[6] and "brak reguły wieku" in pog[6]
     mpzp = by_label["MPZP"]
     assert "częściowo" in mpzp[1] and "wymaga weryfikacji" in mpzp[1]
-    assert "sprzeczne wartości parametrów" in mpzp[6]
+    assert "sprzeczne wartości parametrów" in mpzp[7]
 
 
 def test_freshness_column_does_not_repeat_the_missing_rule_phrase() -> None:
     response, _ = load_fixture("multizone")
     rows = {row[0].split(" (§")[0]: row for row in _table_rows(_html(response, EXPORT_SOON), "quality")}
-    parcel_cell = rows["Działka i geometria"][5]
+    parcel_cell = rows["Działka i geometria"][6]
     assert parcel_cell.count("brak reguły wieku") == 1
     assert "mniej niż 1 dzień" in parcel_cell
     assert "kod źródła:" not in " ".join(" ".join(row) for row in rows.values())  # każdy kod ma etykietę
@@ -71,15 +72,15 @@ def test_sections_without_source_state_the_reason_of_the_gap() -> None:
     transport = by_label["Transport i dostęp do drogi"]
     assert "nieustalone" in transport[1]  # zapis bez sekcji drogowej: nie „brak drogi”
     assert "brak źródła" in transport[2]
-    assert "zapis sprzed sekcji drogowej" in transport[6] and "ROAD_CONTEXT_NOT_RECORDED" in transport[6]
+    assert "zapis sprzed sekcji drogowej" in transport[7] and "ROAD_CONTEXT_NOT_RECORDED" in transport[7]
     mpzp = by_label["MPZP"]
-    assert "nieustalone" in mpzp[1] and "nie ustalono stanu MPZP" in mpzp[6]  # zapis bez stanu (AU-103)
+    assert "nieustalone" in mpzp[1] and "nie ustalono stanu MPZP" in mpzp[7]  # zapis bez stanu (AU-103)
     flood = by_label["Zagrożenie powodziowe (ISOK)"]
     assert "źródło niedostępne" in flood[1]
     kiut = by_label["Uzbrojenie terenu (KIUT)"]
-    assert "nie sprawdzono pokrycia KIUT" in kiut[6]
+    assert "nie sprawdzono pokrycia KIUT" in kiut[7]
     for row in rows:
-        assert row[6] != "—" or "sprawdzono" in row[1]  # pusty powód tylko przy pełnym wyniku
+        assert row[7] != "—" or "sprawdzono" in row[1]  # pusty powód tylko przy pełnym wyniku
 
 
 def test_no_coverage_and_error_are_shown_as_different_states() -> None:

@@ -679,3 +679,22 @@ def test_compatible_relation_needs_no_reason_besides_being_derived() -> None:
         "mpzp_pog_relation"
     ]
     assert (relation.status, relation.reason_codes) == ("available", ["DERIVED_SECTION"])
+
+
+def test_data_as_of_policy_never_falls_back_to_download_time():
+    from datetime import date
+    response = _response()
+    source = response.terrain.source.model_copy(update={"data_as_of": date(2020, 1, 1), "data_as_of_reason": None})
+    response.terrain = response.terrain.model_copy(update={"source": source})
+    policy = {**POLICY_7D, "date_basis": "data_as_of"}
+    catalog = _catalog(nmt=policy)
+    matrix = build_section_quality(response, catalog=catalog)
+    terrain = next(item for item in matrix.sections if item.section == "terrain")
+    assert terrain.data_as_of == date(2020, 1, 1)
+    assert terrain.freshness.state == "stale" and terrain.freshness.date_basis == "data_as_of"
+    response.terrain.source = source.model_copy(update={"data_as_of": None})
+    matrix = build_section_quality(response, catalog=catalog)
+    terrain = next(item for item in matrix.sections if item.section == "terrain")
+    assert terrain.freshness.state == "unknown" and terrain.freshness.reason_code == "FRESHNESS_NO_DATA_AS_OF"
+    assert matrix.integrity_ok()
+    assert catalog.quality_policy_version() != _catalog(nmt=POLICY_7D).quality_policy_version()

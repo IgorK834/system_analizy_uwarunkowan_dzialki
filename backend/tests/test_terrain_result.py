@@ -71,7 +71,7 @@ def test_control_measurement_is_valid_and_serializes_units() -> None:
     terrain = _available()
     dumped = terrain.model_dump(mode="json")
     assert dumped["height_difference_m"] == 3.4
-    assert dumped["schema_version"] == "1.0"
+    assert dumped["schema_version"] == "1.1"
     assert TerrainResult.model_validate(dumped) == terrain
 
 
@@ -347,6 +347,7 @@ def test_source_inconsistency_between_services_is_flagged() -> None:
     )
 
     assert far.relief is not None
-    assert any("różnią się od usługi" in item for item in far.relief.warnings)
+    assert far.crosscheck.warning_code == "NMT_CROSSCHECK_DIFF"
+    assert far.min_height_m == far.relief.min_height_m
     assert near.relief is not None
-    assert not any("różnią się od usługi" in item for item in near.relief.warnings)
+    assert near.crosscheck.warning_code is None
