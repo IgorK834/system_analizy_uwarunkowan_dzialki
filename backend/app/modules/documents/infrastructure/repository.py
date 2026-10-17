@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from typing import cast
 from urllib.parse import urlparse
 
 from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.models.versioned import (
@@ -93,12 +95,23 @@ class SqlAlchemyDocumentRepository(DocumentRepository):
     def replace_document_content(
         self, snapshot: DocumentSnapshot
     ) -> DocumentSnapshot:
-        version = self._session.get(
-            DocumentVersion, snapshot.document_version_id
-        )
+        version = self._session.scalars(
+            select(DocumentVersion).where(DocumentVersion.id == snapshot.document_version_id).with_for_update()
+        ).one_or_none()
         if version is None:
             raise ValueError(
                 f"Nie istnieje DocumentVersion {snapshot.document_version_id}."
+            )
+
+        existing_units = self.get_legal_units_for_version(snapshot.document_version_id)
+        if self._same_content(version, snapshot, existing_units):
+            # Kolejne działki mogą cytować tę samą uchwałę. Identyczny wynik
+            # ekstrakcji nie może usuwać jednostek wskazanych przez ich snapshoty.
+            return self._snapshot(
+                version,
+                self._session.scalar(select(SourceArtifact.uri).where(SourceArtifact.id == version.source_artifact_id)),
+                pages=snapshot.pages,
+                legal_units=tuple(existing_units),
             )
 
         version.media_type = snapshot.media_type
@@ -167,71 +180,110 @@ class SqlAlchemyDocumentRepository(DocumentRepository):
             legal_units=tuple(persisted),
         )
 
+    def _same_content(
+        self, version: DocumentVersion, snapshot: DocumentSnapshot, existing_units: list[LegalUnitNode],
+    ) -> bool:
+        if (version.media_type, version.extraction_method, version.ocr_engine_version, version.quality_score) != (
+            snapshot.media_type, snapshot.extraction_method, snapshot.ocr_engine_version, snapshot.quality_score,
+        ):
+            return False
+        pages = self._session.scalars(
+            select(DocumentPage).where(DocumentPage.document_version_id == version.id).order_by(DocumentPage.page_number)
+        ).all()
+        expected_pages = sorted(snapshot.pages, key=lambda page: page.page_number)
+        if len(pages) != len(expected_pages) or len(existing_units) != len(snapshot.legal_units):
+            return False
+        for stored, expected in zip(pages, expected_pages):
+            if (stored.page_number, stored.text, stored.ocr_used, stored.quality) != (
+                expected.page_number, expected.text, expected.ocr_used, expected.quality,
+            ) or json.dumps(stored.blocks or [], sort_keys=True) != json.dumps(expected.blocks, sort_keys=True):
+                return False
+        # Klucze drzewa parsera są tymczasowe; porównujemy ich relacje z zapisanymi
+        # ID, zamiast traktować brak nowych ID jako zmianę treści.
+        key_to_id: dict[str, int | None] = {}
+        fields = ("unit_type", "number", "order_index", "page_from", "page_to", "source_text", "normalized_text")
+        expected_units = sorted(snapshot.legal_units, key=lambda unit: unit.order_index)
+        for stored_unit, expected_unit in zip(existing_units, expected_units):
+            if expected_unit.parent_key is not None and expected_unit.parent_key not in key_to_id:
+                return False
+            parent_id = (
+                key_to_id[expected_unit.parent_key] if expected_unit.parent_key is not None else expected_unit.parent_id
+            )
+            if parent_id != stored_unit.parent_id or any(
+                getattr(stored_unit, field) != getattr(expected_unit, field) for field in fields
+            ):
+                return False
+            if expected_unit.node_key is not None:
+                key_to_id[expected_unit.node_key] = stored_unit.id
+        return True
+
     def register_document_version(
         self, registration: DocumentRegistration
     ) -> DocumentSnapshot:
-        source = self._session.scalar(
-            select(DataSource).where(
-                DataSource.source_id == registration.source_id
-            )
-        )
-        if source is None:
-            source = DataSource(
+        # Wspólne źródło/artefakt/wydanie mogą być tworzone przez różne procesy
+        # analizujące inne działki. Konflikt naturalnego klucza jest idempotentnym
+        # zapisem, bez przerwania transakcji i bez nadpisywania metadanych źródła.
+        self._session.execute(
+            pg_insert(DataSource).values(
                 source_id=registration.source_id,
                 owner=registration.source_owner,
                 status="production",
                 access_type="document",
-            )
-            self._session.add(source)
-            self._session.flush()
-
-        artifact = self._session.scalar(
-            select(SourceArtifact).where(
-                SourceArtifact.data_source_id == source.id,
-                SourceArtifact.content_hash == registration.content_hash,
-            )
+            ).on_conflict_do_nothing(index_elements=[DataSource.source_id])
         )
-        if artifact is None:
-            artifact = SourceArtifact(
+        source = self._session.scalars(
+            select(DataSource).where(
+                DataSource.source_id == registration.source_id
+            )
+        ).one()
+
+        self._session.execute(
+            pg_insert(SourceArtifact).values(
                 data_source_id=source.id,
                 uri=registration.original_uri,
                 media_type=registration.media_type,
                 content_hash=registration.content_hash,
                 fetched_at=registration.published_at,
+            ).on_conflict_do_nothing(index_elements=[SourceArtifact.data_source_id, SourceArtifact.content_hash])
+        )
+        artifact = self._session.scalars(
+            select(SourceArtifact).where(
+                SourceArtifact.data_source_id == source.id,
+                SourceArtifact.content_hash == registration.content_hash,
             )
-            self._session.add(artifact)
-            self._session.flush()
+        ).one()
 
         release_label = f"document-{registration.content_hash[:32]}"
-        release = self._session.scalar(
-            select(DataRelease).where(
-                DataRelease.data_source_id == source.id,
-                DataRelease.version_label == release_label,
-            )
-        )
-        if release is None:
-            release = DataRelease(
+        self._session.execute(
+            pg_insert(DataRelease).values(
                 data_source_id=source.id,
                 version_label=release_label,
                 published_at=registration.published_at,
                 importer_version="documents-parser/1.0",
+            ).on_conflict_do_nothing(index_elements=[DataRelease.data_source_id, DataRelease.version_label])
+        )
+        release = self._session.scalars(
+            select(DataRelease).where(
+                DataRelease.data_source_id == source.id,
+                DataRelease.version_label == release_label,
             )
-            self._session.add(release)
-            self._session.flush()
+        ).one()
 
-        act = self._session.scalar(
+        self._session.execute(
+            pg_insert(PlanningAct).values(
+                act_identifier=registration.planning_act_identifier,
+                kind="mpzp",
+            ).on_conflict_do_nothing(index_elements=[PlanningAct.act_identifier])
+        )
+        # Blokada dotyczy tylko danego aktu i trwa do commit/rollback wywołującego.
+        # Chroni także SourceDocument, DocumentVersion i późniejszą wymianę stron/
+        # jednostek prawnych. Pobieranie i parsowanie odbywa się przed rejestracją.
+        act = self._session.scalars(
             select(PlanningAct).where(
                 PlanningAct.act_identifier
                 == registration.planning_act_identifier
-            )
-        )
-        if act is None:
-            act = PlanningAct(
-                act_identifier=registration.planning_act_identifier,
-                kind="mpzp",
-            )
-            self._session.add(act)
-            self._session.flush()
+            ).with_for_update()
+        ).one()
 
         source_document = self._session.scalar(
             select(SourceDocument).where(
