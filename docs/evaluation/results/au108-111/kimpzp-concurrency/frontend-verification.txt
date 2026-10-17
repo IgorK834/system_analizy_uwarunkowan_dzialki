@@ -1,0 +1,200 @@
+
+> dzialki-frontend@0.1.0 typecheck
+> tsc --noEmit
+
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> dzialki-frontend@0.1.0 test:coverage
+> vitest run --coverage
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /workspace/frontend
+      Coverage enabled with v8
+
+ ✓ lib/api.test.ts (63 tests) 37ms
+ ✓ lib/pogLayerState.test.ts (29 tests) 17ms
+ ✓ lib/pogLayers.test.ts (10 tests) 30ms
+ ✓ components/MapView.test.tsx (8 tests) 59ms
+ ✓ components/MpzpZoneCard.a11y.test.tsx (13 tests) 481ms
+ ✓ components/PreviewOverlays.test.tsx (13 tests) 779ms
+ ✓ hooks/useAnalyzeParcel.test.tsx (10 tests) 33ms
+ ✓ components/PogFeatureInspector.test.tsx (28 tests) 708ms
+ ✓ components/MpzpZoneCard.test.tsx (22 tests) 853ms
+ ✓ components/ReportDownloadButton.test.tsx (11 tests) 448ms
+ ✓ components/PogOfficialSources.test.tsx (4 tests) 364ms
+ ✓ components/ResultPanel.test.tsx (27 tests) 1347ms
+ ✓ components/PogAreaSummary.test.tsx (7 tests) 469ms
+ ✓ lib/pogZones.test.ts (7 tests) 11ms
+ ✓ components/SectionQualityMatrix.test.tsx (9 tests) 479ms
+ ✓ components/ManualZonePanel.test.tsx (13 tests) 1201ms
+ ✓ app/pogMap.integration.test.tsx (6 tests) 1871ms
+     ✓ 5 trybów klawiaturą i myszą: 0 requestów, te same URL-e źródeł, tylko setPaintProperty  709ms
+     ✓ BK-404: klik obiektu otwiera inspektor bez POST /analyze; przycisk wysyła dokładnie jedno żądanie  383ms
+ ✓ components/MpzpActsList.test.tsx (15 tests) 684ms
+ ✓ components/CoverageLayer.test.tsx (8 tests) 576ms
+ ✓ lib/pogCoverage.test.ts (6 tests) 19ms
+ ✓ lib/quality.test.ts (10 tests) 18ms
+ ✓ lib/pogThemes.test.ts (12 tests) 11ms
+ ✓ app/page.test.tsx (5 tests) 1199ms
+     ✓ przepływ ręcznego symbolu: podgląd źródła → symbol → wynik partial  384ms
+ ✓ components/TerrainCard.test.tsx (9 tests) 407ms
+ ✓ components/PogMapPanel.test.tsx (11 tests) 879ms
+ ✓ lib/mpzpActs.test.ts (9 tests) 26ms
+ ✓ components/CompletenessBar.test.tsx (16 tests) 424ms
+ ✓ hooks/usePogTileActivity.test.tsx (4 tests) 26ms
+ ✓ lib/pogStatus.test.ts (52 tests) 14ms
+ ✓ components/RoadContextCard.test.tsx (7 tests) 75ms
+ ✓ components/PogLegend.test.tsx (8 tests) 272ms
+ ✓ hooks/useResumeAnalysis.test.tsx (8 tests) 25ms
+ ✓ lib/mpzpProvenance.test.ts (7 tests) 5ms
+ ✓ hooks/usePogTileState.test.tsx (8 tests) 524ms
+     ✓ BK-406: ponowienie bez zmiany stanu zachowuje obiekt; nieudane daje stale z datą  326ms
+ ✓ components/BuildingsCard.test.tsx (8 tests) 271ms
+ ✓ components/CompatibilityAssessmentCard.test.tsx (12 tests) 329ms
+ ✓ lib/terrain.test.ts (7 tests) 13ms
+ ✓ components/PogCoveragePanel.test.tsx (10 tests) 1382ms
+     ✓ filtruje listę po zakresie i wyszukiwarce, a puste wyniki nie są informacją o braku planu  325ms
+ ✓ components/MpzpDiscoveryCard.test.tsx (5 tests) 266ms
+ ✓ lib/zoneSymbol.test.ts (67 tests) 9ms
+ ✓ lib/mpzpConditions.test.ts (7 tests) 7ms
+ ✓ lib/bdot.test.ts (5 tests) 20ms
+ ✓ components/LayerToggle.test.tsx (6 tests) 289ms
+ ✓ components/MpzpRasterPreview.test.tsx (5 tests) 165ms
+ ✓ app/searchPanelLayout.test.ts (4 tests) 3ms
+ ✓ lib/mpzpDiscovery.test.ts (4 tests) 7ms
+ ✓ lib/completeness.test.ts (6 tests) 4ms
+ ✓ lib/maplibreWorker.test.ts (2 tests) 7ms
+ ✓ components/MpzpStatusBanner.test.tsx (10 tests) 58ms
+ ✓ lib/mapStyle.test.ts (2 tests) 3ms
+ ✓ lib/compatibility.test.ts (3 tests) 27ms
+ ✓ lib/config.test.ts (4 tests) 4ms
+ ✓ lib/safeLink.test.ts (9 tests) 4ms
+ ✓ components/PogThemeSelector.test.tsx (3 tests) 363ms
+ ✓ components/MapViewLoader.test.tsx (1 test) 20ms
+ ✓ components/PogZoneShareChart.test.tsx (2 tests) 136ms
+ ✓ components/SearchPanel.test.tsx (15 tests) 5603ms
+     ✓ pobiera sugestie po debounce, ale nie analizuje podczas wpisywania  465ms
+     ✓ pozwala wybrać sugestię strzałką i Enterem  431ms
+     ✓ nie odpytuje API dla zbyt krótkiego adresu i pokazuje błąd sugestii  762ms
+     ✓ pokazuje pomocny komunikat, gdy źródło nie zwróci sugestii  440ms
+     ✓ po wyborze miejscowości pozwala dopisać ulicę bez uruchamiania analizy  837ms
+     ✓ przekazuje środek i bbox bieżącego widoku mapy do rankingu  396ms
+       ✓ renderuje listę wewnątrz opakowania pola i podnosi panel tylko, gdy lista jest otwarta  389ms
+       ✓ zachowuje klawiaturę i aria-activedescendant  529ms
+       ✓ Escape zamyka listę i opuszcza panel do poziomu spoczynkowego  464ms
+       ✓ kliknięcie poza panelem zamyka listę, kliknięcie w panelu nie  419ms
+
+ Test Files  57 passed (57)
+      Tests  672 passed (672)
+   Start at  19:50:56
+   Duration  7.78s (transform 3.59s, setup 7.40s, import 5.81s, tests 23.36s, environment 31.98s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   98.03 |    91.31 |   99.23 |   99.05 |                   
+ app               |     100 |       88 |     100 |     100 |                   
+  page.tsx         |     100 |       88 |     100 |     100 | 69,116,144        
+ components        |   96.83 |    89.82 |   98.59 |   98.55 |                   
+  ...ourceLine.tsx |     100 |    66.66 |     100 |     100 | 18-19,43-45       
+  ...dingsCard.tsx |      90 |       92 |      80 |      90 | 129               
+  ...smentCard.tsx |     100 |    88.88 |     100 |     100 | 44,77-81,106      
+  ...tenessBar.tsx |     100 |    93.75 |     100 |     100 | 100               
+  ...rageLayer.tsx |     100 |      100 |     100 |     100 |                   
+  ...ilityNote.tsx |   83.33 |    71.42 |     100 |   83.33 | 70                
+  LayerToggle.tsx  |     100 |      100 |     100 |     100 |                   
+  ...ZonePanel.tsx |   98.14 |    93.44 |     100 |     100 | 51-56,135-139     
+  MapView.tsx      |   98.33 |    96.55 |     100 |     100 | 84                
+  ...iewLoader.tsx |   66.66 |      100 |      50 |      80 | 8                 
+  MpzpActsList.tsx |     100 |    91.66 |     100 |     100 | 36,70,87,115,135  
+  ...overyCard.tsx |     100 |     87.5 |     100 |     100 | ...-70,82,101,121 
+  ...erPreview.tsx |   98.55 |    91.17 |     100 |     100 | 29,31,80          
+  ...tusBanner.tsx |     100 |      100 |     100 |     100 |                   
+  MpzpZoneCard.tsx |     100 |    97.27 |     100 |     100 | 51,103,290        
+  ...eaSummary.tsx |   96.82 |    91.13 |   95.23 |   98.24 | 217               
+  ...ragePanel.tsx |     100 |    90.62 |     100 |     100 | 56-59,159         
+  ...Inspector.tsx |   98.14 |    84.74 |     100 |     100 | ...38,355,407,441 
+  ...yerStatus.tsx |     100 |     92.3 |     100 |     100 | 64                
+  PogLegend.tsx    |     100 |      100 |     100 |     100 |                   
+  PogMapPanel.tsx  |     100 |      100 |     100 |     100 |                   
+  ...alSources.tsx |     100 |    92.59 |     100 |     100 | 52,82,109,141     
+  ...eSelector.tsx |     100 |    81.81 |     100 |     100 | 20,54             
+  ...hareChart.tsx |     100 |      100 |     100 |     100 |                   
+  ...wOverlays.tsx |   96.17 |    89.25 |     100 |   98.69 | 278-279           
+  ...oadButton.tsx |   90.56 |    82.92 |     100 |     100 | 69-82,85-104      
+  ResultPanel.tsx  |   92.66 |    86.94 |   98.24 |   94.53 | ...-983,1022-1023 
+  ...ntextCard.tsx |     100 |    79.48 |     100 |     100 | 49-53,59-68,84-85 
+  SearchPanel.tsx  |   99.13 |    89.77 |     100 |     100 | ...29,170,276-290 
+  ...ityMatrix.tsx |     100 |      100 |     100 |     100 |                   
+  TerrainCard.tsx  |     100 |    88.23 |     100 |     100 | ...82-185,207,245 
+ hooks             |   98.53 |    89.79 |     100 |   99.43 |                   
+  ...lyzeParcel.ts |   97.95 |    85.18 |     100 |     100 | 37,42,79          
+  ...leActivity.ts |    98.3 |     90.9 |     100 |     100 | 66,72             
+  ...gTileState.ts |     100 |      100 |     100 |     100 |                   
+  ...meAnalysis.ts |   97.56 |       85 |     100 |   97.43 | 50                
+ lib               |   99.32 |    94.31 |     100 |   99.56 |                   
+  api.ts           |   99.41 |    94.55 |     100 |   99.36 | 65                
+  bdot.ts          |   96.29 |    86.11 |     100 |     100 | 76,85,91,148-149  
+  compatibility.ts |     100 |      100 |     100 |     100 |                   
+  completeness.ts  |     100 |      100 |     100 |     100 |                   
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  layerState.ts    |     100 |      100 |     100 |     100 |                   
+  layerStyles.ts   |     100 |      100 |     100 |     100 |                   
+  mapStyle.ts      |     100 |      100 |     100 |     100 |                   
+  ...ibreWorker.ts |     100 |      100 |     100 |     100 |                   
+  mpzpActs.ts      |     100 |    93.18 |     100 |     100 | 142,184-185       
+  ...Conditions.ts |     100 |      100 |     100 |     100 |                   
+  mpzpDiscovery.ts |     100 |    93.75 |     100 |     100 | 88                
+  ...Provenance.ts |     100 |      100 |     100 |     100 |                   
+  pogCoverage.ts   |     100 |    97.72 |     100 |     100 | 99                
+  pogLayerState.ts |     100 |    95.83 |     100 |     100 | ...81,220-260,288 
+  pogLayers.ts     |     100 |    88.57 |     100 |     100 | ...30-353,488,493 
+  pogPatterns.ts   |     100 |      100 |     100 |     100 |                   
+  pogStatus.ts     |     100 |      100 |     100 |     100 |                   
+  pogThemes.ts     |   96.49 |    92.68 |     100 |      96 | 66,72             
+  pogZones.ts      |   97.93 |    93.93 |     100 |   98.71 | 151               
+  quality.ts       |     100 |    94.87 |     100 |     100 | 82-90             
+  safeLink.ts      |     100 |      100 |     100 |     100 |                   
+  terrain.ts       |      98 |    88.63 |     100 |     100 | 65,75,103,164-172 
+  zoneSymbol.ts    |     100 |    95.45 |     100 |     100 | 42                
+-------------------|---------|----------|---------|---------|-------------------
+
+> dzialki-frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+✓ Running next.config.ts took 72ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.7s
+  Running TypeScript ...
+  Finished TypeScript in 2.8s ...
+  Collecting page data using 4 workers ...
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 283ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content
+
+
+> dzialki-frontend@0.1.0 lint
+> eslint .
+

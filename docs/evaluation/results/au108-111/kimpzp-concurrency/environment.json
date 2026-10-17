@@ -1,0 +1,47 @@
+{
+  "verified_at": "2026-10-17",
+  "base_commit": "f530b5f186ede3a3295b3db397de9984a2e1fbd1",
+  "uncommitted_working_tree": true,
+  "backend": {
+    "python": "3.13.16",
+    "packages": {
+      "fastapi": "0.141.1",
+      "pydantic": "2.13.5",
+      "SQLAlchemy": "2.0.54",
+      "GeoAlchemy2": "0.20.0",
+      "Shapely": "2.1.2",
+      "pyproj": "3.8.0",
+      "httpx": "0.28.1",
+      "pytest": "9.1.1",
+      "pytest-cov": "7.1.0"
+    }
+  },
+  "frontend": {
+    "node": "v22.23.3",
+    "packages": {
+      "next": "16.3.8",
+      "react": "19.2.7",
+      "typescript": "5.9.3",
+      "maplibre-gl": "6.13.0",
+      "vitest": "4.1.11",
+      "@testing-library/react": "16.3.2"
+    }
+  },
+  "database": "postgis/postgis:16-3.4; au108_race_final (smoke) i au108_race_suite (testy)",
+  "live_flags": {
+    "terrain_relief_enabled": true,
+    "ru_mpzp_acts_enabled": true,
+    "ru_pog_discovery_enabled": true,
+    "mpzp_llm_enabled": false
+  },
+  "local_pog_communes": [
+    "200901",
+    "241203",
+    "281401"
+  ],
+  "local_bdot_counties": [],
+  "source_files_sha256": {
+    "backend/app/modules/documents/infrastructure/repository.py": "c897626f232dfdcff365972bb0b47afc700cc399b8a3633281a7c50c42b11096",
+    "backend/tests/test_document_concurrency.py": "209ffe1a39a1f20ab319370d136dbfcc70f8af6a394cae5af9a06e1def5e12bc"
+  }
+}

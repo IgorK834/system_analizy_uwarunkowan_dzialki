@@ -1,0 +1,132 @@
+{
+  "boundary_count": 2479,
+  "summary": {
+    "ru_communes": 462,
+    "imported_communes": 3,
+    "in_ru_not_imported": 459,
+    "imported_without_ru_entry": 0,
+    "outdated_versions": 0,
+    "state_id": 3
+  },
+  "imported_communes": [
+    {
+      "terc": "200901",
+      "name": "Sejny",
+      "district": "sejneński",
+      "voivodeship": "PODLASKIE",
+      "status": "imported",
+      "ru_acts": [
+        {
+          "published_act_id": 1735,
+          "status_text": "prawnie wiążący lub realizowany",
+          "legal_status": "binding",
+          "publish_date": "2026-09-16",
+          "valid_from": "2026-05-20"
+        }
+      ],
+      "imported_acts": [
+        {
+          "act_identifier": "PL.ZIPPZP.11530/200901-POG/1POG",
+          "act_version": "20260514T084915",
+          "data_as_of": "2026-04-28",
+          "legal_status": "binding",
+          "name": "Plan ogólny miasta Sejny",
+          "state_id": 3,
+          "imported_at": "2026-10-16T16:19:39.460275Z",
+          "fetched_at": "2026-10-16T16:19:39.794414Z",
+          "release_id": 2,
+          "release_label": "pog-7e09618af9f1",
+          "content_hash": "798d5f3daa335e0d17d7352664f12dca4ec8e72e9566acd21dfc0bc7a71f062f",
+          "ru_published_act_id": 1735,
+          "up_to_date": true,
+          "zone_count": 144,
+          "overlay_count": 27
+        }
+      ],
+      "import_job": null,
+      "last_import_failure": null
+    },
+    {
+      "terc": "241203",
+      "name": "Jejkowice",
+      "district": "rybnicki",
+      "voivodeship": "ŚLĄSKIE",
+      "status": "imported",
+      "ru_acts": [
+        {
+          "published_act_id": 1152,
+          "status_text": "prawnie wiążący lub realizowany",
+          "legal_status": "binding",
+          "publish_date": "2026-08-31",
+          "valid_from": "2026-01-02"
+        }
+      ],
+      "imported_acts": [
+        {
+          "act_identifier": "PL.ZIPPZP.10169/241203-POG/1POG",
+          "act_version": "20260102T120826",
+          "data_as_of": "2025-12-02",
+          "legal_status": "binding",
+          "name": "Plan ogólny gminy Jejkowice",
+          "state_id": 1,
+          "imported_at": "2026-10-16T16:19:39.429223Z",
+          "fetched_at": "2026-10-16T16:19:39.665523Z",
+          "release_id": 1,
+          "release_label": "pog-2fdbef142413",
+          "content_hash": "00ef9c5391ab42838b000bdb80e3fb1839edc57b2662bde764fafaf58d7ed1bc",
+          "ru_published_act_id": 1152,
+          "up_to_date": true,
+          "zone_count": 82,
+          "overlay_count": 19
+        }
+      ],
+      "import_job": null,
+      "last_import_failure": null
+    },
+    {
+      "terc": "281401",
+      "name": "Barczewo",
+      "district": "olsztyński",
+      "voivodeship": "WARMIŃSKO-MAZURSKIE",
+      "status": "imported",
+      "ru_acts": [
+        {
+          "published_act_id": 1890,
+          "status_text": "prawnie wiążący lub realizowany",
+          "legal_status": "binding",
+          "publish_date": "2026-09-18",
+          "valid_from": "2026-05-27"
+        },
+        {
+          "published_act_id": 1894,
+          "status_text": "w opracowaniu",
+          "legal_status": "in_progress",
+          "publish_date": "2026-09-18",
+          "valid_from": "2026-06-25"
+        }
+      ],
+      "imported_acts": [
+        {
+          "act_identifier": "PL.ZIPPZP.10963/281401-POG/2POG",
+          "act_version": "20260625T000000",
+          "data_as_of": null,
+          "legal_status": "in_progress",
+          "name": "Plan ogólny gminy Barczewo",
+          "state_id": 2,
+          "imported_at": "2026-10-16T16:19:39.986331Z",
+          "fetched_at": "2026-10-16T16:19:39.993378Z",
+          "release_id": 3,
+          "release_label": "pog-c8f5f8fbbdc8",
+          "content_hash": "4efa83df698717b48b38cb0f1a27946352951f198b72cfce069e79eb36b5c640",
+          "ru_published_act_id": 1894,
+          "up_to_date": true,
+          "zone_count": 0,
+          "overlay_count": 0
+        }
+      ],
+      "import_job": null,
+      "last_import_failure": null
+    }
+  ],
+  "bdot10k_counties": []
+}

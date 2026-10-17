@@ -1,0 +1,24 @@
+{
+  "totals": {
+    "covered_lines": 30049,
+    "num_statements": 31531,
+    "percent_covered": 95.29986362627255,
+    "percent_covered_display": "95",
+    "missing_lines": 1482,
+    "excluded_lines": 320,
+    "percent_statements_covered": 95.29986362627255,
+    "percent_statements_covered_display": "95"
+  },
+  "modules": {
+    "app/modules/documents/infrastructure/repository.py": {
+      "covered_lines": 104,
+      "num_statements": 108,
+      "percent_covered": 96.29629629629629,
+      "percent_covered_display": "96",
+      "missing_lines": 4,
+      "excluded_lines": 0,
+      "percent_statements_covered": 96.29629629629629,
+      "percent_statements_covered_display": "96"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+2026-10-17 16:34:38.380 UTC [649] ERROR:  duplicate key value violates unique constraint "uq_data_sources_source_id"
+2026-10-17 16:34:38.380 UTC [649] DETAIL:  Key (source_id)=(kimpzp) already exists.
+2026-10-17 16:34:38.380 UTC [649] STATEMENT:  INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES ('kimpzp', 'GUGiK / właściwa gmina', 'production', 'document', NULL, NULL) RETURNING data_sources.id, data_sources.created_at

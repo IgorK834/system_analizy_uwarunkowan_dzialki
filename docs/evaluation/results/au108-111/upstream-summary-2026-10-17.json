@@ -1,0 +1,37 @@
+{
+  "http_by_host": {
+    "uldk.gugik.gov.pl": {
+      "200": 30
+    },
+    "integracja.gugik.gov.pl": {
+      "200": 10
+    },
+    "sdi.gdos.gov.pl": {
+      "200": 299,
+      "500": 1
+    },
+    "mapy.geoportal.gov.pl": {
+      "200": 164
+    },
+    "services.gugik.gov.pl": {
+      "200": 30
+    },
+    "wody.isok.gov.pl": {
+      "400": 24,
+      "200": 6
+    },
+    "rejestr-urbanistyczny.gov.pl": {
+      "200": 69
+    },
+    "www.bip.krakow.pl": {
+      "301": 3,
+      "200": 12
+    }
+  },
+  "context_errors": {
+    "kiut/KiutSourceNotRunnableError": 30,
+    "isok/IsokServiceUnavailableError": 24,
+    "gdos/GdosServiceUnavailableError": 3,
+    "nmt/NmtServiceUnavailableError": 2
+  }
+}

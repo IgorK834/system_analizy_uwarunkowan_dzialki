@@ -1,0 +1,1069 @@
+FFFFF.                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_parallel_registration_preserves_complete_lineage_and_pages[different-acts-cold-source] _
+
+self = <sqlalchemy.engine.base.Connection object at 0xffff6a832f10>
+dialect = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6a833790>
+statement = <sqlalchemy.dialects.postgresql.base.PGCompiler object at 0xffff6a998a50>
+parameters = [{'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff6a887b50; closed: -1>
+statement = 'INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at'
+parameters = {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6a833790>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "uq_data_sources_source_id"
+E       DETAIL:  Key (source_id)=(kimpzp) already exists.
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: UniqueViolation
+
+The above exception was the direct cause of the following exception:
+
+empty_document_database = None, existing_source = False, same_act = False
+
+    @pytest.mark.parametrize("existing_source", [False, True], ids=["cold-source", "existing-source"])
+    @pytest.mark.parametrize("same_act", [False, True], ids=["different-acts", "same-act"])
+    def test_parallel_registration_preserves_complete_lineage_and_pages(empty_document_database, existing_source, same_act):
+        if existing_source:
+            with SessionLocal.begin() as db:
+                db.add(DataSource(source_id="kimpzp", owner="Właściciel z katalogu", status="production", access_type="wms"))
+        registration, pages, units = real_document("concurrent-stare-miasto")
+        start = Barrier(2)
+        absent_read = Barrier(2)
+        race_table = "source_artifacts" if existing_source else "data_sources"
+    
+        def both_observed_absence(conn, cursor, statement, parameters, context, executemany):
+            # Stary SELECT→INSERT musi w obu sesjach zobaczyć brak rekordu PRZED wstawieniem.
+            # Atomowe INSERT→SELECT widzi już istniejący wiersz i nie potrzebuje tej bariery.
+            if statement.lstrip().startswith("SELECT") and f"FROM {race_table}" in statement and cursor.rowcount == 0:
+                absent_read.wait(timeout=10)
+    
+        def write(index):
+            with SessionLocal.begin() as db:
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '15s'"))
+                pid = db.scalar(text("SELECT pg_backend_pid()"))
+                start.wait(timeout=10)
+                repository = SqlAlchemyDocumentRepository(db)
+                entry = registration if same_act else replace(registration, planning_act_identifier=f"{registration.planning_act_identifier}-{index}")
+                snapshot = repository.register_document_version(entry)
+                saved = repository.replace_document_content(replace(snapshot, pages=pages, legal_units=units,
+                                                                     extraction_method="pdf_text", quality_score=1.0))
+                return pid, snapshot.document_version_id, tuple(unit.id for unit in saved.legal_units)
+    
+        event.listen(engine, "after_cursor_execute", both_observed_absence)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = [executor.submit(write, index) for index in range(2)]
+>               results = [future.result(timeout=30) for future in futures]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_document_concurrency.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/concurrent/futures/_base.py:460: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/concurrent/futures/_base.py:402: in __get_result
+    raise self._exception
+/usr/local/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_document_concurrency.py:84: in write
+    snapshot = repository.register_document_version(entry)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/modules/documents/infrastructure/repository.py:186: in register_document_version
+    self._session.flush()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:122: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:465: in execute
+    rec.execute(self)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:641: in execute
+    util.preloaded.orm_persistence.save_obj(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:94: in save_obj
+    _emit_insert_statements(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1234: in _emit_insert_statements
+    result = connection.execute(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff6a887b50; closed: -1>
+statement = 'INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at'
+parameters = {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6a833790>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_data_sources_source_id"
+E       DETAIL:  Key (source_id)=(kimpzp) already exists.
+E       
+E       [SQL: INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at]
+E       [parameters: {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', 'license': None, 'attribution': None}]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: IntegrityError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 001_initial_schema, initial_schema
+INFO  [alembic.runtime.migration] Running upgrade 001_initial_schema -> 002_manual_zone_resume, add_manual_zone_resume_fields
+INFO  [alembic.runtime.migration] Running upgrade 002_manual_zone_resume -> 003_source_audit, add_source_record_audit_fields
+INFO  [alembic.runtime.migration] Running upgrade 003_source_audit -> 004_pog_audit_fields, add_pog_audit_fields
+INFO  [alembic.runtime.migration] Running upgrade 004_pog_audit_fields -> 005_infrastructure_audit, add_infrastructure_audit_fields
+INFO  [alembic.runtime.migration] Running upgrade 005_infrastructure_audit -> 006_map_layer_geojson, add_map_layer_geojson
+INFO  [alembic.runtime.migration] Running upgrade 006_map_layer_geojson -> 007_versioned_data_model, versioned_data_model
+INFO  [alembic.runtime.migration] Running upgrade 007_versioned_data_model -> 008_address_search_index, Lokalny indeks prefiksowego wyszukiwania adresów GUGiK.
+INFO  [alembic.runtime.migration] Running upgrade 008_address_search_index -> 009_import_pipeline_fields, Pola potrzebne przez wersjonowany import MPZP.
+INFO  [alembic.runtime.migration] Running upgrade 009_import_pipeline_fields -> 010_legal_document_structure, Cytowalna, hierarchiczna struktura dokumentów prawnych.
+INFO  [alembic.runtime.migration] Running upgrade 010_legal_document_structure -> 011_structured_planning_rules, Ustrukturyzowane reguły planistyczne z provenance i konfliktami.
+INFO  [alembic.runtime.migration] Running upgrade 011_structured_planning_rules -> 012_pog_planning_act_kind, Import POG: ograniczenie rodzaju aktu planistycznego (mpzp/pog).
+INFO  [alembic.runtime.migration] Running upgrade 012_pog_planning_act_kind -> 013_raster_assets, Pipeline georeferencji rastrów planistycznych (COG).
+INFO  [alembic.runtime.migration] Running upgrade 013_raster_assets -> 014_utilities_preview, Snapshot statusu podglądu uzbrojenia KIUT.
+INFO  [alembic.runtime.migration] Running upgrade 014_utilities_preview -> 015_pog_v2_release, Pełny kontrakt POG v2 i wersjonowane obiekty APP.
+INFO  [alembic.runtime.migration] Running upgrade 015_pog_v2_release -> 016_pog_status_coverage, Rozdzielenie statusu prawnego POG od pokrycia i dostępności (BK-106).
+INFO  [alembic.runtime.migration] Running upgrade 016_pog_status_coverage -> 017_pog_act_provenance, Provenance aktu POG: wersja publikacji, dokumenty z SHA i metadane CSW (BK-107).
+INFO  [alembic.runtime.migration] Running upgrade 017_pog_act_provenance -> 018_mpzp_vector_zones, Wersjonowane wydzielenia MPZP w analizie pełnego obrysu działki (BK-202).
+INFO  [alembic.runtime.migration] Running upgrade 018_mpzp_vector_zones -> 019_mpzp_parameter_evidence, Cytowalne evidence parametrów MPZP w snapshotcie analizy (BK-203).
+INFO  [alembic.runtime.migration] Running upgrade 019_mpzp_parameter_evidence -> 020_manual_zone_pending_doc, Przypięty dokument trybu ręcznego MPZP i nieustalony udział stref (BK-204).
+INFO  [alembic.runtime.migration] Running upgrade 020_manual_zone_pending_doc -> 021_compatibility_assessment, Informacyjna ocena relacji MPZP–POG zamiast booleana (BK-205).
+INFO  [alembic.runtime.migration] Running upgrade 021_compatibility_assessment -> 022_analysis_terrain, Snapshot rzeźby terenu (NMT) w wyniku analizy (BK-301/BK-302).
+INFO  [alembic.runtime.migration] Running upgrade 022_analysis_terrain -> 023_structured_risks, Strukturalne wyniki powodzi i ochrony przyrody (BK-303).
+INFO  [alembic.runtime.migration] Running upgrade 023_structured_risks -> 024_pog_area_summaries, Trwałe agregaty powierzchniowe stref POG na poziomie wydania (BK-405).
+INFO  [alembic.runtime.migration] Running upgrade 024_pog_area_summaries -> 025_report_map_snapshot, Zamrożony snapshot map raportu PDF (BK-503, ADR-010).
+INFO  [alembic.runtime.migration] Running upgrade 025_report_map_snapshot -> 026_section_quality_matrix, Trwała macierz kompletności i świeżości sekcji analizy (BK-504, ADR-011).
+INFO  [alembic.runtime.migration] Running upgrade 026_section_quality_matrix -> 027_zone_symbol_length, Dłuższy symbol strefy ręcznie wskazanej przez użytkownika (PV3-04).
+INFO  [alembic.runtime.migration] Running upgrade 027_zone_symbol_length -> 028_mpzp_parameter_condition, Warunki i rodzaj wartości parametru MPZP w evidence analizy (PV3-08).
+INFO  [alembic.runtime.migration] Running upgrade 028_mpzp_parameter_condition -> 029_mpzp_llm_extractions, Cache i provenance wywołań modelu językowego dla bloków stref MPZP (PV3-13).
+INFO  [alembic.runtime.migration] Running upgrade 029_mpzp_llm_extractions -> 030_mpzp_llm_usage, Rejestr zużycia modelu językowego dla twardych limitów dobowych i miesięcznych (PV3-15).
+INFO  [alembic.runtime.migration] Running upgrade 030_mpzp_llm_usage -> 031_source_url_text, Adresy źródeł i odnośniki zasilane z zewnątrz jako ``Text`` (AU-001, Task 21.1).
+INFO  [alembic.runtime.migration] Running upgrade 031_source_url_text -> 032_mpzp_discovery, Snapshot punktowego rozpoznania aktów MPZP z KIMPZP (AU-004, Task 21.4).
+INFO  [alembic.runtime.migration] Running upgrade 032_mpzp_discovery -> 033_mpzp_acts, Snapshot aktów MPZP przecinających działkę (AU-101, Task 22.1).
+INFO  [alembic.runtime.migration] Running upgrade 033_mpzp_acts -> 034_mpzp_status, Snapshot rozłącznego stanu ustalenia MPZP (AU-103, Task 22.3).
+INFO  [alembic.runtime.migration] Running upgrade 034_mpzp_status -> 035_completeness, Snapshot kompletności analizy i komunikatu nagłówkowego (AU-104, Task 22.4).
+INFO  [alembic.runtime.migration] Running upgrade 035_completeness -> 036_bdot10k_context, Lokalne wydania BDOT10k, kontekst drogowy i zabudowa sąsiednia (Task 23.1–23.3, BK-304/BK-305).
+INFO  [alembic.runtime.migration] Running upgrade 036_bdot10k_context -> 037_pog_registry, Krajowy rejestr aktywnych wersji aktów POG, katalog RU, kolejka importu i tabele mapy (ADR-026).
+INFO  [alembic.runtime.migration] Running upgrade 037_pog_registry -> 038_source_dataset_date, Daty zestawów danych w rejestrze źródeł (AU-111); starsze zapisy pozostają nieznane.
+_ test_parallel_registration_preserves_complete_lineage_and_pages[different-acts-existing-source] _
+
+self = <sqlalchemy.engine.base.Connection object at 0xffff69649b70>
+dialect = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69618f30>
+statement = <sqlalchemy.dialects.postgresql.base.PGCompiler object at 0xffff6a999590>
+parameters = [{'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff69606110; closed: -1>
+statement = 'INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(...%(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at'
+parameters = {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69618f30>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "uq_source_artifacts_dedup"
+E       DETAIL:  Key (data_source_id, content_hash)=(1, db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c) already exists.
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: UniqueViolation
+
+The above exception was the direct cause of the following exception:
+
+empty_document_database = None, existing_source = True, same_act = False
+
+    @pytest.mark.parametrize("existing_source", [False, True], ids=["cold-source", "existing-source"])
+    @pytest.mark.parametrize("same_act", [False, True], ids=["different-acts", "same-act"])
+    def test_parallel_registration_preserves_complete_lineage_and_pages(empty_document_database, existing_source, same_act):
+        if existing_source:
+            with SessionLocal.begin() as db:
+                db.add(DataSource(source_id="kimpzp", owner="Właściciel z katalogu", status="production", access_type="wms"))
+        registration, pages, units = real_document("concurrent-stare-miasto")
+        start = Barrier(2)
+        absent_read = Barrier(2)
+        race_table = "source_artifacts" if existing_source else "data_sources"
+    
+        def both_observed_absence(conn, cursor, statement, parameters, context, executemany):
+            # Stary SELECT→INSERT musi w obu sesjach zobaczyć brak rekordu PRZED wstawieniem.
+            # Atomowe INSERT→SELECT widzi już istniejący wiersz i nie potrzebuje tej bariery.
+            if statement.lstrip().startswith("SELECT") and f"FROM {race_table}" in statement and cursor.rowcount == 0:
+                absent_read.wait(timeout=10)
+    
+        def write(index):
+            with SessionLocal.begin() as db:
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '15s'"))
+                pid = db.scalar(text("SELECT pg_backend_pid()"))
+                start.wait(timeout=10)
+                repository = SqlAlchemyDocumentRepository(db)
+                entry = registration if same_act else replace(registration, planning_act_identifier=f"{registration.planning_act_identifier}-{index}")
+                snapshot = repository.register_document_version(entry)
+                saved = repository.replace_document_content(replace(snapshot, pages=pages, legal_units=units,
+                                                                     extraction_method="pdf_text", quality_score=1.0))
+                return pid, snapshot.document_version_id, tuple(unit.id for unit in saved.legal_units)
+    
+        event.listen(engine, "after_cursor_execute", both_observed_absence)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = [executor.submit(write, index) for index in range(2)]
+>               results = [future.result(timeout=30) for future in futures]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_document_concurrency.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/concurrent/futures/_base.py:460: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/concurrent/futures/_base.py:402: in __get_result
+    raise self._exception
+/usr/local/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_document_concurrency.py:84: in write
+    snapshot = repository.register_document_version(entry)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/modules/documents/infrastructure/repository.py:203: in register_document_version
+    self._session.flush()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:122: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:465: in execute
+    rec.execute(self)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:641: in execute
+    util.preloaded.orm_persistence.save_obj(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:94: in save_obj
+    _emit_insert_statements(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1234: in _emit_insert_statements
+    result = connection.execute(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff69606110; closed: -1>
+statement = 'INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(...%(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at'
+parameters = {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69618f30>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_source_artifacts_dedup"
+E       DETAIL:  Key (data_source_id, content_hash)=(1, db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c) already exists.
+E       
+E       [SQL: INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(data_source_id)s, %(uri)s, %(media_type)s, %(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at]
+E       [parameters: {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', 'etag': None, 'size_bytes': None, 'fetched_at': datetime.datetime(2026, 10, 10, 21, 0, 55, 562485, tzinfo=datetime.timezone.utc)}]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: IntegrityError
+_ test_parallel_registration_preserves_complete_lineage_and_pages[same-act-cold-source] _
+
+self = <sqlalchemy.engine.base.Connection object at 0xffff696631e0>
+dialect = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69619150>
+statement = <sqlalchemy.dialects.postgresql.base.PGCompiler object at 0xffff6a998a50>
+parameters = [{'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff69606d40; closed: -1>
+statement = 'INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at'
+parameters = {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69619150>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "uq_data_sources_source_id"
+E       DETAIL:  Key (source_id)=(kimpzp) already exists.
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: UniqueViolation
+
+The above exception was the direct cause of the following exception:
+
+empty_document_database = None, existing_source = False, same_act = True
+
+    @pytest.mark.parametrize("existing_source", [False, True], ids=["cold-source", "existing-source"])
+    @pytest.mark.parametrize("same_act", [False, True], ids=["different-acts", "same-act"])
+    def test_parallel_registration_preserves_complete_lineage_and_pages(empty_document_database, existing_source, same_act):
+        if existing_source:
+            with SessionLocal.begin() as db:
+                db.add(DataSource(source_id="kimpzp", owner="Właściciel z katalogu", status="production", access_type="wms"))
+        registration, pages, units = real_document("concurrent-stare-miasto")
+        start = Barrier(2)
+        absent_read = Barrier(2)
+        race_table = "source_artifacts" if existing_source else "data_sources"
+    
+        def both_observed_absence(conn, cursor, statement, parameters, context, executemany):
+            # Stary SELECT→INSERT musi w obu sesjach zobaczyć brak rekordu PRZED wstawieniem.
+            # Atomowe INSERT→SELECT widzi już istniejący wiersz i nie potrzebuje tej bariery.
+            if statement.lstrip().startswith("SELECT") and f"FROM {race_table}" in statement and cursor.rowcount == 0:
+                absent_read.wait(timeout=10)
+    
+        def write(index):
+            with SessionLocal.begin() as db:
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '15s'"))
+                pid = db.scalar(text("SELECT pg_backend_pid()"))
+                start.wait(timeout=10)
+                repository = SqlAlchemyDocumentRepository(db)
+                entry = registration if same_act else replace(registration, planning_act_identifier=f"{registration.planning_act_identifier}-{index}")
+                snapshot = repository.register_document_version(entry)
+                saved = repository.replace_document_content(replace(snapshot, pages=pages, legal_units=units,
+                                                                     extraction_method="pdf_text", quality_score=1.0))
+                return pid, snapshot.document_version_id, tuple(unit.id for unit in saved.legal_units)
+    
+        event.listen(engine, "after_cursor_execute", both_observed_absence)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = [executor.submit(write, index) for index in range(2)]
+>               results = [future.result(timeout=30) for future in futures]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_document_concurrency.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/concurrent/futures/_base.py:460: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/concurrent/futures/_base.py:402: in __get_result
+    raise self._exception
+/usr/local/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_document_concurrency.py:84: in write
+    snapshot = repository.register_document_version(entry)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/modules/documents/infrastructure/repository.py:186: in register_document_version
+    self._session.flush()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:122: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:465: in execute
+    rec.execute(self)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:641: in execute
+    util.preloaded.orm_persistence.save_obj(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:94: in save_obj
+    _emit_insert_statements(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1234: in _emit_insert_statements
+    result = connection.execute(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff69606d40; closed: -1>
+statement = 'INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at'
+parameters = {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff69619150>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_data_sources_source_id"
+E       DETAIL:  Key (source_id)=(kimpzp) already exists.
+E       
+E       [SQL: INSERT INTO data_sources (source_id, owner, status, access_type, license, attribution) VALUES (%(source_id)s, %(owner)s, %(status)s, %(access_type)s, %(license)s, %(attribution)s) RETURNING data_sources.id, data_sources.created_at]
+E       [parameters: {'source_id': 'kimpzp', 'owner': 'GUGiK / właściwa gmina', 'status': 'production', 'access_type': 'document', 'license': None, 'attribution': None}]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: IntegrityError
+_ test_parallel_registration_preserves_complete_lineage_and_pages[same-act-existing-source] _
+
+self = <sqlalchemy.engine.base.Connection object at 0xffff688dfba0>
+dialect = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6961abe0>
+statement = <sqlalchemy.dialects.postgresql.base.PGCompiler object at 0xffff6a999590>
+parameters = [{'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff68c28310; closed: -1>
+statement = 'INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(...%(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at'
+parameters = {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6961abe0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "uq_source_artifacts_dedup"
+E       DETAIL:  Key (data_source_id, content_hash)=(1, db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c) already exists.
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: UniqueViolation
+
+The above exception was the direct cause of the following exception:
+
+empty_document_database = None, existing_source = True, same_act = True
+
+    @pytest.mark.parametrize("existing_source", [False, True], ids=["cold-source", "existing-source"])
+    @pytest.mark.parametrize("same_act", [False, True], ids=["different-acts", "same-act"])
+    def test_parallel_registration_preserves_complete_lineage_and_pages(empty_document_database, existing_source, same_act):
+        if existing_source:
+            with SessionLocal.begin() as db:
+                db.add(DataSource(source_id="kimpzp", owner="Właściciel z katalogu", status="production", access_type="wms"))
+        registration, pages, units = real_document("concurrent-stare-miasto")
+        start = Barrier(2)
+        absent_read = Barrier(2)
+        race_table = "source_artifacts" if existing_source else "data_sources"
+    
+        def both_observed_absence(conn, cursor, statement, parameters, context, executemany):
+            # Stary SELECT→INSERT musi w obu sesjach zobaczyć brak rekordu PRZED wstawieniem.
+            # Atomowe INSERT→SELECT widzi już istniejący wiersz i nie potrzebuje tej bariery.
+            if statement.lstrip().startswith("SELECT") and f"FROM {race_table}" in statement and cursor.rowcount == 0:
+                absent_read.wait(timeout=10)
+    
+        def write(index):
+            with SessionLocal.begin() as db:
+                db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                db.execute(text("SET LOCAL statement_timeout = '15s'"))
+                pid = db.scalar(text("SELECT pg_backend_pid()"))
+                start.wait(timeout=10)
+                repository = SqlAlchemyDocumentRepository(db)
+                entry = registration if same_act else replace(registration, planning_act_identifier=f"{registration.planning_act_identifier}-{index}")
+                snapshot = repository.register_document_version(entry)
+                saved = repository.replace_document_content(replace(snapshot, pages=pages, legal_units=units,
+                                                                     extraction_method="pdf_text", quality_score=1.0))
+                return pid, snapshot.document_version_id, tuple(unit.id for unit in saved.legal_units)
+    
+        event.listen(engine, "after_cursor_execute", both_observed_absence)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = [executor.submit(write, index) for index in range(2)]
+>               results = [future.result(timeout=30) for future in futures]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_document_concurrency.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/concurrent/futures/_base.py:460: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/concurrent/futures/_base.py:402: in __get_result
+    raise self._exception
+/usr/local/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_document_concurrency.py:84: in write
+    snapshot = repository.register_document_version(entry)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/modules/documents/infrastructure/repository.py:203: in register_document_version
+    self._session.flush()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4353: in flush
+    self._flush(objects)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4488: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:122: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4449: in _flush
+    flush_context.execute()
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:465: in execute
+    rec.execute(self)
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:641: in execute
+    util.preloaded.orm_persistence.save_obj(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:94: in save_obj
+    _emit_insert_statements(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1234: in _emit_insert_statements
+    result = connection.execute(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1421: in execute
+    return meth(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1848: in _execute_context
+    return self._exec_single_context(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0xffff6b6d3390>
+cursor = <cursor object at 0xffff68c28310; closed: -1>
+statement = 'INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(...%(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at'
+parameters = {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', ...}
+context = <sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0xffff6961abe0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "uq_source_artifacts_dedup"
+E       DETAIL:  Key (data_source_id, content_hash)=(1, db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c) already exists.
+E       
+E       [SQL: INSERT INTO source_artifacts (data_source_id, uri, media_type, content_hash, etag, size_bytes, fetched_at) VALUES (%(data_source_id)s, %(uri)s, %(media_type)s, %(content_hash)s, %(etag)s, %(size_bytes)s, %(fetched_at)s) RETURNING source_artifacts.id, source_artifacts.created_at]
+E       [parameters: {'data_source_id': 1, 'uri': 'https://www.bip.krakow.pl/plik.php?zid=258989&wer=0&new=t&mode=shw', 'media_type': 'application/pdf', 'content_hash': 'db82d81d8a30b021782b6a4277763bdc0c820f191f31758a115ee940f4cb3f3c', 'etag': None, 'size_bytes': None, 'fetched_at': datetime.datetime(2026, 10, 10, 21, 0, 55, 562485, tzinfo=datetime.timezone.utc)}]
+E       (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py:952: IntegrityError
+__ test_identical_reparse_preserves_citations_but_changed_extraction_is_saved __
+
+empty_document_database = None
+
+    def test_identical_reparse_preserves_citations_but_changed_extraction_is_saved(empty_document_database):
+        registration, pages, units = real_document("reparsed-stare-miasto")
+        with SessionLocal.begin() as db:
+            repository = SqlAlchemyDocumentRepository(db)
+            base = repository.register_document_version(registration)
+            original = replace(base, pages=pages, legal_units=units, extraction_method="pdf_text", quality_score=1.0)
+            first = repository.replace_document_content(original)
+            repeated = repository.replace_document_content(original)
+>           assert [unit.id for unit in repeated.legal_units] == [unit.id for unit in first.legal_units]
+E           assert [1551, 1552, ...55, 1556, ...] == [1, 2, 3, 4, 5, 6, ...]
+E             
+E             At index 0 diff: 1551 != 1
+E             Use -v to get more diff
+
+tests/test_document_concurrency.py:133: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_document_concurrency.py::test_parallel_registration_preserves_complete_lineage_and_pages[different-acts-cold-source]
+FAILED tests/test_document_concurrency.py::test_parallel_registration_preserves_complete_lineage_and_pages[different-acts-existing-source]
+FAILED tests/test_document_concurrency.py::test_parallel_registration_preserves_complete_lineage_and_pages[same-act-cold-source]
+FAILED tests/test_document_concurrency.py::test_parallel_registration_preserves_complete_lineage_and_pages[same-act-existing-source]
+FAILED tests/test_document_concurrency.py::test_identical_reparse_preserves_citations_but_changed_extraction_is_saved
+5 failed, 1 passed in 5.14s

@@ -1,0 +1,596 @@
+{
+  "case_count": 30,
+  "terrain_methods": {
+    "wcs_raster": 30
+  },
+  "terrain_statuses": {
+    "available": 30
+  },
+  "crosscheck_warnings": 7,
+  "sections": {
+    "parcel": {
+      "available": 30
+    },
+    "mpzp": {
+      "unavailable": 11,
+      "partial": 18,
+      "unknown": 1
+    },
+    "pog": {
+      "unknown": 6,
+      "unavailable": 18,
+      "partial": 6
+    },
+    "pog_overlays": {
+      "unknown": 6,
+      "unavailable": 18,
+      "partial": 6
+    },
+    "flood": {
+      "unavailable": 24,
+      "available": 6
+    },
+    "nature": {
+      "available": 27,
+      "unavailable": 3
+    },
+    "terrain": {
+      "available": 30
+    },
+    "utilities": {
+      "partial": 30
+    },
+    "transport": {
+      "no_coverage": 30
+    },
+    "buildings": {
+      "no_coverage": 30
+    },
+    "mpzp_pog_relation": {
+      "unknown": 30
+    }
+  },
+  "source_dates": {
+    "uldk": {
+      "unknown_with_reason": 30
+    },
+    "kiut_wms": {
+      "unknown_with_reason": 30
+    },
+    "gdos": {
+      "unknown_with_reason": 33
+    },
+    "nmt": {
+      "unknown_with_reason": 28
+    },
+    "pog_app": {
+      "unknown_with_reason": 30
+    },
+    "kimpzp": {
+      "unknown_with_reason": 17,
+      "known": 13
+    },
+    "mpzp_ru": {
+      "unknown_with_reason": 30
+    },
+    "nmt_wcs": {
+      "unknown_with_reason": 30
+    },
+    "bdot10k": {
+      "unknown_with_reason": 30
+    },
+    "isok": {
+      "unknown_with_reason": 30
+    },
+    "KIUT": {
+      "unknown_with_reason": 30
+    },
+    "MPZP_BIP": {
+      "unknown_with_reason": 4
+    },
+    "NMT": {
+      "unknown_with_reason": 2
+    }
+  },
+  "source_date_examples": {
+    "uldk": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "kiut_wms": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "gdos": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Nie wszystkie warstwy/akty źródła podają datę zestawu; wspólny stan na jest nieznany."
+    },
+    "nmt": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Odpowiedź źródła nie zawiera daty zestawu ani nagłówka Last-Modified."
+    },
+    "pog_app": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "kimpzp": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Nie wszystkie warstwy/akty źródła podają datę zestawu; wspólny stan na jest nieznany."
+    },
+    "mpzp_ru": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Nie wszystkie warstwy/akty źródła podają datę zestawu; wspólny stan na jest nieznany."
+    },
+    "nmt_wcs": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "WCS nie podaje daty aktualizacji komórek NMT w dostępnej odpowiedzi."
+    },
+    "bdot10k": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "isok": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "KIUT": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "MPZP_BIP": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    },
+    "NMT": {
+      "data_as_of": null,
+      "data_as_of_basis": null,
+      "data_as_of_reason": "Źródło nie podaje daty zestawu danych w dostępnej odpowiedzi."
+    }
+  },
+  "known_source_date_examples": {
+    "kimpzp": {
+      "data_as_of": "2011-04-13",
+      "data_as_of_basis": "Najstarsza data składowa: data uchwały KIMPZP",
+      "data_as_of_reason": null
+    }
+  },
+  "legacy_records_with_reason_supplied_on_read": {
+    "KIUT": 30,
+    "NMT": 2
+  },
+  "sections_without_date_or_reason": [],
+  "cases": [
+    {
+      "analysis_id": 1,
+      "parcel_identifier": "146510_8.0504.1",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 111.87,
+      "max_height_m": 113.23,
+      "crosscheck_difference_m": 0.23,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 2,
+      "parcel_identifier": "146510_8.0310.82/2",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 111.84,
+      "max_height_m": 112.66,
+      "crosscheck_difference_m": 0.24,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 3,
+      "parcel_identifier": "146510_8.0502.1/3",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 108.86,
+      "max_height_m": 113.77,
+      "crosscheck_difference_m": 0.24,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 4,
+      "parcel_identifier": "146510_8.0309.1/4",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 112.77,
+      "max_height_m": 113.62,
+      "crosscheck_difference_m": 0.18,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 5,
+      "parcel_identifier": "126105_9.0001.49/2",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 213.45,
+      "max_height_m": 215.44,
+      "crosscheck_difference_m": 0.55,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 6,
+      "parcel_identifier": "126105_9.0001.580/4",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 208.6,
+      "max_height_m": 211.83,
+      "crosscheck_difference_m": 0.8,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 7,
+      "parcel_identifier": "126105_9.0001.540/15",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 203.4,
+      "max_height_m": 210.74,
+      "crosscheck_difference_m": 0.2,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 8,
+      "parcel_identifier": "246101_1.0056.155/3",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 317.325,
+      "max_height_m": 319.325,
+      "crosscheck_difference_m": 0.275,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 9,
+      "parcel_identifier": "126105_9.0119.181/10",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 207.98,
+      "max_height_m": 208.47,
+      "crosscheck_difference_m": 0.23,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 10,
+      "parcel_identifier": "246101_1.0055.68/13",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 306.855,
+      "max_height_m": 310.545,
+      "crosscheck_difference_m": 0.345,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 11,
+      "parcel_identifier": "246101_1.0056.110/1",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 320.535,
+      "max_height_m": 329.935,
+      "crosscheck_difference_m": 0.265,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 12,
+      "parcel_identifier": "246101_1.0081.7",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 314.835,
+      "max_height_m": 315.435,
+      "crosscheck_difference_m": 0.565,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 13,
+      "parcel_identifier": "026201_1.0009.1319/4",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 120.84,
+      "max_height_m": 121.47,
+      "crosscheck_difference_m": 0.23,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 14,
+      "parcel_identifier": "026201_1.0015.530",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 119.95,
+      "max_height_m": 120.69,
+      "crosscheck_difference_m": 0.21,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 15,
+      "parcel_identifier": "026201_1.0010.410/1",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 118.04,
+      "max_height_m": 121.69,
+      "crosscheck_difference_m": 0.89,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 16,
+      "parcel_identifier": "026201_1.0009.579/9",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 118.95,
+      "max_height_m": 121.69,
+      "crosscheck_difference_m": 0.71,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 17,
+      "parcel_identifier": "281603_4.0001.358",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 116.005,
+      "max_height_m": 117.565,
+      "crosscheck_difference_m": 0.295,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 18,
+      "parcel_identifier": "281603_4.0001.496/5",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 115.775,
+      "max_height_m": 118.285,
+      "crosscheck_difference_m": 1.425,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 19,
+      "parcel_identifier": "281603_4.0001.740",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 117.486,
+      "max_height_m": 118.016,
+      "crosscheck_difference_m": 0.114,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 20,
+      "parcel_identifier": "022104_2.0002.352",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 481.54,
+      "max_height_m": 482.7,
+      "crosscheck_difference_m": 0.26,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 21,
+      "parcel_identifier": "281603_4.0002.130",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 115.155,
+      "max_height_m": 117.165,
+      "crosscheck_difference_m": 0.245,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 22,
+      "parcel_identifier": "022104_2.0002.288/20",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 486.49,
+      "max_height_m": 507.98,
+      "crosscheck_difference_m": 0.81,
+      "crosscheck_warning_code": "NMT_CROSSCHECK_DIFF",
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 23,
+      "parcel_identifier": "022104_2.0002.776",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 487.22,
+      "max_height_m": 489.03,
+      "crosscheck_difference_m": 0.28,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 24,
+      "parcel_identifier": "022104_2.0002.230/2",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 474.75,
+      "max_height_m": 478.17,
+      "crosscheck_difference_m": 0.25,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 25,
+      "parcel_identifier": "281603_4.0001.431/66",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 114.226,
+      "max_height_m": 117.716,
+      "crosscheck_difference_m": null,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 26,
+      "parcel_identifier": "281604_5.0011.107",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 126.704,
+      "max_height_m": 131.654,
+      "crosscheck_difference_m": null,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 27,
+      "parcel_identifier": "246101_1.0001.1043",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 362.298,
+      "max_height_m": 367.588,
+      "crosscheck_difference_m": 0.302,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 28,
+      "parcel_identifier": "246101_1.0004.737/26",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 323.508,
+      "max_height_m": 327.148,
+      "crosscheck_difference_m": 0.252,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 29,
+      "parcel_identifier": "246101_1.0004.741/132",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 318.268,
+      "max_height_m": 323.748,
+      "crosscheck_difference_m": 0.232,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    },
+    {
+      "analysis_id": 30,
+      "parcel_identifier": "026201_1.0009.578/2",
+      "status": "partial",
+      "terrain_status": "available",
+      "elevation_method": "wcs_raster",
+      "min_height_m": 118.24,
+      "max_height_m": 120.81,
+      "crosscheck_difference_m": 0.26,
+      "crosscheck_warning_code": null,
+      "quality_schema_version": "1.2",
+      "quality_integrity_ok": true,
+      "primary_equals_raster": true
+    }
+  ]
+}

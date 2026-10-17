@@ -1,0 +1,114 @@
+{
+  "totals": {
+    "covered_lines": 30037,
+    "num_statements": 31516,
+    "percent_covered": 95.30714557684985,
+    "percent_covered_display": "95",
+    "missing_lines": 1479,
+    "excluded_lines": 320,
+    "percent_statements_covered": 95.30714557684985,
+    "percent_statements_covered_display": "95"
+  },
+  "modules": {
+    "app/modules/analysis/infrastructure/terrain_raster.py": {
+      "covered_lines": 209,
+      "num_statements": 219,
+      "percent_covered": 95.4337899543379,
+      "percent_covered_display": "95",
+      "missing_lines": 10,
+      "excluded_lines": 0,
+      "percent_statements_covered": 95.4337899543379,
+      "percent_statements_covered_display": "95"
+    },
+    "app/modules/planning/application/pog_release_queries.py": {
+      "covered_lines": 16,
+      "num_statements": 16,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 3,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/modules/planning/domain/pog_area_summary.py": {
+      "covered_lines": 80,
+      "num_statements": 80,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/modules/planning/infrastructure/commune_boundaries.py": {
+      "covered_lines": 11,
+      "num_statements": 11,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/routers/coverage.py": {
+      "covered_lines": 75,
+      "num_statements": 75,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/schemas/source.py": {
+      "covered_lines": 174,
+      "num_statements": 174,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/services/dataset_dates.py": {
+      "covered_lines": 43,
+      "num_statements": 43,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "app/services/pog_analyzer.py": {
+      "covered_lines": 180,
+      "num_statements": 191,
+      "percent_covered": 94.24083769633508,
+      "percent_covered_display": "94",
+      "missing_lines": 11,
+      "excluded_lines": 8,
+      "percent_statements_covered": 94.24083769633508,
+      "percent_statements_covered_display": "94"
+    },
+    "app/services/section_quality.py": {
+      "covered_lines": 240,
+      "num_statements": 241,
+      "percent_covered": 99.5850622406639,
+      "percent_covered_display": "99",
+      "missing_lines": 1,
+      "excluded_lines": 0,
+      "percent_statements_covered": 99.5850622406639,
+      "percent_statements_covered_display": "99"
+    },
+    "app/services/terrain.py": {
+      "covered_lines": 90,
+      "num_statements": 92,
+      "percent_covered": 97.82608695652173,
+      "percent_covered_display": "98",
+      "missing_lines": 2,
+      "excluded_lines": 0,
+      "percent_statements_covered": 97.82608695652173,
+      "percent_statements_covered_display": "98"
+    }
+  }
+}
