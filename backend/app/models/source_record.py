@@ -40,4 +40,6 @@ class SourceRecord(Base):
     data_release_id: Mapped[int | None] = mapped_column(nullable=True)
     act_version: Mapped[str | None] = mapped_column(ClippedString(120), nullable=True)
 
+    dataset_metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
     analysis: Mapped[Analysis] = relationship(back_populates="source_records")
