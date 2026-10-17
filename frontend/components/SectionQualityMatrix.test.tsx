@@ -131,3 +131,12 @@ describe("SectionQualityMatrix", () => {
     expect(screen.getByTestId("quality-missing")).toBeVisible();
   });
 });
+
+it("AU-111: stan danych ma własną datę albo jawny powód braku", () => {
+  const matrix = buildQualityMatrix();
+  matrix.sections[0].data_as_of = "2024-01-15";
+  matrix.sections[1].data_as_of_reason = "RU nie podał daty zestawu";
+  render(<SectionQualityMatrix matrix={matrix} now={NOW} />);
+  expect(screen.getByTestId("quality-row-parcel")).toHaveTextContent("Stan na2024-01-15");
+  expect(screen.getByTestId("quality-row-mpzp")).toHaveTextContent("Nieznany — RU nie podał daty zestawu");
+});

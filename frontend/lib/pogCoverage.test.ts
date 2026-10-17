@@ -14,7 +14,7 @@ import type { PogCommuneStatus } from "@/lib/types";
 import { buildCommuneCoverage, buildPogCoverage } from "@/test/pogFixtures";
 
 // „Brak planu” jako samodzielne stwierdzenie wolno napisać tylko przy urzędowym potwierdzeniu — którego tu nie ma.
-const FORBIDDEN = /(^|[^a-ząćęłńóśźż])brak planu(?! ogólnego| w gminie| —)/i;
+const FORBIDDEN = /(^|[^a-ząćęłńóśźż])(?<!≠ )brak planu(?! ogólnego| w gminie| —)/i;
 
 describe("pogCoverage", () => {
   it("cztery rozłączne stany gminy mają odrębne etykiety i wyjaśnienia, żaden nie mówi „brak planu”", () => {

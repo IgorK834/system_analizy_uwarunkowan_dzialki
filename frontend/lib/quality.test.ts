@@ -130,3 +130,15 @@ describe("prezentacja macierzy jakości", () => {
     expect(matrixOrNull(matrix)).toBe(matrix);
   });
 });
+
+
+it("AU-111: wiek daty danych nie jest wiekiem pobrania; brak daty daje unknown", () => {
+  const matrix = buildQualityMatrix();
+  const row = matrix.sections.find((item) => item.section === "flood")!;
+  row.freshness.date_basis = "data_as_of";
+  row.data_as_of = "2020-01-01";
+  expect(ageWarnings(matrix, new Date("2026-09-21T10:00:00Z")).some((item) => item.section === "flood")).toBe(true);
+  expect(freshnessDetail(row)).toContain("od daty zestawu danych");
+  row.data_as_of = null;
+  expect(ageWarnings(matrix, new Date("2026-09-21T10:00:00Z")).some((item) => item.section === "flood")).toBe(false);
+});

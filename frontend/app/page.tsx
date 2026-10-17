@@ -93,6 +93,7 @@ export default function HomePage() {
         <SearchPanel loading={loading} onAnalyze={run} map={map} />
         <div className="map-controls">
           <PogMapPanel
+            map={map}
             layerStatus={pogLayerStatus}
             theme={pogPreferences.theme}
             onThemeChange={pogPreferences.setTheme}

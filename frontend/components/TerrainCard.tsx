@@ -78,6 +78,7 @@ export function TerrainCard({ terrain }: { terrain: TerrainResult | null | undef
           {note}
         </p>
       )}
+      {value.elevation_note && <p className="field-hint">{value.elevation_note}</p>}
       <SourceLine source={value.source} testId="terrain-source" />
       {value.warnings.map((warning) => (
         <p key={warning} className="field-hint">

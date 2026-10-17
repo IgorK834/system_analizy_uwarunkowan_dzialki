@@ -2,6 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useId, useMemo, useState } from "react";
 
+import { ImportRequestButton } from "@/components/CoverageLayer";
 import { getPogCommuneState, getPogCoverage } from "@/lib/api";
 import {
   COMMUNE_STATUS_EXPLANATIONS,
@@ -83,6 +84,7 @@ export function PogCoveragePanel() {
 
   return (
     <details
+      id="coverage-panel"
       className="pog-coverage-panel"
       data-testid="pog-coverage-panel"
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
@@ -162,6 +164,7 @@ export function PogCoveragePanel() {
                   <span className={`pog-coverage-chip pog-coverage-chip-${commune.status}`}>
                     {COMMUNE_STATUS_LABELS[commune.status]}
                   </span>
+                  {commune.status === "in_ru_not_imported" && <ImportRequestButton terc={commune.terc} />}
                   {communeDetail(commune) && <small className="pog-coverage-detail">{communeDetail(commune)}</small>}
                 </li>
               ))}

@@ -1,5 +1,7 @@
 "use client";
 
+import type { Map } from "maplibre-gl";
+import { CoverageLayer } from "@/components/CoverageLayer";
 import { PogLayerStatus } from "@/components/PogLayerStatus";
 import { PogLegend } from "@/components/PogLegend";
 import { PogThemeSelector } from "@/components/PogThemeSelector";
@@ -14,6 +16,7 @@ export const STATUS_FILTER_LABELS: Record<PogStatusFilter, string> = {
 };
 
 export type PogMapPanelProps = {
+  map?: Map | null;
   layerStatus: PogLayerStatusValue;
   theme: PogThemeId;
   onThemeChange: (theme: PogThemeId) => void;
@@ -29,6 +32,7 @@ export type PogMapPanelProps = {
  * akt wiążący, obsługa klawiaturą) i legenda (BK-403) są w rozwijanej części.
  */
 export function PogMapPanel({
+  map = null,
   layerStatus,
   theme,
   onThemeChange,
@@ -41,6 +45,7 @@ export function PogMapPanel({
   return (
     <section className="pog-map-panel" aria-label="Plan ogólny gminy — mapa analityczna">
       <h2 className="pog-map-panel-title">Plan ogólny — mapa krajowa (lokalny stan)</h2>
+      <CoverageLayer map={map} />
       <PogLayerStatus status={layerStatus} onRetry={onRetry} retrying={retrying} />
       <details className="pog-map-panel-controls" open>
         <summary>Tryb mapy, edycja danych i legenda</summary>

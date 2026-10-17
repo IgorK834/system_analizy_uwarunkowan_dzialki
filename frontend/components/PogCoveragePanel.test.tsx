@@ -42,7 +42,7 @@ describe("PogCoveragePanel", () => {
     expect(items[0]).toHaveTextContent("Sopot");
     expect(items[0]).toHaveTextContent("Zaimportowana");
     expect(items[0]).toHaveTextContent("wersja 20260819T010000, stan #42, import 28.09.2026");
-    expect(items[1]).toHaveTextContent("Plan w RU — jeszcze niezaimportowany");
+    expect(items[1]).toHaveTextContent("Brak lokalnych danych (≠ brak planu)");
     expect(items[1]).toHaveTextContent("zlecenie importu w kolejce");
     expect(coverageMock).toHaveBeenCalledOnce();
   });
@@ -91,7 +91,7 @@ describe("PogCoveragePanel", () => {
 
   it.each([
     ["imported", /Zaimportowana\./],
-    ["in_ru_not_imported", /Plan w RU — jeszcze niezaimportowany\./],
+    ["in_ru_not_imported", /Brak lokalnych danych \(≠ brak planu\)\./],
     ["no_act_in_ru", /Brak aktu POG w wykazie RU\..*nie dowodzi braku planu w gminie/],
     ["unknown", /Źródło niedostępne — stan nieustalony\./],
   ] as const)("sprawdzenie gminy po kodzie TERC: stan %s ma własny komunikat", async (status, message) => {

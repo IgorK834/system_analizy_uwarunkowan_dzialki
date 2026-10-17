@@ -106,6 +106,10 @@ export function SectionQualityMatrix({ matrix, now }: SectionQualityMatrixProps)
                 <dd>{formatFetchedAt(item.fetched_at)}</dd>
               </div>
               <div>
+                <dt>Stan na</dt>
+                <dd>{item.data_as_of ?? `Nieznany — ${item.data_as_of_reason ?? "brak daty zestawu w zapisie"}`}</dd>
+              </div>
+              <div>
                 <dt>Wydanie</dt>
                 <dd>
                   {item.data_release_id != null ? `#${item.data_release_id}` : "—"}

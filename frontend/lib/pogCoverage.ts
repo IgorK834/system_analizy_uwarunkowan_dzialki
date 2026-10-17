@@ -11,7 +11,7 @@ import type { PogCommuneCoverage, PogCommuneStatus, PogCoverage } from "@/lib/ty
 
 export const COMMUNE_STATUS_LABELS: Record<PogCommuneStatus, string> = {
   imported: "Zaimportowana",
-  in_ru_not_imported: "Plan w RU — jeszcze niezaimportowany",
+  in_ru_not_imported: "Brak lokalnych danych (≠ brak planu)",
   no_act_in_ru: "Brak aktu POG w wykazie RU",
   unknown: "Źródło niedostępne — stan nieustalony",
 };
@@ -95,7 +95,7 @@ export function communeDetail(commune: PogCommuneCoverage): string {
             : act.up_to_date === true
               ? "; zgodna z wykazem RU"
               : "";
-        return `${legalStatusShort(act.legal_status)}, ${version}, stan #${act.state_id}${
+        return `${legalStatusShort(act.legal_status)}, wydanie ${act.release_label}, ${version}, stan #${act.state_id}${
           imported ? `, import ${imported}` : ""
         }${freshness}`;
       })

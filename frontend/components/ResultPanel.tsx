@@ -16,6 +16,7 @@ import { PogZoneShareChart } from "@/components/PogZoneShareChart";
 import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import { RoadContextCard } from "@/components/RoadContextCard";
 import { SectionQualityMatrix } from "@/components/SectionQualityMatrix";
+import { ImportRequestButton } from "@/components/CoverageLayer";
 import { TerrainCard } from "@/components/TerrainCard";
 import {
   BUILDINGS_FILL_COLOR,
@@ -661,6 +662,10 @@ function PogSection({ result }: { result: AnalyzeResponse }) {
   return (
     <section className="result-section" aria-label="Plan Ogólny Gminy i OUZ">
       <h3>Plan Ogólny Gminy (POG)</h3>
+      {result.warnings.some((warning) => warning.code === "NO_LOCAL_RELEASE") && <p className="manual-review">
+        Brak lokalnych danych (≠ brak planu). <a href="#coverage-panel">Sprawdź pokrycie</a>{" "}
+        <ImportRequestButton terc={result.parcel?.parcel_identifier.slice(0, 6) ?? ""} />
+      </p>}
       {!pog && (
         <p className="section-empty">
           Niedostępne — brak danych POG dla tej działki.

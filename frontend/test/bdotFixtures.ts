@@ -90,6 +90,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     },
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -100,7 +103,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -166,6 +170,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     },
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -176,7 +183,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -264,6 +272,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     },
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -274,7 +285,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": [
       "Obszar do znalezionej drogi wykracza poza zasięg zaimportowanego powiatu."
@@ -309,6 +321,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     },
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -319,7 +334,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -339,6 +355,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     "release": null,
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -349,7 +368,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -369,6 +389,9 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
     "release": null,
     "interpretation_note": "Bliskość lub sąsiedztwo geometryczne nie jest potwierdzeniem prawnego dostępu działki do drogi publicznej.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -379,7 +402,8 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   }
@@ -613,6 +637,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     },
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -623,7 +650,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -2231,6 +2259,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     },
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -2241,7 +2272,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -2318,6 +2350,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     },
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -2328,7 +2363,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -2559,6 +2595,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     },
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -2569,7 +2608,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -2595,6 +2635,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "release": null,
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -2605,7 +2648,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   },
@@ -2631,6 +2675,9 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "release": null,
     "interpretation_note": "Kontekst istniejącej zabudowy z obrysów BDOT10k (w większości z EGiB): opis tego, co stoi w otoczeniu działki, a nie ocena możliwości zabudowy. Dane bez nazw i właścicieli; stan na datę wskazaną przy wydaniu danych.",
     "source": {
+      "data_as_of": "2026-01-22",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
       "source_id": "bdot10k",
       "source_version": "bdot10k-1261-1355c5a51538",
       "artifact_sha256": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd4",
@@ -2641,7 +2688,8 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
       "fetched_at": "2026-09-02T09:00:00Z",
       "response_status": null,
       "confidence": 0.9,
-      "manual_review_required": false
+      "manual_review_required": false,
+      "data_as_of_status": "known"
     },
     "warnings": []
   }

@@ -115,6 +115,7 @@ export function formatFetchedAt(value: string | null): string {
 
 export function freshnessDetail(item: SectionQuality): string {
   const parts = [`wiek: ${formatAge(item.freshness.age_seconds)}`];
+  if (item.freshness.date_basis === "data_as_of") parts.push("od daty zestawu danych");
   parts.push(
     item.freshness.max_age_days != null
       ? `reguła źródła: ${item.freshness.max_age_days} dni`
@@ -134,8 +135,9 @@ export function ageWarnings(matrix: SectionQualityMatrix, now: Date): ExportAgeW
   const warnings: ExportAgeWarning[] = [];
   for (const item of matrix.sections) {
     const maxDays = item.freshness.max_age_days;
-    if (maxDays == null || !item.fetched_at) continue;
-    const fetched = new Date(item.fetched_at).getTime();
+    const timestamp = item.freshness.date_basis === "data_as_of" ? item.data_as_of : item.fetched_at;
+    if (maxDays == null || !timestamp) continue;
+    const fetched = new Date(timestamp).getTime();
     if (Number.isNaN(fetched)) continue;
     const ageSeconds = Math.floor((now.getTime() - fetched) / 1000);
     if (ageSeconds > maxDays * SECONDS_PER_DAY) {

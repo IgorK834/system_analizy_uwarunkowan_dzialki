@@ -278,7 +278,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     expect(state()).toHaveTextContent("dane niepełne");
     expect(screen.getByText(/Część kafli POG nie została wczytana \(1\)/)).toBeInTheDocument();
     expect(badge()).toBeVisible();
-    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])(?<!≠ )brak planu/i);
 
     // Ponowienie: metadane stanu niedostępne → stale z datą i tym samym stanem.
     vi.mocked(getCurrentPogTileState).mockRejectedValueOnce(new Error("503"));
@@ -293,7 +293,7 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     // Ostatnie dane nie zostały usunięte z mapy.
     expect(mapState.sources.has(POG_SOURCE_ID)).toBe(true);
     expect(mapState.addSource).toHaveBeenCalledTimes(2);
-    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu/i);
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])(?<!≠ )brak planu/i);
     expect(analyzeParcel).not.toHaveBeenCalled();
   });
 
@@ -345,14 +345,14 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     const items = screen.getAllByTestId("pog-coverage-item");
     expect(items.map((item) => item.dataset.status)).toEqual(["imported", "in_ru_not_imported", "in_ru_not_imported"]);
     expect(items[0]).toHaveTextContent("Zaimportowana");
-    expect(items[1]).toHaveTextContent("Plan w RU — jeszcze niezaimportowany");
+    expect(items[1]).toHaveTextContent("Brak lokalnych danych (≠ brak planu)");
     expect(items[1]).toHaveTextContent("zlecenie importu w kolejce");
 
     await user.type(screen.getByLabelText("Sprawdź gminę po kodzie TERC (6 cyfr)"), "246101");
     await user.click(screen.getByRole("button", { name: "Sprawdź" }));
-    expect(await screen.findByTestId("pog-coverage-lookup")).toHaveTextContent(/Plan w RU — jeszcze niezaimportowany/);
+    expect(await screen.findByTestId("pog-coverage-lookup")).toHaveTextContent(/Brak lokalnych danych \(≠ brak planu\)/);
     expect(getPogCommuneState).toHaveBeenCalledWith("246101");
-    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])brak planu(?! ogólnego| w gminie| —| w RU)/i);
+    expect(document.body.textContent).not.toMatch(/(^|[^a-ząćęłńóśźż])(?<!≠ )brak planu(?! ogólnego| w gminie| —| w RU)/i);
     expect(analyzeParcel).not.toHaveBeenCalled();
   });
 });

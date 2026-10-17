@@ -74,6 +74,7 @@ export default defineConfig({
         "components/PogFeatureInspector.tsx",
         "components/PogAreaSummary.tsx",
         "components/PogCoveragePanel.tsx",
+        "components/CoverageLayer.tsx",
         "app/page.tsx",
       ],
       thresholds: {
