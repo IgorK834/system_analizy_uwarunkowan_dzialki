@@ -634,3 +634,76 @@ Decyzje: [ADR-024](adr/ADR-024-import-pog-rownolegly-wznawianie-postep.md); runb
   live smoke 30 działek: 0 × 5xx, **12/12 działek w gminach z wiążącym POG w RU ma strefy POG (`available`)**, `complete` nadal 0/30 (blokują MPZP i BDOT10k, nie POG); przeglądarka 1440×900 i 375×812. Odbiór: [pog-national-verification.md](evaluation/pog-national-verification.md).
 - **Niespełnione / do decyzji:** brak widoku 3D (z13), kafli granic gmin/powiatów, ortofotomapy i wyszukiwarki działek na mapie POG; Warszawa i Kraków bez aktu w wykazie RU; brak zewnętrznego dashboardu i alertów (jest `/health/imports` i flaga `stale`); wartości „Proponowany”
   (redystrybucja kafli, parametry odświeżania, akt z wadą danych) w ADR-026.
+
+## Task 22.8–22.11 (AU-108–111), 2026-10-16
+
+Stan zastany zawierał kolejkę importu POG na żądanie i harmonogram (Task 22.7,
+ADR-026), panel importów gmin oraz osobne endpointy `/api/v1/coverage/pog`
+i `/api/v1/coverage/bdot10k`. **AU-110 było już zaimplementowane**: dwa ścisłe progi
+(< 0,5% i < 1 m²), `topological_slivers` w snapshocie, flaga, pominięcie w tabeli,
+nota w UI/PDF, zachowanie pola w bilansie; ADR-026 pkt 11. Uzupełniono testy
+równości progów oraz regresję na zamrożonej rzeczywistej geometrii Bielska-Białej.
+Dane RU zmieniły się od audytu: zapis wersji 20260901T095300 ma jeden okruch SW
+0,1081 m²; historyczny przypadek SW+SU 0,18 m² pozostaje testem kontrolnym.
+
+Uzupełniono AU-108: wspólny `GET /api/v1/coverage`, warstwa „Pokrycie” z granicami
+PRG 2479 gmin (wyłącznie wizualizacja), statusy uchwalony/projekt/brak aktu w RU/
+brak lokalnych danych/nieustalony, wydania i daty w istniejącej liście gmin,
+powiaty BDOT10k z datami, `NO_LOCAL_RELEASE` i akcja „poproś o import” korzystająca
+z istniejącej kolejki. Błąd odczytu pokrycia daje kontrolowane 503, bez pozornego
+braku planów. Granice PRG są migawką pobraną 16.10.2026, z parametrami i skrótami
+odpowiedzi; data pobrania nie jest datą danych planistycznych.
+
+AU-109: jeden nadrzędny zakres Hmin/Hmax z WCS 1 m, także gdy kontrola usługowa
+jest niedostępna. GetMinMaxByPolygon jest kontrolą krzyżową w snapshocie;
+`NMT_CROSSCHECK_DIFF` pojawia się ściśle powyżej 0,5 m. Bez rastra wartości pochodzą
+z usługi z rzeczywistą rozdzielczością siatki i adnotacją o mniejszej dokładności.
+PDF ma jeden zakres w tabeli 6.1; starsze wyniki z dwiema seriami są sprowadzane
+do nadrzędnego rastra podczas odczytu, bez nadpisania zapisu. Zamrożona odpowiedź
+`141801_4.0701.23/8` daje w prezentacji 118,269–118,959 m (deniwelacja 0,69 m).
+
+AU-111: `SourceMetadata.data_as_of`, podstawa daty, jawny status known/unknown
+i powód braku; pobranie pozostaje osobnym `fetched_at`. Obsługa dat ISO 19139,
+Last-Modified, dat uchwał KIMPZP/RU oraz lokalnych metadanych POG; przy niepełnej
+dacie jawny powód, nigdy czas pobrania w jej zastępstwie. „Stan na” jest w macierzy
+UI i PDF. Reguły świeżości mogą wskazywać datę zestawu; UI i eksport stosują tę samą
+podstawę. Metadane przechodzą do snapshotów i rejestru źródeł. Migracja **038** po
+zastanym head **037**, bez zmian migracji historycznych. `terrain` 1.1, `quality`
+1.2, nowa sygnatura cache i odświeżone mapowanie pól raportu. Zasady i ograniczenia:
+[ADR-027](adr/ADR-027-pokrycie-wysokosci-i-daty-danych.md).
+
+Weryfikacja i ograniczenia odbioru: [notatka AU-108–111](evaluation/au108-111-verification.md).
+
+Końcowa weryfikacja 17.10.2026: backend **5266 passed, 0 failed**, pokrycie **95,31%**;
+frontend **672 testy**, typecheck/lint/build zaliczone, pokrycie linii **99,05%**;
+dodatkowy odbiór komponentu NMT na rzeczywistym snapshocie działki audytowej — zaliczony.
+Pełny live smoke **30/30 HTTP 200, 0 × 5xx API, 0 błędów transportu klienta**, wszystkie
+analizy `partial` (lokalne wydania POG trzech gmin poza korpusem, brak paczek BDOT10k
+w bazie odbiorowej i niepełne wyniki usług). NMT WCS dostępny 30/30, **7 ostrzeżeń
+`NMT_CROSSCHECK_DIFF`**, macierze jakości z poprawnymi odciskami 30/30, zero sekcji bez
+daty i bez powodu jej braku. Niepotwierdzony dosłowny historyczny komunikat AU-110
+„2 artefakty, 0,18 m²”; dostępna rzeczywista wersja ma jeden okruch 0,1081 m².
+Smoke ujawnił także obsłużony wyścig pierwszej rejestracji źródła KIMPZP (1 ostrzeżenie
+`MPZP_DOCUMENT_PERSISTENCE_FAILED`), pierwotnie opisany jako otwarta usterka w notatce odbioru.
+
+## KIMPZP: współbieżna rejestracja dokumentów i trwałość cytowań (2026-10-17)
+
+Naprawiono wyścig `SELECT → INSERT` w adapterze dokumentów: źródło, artefakt, wydanie
+i akt są rejestrowane atomowo (`ON CONFLICT DO NOTHING`), z zachowaniem metadanych
+istniejącego źródła. Blokady wierszy aktu i wersji synchronizują zapis do granicy
+transakcji wywołującego. Identyczna ekstrakcja zachowuje ID jednostek prawnych,
+do których odwołują się wcześniejsze analizy; zmieniona ekstrakcja nadal jest zapisywana.
+Sześć regresji na pełnych 99 stronach rzeczywistej uchwały Kraków Stare Miasto obejmuje
+niezależne połączenia PostgreSQL, zimne/istniejące źródło, ten sam/różne akty, powtórzenie
+zapisu, metadane i rollback. Opis poprawki i ponownej weryfikacji:
+[odbiór KIMPZP](evaluation/kimpzp-concurrency-verification.md).
+
+Ponowna pełna weryfikacja: backend **5272 passed**, pokrycie **95,30%**, Ruff i kontrola
+mypy zaliczone; frontend **672 passed**, pokrycie linii **99,05%**, typowanie/lint/build
+zaliczone. Końcowy live smoke 30 działek: **30/30 HTTP 200, 0 × 5xx API, 0 błędów
+transportu, 0 × `MPZP_DOCUMENT_PERSISTENCE_FAILED`** (poprzednio 1). Kontrola bazy:
+jeden rekord `kimpzp`, 39/39 odwołań parametrów prowadzi do istniejących jednostek
+właściwej wersji dokumentu; dwie wersje mają komplet 99/95 stron i 1550/1885 jednostek.
+Wszystkie analizy nadal `partial` z powodu lokalnego pokrycia i braków usług opisanych
+w odbiorze. Bazy testów i smoke były świeże i odseparowane; nie zmieniano zapisanych
+wyników analizy w środowisku użytkownika.

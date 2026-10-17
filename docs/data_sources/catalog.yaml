@@ -38,6 +38,29 @@ schema_version: "1.0"
 sources:
   # --- ŹRÓDŁA PRODUKCYJNE (kontrakt potwierdzony) ---------------------------
 
+  - source_id: prg_commune_boundaries
+    name: "PRG — granice gmin (podgląd pokrycia)"
+    owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
+    status: production
+    production_ready: true
+    contract_confirmed: true
+    access_type: file
+    file_url: "https://mapy.geoportal.gov.pl/wss/ims/maps/PRG_gugik_wyszukiwarka/FeatureServer/0/query"
+    source_crs: "EPSG:4326"
+    target_crs: "EPSG:2180"
+    teryt_scope: ["PL"]
+    license: "PRG dostępny bezpłatnie i do dowolnego wykorzystania: https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/"
+    attribution: "Źródło: Państwowy Rejestr Granic, GUGiK."
+    expected_update_interval: "not_published"
+    sla: "not_published"
+    redistribution: allowed
+    last_manual_verification: 2026-10-16
+    notes: >-
+      Zamrożona geometria 2479 gmin z oficjalnego FeatureServer, wyłącznie do podglądu pokrycia.
+      Parametry i skróty odpowiedzi w backend/app/data/commune_boundaries.metadata.json.
+      Nie służy do obliczeń analitycznych; uproszczenie 0,001 stopnia, WGS84.
+      Data pobrania nie oznacza daty aktualności zestawu (źródło jej nie podało).
+
   - source_id: uldk
     name: "Usługa Lokalizacji Działek Katastralnych (ULDK)"
     owner: "Główny Urząd Geodezji i Kartografii (GUGiK)"
@@ -393,6 +416,8 @@ sources:
     attribution: "Źródło: Generalna Dyrekcja Ochrony Środowiska (GDOŚ), usługa WFS sdi.gdos.gov.pl."
     expected_update_interval: "not_published"
     freshness_policy:
+      # AU-111: date_basis może mieć wartość data_as_of; brak daty danych daje wtedy unknown (bez zastępowania datą pobrania).
+      date_basis: fetched_at
       max_age_days: 7
       basis: project_decision
       rationale: >-
@@ -444,6 +469,8 @@ sources:
     attribution: "Źródło: Mapy Zagrożenia Powodziowego (MZP), PGW Wody Polskie / ISOK."
     expected_update_interval: "not_published"
     freshness_policy:
+      # AU-111: date_basis może mieć wartość data_as_of; brak daty danych daje wtedy unknown (bez zastępowania datą pobrania).
+      date_basis: fetched_at
       max_age_days: 7
       basis: project_decision
       rationale: >-
@@ -492,6 +519,8 @@ sources:
     attribution: "Źródło: Numeryczny Model Terenu (NMT), GUGiK."
     expected_update_interval: "not_published"
     freshness_policy:
+      # AU-111: date_basis może mieć wartość data_as_of; brak daty danych daje wtedy unknown (bez zastępowania datą pobrania).
+      date_basis: fetched_at
       max_age_days: 7
       basis: project_decision
       rationale: >-
@@ -540,6 +569,8 @@ sources:
     attribution: "Źródło: Numeryczny Model Terenu (NMT GRID1), GUGiK — usługa WCS."
     expected_update_interval: "not_published"
     freshness_policy:
+      # AU-111: date_basis może mieć wartość data_as_of; brak daty danych daje wtedy unknown (bez zastępowania datą pobrania).
+      date_basis: fetched_at
       max_age_days: 7
       basis: project_decision
       rationale: >-
@@ -606,6 +637,8 @@ sources:
     attribution: "Źródło: Baza Danych Obiektów Topograficznych (BDOT10k), GUGiK — paczka powiatowa."
     expected_update_interval: "not_published"
     freshness_policy:
+      # AU-111: date_basis może mieć wartość data_as_of; brak daty danych daje wtedy unknown (bez zastępowania datą pobrania).
+      date_basis: fetched_at
       max_age_days: 365
       basis: project_decision
       rationale: >-

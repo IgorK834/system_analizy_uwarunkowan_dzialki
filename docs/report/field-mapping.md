@@ -137,6 +137,9 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `risk_sections[].source.*` | 9 | Tabela 5.x — źródło sekcji; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `risk_sections[].union_*` | 5 | Tabela 5.x — łączne pokrycie (suma mnogościowa) | wynik obliczenia |
 | `risk_sections[].*` | 5 | Tabela 5.x — status sekcji, relacja, liczność obiektów, powód, ostrzeżenia; macierz 8.1 | wynik obliczenia |
+| `terrain.elevation_method` | 6 | Tabela 6.1 — nadrzędny produkt wysokościowy WCS lub usługa zastępcza | metadane |
+| `terrain.elevation_note` | 6 | Nota tabeli 6.1 — siatka, produkty i układy wysokości | metadane |
+| `terrain.crosscheck.*` | 6 | Kontrola krzyżowa w snapshocie; ostrzeżenie NMT_CROSSCHECK_DIFF powyżej 0,5 m; jeden zakres w tabeli 6.1 | metadane |
 | `terrain.schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
 | `terrain.relief.schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
 | `terrain.relief.profile.line_geojson` | 6 | *pominięte:* linia profilu opisana współrzędnymi początku i końca w EPSG:2180 (Tabela 6.4) | metadane |
@@ -175,7 +178,7 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `infrastructure[].source.*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `infrastructure[].*` | 7 | Tabela 7.2 — bufor [m], pole [m²], podstawa i pewność reguły, wpływ na obszar zabudowy | przybliżenie |
 | `section_quality.legend` | 8 | Tabela 8.2 — legenda statusów, świeżości i kodów powodów | metadane |
-| `section_quality.sections[].*` | 8 | Tabela 8.1 — macierz sekcji: status, źródło, pobranie, wydanie, weryfikacja, świeżość, powody; tabela 8.3 — wiek na dzień eksportu | metadane |
+| `section_quality.sections[].*` | 8 | Tabela 8.1 — macierz sekcji: status, źródło, pobranie, Stan na (data lub jawny powód braku), wydanie, weryfikacja, świeżość, powody; tabela 8.3 — wiek na dzień eksportu | metadane |
 | `section_quality.*` | 8 | Tabele 8.1 i 9.3 — wersja polityki, punkt odniesienia, pochodzenie i suma kontrolna macierzy | metadane |
 | `completeness.sections[].*` | 1 | Strona 1 — tabela kompletności: sekcja, stan (sprawdzono/brak/poza zakresem), podstawa ustalenia MPZP, status źródła i znacznik weryfikacji | metadane |
 | `completeness.notes[]` | 1 | Strona 1 — zastrzeżenia pod tabelą kompletności (MPZP bez lokalnego wektora, status prawny POG) | metadane |
@@ -186,4 +189,4 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 834.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 941.
