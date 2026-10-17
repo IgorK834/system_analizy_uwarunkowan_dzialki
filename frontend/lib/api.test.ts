@@ -802,3 +802,17 @@ describe("klient API", () => {
     });
   });
 });
+
+it("AU-108: wspólne pokrycie i zlecenie importu używają adresu API", async () => {
+  vi.stubGlobal("fetch", fetchMock);
+  vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://localhost:8000");
+  fetchMock.mockReset();
+  const { getCoverage, requestPogImport } = await import("@/lib/api");
+  fetchMock.mockResolvedValueOnce(jsonResponse({ communes: {}, pog: {}, bdot10k: {} }));
+  await getCoverage();
+  expect(fetchMock).toHaveBeenLastCalledWith("http://localhost:8000/api/v1/coverage", expect.objectContaining({ method: "GET" }));
+  fetchMock.mockResolvedValueOnce(jsonResponse({ status: "queued", detail: "w kolejce" }));
+  expect((await requestPogImport("246101")).status).toBe("queued");
+  expect(fetchMock).toHaveBeenLastCalledWith("http://localhost:8000/api/v1/coverage/pog/commune/246101/import", { method: "POST" });
+  vi.unstubAllGlobals(); vi.unstubAllEnvs();
+});

@@ -35,6 +35,10 @@ export type AnalyzeResumeRequest = {
 };
 
 export type SourceMetadata = {
+  data_as_of?: string | null;
+  data_as_of_basis?: string | null;
+  data_as_of_reason?: string | null;
+  data_as_of_status?: "known" | "unknown";
   source_id?: string | null;
   source_version?: string | null;
   artifact_sha256?: string | null;
@@ -1015,6 +1019,10 @@ export type TerrainResult = {
   source: SourceMetadata | null;
   warnings: string[];
   relief: TerrainReliefResult | null;
+  elevation_method?: "wcs_raster" | "polygon_service" | null;
+  elevation_note?: string | null;
+  crosscheck?: { min_height_m: number; max_height_m: number; grid_size_m: number | null;
+    source: SourceMetadata; max_difference_m: number; threshold_m: number; warning_code: "NMT_CROSSCHECK_DIFF" | null } | null;
 };
 
 /** Statusy sekcji z lokalnego wydania BDOT10k (droga, zabudowa sąsiednia) — rozłączne; `no_coverage` ≠ brak obiektów. */
@@ -1161,6 +1169,7 @@ export type SectionQualityKey =
   | "mpzp_pog_relation";
 
 export type FreshnessAssessment = {
+  date_basis?: "fetched_at" | "data_as_of";
   state: FreshnessState;
   reason_code: string | null;
   /** Punkt odniesienia oceny: chwila analizy (ocena historyczna). */
@@ -1171,6 +1180,10 @@ export type FreshnessAssessment = {
 };
 
 export type SectionQuality = {
+  data_as_of?: string | null;
+  data_as_of_basis?: string | null;
+  data_as_of_reason?: string | null;
+  data_as_of_status?: "known" | "unknown";
   section: SectionQualityKey;
   report_section: string;
   status: SectionQualityStatus;
@@ -1584,4 +1597,12 @@ export type PogCommuneLookup = {
   status: PogCommuneStatus;
   catalog_synced_at: string | null;
   detail: string;
+};
+
+export type CoverageResponse = {
+  pog: PogCoverage;
+  bdot10k: { counties: { teryt_powiat: string; name: string | null; version_label: string;
+    data_as_of: string | null; imported_at: string }[] };
+  communes: GeoJSON.FeatureCollection;
+  boundaries_note: string;
 };

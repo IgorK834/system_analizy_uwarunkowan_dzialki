@@ -599,3 +599,11 @@ export async function searchAddresses(
     },
   );
 }
+
+export function getCoverage(options: { signal?: AbortSignal } = {}): Promise<import("@/lib/types").CoverageResponse> {
+  return requestJson<import("@/lib/types").CoverageResponse>(`${getApiBaseUrl()}/api/v1/coverage`, { method: "GET", signal: options.signal });
+}
+
+export function requestPogImport(terc: string): Promise<{ status: string; detail: string }> {
+  return requestJson<{ status: string; detail: string }>(`${getApiBaseUrl()}/api/v1/coverage/pog/commune/${encodeURIComponent(terc)}/import`, { method: "POST" });
+}
