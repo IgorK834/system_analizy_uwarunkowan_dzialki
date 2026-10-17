@@ -1,0 +1,32 @@
+{
+  "source_url": "https://mapy.geoportal.gov.pl/wss/ims/maps/PRG_gugik_wyszukiwarka/FeatureServer/0/query",
+  "documentation_url": "https://www.geoportal.gov.pl/pl/dane/panstwowy-rejestr-granic-prg/",
+  "fetched_at": "2026-10-16T15:56:23.785380+00:00",
+  "data_as_of": null,
+  "data_as_of_reason": "PRG nie podał daty zestawu w odpowiedzi.",
+  "feature_count": 2479,
+  "display_only": true,
+  "parameters": {
+    "where": "1=1",
+    "outFields": "teryt,nazwa",
+    "outSR": 4326,
+    "maxAllowableOffset": 0.001,
+    "orderByFields": "teryt",
+    "resultRecordCount": 1000,
+    "f": "geojson"
+  },
+  "pages": [
+    {
+      "offset": 0,
+      "sha256": "4b667285917749c77257dad194b200d4b4256ff547ee86f82e9b26033ac98859"
+    },
+    {
+      "offset": 1000,
+      "sha256": "2434a8b9f191014d76a4c255d306a679e2652114045229f37bd92ab95f3cb441"
+    },
+    {
+      "offset": 2000,
+      "sha256": "f4e1949d1f95af2118da3428fac5031d5cd31daffdc8b25a2276664a617e8855"
+    }
+  ]
+}
