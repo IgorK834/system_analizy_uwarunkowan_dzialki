@@ -24,6 +24,7 @@ from app.modules.analysis.domain.terrain import (
 )
 from app.schemas.analyze import (
     TerrainAspectResult,
+    TerrainCrosscheck,
     TerrainProfileResult,
     TerrainProfileSample,
     TerrainRasterMetadata,
@@ -47,9 +48,9 @@ REASON_UNEXPECTED_ERROR: Final[str] = "UNEXPECTED_ERROR"
 REASON_LEGACY_SNAPSHOT: Final[str] = "LEGACY_SNAPSHOT"
 REASON_MISSING_MEASUREMENT: Final[str] = "MISSING_MEASUREMENT"
 RELIEF_SOURCE_NAME: Final[str] = "NMT_WCS"
-# Rozbieżność Hmin/Hmax między usługą GetMinMaxByPolygon (siatka 4 m) a
+# Rozbieżność Hmin/Hmax między usługą GetMinMaxByPolygon a
 # rastrem WCS (1 m), powyżej której wynik wymaga weryfikacji.
-SOURCE_CONSISTENCY_TOLERANCE_M: Final[float] = 1.0
+SOURCE_CONSISTENCY_TOLERANCE_M: Final[float] = 0.5
 _PARTIAL_RELIEF_CONFIDENCE: Final[float] = 0.6
 _RELIEF_CONFIDENCE: Final[float] = 0.9
 
@@ -67,6 +68,10 @@ def build_terrain_result(
     relief_result = relief_result_from_outcome(relief) if relief is not None else None
     measurement = section.data[0] if section.status == "available" and section.data else None
 
+    selected = _raster_result(measurement, relief_result)
+    if selected is not None:
+        return selected
+
     if isinstance(measurement, TerrainExtremes):
         terrain = TerrainResult(
             status="available",
@@ -78,8 +83,15 @@ def build_terrain_result(
             source=measurement.source_metadata,
             warnings=list(measurement.warnings),
             relief=relief_result,
+            elevation_method="polygon_service",
+            elevation_note=(
+                f"Raster WCS niedostępny — wysokości z GetMinMaxByPolygon; siatka "
+                f"{_pl(measurement.grid_size_m)} m, mniejsza dokładność."
+                if measurement.grid_size_m is not None else
+                "Raster WCS niedostępny — wysokości z GetMinMaxByPolygon; rozdzielczość siatki nieznana, mniejsza dokładność."
+            ),
         )
-        return _with_consistency_check(terrain)
+        return terrain
 
     if isinstance(measurement, TerrainNoCoverage):
         return TerrainResult(
@@ -105,6 +117,51 @@ def build_terrain_result(
         warnings=list(section.warnings),
         relief=relief_result,
     )
+
+
+def _raster_result(
+    measurement: TerrainExtremes | TerrainNoCoverage | None, relief_result: TerrainReliefResult | None,
+) -> TerrainResult | None:
+    if (
+        relief_result is not None and relief_result.status == "available"
+        and relief_result.min_height_m is not None and relief_result.max_height_m is not None
+        and relief_result.source is not None
+    ):
+        crosscheck = None
+        warnings = list(measurement.warnings) if isinstance(measurement, TerrainExtremes) else []
+        if isinstance(measurement, TerrainExtremes):
+            difference = round(max(
+                abs(relief_result.min_height_m - measurement.min_height_m),
+                abs(relief_result.max_height_m - measurement.max_height_m),
+            ), 6)
+            crosscheck = TerrainCrosscheck(
+                min_height_m=measurement.min_height_m, max_height_m=measurement.max_height_m,
+                grid_size_m=measurement.grid_size_m, source=measurement.source_metadata,
+                max_difference_m=difference, threshold_m=SOURCE_CONSISTENCY_TOLERANCE_M,
+                warning_code="NMT_CROSSCHECK_DIFF" if difference > SOURCE_CONSISTENCY_TOLERANCE_M else None,
+            )
+            if crosscheck.warning_code:
+                warnings.append(
+                    f"NMT_CROSSCHECK_DIFF: różnica wysokości względem GetMinMaxByPolygon wynosi "
+                    f"{_pl(difference)} m i przekracza próg 0,5 m — wynik wymaga weryfikacji."
+                )
+        else:
+            warnings.append("Kontrola krzyżowa GetMinMaxByPolygon niedostępna; wysokości pochodzą z rastra WCS.")
+        return TerrainResult(
+            status="available", min_height_m=relief_result.min_height_m,
+            max_height_m=relief_result.max_height_m,
+            height_difference_m=round(relief_result.max_height_m - relief_result.min_height_m, 4),
+            grid_size_m=relief_result.resolution_m, sampled_points=relief_result.valid_pixel_count,
+            source=relief_result.source, warnings=warnings, relief=relief_result,
+            elevation_method="wcs_raster", crosscheck=crosscheck,
+            elevation_note=(
+                "Wysokości nadrzędne: raster WCS 1 m, w obrysie działki. GetMinMaxByPolygon służy do kontroli "
+                "krzyżowej. Produkty mogą mieć różną siatkę, datę aktualizacji i układ wysokości; "
+                "bez metadanych nie zakładamy zgodności układów ani nie korygujemy wysokości."
+            ),
+        )
+
+    return None
 
 
 def relief_result_from_outcome(outcome: ReliefOutcome) -> TerrainReliefResult:
@@ -169,7 +226,14 @@ def terrain_from_snapshot(raw: dict[str, Any] | None) -> TerrainResult:
             reason_code=REASON_LEGACY_SNAPSHOT,
             warnings=[LEGACY_TERRAIN_WARNING],
         )
-    return TerrainResult.model_validate(raw)
+    terrain = TerrainResult.model_validate(raw)
+    if terrain.elevation_method is None and terrain.status == "available" and terrain.source:
+        measurement = TerrainExtremes(
+            terrain.min_height_m, terrain.max_height_m, terrain.height_difference_m,
+            terrain.grid_size_m, terrain.sampled_points, terrain.source, terrain.warnings,
+        )
+        return _raster_result(measurement, terrain.relief) or terrain
+    return terrain
 
 
 def terrain_warnings(terrain: TerrainResult) -> list[WarningMessage]:
@@ -179,10 +243,14 @@ def terrain_warnings(terrain: TerrainResult) -> list[WarningMessage]:
     kontekstu, więc nie są tu powielane.
     """
     relief = terrain.relief
+    crosscheck_warnings = [
+        WarningMessage(code="NMT_CROSSCHECK_DIFF", message=message, severity="warning", source_name="nmt")
+        for message in terrain.warnings if message.startswith("NMT_CROSSCHECK_DIFF:")
+    ]
     if relief is None:
-        return []
+        return crosscheck_warnings
     severity = "warning" if relief.status == "available" else "info"
-    return [
+    return crosscheck_warnings + [
         WarningMessage(
             code="NMT_RELIEF_WARNING",
             message=message,
@@ -198,38 +266,9 @@ def terrain_sources(terrain: TerrainResult) -> list[SourceMetadata]:
     sources = [terrain.source] if terrain.source is not None else []
     if terrain.relief is not None and terrain.relief.source is not None:
         sources.append(terrain.relief.source)
+    if terrain.crosscheck is not None:
+        sources.append(terrain.crosscheck.source)
     return sources
-
-
-def _with_consistency_check(terrain: TerrainResult) -> TerrainResult:
-    relief = terrain.relief
-    if (
-        relief is None
-        or relief.status != "available"
-        or relief.min_height_m is None
-        or relief.max_height_m is None
-        or terrain.min_height_m is None
-        or terrain.max_height_m is None
-    ):
-        return terrain
-    min_gap = abs(relief.min_height_m - terrain.min_height_m)
-    max_gap = abs(relief.max_height_m - terrain.max_height_m)
-    if max(min_gap, max_gap) <= SOURCE_CONSISTENCY_TOLERANCE_M:
-        return terrain
-    message = (
-        f"Wysokości z rastra WCS 1 m ({_pl(relief.min_height_m)}–"
-        f"{_pl(relief.max_height_m)} m) różnią się od usługi GetMinMaxByPolygon "
-        f"({_pl(terrain.min_height_m)}–{_pl(terrain.max_height_m)} m) o więcej niż "
-        f"{SOURCE_CONSISTENCY_TOLERANCE_M:.0f} m. Źródła mają inną siatkę i mogą "
-        "pochodzić z różnych aktualizacji NMT — wynik wymaga weryfikacji."
-    )
-    return terrain.model_copy(
-        update={
-            "relief": relief.model_copy(
-                update={"warnings": [*relief.warnings, message]}
-            )
-        }
-    )
 
 
 def _pl(value: float) -> str:
@@ -268,6 +307,9 @@ def _relief_source(outcome: ReliefOutcome) -> SourceMetadata | None:
     )
     content_hash = provenance.content_hash
     return SourceMetadata(
+        data_as_of=provenance.data_as_of,
+        data_as_of_basis=provenance.data_as_of_basis,
+        data_as_of_reason="WCS nie podaje daty aktualizacji komórek NMT w dostępnej odpowiedzi.",
         source_id=provenance.source_id,
         source_name=RELIEF_SOURCE_NAME,
         source_version=(

@@ -23,9 +23,11 @@ Kontrakt usługi potwierdzono realnymi zapytaniami 2026-09-28 (fixtures
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from xml.etree import ElementTree
+
+from email.utils import parsedate_to_datetime
 
 import httpx
 import shapely
@@ -140,6 +142,13 @@ class WcsElevationRasterSource:
             raise _raster_error_from_ogc(exc, operation="GetCoverage") from exc
 
         provenance = result.source
+        modified = result.headers.get("last-modified")
+        if modified:
+            try:
+                provenance = replace(provenance, data_as_of=parsedate_to_datetime(modified).date(),
+                                     data_as_of_basis="HTTP Last-Modified")
+            except (ValueError, TypeError, OverflowError):
+                pass
         try:
             band = self._decoder.read_float_band(result.artifact, max_bytes=self._max_bytes)
         except RasterProcessingError as exc:
