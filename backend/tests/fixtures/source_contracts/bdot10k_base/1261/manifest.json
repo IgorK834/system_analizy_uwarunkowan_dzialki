@@ -1,0 +1,16 @@
+{
+  "source_url": "https://opendata.geoportal.gov.pl/bdot10k/schemat2021/12/1261_GML.zip",
+  "source_package_sha256": "1355c5a51538938c16456421969d4fb61dc739c4b85b499dde99a326e03c93ab",
+  "source_package_bytes": 35198806,
+  "class_xml_sha256": "a8db637577a26196e9cc248f80efc8b7a7bfdca97d69038e1f5bfd1fd5604a61",
+  "fixture_sha256": "e103e238a21bb3565b77698189d2398872858861d15a5fe3e148d240bd004f4d",
+  "feature_count": 607,
+  "kinds": {
+    "linia elektroenergetyczna średniego napięcia": 478,
+    "linia elektroenergetyczna wysokiego napięcia": 111,
+    "linia elektroenergetyczna najwyższego napięcia": 18
+  },
+  "attribution": "GUGiK — BDOT10k",
+  "crs": "EPSG:2180",
+  "scope": "whole OT_SULN_L class; road/building excerpt (tests only)"
+}
