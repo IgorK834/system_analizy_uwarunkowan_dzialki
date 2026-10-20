@@ -37,7 +37,7 @@ def _analyze(identifier: str):  # noqa: ANN202
 
 
 @requires_gdal
-def test_mpzp_from_act_and_document_gives_complete_without_a_local_vector(
+def test_mpzp_is_checked_but_legacy_bdot_without_land_cover_remains_partial(
     relief_enabled: FakeWcsClient,  # noqa: F811 - fixture pytest
     bdot_warsaw_release,  # noqa: F811, ANN001 - fixture pytest
 ) -> None:
@@ -53,8 +53,9 @@ def test_mpzp_from_act_and_document_gives_complete_without_a_local_vector(
     assert mpzp["state"] == "checked" and mpzp["basis"] == "document_candidate"
     # Wektor lokalny to wyższa jakość, nie warunek: status wynika z kompletności sekcji w zakresie.
     states = {item["section"]: item["state"] for item in completeness["sections"]}
-    assert completeness["complete"] is True and body["status"] == "complete", states
-    assert body["headline"] == completeness["headline"] and completeness["headline"].startswith("Sprawdzono wszystkie")
+    assert completeness["complete"] is False and body["status"] == "partial", states
+    assert states["land_cover"] == "missing"
+    assert body["headline"] == completeness["headline"] and "pokrycie terenu i lasy" in completeness["headline"]
     assert any("document_candidate" in note for note in completeness["notes"])  # jakość MPZP jest nazwana wprost
     assert states["utilities"] == "out_of_scope"
     assert states["transport"] == states["buildings"] == "checked"  # BDOT10k: zasięg wydania obejmuje działkę kontrolną
@@ -77,7 +78,7 @@ def test_completeness_survives_save_reread_cache_and_pdf(
     cached, nmt_calls = _analyze(identifier)
     assert cached.status_code == 200 and nmt_calls == 0
     assert cached.json()["analysis_id"] == body["analysis_id"]
-    assert cached.json()["status"] == "complete" and cached.json()["headline"] == body["headline"]
+    assert cached.json()["status"] == "partial" and cached.json()["headline"] == body["headline"]
 
     # PDF, strona 1: ten sam komunikat i tabela sekcji.
     report = client.get(f"/report/{body['analysis_id']}?access_token={make_analysis_token(body['analysis_id'])}")

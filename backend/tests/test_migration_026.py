@@ -72,7 +72,7 @@ def test_old_row_keeps_null_and_is_reconstructed_on_read_without_backfill() -> N
             response = build_analyze_response_from_analysis(analysis, db)
             matrix = response.section_quality
             assert matrix is not None and matrix.origin == "reconstructed"
-            assert len(matrix.sections) == 11 and matrix.integrity_ok()
+            assert len(matrix.sections) == 12 and matrix.integrity_ok()
             assert all("LEGACY_QUALITY_RECONSTRUCTED" in item.reason_codes for item in matrix.sections)
             pdf = generate_analysis_report_pdf(ids["analysis"], db)
         assert pdf.startswith(b"%PDF")
@@ -110,7 +110,7 @@ def test_save_analysis_stores_the_matrix_it_was_given_or_issues_one(clean_rows: 
         assert matrix.origin == "stored" and matrix.integrity_ok()
         assert matrix.reference_at == issued.analyzed_at  # punkt odniesienia = chwila analizy
         assert [item.section for item in matrix.sections][:3] == ["parcel", "mpzp", "pog"]
-        assert saved.result_contract_version and "+quality-v1.2" in saved.result_contract_version
+        assert saved.result_contract_version and "+quality-v1.3" in saved.result_contract_version
         read = build_analyze_response_from_analysis(saved, db)
         assert read.section_quality == matrix
 

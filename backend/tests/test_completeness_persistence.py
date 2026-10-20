@@ -45,7 +45,7 @@ def test_saved_analysis_stores_the_completeness_assessed_at_analysis_time() -> N
         loaded = build_analyze_response_from_analysis(saved, db)
         expected = completeness_to_snapshot(build_completeness(loaded.model_copy(update={"completeness": None})))
 
-    assert saved.completeness["rule_version"] == "completeness/1.1"
+    assert saved.completeness["rule_version"] == "completeness/1.2"
     assert saved.completeness["headline"] == expected["headline"]
     assert saved.completeness["checked"] == expected["checked"] and saved.completeness["total"] == expected["total"]
     assert loaded.completeness is not None and loaded.completeness.origin == "stored"

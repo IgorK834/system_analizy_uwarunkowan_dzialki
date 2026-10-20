@@ -295,10 +295,11 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
     assert len(relief["profile"]["samples"]) == 101
     # Źródła WCS 1 m i GetMinMax 4 m różnią się o > 1 m — widoczne ostrzeżenie.
     assert terrain["crosscheck"]["warning_code"] == "NMT_CROSSCHECK_DIFF"
-    # AU-104: wszystkie sekcje w zakresie są sprawdzone (MPZP `no_match`, POG, ISOK, GDOŚ, NMT z rzeźbą), więc
-    # status nagłówkowy to ``complete`` — wynika z kompletności, a nie z wektora MPZP. Brak rzeźby terenu
-    # (WCS niedostępny) obniżyłby go do ``partial``: niesprawdzony teren jest na pasku kompletności.
-    assert body["status"] == "complete" and body["completeness"]["complete"] is True
+    # NMT jest sprawdzone, lecz starszy wycinek BDOT10k nie zawiera klas pokrycia terenu.
+    # To brak danych sekcji land_cover, więc cała analiza pozostaje częściowa.
+    assert body["status"] == "partial" and body["completeness"]["complete"] is False
+    cover_section = next(item for item in body["completeness"]["sections"] if item["section"] == "land_cover")
+    assert cover_section["state"] == "missing"
     terrain_section = next(item for item in body["completeness"]["sections"] if item["section"] == "terrain")
     assert terrain_section["state"] == "checked"
     # Poza zakresem: uzbrojenie (tylko podgląd KIUT) i relacja MPZP–POG (MPZP `no_match` — nie ma strefy do porównania
@@ -307,7 +308,7 @@ def test_control_measurement_survives_api_db_cache_and_pdf(
         "utilities",
         "mpzp_pog_relation",
     ]
-    assert (body["completeness"]["checked"], body["completeness"]["total"]) == (9, 9)
+    assert (body["completeness"]["checked"], body["completeness"]["total"]) == (9, 10)
     analysis_id = body["analysis_id"]
     _write_evidence("bk-301-302/01-api-response.json", body)
 

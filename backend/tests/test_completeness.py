@@ -1,4 +1,4 @@
-"""Kompletność analizy i status nagłówkowy (AU-104, ADR-022): macierz warunków reguły ``completeness/1.1``.
+"""Kompletność analizy i status nagłówkowy (AU-104, ADR-022): macierz warunków reguły ``completeness/1.2``.
 
 Bazą jest zamrożona odpowiedź raportu (``multizone``): rzeczywisty kształt wyniku z MPZP z wektora, POG, ISOK, GDOŚ i NMT.
 Każdy test zmienia jedną rzecz i sprawdza, czy reguła reaguje dokładnie tak, jak opisuje ADR-022.
@@ -20,6 +20,8 @@ from app.schemas.analyze import (
     TerrainResult,
     UtilitiesPreviewResult,
 )
+from pathlib import Path
+from app.schemas.land_cover import LandCoverResult
 from app.schemas.source import SourceMetadata, WarningMessage
 from app.services.cache import RESULT_CONTRACT_VERSION
 from app.services.completeness import (
@@ -61,6 +63,8 @@ def _without_conflicts(response: AnalyzeResponse) -> AnalyzeResponse:
 def _base(**update: Any) -> AnalyzeResponse:
     response, _ = load_fixture("multizone")
     response = _assessed(_without_conflicts(response))
+    cover = LandCoverResult.model_validate_json((Path(__file__).parent / "fixtures/source_contracts/bdot_land_cover/1418/api_result.json").read_text())
+    response = response.model_copy(update={"land_cover": cover})
     return response.model_copy(update={"section_quality": None, "completeness": None, "headline": None, **update})
 
 
@@ -93,11 +97,11 @@ def _unavailable_source(section: str) -> RiskSectionResult:
 def test_all_sections_in_scope_checked_gives_complete_with_the_scope_listed() -> None:
     completeness = build_completeness(_base())
 
-    assert completeness.complete and completeness.rule_version == RULE_VERSION == "completeness/1.1"
-    assert (completeness.checked, completeness.total) == (10, 10)
+    assert completeness.complete and completeness.rule_version == RULE_VERSION == "completeness/1.2"
+    assert (completeness.checked, completeness.total) == (11, 11)
     # Od Task 23.2–23.3 droga i zabudowa sąsiednia mają kontrakt źródła (BDOT10k) i wchodzą do zakresu.
     assert {item.section for item in completeness.sections if item.state == "out_of_scope"} == {"utilities"}
-    assert completeness.headline.startswith("Sprawdzono wszystkie 10 sekcji w zakresie analizy.")
+    assert completeness.headline.startswith("Sprawdzono wszystkie 11 sekcji w zakresie analizy.")
     assert "Poza zakresem: uzbrojenie terenu." in completeness.headline
 
 
@@ -325,7 +329,7 @@ def test_relation_is_out_of_scope_for_a_zone_without_geometry_but_missing_for_a_
 
     relation = next(item for item in document.sections if item.section == "mpzp_pog_relation")
     assert relation.state == "out_of_scope" and "MPZP_WITHOUT_GEOMETRY" in relation.reason_codes
-    assert document.complete and (document.checked, document.total) == (9, 9)
+    assert document.complete and (document.checked, document.total) == (10, 10)
     assert "relacja MPZP–POG" in document.headline  # poza zakresem, ale wymieniona
     assert _states(base.model_copy(update={"pog": pog}))["mpzp_pog_relation"] == "missing" and not vector.complete
 
@@ -411,7 +415,7 @@ def test_utilities_are_out_of_scope_whatever_their_data_say_while_transport_and_
     completeness = build_completeness(base)
     utilities = next(item for item in completeness.sections if item.section == "utilities")
     assert "KIUT_PREVIEW_ONLY" in utilities.reason_codes
-    assert completeness.total == 11 - 1
+    assert completeness.total == 12 - 1
 
 
 @pytest.mark.parametrize("section", ["road_context", "neighbour_buildings"])
@@ -443,7 +447,7 @@ def test_out_of_scope_sections_are_listed_not_silently_dropped() -> None:
     completeness = build_completeness(_base())
 
     assert [item.section for item in completeness.sections] == [
-        "parcel", "mpzp", "pog", "pog_overlays", "flood", "nature", "terrain", "utilities", "transport", "buildings",
+        "parcel", "mpzp", "pog", "pog_overlays", "flood", "nature", "terrain", "utilities", "transport", "land_cover", "buildings",
         "mpzp_pog_relation",
     ]
     assert all(item.label and item.short_label for item in completeness.sections)
@@ -459,7 +463,7 @@ def test_headline_counts_checked_over_in_scope_and_lists_what_is_missing() -> No
 
     assert completeness.headline.startswith(f"{completeness.checked} z {completeness.total} sekcji sprawdzono; brak: ")
     assert "MPZP" in completeness.headline and "teren (NMT)" in completeness.headline
-    assert (completeness.checked, completeness.total) == (8, 10)
+    assert (completeness.checked, completeness.total) == (9, 11)
 
 
 def test_headline_is_the_same_text_in_the_response_and_in_the_completeness() -> None:
@@ -491,9 +495,9 @@ def test_record_from_before_au104_is_reconstructed_and_labelled() -> None:
 
 
 def test_result_contract_version_changes_the_cache_signature() -> None:
-    assert "+completeness-v1.1" in RESULT_CONTRACT_VERSION and "+road-v1.0" in RESULT_CONTRACT_VERSION
-    assert "+buildings-v1.0" in RESULT_CONTRACT_VERSION and "+quality-v1.2" in RESULT_CONTRACT_VERSION
-    assert RESULT_CONTRACT_VERSION.endswith("completeness-v1.1")
+    assert "+completeness-v1.2" in RESULT_CONTRACT_VERSION and "+road-v1.0" in RESULT_CONTRACT_VERSION
+    assert "+buildings-v1.1" in RESULT_CONTRACT_VERSION and "+quality-v1.3" in RESULT_CONTRACT_VERSION
+    assert RESULT_CONTRACT_VERSION.endswith("completeness-v1.2")
 
 
 def test_matrix_from_the_response_is_reused_instead_of_being_assessed_twice() -> None:

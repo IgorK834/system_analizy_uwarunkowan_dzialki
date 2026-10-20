@@ -244,3 +244,14 @@ def test_cache_logs_hit_and_miss(caplog: pytest.LogCaptureFixture) -> None:
     assert "cache_hit" in caplog.text
     assert "cache_miss" in caplog.text
     assert identifier in caplog.text
+
+
+def test_land_cover_settings_invalidate_cached_results(monkeypatch):
+    with SessionLocal() as db:
+        before, _ = current_cache_signature(db)
+        monkeypatch.setattr(settings, "land_cover_enabled", not settings.land_cover_enabled)
+        after, _ = current_cache_signature(db)
+        assert before != after
+        monkeypatch.setattr(settings, "forest_search_radius_m", 1234)
+        changed_radius, _ = current_cache_signature(db)
+        assert changed_radius != after

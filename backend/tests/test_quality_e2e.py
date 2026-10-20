@@ -171,9 +171,9 @@ def test_matrix_is_the_same_in_api_db_reread_cache_and_pdf() -> None:
     sections = _sections(body)
     assert [item["section"] for item in matrix["sections"]] == [
         "parcel", "mpzp", "pog", "pog_overlays", "flood", "nature", "terrain",
-        "utilities", "transport", "buildings", "mpzp_pog_relation",
+        "utilities", "transport", "land_cover", "buildings", "mpzp_pog_relation",
     ]
-    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.2"
+    assert matrix["origin"] == "stored" and matrix["schema_version"] == "1.3"
     assert matrix["policy_version"].startswith("quality-policy/1+")
     assert len(matrix["matrix_sha256"]) == 64
     assert matrix["reference_at"] == body["analyzed_at"]  # punkt odniesienia = chwila analizy
@@ -348,7 +348,7 @@ def test_legacy_row_is_reconstructed_on_read_and_never_written_back() -> None:
     reread = _reread(analysis_id)["section_quality"]
     assert reread["origin"] == "reconstructed"
     assert all("LEGACY_QUALITY_RECONSTRUCTED" in item["reason_codes"] for item in reread["sections"])
-    assert len(reread["sections"]) == 11
+    assert len(reread["sections"]) == 12
 
     with SessionLocal() as db:
         report_text = _pdf_text(generate_analysis_report_pdf(analysis_id, db))
