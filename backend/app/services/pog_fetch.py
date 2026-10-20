@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import re
 import unicodedata
 import zipfile
 from dataclasses import dataclass, field
@@ -570,6 +571,11 @@ def _normalize_geometry(
 
 
 def _canonical_crs(raw_crs: str) -> str:
+    # Realny RU nadal używa historycznego identyfikatora GML. Jest to
+    # identyfikator CRS, nie URL do pobrania; PROJ nie rozpoznaje tej postaci.
+    legacy = re.fullmatch(r"https?://www\.opengis\.net/gml/srs/epsg\.xml#(\d+)", raw_crs.strip())
+    if legacy:
+        raw_crs = f"EPSG:{legacy.group(1)}"
     try:
         return CRS.from_user_input(raw_crs).to_string()
     except Exception as exc:
