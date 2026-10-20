@@ -10,7 +10,7 @@ from app.schemas.analyze import AnalyzeResponse
 from app.services.completeness import with_completeness
 from app.services.report import _build_report_context, _render_report_html
 from tests.report_map_reference import load_fixture
-from tests.test_completeness import _assessed, _without_conflicts
+from tests.test_completeness import _base
 
 NBSP = chr(0xA0)
 
@@ -25,8 +25,7 @@ def _text(node) -> str:  # noqa: ANN001
 
 
 def _complete() -> AnalyzeResponse:
-    response, _ = load_fixture("multizone")
-    return with_completeness(_assessed(_without_conflicts(response)).model_copy(update={"section_quality": None}))
+    return with_completeness(_base())
 
 
 def test_cover_shows_the_same_headline_as_the_api() -> None:
@@ -37,7 +36,7 @@ def test_cover_shows_the_same_headline_as_the_api() -> None:
     row = cover.select_one("td[data-completeness]")
     assert row is not None and row["data-completeness"] == "complete"
     assert _text(row) == response.headline
-    assert "Sprawdzono wszystkie 10 sekcji" in _text(row)
+    assert "Sprawdzono wszystkie 11 sekcji" in _text(row)
 
 
 def test_cover_lists_every_section_with_its_state_basis_and_source_status() -> None:
@@ -46,7 +45,7 @@ def test_cover_lists_every_section_with_its_state_basis_and_source_status() -> N
     table = _cover(response).select_one('table[data-table="completeness"]')
 
     rows = [[_text(cell) for cell in tr.find_all("td")] for tr in table.select("tbody tr")]
-    assert len(rows) == 11  # także sekcje poza zakresem są wymienione
+    assert len(rows) == 12  # także sekcje poza zakresem są wymienione
     by_label = {row[0]: row for row in rows}
     assert by_label["MPZP"][1].startswith("sprawdzono") and "lokalnym wektorem" in by_label["MPZP"][2]
     assert by_label["Uzbrojenie terenu (KIUT)"][1] == "poza zakresem"
@@ -62,7 +61,7 @@ def test_incomplete_analysis_says_what_is_missing_on_the_first_page() -> None:
 
     row = cover.select_one("td[data-completeness]")
     assert row["data-completeness"] == "partial"
-    assert "9 z 10 sekcji sprawdzono; brak: teren (NMT)." in _text(row)
+    assert "10 z 11 sekcji sprawdzono; brak: teren (NMT)." in _text(row)
     terrain = next(tr for tr in cover.select("table[data-table=completeness] tbody tr") if "Teren" in _text(tr.find("td")))
     assert _text(terrain.find_all("td")[1]).startswith("brak")
 

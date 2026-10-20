@@ -213,7 +213,7 @@ def test_analysis_json_is_the_snapshot_without_secrets_geometry_and_source_regis
     # Macierz jakości jest zapisana w całości (bez legendy, która jest wyliczana).
     matrix = document["section_quality"]
     assert "legend" not in matrix and matrix["matrix_sha256"] == response.section_quality.matrix_sha256  # type: ignore[union-attr]
-    assert len(matrix["sections"]) == 11
+    assert len(matrix["sections"]) == 12
     assert matrix["policy_version"].startswith("quality-policy/1+")
     assert document["sources_file"] == "sources.json"
     assert {item["path"] for item in document["geometry_files"]} >= {"parcel.geojson", "layers/flood_risk.geojson"}
@@ -764,6 +764,6 @@ def test_package_carries_value_conditions_and_documents_them() -> None:
     assert plain["value_kind"] == "unconditional" and plain["conditions"] == []
     readme = package.by_name("README.md").data.decode("utf-8")
     assert "wartości warunkowe i sprzeczności" in readme and "`value_kind`" in readme and "`conditions[]`" in readme
-    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.5.0" and AUDIT_EXPORTER_VERSION in readme
+    assert AUDIT_EXPORTER_VERSION == "audit-exporter/1.6.0" and AUDIT_EXPORTER_VERSION in readme
     manifest = json.loads(package.by_name("manifest.json").data)
     assert manifest["exporter_version"] == AUDIT_EXPORTER_VERSION

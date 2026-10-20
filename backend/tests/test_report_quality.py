@@ -40,7 +40,7 @@ def _table_rows(html: str, kind: str) -> list[list[str]]:
 def test_matrix_has_one_row_per_section_with_source_time_release_and_freshness() -> None:
     response, _ = load_fixture("multizone")
     rows = _table_rows(_html(response, EXPORT_SOON), "quality")
-    assert len(rows) == len(QUALITY_SECTIONS) == 11
+    assert len(rows) == len(QUALITY_SECTIONS) == 12
     by_label = {row[0].split(" (§")[0]: row for row in rows}
     flood = by_label["Zagrożenie powodziowe (ISOK)"]
     assert "sprawdzono" in flood[1]
