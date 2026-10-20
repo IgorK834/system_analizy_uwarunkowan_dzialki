@@ -71,6 +71,7 @@ class Analysis(Base):
     completeness: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     # Kontekst drogowy i zabudowa sąsiednia z lokalnego wydania BDOT10k (migracja 036). NULL = zapis sprzed wydania
     # sekcji: odczyt zwraca status ``unknown`` (nie „brak drogi”, nie „brak budynków”).
+    land_cover: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     road_context: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     neighbour_buildings: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     data_release_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)

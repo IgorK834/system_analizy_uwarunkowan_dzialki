@@ -119,3 +119,21 @@ class BdotBuilding(Base):
         CheckConstraint("area_sqm > 0", name="ck_bdot_buildings_area_positive"),
         Index("ix_bdot_buildings_geometry_gist", "geometry", postgresql_using="gist"),
     )
+
+
+class BdotLandCover(Base):
+    """Pokrycie terenu, dwanaście klas PT (bez nazw i danych osobowych)."""
+    __tablename__ = "bdot_landcover"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    data_release_id: Mapped[int] = mapped_column(ForeignKey("data_releases.id"), nullable=False)
+    local_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    class_code: Mapped[str] = mapped_column(String(9), nullable=False)
+    kind: Mapped[str | None] = mapped_column(ClippedString(160), nullable=True)
+    feature_version_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    geometry: Mapped[Any] = mapped_column(Geometry("MULTIPOLYGON", srid=2180, spatial_index=False), nullable=False)
+    __table_args__ = (
+        UniqueConstraint("data_release_id", "local_id", name="uq_bdot_landcover_release_local_id"),
+        CheckConstraint("NOT ST_IsEmpty(geometry) AND ST_IsValid(geometry)", name="ck_bdot_landcover_geometry"),
+        Index("ix_bdot_landcover_geometry_gist", "geometry", postgresql_using="gist"),
+        Index("ix_bdot_landcover_release_class", "data_release_id", "class_code"),
+    )
