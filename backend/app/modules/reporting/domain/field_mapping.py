@@ -283,6 +283,12 @@ FIELD_MAPPINGS: Final[tuple[FieldMapping, ...]] = (
        "Uwaga interpretacyjna pod nagłówkiem „Transport i dostęp do drogi” i w sekcji 10", "metadata"),
     _m("road_context.*", "infrastructure",
        "Tabela 7.3 — status, promień i metadane wyszukiwania, liczba osi w kontakcie z działką", "computed"),
+    _m("land_cover.schema_version", "sources", "Tabela 9.3 — wersja kontraktu pokrycia terenu", "metadata"),
+    _m("land_cover.features_geojson[]", "environment", "Geometrie w mapie 5 i layers/land_cover.geojson w ZIP.", "computed"),
+    _m("land_cover.forest.geometry_geojson", "environment", "Las w mapie 5 i layers/forest_context.geojson w ZIP.", "computed"),
+    _m("land_cover.forest.buffers[].geometry_geojson", "environment", "Orientacyjne bufory w mapie 5 i layers/forest_context.geojson.", "approximation"),
+    _m("land_cover.source.*", "sources", "Sekcja 5 — źródło BDOT10k i stan danych", "source_fact"),
+    _m("land_cover.*", "environment", "Sekcja 5 — udziały na działce i w 200 m, las i bufory orientacyjne", "computed"),
     _m("neighbour_buildings.schema_version", "sources", "Tabela 9.3 — wersje kontraktów", "metadata"),
     _omit("neighbour_buildings.buildings[].geometry_geojson", "infrastructure",
           "obrysy budynków są w warstwie layers/neighbour_buildings.geojson pakietu audytowego; PDF podaje tabelę 7.5 "

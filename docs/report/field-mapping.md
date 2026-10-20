@@ -159,6 +159,12 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `road_context.release.*` | 7 | Tabela 7.3 — wydanie danych: powiat, stan danych, import, SHA-256 paczki | metadane |
 | `road_context.interpretation_note` | 7 | Uwaga interpretacyjna pod nagłówkiem „Transport i dostęp do drogi” i w sekcji 10 | metadane |
 | `road_context.*` | 7 | Tabela 7.3 — status, promień i metadane wyszukiwania, liczba osi w kontakcie z działką | wynik obliczenia |
+| `land_cover.schema_version` | 9 | Tabela 9.3 — wersja kontraktu pokrycia terenu | metadane |
+| `land_cover.features_geojson[]` | 5 | Geometrie w mapie 5 i layers/land_cover.geojson w ZIP. | wynik obliczenia |
+| `land_cover.forest.geometry_geojson` | 5 | Las w mapie 5 i layers/forest_context.geojson w ZIP. | wynik obliczenia |
+| `land_cover.forest.buffers[].geometry_geojson` | 5 | Orientacyjne bufory w mapie 5 i layers/forest_context.geojson. | przybliżenie |
+| `land_cover.source.*` | 9 | Sekcja 5 — źródło BDOT10k i stan danych | fakt źródłowy |
+| `land_cover.*` | 5 | Sekcja 5 — udziały na działce i w 200 m, las i bufory orientacyjne | wynik obliczenia |
 | `neighbour_buildings.schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
 | `neighbour_buildings.buildings[].geometry_geojson` | 7 | *pominięte:* obrysy budynków są w warstwie layers/neighbour_buildings.geojson pakietu audytowego; PDF podaje tabelę 7.5 (mapy raportu nie mają warstwy budynków) | fakt źródłowy |
 | `neighbour_buildings.buildings[].distance_m` | 7 | Tabela 7.5 — odległość od działki do obrysu [m] | wynik obliczenia |
@@ -189,4 +195,4 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 941.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 995.

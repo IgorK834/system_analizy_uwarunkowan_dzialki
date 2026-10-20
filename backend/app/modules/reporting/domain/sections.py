@@ -12,7 +12,7 @@ from typing import Final, Literal
 
 from app.shared.data_quality import QUALITY_STATUS_LABELS_PL
 
-REPORT_LAYOUT_VERSION: Final[str] = "report-v2/2026.10.13-1"
+REPORT_LAYOUT_VERSION: Final[str] = "report-v2/2026.10.17-1"
 
 FindingKind = Literal["source_fact", "computed", "approximation", "manual"]
 
@@ -93,6 +93,7 @@ QUALITY_SECTIONS: Final[tuple[QualitySection, ...]] = (
     QualitySection("terrain", "terrain", "Teren (NMT)"),
     QualitySection("utilities", "infrastructure", "Uzbrojenie terenu (KIUT)"),
     QualitySection("transport", "infrastructure", "Transport i dostęp do drogi"),
+    QualitySection("land_cover", "environment", "Pokrycie terenu i lasy"),
     QualitySection("buildings", "infrastructure", "Zabudowa sąsiednia"),
     QualitySection("mpzp_pog_relation", "pog", "Relacja MPZP–POG"),
 )
