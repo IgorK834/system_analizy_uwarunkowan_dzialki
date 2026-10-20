@@ -37,7 +37,7 @@ from app.services.mpzp_parser_hybrid import WARNING_LLM_CANDIDATES_REJECTED, WAR
 from app.services.section_quality import build_section_quality
 
 # 1.1 (Task 23.2–23.3): transport (droga) i zabudowa sąsiednia mają kontrakt źródła (BDOT10k), więc wchodzą do zakresu.
-RULE_VERSION: Final[str] = "completeness/1.1"
+RULE_VERSION: Final[str] = "completeness/1.2"
 
 SHORT_LABELS: Final[dict[str, str]] = {
     "parcel": "geometria działki",
@@ -50,6 +50,7 @@ SHORT_LABELS: Final[dict[str, str]] = {
     "utilities": "uzbrojenie terenu",
     "transport": "droga i dostęp",
     "buildings": "zabudowa sąsiednia",
+    "land_cover": "pokrycie terenu i lasy",
     "mpzp_pog_relation": "relacja MPZP–POG",
 }
 

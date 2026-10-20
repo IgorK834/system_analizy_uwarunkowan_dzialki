@@ -41,6 +41,7 @@ from app.schemas.source import (
     SectionQualityMatrix,
     SourceMetadata,
 )
+from app.services.land_cover import land_cover_from_snapshot
 from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.terrain import terrain_from_snapshot
@@ -289,6 +290,7 @@ def _drafts(response: AnalyzeResponse) -> dict[str, _Draft]:
         "utilities": _utilities(response),
         "transport": _transport(response),
         "buildings": _buildings(response),
+        "land_cover": _land_cover(response),
         "mpzp_pog_relation": _relation(response.pog),
     }
 
@@ -498,3 +500,13 @@ def _relation(pog: PogResult | None) -> _Draft:
         codes.append("COMPATIBILITY_REVIEW_REQUIRED")
     codes.append("DERIVED_SECTION")
     return _Draft(status, None, assessment.manual_review_required, codes)
+
+
+def _land_cover(response: AnalyzeResponse) -> _Draft:
+    section = response.land_cover or land_cover_from_snapshot(None)
+    result = _bdot_draft(section, "LAND_COVER_NOT_RECORDED", "LAND_COVER_UNAVAILABLE")
+    if section.status == "available" and section.forest.status not in {"available", "no_match"}:
+        result.status = "partial"
+        result.manual = True
+        result.codes.append(section.forest.reason_code or "FOREST_CONTEXT_UNAVAILABLE")
+    return result
