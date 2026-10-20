@@ -1,6 +1,7 @@
 from app.models.analysis import Analysis
 from app.models.analysis_pending_document import AnalysisPendingDocument
-from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad
+from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad, BdotLandCover
+from app.models.bdot_powerline import BdotPowerline
 from app.models.infrastructure import Infrastructure
 from app.models.mpzp_llm_extraction import MpzpLlmExtraction
 from app.models.mpzp_llm_usage import MpzpLlmUsage
@@ -50,6 +51,8 @@ __all__ = [
     "Analysis",
     "AnalysisPendingDocument",
     "BdotBuilding",
+    "BdotLandCover",
+    "BdotPowerline",
     "BdotRelease",
     "BdotRoad",
     "Infrastructure",
