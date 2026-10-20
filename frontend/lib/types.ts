@@ -1121,6 +1121,8 @@ export type NeighbourBuildingItem = {
 
 /** Kontekst istniejącej zabudowy w otoczeniu działki (Task 23.3) — nie „możliwość zabudowy”. */
 export type NeighbourBuildingsResult = {
+  neighbour_parcel_indicators_status?: "unknown";
+  neighbour_parcel_indicators_reason?: string;
   schema_version: string;
   status: BdotContextStatus;
   reason_code: string | null;
@@ -1166,6 +1168,7 @@ export type SectionQualityKey =
   | "utilities"
   | "transport"
   | "buildings"
+  | "land_cover"
   | "mpzp_pog_relation";
 
 export type FreshnessAssessment = {
@@ -1435,6 +1438,7 @@ export type AnalyzeResponse = {
   /** Sekcja NMT; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
   terrain?: TerrainResult | null;
   /** Najbliższa droga z BDOT10k; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
+  land_cover?: LandCoverResult | null;
   road_context?: RoadContextResult | null;
   /** Zabudowa sąsiednia z BDOT10k; brak pola (starsze odpowiedzi) jest traktowany jak status unknown. */
   neighbour_buildings?: NeighbourBuildingsResult | null;
@@ -1503,6 +1507,12 @@ export type AddressSearchResponse = {
   query: string;
   results: AddressSearchResult[];
   total_returned: number;
+};
+
+export type AddressIndexStatus = {
+  ready: boolean;
+  entry_count: number;
+  release_id: number | null;
 };
 
 /** Rodzaj linku z `POST /analyze/{id}/links`: `download` (15 min) albo `share` (30 dni). */
@@ -1602,7 +1612,34 @@ export type PogCommuneLookup = {
 export type CoverageResponse = {
   pog: PogCoverage;
   bdot10k: { counties: { teryt_powiat: string; name: string | null; version_label: string;
-    data_as_of: string | null; imported_at: string }[] };
+    data_as_of: string | null; imported_at: string; road_count?: number; building_count?: number;
+    landcover_count?: number | null; powerline_count?: number | null }[] };
   communes: GeoJSON.FeatureCollection;
   boundaries_note: string;
 };
+
+
+export interface LandCoverZone {
+  area_sqm: number;
+  classified_share_pct: number;
+  classes: { class_code: string; label: string; area_sqm: number; share_pct: number }[];
+}
+export interface LandCoverResult {
+  schema_version: string;
+  status: BdotContextStatus;
+  reason_code: string | null;
+  radius_m: number;
+  surroundings_definition: string;
+  parcel: LandCoverZone | null;
+  surroundings: LandCoverZone | null;
+  forest: { status: BdotContextStatus; reason_code: string | null; distance_m: number | null;
+    forest_id: string | null; search_radius_m: number; distance_reference: string;
+    buffers: { radius_m: number; overlap_with_parcel_sqm: number; geometry_geojson: Record<string, unknown> | null }[];
+    geometry_geojson: Record<string, unknown> | null };
+  search_area_within_coverage: boolean | null;
+  release: BdotReleaseInfo | null;
+  source: SourceMetadata | null;
+  interpretation_note: string;
+  features_geojson: Record<string, unknown>[];
+  warnings: string[];
+}

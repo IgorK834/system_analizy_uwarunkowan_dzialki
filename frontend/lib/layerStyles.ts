@@ -135,6 +135,7 @@ export type LayerId =
   | "mpzp_acts"
   | "road_context"
   | "neighbour_buildings"
+  | "land_cover"
   | "mpzp_wms"
   | "pog_wms"
   | "kiut_wms";
@@ -180,6 +181,7 @@ export const LAYER_LEGEND: Record<LayerId, LayerLegendEntry> = {
     label: "Najbliższa droga (oś jezdni, BDOT10k)",
     color: ROAD_LINE_COLOR,
   },
+  land_cover: {id: "land_cover", label: "Pokrycie terenu i orientacyjne bufory lasu (BDOT10k)", color: "#739b43"},
   neighbour_buildings: {
     id: "neighbour_buildings",
     label: "Budynki w sąsiedztwie (BDOT10k)",
@@ -200,4 +202,11 @@ export const LAYER_LEGEND: Record<LayerId, LayerLegendEntry> = {
     label: "Uzbrojenie terenu (nakładka WMS, KIUT)",
     color: "#147d86",
   },
+};
+
+
+export const LAND_COVER_COLORS: Record<string, string> = {
+  OT_PTWP_A: "#61a5d8", OT_PTZB_A: "#b78274", OT_PTLZ_A: "#387c45", OT_PTRK_A: "#91ad69",
+  OT_PTUT_A: "#b7a34c", OT_PTTR_A: "#c5cf81", OT_PTKM_A: "#99999b", OT_PTGN_A: "#d7bf98",
+  OT_PTPL_A: "#c9beb3", OT_PTSO_A: "#ad829e", OT_PTWZ_A: "#bc915f", OT_PTNZ_A: "#b5a8cb",
 };

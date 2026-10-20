@@ -31,7 +31,7 @@ describe("prezentacja macierzy jakości", () => {
     expect(QUALITY_STATUS_LABELS.no_coverage).not.toBe(QUALITY_STATUS_LABELS.unavailable);
     expect(QUALITY_STATUS_LABELS.error).not.toBe(QUALITY_STATUS_LABELS.unavailable);
     expect(new Set(Object.values(QUALITY_STATUS_MARKS)).size).toBe(8);
-    expect(Object.keys(QUALITY_SECTION_LABELS)).toHaveLength(11); // w tym `buildings` (zabudowa sąsiednia)
+    expect(Object.keys(QUALITY_SECTION_LABELS)).toHaveLength(12); // w tym `buildings` (zabudowa sąsiednia)
     expect(Object.keys(FRESHNESS_LABELS)).toEqual(["fresh", "stale", "unknown"]);
   });
 

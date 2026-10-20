@@ -607,3 +607,13 @@ export function getCoverage(options: { signal?: AbortSignal } = {}): Promise<imp
 export function requestPogImport(terc: string): Promise<{ status: string; detail: string }> {
   return requestJson<{ status: string; detail: string }>(`${getApiBaseUrl()}/api/v1/coverage/pog/commune/${encodeURIComponent(terc)}/import`, { method: "POST" });
 }
+
+export function getAddressIndexStatus(signal?: AbortSignal): Promise<import("./types").AddressIndexStatus> {
+  return requestJson<import("./types").AddressIndexStatus>(
+    `${getApiBaseUrl()}/api/v1/search/addresses/status`, { signal },
+  );
+}
+
+export function requestBdotImport(powiat: string): Promise<{ job_id: number; status: string; detail: string }> {
+  return requestJson(`${getApiBaseUrl()}/api/v1/coverage/bdot10k/county/${encodeURIComponent(powiat)}/import`, { method: "POST" });
+}
