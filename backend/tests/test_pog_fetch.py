@@ -2,6 +2,7 @@ import io
 import json
 import socket
 import zipfile
+from pathlib import Path
 
 import httpx
 import pytest
@@ -11,11 +12,29 @@ from app.services.pog_fetch import (
     PogVectorSecurityError,
     _extract_vector_entries_from_zip,
     fetch_pog_vector_data,
+    _parse_gml,
+    _canonical_crs,
 )
 
 PUBLIC_URL = "https://bip.example.test/pog.gml"
 ZIP_URL = "https://bip.example.test/pog.zip"
 HTML_URL = "https://bip.example.test/pog"
+
+
+def test_real_ru_legacy_srs_is_parsed_without_a_freezing_tool_rewrite():
+    content = (Path(__file__).parent / "fixtures/ru/wfs_pog_getfeature_zone.xml").read_bytes()
+    assert b"http://www.opengis.net/gml/srs/epsg.xml#2180" in content
+    document = _parse_gml(content)
+    assert document.planning_zones
+    assert document.planning_zones[0].geometry.is_valid
+    x, y, _, _ = document.planning_zones[0].geometry.bounds
+    assert 460000 < x < 480000 and 720000 < y < 750000
+
+
+@pytest.mark.parametrize("name", ["EPSG:2180", "urn:ogc:def:crs:EPSG::2180",
+    "http://www.opengis.net/gml/srs/epsg.xml#2180", "https://www.opengis.net/gml/srs/epsg.xml#2180"])
+def test_crs_identifiers_are_canonical(name):
+    assert _canonical_crs(name) == "EPSG:2180"
 
 GML = b"""<?xml version="1.0" encoding="UTF-8"?>
 <gml:FeatureCollection xmlns:gml="http://www.opengis.net/gml/3.2"

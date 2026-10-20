@@ -60,6 +60,15 @@ EXPECTED: dict[str, tuple[str, list[str], tuple[str, ...], set[str]]] = {
 ALL_NUMBERS = {number for _, numbers, _, _ in EXPECTED.values() for number in numbers}
 
 
+def test_real_pisz_null_is_never_a_zone_symbol():
+    content = (FIXTURES / "pisz_281603_4.0001.496_5.html").read_text()
+    assert "<TH>symbol</TH><TD>NULL</TD>" in content
+    result = parse_kimpzp_feature_info(content)
+    assert result.status == "available"
+    assert "NULL" not in result.zone_symbols
+    assert all("NULL" not in act.zone_symbols for act in result.acts)
+
+
 def _read(name: str) -> str:
     return (FIXTURES / name).read_text(encoding="utf-8")
 
