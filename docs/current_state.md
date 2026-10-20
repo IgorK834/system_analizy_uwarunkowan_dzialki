@@ -707,3 +707,152 @@ właściwej wersji dokumentu; dwie wersje mają komplet 99/95 stron i 1550/1885 
 Wszystkie analizy nadal `partial` z powodu lokalnego pokrycia i braków usług opisanych
 w odbiorze. Bazy testów i smoke były świeże i odseparowane; nie zmieniano zapisanych
 wyników analizy w środowisku użytkownika.
+
+
+## AU-202–204 / Task 23.2–23.4 — droga, zabudowa i pokrycie terenu (2026-10-17)
+
+Przy rozpoczęciu tej pracy droga i zabudowa miały już ścieżkę API–UI–PDF–ZIP (ADR-025 i wcześniejszy protokół
+`docs/evaluation/bdot10k-road-buildings-verification.md`). Potwierdzono to ponownymi testami. Uzupełniono brakujący
+pomiar działki 141801_4.0701.23/8 na realnym wydaniu powiatu 1418: 10 budynków do 50 m (OnGeo: 11, inna migawka),
+odległości zgodne z niezależnym odczytem geometrii w tolerancji 0,05 m. Brak pola prawnego dostępu do drogi pozostaje
+chroniony testami; UI/API/PDF zawierają zastrzeżenie. Wskaźniki sąsiednich działek są jawnie unknown.
+
+Dodano klasę `bdot_landcover`, import dwunastu klas PT, port i adapter PostGIS, obliczenia pól przecięć i udziałów
+na działce oraz w pierścieniu 200 m, pomiar lasu i orientacyjne bufory 8/12/16 m. Dwanaście klas i kompletność importu
+są w class_stats wydania; starszy import samych dróg/budynków daje no_coverage/LAND_COVER_NOT_IMPORTED.
+Wynik jest zapisany w analyses.land_cover (migracja 039 po 038), macierz jakości ma sekcję land_cover ze źródłem bdot10k.
+API, karta UI z warstwą i legendą, tabela i mapa PDF oraz warstwy ZIP używają tego samego snapshotu.
+Luki/nałożenia geometrii powodują unknown; awaria źródła unavailable; braki danych nie dają zer.
+
+Kontrakt land_cover/1.0, buildings/1.1, quality/1.3, completeness/1.2; RESULT_CONTRACT_VERSION unieważnia poprzedni cache.
+Konfiguracja cache uwzględnia włączenie sekcji, promień lasu i limit kandydatów. Kontrakt i rzeczywiste zamrożone geometrie:
+`docs/data_sources/land_cover_contracts.md`, `backend/tests/fixtures/source_contracts/bdot_land_cover/`.
+Decyzja: `docs/adr/ADR-028-pokrycie-terenu-bdot10k.md`. Dokładne wyniki odbioru i ograniczenia:
+`docs/evaluation/au202-204-acceptance.md`.
+
+Wdrożenie wymaga migracji oraz ponownego importu pełnych paczek BDOT10k przez operatora. Mini-paczki fixtures są
+wyłącznie do testów. Ta praca nie uzupełnia ani nie modyfikuje użytkowej bazy danych; weryfikacja działa na osobnym
+PostGIS. Nie tworzono commitów.
+
+Odbiór 2026-10-19: QGIS 4.2.3 niezależnie odczytał GML i potwierdził odległości/relacje dróg oraz
+budynki, lasy, udziały i bufory dla 11 działek (tolerancja 0,05 m / 0,05 m²; sumy 100% ±0,01 pp).
+Świeży live smoke po unieważnieniu cache tylko w izolowanej bazie: 30/30 HTTP 200, bez 5xx i błędów połączenia.
+Wyniki i powtarzalne polecenia są w protokole AU-202–204.
+Końcowa bramka: backend **5351 testów, 95,33% pokrycia**; frontend **683 testy, 98,98% linii**,
+lint, typecheck i build produkcyjny. Ruff i mypy bez regresji.
+
+## AU-112 / Task 22.12 — dokładny BK-602 (2026-10-17)
+
+Wykonane w drzewie roboczym. [Odbiór BK-601–603](evaluation/bk-601-603-verification.md)
+ma teraz wynik dokładny POG: **13 działek, 3 gminy** (Bielsko-Biała 7,
+Legnica 5, Sopot 1), dwa identyczne przebiegi offline. Zamrożono surowe strony
+WFS i geometrie EPSG:2180 z SHA-256. Wszystkie 30 działek pierwotnego korpusu
+odpytano; 18 pustych odpowiedzi zachowano jawnie. Osobne rozszerzenie korpusu
+zawiera działkę `226401_1.0002.2/66` z rzeczywistą odpowiedzią ULDK; pierwotne
+etykiety i geometrie pozostają bez zmian. Centroid pomija strefę w **5/13**,
+wskazuje inną niż dominująca w **1/13** (Legnica: centroid poza działką,
+pominięcie 100%). Ograniczenie „RU nieosiągalny” zdjęto. Żądania: URN bbox
+północ,wschód; krótki `srsName=EPSG:2180` dla odpowiedzi wschód,północ;
+stronicowanie po 10 i `--resume` tylko dla nieudanych odczytów.
+
+Produkcja `_canonical_crs` obsługuje legacy `gml/srs/epsg.xml#2180`; test
+parsuje niezmienioną rzeczywistą odpowiedź RU. `NULL` był już odfiltrowywany
+przez obecny adapter KIMPZP (`clean_value` zamiast usuniętej funkcji starego
+`mpzp.py`); jawny test na odpowiedzi Pisza zamyka ten punkt audytu.
+Nie zmienia się `AnalyzeResponse`, schemat bazy ani decyzja architektoniczna.
+
+## AU-113 / Task 22.13 — adresy przed importem PRG (2026-10-17)
+
+Wykonane w drzewie roboczym: **20/20** rzeczywistych zapisów adresu daje wynik
+z fallbacku UUG, w tym **6/6** z audytu. Potwierdzono też 20/20 przez endpoint
+API na bazie z pustym indeksem. Normalizacja NFC, odstępów, `ul.`/`ulica`,
+`al.`, kolejności miejscowość–ulica i ulicy–numeru–miejscowości działa przed
+żądaniem UUG. Nazwy gmin z zamrożonego PRG przywracają polskie znaki nazw
+miejscowości (także wielowyrazowych). To pomocniczy słownik nazw, nie import
+punktów adresowych; dla nieznanej nazwy są najwyżej 6 wariantów, bez
+usuwania numeru. Nie gwarantuje to obsługi wszystkich wsi w Polsce.
+
+`SearchPanel` czyta `/api/v1/search/addresses/status`; pusty indeks (także
+aktywne wydanie bez rekordów) pokazuje „Wyszukiwanie ograniczone: indeks
+adresowy niezaimportowany”. Błąd statusu nie jest utożsamiany z pustym indeksem.
+Zmiana schematu JSON UUG, brak słownika lub niefinitywne współrzędne są błędem
+dostawcy, nie sukcesem z pustą listą. Zamrożone surowe odpowiedzi z SHA-256:
+`backend/tests/fixtures/uug/au113/`. Odtwarzalna sonda:
+`backend/scripts/freeze_uug_address_cases.py`. Bez zmiany `AnalyzeResponse`
+i bez nowej migracji.
+
+## AU-201 / Task 23.1 — podstawa czterech grup BDOT10k (2026-10-17)
+
+Dotychczasowy import dróg i budynków był już wdrożony. Zachowano równolegle
+rozwijany import pokrycia terenu AU-204 (migracja 039) i uzupełniono
+**`OT_SULN_L` → `bdot_powerlines`** (migracja **040**, po 039; EPSG:2180,
+GiST, FK do wydania, walidacja kontraktu). Powiatowe wydanie obejmuje teraz
+osie jezdni, budynki, 12 klas pokrycia terenu i linie energetyczne.
+`bdot10k-import/3`, etykieta `-v3` umożliwiają uzupełnienie tego samego hash
+paczki wcześniej zaimportowanego bez PT/SULN, zachowując stare wydania.
+
+Pełne oficjalne paczki **1261, 0262, 2461** zaimportowano i powtórzono na
+osobnej bazie: 52 138 osi, 140 456 budynków, 30 050 obiektów pokrycia i 1 052
+linie. Import 23,70 / 2,39 / 6,97 s; ponowienie zwraca te same wydania
+i liczności. Pomiary rozmiarów oraz decyzje opisuje
+`docs/adr/ADR-029-bdot10k-import-czterech-warstw.md`; kontrakt dopisano do
+[road_contracts.md](data_sources/road_contracts.md). Katalog `bdot10k` pozostaje
+`contract_confirmed`, weryfikacja 17.10.2026. Mini-paczki kontraktowe trzech
+powiatów zawierają niezmienione pełne klasy SULN i niezależny pomiar długości.
+
+Kolejka z Task 22.7 obsługuje `bdot_county`; POST
+`/api/v1/coverage/bdot10k/county/{powiat}/import` i formularz na ekranie pokrycia
+zlecają import. Worker: `python -m app.modules.imports pog-sync --no-schedule`
+(kolejka bez cyklicznego importu kraju). Pokrycie pokazuje liczności czterech
+grup; brak klasy to `null`, potwierdzona pusta klasa to 0. Timeout podlega
+ponowieniu, nieznany schemat zatrzymuje publikację. Sam import linii nie
+wyprowadza napięcia w kV, stref prawnych ani nowej sekcji analizy uzbrojenia;
+to podstawa wektorowa dla dalszej analizy. Istniejące sekcje dróg, budynków
+i pokrycia terenu zapewniają ścieżkę API/UI/PDF/audyt. Weryfikacja zbiorcza
+i artefakty tej sesji są w `docs/evaluation/results/au112-113/`.
+
+### Ponowny odbiór AU-112, AU-113 i AU-201 — 2026-10-19
+
+[Notatka odbioru](evaluation/au112-113-au201-verification.md) zawiera dowody,
+manifesty testowanego kodu i instrukcje odtworzenia. Świeże wyszukiwanie przez
+API przy pustym indeksie: **20/20**, w tym **6/6** zapytań audytu. Live smoke
+30 działek z `--force-refresh`: **30/30 HTTP 200, 0 × 5xx, 0 braków odpowiedzi**.
+Drogi, zabudowa i pokrycie są `available` na 16 działkach w trzech
+zaimportowanych powiatach; pozostałe 14 ma `no_coverage`. Analizy pozostają
+`partial` z jawnymi brakami innych źródeł i nieustalonymi pomiarami.
+
+Powtórzono podpisane pobranie PDF i ZIP z API; manifest ZIP zgodny **11/11**,
+kontrola renderu 38 stron PDF bez problemów z układem. Dowody nie zawierają
+tokenów analizy ani podpisanych URL. Skan sekretów: **0 trafień**.
+Weryfikacja korzystała z odizolowanej bazy i kopii repozytorium bez `.env`,
+montowanej tylko do odczytu. Zachowano zmiany pokrycia terenu z drugiego czatu.
+
+Pełny backend: **5351 passed**, pokrycie **95,33%**; po sześciu ostatnich zmianach
+pokrycia terenu dodatkowo **81 passed** na końcowym snapshotcie. Frontend ponownie
+w całości: **683 passed**, 97,99% instrukcji / 98,98% linii, lint, typy i build
+zaliczone. Ruff bez zgłoszeń, mypy bez nowych zgłoszeń (17 w bazie / 17 bieżących).
+Końcowy smoke po tych zmianach ponownie **30/30 HTTP 200, 0 × 5xx**.
+Pełne logi i oba manifesty hashy wskazuje notatka odbioru. Zmiany pozostają
+w drzewie roboczym; nie tworzono commitów ani nie wdrażano migracji na bazie użytkownika.
+
+## Lokalne wdrożenie BDOT10k i AU-202–204 — 2026-10-19
+
+Na późniejsze polecenie użytkownika zaktualizowano **główną lokalną bazę `dzialki`**:
+037 → 038 → 039 → **040_bdot_powerlines**, po wykonaniu prywatnej kopii `pg_dump`.
+Wcześniejsze dziewięć analiz zachowano bez zmian (identyczny skrót uporządkowanego JSON rekordów).
+Siedem pełnych oficjalnych paczek (0221, 0262, 1261, 1418, 1465, 2461, 2816) daje
+181 761 osi jezdni, 437 789 budynków, 115 968 obiektów pokrycia i 5 334 linie energetyczne.
+Wszystkie 740 852 geometrie są poprawne, niepuste i w EPSG:2180. Ponowny import 1418 nie tworzy duplikatów.
+
+Lokalny korpus: **30/30 HTTP 200, 0 × 5xx**; drogi, budynki i udziały pokrycia `available` na 30 działkach.
+Pomiar lasu: 27 `available`, 3 `no_coverage/null` z powodu wyjścia obszaru wyszukiwania poza pokrycie powiatowe;
+macierz jakości tych trzech sekcji jest `partial`. Pozostałe braki źródeł nadal utrzymują nagłówkowy status analiz
+`partial`. Nie jest to potwierdzenie kompletności MPZP/POG/ISOK ani pokrycia kraju.
+
+Po restarcie API/UI, snapshot/cache, PDF i ZIP zweryfikowano ponownie dla Góry Kalwarii oraz częściowego
+zasięgu lasu w Bielsku-Białej. Poprawiono mylący opis `no_coverage` w PDF i dodano regresję na zamrożonej
+rzeczywistej odpowiedzi. Aplikacja: <http://localhost:13000/>, API: <http://localhost:8000>;
+lokalny plik override ustawia port i CORS, nie trafia do Git. Kontenery pozostawiono uruchomione.
+[Protokół, polecenia i artefakty](evaluation/au202-204-local-deployment-2026-10-19.md).
+Wszystkie zmiany nadal bez commitów. Powyższe wcześniejsze wpisy o izolowanych bazach opisują historyczny odbiór,
+przed tym poleceniem wdrożenia.

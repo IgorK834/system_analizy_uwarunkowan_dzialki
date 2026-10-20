@@ -85,12 +85,19 @@ Pokrycie: `GET /api/v1/coverage/pog` i panel „Pokrycie importu planów ogólny
 <a id="import-bdot10k"></a>
 **1b. Import BDOT10k** (jeden powiat; pobiera paczkę ZIP z `opendata.geoportal.gov.pl`, od ok. 5 MB do ok. 90 MB; `--dry-run` czyta i waliduje bez publikacji):
 
+Import obejmuje osie jezdni, budynki, 12 klas pokrycia terenu i linie
+elektroenergetyczne (`OT_SULN_L`), zapisane w EPSG:2180 i powiązane z wydaniem
+powiatu. Liczności wszystkich czterech grup widać w ekranie „Pokrycie” oraz
+`GET /api/v1/coverage/bdot10k`; brak zaimportowanej klasy daje `null`, nie 0.
+Ekran pozwala też zlecić import powiatu. Samą kolejkę (bez krajowego
+odświeżania POG) obsłuży `python -m app.modules.imports pog-sync --no-schedule`.
+
 ```bash
 docker compose exec backend python -m app.modules.imports bdot10k --powiat 2461
 ```
 
 `--powiat` to czterocyfrowy TERYT powiatu (tu Bielsko-Biała; pierwsze dwie cyfry wskazują województwo w adresie paczki). Paczkę można podać z dysku (`--package sciezka/2461_GML.zip`) albo z adresu `https`
-z hosta dozwolonego w katalogu źródeł. Polecenie zapisuje oryginał z SHA-256, importuje osie jezdni (`OT_SKJZ_L`), obrysy budynków (`OT_BUBD_A`) i granicę powiatu (`OT_ADJA_A`), a wynik drukuje jako jedną linię JSON;
+z hosta dozwolonego w katalogu źródeł. Polecenie zapisuje oryginał z SHA-256, importuje osie jezdni (`OT_SKJZ_L`), obrysy budynków (`OT_BUBD_A`), pokrycie (`OT_PT*_A`), linie (`OT_SULN_L`) i granicę powiatu (`OT_ADJA_A`), a wynik drukuje jako jedną linię JSON;
 ten sam SHA-256 daje to samo wydanie (import idempotentny), a nowa paczka powiatu wygasza tylko jego poprzednie wydanie. Czas importu w kontenerze deweloperskim: 2–25 s zależnie od powiatu. Pokrycie sprawdzisz:
 `curl 'http://localhost:8000/api/v1/coverage/bdot10k?lon=19.05&lat=49.82'`. Kontrakt, liczności i weryfikacja: [`road_contracts.md`](docs/data_sources/road_contracts.md), [`building_contracts.md`](docs/data_sources/building_contracts.md).
 
