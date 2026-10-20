@@ -178,6 +178,14 @@ def test_status_describes_active_release(indexed_provider) -> None:
     assert status.scopes == ()
 
 
+def test_empty_active_release_is_not_ready(indexed_provider) -> None:
+    with indexed_provider._session_factory.begin() as db:
+        db.execute(text("DELETE FROM address_search_entries"))
+    status = indexed_provider._status_sync()
+    assert status.entry_count == 0 and status.ready is False
+    assert status.release_id is not None
+
+
 def test_parent_suggestions_are_rebuilt_with_aggregated_geometry(
     indexed_provider,
 ) -> None:
