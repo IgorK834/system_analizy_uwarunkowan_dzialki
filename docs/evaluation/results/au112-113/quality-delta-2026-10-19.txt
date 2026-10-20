@@ -1,0 +1,4 @@
+ Container au112201-backend-test-run-37db899b86ee Creating 
+ Container au112201-backend-test-run-37db899b86ee Created 
+All checks passed!
+mypy: brak nowych zgłoszeń (17 znanych w bazie, 17 bieżących).

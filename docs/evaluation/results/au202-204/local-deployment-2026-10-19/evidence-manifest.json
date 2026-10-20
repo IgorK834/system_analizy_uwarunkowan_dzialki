@@ -1,0 +1,52 @@
+{
+  "files": {
+    "coverage.json": {
+      "sha256": "6c70c967ac7265919a100426bc7d0fce1ebfc5525b4cc53a4c244308033a26a6",
+      "bytes": 4123
+    },
+    "exports-summary.json": {
+      "sha256": "4d7bb7939ec8928b7ff66b952725d7967d77100a6a399e5f36762969412785ad",
+      "bytes": 1482
+    },
+    "final-state.json": {
+      "sha256": "dae62bc7df35dfe0fee67190b2f8c42ef8b123c8fdb65014c7633b04ecf039c5",
+      "bytes": 227
+    },
+    "geometry-integrity.json": {
+      "sha256": "ff54ec9b40d6a84dcecf30af744bc5a2ccdff1bb5dc823f0408f3d7d80eed6e2",
+      "bytes": 365
+    },
+    "imports.json": {
+      "sha256": "05b4f83e7f69ea530b6c0e8d91616ec1bc9fa2466c7e022c9cb146ea82e2415d",
+      "bytes": 6644
+    },
+    "label-regression.log": {
+      "sha256": "403443127e9528643295110969206f4e43d69f160668a45614c11f10a00e3bad",
+      "bytes": 117
+    },
+    "live-smoke.json": {
+      "sha256": "287f4dcabc10d4a64f0f8caec4ef216eae60ab2b89db70602f7a16b1fd71a0c5",
+      "bytes": 58609
+    },
+    "live-smoke.md": {
+      "sha256": "0790893a72762b0a4d825d679bce04672a37da5e36e77844f0b6dd08d6fa7693",
+      "bytes": 8281
+    },
+    "migrations.log": {
+      "sha256": "e0647938b4d4cd9a5d29ccd6c44c84566f7413f7e55ad9c907e0a8ada28f4c16",
+      "bytes": 768
+    },
+    "reimport-1418.json": {
+      "sha256": "c054112df513ac6492c0292454c7f02a0b6063895a430ba505b7165277da5800",
+      "bytes": 644
+    },
+    "releases.json": {
+      "sha256": "b318abcd694fa51b3933a08642ee5e702a4721b7fe1512201e8940c7d95511ff",
+      "bytes": 9059
+    },
+    "verification.json": {
+      "sha256": "3548466ec1dddbe07ea22e64df15a610801ffe0a436269ec1994cf41d9a66e7f",
+      "bytes": 5782
+    }
+  }
+}

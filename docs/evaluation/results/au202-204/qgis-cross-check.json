@@ -1,0 +1,201 @@
+{
+  "tool": "PyQGIS/OGR",
+  "qgis_version": "4.2.3-Belém do Pará",
+  "crs": "EPSG:2180",
+  "passed": true,
+  "distance_tolerance_m": 0.05,
+  "area_tolerance_sqm": 0.05,
+  "share_tolerance_pp": 0.01,
+  "cases": [
+    {
+      "parcel_identifier": "real-005-126105-9-0001-580-4",
+      "county": "1261",
+      "road_distance_m": 0.0,
+      "road_relation": "intersects",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 2042.6336469404298,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 68,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 2.693468559300527e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999992919,
+        "surroundings": 100.00000000004256
+      },
+      "fixture_sha256": "f09c79a68db974c77a24a290e318cb7295d8009fe285d79661eec6bc6b0d5dfe"
+    },
+    {
+      "parcel_identifier": "real-006-126105-9-0001-49-2",
+      "county": "1261",
+      "road_distance_m": 30.20633045296867,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 2338.8946784140344,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 30,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 4.895264282822609e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999989456,
+        "surroundings": 100.0000000000135
+      },
+      "fixture_sha256": "f09c79a68db974c77a24a290e318cb7295d8009fe285d79661eec6bc6b0d5dfe"
+    },
+    {
+      "parcel_identifier": "real-007-126105-9-0001-540-15",
+      "county": "1261",
+      "road_distance_m": 3.732061199424634,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 1728.0584077744995,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 70,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 6.507616490125656e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999983892,
+        "surroundings": 100.00000000001043
+      },
+      "fixture_sha256": "f09c79a68db974c77a24a290e318cb7295d8009fe285d79661eec6bc6b0d5dfe"
+    },
+    {
+      "parcel_identifier": "real-008-126105-9-0119-181-10",
+      "county": "1261",
+      "road_distance_m": 8.650496678280579,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 2234.749225297563,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 17,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 1.7913407646119595e-08,
+      "share_sums_pct": {
+        "parcel": 100.00000000128719,
+        "surroundings": 100.00000000000551
+      },
+      "fixture_sha256": "f09c79a68db974c77a24a290e318cb7295d8009fe285d79661eec6bc6b0d5dfe"
+    },
+    {
+      "parcel_identifier": "real-017-281603-4-0001-496-5",
+      "county": "2816",
+      "road_distance_m": 0.0,
+      "road_relation": "intersects",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 177.73734133581797,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 98,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 6.327172741293907e-08,
+      "share_sums_pct": {
+        "parcel": 100.00000000036333,
+        "surroundings": 99.99991739913081
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "real-018-281603-4-0001-358",
+      "county": "2816",
+      "road_distance_m": 5.484024037051961,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 56.16279486643526,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 24,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 2.854721969924867e-08,
+      "share_sums_pct": {
+        "parcel": 100.0,
+        "surroundings": 100.00008818182707
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "real-019-281603-4-0001-740",
+      "county": "2816",
+      "road_distance_m": 6.916325540530481,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 407.2048724979536,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 18,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 9.083305485546589e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999903095,
+        "surroundings": 100.00000000010357
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "real-020-281603-4-0002-130",
+      "county": "2816",
+      "road_distance_m": 0.0,
+      "road_relation": "intersects",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 143.5560944267309,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 6,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 2.079468686133623e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999990612,
+        "surroundings": 99.99999401362413
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "real-025-281603-4-0001-431-66",
+      "county": "2816",
+      "road_distance_m": 21.425514936701745,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 0.0,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 6,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 6.42885424895212e-08,
+      "share_sums_pct": {
+        "parcel": 99.99999999994293,
+        "surroundings": 100.00010517333233
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "real-026-281604-5-0011-107",
+      "county": "2816",
+      "road_distance_m": 0.0,
+      "road_relation": "intersects",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 0.0,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 0,
+      "building_max_delta_m": 0,
+      "area_max_delta_sqm": 1.3969838619232178e-07,
+      "share_sums_pct": {
+        "parcel": 100.00000000001121,
+        "surroundings": 100.00000000001279
+      },
+      "fixture_sha256": "db362696ffa21df9dbce33dcb12edba9cc9e5395a069d9565fa9742782bbf7e5"
+    },
+    {
+      "parcel_identifier": "141801_4.0701.23/8",
+      "county": "1418",
+      "road_distance_m": 3.3843489743869237,
+      "road_relation": "disjoint",
+      "road_delta_m": 0.0,
+      "forest_distance_m": 12.72911471996106,
+      "forest_delta_m": 0.0,
+      "buildings_50m": 10,
+      "building_max_delta_m": 0.0,
+      "area_max_delta_sqm": 2.8441718313843012e-08,
+      "share_sums_pct": {
+        "parcel": 100.00000000046604,
+        "surroundings": 99.99999999999064
+      },
+      "fixture_sha256": "5b9c01ec3f376fd09b22edc7680021bf9ea5d7d661d66e4cc14420e331fa069a"
+    }
+  ],
+  "container_image": "qgis/qgis@sha256:56c69c92e316aa679e5c30ebf7fcfd89fd1124ec728106ec0cced1c71a28d877",
+  "platform": "linux/amd64",
+  "verified_at": "2026-10-19"
+}

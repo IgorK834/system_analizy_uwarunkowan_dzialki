@@ -1,0 +1,340 @@
+{
+  "verified_at": "2026-10-19",
+  "parcel_identifier": "141801_4.0701.23/8",
+  "http_status": 200,
+  "measurement_crs": "EPSG:2180",
+  "analysis_id": 41,
+  "road_context": {
+    "status": "available",
+    "nearest": {
+      "road_id": "330474B1-3086-2EA6-E053-CA2BA8C08578",
+      "distance_m": 3.38,
+      "relation": "disjoint",
+      "geometry_kind": "carriageway_axis",
+      "category": "wewnętrzna",
+      "road_class": "droga wewnętrzna",
+      "road_number": null,
+      "street_name": null,
+      "surface_material": "grunt naturalny",
+      "surface_width_m": null,
+      "position": "na powierzchni gruntu",
+      "feature_version": "2024-12-19T00:00:00+00:00",
+      "road_geojson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "MultiLineString",
+          "coordinates": [
+            [
+              [
+                21.214534426280302,
+                51.98908328946727
+              ],
+              [
+                21.21486218234327,
+                51.989132084996996
+              ],
+              [
+                21.215348413651256,
+                51.98920353421994
+              ],
+              [
+                21.215535015191602,
+                51.9892322258689
+              ],
+              [
+                21.216094283315382,
+                51.989319208678246
+              ],
+              [
+                21.216580654226767,
+                51.98938750185437
+              ]
+            ]
+          ]
+        },
+        "properties": {
+          "layer": "road_context",
+          "road_id": "330474B1-3086-2EA6-E053-CA2BA8C08578",
+          "distance_m": 3.38,
+          "category": "wewnętrzna",
+          "road_class": "droga wewnętrzna"
+        }
+      },
+      "link_geojson": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              21.216526854226533,
+              51.98934874157537
+            ],
+            [
+              21.216515923858314,
+              51.98937841294739
+            ]
+          ]
+        },
+        "properties": {
+          "layer": "road_context_link",
+          "road_id": "330474B1-3086-2EA6-E053-CA2BA8C08578",
+          "distance_m": 3.38,
+          "category": "wewnętrzna",
+          "road_class": "droga wewnętrzna"
+        }
+      }
+    }
+  },
+  "neighbour_buildings": {
+    "status": "available",
+    "listed_radius_m": 50.0,
+    "listed_count": 10,
+    "buffers": [
+      {
+        "radius_m": 50.0,
+        "ring_area_sqm": 14733.7883,
+        "count": 10,
+        "straddling_parcel_count": 0,
+        "footprint_area_in_ring_sqm": 1137.8367,
+        "union_area_in_ring_sqm": 1137.8367,
+        "built_share_pct": 7.7226,
+        "min_distance_m": 14.53,
+        "footprint_min_sqm": 33.1243,
+        "footprint_median_sqm": 90.4205,
+        "footprint_max_sqm": 418.941
+      },
+      {
+        "radius_m": 100.0,
+        "ring_area_sqm": 45150.3126,
+        "count": 19,
+        "straddling_parcel_count": 0,
+        "footprint_area_in_ring_sqm": 2035.7323,
+        "union_area_in_ring_sqm": 2035.7323,
+        "built_share_pct": 4.5088,
+        "min_distance_m": 14.53,
+        "footprint_min_sqm": 33.1243,
+        "footprint_median_sqm": 84.7614,
+        "footprint_max_sqm": 426.1562
+      },
+      {
+        "radius_m": 200.0,
+        "ring_area_sqm": 153031.5693,
+        "count": 52,
+        "straddling_parcel_count": 0,
+        "footprint_area_in_ring_sqm": 8720.3095,
+        "union_area_in_ring_sqm": 8720.3095,
+        "built_share_pct": 5.6984,
+        "min_distance_m": 14.53,
+        "footprint_min_sqm": 33.1243,
+        "footprint_median_sqm": 109.8706,
+        "footprint_max_sqm": 951.4891
+      }
+    ]
+  },
+  "land_cover": {
+    "status": "available",
+    "parcel": {
+      "area_sqm": 1199.0106690403386,
+      "classified_share_pct": 100.0,
+      "classes": [
+        {
+          "class_code": "OT_PTUT_A",
+          "label": "Uprawy trwałe",
+          "area_sqm": 1199.0107,
+          "share_pct": 100.0
+        }
+      ]
+    },
+    "surroundings": {
+      "area_sqm": 153031.56927042344,
+      "classified_share_pct": 100.0000000000013,
+      "classes": [
+        {
+          "class_code": "OT_PTLZ_A",
+          "label": "Tereny leśne i zadrzewione",
+          "area_sqm": 60111.8921,
+          "share_pct": 39.28071336305657
+        },
+        {
+          "class_code": "OT_PTRK_A",
+          "label": "Roślinność krzewiasta",
+          "area_sqm": 258.4075,
+          "share_pct": 0.1688589498390785
+        },
+        {
+          "class_code": "OT_PTTR_A",
+          "label": "Roślinność trawiasta i uprawy rolne",
+          "area_sqm": 27741.2319,
+          "share_pct": 18.127783709595647
+        },
+        {
+          "class_code": "OT_PTUT_A",
+          "label": "Uprawy trwałe",
+          "area_sqm": 8650.8704,
+          "share_pct": 5.65299726860558
+        },
+        {
+          "class_code": "OT_PTWP_A",
+          "label": "Wody powierzchniowe",
+          "area_sqm": 297.4354,
+          "share_pct": 0.19436213338799008
+        },
+        {
+          "class_code": "OT_PTZB_A",
+          "label": "Zabudowa",
+          "area_sqm": 55971.732,
+          "share_pct": 36.57528457551643
+        }
+      ]
+    },
+    "release": {
+      "data_release_id": 3,
+      "version_label": "bdot10k-1418-b3ae64b39cbb-v3",
+      "teryt_powiat": "1418",
+      "data_as_of": "2024-12-19",
+      "package_sha256": "b3ae64b39cbbbfa865de6d6de525719832be0ab435543cbdc0d3d5d7f886b226",
+      "imported_at": "2026-10-17T21:20:59.991306Z"
+    },
+    "interpretation_note": "Udziały to pola przecięć klas BDOT10k z działką i pierścieniem buffer(działka, 200 m) − działka w EPSG:2180. Nakładające się obiekty jednej klasy są scalane. Brak pokrycia nie jest zerowym udziałem. Las oznacza OT_PTLZ_A z rodzajem las; zagajniki i zadrzewienia nie są lasem w tym obliczeniu. Bufory 8/12/16 m są orientacyjnym przybliżeniem geometrycznym, bez interpretacji przepisów."
+  },
+  "forest": {
+    "status": "available",
+    "distance_m": 12.73,
+    "distance_reference": "parcel_polygon_to_forest_polygon",
+    "search_radius_m": 5000.0
+  },
+  "forest_buffers": [
+    {
+      "radius_m": 8.0,
+      "overlap_with_parcel_sqm": 0.0
+    },
+    {
+      "radius_m": 12.0,
+      "overlap_with_parcel_sqm": 0.0
+    },
+    {
+      "radius_m": 16.0,
+      "overlap_with_parcel_sqm": 23.6701
+    }
+  ],
+  "section_quality": [
+    {
+      "section": "transport",
+      "report_section": "infrastructure",
+      "status": "available",
+      "source_id": "bdot10k",
+      "source_name": "BDOT10k",
+      "fetched_at": "2026-10-17T21:20:59.991306Z",
+      "data_release_id": 3,
+      "source_version": "bdot10k-1418-b3ae64b39cbb-v3",
+      "data_as_of": "2024-12-19",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
+      "manual_review_required": false,
+      "freshness": {
+        "date_basis": "fetched_at",
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-10-19T10:23:23.470250Z",
+        "age_seconds": 133343,
+        "max_age_days": 365,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+5803c2341859",
+      "reason_codes": []
+    },
+    {
+      "section": "land_cover",
+      "report_section": "environment",
+      "status": "available",
+      "source_id": "bdot10k",
+      "source_name": "BDOT10k",
+      "fetched_at": "2026-10-17T21:20:59.991306Z",
+      "data_release_id": 3,
+      "source_version": "bdot10k-1418-b3ae64b39cbb-v3",
+      "data_as_of": "2024-12-19",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
+      "manual_review_required": false,
+      "freshness": {
+        "date_basis": "fetched_at",
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-10-19T10:23:23.470250Z",
+        "age_seconds": 133343,
+        "max_age_days": 365,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+5803c2341859",
+      "reason_codes": []
+    },
+    {
+      "section": "buildings",
+      "report_section": "infrastructure",
+      "status": "available",
+      "source_id": "bdot10k",
+      "source_name": "BDOT10k",
+      "fetched_at": "2026-10-17T21:20:59.991306Z",
+      "data_release_id": 3,
+      "source_version": "bdot10k-1418-b3ae64b39cbb-v3",
+      "data_as_of": "2024-12-19",
+      "data_as_of_basis": "BDOT10k: data wersji obiektów w paczce",
+      "data_as_of_reason": null,
+      "manual_review_required": false,
+      "freshness": {
+        "date_basis": "fetched_at",
+        "state": "fresh",
+        "reason_code": null,
+        "reference_at": "2026-10-19T10:23:23.470250Z",
+        "age_seconds": 133343,
+        "max_age_days": 365,
+        "basis": "project_decision"
+      },
+      "policy_version": "quality-policy/1+5803c2341859",
+      "reason_codes": []
+    }
+  ],
+  "pdf": {
+    "pages": 33,
+    "reviewed_pages": [
+      10,
+      11,
+      12,
+      15,
+      16,
+      17
+    ],
+    "sha256": "64bc9654ec44a319221ebc110a54914128bf357b976c625d172d52923cd459d8"
+  },
+  "audit": {
+    "manifest_check": "OK",
+    "files": 12,
+    "sha256": "af86810f892178e4e1a9b3af94f0e6b848698a3d49ea3d2d0f5c97de409e4297"
+  },
+  "ui": {
+    "production_build": true,
+    "submit_button": "passed",
+    "land_cover_toggle": [
+      false,
+      true
+    ],
+    "real_values": "passed"
+  },
+  "notes": [
+    "Pomiary porównano niezależnie przez odczyt GML/Shapely oraz QGIS 4.2.3 (11 działek).",
+    "10 budynków w BDOT10k; 11 OnGeo jest porównaniem między migawkami."
+  ],
+  "no_coverage_regression": {
+    "parcel_identifier": "146510_8.0502.1/3",
+    "http_status": 200,
+    "land_cover_status": "no_coverage",
+    "forest_status": "no_coverage",
+    "forest_reason_code": "OUTSIDE_COVERAGE",
+    "forest_distance_m": null,
+    "ui_label": "brak pokrycia danymi BDOT10k",
+    "pdf_label_verified": true,
+    "pdf_sha256": "9de728b2dbf6933dead798a927b84654006906bb9efeedd4b2d869870ba3cf72",
+    "audit_manifest_check": "OK",
+    "audit_files": 7
+  }
+}

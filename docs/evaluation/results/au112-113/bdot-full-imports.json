@@ -1,0 +1,389 @@
+[
+  {
+    "powiat": "1261",
+    "first": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "1261",
+        "package": "1261_GML.zip",
+        "package_sha256": "1355c5a51538938c16456421969d4fb61dc739c4b85b499dde99a326e03c93ab",
+        "package_bytes": 35198806,
+        "land_cover_imported": 22731,
+        "powerlines_imported": 607,
+        "powerlines_complete": 1,
+        "roads_read": 33585,
+        "roads_imported": 33585,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 90563,
+        "buildings_imported": 90563,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-27",
+        "created": 1,
+        "activated": 1
+      }
+    },
+    "repeat": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "1261",
+        "package": "1261_GML.zip",
+        "package_sha256": "1355c5a51538938c16456421969d4fb61dc739c4b85b499dde99a326e03c93ab",
+        "package_bytes": 35198806,
+        "land_cover_imported": 22731,
+        "powerlines_imported": 607,
+        "powerlines_complete": 1,
+        "roads_read": 33585,
+        "roads_imported": 33585,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 90563,
+        "buildings_imported": 90563,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-27",
+        "created": 0,
+        "activated": 0
+      }
+    },
+    "seconds": 23.7,
+    "repeat_seconds": 9.51,
+    "release": {
+      "class_stats": {
+        "roads": {
+          "read": 33585,
+          "imported": 33585,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "w budowie": 21,
+            "eksploatowany": 33564
+          },
+          "latest_version": "2026-05-27T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "buildings": {
+          "read": 90563,
+          "imported": 90563,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "nieczynny": 255,
+            "w budowie": 1155,
+            "zniszczony": 155,
+            "eksploatowany": 88998
+          },
+          "latest_version": "2026-05-18T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "boundaries": {
+          "read": 8,
+          "used": 1
+        },
+        "land_cover": {
+          "read": 22731,
+          "layers": [
+            "OT_PTGN_A",
+            "OT_PTKM_A",
+            "OT_PTLZ_A",
+            "OT_PTNZ_A",
+            "OT_PTPL_A",
+            "OT_PTRK_A",
+            "OT_PTSO_A",
+            "OT_PTTR_A",
+            "OT_PTUT_A",
+            "OT_PTWP_A",
+            "OT_PTWZ_A",
+            "OT_PTZB_A"
+          ],
+          "complete": true,
+          "imported": 22731,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {},
+          "latest_version": "2026-05-27T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "powerlines": {
+          "read": 607,
+          "complete": true,
+          "imported": 607,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "eksploatowany": 607
+          },
+          "latest_version": "2026-01-22T00:00:00+00:00",
+          "rejected_total": 0
+        }
+      },
+      "data_as_of": "2026-05-27",
+      "version_label": "bdot10k-1261-1355c5a51538-v3"
+    },
+    "cumulative_table_bytes": {
+      "bdot_roads": 16760832,
+      "bdot_buildings": 52772864,
+      "bdot_landcover": 17121280,
+      "bdot_powerlines": 360448
+    }
+  },
+  {
+    "powiat": "0262",
+    "first": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "0262",
+        "package": "0262_GML.zip",
+        "package_sha256": "80f974d6c258349f178f4ec5a1da61a6bb7ab096242afc884f5f56417c92c8c4",
+        "package_bytes": 5383751,
+        "land_cover_imported": 2256,
+        "powerlines_imported": 154,
+        "powerlines_complete": 1,
+        "roads_read": 5230,
+        "roads_imported": 5230,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 12302,
+        "buildings_imported": 12302,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-18",
+        "created": 1,
+        "activated": 1
+      }
+    },
+    "repeat": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "0262",
+        "package": "0262_GML.zip",
+        "package_sha256": "80f974d6c258349f178f4ec5a1da61a6bb7ab096242afc884f5f56417c92c8c4",
+        "package_bytes": 5383751,
+        "land_cover_imported": 2256,
+        "powerlines_imported": 154,
+        "powerlines_complete": 1,
+        "roads_read": 5230,
+        "roads_imported": 5230,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 12302,
+        "buildings_imported": 12302,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-18",
+        "created": 0,
+        "activated": 0
+      }
+    },
+    "seconds": 2.39,
+    "repeat_seconds": 1.22,
+    "release": {
+      "class_stats": {
+        "roads": {
+          "read": 5230,
+          "imported": 5230,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "w budowie": 13,
+            "eksploatowany": 5217
+          },
+          "latest_version": "2026-05-07T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "buildings": {
+          "read": 12302,
+          "imported": 12302,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "nieczynny": 71,
+            "w budowie": 104,
+            "zniszczony": 46,
+            "eksploatowany": 12081
+          },
+          "latest_version": "2026-05-18T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "boundaries": {
+          "read": 4,
+          "used": 1
+        },
+        "land_cover": {
+          "read": 2256,
+          "layers": [
+            "OT_PTGN_A",
+            "OT_PTKM_A",
+            "OT_PTLZ_A",
+            "OT_PTNZ_A",
+            "OT_PTPL_A",
+            "OT_PTRK_A",
+            "OT_PTSO_A",
+            "OT_PTTR_A",
+            "OT_PTUT_A",
+            "OT_PTWP_A",
+            "OT_PTWZ_A",
+            "OT_PTZB_A"
+          ],
+          "complete": true,
+          "imported": 2256,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {},
+          "latest_version": "2026-05-07T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "powerlines": {
+          "read": 154,
+          "complete": true,
+          "imported": 154,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "eksploatowany": 154
+          },
+          "latest_version": "2025-05-13T00:00:00+00:00",
+          "rejected_total": 0
+        }
+      },
+      "data_as_of": "2026-05-18",
+      "version_label": "bdot10k-0262-80f974d6c258-v3"
+    },
+    "cumulative_table_bytes": {
+      "bdot_roads": 19292160,
+      "bdot_buildings": 59711488,
+      "bdot_landcover": 19087360,
+      "bdot_powerlines": 425984
+    }
+  },
+  {
+    "powiat": "2461",
+    "first": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "2461",
+        "package": "2461_GML.zip",
+        "package_sha256": "560f259cbc360ffa51b6442684bdf45a7e50a66db0df35329196a527ffadadad",
+        "package_bytes": 19169873,
+        "land_cover_imported": 5063,
+        "powerlines_imported": 291,
+        "powerlines_complete": 1,
+        "roads_read": 13323,
+        "roads_imported": 13323,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 37591,
+        "buildings_imported": 37591,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-06-03",
+        "created": 1,
+        "activated": 1
+      }
+    },
+    "repeat": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "2461",
+        "package": "2461_GML.zip",
+        "package_sha256": "560f259cbc360ffa51b6442684bdf45a7e50a66db0df35329196a527ffadadad",
+        "package_bytes": 19169873,
+        "land_cover_imported": 5063,
+        "powerlines_imported": 291,
+        "powerlines_complete": 1,
+        "roads_read": 13323,
+        "roads_imported": 13323,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 37591,
+        "buildings_imported": 37591,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-06-03",
+        "created": 0,
+        "activated": 0
+      }
+    },
+    "seconds": 6.97,
+    "repeat_seconds": 3.53,
+    "release": {
+      "class_stats": {
+        "roads": {
+          "read": 13323,
+          "imported": 13323,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "nieczynny": 1,
+            "eksploatowany": 13322
+          },
+          "latest_version": "2026-05-05T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "buildings": {
+          "read": 37591,
+          "imported": 37591,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "nieczynny": 95,
+            "w budowie": 187,
+            "zniszczony": 21,
+            "eksploatowany": 37288
+          },
+          "latest_version": "2026-06-03T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "boundaries": {
+          "read": 4,
+          "used": 1
+        },
+        "land_cover": {
+          "read": 5063,
+          "layers": [
+            "OT_PTGN_A",
+            "OT_PTKM_A",
+            "OT_PTLZ_A",
+            "OT_PTNZ_A",
+            "OT_PTPL_A",
+            "OT_PTRK_A",
+            "OT_PTSO_A",
+            "OT_PTTR_A",
+            "OT_PTUT_A",
+            "OT_PTWP_A",
+            "OT_PTWZ_A",
+            "OT_PTZB_A"
+          ],
+          "complete": true,
+          "imported": 5063,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {},
+          "latest_version": "2026-05-08T00:00:00+00:00",
+          "rejected_total": 0
+        },
+        "powerlines": {
+          "read": 291,
+          "complete": true,
+          "imported": 291,
+          "rejected": {},
+          "repaired": 0,
+          "existence": {
+            "eksploatowany": 291
+          },
+          "latest_version": "2024-08-31T00:00:00+00:00",
+          "rejected_total": 0
+        }
+      },
+      "data_as_of": "2026-06-03",
+      "version_label": "bdot10k-2461-560f259cbc36-v3"
+    },
+    "cumulative_table_bytes": {
+      "bdot_roads": 25837568,
+      "bdot_buildings": 81223680,
+      "bdot_landcover": 23437312,
+      "bdot_powerlines": 557056
+    }
+  }
+]

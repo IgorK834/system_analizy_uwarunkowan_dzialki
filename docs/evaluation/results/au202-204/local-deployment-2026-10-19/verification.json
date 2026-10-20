@@ -1,0 +1,197 @@
+{
+  "verified_at": "2026-10-19T16:21:29.096871+00:00",
+  "base_head": "fffdafe7e03464ffc39506054955307bce836db5",
+  "commits_created": false,
+  "database": "canonical local Compose dzialki database",
+  "backup": {
+    "path": "/tmp/au202-204/local-deployment/before-migrations.dump",
+    "bytes": 8599723,
+    "sha256": "da73fa70248487f92d169223d5a0e376739a96f90acb6883bc42cd027d1dbadc",
+    "mode": "0600",
+    "pg_restore_list": "passed"
+  },
+  "final_state": {
+    "checked_at": "2026-10-19T16:21:28.970553+00:00",
+    "alembic_head": "040_bdot_powerlines",
+    "preserved_existing_analyses": {
+      "count": 9,
+      "rows_md5": "1f9baead1736e4e14257c19fe68161fe"
+    },
+    "active_releases": 7
+  },
+  "geometry": [
+    {
+      "layer": "buildings",
+      "objects": 437789,
+      "min_srid": 2180,
+      "max_srid": 2180,
+      "invalid_objects": 0
+    },
+    {
+      "layer": "land_cover",
+      "objects": 115968,
+      "min_srid": 2180,
+      "max_srid": 2180,
+      "invalid_objects": 0
+    },
+    {
+      "layer": "powerlines",
+      "objects": 5334,
+      "min_srid": 2180,
+      "max_srid": 2180,
+      "invalid_objects": 0
+    },
+    {
+      "layer": "roads",
+      "objects": 181761,
+      "min_srid": 2180,
+      "max_srid": 2180,
+      "invalid_objects": 0
+    }
+  ],
+  "smoke": {
+    "analysis_status_histogram": {
+      "partial": 30
+    },
+    "buildings_status_histogram": {
+      "available": 30
+    },
+    "cases": 30,
+    "client_errors": 0,
+    "complete": 0,
+    "completeness_checked_histogram": {
+      "6 z 11": 14,
+      "7 z 11": 11,
+      "8 z 11": 3,
+      "9 z 11": 2
+    },
+    "completeness_missing_histogram": {
+      "flood": 19,
+      "land_cover": 3,
+      "mpzp": 27,
+      "mpzp_pog_relation": 30,
+      "nature": 2,
+      "pog": 23,
+      "pog_overlays": 23
+    },
+    "error_code_histogram": {},
+    "five_xx": 0,
+    "http_status_histogram": {
+      "200": 30
+    },
+    "latency_ms": {
+      "count": 30,
+      "max": 48531.4,
+      "p50": 6214.450000000001,
+      "p95": 38506.744999999944
+    },
+    "mpzp": {
+      "cases_with_section": 30,
+      "cases_with_zones": 4,
+      "cases_without_section": 0,
+      "zones_total": 5
+    },
+    "mpzp_basis_histogram": {
+      "document_candidate": 3
+    },
+    "passed": true,
+    "pog": {
+      "cases_with_section": 30,
+      "cases_with_zones": 7,
+      "cases_without_section": 0,
+      "zones_total": 9
+    },
+    "rate_limited_retries": 0,
+    "road_status_histogram": {
+      "available": 30
+    },
+    "successful": 30,
+    "transport_errors": 0,
+    "warning_code_histogram": {
+      "GDOS_WARNING": 2,
+      "ISOK_WARNING": 22,
+      "KIMPZP_PARTIAL_SERVICE_ERROR": 2,
+      "KIUT_WARNING": 30,
+      "LAND_COVER_WARNING": 3,
+      "MPZP_DISCOVERY_UNAVAILABLE": 12,
+      "MPZP_DOCUMENT_OR_SYMBOL_MISSING": 14,
+      "MPZP_PARAMETERS_NOT_IN_FLAT_CONTRACT": 3,
+      "MPZP_POG_INPUT_INCOMPLETE": 12,
+      "MPZP_VECTOR_UNAVAILABLE": 4,
+      "MPZP_WARNING": 30,
+      "NMT_CROSSCHECK_DIFF": 5,
+      "NMT_WARNING": 5,
+      "NO_LOCAL_RELEASE": 23,
+      "OUZ_DATA_UNAVAILABLE": 23,
+      "PARAMETER_CONFLICT": 1,
+      "POG_COVERAGE_PARTIAL": 5,
+      "POG_DISCOVERY_ONLY": 23,
+      "POG_EMPTY_RESPONSE_NOT_ABSENCE": 18,
+      "POG_IMPORT_PENDING": 4,
+      "POG_IMPORT_QUEUED": 1,
+      "POG_NOT_FOUND_IN_SOURCE": 18,
+      "POG_RU_CATALOG_SOURCE": 23,
+      "POG_SCENARIO_UNKNOWN": 18,
+      "POG_TOPOLOGICAL_SLIVERS_OMITTED": 4,
+      "POG_VECTOR_LINK_MISSING": 5,
+      "ZONE_SECTION_AMBIGUOUS": 3
+    }
+  },
+  "forest_status": {
+    "available": 27,
+    "no_coverage": 3
+  },
+  "partial_forest_parcels": [
+    "246101_1.0056.110/1",
+    "246101_1.0004.737/26",
+    "246101_1.0004.741/132"
+  ],
+  "exports": [
+    {
+      "case": "gora-kalwaria",
+      "analysis_id": 217,
+      "pdf_path": "/tmp/au202-204/local-deployment/export-proof-final/exports/gora-kalwaria/report.pdf",
+      "zip_path": "/tmp/au202-204/local-deployment/export-proof-final/exports/gora-kalwaria/audit.zip",
+      "sha256": {
+        "report.pdf": "2e126c1c17ab6d79de7f60c551711e5193873fa3ce8ec160ebe727104e9c3a83",
+        "audit.zip": "f14f83af480ab91befed5510fe26adc138add4d12e175d65a1489852790befa1"
+      },
+      "manifest_verified": true,
+      "pdf_disclaimer_verified": true
+    },
+    {
+      "case": "bielsko-partial-forest",
+      "analysis_id": 218,
+      "pdf_path": "/tmp/au202-204/local-deployment/export-proof-final/exports/bielsko-partial-forest/report.pdf",
+      "zip_path": "/tmp/au202-204/local-deployment/export-proof-final/exports/bielsko-partial-forest/audit.zip",
+      "sha256": {
+        "report.pdf": "4836443b8d2bba2e246c6b3fe05744151f7ca24b4a174bcebec884de2c9211ce",
+        "audit.zip": "7520e3e505a6d7c0cdf2866f297b13141e11e292882a5839bf86d8817f84a62d"
+      },
+      "manifest_verified": true,
+      "pdf_disclaimer_verified": true
+    }
+  ],
+  "ui": {
+    "url": "http://localhost:13000/",
+    "api_url": "http://localhost:8000",
+    "form_and_cards": "passed",
+    "partial_forest_distance_display": "unknown, never zero",
+    "pdf_download_button": "passed, HTTP 200",
+    "zip_download_button": "passed, HTTP 200, SHA-256 displayed",
+    "cors_preflight": "HTTP 200"
+  },
+  "regression": "1 passed in 0.35s; Ruff passed; no database connection used",
+  "full_automated_gates": "See ../verification.json (5351 backend and 683 frontend tests, coverage 95.33% / 98.98% lines). Only the PDF no_coverage wording changed afterwards; its focused regression and live exports passed.",
+  "final_checks": {
+    "git_diff_check": "passed",
+    "secret_scan_findings": 0,
+    "health_ready": 200,
+    "containers": {
+      "db": "healthy",
+      "backend": "healthy",
+      "frontend": "healthy"
+    },
+    "head_unchanged": "fffdafe7e03464ffc39506054955307bce836db5"
+  }
+}

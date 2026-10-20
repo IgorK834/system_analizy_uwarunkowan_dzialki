@@ -1,0 +1,261 @@
+
+> dzialki-frontend@0.1.0 lint
+> eslint .
+
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+
+> dzialki-frontend@0.1.0 typecheck
+> tsc --noEmit
+
+
+> dzialki-frontend@0.1.0 test:coverage
+> vitest run --coverage
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /workspace/frontend
+      Coverage enabled with v8
+
+ ✓ lib/api.test.ts (63 tests) 130ms
+ ✓ lib/pogLayers.test.ts (10 tests) 39ms
+ ✓ lib/pogLayerState.test.ts (29 tests) 64ms
+ ✓ components/MapView.test.tsx (8 tests) 177ms
+ ✓ components/MpzpZoneCard.a11y.test.tsx (13 tests) 1235ms
+     ✓ oznaczenie odczytu modelu ma pełny tekst w nazwie nagłówka wiersza i tekst dla czytnika  625ms
+ ✓ components/PogFeatureInspector.test.tsx (28 tests) 1648ms
+     ✓ pokazuje natychmiast strefę, 4 parametry z jednostkami, profile i status aktu — bez analizy  474ms
+ ✓ components/PreviewOverlays.test.tsx (13 tests) 1973ms
+     ✓ pobiera rejestr backendu i dodaje MPZP oraz POG bez adresów upstreamu  608ms
+ ✓ hooks/useAnalyzeParcel.test.tsx (10 tests) 78ms
+ ✓ components/MpzpZoneCard.test.tsx (22 tests) 2439ms
+     ✓ pokazuje obie strefy z udziałem 60/40 i stabilnymi ID w panelu  524ms
+ ✓ components/ReportDownloadButton.test.tsx (11 tests) 1435ms
+     ✓ wyłącza pobieranie, gdy analiza nie została zapisana  338ms
+ ✓ components/PogOfficialSources.test.tsx (4 tests) 1645ms
+     ✓ pokazuje klikalne źródła, dokładną wersję, wydanie i SHA  563ms
+     ✓ nie linkuje niezweryfikowanych adresów i escapuje tytuły  303ms
+     ✓ panel wyników prowadzi od parametru strefy do źródła GML  650ms
+ ✓ components/PogAreaSummary.test.tsx (7 tests) 1906ms
+     ✓ akt 1 km² 60/40: wykres i tabela pokazują identyczne liczby  593ms
+     ✓ luka 0,1 km²: dane niepełne oznaczone, jawny mianownik i wiersz luki w obu widokach  737ms
+     ✓ brak mianownika: udziały „nie obliczono”, skala względna, nigdy 100%  313ms
+ ✓ components/ManualZonePanel.test.tsx (13 tests) 3052ms
+     ✓ pokazuje obraz źródłowy, plan, dokument i kandydatów przed formularzem  601ms
+     ✓ blokuje symbol z niedozwolonym znakiem tą samą regułą co API  389ms
+     ✓ przyjmuje symbol ze spacją i wysyła jego formę kanoniczną  573ms
+     ✓ nie uznaje za spoza kandydatów symbolu różniącego się tylko odstępami  464ms
+ ✓ app/pogMap.integration.test.tsx (6 tests) 4667ms
+     ✓ 5 trybów klawiaturą i myszą: 0 requestów, te same URL-e źródeł, tylko setPaintProperty  1494ms
+     ✓ BK-404: klik obiektu otwiera inspektor bez POST /analyze; przycisk wysyła dokładnie jedno żądanie  908ms
+     ✓ BK-406: edycja klawiaturą, awaria kafla i nieudane ponowienie — plakietka i data stale widoczne  1133ms
+     ✓ po remoncie mapy tryb i filtr są odtwarzane  634ms
+     ✓ issue 301: panel pokrycia pobiera listę dopiero po rozwinięciu i rozróżnia stany gmin bez „brak planu”  413ms
+ ✓ lib/pogZones.test.ts (7 tests) 12ms
+ ✓ components/ResultPanel.test.tsx (28 tests) 5386ms
+     ✓ pokazuje macierz kompletności i świeżości z odpowiedzi API (BK-504)  597ms
+     ✓ dodaje warstwy sieci, stref ochronnych i ryzyk oraz obsługuje ich przełączniki  689ms
+     ✓ dodaje warstwy osi drogi, odcinka działka → oś i budynków oraz obsługuje ich przełączniki  859ms
+     ✓ rysuje prawdziwe pokrycie i bufory lasu, przełącza warstwę i sprząta geometrie  561ms
+ ✓ components/SectionQualityMatrix.test.tsx (9 tests) 1180ms
+     ✓ pokazuje każdą sekcję — także pustą — ze statusem, źródłem albo powodem braku  370ms
+ ✓ components/MpzpActsList.test.tsx (15 tests) 1573ms
+     ✓ wymienia oba akty Góry Kalwarii bez wyboru, z udziałem 'nie ustalono' i uwagą o weryfikacji  327ms
+     ✓ bez granicy aktu przełącznik jest wyłączony z wyjaśnieniem  380ms
+ ✓ app/page.test.tsx (5 tests) 2699ms
+     ✓ pokazuje przełączniki warstw podglądowych jeszcze przed analizą  891ms
+     ✓ łączy klik mapy z POST /analyze i pokazuje krótki wynik  388ms
+     ✓ przepływ ręcznego symbolu: podgląd źródła → symbol → wynik partial  798ms
+     ✓ nie wznawia analizy, gdy wynik nie niesie tokenu dostępu (AU-005)  490ms
+ ✓ lib/pogCoverage.test.ts (6 tests) 9ms
+ ✓ components/CoverageLayer.test.tsx (8 tests) 1406ms
+     ✓ pobiera dopiero po włączeniu, pokazuje legendę i usuwa źródło po wyłączeniu  655ms
+     ✓ anuluje spóźnioną odpowiedź i porażkę po wyłączeniu  331ms
+ ✓ components/PogMapPanel.test.tsx (11 tests) 2256ms
+     ✓ przełącza tryb i jawną edycję danych klawiaturą, bez innych efektów  476ms
+ ✓ lib/quality.test.ts (10 tests) 68ms
+ ✓ components/TerrainCard.test.tsx (9 tests) 1200ms
+     ✓ pokazuje spadek, klasy, ekspozycję, profil, rozdzielczość i źródło rastra  531ms
+ ✓ lib/pogThemes.test.ts (12 tests) 41ms
+ ✓ lib/mpzpActs.test.ts (9 tests) 141ms
+ ✓ components/SearchPanel.test.tsx (17 tests) 10142ms
+     ✓ informuje o ograniczeniu przy pustym indeksie  417ms
+     ✓ awaria statusu nie oznacza pustego indeksu i nie blokuje sugestii  682ms
+     ✓ pobiera sugestie po debounce, ale nie analizuje podczas wpisywania  509ms
+     ✓ pozwala wybrać sugestię strzałką i Enterem  641ms
+     ✓ nie odpytuje API dla zbyt krótkiego adresu i pokazuje błąd sugestii  945ms
+     ✓ pokazuje pomocny komunikat, gdy źródło nie zwróci sugestii  712ms
+     ✓ po wyborze miejscowości pozwala dopisać ulicę bez uruchamiania analizy  1627ms
+     ✓ przekazuje środek i bbox bieżącego widoku mapy do rankingu  515ms
+     ✓ waliduje identyfikator i wysyła poprawny kontrakt  614ms
+       ✓ renderuje listę wewnątrz opakowania pola i podnosi panel tylko, gdy lista jest otwarta  489ms
+       ✓ zachowuje klawiaturę i aria-activedescendant  825ms
+       ✓ Escape zamyka listę i opuszcza panel do poziomu spoczynkowego  883ms
+       ✓ kliknięcie poza panelem zamyka listę, kliknięcie w panelu nie  910ms
+ ✓ components/CompletenessBar.test.tsx (16 tests) 2015ms
+     ✓ przypadek complete_vector pokazuje komunikat z backendu, liczby i po jednym segmencie na sekcję w zakresie  727ms
+     ✓ `no_match` jest sprawdzeniem, ale komunikat nie twierdzi, że planu nie ma  493ms
+ ✓ lib/pogStatus.test.ts (52 tests) 81ms
+ ✓ hooks/usePogTileActivity.test.tsx (4 tests) 96ms
+ ✓ hooks/usePogTileState.test.tsx (8 tests) 615ms
+     ✓ BK-406: ponowienie bez zmiany stanu zachowuje obiekt; nieudane daje stale z datą  329ms
+ ✓ components/PogLegend.test.tsx (8 tests) 729ms
+ ✓ components/RoadContextCard.test.tsx (7 tests) 118ms
+ ✓ lib/mpzpProvenance.test.ts (7 tests) 39ms
+ ✓ hooks/useResumeAnalysis.test.tsx (8 tests) 93ms
+ ✓ components/PogCoveragePanel.test.tsx (10 tests) 2943ms
+     ✓ po rozwinięciu pokazuje podsumowanie, świeżość wykazu RU i gminy ze stanem oraz wersją  463ms
+     ✓ filtruje listę po zakresie i wyszukiwarce, a puste wyniki nie są informacją o braku planu  617ms
+     ✓ sprawdzenie gminy po kodzie TERC: stan no_act_in_ru ma własny komunikat  314ms
+     ✓ sprawdzenie gminy po kodzie TERC: stan unknown ma własny komunikat  372ms
+     ✓ niepoprawny kod TERC nie wysyła żądania, a błąd żądania nie udaje żadnego stanu gminy  363ms
+ ✓ components/CompatibilityAssessmentCard.test.tsx (12 tests) 1408ms
+     ✓ pokazuje wynik, datę stanu prawnego, reguły i pary stref  566ms
+ ✓ components/BuildingsCard.test.tsx (8 tests) 1450ms
+     ✓ pokazuje budynki na działce, pokrycie i trzy bufory z licznościami  382ms
+     ✓ długa lista jest skrócona w tabeli z informacją o pełnej liście w pakiecie audytowym  625ms
+ ✓ lib/zoneSymbol.test.ts (67 tests) 72ms
+ ✓ lib/terrain.test.ts (7 tests) 399ms
+     ✓ formatuje jednostki po polsku bez sztucznych zer  317ms
+ ✓ lib/mpzpConditions.test.ts (7 tests) 19ms
+ ✓ app/searchPanelLayout.test.ts (4 tests) 14ms
+ ✓ components/LayerToggle.test.tsx (6 tests) 2066ms
+     ✓ renderuje legendę i etykietę przełącznika  593ms
+     ✓ wywołuje onChange z przełączoną wartością po kliknięciu  462ms
+     ✓ pokazuje jawny status warstwy pod przełącznikiem  339ms
+     ✓ BK-406: pokazuje stan warstwy tekstem, osobno od statusu i przełącznika  502ms
+ ✓ lib/completeness.test.ts (6 tests) 32ms
+ ✓ components/MpzpDiscoveryCard.test.tsx (5 tests) 1431ms
+     ✓ pokazuje oba akty Góry Kalwarii z linkami, a LIV/467/2021 tylko jako zmianę  983ms
+ ✓ components/MpzpRasterPreview.test.tsx (5 tests) 721ms
+     ✓ renderuje kafle z backendowego proxy i obrys działki  586ms
+ ✓ lib/bdot.test.ts (5 tests) 214ms
+ ✓ components/LandCoverCard.test.tsx (6 tests) 1956ms
+     ✓ pokazuje udziały, odległość, bufory, stan danych i ograniczenie interpretacji  1568ms
+ ✓ components/MpzpStatusBanner.test.tsx (10 tests) 774ms
+     ✓ stan ambiguous ma własny kod, etykietę i komunikat  322ms
+ ✓ lib/mpzpDiscovery.test.ts (4 tests) 60ms
+ ✓ components/PogZoneShareChart.test.tsx (2 tests) 614ms
+     ✓ koloruje udziały tą samą paletą co mapa i opisuje je tekstem  606ms
+ ✓ lib/maplibreWorker.test.ts (2 tests) 18ms
+ ✓ lib/config.test.ts (4 tests) 6ms
+ ✓ lib/mapStyle.test.ts (2 tests) 6ms
+ ✓ components/PogThemeSelector.test.tsx (3 tests) 896ms
+     ✓ pokazuje pięć trybów z jednostką i kierunkiem skali  547ms
+     ✓ obsługuje klawiaturę: Tab i strzałki przechodzą przez wszystkie tryby  308ms
+ ✓ components/BdotImportRequest.test.tsx (2 tests) 491ms
+   ✓ validates a county and confirms the queued request  394ms
+ ✓ lib/compatibility.test.ts (3 tests) 12ms
+ ✓ components/MapViewLoader.test.tsx (1 test) 17ms
+ ✓ lib/safeLink.test.ts (9 tests) 3ms
+
+ Test Files  59 passed (59)
+      Tests  683 passed (683)
+   Start at  10:30:38
+   Duration  24.28s (transform 12.69s, setup 25.61s, import 21.56s, tests 66.01s, environment 101.19s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   97.99 |    91.41 |   98.96 |   98.98 |                   
+ app               |     100 |       88 |     100 |     100 |                   
+  page.tsx         |     100 |       88 |     100 |     100 | 69,116,144        
+ components        |   96.94 |    90.03 |   98.66 |    98.6 |                   
+  ...rtRequest.tsx |     100 |      100 |     100 |     100 |                   
+  ...ourceLine.tsx |     100 |    66.66 |     100 |     100 | 18-19,43-45       
+  ...dingsCard.tsx |      90 |       92 |      80 |      90 | 130               
+  ...smentCard.tsx |     100 |    88.88 |     100 |     100 | 44,77-81,106      
+  ...tenessBar.tsx |     100 |    93.75 |     100 |     100 | 100               
+  ...rageLayer.tsx |     100 |      100 |     100 |     100 |                   
+  ...CoverCard.tsx |     100 |      100 |     100 |     100 |                   
+  ...ilityNote.tsx |   83.33 |    71.42 |     100 |   83.33 | 70                
+  LayerToggle.tsx  |     100 |      100 |     100 |     100 |                   
+  ...ZonePanel.tsx |   98.14 |    93.44 |     100 |     100 | 51-56,135-139     
+  MapView.tsx      |   98.33 |    96.55 |     100 |     100 | 84                
+  ...iewLoader.tsx |   66.66 |      100 |      50 |      80 | 8                 
+  MpzpActsList.tsx |     100 |    91.66 |     100 |     100 | 36,70,87,115,135  
+  ...overyCard.tsx |     100 |     87.5 |     100 |     100 | ...-70,82,101,121 
+  ...erPreview.tsx |   98.55 |    91.17 |     100 |     100 | 29,31,80          
+  ...tusBanner.tsx |     100 |      100 |     100 |     100 |                   
+  MpzpZoneCard.tsx |     100 |    97.27 |     100 |     100 | 51,103,290        
+  ...eaSummary.tsx |   96.82 |    91.13 |   95.23 |   98.24 | 217               
+  ...ragePanel.tsx |     100 |    90.62 |     100 |     100 | 56-59,159         
+  ...Inspector.tsx |   98.14 |    84.74 |     100 |     100 | ...38,355,407,441 
+  ...yerStatus.tsx |     100 |     92.3 |     100 |     100 | 64                
+  PogLegend.tsx    |     100 |      100 |     100 |     100 |                   
+  PogMapPanel.tsx  |     100 |      100 |     100 |     100 |                   
+  ...alSources.tsx |     100 |    92.59 |     100 |     100 | 52,82,109,141     
+  ...eSelector.tsx |     100 |    81.81 |     100 |     100 | 20,54             
+  ...hareChart.tsx |     100 |      100 |     100 |     100 |                   
+  ...wOverlays.tsx |   96.17 |    89.25 |     100 |   98.69 | 278-279           
+  ...oadButton.tsx |   90.56 |    82.92 |     100 |     100 | 69-82,85-104      
+  ResultPanel.tsx  |   93.01 |    87.45 |   98.33 |   94.76 | ...1008,1047-1048 
+  ...ntextCard.tsx |     100 |    79.48 |     100 |     100 | 49-53,59-68,84-85 
+  SearchPanel.tsx  |   99.21 |    88.54 |     100 |     100 | ...40,181,290-304 
+  ...ityMatrix.tsx |     100 |      100 |     100 |     100 |                   
+  TerrainCard.tsx  |     100 |    88.23 |     100 |     100 | ...82-185,207,245 
+ hooks             |   98.53 |    89.79 |     100 |   99.43 |                   
+  ...lyzeParcel.ts |   97.95 |    85.18 |     100 |     100 | 37,42,79          
+  ...leActivity.ts |    98.3 |     90.9 |     100 |     100 | 66,72             
+  ...gTileState.ts |     100 |      100 |     100 |     100 |                   
+  ...meAnalysis.ts |   97.56 |       85 |     100 |   97.43 | 50                
+ lib               |   99.13 |    94.31 |   99.19 |   99.34 |                   
+  api.ts           |   98.26 |    94.55 |   93.33 |   98.11 | 65,612-618        
+  bdot.ts          |   96.29 |    86.11 |     100 |     100 | 76,85,91,148-149  
+  compatibility.ts |     100 |      100 |     100 |     100 |                   
+  completeness.ts  |     100 |      100 |     100 |     100 |                   
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  layerState.ts    |     100 |      100 |     100 |     100 |                   
+  layerStyles.ts   |     100 |      100 |     100 |     100 |                   
+  mapStyle.ts      |     100 |      100 |     100 |     100 |                   
+  ...ibreWorker.ts |     100 |      100 |     100 |     100 |                   
+  mpzpActs.ts      |     100 |    93.18 |     100 |     100 | 142,184-185       
+  ...Conditions.ts |     100 |      100 |     100 |     100 |                   
+  mpzpDiscovery.ts |     100 |    93.75 |     100 |     100 | 88                
+  ...Provenance.ts |     100 |      100 |     100 |     100 |                   
+  pogCoverage.ts   |     100 |    97.72 |     100 |     100 | 99                
+  pogLayerState.ts |     100 |    95.83 |     100 |     100 | ...81,220-260,288 
+  pogLayers.ts     |     100 |    88.57 |     100 |     100 | ...30-353,488,493 
+  pogPatterns.ts   |     100 |      100 |     100 |     100 |                   
+  pogStatus.ts     |     100 |      100 |     100 |     100 |                   
+  pogThemes.ts     |   96.49 |    92.68 |     100 |      96 | 66,72             
+  pogZones.ts      |   97.93 |    93.93 |     100 |   98.71 | 151               
+  quality.ts       |     100 |    94.87 |     100 |     100 | 83-91             
+  safeLink.ts      |     100 |      100 |     100 |     100 |                   
+  terrain.ts       |      98 |    88.63 |     100 |     100 | 65,75,103,164-172 
+  zoneSymbol.ts    |     100 |    95.45 |     100 |     100 | 42                
+-------------------|---------|----------|---------|---------|-------------------
+
+> dzialki-frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+✓ Running next.config.ts took 83ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.4s
+  Running TypeScript ...
+  Finished TypeScript in 4.4s ...
+  Collecting page data using 4 workers ...
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 282ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content
+

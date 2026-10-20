@@ -1,0 +1,46 @@
+[
+  {
+    "case": "gora-kalwaria",
+    "parcel_identifier": "141801_4.0701.23/8",
+    "analysis_id": 217,
+    "http": 200,
+    "road_status": "available",
+    "road_distance_m": 3.38,
+    "buildings_status": "available",
+    "buildings_50m": 10,
+    "land_cover_status": "available",
+    "forest_status": "available",
+    "forest_reason_code": null,
+    "forest_distance_m": 12.73,
+    "quality_land_cover_status": "available",
+    "snapshot_reread": "identical",
+    "cache_reread": "identical",
+    "zip_files": 12,
+    "sha256": {
+      "report.pdf": "2e126c1c17ab6d79de7f60c551711e5193873fa3ce8ec160ebe727104e9c3a83",
+      "audit.zip": "f14f83af480ab91befed5510fe26adc138add4d12e175d65a1489852790befa1"
+    }
+  },
+  {
+    "case": "bielsko-partial-forest",
+    "parcel_identifier": "246101_1.0056.110/1",
+    "analysis_id": 218,
+    "http": 200,
+    "road_status": "available",
+    "road_distance_m": 5.21,
+    "buildings_status": "available",
+    "buildings_50m": 38,
+    "land_cover_status": "available",
+    "forest_status": "no_coverage",
+    "forest_reason_code": "SEARCH_AREA_PARTIALLY_OUTSIDE_COVERAGE",
+    "forest_distance_m": null,
+    "quality_land_cover_status": "partial",
+    "snapshot_reread": "identical",
+    "cache_reread": "identical",
+    "zip_files": 11,
+    "sha256": {
+      "report.pdf": "4836443b8d2bba2e246c6b3fe05744151f7ca24b4a174bcebec884de2c9211ce",
+      "audit.zip": "7520e3e505a6d7c0cdf2866f297b13141e11e292882a5839bf86d8817f84a62d"
+    }
+  }
+]

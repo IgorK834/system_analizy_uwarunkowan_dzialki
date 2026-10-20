@@ -1,0 +1,140 @@
+{
+  "source_id": "bdot10k",
+  "counties": [
+    {
+      "teryt_powiat": "0221",
+      "name": "wałbrzyski",
+      "release_id": 82,
+      "version_label": "bdot10k-0221-06c500fbf133-v3",
+      "data_as_of": "2026-05-07",
+      "imported_at": "2026-10-19T11:13:05.742452Z",
+      "road_count": 14185,
+      "building_count": 15543,
+      "landcover_count": 10335,
+      "powerline_count": 571,
+      "package_sha256": "06c500fbf133e37639dac2faad48e98c8e81c41c221ae7db8cdc8599cf34d0b9",
+      "bounds_wgs84": [
+        16.067573,
+        50.627205,
+        16.493481,
+        50.887441
+      ]
+    },
+    {
+      "teryt_powiat": "0262",
+      "name": "Legnica",
+      "release_id": 80,
+      "version_label": "bdot10k-0262-80f974d6c258-v3",
+      "data_as_of": "2026-05-18",
+      "imported_at": "2026-10-19T11:12:49.890554Z",
+      "road_count": 5230,
+      "building_count": 12302,
+      "landcover_count": 2256,
+      "powerline_count": 154,
+      "package_sha256": "80f974d6c258349f178f4ec5a1da61a6bb7ab096242afc884f5f56417c92c8c4",
+      "bounds_wgs84": [
+        16.083254,
+        51.160528,
+        16.233209,
+        51.248847
+      ]
+    },
+    {
+      "teryt_powiat": "1261",
+      "name": "Kraków",
+      "release_id": 77,
+      "version_label": "bdot10k-1261-1355c5a51538-v3",
+      "data_as_of": "2026-05-27",
+      "imported_at": "2026-10-19T11:12:03.721280Z",
+      "road_count": 33585,
+      "building_count": 90563,
+      "landcover_count": 22731,
+      "powerline_count": 607,
+      "package_sha256": "1355c5a51538938c16456421969d4fb61dc739c4b85b499dde99a326e03c93ab",
+      "bounds_wgs84": [
+        19.791776,
+        49.967665,
+        20.217347,
+        50.126135
+      ]
+    },
+    {
+      "teryt_powiat": "1418",
+      "name": "piaseczyński",
+      "release_id": 78,
+      "version_label": "bdot10k-1418-b3ae64b39cbb-v3",
+      "data_as_of": "2024-12-19",
+      "imported_at": "2026-10-19T11:12:23.306442Z",
+      "road_count": 25575,
+      "building_count": 87508,
+      "landcover_count": 26187,
+      "powerline_count": 1984,
+      "package_sha256": "b3ae64b39cbbbfa865de6d6de525719832be0ab435543cbdc0d3d5d7f886b226",
+      "bounds_wgs84": [
+        20.685116,
+        51.887954,
+        21.281262,
+        52.144728
+      ]
+    },
+    {
+      "teryt_powiat": "1465",
+      "name": "m. St. Warszawa",
+      "release_id": 83,
+      "version_label": "bdot10k-1465-8cad94ae4004-v3",
+      "data_as_of": "2025-06-01",
+      "imported_at": "2026-10-19T11:13:37.037208Z",
+      "road_count": 69505,
+      "building_count": 167099,
+      "landcover_count": 29160,
+      "powerline_count": 784,
+      "package_sha256": "8cad94ae40048903aeb5217916accf293edb9615b26a7f483c03828f0b5aa110",
+      "bounds_wgs84": [
+        20.851688,
+        52.09785,
+        21.271151,
+        52.368154
+      ]
+    },
+    {
+      "teryt_powiat": "2461",
+      "name": "m. Bielsko-Biała",
+      "release_id": 81,
+      "version_label": "bdot10k-2461-560f259cbc36-v3",
+      "data_as_of": "2026-06-03",
+      "imported_at": "2026-10-19T11:12:57.360585Z",
+      "road_count": 13323,
+      "building_count": 37591,
+      "landcover_count": 5063,
+      "powerline_count": 291,
+      "package_sha256": "560f259cbc360ffa51b6442684bdf45a7e50a66db0df35329196a527ffadadad",
+      "bounds_wgs84": [
+        18.945377,
+        49.736683,
+        19.132134,
+        49.88744
+      ]
+    },
+    {
+      "teryt_powiat": "2816",
+      "name": "piski",
+      "release_id": 79,
+      "version_label": "bdot10k-2816-a887ee22c210-v3",
+      "data_as_of": "2024-09-11",
+      "imported_at": "2026-10-19T11:12:42.609895Z",
+      "road_count": 20358,
+      "building_count": 27183,
+      "landcover_count": 20236,
+      "powerline_count": 943,
+      "package_sha256": "a887ee22c210759925e3112727d552da106d9c69435a147940c91060557cfc45",
+      "bounds_wgs84": [
+        21.408824,
+        53.458916,
+        22.305639,
+        53.902604
+      ]
+    }
+  ],
+  "point": null,
+  "note": "Pokrycie dotyczy zaimportowanych wydań BDOT10k (paczki powiatowe). Punkt poza pokryciem daje w analizie status no_coverage, a nie brak drogi lub budynków."
+}

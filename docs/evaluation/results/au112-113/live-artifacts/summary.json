@@ -1,0 +1,28 @@
+{
+  "analysis_id": 5,
+  "files": {
+    "report.pdf": {
+      "sha256": "cb6e83df93a93d948cb1d5972d5ad8a08b3515ef779719f5ae10cbd65c8ae432",
+      "bytes": 229172,
+      "status": 200
+    },
+    "audit.zip": {
+      "sha256": "55ff1a533a352c42f0158341ede9a7b9f1efc4ef545795298e5711dfafea1f52",
+      "bytes": 102754,
+      "status": 200
+    }
+  },
+  "members": [
+    "README.md",
+    "analysis.json",
+    "layers/buildable_area.geojson",
+    "layers/forest_context.geojson",
+    "layers/land_cover.geojson",
+    "layers/neighbour_buildings.geojson",
+    "layers/road_context.geojson",
+    "layers/terrain_profile.geojson",
+    "manifest.json",
+    "parcel.geojson",
+    "sources.json"
+  ]
+}

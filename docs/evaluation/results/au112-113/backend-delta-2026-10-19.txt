@@ -1,0 +1,20 @@
+ Container au112201-db-1 Running 
+ Container au112201-db-1 Waiting 
+ Container au112201-db-1 Healthy 
+ Container au112201-backend-test-run-dd2bbf59ac7f Creating 
+ Container au112201-backend-test-run-dd2bbf59ac7f Created 
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+........................................................................ [ 88%]
+.........                                                                [100%]
+=============================== warnings summary ===============================
+../usr/local/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_bdot_context_e2e.py::test_road_and_buildings_survive_api_db_reread_cache_pdf_and_zip
+  /usr/local/lib/python3.13/site-packages/weasyprint/text/ffi.py:528: DeprecationWarning: HarfBuzz-Subset will be required by future versions of WeasyPrint. Please install this library with your package manager.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+81 passed, 2 warnings in 76.92s (0:01:16)

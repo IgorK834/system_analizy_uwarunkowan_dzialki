@@ -1,0 +1,908 @@
+{
+  "index_status": {
+    "ready": false,
+    "source": {
+      "source_id": "prg_address_dictionary",
+      "attribution": "Źródło: Słowniki adresowe PRG Adresy / EMUiA, GUGiK."
+    },
+    "release_id": null,
+    "version_label": null,
+    "published_at": null,
+    "entry_count": 0,
+    "scopes": []
+  },
+  "cases": [
+    {
+      "query": "Marszałkowska 1 Warszawa",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.679,
+      "first": {
+        "id": "hash:513a11c208a64824",
+        "label": "Warszawa, ulica Marszałkowska 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 16,
+            "end": 29
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.020953033454422,
+            52.21432731328465
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "ulica Marszałkowska",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 0.785714,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Kraków Floriańska 3",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.305,
+      "first": {
+        "id": "hash:65c81ddae556c73f",
+        "label": "Kraków, Floriańska 3",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 6
+          },
+          {
+            "start": 8,
+            "end": 18
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            19.939447221496213,
+            50.06221046711216
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Kraków",
+          "street": "Floriańska",
+          "house_number": "3"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Wrocław Rynek 1",
+      "http_status": 200,
+      "count": 8,
+      "seconds": 0.809,
+      "first": {
+        "id": "hash:ecf6e3ae43329664",
+        "label": "Wrocław, Rynek 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 7
+          },
+          {
+            "start": 9,
+            "end": 14
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            17.030643709702606,
+            51.110933417858206
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Wrocław",
+          "street": "Rynek",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Piaseczno Puławska 10",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.318,
+      "first": {
+        "id": "hash:4797b67b0698ef7d",
+        "label": "Piaseczno, Puławska 18",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 9
+          },
+          {
+            "start": 11,
+            "end": 19
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.026931953510996,
+            52.07647185423013
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Piaseczno",
+          "street": "Puławska",
+          "house_number": "18"
+        },
+        "result_type": "house_number",
+        "confidence": 0.826087,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Lipkowska Góra Kalwaria",
+      "http_status": 200,
+      "count": 1,
+      "seconds": 0.209,
+      "first": {
+        "id": "hash:664ee18916961984",
+        "label": "Góra Kalwaria, Lipkowska",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 13
+          },
+          {
+            "start": 15,
+            "end": 24
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.216871025053575,
+            51.9914458250323
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Góra Kalwaria",
+          "street": "Lipkowska",
+          "house_number": null
+        },
+        "result_type": "street",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Warszawa, Marszałkowska 1",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.833,
+      "first": {
+        "id": "hash:513a11c208a64824",
+        "label": "Warszawa, ulica Marszałkowska 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 16,
+            "end": 29
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.020953033454422,
+            52.21432731328465
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "ulica Marszałkowska",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 0.785714,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Warszawa ul. Marszalkowska 1",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.735,
+      "first": {
+        "id": "hash:513a11c208a64824",
+        "label": "Warszawa, ulica Marszałkowska 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 10,
+            "end": 12
+          },
+          {
+            "start": 16,
+            "end": 29
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.020953033454422,
+            52.21432731328465
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "ulica Marszałkowska",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 0.612903,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "ul. Marszałkowska 1 Warszawa",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.733,
+      "first": {
+        "id": "hash:513a11c208a64824",
+        "label": "Warszawa, ulica Marszałkowska 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 10,
+            "end": 12
+          },
+          {
+            "start": 16,
+            "end": 29
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.020953033454422,
+            52.21432731328465
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "ulica Marszałkowska",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 0.785714,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Krakow Florianska 3",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.3,
+      "first": {
+        "id": "hash:65c81ddae556c73f",
+        "label": "Kraków, Floriańska 3",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 6
+          },
+          {
+            "start": 8,
+            "end": 18
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            19.939447221496213,
+            50.06221046711216
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Kraków",
+          "street": "Floriańska",
+          "house_number": "3"
+        },
+        "result_type": "house_number",
+        "confidence": 0.73913,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Florianska 3 Krakow",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.27,
+      "first": {
+        "id": "hash:65c81ddae556c73f",
+        "label": "Kraków, Floriańska 3",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 6
+          },
+          {
+            "start": 8,
+            "end": 18
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            19.939447221496213,
+            50.06221046711216
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Kraków",
+          "street": "Floriańska",
+          "house_number": "3"
+        },
+        "result_type": "house_number",
+        "confidence": 0.73913,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Wroclaw Rynek 1",
+      "http_status": 200,
+      "count": 8,
+      "seconds": 0.845,
+      "first": {
+        "id": "hash:ecf6e3ae43329664",
+        "label": "Wrocław, Rynek 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 7
+          },
+          {
+            "start": 9,
+            "end": 14
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            17.030643709702606,
+            51.110933417858206
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Wrocław",
+          "street": "Rynek",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Rynek 1 Wroclaw",
+      "http_status": 200,
+      "count": 8,
+      "seconds": 0.713,
+      "first": {
+        "id": "hash:ecf6e3ae43329664",
+        "label": "Wrocław, Rynek 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 7
+          },
+          {
+            "start": 9,
+            "end": 14
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            17.030643709702606,
+            51.110933417858206
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Wrocław",
+          "street": "Rynek",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Piaseczno ul. Pulawska 10",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.321,
+      "first": {
+        "id": "hash:4797b67b0698ef7d",
+        "label": "Piaseczno, Puławska 18",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 9
+          },
+          {
+            "start": 11,
+            "end": 19
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.026931953510996,
+            52.07647185423013
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Piaseczno",
+          "street": "Puławska",
+          "house_number": "18"
+        },
+        "result_type": "house_number",
+        "confidence": 0.615385,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "ul. Pulawska 10 Piaseczno",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.296,
+      "first": {
+        "id": "hash:4797b67b0698ef7d",
+        "label": "Piaseczno, Puławska 18",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 9
+          },
+          {
+            "start": 11,
+            "end": 19
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.026931953510996,
+            52.07647185423013
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Piaseczno",
+          "street": "Puławska",
+          "house_number": "18"
+        },
+        "result_type": "house_number",
+        "confidence": 0.615385,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Gora Kalwaria Lipkowska",
+      "http_status": 200,
+      "count": 1,
+      "seconds": 0.197,
+      "first": {
+        "id": "hash:664ee18916961984",
+        "label": "Góra Kalwaria, Lipkowska",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 13
+          },
+          {
+            "start": 15,
+            "end": 24
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.216871025053575,
+            51.9914458250323
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Góra Kalwaria",
+          "street": "Lipkowska",
+          "house_number": null
+        },
+        "result_type": "street",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Lipkowska Gora Kalwaria",
+      "http_status": 200,
+      "count": 1,
+      "seconds": 0.21,
+      "first": {
+        "id": "hash:664ee18916961984",
+        "label": "Góra Kalwaria, Lipkowska",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 13
+          },
+          {
+            "start": 15,
+            "end": 24
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.216871025053575,
+            51.9914458250323
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Góra Kalwaria",
+          "street": "Lipkowska",
+          "house_number": null
+        },
+        "result_type": "street",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Warszawa al. Jana Pawła II 20",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.622,
+      "first": {
+        "id": "hash:ebc83374cfb01e61",
+        "label": "Warszawa, Aleja Jana Pawła II 20",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 10,
+            "end": 12
+          },
+          {
+            "start": 16,
+            "end": 20
+          },
+          {
+            "start": 21,
+            "end": 26
+          },
+          {
+            "start": 27,
+            "end": 29
+          },
+          {
+            "start": 30,
+            "end": 32
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            20.998414653031674,
+            52.234614391718445
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "Aleja Jana Pawła II",
+          "house_number": "20"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "al. Jana Pawła II 20 Warszawa",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.548,
+      "first": {
+        "id": "hash:ebc83374cfb01e61",
+        "label": "Warszawa, Aleja Jana Pawła II 20",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 10,
+            "end": 12
+          },
+          {
+            "start": 16,
+            "end": 20
+          },
+          {
+            "start": 21,
+            "end": 26
+          },
+          {
+            "start": 27,
+            "end": 29
+          },
+          {
+            "start": 30,
+            "end": 32
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            20.998414653031674,
+            52.234614391718445
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "Aleja Jana Pawła II",
+          "house_number": "20"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "Marszałkowska 1, Warszawa",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.825,
+      "first": {
+        "id": "hash:513a11c208a64824",
+        "label": "Warszawa, ulica Marszałkowska 1",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 8
+          },
+          {
+            "start": 16,
+            "end": 29
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            21.020953033454422,
+            52.21432731328465
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Warszawa",
+          "street": "ulica Marszałkowska",
+          "house_number": "1"
+        },
+        "result_type": "house_number",
+        "confidence": 0.785714,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    },
+    {
+      "query": "  Kraków,   ul. Floriańska   3  ",
+      "http_status": 200,
+      "count": 10,
+      "seconds": 0.295,
+      "first": {
+        "id": "hash:65c81ddae556c73f",
+        "label": "Kraków, Floriańska 3",
+        "match_ranges": [
+          {
+            "start": 0,
+            "end": 6
+          },
+          {
+            "start": 8,
+            "end": 18
+          }
+        ],
+        "point": {
+          "type": "Point",
+          "coordinates": [
+            19.939447221496213,
+            50.06221046711216
+          ]
+        },
+        "address_parts": {
+          "country": "Polska",
+          "voivodeship": null,
+          "county": null,
+          "municipality": null,
+          "city": "Kraków",
+          "street": "Floriańska",
+          "house_number": "3"
+        },
+        "result_type": "house_number",
+        "confidence": 1.0,
+        "source": {
+          "source_id": "emuia_uug",
+          "attribution": "Źródło: Usługa Uniwersalnego Geokodera (UUG), GUGiK."
+        }
+      }
+    }
+  ]
+}

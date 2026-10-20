@@ -1,0 +1,9 @@
+ Container au112201-db-1 Running 
+ Container au112201-db-1 Waiting 
+ Container au112201-db-1 Healthy 
+ Container au112201-backend-test-run-ac1db04edfc6 Creating 
+ Container au112201-backend-test-run-ac1db04edfc6 Created 
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+All checks passed!
+mypy: brak nowych zgłoszeń (17 znanych w bazie, 17 bieżących).

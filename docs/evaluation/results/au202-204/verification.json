@@ -1,0 +1,66 @@
+{
+  "verified_at": "2026-10-19",
+  "git_commit_created": false,
+  "base_head": "fffdafe",
+  "environment": {
+    "backend": "Python 3.13 / PostgreSQL 16 / PostGIS 3.4, isolated Docker database",
+    "source": "frozen repository copy without .env, REPO_ROOT=/repo, read-only mounts",
+    "frontend": "Node 22, Docker test target"
+  },
+  "backend": {
+    "command": "pytest -m \"not docker_cli\" --cov=app --cov-report=term-missing --cov-fail-under=80 --durations=8 -q",
+    "passed": 5351,
+    "deselected_docker_cli": 3,
+    "coverage_pct": 95.33,
+    "elapsed_s": 748.6,
+    "new_land_cover_modules_coverage_pct": {
+      "application": 100,
+      "domain": 100,
+      "infrastructure": 96,
+      "schema": 96,
+      "mapping_service": 100
+    }
+  },
+  "frontend": {
+    "command": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+    "test_files": 59,
+    "passed": 683,
+    "line_coverage_pct": 98.98,
+    "branch_coverage_pct": 91.41,
+    "LandCoverCard_coverage_pct": 100,
+    "ResultPanel_line_coverage_pct": 94.76,
+    "production_build": "passed"
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "mypy_known": 17,
+    "mypy_current": 17,
+    "git_diff_check": "passed",
+    "qgis_tool_static_check": "passed"
+  },
+  "live_smoke": {
+    "fresh_after_test_cache_invalidation": true,
+    "cases": 30,
+    "http_200": 30,
+    "five_xx": 0,
+    "transport_errors": 0,
+    "bdot_available": 10,
+    "bdot_no_coverage": 20
+  },
+  "independent_qgis": {
+    "version": "4.2.3-Belém do Pará",
+    "cases": 11,
+    "distance_tolerance_m": 0.05,
+    "area_tolerance_sqm": 0.05,
+    "max_distance_difference_m": 0,
+    "max_area_difference_sqm": 1.3969838619232178e-07
+  },
+  "artifacts": {
+    "live_parcel": "141801_4.0701.23/8",
+    "buildings_50m": 10,
+    "forest_distance_m": 12.73,
+    "audit_manifest_files": 12,
+    "no_coverage_audit_manifest_files": 7
+  },
+  "deployment": "Apply migrations including 039/040 and reimport full BDOT10k packages for legacy releases; user database was not modified."
+}

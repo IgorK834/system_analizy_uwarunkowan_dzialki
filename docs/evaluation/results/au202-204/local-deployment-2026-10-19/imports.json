@@ -1,0 +1,247 @@
+[
+  {
+    "county": "1261",
+    "returncode": 0,
+    "elapsed_s": 20.93,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "1261",
+        "package": "1261_GML.zip",
+        "package_sha256": "1355c5a51538938c16456421969d4fb61dc739c4b85b499dde99a326e03c93ab",
+        "package_bytes": 35198806,
+        "land_cover_imported": 22731,
+        "powerlines_imported": 607,
+        "powerlines_complete": 1,
+        "roads_read": 33585,
+        "roads_imported": 33585,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 90563,
+        "buildings_imported": 90563,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-27",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 63,
+      "data_release_id": 77,
+      "timing": {
+        "total_seconds": 20.1
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "1418",
+    "returncode": 0,
+    "elapsed_s": 20.2,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "1418",
+        "package": "1418_GML.zip",
+        "package_sha256": "b3ae64b39cbbbfa865de6d6de525719832be0ab435543cbdc0d3d5d7f886b226",
+        "package_bytes": 31690880,
+        "land_cover_imported": 26187,
+        "powerlines_imported": 1984,
+        "powerlines_complete": 1,
+        "roads_read": 25575,
+        "roads_imported": 25575,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 87508,
+        "buildings_imported": 87508,
+        "buildings_rejected": 0,
+        "buildings_repaired": 1,
+        "data_as_of": "2024-12-19",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 64,
+      "data_release_id": 78,
+      "timing": {
+        "total_seconds": 19.5
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "2816",
+    "returncode": 0,
+    "elapsed_s": 16.53,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "2816",
+        "package": "2816_GML.zip",
+        "package_sha256": "a887ee22c210759925e3112727d552da106d9c69435a147940c91060557cfc45",
+        "package_bytes": 54352143,
+        "land_cover_imported": 20236,
+        "powerlines_imported": 943,
+        "powerlines_complete": 1,
+        "roads_read": 20358,
+        "roads_imported": 20358,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 27183,
+        "buildings_imported": 27183,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2024-09-11",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 65,
+      "data_release_id": 79,
+      "timing": {
+        "total_seconds": 15.8
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "0262",
+    "returncode": 0,
+    "elapsed_s": 3.83,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "0262",
+        "package": "0262_GML.zip",
+        "package_sha256": "80f974d6c258349f178f4ec5a1da61a6bb7ab096242afc884f5f56417c92c8c4",
+        "package_bytes": 5383751,
+        "land_cover_imported": 2256,
+        "powerlines_imported": 154,
+        "powerlines_complete": 1,
+        "roads_read": 5230,
+        "roads_imported": 5230,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 12302,
+        "buildings_imported": 12302,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-18",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 66,
+      "data_release_id": 80,
+      "timing": {
+        "total_seconds": 3.1
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "2461",
+    "returncode": 0,
+    "elapsed_s": 9.88,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "2461",
+        "package": "2461_GML.zip",
+        "package_sha256": "560f259cbc360ffa51b6442684bdf45a7e50a66db0df35329196a527ffadadad",
+        "package_bytes": 19169873,
+        "land_cover_imported": 5063,
+        "powerlines_imported": 291,
+        "powerlines_complete": 1,
+        "roads_read": 13323,
+        "roads_imported": 13323,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 37591,
+        "buildings_imported": 37591,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-06-03",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 67,
+      "data_release_id": 81,
+      "timing": {
+        "total_seconds": 9.2
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "0221",
+    "returncode": 0,
+    "elapsed_s": 7.22,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "0221",
+        "package": "0221_GML.zip",
+        "package_sha256": "06c500fbf133e37639dac2faad48e98c8e81c41c221ae7db8cdc8599cf34d0b9",
+        "package_bytes": 14454176,
+        "land_cover_imported": 10335,
+        "powerlines_imported": 571,
+        "powerlines_complete": 1,
+        "roads_read": 14185,
+        "roads_imported": 14185,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 15543,
+        "buildings_imported": 15543,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2026-05-07",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 68,
+      "data_release_id": 82,
+      "timing": {
+        "total_seconds": 6.5
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "county": "1465",
+    "returncode": 0,
+    "elapsed_s": 43.14,
+    "result": {
+      "status": "succeeded",
+      "stats": {
+        "teryt_powiat": "1465",
+        "package": "1465_GML.zip",
+        "package_sha256": "8cad94ae40048903aeb5217916accf293edb9615b26a7f483c03828f0b5aa110",
+        "package_bytes": 89020411,
+        "land_cover_imported": 29160,
+        "powerlines_imported": 784,
+        "powerlines_complete": 1,
+        "roads_read": 69505,
+        "roads_imported": 69505,
+        "roads_rejected": 0,
+        "roads_repaired": 0,
+        "buildings_read": 167099,
+        "buildings_imported": 167099,
+        "buildings_rejected": 0,
+        "buildings_repaired": 0,
+        "data_as_of": "2025-06-01",
+        "created": 1,
+        "activated": 1
+      },
+      "warnings": [],
+      "import_run_id": 69,
+      "data_release_id": 83,
+      "timing": {
+        "total_seconds": 42.4
+      },
+      "exit_code": 0
+    }
+  }
+]

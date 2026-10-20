@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-10-19T16:21:28.970553+00:00",
+  "alembic_head": "040_bdot_powerlines",
+  "preserved_existing_analyses": {
+    "count": 9,
+    "rows_md5": "1f9baead1736e4e14257c19fe68161fe"
+  },
+  "active_releases": 7
+}

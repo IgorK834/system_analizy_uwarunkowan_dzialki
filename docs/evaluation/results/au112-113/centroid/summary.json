@@ -1,0 +1,1767 @@
+{
+  "bounds": [
+    {
+      "case_id": "real-005-126105-9-0001-580-4",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "KP.1"
+      ]
+    },
+    {
+      "case_id": "real-006-126105-9-0001-49-2",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "MW/U.4"
+      ]
+    },
+    {
+      "case_id": "real-007-126105-9-0001-540-15",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 3,
+      "dominant_share_pct": 97.628921,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 99.958318,
+      "min_missing_zones": 2,
+      "min_omitted_area_pct": 2.3710789999999946,
+      "municipality": "Kraków",
+      "shares_pct": [
+        97.628921,
+        2.328743,
+        0.041682
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 3,
+      "zone_symbols": [
+        "KD/L+T",
+        "U.11",
+        "ZP.4"
+      ]
+    },
+    {
+      "case_id": "real-008-126105-9-0119-181-10",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "mpzp",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Kraków",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "manual_review",
+      "zone_count": 1,
+      "zone_symbols": [
+        "ZPb.9"
+      ]
+    },
+    {
+      "case_id": "real-009-246101-1-0056-155-3",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.987245,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.012754999999998518,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.012754999999998518,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.987245
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SK"
+      ]
+    },
+    {
+      "case_id": "real-010-246101-1-0055-68-13",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.999056,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.0009440000000040527,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0009440000000040527,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.999056
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SW"
+      ]
+    },
+    {
+      "case_id": "real-011-246101-1-0081-7",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 100.0,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.0,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.0,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        100.0
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SW"
+      ]
+    },
+    {
+      "case_id": "real-012-246101-1-0056-110-1",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.997791,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.002208999999993466,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.002208999999993466,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.997791
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SU"
+      ]
+    },
+    {
+      "case_id": "real-027-246101-1-0001-1043",
+      "centroid_loses_significant_zone_guaranteed": false,
+      "centroid_loses_zone_guaranteed": false,
+      "distinct_symbol_count": 1,
+      "dominant_share_pct": 99.998649,
+      "layer": "pog",
+      "max_omitted_area_pct": 0.001350999999999658,
+      "min_missing_zones": 0,
+      "min_omitted_area_pct": 0.001350999999999658,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        99.998649
+      ],
+      "significant_zone_count": 1,
+      "status": "available",
+      "zone_count": 1,
+      "zone_symbols": [
+        "SJ"
+      ]
+    },
+    {
+      "case_id": "real-028-246101-1-0004-737-26",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 2,
+      "dominant_share_pct": 80.34066,
+      "layer": "pog",
+      "max_omitted_area_pct": 80.34066,
+      "min_missing_zones": 1,
+      "min_omitted_area_pct": 19.65934,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        80.34066,
+        19.65934
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 2,
+      "zone_symbols": [
+        "SO",
+        "SJ"
+      ]
+    },
+    {
+      "case_id": "real-029-246101-1-0004-741-132",
+      "centroid_loses_significant_zone_guaranteed": true,
+      "centroid_loses_zone_guaranteed": true,
+      "distinct_symbol_count": 2,
+      "dominant_share_pct": 50.070792,
+      "layer": "pog",
+      "max_omitted_area_pct": 50.070792,
+      "min_missing_zones": 1,
+      "min_omitted_area_pct": 49.929208,
+      "municipality": "Bielsko-Biała",
+      "shares_pct": [
+        50.070792,
+        49.929208
+      ],
+      "significant_zone_count": 2,
+      "status": "available",
+      "zone_count": 2,
+      "zone_symbols": [
+        "SO",
+        "SJ"
+      ]
+    }
+  ],
+  "bounds_summary": {
+    "cases": 11,
+    "min_missing_zones_total": 4,
+    "multi_significant_zone_guaranteed_loss": {
+      "denominator": 11,
+      "numerator": 3,
+      "reason": null,
+      "value": 0.2727272727272727
+    },
+    "multi_zone_guaranteed_loss": {
+      "denominator": 11,
+      "numerator": 3,
+      "reason": null,
+      "value": 0.2727272727272727
+    }
+  },
+  "control_failures": [],
+  "controls": [
+    {
+      "case_id": "control-rectangle-60-40",
+      "centroid": {
+        "location": "inside_parcel",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": true,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "A"
+      ],
+      "dominant_id": "A",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 60.0,
+          "pct": 60.0,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 40.0,
+          "pct": 40.0,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "B"
+      ],
+      "missing_significant_ids": [
+        "B"
+      ],
+      "omitted_area_pct": 40.0,
+      "parameter_differences": [
+        {
+          "centroid_values": [
+            9.0
+          ],
+          "differs": true,
+          "intersection_values": [
+            {
+              "share_pct": 60.0,
+              "value": 9.0,
+              "zone_id": "A"
+            },
+            {
+              "share_pct": 40.0,
+              "value": 12.0,
+              "zone_id": "B"
+            }
+          ],
+          "parameter": "max_building_height_m"
+        }
+      ],
+      "parcel_area_sqm": 100.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-concave-l-shape",
+      "centroid": {
+        "location": "outside_parcel",
+        "x": 3.2222222222222223,
+        "y": 3.2222222222222223
+      },
+      "centroid_is_dominant": false,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "N"
+      ],
+      "dominant_id": "S",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "S",
+        "W"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 20.0,
+          "pct": 55.55555555555556,
+          "zone_id": "S"
+        },
+        {
+          "area_sqm": 16.0,
+          "pct": 44.44444444444444,
+          "zone_id": "W"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "S",
+        "W"
+      ],
+      "missing_significant_ids": [
+        "S",
+        "W"
+      ],
+      "omitted_area_pct": 100.0,
+      "parameter_differences": [],
+      "parcel_area_sqm": 36.0,
+      "phantom_ids": [
+        "N"
+      ],
+      "significant_zone_ids": [
+        "S",
+        "W"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-hole",
+      "centroid": {
+        "location": "in_hole",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": true,
+      "centroid_status": "unique",
+      "centroid_zone_ids": [
+        "A"
+      ],
+      "dominant_id": "A",
+      "dominant_tie": false,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 45.0,
+          "pct": 53.57142857142857,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 39.0,
+          "pct": 46.42857142857143,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [
+        "B"
+      ],
+      "missing_significant_ids": [
+        "B"
+      ],
+      "omitted_area_pct": 46.42857142857143,
+      "parameter_differences": [],
+      "parcel_area_sqm": 84.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    },
+    {
+      "case_id": "control-boundary-tie",
+      "centroid": {
+        "location": "inside_parcel",
+        "x": 5.0,
+        "y": 5.0
+      },
+      "centroid_is_dominant": null,
+      "centroid_status": "tie",
+      "centroid_zone_ids": [
+        "A",
+        "B"
+      ],
+      "dominant_id": null,
+      "dominant_tie": true,
+      "engine": "pog",
+      "intersection_zone_ids": [
+        "A",
+        "B"
+      ],
+      "intersections": [
+        {
+          "area_sqm": 50.0,
+          "pct": 50.0,
+          "zone_id": "A"
+        },
+        {
+          "area_sqm": 50.0,
+          "pct": 50.0,
+          "zone_id": "B"
+        }
+      ],
+      "kind": "control",
+      "missing_ids": [],
+      "missing_significant_ids": [],
+      "omitted_area_pct": 0.0,
+      "parameter_differences": [],
+      "parcel_area_sqm": 100.0,
+      "phantom_ids": [],
+      "significant_zone_ids": [
+        "A",
+        "B"
+      ],
+      "source": {},
+      "zone_count": 2
+    }
+  ],
+  "engine_agreement": [
+    {
+      "case_id": "control-rectangle-60-40",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-concave-l-shape",
+      "mpzp_zones": [
+        "S",
+        "W"
+      ],
+      "pog_zones": [
+        "S",
+        "W"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-hole",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    },
+    {
+      "case_id": "control-boundary-tie",
+      "mpzp_zones": [
+        "A",
+        "B"
+      ],
+      "pog_zones": [
+        "A",
+        "B"
+      ],
+      "same_zones_and_areas": true
+    }
+  ],
+  "manifest_sha256": "0cd2a4abc46b4aa530faebe9b6653b2a4cd5d851faf05e64855aa7410a6d3d08",
+  "parcel_descriptor_summary": {
+    "centroid_location_counts": {
+      "in_hole": 1,
+      "inside_parcel": 28,
+      "outside_parcel": 2
+    },
+    "parcels": 31,
+    "parcels_solidity_below_0_95": 18,
+    "parcels_with_holes": 2
+  },
+  "real_layers": {
+    "missing": [
+      {
+        "case_id": "real-005-126105-9-0001-580-4",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-006-126105-9-0001-49-2",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-007-126105-9-0001-540-15",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      },
+      {
+        "case_id": "real-008-126105-9-0119-181-10",
+        "layer": "mpzp",
+        "reason": "source not redistributable (contract_required); geometry not frozen"
+      }
+    ],
+    "results": [
+      {
+        "case_id": "real-009-246101-1-0056-155-3",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 503236.34949576075,
+          "y": 217235.28136133502
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-24SK 20250422T091925"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-24SK 20250422T091925",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-24SK 20250422T091925"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 1413.7598639215519,
+            "pct": 99.98724471754004,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-24SK 20250422T091925"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.012755282459964157,
+        "parameter_differences": [],
+        "parcel_area_sqm": 1413.9402159899164,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-24SK 20250422T091925"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-009-246101-1-0056-155-3.zones.geojson",
+          "layer_sha256": "2f7f22a12dbc3e8777b0d6285081d88a905b9bdf18d1c6adb5b092589c97166b",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "53dd0b622ab6cd52b1b96e6b9b5bfb77e6a110182286b41ac81ce281abfff128",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-010-246101-1-0055-68-13",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 503452.45480280207,
+          "y": 217521.98723061584
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-28SW 20260212T133555"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-28SW 20260212T133555",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-28SW 20260212T133555"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 4544.554544664073,
+            "pct": 99.99905596770773,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-28SW 20260212T133555"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.0009440322922604771,
+        "parameter_differences": [],
+        "parcel_area_sqm": 4544.597447131527,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-28SW 20260212T133555"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-010-246101-1-0055-68-13.zones.geojson",
+          "layer_sha256": "d063f466139a5ed61eec8d196b53a7f5a8de30568be5b4a030035fd7007653ff",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "05c1e38472c7abfca4977eca7c58bc8497dad98df532316be7021829749641aa",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-011-246101-1-0081-7",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 503387.8417940279,
+          "y": 216841.79498275334
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-44SW 20260203T101137"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-44SW 20260203T101137",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-44SW 20260203T101137"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 524.1957859687446,
+            "pct": 100.0,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-44SW 20260203T101137"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.0,
+        "parameter_differences": [],
+        "parcel_area_sqm": 524.1957859687446,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-44SW 20260203T101137"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-011-246101-1-0081-7.zones.geojson",
+          "layer_sha256": "d285274111770815a48320d4d902ef5feaf5341a015e7bb27778ac9bdaf37326",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "2504a98b6710dae6d93cdccbcce19659f4a0009d5f69ea78b76f261f8f99eb1f",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-012-246101-1-0056-110-1",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 502886.6914190468,
+          "y": 217798.18709821108
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-119SU 20250422T091925"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-119SU 20250422T091925",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-119SU 20250422T091925"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 17102.167178192765,
+            "pct": 99.99779146281533,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-119SU 20250422T091925"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.002208537184666959,
+        "parameter_differences": [],
+        "parcel_area_sqm": 17102.54489425628,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-119SU 20250422T091925"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-012-246101-1-0056-110-1.zones.geojson",
+          "layer_sha256": "a9c0abd3012c58aeb792be01bb2a3f281f237379a46895fb6c874630148b1e89",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "26f1ef2702e1c47d16981cc597015d3d5dc8896c8979b6451388e02ff53386ef",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-027-246101-1-0001-1043",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 501583.49744963995,
+          "y": 216786.08017990063
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-98SJ 20250625T113413"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-98SJ 20250625T113413",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-98SJ 20250625T113413"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 2851.247279554228,
+            "pct": 99.99864947139912,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-98SJ 20250625T113413"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.001350528600885248,
+        "parameter_differences": [],
+        "parcel_area_sqm": 2851.285786984274,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-98SJ 20250625T113413"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-027-246101-1-0001-1043.zones.geojson",
+          "layer_sha256": "8d3d69de51396f4cec5fe590b62a5da5adc8322de0a0aa1ed764fa80ee04dd70",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "fb94c97c9fe25e4711cf11e47edd57a9f2e695adba7e6574c0f15cc2edb2b6fc",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-028-246101-1-0004-737-26",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 501897.3076328333,
+          "y": 217815.66756693402
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130",
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 723.0582966917206,
+            "pct": 80.34066047877934,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+          },
+          {
+            "area_sqm": 176.93218432119912,
+            "pct": 19.659339521248633,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130"
+        ],
+        "missing_significant_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130"
+        ],
+        "omitted_area_pct": 19.659339521220666,
+        "parameter_differences": [],
+        "parcel_area_sqm": 899.9904810126679,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130",
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-028-246101-1-0004-737-26.zones.geojson",
+          "layer_sha256": "4dd86b6b0a3fcf55d05116c723d04ab6932e57dee66c006b28d9938860e761f9",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "d147e98ff777d28d8a9f0f99b6d53f40c74bab0b5124b112d02ca619317f9e1b",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 2
+      },
+      {
+        "case_id": "real-029-246101-1-0004-741-132",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 502167.05901683785,
+          "y": 217932.8137086914
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130"
+        ],
+        "dominant_id": "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130",
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 2138.4407208681355,
+            "pct": 50.07079222980706,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130"
+          },
+          {
+            "area_sqm": 2132.393882773487,
+            "pct": 49.929207770191304,
+            "zone_id": "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "missing_significant_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "omitted_area_pct": 49.92920777019294,
+        "parameter_differences": [],
+        "parcel_area_sqm": 4270.834603641692,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9995/246101-POG 1POG-121SO 20250708T084130",
+          "PL.ZIPPZP.9995/246101-POG 1POG-78SJ 20250708T084102"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-029-246101-1-0004-741-132.zones.geojson",
+          "layer_sha256": "c99dd606b6d9814a7f49a74112a28dfc9ed5d0b5e74e73054b9b9e8cf6caf9a3",
+          "municipality": "Bielsko-Biała",
+          "parcel_artifact_sha256": "f6ee6f2f1470441fe50d74d750f866e6f0b989537fbac988775ef04a3b9709ee",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 2
+      },
+      {
+        "case_id": "real-013-026201-1-0009-1319-4",
+        "centroid": {
+          "location": "outside_parcel",
+          "x": 301261.95860962034,
+          "y": 374984.6569095481
+        },
+        "centroid_is_dominant": false,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-184SW 20260626T121502"
+        ],
+        "dominant_id": "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 1965.639719411903,
+            "pct": 99.99999999999999,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502"
+        ],
+        "missing_significant_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502"
+        ],
+        "omitted_area_pct": 100.0,
+        "parameter_differences": [],
+        "parcel_area_sqm": 1965.6397194119031,
+        "phantom_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-184SW 20260626T121502"
+        ],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-21SK 20260626T121502"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-013-026201-1-0009-1319-4.zones.geojson",
+          "layer_sha256": "0d36d8c5240c4280981e5912b0fe4e69a11a2f1262d2fac87e90601cc653538d",
+          "municipality": "Legnica",
+          "parcel_artifact_sha256": "64488086e120d7fc6b83820035eacd551edfa1338fc23b58860f545a8b010d8d",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-014-026201-1-0010-410-1",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 301534.6401321799,
+          "y": 375276.1132040039
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-135SW 20260626T121502"
+        ],
+        "dominant_id": "PL.ZIPPZP.9489/026201-POG 1POG-135SW 20260626T121502",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-135SW 20260626T121502"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 3603.755667960612,
+            "pct": 100.0,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-135SW 20260626T121502"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.0,
+        "parameter_differences": [],
+        "parcel_area_sqm": 3603.755667960612,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-135SW 20260626T121502"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-014-026201-1-0010-410-1.zones.geojson",
+          "layer_sha256": "ea18bedf64e0bc492b97b0f1df485daa0a1e5421c1bbe71065d307ceec661f49",
+          "municipality": "Legnica",
+          "parcel_artifact_sha256": "dcea0c5d77028add25229ddef60fa79ab21985e1c879702b3181260f8068a892",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-015-026201-1-0015-530",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 301472.374547816,
+          "y": 374555.77542610234
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-38SN 20260626T121502"
+        ],
+        "dominant_id": "PL.ZIPPZP.9489/026201-POG 1POG-38SN 20260626T121502",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-189SW 20260626T121502",
+          "PL.ZIPPZP.9489/026201-POG 1POG-38SN 20260626T121502"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 2409.0035851660423,
+            "pct": 99.62489823951346,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-38SN 20260626T121502"
+          },
+          {
+            "area_sqm": 8.94656409126019,
+            "pct": 0.36998721906163046,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-189SW 20260626T121502"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-189SW 20260626T121502"
+        ],
+        "missing_significant_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-189SW 20260626T121502"
+        ],
+        "omitted_area_pct": 0.3751017604865403,
+        "parameter_differences": [],
+        "parcel_area_sqm": 2418.0738226446465,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-189SW 20260626T121502",
+          "PL.ZIPPZP.9489/026201-POG 1POG-38SN 20260626T121502"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-015-026201-1-0015-530.zones.geojson",
+          "layer_sha256": "476837d685b3f4e77b02835a2488d90f25053d8f9ca675e9f553a6320f7c69fe",
+          "municipality": "Legnica",
+          "parcel_artifact_sha256": "dd8505809a0386aa1d2919d92937b4269fc22b24019d588ac0b0be7a33d4bd60",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 2
+      },
+      {
+        "case_id": "real-016-026201-1-0009-579-9",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 301067.87644459127,
+          "y": 375484.03699829767
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-181SW 20260626T121502"
+        ],
+        "dominant_id": "PL.ZIPPZP.9489/026201-POG 1POG-181SW 20260626T121502",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-181SW 20260626T121502"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 6602.41470930847,
+            "pct": 99.99631045089149,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-181SW 20260626T121502"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.0036895491085098264,
+        "parameter_differences": [],
+        "parcel_area_sqm": 6602.658317629566,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-181SW 20260626T121502"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-016-026201-1-0009-579-9.zones.geojson",
+          "layer_sha256": "7233e6a6bcf90bde7c68fd9d4bec5a7444a3867f6678d391117a55546afcfa48",
+          "municipality": "Legnica",
+          "parcel_artifact_sha256": "8415c9e985ac230dc1def727517b3f72dd7f1e7a48326f509f21a75d47115f21",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "real-030-026201-1-0009-578-2",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 301141.73605087405,
+          "y": 375546.95981285337
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-54SI 20260626T121502"
+        ],
+        "dominant_id": "PL.ZIPPZP.9489/026201-POG 1POG-54SI 20260626T121502",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-54SI 20260626T121502"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 6035.5895526245995,
+            "pct": 99.9836033560486,
+            "zone_id": "PL.ZIPPZP.9489/026201-POG 1POG-54SI 20260626T121502"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [],
+        "missing_significant_ids": [],
+        "omitted_area_pct": 0.016396643951388512,
+        "parameter_differences": [],
+        "parcel_area_sqm": 6036.579349047306,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.9489/026201-POG 1POG-54SI 20260626T121502"
+        ],
+        "source": {
+          "layer_artifact": "layers/real-030-026201-1-0009-578-2.zones.geojson",
+          "layer_sha256": "eec3f485a38097bafe5180a2c8c6ab311a108aa5c49e2a91743447513348edf4",
+          "municipality": "Legnica",
+          "parcel_artifact_sha256": "46b022199111c340e8f9b83879faba914a4350b540ecceba9d05782b46876787",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 1
+      },
+      {
+        "case_id": "supplement-031-226401-1-0002-2-66",
+        "centroid": {
+          "location": "inside_parcel",
+          "x": 470076.1484027841,
+          "y": 732568.6177868217
+        },
+        "centroid_is_dominant": true,
+        "centroid_status": "unique",
+        "centroid_zone_ids": [
+          "PL.ZIPPZP.10011/226401-POG 1POG-100SU 20260819T010000"
+        ],
+        "dominant_id": "PL.ZIPPZP.10011/226401-POG 1POG-100SU 20260819T010000",
+        "dominant_tie": false,
+        "engine": "pog",
+        "intersection_zone_ids": [
+          "PL.ZIPPZP.10011/226401-POG 1POG-100SU 20260819T010000",
+          "PL.ZIPPZP.10011/226401-POG 1POG-55SN 20260819T010000"
+        ],
+        "intersections": [
+          {
+            "area_sqm": 3886.4540253091654,
+            "pct": 98.19063671776917,
+            "zone_id": "PL.ZIPPZP.10011/226401-POG 1POG-100SU 20260819T010000"
+          },
+          {
+            "area_sqm": 71.58291932124041,
+            "pct": 1.808530959197481,
+            "zone_id": "PL.ZIPPZP.10011/226401-POG 1POG-55SN 20260819T010000"
+          }
+        ],
+        "kind": "real_layer",
+        "missing_ids": [
+          "PL.ZIPPZP.10011/226401-POG 1POG-55SN 20260819T010000"
+        ],
+        "missing_significant_ids": [
+          "PL.ZIPPZP.10011/226401-POG 1POG-55SN 20260819T010000"
+        ],
+        "omitted_area_pct": 1.8093632822308359,
+        "parameter_differences": [],
+        "parcel_area_sqm": 3958.0698885577644,
+        "phantom_ids": [],
+        "significant_zone_ids": [
+          "PL.ZIPPZP.10011/226401-POG 1POG-100SU 20260819T010000",
+          "PL.ZIPPZP.10011/226401-POG 1POG-55SN 20260819T010000"
+        ],
+        "source": {
+          "layer_artifact": "layers/supplement-031-226401-1-0002-2-66.zones.geojson",
+          "layer_sha256": "a2e3f613d36b68faa9da339452b215efe832f90607192e822a2a9971efd19d49",
+          "municipality": "Sopot",
+          "parcel_artifact_sha256": "7e6500a3b7f70a3cca2584887409a63eecb3c1166fab334a0e76bfaf4c1d7168",
+          "release": "ru_pog@2026-10-17"
+        },
+        "zone_count": 2
+      }
+    ],
+    "summary": {
+      "cases": 13,
+      "cases_with_intersecting_zone": 13,
+      "centroid_location_counts": {
+        "inside_parcel": 12,
+        "outside_parcel": 1
+      },
+      "centroid_not_dominant_among_decided": {
+        "denominator": 13,
+        "numerator": 1,
+        "reason": null,
+        "value": 0.07692307692307693
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 13,
+        "numerator": 1,
+        "reason": null,
+        "value": 0.07692307692307693
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 13,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.38461538461538464
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 13,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.38461538461538464
+      },
+      "centroid_phantom_zone": {
+        "denominator": 13,
+        "numerator": 1,
+        "reason": null,
+        "value": 0.07692307692307693
+      },
+      "centroid_status_counts": {
+        "unique": 13
+      },
+      "centroid_unresolved": {
+        "denominator": 13,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "multi_zone_cases": 4,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 4,
+        "numerator": 4,
+        "reason": null,
+        "value": 1.0
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 13,
+          "numerator": 4,
+          "reason": null,
+          "value": 0.3076923076923077
+        },
+        "10": {
+          "denominator": 13,
+          "numerator": 3,
+          "reason": null,
+          "value": 0.23076923076923078
+        },
+        "25": {
+          "denominator": 13,
+          "numerator": 2,
+          "reason": null,
+          "value": 0.15384615384615385
+        },
+        "5": {
+          "denominator": 13,
+          "numerator": 3,
+          "reason": null,
+          "value": 0.23076923076923078
+        },
+        "50": {
+          "denominator": 13,
+          "numerator": 1,
+          "reason": null,
+          "value": 0.07692307692307693
+        }
+      },
+      "omitted_significant_zones_total": 5,
+      "omitted_zones_total": 5,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    }
+  },
+  "simulation_summary": {
+    "all_scenarios": {
+      "cases": 558,
+      "cases_with_intersecting_zone": 558,
+      "centroid_location_counts": {
+        "in_hole": 18,
+        "inside_parcel": 504,
+        "outside_parcel": 36
+      },
+      "centroid_not_dominant_among_decided": {
+        "denominator": 558,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.008960573476702509
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 558,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.008960573476702509
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_phantom_zone": {
+        "denominator": 558,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "centroid_status_counts": {
+        "unique": 558
+      },
+      "centroid_unresolved": {
+        "denominator": 558,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "multi_zone_cases": 558,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 558,
+          "numerator": 554,
+          "reason": null,
+          "value": 0.992831541218638
+        },
+        "10": {
+          "denominator": 558,
+          "numerator": 397,
+          "reason": null,
+          "value": 0.7114695340501792
+        },
+        "25": {
+          "denominator": 558,
+          "numerator": 238,
+          "reason": null,
+          "value": 0.4265232974910394
+        },
+        "5": {
+          "denominator": 558,
+          "numerator": 467,
+          "reason": null,
+          "value": 0.8369175627240143
+        },
+        "50": {
+          "denominator": 558,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.008960573476702509
+        }
+      },
+      "omitted_significant_zones_total": 558,
+      "omitted_zones_total": 558,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    },
+    "by_solidity": {
+      "0.80<=solidity<0.95": {
+        "cases": 144,
+        "cases_with_intersecting_zone": 144,
+        "centroid_location_counts": {
+          "in_hole": 18,
+          "inside_parcel": 126
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 144
+        },
+        "centroid_unresolved": {
+          "denominator": 144,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 144,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 144,
+          "numerator": 144,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 144,
+            "numerator": 144,
+            "reason": null,
+            "value": 1.0
+          },
+          "10": {
+            "denominator": 144,
+            "numerator": 103,
+            "reason": null,
+            "value": 0.7152777777777778
+          },
+          "25": {
+            "denominator": 144,
+            "numerator": 62,
+            "reason": null,
+            "value": 0.4305555555555556
+          },
+          "5": {
+            "denominator": 144,
+            "numerator": 120,
+            "reason": null,
+            "value": 0.8333333333333334
+          },
+          "50": {
+            "denominator": 144,
+            "numerator": 0,
+            "reason": null,
+            "value": 0.0
+          }
+        },
+        "omitted_significant_zones_total": 144,
+        "omitted_zones_total": 144,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 8
+      },
+      "solidity<0.80": {
+        "cases": 180,
+        "cases_with_intersecting_zone": 180,
+        "centroid_location_counts": {
+          "inside_parcel": 144,
+          "outside_parcel": 36
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 180,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.027777777777777776
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 180,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.027777777777777776
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 180,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 180
+        },
+        "centroid_unresolved": {
+          "denominator": 180,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 180,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 180,
+          "numerator": 180,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 180,
+            "numerator": 176,
+            "reason": null,
+            "value": 0.9777777777777777
+          },
+          "10": {
+            "denominator": 180,
+            "numerator": 136,
+            "reason": null,
+            "value": 0.7555555555555555
+          },
+          "25": {
+            "denominator": 180,
+            "numerator": 85,
+            "reason": null,
+            "value": 0.4722222222222222
+          },
+          "5": {
+            "denominator": 180,
+            "numerator": 157,
+            "reason": null,
+            "value": 0.8722222222222222
+          },
+          "50": {
+            "denominator": 180,
+            "numerator": 5,
+            "reason": null,
+            "value": 0.027777777777777776
+          }
+        },
+        "omitted_significant_zones_total": 180,
+        "omitted_zones_total": 180,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 10
+      },
+      "solidity>=0.95": {
+        "cases": 234,
+        "cases_with_intersecting_zone": 234,
+        "centroid_location_counts": {
+          "inside_parcel": 234
+        },
+        "centroid_not_dominant_among_decided": {
+          "denominator": 234,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_not_dominant_unresolved_counted_as_not": {
+          "denominator": 234,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_omits_at_least_one_significant_zone": {
+          "denominator": 234,
+          "numerator": 234,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_omits_at_least_one_zone": {
+          "denominator": 234,
+          "numerator": 234,
+          "reason": null,
+          "value": 1.0
+        },
+        "centroid_phantom_zone": {
+          "denominator": 234,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "centroid_status_counts": {
+          "unique": 234
+        },
+        "centroid_unresolved": {
+          "denominator": 234,
+          "numerator": 0,
+          "reason": null,
+          "value": 0.0
+        },
+        "multi_zone_cases": 234,
+        "multi_zone_centroid_omits_zone": {
+          "denominator": 234,
+          "numerator": 234,
+          "reason": null,
+          "value": 1.0
+        },
+        "omitted_area_at_least": {
+          "1": {
+            "denominator": 234,
+            "numerator": 234,
+            "reason": null,
+            "value": 1.0
+          },
+          "10": {
+            "denominator": 234,
+            "numerator": 158,
+            "reason": null,
+            "value": 0.6752136752136753
+          },
+          "25": {
+            "denominator": 234,
+            "numerator": 91,
+            "reason": null,
+            "value": 0.3888888888888889
+          },
+          "5": {
+            "denominator": 234,
+            "numerator": 190,
+            "reason": null,
+            "value": 0.811965811965812
+          },
+          "50": {
+            "denominator": 234,
+            "numerator": 0,
+            "reason": null,
+            "value": 0.0
+          }
+        },
+        "omitted_significant_zones_total": 234,
+        "omitted_zones_total": 234,
+        "parameter_differences": {
+          "cases_where_user_would_see_a_difference": 0,
+          "cases_with_parameters": 0
+        },
+        "parcels": 13
+      }
+    },
+    "parameters": {
+      "cut_fractions": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ],
+      "engine": "pog",
+      "orientations": [
+        "vertical",
+        "horizontal"
+      ],
+      "zones_per_scenario": 2
+    },
+    "two_zone_scenarios": {
+      "cases": 558,
+      "cases_with_intersecting_zone": 558,
+      "centroid_location_counts": {
+        "in_hole": 18,
+        "inside_parcel": 504,
+        "outside_parcel": 36
+      },
+      "centroid_not_dominant_among_decided": {
+        "denominator": 558,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.008960573476702509
+      },
+      "centroid_not_dominant_unresolved_counted_as_not": {
+        "denominator": 558,
+        "numerator": 5,
+        "reason": null,
+        "value": 0.008960573476702509
+      },
+      "centroid_omits_at_least_one_significant_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_omits_at_least_one_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "centroid_phantom_zone": {
+        "denominator": 558,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "centroid_status_counts": {
+        "unique": 558
+      },
+      "centroid_unresolved": {
+        "denominator": 558,
+        "numerator": 0,
+        "reason": null,
+        "value": 0.0
+      },
+      "multi_zone_cases": 558,
+      "multi_zone_centroid_omits_zone": {
+        "denominator": 558,
+        "numerator": 558,
+        "reason": null,
+        "value": 1.0
+      },
+      "omitted_area_at_least": {
+        "1": {
+          "denominator": 558,
+          "numerator": 554,
+          "reason": null,
+          "value": 0.992831541218638
+        },
+        "10": {
+          "denominator": 558,
+          "numerator": 397,
+          "reason": null,
+          "value": 0.7114695340501792
+        },
+        "25": {
+          "denominator": 558,
+          "numerator": 238,
+          "reason": null,
+          "value": 0.4265232974910394
+        },
+        "5": {
+          "denominator": 558,
+          "numerator": 467,
+          "reason": null,
+          "value": 0.8369175627240143
+        },
+        "50": {
+          "denominator": 558,
+          "numerator": 5,
+          "reason": null,
+          "value": 0.008960573476702509
+        }
+      },
+      "omitted_significant_zones_total": 558,
+      "omitted_zones_total": 558,
+      "parameter_differences": {
+        "cases_where_user_would_see_a_difference": 0,
+        "cases_with_parameters": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+ Container au112201-backend-test-run-c38e7ba70d85 Creating 
+ Container au112201-backend-test-run-c38e7ba70d85 Created 
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+[pog-sync] zlecenie 1 zakres 0262: succeeded
+{"status": "ok", "jobs": [{"job_id": 1, "powiat": "0262", "status": "succeeded", "data_release_id": 2, "stats": {"teryt_powiat": "0262", "package": "0262_GML.zip", "package_sha256": "80f974d6c258349f178f4ec5a1da61a6bb7ab096242afc884f5f56417c92c8c4", "package_bytes": 5383751, "land_cover_imported": 2256, "powerlines_imported": 154, "powerlines_complete": 1, "roads_read": 5230, "roads_imported": 5230, "roads_rejected": 0, "roads_repaired": 0, "buildings_read": 12302, "buildings_imported": 12302, "buildings_rejected": 0, "buildings_repaired": 0, "data_as_of": "2026-05-18", "created": 0, "activated": 0}, "seconds": 2.36, "job_status": "succeeded"}], "scheduled": null, "map_rebuilt": {"zones": 0, "overlays": 0, "acts": 0}, "finished_at": "2026-10-17T21:32:46.245648+00:00", "exit_code": 0}
