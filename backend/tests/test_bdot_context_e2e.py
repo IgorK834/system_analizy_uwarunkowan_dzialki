@@ -30,7 +30,7 @@ from app.modules.analysis.infrastructure.bdot_repository import PostgisBdotIndex
 from app.services import audit_package
 from app.services.pog_fetch import PogVectorData
 from tests import test_terrain_e2e as base
-from tests.bdot_support import corpus_parcels, expected, installed_releases
+from tests.bdot_support import corpus_parcels, expected
 from tests.test_analysis_orchestrator import _found_discovery
 from tests.test_audit_e2e import _catalog_with
 from tests.test_completeness_e2e import _analyze  # noqa: F401 - ten sam szkielet analizy
@@ -67,8 +67,16 @@ def pog_over_the_parcel(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def krakow_release(tmp_path: Path):
-    with installed_releases(tmp_path, "1261"):
+    from tests.test_land_cover_context import FIXTURES
+    from tests.bdot_support import import_package, purge_bdot
+    with SessionLocal() as db:
+        purge_bdot(db)
+        import_package(db, "1261", tmp_path, package=FIXTURES/"1261/1261_GML.zip")
+    try:
         yield
+    finally:
+        with SessionLocal() as db:
+            purge_bdot(db)
 
 
 def _analyze_parcel(identifier: str, wkt: str):
@@ -120,10 +128,10 @@ def test_road_and_buildings_survive_api_db_reread_cache_pdf_and_zip(
         assert item["union_area_in_ring_sqm"] == pytest.approx(target["union_area_in_ring_sqm"], abs=0.05)
     assert buildings["buildings"] and "owner" not in json.dumps(buildings["buildings"][0])
 
-    # Kompletność: transport i zabudowa są w zakresie i sprawdzone; status wynika z reguły completeness/1.1.
+    # Kompletność: transport i zabudowa są w zakresie i sprawdzone; status wynika z reguły completeness/1.2.
     completeness = body["completeness"]
     states = {item["section"]: item["state"] for item in completeness["sections"]}
-    assert completeness["rule_version"] == "completeness/1.1"
+    assert completeness["rule_version"] == "completeness/1.2"
     assert states["transport"] == states["buildings"] == "checked"
     assert body["status"] == "complete" and completeness["complete"] is True, (states, completeness["headline"])
     quality = {item["section"]: item for item in body["section_quality"]["sections"]}
@@ -191,6 +199,7 @@ def test_the_audit_layers_are_copied_only_when_the_catalog_allows_redistribution
     members = _members(client.get(_links(analysis_id)["audit_package_url"]).content)
 
     assert "layers/road_context.geojson" not in members and "layers/neighbour_buildings.geojson" not in members
+    assert "layers/land_cover.geojson" not in members and "layers/forest_context.geojson" not in members
     manifest = json.loads(members["manifest.json"])
     omitted = {item["name"]: item for item in manifest["omitted_artifacts"]}
     assert omitted["layers/road_context.geojson"]["reason"] == "redistribution_forbidden"
@@ -249,3 +258,47 @@ def test_a_failing_query_does_not_break_the_analysis_and_is_unavailable_not_no_r
     assert quality["transport"] == quality["buildings"] == "unavailable"
     assert body["status"] == "partial"
     assert any(item["code"].startswith("ROAD_CONTEXT_") and item["severity"] == "warning" for item in body["warnings"])
+
+
+def test_land_cover_survives_api_snapshot_pdf_and_redistribution_gate(tmp_path):
+    from app.schemas.analyze import AnalyzeResponse
+    from app.services.report_map_snapshot import build_report_map_snapshot
+    from tests.test_land_cover_context import FIXTURES
+    from tests.bdot_support import import_package, purge_bdot
+    with SessionLocal() as db:
+        purge_bdot(db)
+        import_package(db, '1261', tmp_path, package=FIXTURES/'1261/1261_GML.zip')
+    try:
+        first, _ = _analyze_parcel(f'{_PREFIX}LAND_{uuid4().hex[:6]}',corpus_parcels()[KRAKOW].wkt)
+        assert first.status_code == 200
+        body = first.json()
+        cover = body['land_cover']
+        assert cover['status'] == 'available' and cover['forest']['distance_m'] > 0
+        quality = {r['section']:r for r in body['section_quality']['sections']}
+        assert quality['land_cover']['source_id'] == 'bdot10k' and quality['land_cover']['status'] == 'available'
+        reread = _reread(body['analysis_id'])
+        assert reread['land_cover'] == cover
+        response = AnalyzeResponse.model_validate(body)
+        snapshot = build_report_map_snapshot(response, corpus_parcels()[KRAKOW], basemap_dir='')
+        environment = next(m for m in snapshot['maps'] if m['id'] == 'environment')
+        assert any(layer['id'].startswith('land_cover:') for layer in environment['layers'])
+        links = _links(body['analysis_id'])
+        pdf = client.get(links['report_url'])
+        assert pdf.status_code == 200
+        assert 'Pokrycie terenu i lasy' in _pdf_text(pdf.content)
+        package = client.get(links['audit_package_url'])
+        members = _members(package.content)
+        assert 'layers/land_cover.geojson' in members
+        assert 'layers/forest_context.geojson' in members
+        assert json.loads(members['analysis.json'])['result']['land_cover']['status'] == 'available'
+    finally:
+        with SessionLocal() as db:
+            purge_bdot(db)
+
+
+def test_land_cover_mapping_failure_is_a_section_failure_not_http_500(monkeypatch):
+    monkeypatch.setattr('app.services.analysis_orchestrator.build_land_cover', lambda _: (_ for _ in ()).throw(ValueError('schema changed')))
+    response, _ = _analyze_parcel(f'{_PREFIX}LAND_FAIL_{uuid4().hex[:6]}',corpus_parcels()[KRAKOW].wkt)
+    assert response.status_code == 200
+    assert response.json()['land_cover']['status'] == 'unavailable'
+    assert response.json()['land_cover']['reason_code'] == 'UNEXPECTED_ERROR'
