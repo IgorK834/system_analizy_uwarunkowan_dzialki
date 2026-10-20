@@ -411,9 +411,11 @@ export const ROAD_CASES: Record<string, RoadContextResult> = {
 
 export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
   "available": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "available",
     "reason_code": null,
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
@@ -656,9 +658,11 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "warnings": []
   },
   "crowded": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "available",
     "reason_code": null,
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
@@ -2278,9 +2282,11 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "warnings": []
   },
   "empty": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "available",
     "reason_code": null,
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
@@ -2369,9 +2375,11 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "warnings": []
   },
   "partial_coverage": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "available",
     "reason_code": null,
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
@@ -2614,9 +2622,11 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "warnings": []
   },
   "no_coverage": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "no_coverage",
     "reason_code": "OUTSIDE_COVERAGE",
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
@@ -2654,9 +2664,11 @@ export const BUILDINGS_CASES: Record<string, NeighbourBuildingsResult> = {
     "warnings": []
   },
   "unavailable": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "status": "unavailable",
     "reason_code": "QUERY_TIMEOUT",
+    "neighbour_parcel_indicators_status": "unknown",
+    "neighbour_parcel_indicators_reason": "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE",
     "ring_definition": "buffer(parcel, r) - parcel",
     "distance_reference": "parcel_polygon_to_building_footprint",
     "buffers_m": [
