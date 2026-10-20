@@ -354,8 +354,8 @@ def test_freezing_tool_records_mismatch_and_network_errors(tmp_path: Path) -> No
             mismatch = freeze.freeze_layers(manifest, corpus_dir, tmp_path / "a", client)
     assert mismatch["layers"] == {}
     attempts = mismatch["failures"][0]["attempts"]
-    assert [a["status"] for a in attempts] == ["release_mismatch", "release_mismatch"]
-    assert [a["swap_axes"] for a in attempts] == [False, True]
+    assert [a["status"] for a in attempts] == ["release_mismatch"]
+    assert [a["swap_axes"] for a in attempts] == [True]
 
     manifest, corpus_dir, _parcel = _mini_corpus(tmp_path)
     with respx.mock() as router:
@@ -365,14 +365,13 @@ def test_freezing_tool_records_mismatch_and_network_errors(tmp_path: Path) -> No
     assert offline["layers"] == {} and "ConnectTimeout" in offline["failures"][0]["attempts"][0]["error"]
 
 
-def test_request_parameters_and_legacy_srs_rewrite() -> None:
+def test_request_parameters_use_urn_bbox_axis_order() -> None:
     straight = freeze.request_params((1.0, 2.0, 3.0, 4.0), swap_axes=False)
     swapped = freeze.request_params((1.0, 2.0, 3.0, 4.0), swap_axes=True)
-    assert straight["bbox"] == "1.000,2.000,3.000,4.000,EPSG:2180"
-    assert swapped["bbox"] == "2.000,1.000,4.000,3.000,EPSG:2180"
-    assert straight["count"] == "100" and straight["version"] == "2.0.0"
-    rewritten = freeze.normalize_legacy_srs(b'srsName="http://www.opengis.net/gml/srs/epsg.xml#2180"')
-    assert rewritten == b'srsName="EPSG:2180"'
+    assert straight["bbox"] == "1.000,2.000,3.000,4.000,urn:ogc:def:crs:EPSG::2180"
+    assert swapped["bbox"] == "2.000,1.000,4.000,3.000,urn:ogc:def:crs:EPSG::2180"
+    assert straight["count"] == "10" and straight["version"] == "2.0.0"
+    assert straight["srsName"] == "EPSG:2180"
     assert exp.canonical_json({"b": 1, "a": 2}) == '{"a":2,"b":1}'
 
 
@@ -431,3 +430,36 @@ def test_experiment_is_deterministic_offline(monkeypatch: pytest.MonkeyPatch, ma
     monkeypatch.setattr(socket.socket, "connect", blocked)
     again = exp.run_experiment(manifest, CORPUS.parent)
     assert exp.canonical_json(again) == exp.canonical_json(experiment)
+
+
+def test_live_frozen_layers_cover_three_municipalities_with_complete_pages():
+    corpus_path = ROOT / "backend/tests/fixtures/centroid_corpus/manifest.json"
+    corpus = json.loads(corpus_path.read_text())
+    directory = ROOT / "backend/tests/fixtures/centroid_zone_layers"
+    frozen = json.loads((directory / "manifest.json").read_text())
+    assert not frozen["failures"] and len(frozen["observations"]) == 18
+    assert {entry["municipality"] for entry in frozen["layers"].values()} == {"Bielsko-Biała", "Legnica", "Sopot"}
+    for entry in [*frozen["layers"].values(), *frozen["observations"]]:
+        for page in entry["responses"]:
+            assert hashlib.sha256((directory / page["path"]).read_bytes()).hexdigest() == page["sha256"]
+    cases, missing = exp.load_zone_layers(directory, corpus, corpus_path.parent)
+    assert len(cases) == 13 and {row["layer"] for row in missing} == {"mpzp"}
+    results = [exp.compare_case(case) for case in cases]
+    summary = exp.summarize(results)
+    assert summary["multi_zone_cases"] == 4
+    assert summary["centroid_not_dominant_among_decided"]["numerator"] == 1
+    assert summary["centroid_omits_at_least_one_zone"]["numerator"] == 5
+    sopot = next(entry for entry in frozen["layers"].values() if entry["municipality"] == "Sopot")
+    assert len(sopot["responses"]) == 2  # real RU ignores count>10
+
+
+def test_resume_preserves_verified_snapshot_without_network(tmp_path):
+    manifest, corpus_dir, _parcel = _mini_corpus(tmp_path)
+    with respx.mock() as router:
+        router.get(freeze.WFS_URL).respond(200, content=RU_ZONE_FIXTURE.read_bytes())
+        with httpx.Client() as client:
+            first = freeze.freeze_layers(manifest, corpus_dir, tmp_path / "frozen", client)
+    with respx.mock(assert_all_mocked=True):
+        with httpx.Client() as client:
+            resumed = freeze.freeze_layers(manifest, corpus_dir, tmp_path / "frozen", client, resume=True)
+    assert resumed["layers"] == first["layers"] and resumed["failures"] == []

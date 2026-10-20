@@ -786,3 +786,10 @@ def test_git_helpers_degrade_without_git(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_default_output_path_is_dated_markdown() -> None:
     assert smoke.default_output_path("2026-10-08").name == "2026-10-08.md"
+
+
+def test_land_cover_and_forest_are_visible_in_smoke_summary():
+    summary = smoke.summarize_response(200, _ok(land_cover={"status":"available", "reason_code":None,
+        "forest":{"status":"available", "distance_m":0.0}}))
+    assert summary['land_cover_status'] == 'available'
+    assert summary['forest_status'] == 'available' and summary['forest_distance_m'] == 0.0
