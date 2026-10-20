@@ -25,6 +25,7 @@ from shapely.geometry import mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform
 
+from app.modules.analysis.domain.landcover import CLASS_COLORS
 from app.core.report_config import (
     MAP_BBOX_EXPANSION_RATIO,
     MAP_IMAGE_HEIGHT,
@@ -82,8 +83,10 @@ def build_report_map_snapshot(
     if parcel_geometry.is_empty:
         raise ValueError("Nie można zamrozić mapy bez geometrii działki.")
     theme_id = pog_theme or settings.report_map_pog_theme
+    cover = getattr(response, "land_cover", None)
+    context_bounds = parcel_geometry.buffer(200, quad_segs=16).bounds if cover and cover.features_geojson else parcel_geometry.bounds
     frame = fit_frame(
-        parcel_geometry.bounds,
+        context_bounds,
         width_px=MAP_IMAGE_WIDTH,
         height_px=MAP_IMAGE_HEIGHT,
         margin_ratio=MAP_BBOX_EXPANSION_RATIO,
@@ -479,6 +482,31 @@ def _environment_map(
         _layer("flood", styles["flood"], features["flood"]),
         _layer("nature", styles["nature"], features["nature"]),
     ]
+    cover = getattr(response, "land_cover", None)
+    if cover is not None:
+        for index, code in enumerate(sorted({f.get("properties", {}).get("class_code", "") for f in cover.features_geojson})):
+            items = [f for f in cover.features_geojson if f.get("properties", {}).get("class_code") == code]
+            style = {**styles["nature"], "label": items[0].get("properties", {}).get("label", code),
+                     "fill": CLASS_COLORS.get(code, "#888888"), "outline": CLASS_COLORS.get(code, "#888888"),
+                     "line_dash": None, "pattern": None, "fill_alpha": 100}
+            layers.append(_layer("land_cover:" + code, style,
+                [_feature(f"cover:{index}:{j}", code, _clip_geojson(f, clip)) for j, f in enumerate(items)], kind="computed"))
+        for b in cover.forest.buffers:
+            style = {**styles["nature"], "label": f"Las — orientacyjny bufor {b.radius_m:g} m",
+                     "fill": "#34732d", "fill_alpha": 30, "pattern": None}
+            layers.append(_layer(f"forest_buffer:{b.radius_m:g}", style,
+                [_feature(f"forest:{b.radius_m:g}", "bufor lasu", _clip_geojson(b.geometry_geojson, clip))], kind="approximation"))
+    if cover is not None and cover.features_geojson:
+        buildings = getattr(response, "neighbour_buildings", None)
+        if buildings:
+            layers.append(_layer("neighbour_buildings", {**styles["nature"], "label": "Budynki BDOT10k",
+                "fill": "#897468", "outline": "#514237", "pattern": None},
+                [_feature(b.building_id, b.general_function, _clip_geojson(b.geometry_geojson, clip)) for b in buildings.buildings]))
+        road = getattr(response, "road_context", None)
+        if road and road.nearest:
+            layers.append(_layer("road_context", {**styles["network"], "label": "Najbliższa oś jezdni BDOT10k",
+                "outline": "#bd7900", "fill": None, "pattern": None},
+                [_feature(road.nearest.road_id, "oś jezdni", _clip_geojson(road.nearest.road_geojson, clip))]))
     reason = None
     if not any(layer["features"] for layer in layers):
         statuses = {
@@ -490,8 +518,14 @@ def _environment_map(
             f"ochrona przyrody — {statuses.get('nature', 'unknown')}). "
             "Przy statusie innym niż „sprawdzono” brak obiektów nie oznacza braku ograniczeń."
         )
-    return _map("environment", "environment_risk", "Zagrożenie powodziowe i formy ochrony przyrody",
-                [*layers, parcel_layer], reason)
+    result = _map("environment", "environment_risk", "Zagrożenie powodziowe i formy ochrony przyrody",
+                  [*layers, parcel_layer], reason)
+    if cover is not None and cover.features_geojson:
+        result["title"] = "Mapa 5. Pokrycie terenu, lasy, zabudowa i środowisko w otoczeniu działki"
+        result["notes"] = ["Pokrycie w promieniu 200 m. Bufory lasu 8/12/16 m to orientacyjne przybliżenie geometryczne, bez interpretacji przepisów."]
+        if getattr(response, "road_context", None):
+            result["notes"].append(response.road_context.interpretation_note)
+    return result
 
 
 # --- Pomocnicze ------------------------------------------------------------------
@@ -645,6 +679,13 @@ def _map_data_provenance(response: Any, map_id: str) -> tuple[list[str], list[in
                 sources.append(pog.act)
     elif map_id == "environment":
         sources.extend(section.source for section in getattr(response, "risk_sections", None) or [])
+        cover = getattr(response, "land_cover", None)
+        if cover is not None:
+            sources.append(cover.source)
+            for name in ("road_context", "neighbour_buildings"):
+                section = getattr(response, name, None)
+                if section:
+                    sources.append(section.source)
     elif map_id == "parcel":
         sources.extend(item.source for item in getattr(response, "infrastructure", None) or [])
     dates = sorted(

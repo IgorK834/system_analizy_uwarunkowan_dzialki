@@ -72,6 +72,7 @@ from app.services.report_map_snapshot import build_report_map_snapshot
 from app.services.risks import risk_sections_from_snapshot
 from app.services.section_quality import build_section_quality
 from app.services.terrain import terrain_from_snapshot
+from app.services.land_cover import land_cover_from_snapshot
 from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
 from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.shared.mpzp_status_text import MPZP_STATUS_MISSING_MESSAGE
@@ -236,6 +237,7 @@ def _build_report_context(
         ),
         "risk_sections": _risk_sections_context(response),
         "terrain": _terrain_context(response.terrain),
+        "land_cover": _land_cover_context(response.land_cover),
         "road": _road_context(response.road_context),
         "buildings": _buildings_context(response.neighbour_buildings),
         "utilities_preview": _utilities_preview_context(response),
@@ -397,6 +399,7 @@ def _domain_assessments(
         "utilities": _utilities_finding(response),
         "transport": _road_finding(response.road_context),
         "buildings": _buildings_finding(response.neighbour_buildings),
+        "land_cover": ("Pokrycie terenu i lasy: " + _BDOT_STATUS_LABELS[(response.land_cover or land_cover_from_snapshot(None)).status], "computed" if response.land_cover and response.land_cover.status == "available" else None),
         "mpzp_pog_relation": _compatibility_finding(response.pog),
     }
     by_key = {item.section: item for item in quality.sections}
@@ -1904,7 +1907,7 @@ def _infrastructure_context(item: Any) -> dict[str, Any]:
 _BDOT_STATUS_LABELS: Final[dict[str, str]] = {
     "available": "obliczono z lokalnego wydania BDOT10k",
     "no_match": "nic nie znaleziono w ograniczonym zasięgu",
-    "no_coverage": "brak pokrycia — działka poza zaimportowanymi powiatami BDOT10k",
+    "no_coverage": "brak pełnego pokrycia zaimportowanymi danymi BDOT10k",
     "unavailable": "źródło niedostępne",
     "unknown": "zapis sprzed tej sekcji — brak informacji",
 }
@@ -2173,6 +2176,7 @@ def _provenance_context(
         ),
         ("Polityka jakości (wersja)", quality.policy_version if quality else None),
         ("Teren (NMT)", response.terrain.schema_version if response.terrain else None),
+        ("Pokrycie terenu i lasy (BDOT10k)", response.land_cover.schema_version if response.land_cover else None),
         ("Droga i dostęp do drogi (BDOT10k)", response.road_context.schema_version if response.road_context else None),
         (
             "Zabudowa sąsiednia (BDOT10k)",
@@ -2611,3 +2615,17 @@ def _plural(count: int, one: str, few: str, many: str) -> str:
     if count % 10 in {2, 3, 4} and count % 100 not in {12, 13, 14}:
         return few
     return many
+
+
+def _land_cover_context(value):
+    value = value or land_cover_from_snapshot(None)
+    return {"value": value, "status_label": "nieustalony — brak pełnych danych" if value.status == "unknown" else _BDOT_STATUS_LABELS[value.status],
+        "forest_status_label": "nieustalony — brak pełnych danych" if value.forest.status == "unknown" else _BDOT_STATUS_LABELS[value.forest.status],
+        "distance": _meters(value.forest.distance_m, 2) if value.forest.distance_m is not None else NOT_SPECIFIED,
+        "source": _source_brief(value.source),
+        "release": _bdot_release_context(value.release),
+        "zones": [{"label": label, "area": _area(zone.area_sqm),
+            "classes": [{"label": c.label, "area": _area(c.area_sqm), "share": _share(c.share_pct)} for c in zone.classes],
+            "sum": _share(zone.classified_share_pct)}
+            for label, zone in (("Na działce", value.parcel), ("W pierścieniu do 200 m", value.surroundings)) if zone is not None],
+        "buffers": [{"radius": b.radius_m, "area": _area(b.overlap_with_parcel_sqm)} for b in value.forest.buffers]}

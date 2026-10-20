@@ -609,6 +609,25 @@
   {% endif %}
   {% for warning in risk.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
   {% endfor %}
+  <h3 id="sec-land-cover">Pokrycie terenu i lasy (BDOT10k)</h3>
+  <p data-block="land-cover-status">Status: {{ land_cover.status_label }}{% if land_cover.value.reason_code %} ({{ land_cover.value.reason_code }}){% endif %}.</p>
+  <p class="informational">{{ land_cover.value.interpretation_note }}</p>
+  {% for zone in land_cover.zones %}
+  <div style="break-inside: avoid;">
+  <table class="data" data-block="land-cover-table">
+    <caption>{{ zone.label }} — {{ zone.area }} {{ kind("computed") }}</caption>
+    <thead><tr><th>Klasa pokrycia</th><th>Pole</th><th>Udział</th></tr></thead><tbody>
+    {% for c in zone.classes %}<tr><td>{{ c.label }}</td><td>{{ c.area }}</td><td>{{ c.share }}</td></tr>{% endfor %}
+    </tbody><tfoot><tr><th>Suma sklasyfikowana</th><td>—</td><td>{{ zone.sum }}</td></tr></tfoot>
+  </table>
+  </div>
+  {% endfor %}
+  <p>Odległość od poligonu działki do lasu: {{ land_cover.distance }}; status pomiaru: {{ land_cover.forest_status_label }}.
+  Promień wyszukiwania: {{ land_cover.value.forest.search_radius_m|int }} m.</p>
+  {% for b in land_cover.buffers %}<p>Orientacyjny bufor {{ b.radius|int }} m — część działki w buforze: {{ b.area }}.</p>{% endfor %}
+  {% if land_cover.release %}<p class="note">Wydanie: {{ land_cover.release.label }}; stan danych: {{ na(land_cover.release.data_as_of) }}.</p>{% endif %}
+  {% if land_cover.source %}<p class="note">Źródło: {{ source_line(land_cover.source) }}</p>{% endif %}
+  {% for w in land_cover.value.warnings %}<p class="empty">{{ w }}</p>{% endfor %}
 </section>
 
 {# ---------- 6. Teren ---------- #}
@@ -757,6 +776,7 @@
   {% for warning in road.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
 
   <h3 id="sec-buildings">Zabudowa sąsiednia</h3>
+  <p class="note">Wskaźniki sąsiednich działek: nieustalone — brak geometrii tych działek w analizie.</p>
   <p class="informational" data-block="buildings-note">{{ buildings.note }}</p>
   {% if buildings.on_parcel %}
   <h4>Tabela 7.4. Zabudowa na działce i w buforach {{ kind("computed") }}</h4>

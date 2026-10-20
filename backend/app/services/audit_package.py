@@ -54,6 +54,7 @@ GEOMETRY_KEYS: Final[frozenset[str]] = frozenset(
         "line_geojson",
         "road_geojson",
         "link_geojson",
+        "features_geojson",
     }
 )
 GEOMETRY_MOVED: Final[dict[str, bool]] = {"moved_to_geojson_files": True}
@@ -225,7 +226,7 @@ def _all_sources(response: AnalyzeResponse) -> list[SourceMetadata]:
             found.append(response.terrain.relief.source)
     found.extend(
         section.source
-        for section in (response.road_context, response.neighbour_buildings)
+        for section in (response.road_context, response.neighbour_buildings, response.land_cover)
         if section is not None and section.source is not None
     )
     return found
@@ -498,6 +499,14 @@ def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> lis
                                  "distance_m": item.distance_m, "relation": item.relation,
                                  "floors": item.floors, "general_function": item.general_function})],
             [buildings.source])
+    cover = response.land_cover
+    if cover is not None:
+        add("land_cover", "Pokrycie terenu BDOT10k", cover.interpretation_note,
+            [f for item in cover.features_geojson for f in _features(item, {"layer": "land_cover"})], [cover.source])
+        forest_features = _features(cover.forest.geometry_geojson, {"layer": "forest"})
+        for buffer in cover.forest.buffers:
+            forest_features += _features(buffer.geometry_geojson, {"layer": "forest_buffer", "radius_m": buffer.radius_m})
+        add("forest_context", "Las i bufory orientacyjne", cover.interpretation_note, forest_features, [cover.source])
     return layers
 
 
