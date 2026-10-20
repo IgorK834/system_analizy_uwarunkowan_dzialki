@@ -19,12 +19,18 @@ from app.modules.imports.application.common import (
     ImportRelease,
     ImportSourceNotRunnable,
 )
+from app.modules.imports.application.powerlines import prepare_powerlines
+from app.modules.imports.domain.powerlines import PowerlineRow
 from app.modules.imports.domain.bdot10k import (
     REJECT_EMPTY_AFTER_REPAIR,
     BuildingRow,
     Bdot10kValidationError,
     ExtentRow,
     LayerStats,
+    LandCoverRow,
+    LAND_COVER_LAYERS,
+    clean_text,
+    parse_version,
     RawFeature,
     RoadRow,
     data_as_of,
@@ -52,6 +58,9 @@ class Bdot10kBatch:
     roads: tuple[RawFeature, ...] = ()
     buildings: tuple[RawFeature, ...] = ()
     boundaries: tuple[RawFeature, ...] = ()
+    land_cover: Mapping[str, tuple[RawFeature, ...]] = field(default_factory=dict)
+    # None = klasa nieobecna (starszy wycinek); () = potwierdzona pusta klasa.
+    powerlines: tuple[RawFeature, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -87,6 +96,8 @@ class Bdot10kPublication:
     buildings: tuple[BuildingRow, ...]
     class_stats: Mapping[str, Mapping[str, object]]
     data_as_of: date | None
+    land_cover: tuple[LandCoverRow, ...] = ()
+    powerlines: tuple[PowerlineRow, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -141,6 +152,10 @@ def run_bdot10k_import(
     extent = ExtentRow(teryt_powiat=teryt, name=extent_raw.name, geometry_wkb=extent_geometry.wkb)
 
     road_stats, building_stats = LayerStats(), LayerStats()
+    cover_stats = LayerStats()
+    cover = _prepare_land_cover(batch, mapping, geometry, cover_stats)
+    powerline_stats = LayerStats()
+    powerlines = prepare_powerlines(batch.powerlines or (), mapping, geometry, powerline_stats)
     prepared = _Prepared()
     prepared.roads = _prepare_roads(batch, mapping, geometry, road_stats)
     prepared.buildings = _prepare_buildings(batch, mapping, geometry, building_stats)
@@ -153,16 +168,22 @@ def run_bdot10k_import(
         )
 
     class_stats = {
+        "powerlines": {**powerline_stats.as_dict(), "complete": batch.powerlines is not None},
+        "land_cover": {**cover_stats.as_dict(), "complete": set(batch.land_cover) == set(LAND_COVER_LAYERS)
+                       and not cover_stats.rejected, "layers": sorted(batch.land_cover)},
         "roads": road_stats.as_dict(),
         "buildings": building_stats.as_dict(),
         "boundaries": {"read": len(batch.boundaries), "used": 1},
     }
-    as_of = data_as_of(road_stats, building_stats)
+    as_of = data_as_of(road_stats, building_stats, cover_stats, powerline_stats)
     stats: dict[str, int | float | str] = {
         "teryt_powiat": teryt,
         "package": batch.package_name,
         "package_sha256": batch.package_sha256,
         "package_bytes": batch.size_bytes,
+        "land_cover_imported": len(cover),
+        "powerlines_imported": len(powerlines),
+        "powerlines_complete": int(batch.powerlines is not None),
         "roads_read": road_stats.read,
         "roads_imported": road_stats.imported,
         "roads_rejected": sum(road_stats.rejected.values()),
@@ -174,7 +195,7 @@ def run_bdot10k_import(
         "data_as_of": as_of.isoformat() if as_of else "unknown",
     }
     warnings: list[str] = []
-    for label, layer in (("roads", road_stats), ("buildings", building_stats)):
+    for label, layer in (("roads", road_stats), ("buildings", building_stats), ("land_cover", cover_stats)):
         for reason, count in sorted(layer.rejected.items()):
             warnings.append(f"{label}:{reason}={count}")
 
@@ -198,6 +219,8 @@ def run_bdot10k_import(
             buildings=tuple(prepared.buildings),
             class_stats=class_stats,
             data_as_of=as_of,
+            land_cover=tuple(cover),
+            powerlines=powerlines,
         )
     )
     stats["created"] = int(result.created)
@@ -251,3 +274,35 @@ def _prepare_buildings(
             stats.repaired += 1
         rows.append(replace(row, geometry_wkb=repaired.wkb, area_sqm=repaired.area_sqm))
     return keep_latest_per_id(rows, stats)
+
+
+def _prepare_land_cover(batch, mapping, geometry, stats) -> list[LandCoverRow]:
+    rows = []
+    for code, features in sorted(batch.land_cover.items()):
+        if code not in LAND_COVER_LAYERS:
+            raise Bdot10kValidationError(f"Nieznana klasa pokrycia: {code}")
+        for feature in features:
+            stats.read += 1
+            local_id = clean_text(feature.attributes.get(mapping["local_id"]))
+            if not local_id or len(local_id) > 64:
+                stats.reject("invalid_local_id")
+                continue
+            if feature.geometry_wkb is None:
+                stats.reject("no_geometry")
+                continue
+            repaired = geometry.repair_polygon(feature.geometry_wkb)
+            if repaired.wkb is None:
+                stats.reject(repaired.reject_reason or REJECT_EMPTY_AFTER_REPAIR)
+                continue
+            stats.repaired += int(repaired.repaired)
+            version = parse_version(feature.attributes.get(mapping["feature_version"]))
+            if version and (stats.latest_version is None or version > stats.latest_version):
+                stats.latest_version = version
+            kind = clean_text(feature.attributes.get(mapping.get("land_cover_kind", "rodzaj")))
+            if code == "OT_PTLZ_A" and kind not in {"las", "zagajnik", "zadrzewienie"}:
+                stats.reject("unknown_forest_kind")
+                continue
+            rows.append(LandCoverRow(local_id, code, kind, repaired.wkb, version))
+    result = keep_latest_per_id(rows, stats)
+    stats.imported = len(result)
+    return result

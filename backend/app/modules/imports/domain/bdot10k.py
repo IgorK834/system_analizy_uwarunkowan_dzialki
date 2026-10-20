@@ -26,6 +26,9 @@ ROAD_LAYER: Final[str] = "OT_SKJZ_L"
 BUILDING_LAYER: Final[str] = "OT_BUBD_A"
 BOUNDARY_LAYER: Final[str] = "OT_ADJA_A"
 REQUIRED_LAYERS: Final[tuple[str, ...]] = (ROAD_LAYER, BUILDING_LAYER, BOUNDARY_LAYER)
+LAND_COVER_LAYERS: Final[tuple[str, ...]] = tuple(
+    f"OT_{code}_A" for code in ("PTWP", "PTZB", "PTLZ", "PTRK", "PTUT", "PTTR", "PTKM", "PTGN", "PTPL", "PTSO", "PTWZ", "PTNZ")
+)
 POWIAT_UNIT_KIND: Final[str] = "powiat"
 SCOPE_PREFIX: Final[str] = "powiat:"
 
@@ -123,6 +126,15 @@ class BuildingRow:
     predominant_function: str | None
     floors: int | None
     geometry_source: str | None
+    feature_version_at: datetime | None
+
+
+@dataclass(frozen=True)
+class LandCoverRow:
+    local_id: str
+    class_code: str
+    kind: str | None
+    geometry_wkb: bytes
     feature_version_at: datetime | None
 
 

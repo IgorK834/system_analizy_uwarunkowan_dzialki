@@ -25,6 +25,7 @@ from app.modules.imports.domain.bdot10k import (
     BUILDING_FIELD_KEYS,
     BUILDING_LAYER,
     REQUIRED_LAYERS,
+    LAND_COVER_LAYERS,
     ROAD_FIELD_KEYS,
     ROAD_LAYER,
     Bdot10kValidationError,
@@ -33,6 +34,7 @@ from app.modules.imports.domain.bdot10k import (
     validate_powiat_teryt,
 )
 from app.shared.safe_archive import ArchiveLimits, extract_zip
+from app.modules.imports.domain.powerlines import POWERLINE_LAYER
 
 MB = 1024 * 1024
 # Realne paczki: 51–792 MB po rozpakowaniu, współczynnik kompresji 15–31. Limity zostawiają zapas, ale
@@ -44,7 +46,7 @@ BDOT10K_ARCHIVE_LIMITS = ArchiveLimits(
     max_compression_ratio=100.0,
     compression_ratio_floor_bytes=4 * 1024,
 )
-_MEMBER_SUFFIXES = tuple(f"__{layer}.xml".lower() for layer in REQUIRED_LAYERS)
+_MEMBER_SUFFIXES = tuple(f"__{layer}.xml".lower() for layer in (*REQUIRED_LAYERS, *LAND_COVER_LAYERS, POWERLINE_LAYER))
 _MEMBER_TERYT = re.compile(r"\.(\d{4})__ot_[a-z]{4}_[a-z]\.xml$", re.IGNORECASE)
 _CANONICAL_CRS = "EPSG:2180"
 class Bdot10kReadError(RuntimeError):
@@ -94,6 +96,10 @@ class ZipBdot10kReader:
                 package_sha256=sha,
                 size_bytes=self._package.stat().st_size,
                 teryt_powiat=self._teryt,
+                powerlines=(_read_layer(by_layer[POWERLINE_LAYER], self._columns(("local_id", "feature_version", "existence_category")) + ("rodzaj",), POWERLINE_LAYER)
+                            if POWERLINE_LAYER in by_layer else None),
+                land_cover={layer: _read_layer(path, (self._mapping["local_id"], self._mapping["feature_version"], self._mapping.get("land_cover_kind", "rodzaj")), layer)
+                            for layer, path in by_layer.items() if layer in LAND_COVER_LAYERS},
                 roads=_read_layer(by_layer[ROAD_LAYER], self._columns(ROAD_FIELD_KEYS), ROAD_LAYER),
                 buildings=_read_layer(by_layer[BUILDING_LAYER], self._columns(BUILDING_FIELD_KEYS), BUILDING_LAYER),
                 boundaries=_read_layer(by_layer[BOUNDARY_LAYER], self._columns(BOUNDARY_FIELD_KEYS), BOUNDARY_LAYER),
@@ -102,7 +108,7 @@ class ZipBdot10kReader:
     def _members_by_layer(self, extracted: list[Path]) -> dict[str, Path]:
         found: dict[str, Path] = {}
         for path in extracted:
-            for layer in REQUIRED_LAYERS:
+            for layer in (*REQUIRED_LAYERS, *LAND_COVER_LAYERS, POWERLINE_LAYER):
                 if path.name.lower().endswith(f"__{layer}.xml".lower()):
                     found[layer] = path
             match = _MEMBER_TERYT.search(path.name)
@@ -142,9 +148,19 @@ def _read_layer(path: Path, columns: tuple[str, ...], layer: str) -> tuple[RawFe
         from pyogrio.raw import read
     except ImportError as exc:  # pragma: no cover - błąd obrazu
         raise Bdot10kReadError("Brak pyogrio. Zbuduj ponownie obraz backendu.") from exc
+    from xml.etree import ElementTree
+    with path.open("rb") as stream:
+        starts = ElementTree.iterparse(stream, events=("start",))
+        _, root = next(starts)
+        if next(starts, None) is None and root.tag == "{http://www.opengis.net/gml/3.2}FeatureCollection":
+            return ()
     try:
         info = read_info(path)
         available = {str(name) for name in info.get("fields", ())}
+        if layer.startswith("OT_PT"):
+            required = set(columns if layer == "OT_PTLZ_A" else columns[:2])
+            if missing := required - available:
+                raise Bdot10kReadError(f"Klasa {layer} nie ma wymaganych pól: {sorted(missing)}")
         wanted = [name for name in columns if name in available]
         metadata, _fids, geometries, field_data = read(path, columns=wanted, force_2d=True)
     except Exception as exc:  # noqa: BLE001 - GDAL zgłasza różne typy błędów

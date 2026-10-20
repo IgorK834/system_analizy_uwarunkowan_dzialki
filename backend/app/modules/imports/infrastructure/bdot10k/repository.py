@@ -16,7 +16,8 @@ from sqlalchemy import LargeBinary, Table, bindparam, func, insert, select, text
 from sqlalchemy.orm import Session
 
 from app.core.data_sources import DataSourceEntry
-from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad
+from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad, BdotLandCover
+from app.models.bdot_powerline import BdotPowerline
 from app.models.versioned import DataRelease, DataSource, ImportRun
 from app.modules.imports.application.bdot10k_import import (
     Bdot10kPublication,
@@ -26,14 +27,14 @@ from app.modules.imports.domain.bdot10k import BDOT10K_SOURCE_ID, scope_key
 from app.modules.imports.infrastructure.artifacts import LocalArtifactStore
 from app.modules.imports.infrastructure.repository import SqlAlchemyImportRepository
 
-BDOT10K_IMPORTER_VERSION = "bdot10k-import/1"
+BDOT10K_IMPORTER_VERSION = "bdot10k-import/3"
 BATCH_SIZE = 5_000
 _T = TypeVar("_T")
 
 
 def release_label(teryt_powiat: str, package_sha256: str) -> str:
     """Etykieta wydania: ten sam powiat i ta sama paczka zawsze dają tę samą etykietę."""
-    return f"{BDOT10K_SOURCE_ID}-{teryt_powiat}-{package_sha256[:12]}"
+    return f"{BDOT10K_SOURCE_ID}-{teryt_powiat}-{package_sha256[:12]}-v3"
 
 
 def _batches(items: Iterable[_T], size: int) -> Iterator[list[_T]]:
@@ -130,6 +131,16 @@ class SqlAlchemyBdot10kRepository(SqlAlchemyImportRepository):
 
     def _insert_objects(self, release_id: int, teryt: str, publication: Bdot10kPublication) -> None:
         batch = publication.batch
+        powerline_stmt = insert(cast(Table, BdotPowerline.__table__)).values(
+            geometry=func.ST_SetSRID(func.ST_GeomFromWKB(bindparam("geometry_wkb", type_=LargeBinary)), 2180)
+        )
+        for chunk in _batches(publication.powerlines, BATCH_SIZE):
+            self.session.execute(powerline_stmt, [
+                {"data_release_id": release_id, "local_id": row.local_id,
+                 "kind": row.kind, "existence_category": row.existence_category,
+                 "feature_version_at": row.feature_version_at, "geometry_wkb": row.geometry_wkb}
+                for row in chunk
+            ])
         self.session.add(
             BdotRelease(
                 data_release_id=release_id,
@@ -169,6 +180,13 @@ class SqlAlchemyBdot10kRepository(SqlAlchemyImportRepository):
                     for row in road_chunk
                 ],
             )
+        cover_stmt = insert(cast(Table, BdotLandCover.__table__)).values(
+            geometry=func.ST_SetSRID(func.ST_GeomFromWKB(bindparam("geometry_wkb", type_=LargeBinary)), 2180)
+        )
+        for cover_chunk in _batches(publication.land_cover, BATCH_SIZE):
+            self.session.execute(cover_stmt, [{"data_release_id": release_id, "local_id": row.local_id,
+                "class_code": row.class_code, "kind": row.kind, "feature_version_at": row.feature_version_at,
+                "geometry_wkb": row.geometry_wkb} for row in cover_chunk])
         building_stmt = insert(cast(Table, BdotBuilding.__table__)).values(
             geometry=func.ST_SetSRID(func.ST_GeomFromWKB(bindparam("geometry_wkb", type_=LargeBinary)), 2180)
         )
