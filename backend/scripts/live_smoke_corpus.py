@@ -239,6 +239,14 @@ def summarize_response(status_code: int, body: object) -> dict[str, Any]:
     summary["manual_zone_required"] = required if isinstance(required, bool) else None
     _summarize_completeness(summary, body.get("completeness"))
     _summarize_bdot(summary, body.get("road_context"), body.get("neighbour_buildings"))
+    cover = body.get("land_cover")
+    if isinstance(cover, dict):
+        summary["land_cover_status"] = cover.get("status")
+        summary["land_cover_reason"] = cover.get("reason_code")
+        forest = cover.get("forest")
+        summary["forest_status"] = forest.get("status") if isinstance(forest, dict) else None
+        summary["forest_distance_m"] = forest.get("distance_m") if isinstance(forest, dict) else None
+
     warnings = body.get("warnings")
     if isinstance(warnings, list):
         summary["warning_codes"] = sorted(

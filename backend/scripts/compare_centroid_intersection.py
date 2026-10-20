@@ -497,6 +497,9 @@ def load_zone_layers(directory: Path | None, manifest: Mapping[str, Any], corpus
     layers: dict[str, Any] = {}
     if directory is not None and (directory / "manifest.json").is_file():
         layers = json.loads((directory / "manifest.json").read_text(encoding="utf-8")).get("layers", {})
+    for case_id in parcels:
+        if case_id not in bounds and f"{case_id}:pog" in layers:
+            bounds[case_id] = {"layer": "pog"}
     cases: list[CaseSpec] = []
     missing = []
     for case_id, row in bounds.items():
@@ -528,6 +531,7 @@ def load_zone_layers(directory: Path | None, manifest: Mapping[str, Any], corpus
             CaseSpec(
                 case_id, "real_layer", parcels[case_id]["geometry"], zones, engine="pog",
                 source={
+                    "municipality": parcels[case_id]["municipality"],
                     "layer_artifact": entry["path"], "layer_sha256": entry["sha256"],
                     "parcel_artifact_sha256": parcels[case_id]["artifact_sha256"],
                     "release": entry.get("source_release_id"),

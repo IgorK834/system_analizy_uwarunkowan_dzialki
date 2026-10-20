@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
@@ -27,6 +26,8 @@ from typing import Any
 
 import httpx
 from shapely.geometry import mapping
+from shapely.ops import unary_union
+from xml.etree import ElementTree
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
@@ -62,28 +63,16 @@ def request_params(bbox: Sequence[float], *, swap_axes: bool) -> dict[str, str]:
         "version": "2.0.0",
         "request": "GetFeature",
         "typeNames": TYPE_NAME,
+        # Jawny skrót daje geometrię easting,northing; URN w bbox ma
+        # normatywną kolejność northing,easting (AU-101).
         "srsName": "EPSG:2180",
-        "count": "100",
-        "bbox": ",".join(f"{value:.3f}" for value in values) + ",EPSG:2180",
+        "count": "10",
+        "bbox": ",".join(f"{value:.3f}" for value in values) + ",urn:ogc:def:crs:EPSG::2180",
     }
 
 
-_LEGACY_SRS = re.compile(rb"http://www\.opengis\.net/gml/srs/epsg\.xml#(\d+)")
-
-
-def normalize_legacy_srs(content: bytes) -> bytes:
-    """Rewrites the legacy ``gml/srs/epsg.xml#2180`` srsName used by the RU WFS.
-
-    The production reader ``pog_fetch._parse_gml`` rejects that URL form
-    (``pyproj`` cannot resolve it), although the real RU WFS answers with it.
-    Only this freezing tool applies the rewrite; the production module is left
-    unchanged and the mismatch is reported as a separate finding.
-    """
-    return _LEGACY_SRS.sub(rb"EPSG:\1", content)
-
-
 def zones_from_gml(content: bytes) -> list[Zone]:
-    document = _parse_gml(normalize_legacy_srs(content))
+    document = _parse_gml(content)
     zones = []
     for index, feature in enumerate(document.planning_zones, start=1):
         zone_id = first_string_attribute(feature.attributes, FEATURE_ID_KEYS) or f"zone-{index}"
@@ -141,44 +130,64 @@ def freeze_layers(
     client: httpx.Client,
     url: str = WFS_URL,
     now: datetime | None = None,
+    all_parcels: bool = False,
+    resume: bool = False,
 ) -> dict[str, Any]:
     parcels = {item["case_id"]: item for item in load_parcels(manifest, corpus_dir)}
     layers: dict[str, Any] = {}
     failures: list[dict[str, Any]] = []
     fetched_at = (now or datetime.now(timezone.utc)).isoformat().replace("+00:00", "Z")
-    for row in bounds_from_corpus(manifest):
+    rows = [row for row in bounds_from_corpus(manifest) if row["layer"] == "pog"]
+    if all_parcels:
+        eligible = {row["case_id"] for row in rows}
+        rows.extend({"case_id": case_id, "layer": "pog", "zone_symbols": []} for case_id in parcels if case_id not in eligible)
+    observations = []
+    previous_path = output_dir / "manifest.json"
+    if resume and previous_path.is_file():
+        previous = json.loads(previous_path.read_text(encoding="utf-8"))
+        if previous["corpus_id"] != manifest.get("corpus_id"):
+            raise ValueError("Cannot resume a different corpus")
+        layers = previous["layers"]
+        observations = previous.get("observations", [])
+    completed = {key.removesuffix(":pog") for key in layers} | {item["case_id"] for item in observations}
+    for row in rows:
         if row["layer"] != "pog":
             continue
         case_id = row["case_id"]
+        if case_id in completed:
+            continue
         parcel = parcels[case_id]["geometry"]
         expected = [
             {"symbol": symbol, "share_pct": share}
             for symbol, share in zip(row["zone_symbols"], _shares_in_symbol_order(manifest, case_id), strict=False)
         ]
         attempt_log = []
-        for swap in (False, True):
+        for swap in (True,):
             params = request_params(parcel.buffer(BBOX_PAD_M).bounds, swap_axes=swap)
             try:
-                response = client.get(url, params=params, timeout=TIMEOUT_S)
-                response.raise_for_status()
-                zones = zones_from_gml(response.content)
+                zones, responses = fetch_zone_pages(client, url, params, output_dir, case_id)
             except Exception as exc:  # noqa: BLE001 - every failure is recorded in the manifest
                 attempt_log.append({"swap_axes": swap, "error": f"{type(exc).__name__}: {exc}"})
                 continue
-            verification = verify_against_corpus(parcel, zones, expected)
+            if not zones and not expected:
+                observations.append({"case_id": case_id, "status": "no_match", "responses": responses})
+                break
+            verification = verify_against_corpus(parcel, zones, expected) if expected else verify_independently(parcel, zones)
             attempt_log.append({"swap_axes": swap, "features": len(zones), "status": verification["status"]})
             if verification["status"] == "verified":
                 path, digest = write_layer(output_dir, case_id, zones)
                 layers[f"{case_id}:pog"] = {
                     "path": path,
                     "sha256": digest,
-                    "response_sha256": hashlib.sha256(response.content).hexdigest(),
+                    "response_sha256": responses[0]["sha256"],
+                    "responses": responses,
                     "feature_count": len(zones),
                     "request": {"url": url, "params": params},
                     "source_release_id": f"ru_pog@{fetched_at[:10]}",
                     "fetched_at": fetched_at,
                     "verification": verification,
                     "status": "verified",
+                    "municipality": parcels[case_id]["municipality"],
                 }
                 break
         else:
@@ -191,12 +200,54 @@ def freeze_layers(
         "corpus_id": manifest.get("corpus_id"),
         "layers": layers,
         "failures": failures,
+        "observations": observations,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest_out, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return manifest_out
+
+
+def fetch_zone_pages(client: httpx.Client, url: str, params: dict[str, str], output: Path, case_id: str) -> tuple[list[Zone], list[dict[str, Any]]]:
+    """RU ogranicza stronę do 10 cech niezależnie od count. Zachowaj surowe strony."""
+    zones: list[Zone] = []
+    evidence = []
+    seen: set[str] = set()
+    for start in range(0, 10_000, 10):
+        page_params = params | {"startIndex": str(start)}
+        response = client.get(url, params=page_params, timeout=TIMEOUT_S)
+        response.raise_for_status()
+        root = ElementTree.fromstring(response.content)
+        if root.tag.rsplit("}", 1)[-1] != "FeatureCollection":
+            raise ValueError("RU did not return a WFS FeatureCollection")
+        page = [] if root.attrib.get("numberMatched") == "0" else zones_from_gml(response.content)
+        relative = f"responses/{case_id}.{start}.xml"
+        target = output / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(response.content)
+        evidence.append({"path": relative, "sha256": hashlib.sha256(response.content).hexdigest(), "params": page_params})
+        new = [zone for zone in page if zone.zone_id not in seen]
+        zones.extend(new)
+        seen.update(zone.zone_id for zone in new)
+        matched = root.attrib.get("numberMatched")
+        returned = int(root.attrib.get("numberReturned", len(page)))
+        if returned < 10 or (matched and matched.isdigit() and start + returned >= int(matched)):
+            return zones, evidence
+        if not new:
+            raise ValueError("RU repeated a page; refusing a truncated layer")
+    raise ValueError("RU layer exceeds the explicit 10000-feature safety limit")
+
+
+def verify_independently(parcel: Any, zones: Sequence[Zone]) -> dict[str, Any]:
+    """Kontrola nowego wydania bez zmiany historycznej prawdy korpusu."""
+    expected = {}
+    for symbol in {zone.symbol for zone in zones}:
+        area = parcel.intersection(unary_union([zone.geometry for zone in zones if zone.symbol == symbol])).area
+        if area > 0.01:
+            expected[symbol] = area / parcel.area * 100
+    verification = verify_against_corpus(parcel, zones, [{"symbol": key, "share_pct": value} for key, value in expected.items()])
+    return verification | {"basis": "independent_shapely_current_snapshot"}
 
 
 def _shares_in_symbol_order(manifest: Mapping[str, Any], case_id: str) -> list[float]:
@@ -216,6 +267,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--url", default=WFS_URL)
+    parser.add_argument("--all-parcels", action="store_true", help="Probe also parcels without historical POG shares; verify against independent Shapely intersections.")
+    parser.add_argument("--resume", action="store_true", help="Keep verified layers/empty responses and retry failures only.")
     return parser
 
 
@@ -224,7 +277,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     corpus_path = args.corpus.resolve()
     manifest = json.loads(corpus_path.read_text(encoding="utf-8"))
     with httpx.Client(follow_redirects=False) as client:
-        result = freeze_layers(manifest, corpus_path.parent, args.output_dir.resolve(), client, args.url)
+        result = freeze_layers(manifest, corpus_path.parent, args.output_dir.resolve(), client, args.url, all_parcels=args.all_parcels, resume=args.resume)
     print(f"frozen {len(result['layers'])} layers, {len(result['failures'])} failures -> {args.output_dir.resolve()}")
     return 0 if not result["failures"] else 2
 
