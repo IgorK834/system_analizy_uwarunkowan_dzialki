@@ -47,6 +47,8 @@ from app.schemas.analyze import (
 )
 from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
 from app.schemas.source import SourceMetadata, warnings_from_domain_messages
+from app.services.land_cover import build_land_cover, missing_land_cover
+from app.modules.analysis.composition import analyze_land_cover
 from app.services.bdot_context import (
     bdot_sources,
     bdot_warnings,
@@ -345,6 +347,15 @@ async def _analyze_uncached(
         _analyze_bdot_context_safely, db, parcel_geometry
     )
     warnings.extend(bdot_warnings(road_context, neighbour_buildings))
+    land_cover = missing_land_cover("unavailable", "FEATURE_DISABLED")
+    if settings.land_cover_enabled:
+        try:
+            land_cover = build_land_cover(await asyncio.to_thread(analyze_land_cover, db, parcel_geometry))
+        except Exception as exc:
+            log_analysis_event("section_error", section="land_cover", status=type(exc).__name__)
+            land_cover = missing_land_cover("unavailable", "UNEXPECTED_ERROR")
+    warnings.extend(WarningMessage(code=f"LAND_COVER_{land_cover.reason_code or 'WARNING'}", message=m,
+                    severity="warning", source_name="bdot10k") for m in land_cover.warnings)
     # Status i provenance sekcji ryzyka niezależnie od listy obiektów (BK-303).
     risk_sections = [
         build_risk_section("flood", context.isok, parcel_geometry),
@@ -425,13 +436,14 @@ async def _analyze_uncached(
             risks=risks,
             risk_sections=risk_sections,
             terrain=terrain,
+            land_cover=land_cover,
             road_context=road_context,
             neighbour_buildings=neighbour_buildings,
             buildable_area_sqm=buildable_area_sqm,
             manual_zone_required=True,
             warnings=warnings,
             sources=_unique_sources(
-                [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings)]
+                [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings), *([land_cover.source] if land_cover.source else [])]
             ),
         )
         # BK-504: ocena jakości z punktem odniesienia analyzed_at trafia do
@@ -531,13 +543,14 @@ async def _analyze_uncached(
         risks=risks,
         risk_sections=risk_sections,
         terrain=terrain,
+        land_cover=land_cover,
         road_context=road_context,
         neighbour_buildings=neighbour_buildings,
         buildable_area_sqm=buildable_area_sqm,
         manual_zone_required=False,
         warnings=warnings,
         sources=_unique_sources(
-            [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings)]
+            [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings), *([land_cover.source] if land_cover.source else [])]
         ),
     )
     response = with_completeness(with_section_quality(response))

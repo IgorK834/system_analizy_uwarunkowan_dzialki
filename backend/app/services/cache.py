@@ -22,6 +22,7 @@ from app.schemas.analyze import (
     RISK_RESULT_SCHEMA_VERSION,
     TERRAIN_RESULT_SCHEMA_VERSION,
 )
+from app.schemas.land_cover import LAND_COVER_RESULT_SCHEMA_VERSION
 from app.schemas.bdot_context import BUILDINGS_RESULT_SCHEMA_VERSION, ROAD_RESULT_SCHEMA_VERSION
 from app.schemas.source import COMPLETENESS_RESULT_SCHEMA_VERSION, QUALITY_RESULT_SCHEMA_VERSION
 from app.modules.planning.domain.extraction_contract import PROMPT_VERSION, SCHEMA_VERSION
@@ -54,6 +55,7 @@ RESULT_CONTRACT_VERSION: Final[str] = (
     f"+terrain-v{TERRAIN_RESULT_SCHEMA_VERSION}"
     f"+road-v{ROAD_RESULT_SCHEMA_VERSION}"
     f"+buildings-v{BUILDINGS_RESULT_SCHEMA_VERSION}"
+    f"+landcover-v{LAND_COVER_RESULT_SCHEMA_VERSION}"
     f"+risk-v{RISK_RESULT_SCHEMA_VERSION}"
     f"+quality-v{QUALITY_RESULT_SCHEMA_VERSION}"
     f"+completeness-v{COMPLETENESS_RESULT_SCHEMA_VERSION}"
@@ -126,6 +128,9 @@ def current_cache_signature(db: Session, parcel_identifier: str | None = None) -
         {
             "contract": RESULT_CONTRACT_VERSION,
             "mpzp_parser": mpzp_parser_signature(),
+            "land_cover": {"enabled": settings.land_cover_enabled,
+                           "forest_search_radius_m": settings.forest_search_radius_m,
+                           "candidate_limit": settings.land_cover_candidate_limit},
             "releases": releases,
             "pog_state": pog_scope_version(db, parcel_identifier),
         },

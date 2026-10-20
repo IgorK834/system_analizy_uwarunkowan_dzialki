@@ -56,6 +56,7 @@ from app.schemas.analyze import (
     WarningMessage,
 )
 from app.schemas.source import SourceMetadata
+from app.services.land_cover import land_cover_from_snapshot
 from app.services.bdot_context import neighbour_buildings_from_snapshot, road_context_from_snapshot
 from app.services.context import ContextResult
 from app.services.geojson import (
@@ -382,6 +383,7 @@ def save_analysis(
                 or None
             ),
             # ``None`` tylko, gdy wynik nie zawiera sekcji (wywołanie bezpośrednie): odczyt da ``unknown``.
+            land_cover=result.land_cover.model_dump(mode="json") if result.land_cover else None,
             road_context=(
                 result.road_context.model_dump(mode="json") if result.road_context is not None else None
             ),
@@ -922,6 +924,7 @@ def build_analyze_response_from_analysis(
         risks=risks,
         risk_sections=risk_sections_from_snapshot(loaded.risk_sections),
         terrain=terrain_from_snapshot(loaded.terrain),
+        land_cover=land_cover_from_snapshot(loaded.land_cover),
         road_context=road_context_from_snapshot(loaded.road_context),
         neighbour_buildings=neighbour_buildings_from_snapshot(loaded.neighbour_buildings),
         buildable_area_sqm=loaded.buildable_area_sqm,
@@ -1073,7 +1076,7 @@ def _terrain_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
 def _bdot_source_records(result: AnalyzeResponse) -> list[SourceRecordData]:
     """Źródła sekcji drogi i zabudowy (BDOT10k) z jawnym statusem — także brak pokrycia i porażka."""
     records: list[SourceRecordData] = []
-    for section in (result.road_context, result.neighbour_buildings):
+    for section in (result.road_context, result.neighbour_buildings, result.land_cover):
         if section is None or section.source is None:
             continue
         record = _source_record_data(section.source, result)
