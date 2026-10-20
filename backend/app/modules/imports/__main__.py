@@ -345,10 +345,10 @@ def _run_sync(command: CliCommand) -> int:
         settings.pog_sync_interval_seconds = command.interval
     try:
         if command.once:
-            summary = run_sync_cycle(with_csw=not command.no_csw, cancel=stop, emit=say)
+            summary = run_sync_cycle(with_csw=not command.no_csw, cancel=stop, emit=say, schedule=not command.no_schedule)
             return _emit_json(summary, EXIT_OK if summary.get("status") in {"ok", "locked"} else EXIT_INCOMPLETE)
         say("[pog-sync] usługa uruchomiona (SIGTERM kończy po bieżącym zleceniu)")
-        run_sync_forever(stop, with_csw=not command.no_csw, emit=say)
+        run_sync_forever(stop, with_csw=not command.no_csw, emit=say, schedule=not command.no_schedule)
         return _emit_json({"status": "stopped"}, EXIT_OK)
     finally:
         for signum, old in previous.items():

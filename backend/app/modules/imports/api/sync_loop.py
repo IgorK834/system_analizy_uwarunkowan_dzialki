@@ -58,6 +58,9 @@ def process_one_job(*, with_csw: bool = True, cancel: threading.Event | None = N
         session.commit()
     if job is None:
         return None
+    if job.kind == "bdot_county":
+        from app.modules.imports.api.bdot_jobs import process_county_job
+        return process_county_job(job)
     terc = job.scope_key.removeprefix("terc:")
     started = time.monotonic()
     try:
@@ -130,7 +133,7 @@ def run_sync_cycle(
                 job_result = process_one_job(with_csw=with_csw, cancel=cancel)
                 if job_result is None:
                     break
-                say(f"[pog-sync] zlecenie {job_result.get('job_id')} gmina {job_result.get('terc')}: {job_result.get('job_status')}")
+                say(f"[pog-sync] zlecenie {job_result.get('job_id')} zakres {job_result.get('terc') or job_result.get('powiat')}: {job_result.get('job_status')}")
                 summary["jobs"].append(job_result)
             if schedule and (cancel is None or not cancel.is_set()):
                 age = _last_success_age_seconds()

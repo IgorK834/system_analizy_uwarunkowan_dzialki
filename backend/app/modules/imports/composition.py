@@ -29,6 +29,7 @@ from app.core.data_sources import (
 from app.core.settings import settings
 from app.db.session import SessionLocal
 from app.modules.imports.application.bdot10k_import import run_bdot10k_import
+from app.modules.imports.infrastructure.bdot_jobs import enqueue_county_import
 from app.modules.imports.application.common import ImportOutcome, ImportRelease
 from app.modules.imports.application.mpzp_import import (
     MpzpSourceReader,
@@ -100,6 +101,7 @@ from app.modules.imports.infrastructure.raster.repository import (
     SqlAlchemyRasterRepository,
 )
 from app.modules.imports.infrastructure.job_queue import (
+    ClaimedJob,
     claim_next_job,
     complete_job,
     fail_job,
@@ -152,6 +154,8 @@ def pog_resume_key(*parts: object) -> str:
 # Kompozycja jest fasadą dla innych modułów (analysis/terrain, testy): te nazwy
 # są celowym re-eksportem, nie nieużywanymi importami.
 __all__ = [
+    "enqueue_county_import",
+    "ClaimedJob",
     "claim_next_job",
     "complete_job",
     "fail_job",

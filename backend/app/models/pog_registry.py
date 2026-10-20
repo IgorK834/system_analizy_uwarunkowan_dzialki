@@ -43,7 +43,7 @@ from app.models.types import ClippedString
 POG_REGISTRY_STATE_KINDS: tuple[str, ...] = ("import", "withdrawal", "rollback", "migration")
 POG_REGISTRY_END_REASONS: tuple[str, ...] = ("replaced", "withdrawn", "not_current", "rolled_back")
 IMPORT_JOB_STATUSES: tuple[str, ...] = ("queued", "running", "succeeded", "failed", "cancelled")
-IMPORT_JOB_KINDS: tuple[str, ...] = ("pog_commune",)
+IMPORT_JOB_KINDS: tuple[str, ...] = ("pog_commune", "bdot_county")
 
 _STATE_KINDS_SQL = ", ".join(f"'{value}'" for value in POG_REGISTRY_STATE_KINDS)
 _END_REASONS_SQL = ", ".join(f"'{value}'" for value in POG_REGISTRY_END_REASONS)

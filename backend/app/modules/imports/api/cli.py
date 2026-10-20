@@ -48,6 +48,7 @@ class CliCommand:
     to_version_id: int | None = None
     once: bool = False
     interval: int | None = None
+    no_schedule: bool = False
 
 
 def _concurrency(value: str) -> int:
@@ -251,6 +252,7 @@ def parse_args(argv: Sequence[str] | None = None) -> CliCommand:
     sync.add_argument("--once", action="store_true", help="Jeden przebieg (kolejka + import przyrostowy) i koniec.")
     sync.add_argument("--interval", type=int, metavar="SEKUNDY", help="Odstęp przebiegów (domyślnie POG_SYNC_INTERVAL_SECONDS).")
     sync.add_argument("--no-csw", action="store_true")
+    sync.add_argument("--no-schedule", action="store_true", help="Tylko kolejka zleceń (POG/BDOT10k), bez cyklicznego importu kraju.")
 
     status = subparsers.add_parser("pog-status", help="Stan importu krajowego POG (JSON)")
     status.add_argument("--source", default="pog_app")
@@ -328,6 +330,7 @@ def parse_args(argv: Sequence[str] | None = None) -> CliCommand:
         to_version_id=getattr(namespace, "to_version_id", None),
         once=bool(getattr(namespace, "once", False)),
         interval=getattr(namespace, "interval", None),
+        no_schedule=bool(getattr(namespace, "no_schedule", False)),
     )
 
 
