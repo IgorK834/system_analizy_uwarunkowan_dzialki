@@ -22,7 +22,8 @@ from sqlalchemy.orm import Session
 
 from app.core.data_sources import get_catalog
 from app.db.session import SessionLocal
-from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad
+from app.models.bdot10k import BdotBuilding, BdotRelease, BdotRoad, BdotLandCover
+from app.models.bdot_powerline import BdotPowerline
 from app.models.versioned import DataRelease, DataSource, ImportRun, SourceArtifact
 from app.modules.imports.application.bdot10k_import import run_bdot10k_import
 from app.modules.imports.application.common import ImportOutcome, ImportRelease
@@ -95,6 +96,8 @@ def purge_bdot(session: Session) -> None:
     if source_row is None:
         return
     release_ids = select(DataRelease.id).where(DataRelease.data_source_id == source_row)
+    session.execute(delete(BdotPowerline).where(BdotPowerline.data_release_id.in_(release_ids)))
+    session.execute(delete(BdotLandCover).where(BdotLandCover.data_release_id.in_(release_ids)))
     session.execute(delete(BdotBuilding).where(BdotBuilding.data_release_id.in_(release_ids)))
     session.execute(delete(BdotRoad).where(BdotRoad.data_release_id.in_(release_ids)))
     session.execute(delete(BdotRelease).where(BdotRelease.data_release_id.in_(release_ids)))

@@ -164,6 +164,16 @@ COLUMN_POLICY: Final[dict[str, dict[str, tuple[str, str]]]] = {
         "road_number": (CLIPPED, "numer drogi z zewnętrznego źródła"),
         "street_name": (CLIPPED, "nazwa ulicy z zewnętrznego źródła"),
     },
+    "bdot_powerlines": {
+        "local_id": (STRICT, _KEY),
+        "kind": (CLIPPED, "rodzaj linii energetycznej ze słownika BDOT10k"),
+        "existence_category": (CLIPPED, "kategoria istnienia obiektu ze słownika BDOT10k"),
+    },
+    "bdot_landcover": {
+        "local_id": (STRICT, _KEY),
+        "class_code": (STRICT, _ENUM),
+        "kind": (CLIPPED, "rodzaj pokrycia terenu ze słownika BDOT10k"),
+    },
     "bdot_buildings": {
         "local_id": (STRICT, _KEY),
         "existence_category": (CLIPPED, "kategoria istnienia obiektu ze słownika BDOT10k"),
