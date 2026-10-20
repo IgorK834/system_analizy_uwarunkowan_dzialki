@@ -8,6 +8,10 @@ się do oryginalnego label.
 
 from __future__ import annotations
 
+import re
+import unicodedata
+from collections.abc import Mapping
+
 from app.modules.location.domain.models import MatchRange
 
 # Mapowanie polskich znaków diakrytycznych na podstawowe litery (1:1).
@@ -58,6 +62,54 @@ def tokenize(normalized: str) -> list[str]:
     if current:
         tokens.append("".join(current))
     return tokens
+
+
+def uug_query_variants(query: str, localities: Mapping[str, str]) -> tuple[str, ...]:
+    """Ograniczona lista zapisów UUG: miejscowość, ulica numer.
+
+    Nazwy z PRG przywracają diakrytyki miejscowości; ulic nie zgadujemy.
+    Przy nieznanej miejscowości próbujemy podziały tekstu, bez usuwania
+    numeru i bez zastępowania adresu samym środkiem miejscowości.
+    """
+    text = " ".join(unicodedata.normalize("NFC", query).split())
+    text = re.sub(r"\b(?:ul\.|ulica)\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bal\.\s*", "aleja ", text, flags=re.IGNORECASE)
+    variants: list[str] = []
+
+    def add(city: str, street: str = "") -> None:
+        city = localities.get(fold_text(city), city)
+        candidate = f"{city}, {street}" if street else city
+        if candidate and candidate not in variants:
+            variants.append(candidate)
+
+    if "," in text:
+        left, right = (part.strip() for part in text.split(",", 1))
+        if fold_text(right) in localities and fold_text(left) not in localities:
+            add(right, left)
+        else:
+            add(left, right)
+        return tuple(variants)
+
+    words = text.split()
+    # Najdłuższa znana nazwa: „Góra Kalwaria”, „Nowy Dwór Mazowiecki”…
+    for count in range(min(len(words), 4), 0, -1):
+        prefix, suffix = " ".join(words[:count]), " ".join(words[-count:])
+        if fold_text(prefix) in localities:
+            add(prefix, " ".join(words[count:]))
+        if fold_text(suffix) in localities:
+            add(suffix, " ".join(words[:-count]))
+    if variants:
+        return tuple(variants)
+    # Numer między ulicą a miejscowością wskazuje granicę również dla wsi
+    # nieobecnych w słowniku nazw gmin. „3 Maja” jest częścią nazwy ulicy.
+    for index, word in enumerate(words[:-1]):
+        if index > 0 and re.fullmatch(r"\d+[a-zA-Z]?(?:/\d+[a-zA-Z]?)?", word):
+            add(" ".join(words[index + 1:]), " ".join(words[:index + 1]))
+    add(text)
+    for count in range(1, min(3, len(words))):
+        add(" ".join(words[:count]), " ".join(words[count:]))
+        add(" ".join(words[-count:]), " ".join(words[:-count]))
+    return tuple(variants[:6])
 
 
 def compute_match_ranges(label: str, query: str) -> tuple[MatchRange, ...]:

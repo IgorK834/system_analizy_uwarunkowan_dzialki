@@ -14,6 +14,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
+import json
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Final
 
 import httpx
@@ -36,6 +40,7 @@ from app.modules.location.domain.models import (
     ResultType,
 )
 from app.modules.location.infrastructure.cache import BoundedTTLCache
+from app.modules.location.domain.normalization import fold_text, uug_query_variants
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +50,12 @@ _TIMEOUT_S: Final[float] = 8.0
 _MAX_RETRIES: Final[int] = 2
 _BACKOFF_S: Final[float] = 0.5
 _MAX_RESULTS: Final[int] = 20
+
+
+@lru_cache(maxsize=1)
+def _localities() -> dict[str, str]:
+    path = Path(__file__).resolve().parents[3] / "data" / "address_localities.json"
+    return {fold_text(name): name for name in json.loads(path.read_text(encoding="utf-8"))["names"]}
 
 # Transformer EPSG:2180 -> WGS84 (lon, lat). always_xy gwarantuje kolejność x,y.
 _TO_WGS84: Final[Transformer] = Transformer.from_crs(
@@ -77,7 +88,6 @@ class UugAddressSearchProvider(AddressSearchProvider):
 
         params = {
             "request": "GetAddress",
-            "address": query.q.strip(),
             # UUG domyślnie wymaga bardzo dokładnego dopasowania i dokładnego
             # numeru budynku. Dla sugestii podczas pisania korzystamy z
             # oficjalnego dolnego progu podobieństwa i dopuszczamy wynik ulicy,
@@ -85,8 +95,19 @@ class UugAddressSearchProvider(AddressSearchProvider):
             "accuracy": "0.5",
             "exact_number": "0",
         }
-        response = await self._request_with_retry(params)
-        candidates = self._parse(response.json())
+        candidates: list[RawAddressCandidate] = []
+        try:
+            variants = uug_query_variants(query.q, _localities())
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise AddressSearchProviderError("Słownik nazw miejscowości jest niedostępny.") from exc
+        for variant in variants:
+            response = await self._request_with_retry(params | {"address": variant})
+            try:
+                candidates = self._parse(response.json())
+            except (ValueError, TypeError) as exc:
+                raise AddressSearchProviderError("Nieoczekiwany format odpowiedzi UUG.") from exc
+            if candidates:
+                break
         self._cache.set(cache_key, candidates)
         return candidates
 
@@ -150,7 +171,9 @@ class UugAddressSearchProvider(AddressSearchProvider):
     def _parse(self, data: Any) -> list[RawAddressCandidate]:
         if not isinstance(data, dict):
             raise AddressSearchProviderError("Nieoczekiwany format odpowiedzi.")
-        results = data.get("results", {})
+        if "results" not in data or (data["results"] is not None and not isinstance(data["results"], dict)):
+            raise AddressSearchProviderError("Nieoczekiwany format wyników UUG.")
+        results = data["results"]
         # Odpowiedzi UUG dla dopasowań częściowych (np. type=street) potrafią
         # zawierać "found objects" i poprawny słownik "results", ale pomijać
         # pole "returned objects". To wyniki, nie licznik, są źródłem prawdy.
@@ -162,6 +185,8 @@ class UugAddressSearchProvider(AddressSearchProvider):
             candidate = self._build_candidate(result)
             if candidate is not None:
                 candidates.append(candidate)
+        if not candidates:
+            raise AddressSearchProviderError("UUG zwróciło wyniki bez poprawnych współrzędnych.")
         return candidates
 
     def _build_candidate(self, result: Any) -> RawAddressCandidate | None:
@@ -174,6 +199,8 @@ class UugAddressSearchProvider(AddressSearchProvider):
             return None
 
         lon, lat = _TO_WGS84.transform(x, y)
+        if not all(math.isfinite(value) for value in (lon, lat)) or not (-180 <= lon <= 180 and -90 <= lat <= 90):
+            return None
         city = _clean(result.get("city"))
         street = _clean(result.get("street"))
         number = _clean(result.get("number"))

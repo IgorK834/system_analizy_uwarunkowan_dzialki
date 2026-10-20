@@ -96,7 +96,7 @@ class PostgresAddressSearchProvider(AddressSearchProvider):
         except (TypeError, json.JSONDecodeError):
             checkpoint = {}
         return AddressIndexStatus(
-            ready=True,
+            ready=int(row["entry_count"]) > 0,
             release_id=int(row["id"]),
             version_label=str(row["version_label"]),
             published_at=row["published_at"].isoformat(),
