@@ -22,6 +22,7 @@ from app.modules.planning.application.pog_release_queries import coverage_featur
 from app.modules.planning.infrastructure.commune_boundaries import PrgCommuneBoundaries
 from app.routers.pog_coverage import PogCoverageResponse, get_pog_coverage
 from app.services.pog_on_demand import request_commune_import
+from app.modules.imports.composition import enqueue_county_import
 
 router = APIRouter(prefix="/api/v1/coverage", tags=["coverage"])
 _coverage_limit = rate_limit(settings.rate_limit_coverage_per_minute)
@@ -29,7 +30,7 @@ _coverage_limit = rate_limit(settings.rate_limit_coverage_per_minute)
 _COUNTIES = text(
     """
     SELECT br.teryt_powiat, br.powiat_name, dr.id AS release_id, dr.version_label, br.data_as_of, br.imported_at,
-           br.road_count, br.building_count, br.package_sha256,
+           br.road_count, br.building_count, br.package_sha256, br.class_stats,
            ST_XMin(b.box) AS min_lon, ST_YMin(b.box) AS min_lat, ST_XMax(b.box) AS max_lon, ST_YMax(b.box) AS max_lat
     FROM bdot_releases br
     JOIN data_releases dr ON dr.id = br.data_release_id
@@ -64,6 +65,8 @@ class Bdot10kCounty(BaseModel):
     imported_at: datetime
     road_count: int
     building_count: int
+    landcover_count: int | None = Field(default=None, description="None: klasa niezaimportowana lub niekompletna; 0: potwierdzona pusta klasa.")
+    powerline_count: int | None = Field(default=None, description="Linie elektroenergetyczne OT_SULN_L; None przy braku importu klasy.")
     package_sha256: str
     bounds_wgs84: list[float] = Field(description="[min_lon, min_lat, max_lon, max_lat] obwiednia granicy powiatu.")
 
@@ -99,6 +102,14 @@ def get_bdot10k_coverage(
     lon: Annotated[float | None, Query(ge=-180.0, le=180.0)] = None,
     lat: Annotated[float | None, Query(ge=-90.0, le=90.0)] = None,
 ) -> Bdot10kCoverageResponse:
+    try:
+        return _load_bdot10k_coverage(db, lon, lat)
+    except (SQLAlchemyError, ValueError, KeyError, TypeError) as exc:
+        db.rollback()
+        raise HTTPException(503, "Pokrycie BDOT10k jest niedostępne — stan nieustalony.") from exc
+
+
+def _load_bdot10k_coverage(db: Session, lon: float | None, lat: float | None) -> Bdot10kCoverageResponse:
     rows = db.execute(_COUNTIES, {"source_id": BDOT10K_SOURCE_ID}).mappings().all()
     counties = [
         Bdot10kCounty(
@@ -110,6 +121,8 @@ def get_bdot10k_coverage(
             imported_at=row["imported_at"],
             road_count=int(row["road_count"]),
             building_count=int(row["building_count"]),
+            landcover_count=_class_count(row["class_stats"], "land_cover"),
+            powerline_count=_class_count(row["class_stats"], "powerlines"),
             package_sha256=str(row["package_sha256"]),
             bounds_wgs84=[
                 round(float(row[key]), 6) for key in ("min_lon", "min_lat", "max_lon", "max_lat")
@@ -122,6 +135,42 @@ def get_bdot10k_coverage(
         found = db.execute(_POINT, {"source_id": BDOT10K_SOURCE_ID, "lon": lon, "lat": lat}).scalar_one_or_none()
         point = Bdot10kPointCoverage(lon=lon, lat=lat, covered=found is not None, teryt_powiat=found)
     return Bdot10kCoverageResponse(counties=counties, point=point)
+
+
+def _class_count(stats: dict[str, Any], name: str) -> int | None:
+    if not isinstance(stats, dict):
+        raise ValueError("Invalid BDOT class statistics")
+    entry = stats.get(name) or {}
+    if not isinstance(entry, dict):
+        raise ValueError("Invalid BDOT class statistics")
+    if entry.get("complete") is not True:
+        return None
+    count = entry.get("imported")
+    if type(count) is not int or count < 0:
+        raise ValueError("Invalid BDOT class count")
+    return count
+
+
+class CountyImportResponse(BaseModel):
+    powiat: str
+    job_id: int
+    status: str
+    detail: str
+
+
+@router.post("/bdot10k/county/{powiat}/import", response_model=CountyImportResponse,
+             dependencies=[Depends(rate_limit(settings.rate_limit_refresh_per_minute))])
+def request_county_import(powiat: str, db: Annotated[Session, Depends(get_db)]) -> CountyImportResponse:
+    if len(powiat) != 4 or not powiat.isascii() or not powiat.isdigit():
+        raise HTTPException(422, "TERYT powiatu musi mieć 4 cyfry.")
+    try:
+        job = enqueue_county_import(db, powiat)
+        db.commit()
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(503, "Kolejka importów jest niedostępna; nie potwierdzono zlecenia.") from exc
+    return CountyImportResponse(powiat=powiat, job_id=job.job_id, status=job.status,
+        detail=f"Import BDOT10k powiatu {powiat} jest w kolejce (zlecenie #{job.job_id}). Dane pojawią się po zakończeniu; brak lokalnego wydania nie oznacza braku obiektów.")
 
 
 # Wspólny widok POG + BDOT10k. Zachowujemy istniejące endpointy szczegółowe.
