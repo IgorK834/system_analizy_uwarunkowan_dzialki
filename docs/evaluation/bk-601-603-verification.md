@@ -8,7 +8,7 @@ odbioru (manifesty zapisują `worktree.dirty` i odcisk kodu).
 | Zadanie | Stan | Zastrzeżenie |
 |---|---|---|
 | BK-601 — badanie poprawności | wykonane | udziały stref POG/MPZP/OUZ i NMT w harnessie BK-004 są odczytem zamrożonych obserwacji, więc ich zgodność nie dowodzi poprawności przecięć; raport to rozdziela |
-| BK-602 — centroid vs przecięcie | **wykonane częściowo** | brak geometrii stref rzeczywistych: host Rejestru Urbanistycznego był nieosiągalny; wynik dokładny na realnych strefach nie został zmierzony |
+| BK-602 — centroid vs przecięcie | **wykonane (AU-112, 2026-10-17)** | wynik dokładny: 13 działek, 3 gminy; surowe odpowiedzi RU i geometrie z SHA-256; dwa identyczne przebiegi offline |
 | BK-603 — ewaluacja parsera MPZP | wykonane | anotacje sporządził asystent AI z tekstu źródłowego; przegląd człowieka oczekuje |
 
 ## Następstwo: parser MPZP v3
@@ -139,34 +139,61 @@ pola).
    działkach o wypukłości < 0,80); centroid poza działką dla 2 działek i w dziurze dla 1.
    Wniosek: dla cięć prostoliniowych centroid zwykle trafia w strefę dominującą, ale gubi
    dużą część powierzchni — pominięcie *strefy* jest dla dwóch stref pewne z definicji.
-4. **Dokładne wyniki na realnych strefach: nie zmierzone.** Zadanie wymaga geometrii
-   stref POG z publicznego WFS RU; za zgodą użytkownika próbowano je pobrać, ale
-   `rejestr-urbanistyczny.gov.pl` przekraczał czas połączenia (curl i przeglądarka
-   aplikacji, kilka prób w czasie sesji; inne hosty GUGiK odpowiadały). `freeze_pog_zone_layers.py`
-   jest gotowy i przetestowany na prawdziwej odpowiedzi RU z fixtures; po odzyskaniu
-   dostępu wystarczy:
+4. **Dokładne wyniki na realnych strefach — wykonane 17.10.2026 (AU-112).**
+   RU jest osiągalny. Żądanie używa URN w `bbox` z osiami północ,wschód oraz
+   `srsName=EPSG:2180` dla geometrii w kolejności wschód,północ. Warstwy
+   zamrożono dla **13 rzeczywistych działek w 3 gminach**: Bielsko-Biała (7),
+   Legnica (5), Sopot (1). Surowe strony (w tym druga strona Sopotu) i GeoJSON
+   mają SHA-256 w `backend/tests/fixtures/centroid_zone_layers/manifest.json`.
+   Wszystkie 30 działek pierwotnego korpusu odpytano; 18 pustych odpowiedzi
+   zachowano jako `no_match` zapytania WFS, bez wnioskowania o braku planu.
+   Sopot (`226401_1.0002.2/66`) jest **osobnym rozszerzeniem** korpusu,
+   z geometrią ULDK i zachowaną odpowiedzią. Pierwotna prawda korpusu jest bez zmian.
+   Dla 7 dawnych przypadków POG udziały zgadzają się z korpusem (≤ 0,1 p.p.);
+   5 przypadków Legnicy i Sopot zweryfikowano niezależnym przecięciem Shapely.
+
+   | Miara dokładna | Wynik |
+   |---|---:|
+   | Działki / gminy | **13 / 3** |
+   | Działki z ≥ 2 przecinającymi strefami | 4 |
+   | Centroid pomija co najmniej jedną strefę | **5/13 (38,46%)** |
+   | Strefa centroidu inna niż dominująca | **1/13 (7,69%)** |
+   | Centroid poza działką / wskazuje strefę bez powierzchni wspólnej | 1 / 1 |
+   | Pominięta powierzchnia ≥ 10% / ≥ 25% | 3/13 / 2/13 |
+   | Dwa przebiegi offline | identyczne |
+
+   W `real-028` pominięcie wynosi 19,65934%, w `real-029` 49,92921%.
+   W `real-013` (Legnica) centroid leży poza działką i wskazuje inną strefę:
+   pomija 100% powierzchni. Dla Sopotu pomija 1,80936%.
+   To pomiar przestrzenny wydania RU, nie ocena mocy prawnej POG. Parametry
+   urbanistyczne nie są mierzone przez ten eksperyment (zamrażamy geometrię i symbol).
 
    ```bash
-   python3 backend/scripts/freeze_pog_zone_layers.py --output-dir backend/tests/fixtures/centroid_zone_layers
-   python3 backend/scripts/compare_centroid_intersection.py --zone-layers backend/tests/fixtures/centroid_zone_layers
+   python backend/scripts/freeze_pog_zone_layers.py --corpus backend/tests/fixtures/centroid_corpus/manifest.json --all-parcels --output-dir backend/tests/fixtures/centroid_zone_layers
+   # Po przejściowym timeout: to samo polecenie z --resume (ponawia tylko błędy).
+   python backend/scripts/compare_centroid_intersection.py --corpus backend/tests/fixtures/centroid_corpus/manifest.json --zone-layers backend/tests/fixtures/centroid_zone_layers --repeat 2 --output-dir docs/evaluation/results/au112-113/centroid
    ```
 
-   Geometrii MPZP Krakowa nie wolno redystrybuować (`contract_required`), więc dla
-   `real-005…008` zostają granice z zamrożonych udziałów.
+   Wynik: [raport dokładny](results/au112-113/centroid/report.md),
+   [wyniki JSON](results/au112-113/centroid/summary.json),
+   [determinizm](results/au112-113/centroid/determinism.json).
+   Geometrii MPZP Krakowa nadal nie redystrybuujemy (`contract_required`);
+   dla `real-005…008` pozostają granice z zamrożonych udziałów.
 
-Kryterium „eksperyment używa całego właściwego podzbioru korpusu” jest spełnione
-częściowo: granice obejmują wszystkie 11 przypadków z udziałami, symulacja wszystkie 30
-działek, natomiast wynik dokładny dotyczy 0 z 11.
+Część dokładna BK-602 jest zamknięta dla POG (wszystkie 7 dawnych przypadków
+z udziałami + 6 dodatkowych). Pierwotna symulacja 30 działek powyżej pozostaje
+wynikiem historycznym; przebieg z rozszerzeniem Sopotu ma 31 działek i 558 symulacji.
 
 ## Ustalenia wymagające decyzji (poza zakresem tych zadań)
 
-1. `app/services/mpzp.py::_first_matching_attribute` przyjmuje `NULL` jako symbol strefy
-   (RC-01). Zadanie utworzone osobno.
-2. `app/services/pog_fetch.py::_canonical_crs` odrzuca legacy `srsName`
-   `http://www.opengis.net/gml/srs/epsg.xml#2180`, którym odpowiada prawdziwe WFS RU
-   (fixture `wfs_pog_getfeature_zone.xml` się nie parsuje). Runtime `fetch_pog_vector_data`
-   zgłosiłby `POG_VECTOR_UNAVAILABLE`. Zadanie utworzone osobno; narzędzie zamrażające
-   stosuje obejście tylko u siebie.
+1. **Zamknięte (AU-112):** literał `NULL` nie jest symbolem strefy. Funkcję starego
+   `mpzp.py::_first_matching_attribute` zastąpił wcześniej adapter KIMPZP z
+   `clean_value`; nowy jawny test `test_real_pisz_null_is_never_a_zone_symbol`
+   potwierdza zachowanie na niezmienionej rzeczywistej odpowiedzi z Pisza.
+2. **Zamknięte (AU-112):** produkcyjne `_canonical_crs` rozpoznaje legacy
+   `http://www.opengis.net/gml/srs/epsg.xml#2180` (i HTTPS), bez odczytu URL.
+   Regresja parsuje oryginalne `wfs_pog_getfeature_zone.xml` bez przepisania XML;
+   obejście w narzędziu zamrażającym usunięto.
 3. Etykiety ground truth: `real-008` ma `manual_review`/`document_parse` mimo identycznych
    dowodów co `real-005…007` (RC-03); klasy `flat/moderate/relief` nie mają definicji
    (RC-02). Wymagają decyzji właściciela korpusu.
@@ -195,15 +222,16 @@ XXXVIII/262/2021 (1,6 MB), Szczytno LXXVI/555/2023 (1,7 MB), Ostrów Wlkp. XI/10
 (2,0 MB), Raszków XXXVI/242/2021 (2,1 MB), Krzemieniewo X/87/2025 (3,2 MB), Libertów
 XXV/213/05 (73 KB), Łódź VI/214/19 (HTML, 167 KB), Pisz XXV/254/98 (skan, 456 KB). Tylko
 przegląd (4): projekt MPZP Puław (156 KB), wykaz planów Legnicy (85 KB), Włosań (90 KB),
-Konary (82 KB). URL i SHA-256: `mpzp_evaluation/manifest.json`. Pobranie geometrii POG z RU
-nie powiodło się (brak połączenia). Nie wyłączano weryfikacji TLS; dwa dzienniki z błędem
-certyfikatu pominięto.
+Konary (82 KB). URL i SHA-256: `mpzp_evaluation/manifest.json`. W pierwotnej próbie
+pobranie geometrii POG z RU nie powiodło się. AU-112 z 17.10.2026 usunął tę blokadę:
+surowe odpowiedzi i geometrie z trzech gmin są zamrożone, a wynik dokładny jest powyżej.
+Nie wyłączano weryfikacji TLS; dwa dzienniki z błędem certyfikatu pominięto.
 
 ## Ograniczenia
 
 - BK-601: pokrycie produkcyjne ogranicza się do pól działki i mapowania kontraktu ryzyk;
   zamrożone obserwacje nie pozwalają zmierzyć przecięć stref, ISOK, GDOŚ ani NMT;
-- BK-602: patrz wyżej (brak realnych geometrii stref);
+- BK-602: zamknięte dla POG (AU-112: 13 działek / 3 gminy); MPZP nadal bez redystrybucji geometrii;
 - BK-603: jeden anotator (AI), bez zgodności międzyanotatorskiej; próbki tabelowe i OCR
   rzeczywiste są nieliczne (1 i 2), więc przedziały są szerokie; dwie próbki OCR są
   symulacją skanu; dla czterech próbek rozwojowych anotator znał część oczekiwań
@@ -211,7 +239,7 @@ certyfikatu pominięto.
   (wartości anotacji niezmienione, potwierdzone porównaniem), co zmieniło skrót zamrożenia;
 - wyniki są pomiarem w danym dniu i na danych, nie gwarancją jakości dla innych gmin.
 
-## Weryfikacja
+## Weryfikacja pierwotna BK-601–603
 
 Środowisko: obraz backendu (`python:3.13`, Tesseract 5.5), PostGIS 16-3.4, osobny projekt
 Compose, kopia repozytorium bez `.env` jako `/repo` tylko do odczytu (jak w CI).
@@ -233,3 +261,8 @@ Logi: `results/bk-601-603/`.
 
 Powtarzalność: skrót merytoryczny BK-601 jest identyczny w trzech biegach w procesie i w
 dwóch osobnych procesach CLI; BK-602 i BK-603 porównują dwa biegi i kończą kodem 1 przy różnicy.
+
+Ponowna weryfikacja AU-112 (19.10.2026): pełny backend **5351 passed**, pokrycie
+**95,33%**, `pog_fetch` 84%. Regresje używają niezmienionych rzeczywistych odpowiedzi
+RU i KIMPZP. Zbiorcze logi oraz zakres ostatnich zmian:
+[odbiór AU-112, AU-113 i AU-201](au112-113-au201-verification.md).
