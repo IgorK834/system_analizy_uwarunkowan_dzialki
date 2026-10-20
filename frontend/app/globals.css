@@ -653,7 +653,7 @@ input:disabled {
   left: 20px;
   bottom: 20px;
   width: min(400px, calc(100% - 40px));
-  max-height: min(58vh, 640px);
+  max-height: min(58vh, 640px, calc(100% - 340px));
   overflow-y: auto;
   display: flex;
   flex-direction: column;

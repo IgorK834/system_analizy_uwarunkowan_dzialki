@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as maplibregl from "maplibre-gl";
 
+import realCover from "@/test/landCoverFixture.json";
+import type { LandCoverResult } from "@/lib/types";
 import { ResultPanel } from "@/components/ResultPanel";
 import { BUILDINGS_CASES, ROAD_CASES } from "@/test/bdotFixtures";
 import { COMPLETENESS_CASES } from "@/test/completenessFixtures";
@@ -515,6 +517,19 @@ describe("ResultPanel", () => {
     expect(map.setLayoutProperty).toHaveBeenCalledWith("road-context-line-layer", "visibility", "none");
     expect(map.setLayoutProperty).toHaveBeenCalledWith("road-link-line-layer", "visibility", "none");
     expect(map.setLayoutProperty).toHaveBeenCalledWith("neighbour-buildings-fill-layer", "visibility", "none");
+  });
+
+  it("rysuje prawdziwe pokrycie i bufory lasu, przełącza warstwę i sprząta geometrie", async () => {
+    const { default: userEvent } = await import("@testing-library/user-event");
+    const result = buildAnalyzeResponse({land_cover: realCover as LandCoverResult});
+    const {rerender} = render(<ResultPanel result={result} map={map} />);
+    expect(map.addSource).toHaveBeenCalledWith("land-cover-source", expect.objectContaining({type:"geojson"}));
+    expect(screen.getByRole("switch", {name:/Pokrycie terenu i orientacyjne/})).toBeEnabled();
+    await userEvent.click(screen.getByRole("switch", {name:/Pokrycie terenu i orientacyjne/}));
+    expect(map.setLayoutProperty).toHaveBeenCalledWith("land-cover-fill", "visibility", "none");
+    rerender(<ResultPanel result={buildAnalyzeResponse({land_cover:null})} map={map} />);
+    expect(map.removeSource).toHaveBeenCalledWith("land-cover-source");
+    expect(screen.getByRole("switch", {name:/Pokrycie terenu i orientacyjne/})).toBeDisabled();
   });
 
   it("bez pokrycia BDOT10k przełączniki dróg i budynków są wyłączone z powodem", () => {

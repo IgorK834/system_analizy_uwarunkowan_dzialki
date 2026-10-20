@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Map } from "maplibre-gl";
 import { getCoverage, requestPogImport } from "@/lib/api";
 import type { CoverageResponse } from "@/lib/types";
+import { BdotImportRequest } from "@/components/BdotImportRequest";
 
 const SOURCE = "data-coverage";
 const FILL = "data-coverage-fill";
@@ -57,7 +58,10 @@ export function CoverageLayer({ map }: { map: Map | null }) {
         <p className="field-hint">Status prawny dotyczy lokalnego wydania. Data importu i „stan na” mają różne znaczenie.</p>
         <details><summary>Pokrycie BDOT10k (powiaty)</summary>
           {coverage.bdot10k.counties.length === 0 ? <p>Brak lokalnych wydań BDOT10k — nie oznacza to braku dróg lub budynków.</p> :
-            <ul>{coverage.bdot10k.counties.map((county) => <li key={county.teryt_powiat}>{county.name ?? county.teryt_powiat}: {county.version_label}, stan na {county.data_as_of ?? "nieznany"}, import {county.imported_at.slice(0, 10)}</li>)}</ul>}
+            <ul>{coverage.bdot10k.counties.map((county) => <li key={county.teryt_powiat}>{county.name ?? county.teryt_powiat}: {county.version_label}, stan na {county.data_as_of ?? "nieznany"}, import {county.imported_at.slice(0, 10)}
+              <span> · drogi: {county.road_count ?? "nieustalone"}, budynki: {county.building_count ?? "nieustalone"}, pokrycie terenu: {county.landcover_count ?? "niezaimportowane"}, linie energetyczne: {county.powerline_count ?? "niezaimportowane"}</span>
+            </li>)}</ul>}
+          <BdotImportRequest />
         </details>
       </>}
     </>}

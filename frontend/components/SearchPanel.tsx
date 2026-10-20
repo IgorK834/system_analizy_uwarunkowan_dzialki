@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type * as maplibregl from "maplibre-gl";
 
-import { ApiError, searchAddresses } from "@/lib/api";
+import { ApiError, getAddressIndexStatus, searchAddresses } from "@/lib/api";
 import type { AddressSearchResult, AnalyzeRequest } from "@/lib/types";
 
 type Tab = "map" | "address" | "parcel";
@@ -35,6 +35,7 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [indexReady, setIndexReady] = useState<boolean | null>(null);
   const [resolvedSuggestionQuery, setResolvedSuggestionQuery] = useState<
     string | null
   >(null);
@@ -44,6 +45,16 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
   const suggestionsOpen = activeTab === "address" && suggestions.length > 0;
+
+  useEffect(() => {
+    if (activeTab !== "address") return;
+    const controller = new AbortController();
+    void getAddressIndexStatus(controller.signal).then(
+      (status) => { if (!controller.signal.aborted) setIndexReady(status.ready); },
+      () => { if (!controller.signal.aborted) setIndexReady(null); },
+    );
+    return () => controller.abort();
+  }, [activeTab]);
 
   // Lista jest popoverem (AU-008): zamykamy ją kliknięciem poza panelem, żeby nie zasłaniała
   // kontrolek mapy, gdy użytkownik przestał z niej korzystać.
@@ -233,6 +244,9 @@ export function SearchPanel({ loading, onAnalyze, map = null }: SearchPanelProps
 
       {activeTab === "address" && (
         <div id="search-address" role="tabpanel" className="panel-content">
+          {indexReady === false && <p className="inline-status" role="status">
+            Wyszukiwanie ograniczone: indeks adresowy niezaimportowany
+          </p>}
           <label htmlFor="address-query">Adres</label>
           <div className="address-field">
             <input

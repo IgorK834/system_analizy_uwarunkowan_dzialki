@@ -4,12 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as maplibregl from "maplibre-gl";
 
 import { SearchPanel } from "@/components/SearchPanel";
-import { ApiError, searchAddresses } from "@/lib/api";
+import { ApiError, getAddressIndexStatus, searchAddresses } from "@/lib/api";
 import type { AddressSearchResult } from "@/lib/types";
 
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
-  return { ...actual, searchAddresses: vi.fn() };
+  return { ...actual, searchAddresses: vi.fn(), getAddressIndexStatus: vi.fn() };
 });
 
 const searchAddressesMock = vi.mocked(searchAddresses);
@@ -34,12 +34,29 @@ const warsawResult: AddressSearchResult = {
 
 describe("SearchPanel", () => {
   beforeEach(() => {
+    vi.mocked(getAddressIndexStatus).mockReset().mockResolvedValue({ ready: true, entry_count: 100, release_id: 1 });
     searchAddressesMock.mockReset();
     searchAddressesMock.mockResolvedValue({
       query: "Warszawa",
       results: [warsawResult],
       total_returned: 1,
     });
+  });
+
+  it("informuje o ograniczeniu przy pustym indeksie", async () => {
+    vi.mocked(getAddressIndexStatus).mockResolvedValue({ ready: false, entry_count: 0, release_id: null });
+    render(<SearchPanel loading={false} onAnalyze={vi.fn()} />);
+    await userEvent.click(screen.getByRole("tab", { name: "Adres" }));
+    expect(await screen.findByText("Wyszukiwanie ograniczone: indeks adresowy niezaimportowany")).toBeVisible();
+  });
+
+  it("awaria statusu nie oznacza pustego indeksu i nie blokuje sugestii", async () => {
+    vi.mocked(getAddressIndexStatus).mockRejectedValue(new Error("offline"));
+    render(<SearchPanel loading={false} onAnalyze={vi.fn()} />);
+    await userEvent.click(screen.getByRole("tab", { name: "Adres" }));
+    await userEvent.type(screen.getByLabelText("Adres"), "Warszawa");
+    expect(await screen.findByRole("option", { name: /Marszałkowska 1/ })).toBeVisible();
+    expect(screen.queryByText(/Wyszukiwanie ograniczone/)).not.toBeInTheDocument();
   });
 
   it("domyślnie pokazuje instrukcję wyboru punktu z mapy", () => {

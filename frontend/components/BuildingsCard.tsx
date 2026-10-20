@@ -77,6 +77,7 @@ export function BuildingsCard({ buildings }: { buildings: NeighbourBuildingsResu
           statystyki są kumulatywne (bufor 100 m zawiera bufor 50 m), a budynek liczy się raz.
         </p>
       )}
+      <p className="field-hint">Wskaźniki sąsiednich działek: nieustalone — brak geometrii tych działek w analizie.</p>
       {shown.length > 0 && (
         <div
           className="result-table-scroll"

@@ -256,6 +256,8 @@ describe("Mapa analityczna POG — scenariusz końcowy", () => {
     render(<HomePage />);
     fire("load");
     await screen.findByText(/Stan krajowy #42/);
+    // Metadane mogą pojawić się przed efektem, który podpina zdarzenia gotowej mapy.
+    await waitFor(() => expect(mapState.handlers.some(([name]) => name === "sourcedata")).toBe(true));
     const state = () => screen.getByTestId("pog-layer-state");
     const badge = () => screen.getByTestId("pog-status-badge");
     expect(state()).toHaveTextContent("ładowanie");

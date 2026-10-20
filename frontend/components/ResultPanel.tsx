@@ -17,6 +17,7 @@ import { ReportDownloadButton } from "@/components/ReportDownloadButton";
 import { RoadContextCard } from "@/components/RoadContextCard";
 import { SectionQualityMatrix } from "@/components/SectionQualityMatrix";
 import { ImportRequestButton } from "@/components/CoverageLayer";
+import { LandCoverCard } from "@/components/LandCoverCard";
 import { TerrainCard } from "@/components/TerrainCard";
 import {
   BUILDINGS_FILL_COLOR,
@@ -35,6 +36,7 @@ import {
   BUILDABLE_AREA_LINE_WIDTH,
   BUILDABLE_AREA_SOURCE_ID,
   LAYER_LEGEND,
+  LAND_COVER_COLORS,
   MPZP_ACT_BOUNDARY_COLOR,
   MPZP_ACT_BOUNDARY_DASH,
   MPZP_ACT_BOUNDARY_LAYER_ID,
@@ -128,6 +130,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
   const [risksVisible, setRisksVisible] = useState(true);
   const [mpzpActsVisible, setMpzpActsVisible] = useState(true);
   const [roadVisible, setRoadVisible] = useState(true);
+  const [coverVisible, setCoverVisible] = useState(true);
   const [buildingsVisible, setBuildingsVisible] = useState(true);
   const layersReadyRef = useRef(false);
   const fittedResultRef = useRef<{
@@ -167,6 +170,10 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
   );
 
   // Droga i zabudowa sąsiednia z BDOT10k (Task 23.2–23.3): oś najbliższej drogi, odcinek działka → oś i obrysy budynków.
+  const coverGeojson = useMemo(() => toFeatureCollection([
+    ...(result.land_cover?.features_geojson ?? []),
+    ...(result.land_cover?.forest.buffers.map(b => b.geometry_geojson) ?? []),
+  ]), [result.land_cover]);
   const roadLayers = useMemo(() => roadMapLayers(result.road_context), [result.road_context]);
   const roadAxisGeojson = useMemo(() => toFeatureCollection(roadLayers.axes), [roadLayers]);
   const roadLinkGeojson = useMemo(() => toFeatureCollection(roadLayers.links), [roadLayers]);
@@ -184,6 +191,11 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     // Kolejność dodawania jest równocześnie kolejnością renderowania. WMS-y są
     // dodawane wcześniej przez PreviewOverlays, a warstwy wynikowe układamy od
     // powierzchniowych ryzyk do najważniejszego obrysu działki na samej górze.
+    addOrUpdateGeojsonLayer(map, {
+      sourceId: "land-cover-source", fillLayerId: "land-cover-fill", lineLayerId: "land-cover-line",
+      geojson: coverGeojson, fillColor: ["match", ["get", "class_code"],
+        ...Object.entries(LAND_COVER_COLORS).flat(), "#34732d"] as unknown as maplibregl.ExpressionSpecification, fillOpacity: 0.25, lineColor: "#426529", lineWidth: 1,
+    });
     addOrUpdateGeojsonLayer(map, {
       sourceId: RISK_SOURCE_ID,
       fillLayerId: RISK_FILL_LAYER_ID,
@@ -332,6 +344,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         fillLayerId: `${MPZP_ACT_BOUNDARY_LAYER_ID}-unused-fill`,
         lineLayerId: MPZP_ACT_BOUNDARY_LAYER_ID,
       });
+      removeGeojsonLayer(map, {sourceId: "land-cover-source", fillLayerId: "land-cover-fill", lineLayerId: "land-cover-line"});
       layersReadyRef.current = false;
     };
   }, [
@@ -346,6 +359,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     roadAxisGeojson,
     roadLinkGeojson,
     buildingsGeojson,
+    coverGeojson,
   ]);
 
   useEffect(() => {
@@ -427,6 +441,10 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     setLayerVisibility(map, [BUILDINGS_FILL_LAYER_ID, BUILDINGS_LINE_LAYER_ID], buildingsVisible);
   }, [map, buildingsVisible]);
 
+  useEffect(() => {
+    if (map) setLayerVisibility(map, ["land-cover-fill", "land-cover-line"], coverVisible);
+  }, [map, coverVisible, coverGeojson]);
+
   const toggleItems: LayerToggleItem[] = [
     {
       id: "parcel",
@@ -486,6 +504,11 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       disabledReason: !roadAxisGeojson
         ? "Brak osi najbliższej drogi dla tej analizy (brak pokrycia danymi BDOT10k, pusty zasięg albo awaria zapytania)."
         : undefined,
+    },
+    {
+      id: "land_cover", label: LAYER_LEGEND.land_cover.label, color: LAYER_LEGEND.land_cover.color,
+      checked: Boolean(coverGeojson) && coverVisible, disabled: !coverGeojson,
+      disabledReason: !coverGeojson ? "Brak geometrii pokrycia terenu dla tej analizy." : undefined,
     },
     {
       id: "neighbour_buildings",
@@ -556,6 +579,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       <TerrainCard terrain={result.terrain} />
       <RoadContextCard road={result.road_context} />
       <BuildingsCard buildings={result.neighbour_buildings} />
+      <LandCoverCard value={result.land_cover} />
       <SectionQualityMatrix matrix={result.section_quality} />
       <SourcesSection sources={result.sources} />
       <WarningsSection warnings={result.warnings} />
@@ -570,6 +594,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     if (id === "risks") setRisksVisible(checked);
     if (id === "mpzp_acts") setMpzpActsVisible(checked);
     if (id === "road_context") setRoadVisible(checked);
+    if (id === "land_cover") setCoverVisible(checked);
     if (id === "neighbour_buildings") setBuildingsVisible(checked);
   }
 }
@@ -999,7 +1024,7 @@ type GeojsonLayerConfig = {
   fillLayerId: string;
   lineLayerId: string;
   geojson: Record<string, unknown> | null;
-  fillColor?: string;
+  fillColor?: string | maplibregl.ExpressionSpecification;
   fillOpacity?: number;
   lineColor: string;
   lineWidth: number;
