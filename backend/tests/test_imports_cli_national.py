@@ -172,3 +172,13 @@ def test_sync_service_loop_announces_itself_and_stops_cleanly(
 
     out, err = capsys.readouterr()
     assert _json(out)["status"] == "stopped" and "usługa uruchomiona" in err and called["with_csw"] is True
+
+
+def test_no_schedule_processes_queue_without_starting_national_import(monkeypatch, capsys):
+    seen = {}
+    def cycle(**kwargs):
+        seen.update(kwargs)
+        return {"status": "ok", "jobs": []}
+    monkeypatch.setattr(sync_loop, "run_sync_cycle", cycle)
+    assert cli.main(["pog-sync", "--once", "--no-schedule"]) == 0
+    assert seen["schedule"] is False
