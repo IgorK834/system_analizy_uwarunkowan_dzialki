@@ -95,3 +95,47 @@ Odrzucone przy imporcie: 0 obiektów w żadnej paczce; naprawianych geometrii: 0
   (odległość) i 0,05 m² (pole); wynik: `docs/evaluation/results/bdot10k/gdal-cross-check.md`. QGIS nie był dostępny, więc
   kryterium „porównanie w QGIS” jest spełnione innym narzędziem, o czym mówi wprost raport odbioru.
 * Testy aplikacji porównują wynik PostGIS z `expected.json` dla wszystkich 30 działek (tolerancja 0,05 m dla odległości).
+
+## Domknięcie podstawy BDOT10k (AU-201, Task 23.1; 2026-10-17)
+
+Oprócz osi jezdni i budynków importer odczytuje 12 klas `OT_PT*_A` (AU-204)
+oraz `OT_SULN_L`. Tę ostatnią klasę potwierdzono w niezmienionych paczkach
+Krakowa (1261: 607 linii), Legnicy (0262: 154) i Bielska-Białej (2461: 291).
+`rodzaj` rozróżnia linie elektroenergetyczne średniego, wysokiego i najwyższego
+napięcia. Nie wyprowadzamy napięcia w kV ani pasów ochronnych z tych nazw.
+Geometrie `gml:Curve/LineStringSegment` są w EPSG:2180 (wschód,północ).
+
+Zamrożone pełne klasy SULN i wycinki dróg/budynków:
+`backend/tests/fixtures/source_contracts/bdot10k_base/<powiat>/` (manifest z
+SHA-256 paczki źródłowej, XML i mini-paczki). Budowanie bez sieci:
+
+```bash
+python backend/scripts/build_bdot10k_base_fixtures.py --packages <katalog-oryginalnych-ZIP> --output backend/tests/fixtures/source_contracts/bdot10k_base
+```
+
+Mini-paczki służą wyłącznie testom. Wdrożenie używa pełnych paczek powiatowych.
+Importer `bdot10k-import/3` i etykieta wydania z końcówką `-v3` umożliwiają
+uzupełnienie tego samego SHA-256 paczki wcześniej zaimportowanego bez klas
+PT/SULN. Powtórzenie importu tym samym importerem odtwarza to samo wydanie
+i liczności; stare wydania i snapshoty nie są przepisywane. Nieznany rodzaj
+SULN albo brak geometrii odrzuca publikację, zamiast udawać kompletny zbiór.
+Starszy wycinek bez SULN daje `class_stats.powerlines.complete=false`,
+`powerline_count=null`; potwierdzony pusty zbiór ma liczność 0.
+
+Migracja `040_bdot_powerlines` dodaje tabelę z FK do `data_releases`, geometrią
+`MULTILINESTRING(2180)` i GiST. Zlecenia `bdot_county` korzystają z istniejącej
+kolejki `import_jobs` (deduplikacja aktywnego zakresu, dzierżawa, trzy próby).
+
+```bash
+curl -X POST http://localhost:8000/api/v1/coverage/bdot10k/county/1261/import
+# Worker kolejki bez uruchamiania harmonogramu krajowego POG:
+python -m app.modules.imports pog-sync --once --no-schedule
+```
+
+Ekran „Pokrycie → Pokrycie BDOT10k (powiaty)” udostępnia zlecenie i pokazuje
+liczności czterech grup danych. `GET /api/v1/coverage` oraz `/coverage/bdot10k`
+wykazują liczności; awaria odczytu daje 503 i stan nieustalony. Dróg i budynków
+nadal dotyczą opisane wyżej kontrakty analizy, UI, PDF i eksportu. Analiza
+pokrycia terenu ma osobny kontrakt `land_cover_contracts.md`; Task 23.1 dostarcza
+podstawę wektorową linii, a nie interpretację stref prawnych sieci energetycznej.
+Licencja i atrybucja pozostają zgodne z katalogiem: [oficjalny opis BDOT10k](https://www.geoportal.gov.pl/pl/dane/baza-danych-obiektow-topograficznych-bdot10k/).

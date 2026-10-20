@@ -650,8 +650,9 @@ sources:
         quality_policy_version.
     redistribution: derived_only
     sla: "not_published"
-    last_manual_verification: 2026-10-13
+    last_manual_verification: 2026-10-17
     field_mapping:
+      land_cover_kind: "rodzaj"
       local_id: "lokalnyId"
       existence_category: "kategoriaIstnienia"
       feature_version: "wersja"
@@ -687,11 +688,41 @@ sources:
           - "OT_SKJZ_L"
           - "OT_BUBD_A"
           - "OT_ADJA_A"
+          - "OT_PTWP_A"
+          - "OT_PTZB_A"
+          - "OT_PTLZ_A"
+          - "OT_PTRK_A"
+          - "OT_PTUT_A"
+          - "OT_PTTR_A"
+          - "OT_PTKM_A"
+          - "OT_PTGN_A"
+          - "OT_PTPL_A"
+          - "OT_PTSO_A"
+          - "OT_PTWZ_A"
+          - "OT_PTNZ_A"
+          - "OT_PTZB_A"
+          - "OT_PTWP_A"
+          - "OT_PTLZ_A"
+          - "OT_PTRK_A"
+          - "OT_PTUT_A"
+          - "OT_PTTR_A"
+          - "OT_PTKM_A"
+          - "OT_PTGN_A"
+          - "OT_PTPL_A"
+          - "OT_PTSO_A"
+          - "OT_PTWZ_A"
+          - "OT_PTNZ_A"
+          - "OT_SULN_L"
         protocol_version: "BDOT10k schemat 2021 (GML 3.2)"
         namespace_uri: "urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0"
         source_crs: "EPSG:2180"
         output_formats: ["application/zip"]
     notes: >-
+      Pokrycie terenu: dwanaście klas PT (AU-204), kontrakt sprawdzony 2026-10-17
+      na paczkach 1261, 2816, 1418; docs/data_sources/land_cover_contracts.md.
+      Kompletność importu PT jest zapisana per wydanie; brak klasy oznacza brak
+      pokrycia analitycznego, nie zerowy udział. Las: OT_PTLZ_A/rodzaj=las.
+
       Kontrakt potwierdzony 2026-10-13 na sześciu realnych paczkach powiatów
       korpusu (1261, 1465, 2461, 0262, 2816, 0221), patrz
       docs/data_sources/road_contracts.md (drogi) i building_contracts.md
@@ -699,10 +730,13 @@ sources:
       ma jedną warstwę ms:BDOT10k_powiaty (katalog paczek z geometrią powiatu,
       polami TERYT, NAZWA_POWIATU, Data_aktualizacji i URL_GML), a nie obiekty
       topograficzne. Paczka ma jeden plik GML na klasę obiektów, układ
-      EPSG:2180 z osiami (easting northing) i brak pliku XSD. Importujemy trzy
-      klasy: OT_SKJZ_L (osie jezdni), OT_BUBD_A (obrysy budynków) i OT_ADJA_A
-      (granica powiatu = zasięg wydania). Klasy OT_SKDR_L, pokrycie terenu i
-      linie energetyczne pomijamy świadomie. Pola tekstu wolnego (nazwa,
+      EPSG:2180 z osiami (easting northing) i brak pliku XSD. Importujemy OT_SKJZ_L (osie jezdni), OT_BUBD_A (obrysy budynków), OT_ADJA_A
+      (granica powiatu = zasięg wydania), 12 klas OT_PT*_A (pokrycie terenu) i
+      OT_SULN_L (linie elektroenergetyczne: średnie, wysokie, najwyższe napięcie;
+      bez domniemanego napięcia w kV). OT_SKDR_L nie jest importowane. AU-201:
+      pełne OT_SULN_L potwierdzone 2026-10-17 dla 1261, 0262, 2461, zamrożone
+      w tests/fixtures/source_contracts/bdot10k_base. Starszy wycinek bez klasy
+      ma nieustaloną kompletność tej klasy (null w pokryciu), nie 0. Pola tekstu wolnego (nazwa,
       informacjaDodatkowa, uwagi) i identyfikatorEGiB nie są importowane.
       Wydanie jest per powiat (scope_key), aktywne jednocześnie z wydaniami
       innych powiatów. Adapter importu:
