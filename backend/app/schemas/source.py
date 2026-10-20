@@ -221,7 +221,7 @@ def warnings_from_domain_messages(
 # --- Macierz kompletności i świeżości sekcji (BK-504, ADR-011) ---------------------
 
 # 1.1 (Task 23.3): nowa sekcja ``buildings`` (zabudowa sąsiednia) w macierzy; ``transport`` ma teraz źródło (BDOT10k).
-QUALITY_RESULT_SCHEMA_VERSION = "1.2"
+QUALITY_RESULT_SCHEMA_VERSION = "1.3"
 
 SectionKey = Literal[
     "parcel",
@@ -234,6 +234,7 @@ SectionKey = Literal[
     "utilities",
     "transport",
     "buildings",
+    "land_cover",
     "mpzp_pog_relation",
 ]
 
@@ -444,7 +445,7 @@ class SectionQualityMatrix(BaseModel):
 # --- Kompletność analizy i status nagłówkowy (AU-104, ADR-022) -----------------------------
 
 # 1.1: transport i zabudowa sąsiednia wchodzą do zakresu kompletności (``completeness/1.1``).
-COMPLETENESS_RESULT_SCHEMA_VERSION = "1.1"
+COMPLETENESS_RESULT_SCHEMA_VERSION = "1.2"
 
 # ``checked`` — sekcja sprawdzona w źródle (``available`` albo potwierdzone ``no_match``); ``missing`` — brak
 # wiarygodnego wyniku (częściowy, niedostępny, brak pokrycia, nieustalony…); ``out_of_scope`` — sekcja poza zakresem

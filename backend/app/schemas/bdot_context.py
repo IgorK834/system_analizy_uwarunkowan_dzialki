@@ -22,7 +22,7 @@ from app.modules.analysis.domain.roads import ROAD_ACCESS_DISCLAIMER
 from app.schemas.source import SourceMetadata
 
 ROAD_RESULT_SCHEMA_VERSION = "1.0"
-BUILDINGS_RESULT_SCHEMA_VERSION = "1.0"
+BUILDINGS_RESULT_SCHEMA_VERSION = "1.1"
 
 BdotContextStatus = Literal["available", "no_match", "no_coverage", "unavailable", "unknown"]
 _STATUS_DESCRIPTION = (
@@ -166,6 +166,8 @@ class NeighbourBuildingsResult(BaseModel):
     schema_version: str = BUILDINGS_RESULT_SCHEMA_VERSION
     status: BdotContextStatus = Field(description=_STATUS_DESCRIPTION)
     reason_code: str | None = None
+    neighbour_parcel_indicators_status: Literal["unknown"] = "unknown"
+    neighbour_parcel_indicators_reason: str = "NEIGHBOUR_PARCEL_GEOMETRY_NOT_AVAILABLE"
     ring_definition: str = Field(default=RING_DEFINITION, description="Definicja sąsiedztwa o promieniu r.")
     distance_reference: str = Field(default=BUILDING_DISTANCE_REFERENCE)
     buffers_m: list[float] = Field(default_factory=list)

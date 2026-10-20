@@ -12,6 +12,7 @@ from pydantic import (
     model_validator,
 )
 
+from app.schemas.land_cover import LandCoverResult
 from app.schemas.bdot_context import NeighbourBuildingsResult, RoadContextResult
 from app.schemas.mpzp import LLM_PROVENANCE_FIELDS
 
@@ -2177,6 +2178,7 @@ class AnalyzeResponse(BaseModel):
         ),
         json_schema_extra={"example": None},
     )
+    land_cover: LandCoverResult | None = None
     road_context: RoadContextResult | None = Field(
         default=None,
         description=(
