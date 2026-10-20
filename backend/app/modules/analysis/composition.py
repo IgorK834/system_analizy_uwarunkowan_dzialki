@@ -251,3 +251,18 @@ def analyze_building_context(
             plan=plan,
             warnings=("Wystąpił nieoczekiwany błąd kontekstu zabudowy — statystyk nie policzono.",),
         )
+
+
+def analyze_land_cover(session: Session, parcel_geometry: BaseGeometry):
+    """Sekcja informacyjna AU-204 — kontrolowana degradacja na granicy modułu."""
+    from app.modules.analysis.application.landcover import LandCoverOutcome, find_land_cover
+    from app.modules.analysis.infrastructure.landcover import PostgisLandCoverIndex
+    if not _bdot_runnable():
+        return LandCoverOutcome("unavailable", "SOURCE_NOT_RUNNABLE")
+    try:
+        index = PostgisLandCoverIndex(session, statement_timeout_ms=settings.land_cover_statement_timeout_ms)
+        return find_land_cover(parcel_geometry.wkt, index, forest_radius_m=settings.forest_search_radius_m,
+                               candidate_limit=settings.land_cover_candidate_limit)
+    except Exception:
+        logger.exception("Nieoczekiwany błąd pokrycia terenu")
+        return LandCoverOutcome("unavailable", "UNEXPECTED_ERROR")

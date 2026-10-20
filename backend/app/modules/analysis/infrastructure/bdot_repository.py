@@ -80,7 +80,7 @@ _NEAREST = text(
     WHERE r.data_release_id = :release_id
       AND r.existence_category = :in_operation
       AND ST_DWithin(r.geometry, p.geom, :radius)
-    ORDER BY distance_m, r.local_id
+    ORDER BY r.geometry <-> p.geom, r.local_id
     LIMIT :limit
     """
 )
