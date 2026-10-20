@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # BK-305: kontekst drogowy z lokalnego wydania BDOT10k (PostGIS). Promienie
     # rosnącego wyszukiwania kandydatów są jawną konfiguracją; ostatni jest
     # maksymalnym zasięgiem. Brak kandydata w limicie NIE dowodzi braku drogi.
+    land_cover_enabled: bool = True
+    forest_search_radius_m: float = Field(default=5000, gt=0, le=20000)
+    land_cover_statement_timeout_ms: int = Field(default=10000, ge=100, le=120000)
+    land_cover_candidate_limit: int = Field(default=20000, ge=1, le=100000)
     road_context_enabled: bool = True
     road_context_search_radii_m: tuple[float, ...] = (25.0, 50.0, 100.0, 250.0, 500.0)
     road_context_candidate_limit: int = 25
