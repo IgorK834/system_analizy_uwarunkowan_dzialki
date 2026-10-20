@@ -1,0 +1,347 @@
+{
+  "source": "https://services.gugik.gov.pl/uug/",
+  "fetched_at": "2026-10-17T21:13:34.425532+00:00",
+  "attribution": "GUGiK — UUG/EMUiA",
+  "cases": [
+    {
+      "query": "Marszałkowska 1 Warszawa",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, Marszałkowska 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "59cc1d3ce5ae2585e4492607056bc6734a41d1d9c790e031a6c84897d7be3e59.json",
+          "sha256": "59cc1d3ce5ae2585e4492607056bc6734a41d1d9c790e031a6c84897d7be3e59",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Kraków Floriańska 3",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Kraków, Floriańska 3",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "4d672f67c4c81408d2157424a826d95fd9523711bd84b8503d020a0fddeda18a.json",
+          "sha256": "4d672f67c4c81408d2157424a826d95fd9523711bd84b8503d020a0fddeda18a",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Wrocław Rynek 1",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Wrocław, Rynek 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "b5cd15106b4777d3751a655d74d97161ff2a1860ce395877c9c0443235287e89.json",
+          "sha256": "b5cd15106b4777d3751a655d74d97161ff2a1860ce395877c9c0443235287e89",
+          "http_status": 200
+        }
+      ],
+      "result_count": 8
+    },
+    {
+      "query": "Piaseczno Puławska 10",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Piaseczno, Puławska 10",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "bdd85321599cb94f7be30e01044138c31f6f8273a362f8466a5abfeadc4ee75d.json",
+          "sha256": "bdd85321599cb94f7be30e01044138c31f6f8273a362f8466a5abfeadc4ee75d",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Lipkowska Góra Kalwaria",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Góra Kalwaria, Lipkowska",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "93ab1c6a361ea56eb3d8f9b5c07b7e74d7d9a7ba08509bc5d3f1a4303e093f66.json",
+          "sha256": "93ab1c6a361ea56eb3d8f9b5c07b7e74d7d9a7ba08509bc5d3f1a4303e093f66",
+          "http_status": 200
+        }
+      ],
+      "result_count": 1
+    },
+    {
+      "query": "Warszawa, Marszałkowska 1",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, Marszałkowska 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "c239ad16e0c8c3d334b8075d8d5e1a4301729028b3920b04fdbdbbbc53a560fe.json",
+          "sha256": "c239ad16e0c8c3d334b8075d8d5e1a4301729028b3920b04fdbdbbbc53a560fe",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Warszawa ul. Marszalkowska 1",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, Marszalkowska 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "dac4eb868bee7090d607a00b62bdfd7d39e913f1e6479bc1425a05b80ebfa200.json",
+          "sha256": "dac4eb868bee7090d607a00b62bdfd7d39e913f1e6479bc1425a05b80ebfa200",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "ul. Marszałkowska 1 Warszawa",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, Marszałkowska 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "3997f17007d538b4cc110827a122de2cfca93461e87d680391642ebddbd4fb75.json",
+          "sha256": "3997f17007d538b4cc110827a122de2cfca93461e87d680391642ebddbd4fb75",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Krakow Florianska 3",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Kraków, Florianska 3",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "a3acab9d545787105d3310f0766718bb02cb7fa582560e0ee875818a5c4911ea.json",
+          "sha256": "a3acab9d545787105d3310f0766718bb02cb7fa582560e0ee875818a5c4911ea",
+          "http_status": 200
+        }
+      ],
+      "result_count": 12
+    },
+    {
+      "query": "Florianska 3 Krakow",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Kraków, Florianska 3",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "3a1ea8cbd098476cd2cf259d72609f053247dd7332007b9e947821502c975530.json",
+          "sha256": "3a1ea8cbd098476cd2cf259d72609f053247dd7332007b9e947821502c975530",
+          "http_status": 200
+        }
+      ],
+      "result_count": 12
+    },
+    {
+      "query": "Wroclaw Rynek 1",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Wrocław, Rynek 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "e68f30e5a6c3f1dadc146455505c91af0e7e698db39f0dc2ac2b16e7b23e9e49.json",
+          "sha256": "e68f30e5a6c3f1dadc146455505c91af0e7e698db39f0dc2ac2b16e7b23e9e49",
+          "http_status": 200
+        }
+      ],
+      "result_count": 8
+    },
+    {
+      "query": "Rynek 1 Wroclaw",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Wrocław, Rynek 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "9d8f9142388aced0c524335bd9725ed10641857bb0c8461572ce0478e0c9fb5d.json",
+          "sha256": "9d8f9142388aced0c524335bd9725ed10641857bb0c8461572ce0478e0c9fb5d",
+          "http_status": 200
+        }
+      ],
+      "result_count": 8
+    },
+    {
+      "query": "Piaseczno ul. Pulawska 10",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Piaseczno, Pulawska 10",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "ea7a8f11fcdf1b93c604432afcd428e6923d064b3ed2b778df82b1e3ffd10d72.json",
+          "sha256": "ea7a8f11fcdf1b93c604432afcd428e6923d064b3ed2b778df82b1e3ffd10d72",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "ul. Pulawska 10 Piaseczno",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Piaseczno, Pulawska 10",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "2231969919106edfc818de855246e89b2191ef69f0be701a013e6dfcb953106a.json",
+          "sha256": "2231969919106edfc818de855246e89b2191ef69f0be701a013e6dfcb953106a",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Gora Kalwaria Lipkowska",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Góra Kalwaria, Lipkowska",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "6ec48c26a7fbe410cf54a32616261504ac3e5203b803449369ca2acfdf8d19c1.json",
+          "sha256": "6ec48c26a7fbe410cf54a32616261504ac3e5203b803449369ca2acfdf8d19c1",
+          "http_status": 200
+        }
+      ],
+      "result_count": 1
+    },
+    {
+      "query": "Lipkowska Gora Kalwaria",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Góra Kalwaria, Lipkowska",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "ca68ce134b06f33c88d6a78215c24717c552b4adfecc0b3581f403450cde3259.json",
+          "sha256": "ca68ce134b06f33c88d6a78215c24717c552b4adfecc0b3581f403450cde3259",
+          "http_status": 200
+        }
+      ],
+      "result_count": 1
+    },
+    {
+      "query": "Warszawa al. Jana Pawła II 20",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, aleja Jana Pawła II 20",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "af9b591f5310102848879e53154e830796394cc8436ad602c534d3b4ceb5b422.json",
+          "sha256": "af9b591f5310102848879e53154e830796394cc8436ad602c534d3b4ceb5b422",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "al. Jana Pawła II 20 Warszawa",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, aleja Jana Pawła II 20",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "053e02a825e0e4da21a2e6509d6ea763c302f04f0b1474c5234c6fc29184f40c.json",
+          "sha256": "053e02a825e0e4da21a2e6509d6ea763c302f04f0b1474c5234c6fc29184f40c",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "Marszałkowska 1, Warszawa",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Warszawa, Marszałkowska 1",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "19baf0fd2f95de2637cec3b2903fd0e6a5cf62543a42045416b8c8c94c22ea05.json",
+          "sha256": "19baf0fd2f95de2637cec3b2903fd0e6a5cf62543a42045416b8c8c94c22ea05",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    },
+    {
+      "query": "  Kraków,   ul. Floriańska   3  ",
+      "attempts": [
+        {
+          "params": {
+            "request": "GetAddress",
+            "address": "Kraków, Floriańska 3",
+            "accuracy": "0.5",
+            "exact_number": "0"
+          },
+          "file": "964dbfeea2662d8dde784da3a4e179d73add3f130e60331b5f82566a5d692849.json",
+          "sha256": "964dbfeea2662d8dde784da3a4e179d73add3f130e60331b5f82566a5d692849",
+          "http_status": 200
+        }
+      ],
+      "result_count": 15
+    }
+  ]
+}
