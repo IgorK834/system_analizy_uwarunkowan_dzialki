@@ -1,4 +1,4 @@
-"""Wspólny parser odpowiedzi WFS (GML 3.2 / GeoJSON) dla źródeł powierzchniowych.
+"""Wspólny parser odpowiedzi WFS (GML 3.2 / GeoJSON) dla geometrii powierzchniowych i punktowych.
 
 Modułu nie ma po to, żeby „ładniej rozdzielić kod”. Powstał, bo dwa
 bezpieczeństwo-krytyczne źródła (ISOK i GDOŚ) mają identyczne wymagania wobec
@@ -44,7 +44,7 @@ from typing import Final
 from xml.etree import ElementTree
 
 from pyproj import CRS, Transformer
-from shapely.geometry import MultiPolygon, Polygon, shape as shapely_shape
+from shapely.geometry import MultiPoint, MultiPolygon, Point, Polygon, shape as shapely_shape
 from shapely.geometry.base import BaseGeometry
 
 logger = logging.getLogger(__name__)
@@ -56,9 +56,7 @@ CANONICAL_EPSG_CODE: Final[int] = 2180
 
 # Formy zapisu ``srsName``. Rozróżnienie jest istotne wyłącznie z powodu
 # kolejności osi — kod EPSG jest w obu przypadkach ten sam.
-_URN_CRS_RE: Final[re.Pattern[str]] = re.compile(
-    r"^urn:ogc:def:crs:EPSG:[^:]*:(\d+)$", re.IGNORECASE
-)
+_URN_CRS_RE: Final[re.Pattern[str]] = re.compile(r"^urn:ogc:def:crs:EPSG:[^:]*:(\d+)$", re.IGNORECASE)
 _HTTP_CRS_RE: Final[re.Pattern[str]] = re.compile(
     r"^https?://(?:www\.)?opengis\.net/def/crs/EPSG/[^/]*/(\d+)$", re.IGNORECASE
 )
@@ -199,20 +197,14 @@ def _raise_if_exception_report(root: ElementTree.Element) -> None:
     """Rozpoznaje raport wyjątku OWS zwrócony ze statusem HTTP 200."""
     if local_name(root.tag) != "ExceptionReport":
         return
-    codes = [
-        elem.get("exceptionCode", "")
-        for elem in root.iter()
-        if local_name(elem.tag) == "Exception"
-    ]
+    codes = [elem.get("exceptionCode", "") for elem in root.iter() if local_name(elem.tag) == "Exception"]
     texts = [
         (elem.text or "").strip()
         for elem in root.iter()
         if local_name(elem.tag) == "ExceptionText" and (elem.text or "").strip()
     ]
     detail = "; ".join(filter(None, [", ".join(filter(None, codes)), " ".join(texts)]))
-    raise OwsExceptionReportError(
-        f"Usługa zwróciła ows:ExceptionReport: {detail or 'brak szczegółów'}"
-    )
+    raise OwsExceptionReportError(f"Usługa zwróciła ows:ExceptionReport: {detail or 'brak szczegółów'}")
 
 
 def _extract_geometry(
@@ -225,11 +217,62 @@ def _extract_geometry(
     na rodzica, więc kolejność osi trzeba przekazywać podczas zejścia w dół.
     """
     polygons = _collect_polygons(elem, inherited_srs, transforms)
-    if not polygons:
+    if polygons:
+        if len(polygons) == 1:
+            return polygons[0]
+        return MultiPolygon(polygons)
+
+    points = _collect_points(elem, inherited_srs, transforms)
+    if not points:
         return None
-    if len(polygons) == 1:
-        return polygons[0]
-    return MultiPolygon(polygons)
+    if len(points) == 1:
+        return points[0]
+    return MultiPoint(points)
+
+
+def _collect_points(
+    elem: ElementTree.Element,
+    inherited_srs: str | None,
+    transforms: "_TransformCache | None" = None,
+) -> list[Point]:
+    """Zbiera ``gml:Point``/``gml:MultiPoint`` z zachowaniem reguł osi CRS."""
+    srs = elem.get("srsName") or inherited_srs
+    if local_name(elem.tag) == "Point":
+        point = _parse_point(elem, srs, transforms)
+        return [point] if point is not None else []
+
+    points: list[Point] = []
+    for child in elem:
+        points.extend(_collect_points(child, srs, transforms))
+    return points
+
+
+def _parse_point(
+    point_elem: ElementTree.Element,
+    srs_name: str | None,
+    transforms: "_TransformCache | None" = None,
+) -> Point | None:
+    swap_axes = False
+    transform = None
+    if transforms is not None:
+        swap_axes, transform = transforms.resolve(srs_name)
+    else:
+        swap_axes = _requires_axis_swap(srs_name)
+
+    for elem in point_elem.iter():
+        if local_name(elem.tag) != "pos" or not elem.text:
+            continue
+        try:
+            values = [float(value) for value in elem.text.split()]
+        except ValueError as exc:
+            raise GmlResponseError(f"Współrzędne gml:pos są nieliczbowe: {exc}") from exc
+        if len(values) < 2:
+            raise GmlResponseError("gml:pos punktu musi zawierać co najmniej dwie współrzędne.")
+        x, y = (values[1], values[0]) if swap_axes else (values[0], values[1])
+        if transform is not None:
+            x, y = transform.transform(x, y)
+        return Point(x, y)
+    return None
 
 
 def _collect_polygons(
@@ -281,13 +324,9 @@ def _ring_coordinates(
         try:
             values = [float(value) for value in elem.text.split()]
         except ValueError as exc:
-            raise GmlResponseError(
-                f"Lista współrzędnych gml:posList jest nieliczbowa: {exc}"
-            ) from exc
+            raise GmlResponseError(f"Lista współrzędnych gml:posList jest nieliczbowa: {exc}") from exc
         first, second = values[0::2], values[1::2]
-        pairs = (
-            list(zip(second, first)) if swap_axes else list(zip(first, second))
-        )
+        pairs = list(zip(second, first)) if swap_axes else list(zip(first, second))
         if transform is not None and pairs:
             easting, northing = transform.transform([x for x, _y in pairs], [y for _x, y in pairs])
             pairs = list(zip(easting, northing))
@@ -324,8 +363,7 @@ class _TransformCache:
         code = int(next(group for group in match.groups() if group))
         if code not in REPROJECTABLE_EPSG:
             raise UnsupportedCrsError(
-                f"Geometria jest w EPSG:{code}, którego parser nie przyjmuje "
-                f"(dozwolone: {sorted(REPROJECTABLE_EPSG)})."
+                f"Geometria jest w EPSG:{code}, którego parser nie przyjmuje (dozwolone: {sorted(REPROJECTABLE_EPSG)})."
             )
         # Skrót ``EPSG:code`` oznacza kolejność „GIS” (x = wschód); formy URN i HTTP — kolejność z rejestru EPSG.
         short_form = key.upper().startswith("EPSG:")
@@ -372,9 +410,7 @@ def _requires_axis_swap(srs_name: str | None) -> bool:
             )
         return swap
 
-    raise UnsupportedCrsError(
-        f"Nierozpoznany zapis układu współrzędnych srsName={srs_name!r}."
-    )
+    raise UnsupportedCrsError(f"Nierozpoznany zapis układu współrzędnych srsName={srs_name!r}.")
 
 
 def _extract_properties(feature_elem: ElementTree.Element) -> dict[str, str]:
@@ -389,9 +425,7 @@ def _extract_properties(feature_elem: ElementTree.Element) -> dict[str, str]:
     return properties
 
 
-def _collect_properties(
-    elem: ElementTree.Element, properties: dict[str, str]
-) -> None:
+def _collect_properties(elem: ElementTree.Element, properties: dict[str, str]) -> None:
     for child in elem:
         name = local_name(child.tag)
         if name in _GEOMETRY_CONTAINERS:
@@ -419,17 +453,13 @@ def _parse_geojson(text: str) -> list[GmlFeature]:
         if not geometry_dict:
             continue
         geometry = shapely_shape(geometry_dict)
-        if geometry.geom_type not in ("Polygon", "MultiPolygon"):
+        if geometry.geom_type not in ("Polygon", "MultiPolygon", "Point", "MultiPoint"):
             logger.warning(
                 "Pominięto nieobsługiwany typ geometrii GeoJSON: %s",
                 geometry.geom_type,
             )
             continue
-        properties = {
-            key: str(value)
-            for key, value in (feature.get("properties") or {}).items()
-            if value is not None
-        }
+        properties = {key: str(value) for key, value in (feature.get("properties") or {}).items() if value is not None}
         raw_id = feature.get("id")
         features.append(
             GmlFeature(
