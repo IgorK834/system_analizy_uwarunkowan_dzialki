@@ -95,7 +95,9 @@ def generate_audit_package(analysis_id: int, db: Session) -> ArchiveResult:
     package = build_audit_package(audit_input, limits)
     logger.info(
         "Zbudowano pakiet audytowy analizy %s: %d plików, %d pominięć",
-        analysis_id, len(package.files), len(package.omitted),
+        analysis_id,
+        len(package.files),
+        len(package.omitted),
     )
     return write_deterministic_zip(package.files, limits)
 
@@ -125,15 +127,16 @@ def build_audit_input(
     payload.pop("sources", None)  # rejestr źródeł jest w sources.json
     _strip_ui_fields(payload)
     quality_payload = payload.pop("section_quality", None)
-    quality = (
-        quality_to_snapshot(response.section_quality) if response.section_quality else quality_payload
-    )
+    quality = quality_to_snapshot(response.section_quality) if response.section_quality else quality_payload
     _replace_geometries(payload)
 
     parcel_ids = _ids([response.parcel.source] if response.parcel else [], catalog)
     parcel_geometry_2180 = (
-        {"type": "Feature", "geometry": mapping(to_shape(analysis.parcel.geometry)),
-         "properties": {"parcel_identifier": analysis.parcel.parcel_identifier, "crs": "EPSG:2180"}}
+        {
+            "type": "Feature",
+            "geometry": mapping(to_shape(analysis.parcel.geometry)),
+            "properties": {"parcel_identifier": analysis.parcel.parcel_identifier, "crs": "EPSG:2180"},
+        }
         if analysis.parcel is not None
         else None
     )
@@ -192,10 +195,7 @@ def _ids(sources: Iterable[SourceMetadata | None], catalog: DataSourceCatalog | 
 def _redistribution_map(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> dict[str, str]:
     if catalog is None:
         return {}
-    ids = {
-        resolve_source_id(source, catalog)[0]
-        for source in _all_sources(response)
-    }
+    ids = {resolve_source_id(source, catalog)[0] for source in _all_sources(response)}
     return {sid: catalog.redistribution_of(sid) for sid in ids if sid}
 
 
@@ -214,8 +214,7 @@ def _all_sources(response: AnalyzeResponse) -> list[SourceMetadata]:
         for zone in response.pog.zones:
             if zone.source:
                 found.append(zone.source)
-        for group in (response.pog.ouz, response.pog.downtown_areas,
-                      response.pog.social_infrastructure_standard_areas):
+        for group in (response.pog.ouz, response.pog.downtown_areas, response.pog.social_infrastructure_standard_areas):
             found.extend(item.source for item in group if item.source)
     found.extend(item.source for item in response.risks)
     found.extend(item.source for item in response.infrastructure)
@@ -236,8 +235,7 @@ def _raw_blocks(response: AnalyzeResponse, catalog: DataSourceCatalog | None) ->
     blocks: list[AuditRawBlock] = []
     if response.pog is not None and response.pog.raw_attributes:
         source_id = resolve_source_id(response.pog.source, catalog)[0] if response.pog.source else None
-        blocks.append(AuditRawBlock(("pog", "raw_attributes"), source_id,
-                                    "surowe atrybuty rekordu POG ze źródła"))
+        blocks.append(AuditRawBlock(("pog", "raw_attributes"), source_id, "surowe atrybuty rekordu POG ze źródła"))
     return blocks
 
 
@@ -279,9 +277,7 @@ def _source_entries(
                         "attribution": entry.attribution,
                         "expected_update_interval": entry.expected_update_interval,
                         "freshness_policy": (
-                            entry.freshness_policy.model_dump(mode="json")
-                            if entry.freshness_policy
-                            else None
+                            entry.freshness_policy.model_dump(mode="json") if entry.freshness_policy else None
                         ),
                     }
                     if entry is not None
@@ -346,11 +342,7 @@ def _features(value: Mapping[str, Any] | None, properties: Mapping[str, Any]) ->
         return []
     kind = value.get("type")
     if kind == "FeatureCollection":
-        return [
-            item
-            for feature in value.get("features", [])
-            for item in _features(feature, properties)
-        ]
+        return [item for feature in value.get("features", []) for item in _features(feature, properties)]
     if kind == "Feature":
         merged = {**dict(properties), **(dict(value.get("properties") or {}))}
         return [{"type": "Feature", "geometry": value.get("geometry"), "properties": merged}]
@@ -362,41 +354,64 @@ def _features(value: Mapping[str, Any] | None, properties: Mapping[str, Any]) ->
 def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> list[AuditLayer]:
     layers: list[AuditLayer] = []
 
-    def add(name: str, title: str, description: str, features: list[dict[str, Any]],
-            sources: Iterable[SourceMetadata | None], kind: str = "derived") -> None:
+    def add(
+        name: str,
+        title: str,
+        description: str,
+        features: list[dict[str, Any]],
+        sources: Iterable[SourceMetadata | None],
+        kind: str = "derived",
+    ) -> None:
         if features:
             layers.append(
                 AuditLayer(
-                    name=name, title=title, description=description,
-                    features=tuple(features), source_ids=_ids(sources, catalog),
+                    name=name,
+                    title=title,
+                    description=description,
+                    features=tuple(features),
+                    source_ids=_ids(sources, catalog),
                     kind=kind,  # type: ignore[arg-type]
                 )
             )
 
     if response.parcel is not None:
         parcel = response.parcel
-        add("parcel", "Obrys działki",
+        add(
+            "parcel",
+            "Obrys działki",
             "Geometria działki z ULDK przeliczona z EPSG:2180 do EPSG:4326.",
-            _features(parcel.geometry_geojson, {"layer": "parcel",
-                                                "parcel_identifier": parcel.parcel_identifier}),
-            [parcel.source], kind="parcel")
-        add("buildable_area", "Obszar po technicznym odsunięciu od granic (przybliżenie)",
+            _features(parcel.geometry_geojson, {"layer": "parcel", "parcel_identifier": parcel.parcel_identifier}),
+            [parcel.source],
+            kind="parcel",
+        )
+        add(
+            "buildable_area",
+            "Obszar po technicznym odsunięciu od granic (przybliżenie)",
             "Przybliżenie techniczne (bufor ujemny) — nie jest linią zabudowy z MPZP.",
-            _features(parcel.buildable_area_geojson, {"layer": "buildable_area",
-                                                      "is_technical_approximation": True}),
-            [parcel.source])
+            _features(parcel.buildable_area_geojson, {"layer": "buildable_area", "is_technical_approximation": True}),
+            [parcel.source],
+        )
 
     mpzp: list[dict[str, Any]] = []
     for zone in response.mpzp_zones:
         mpzp += _features(
             zone.intersection_geojson,
-            {"layer": "mpzp_zone", "zone_symbol": zone.zone_symbol, "zone_id": zone.zone_id,
-             "share_pct": zone.intersection_pct, "area_sqm": zone.intersection_area_sqm,
-             "assignment_method": zone.assignment_method},
+            {
+                "layer": "mpzp_zone",
+                "zone_symbol": zone.zone_symbol,
+                "zone_id": zone.zone_id,
+                "share_pct": zone.intersection_pct,
+                "area_sqm": zone.intersection_area_sqm,
+                "assignment_method": zone.assignment_method,
+            },
         )
-    add("mpzp_zones", "Strefy MPZP przecinające działkę",
+    add(
+        "mpzp_zones",
+        "Strefy MPZP przecinające działkę",
         "Przecięcia stref MPZP z działką (obliczone w EPSG:2180, zapis w EPSG:4326).",
-        mpzp, [zone.source for zone in response.mpzp_zones])
+        mpzp,
+        [zone.source for zone in response.mpzp_zones],
+    )
 
     # AU-101: granice aktów (RU, ``redistribution: allowed``) i części działki objęte aktem. Akt znany tylko z
     # KIMPZP nie ma geometrii, więc nie tworzy obiektu warstwy; jego dane są w ``analysis.json``.
@@ -419,59 +434,128 @@ def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> lis
         for channel in (response.mpzp_status.channels if response.mpzp_status else [])
         if channel.channel == "mpzp_ru"
     ]
-    add("mpzp_acts", "Akty MPZP przecinające działkę (Rejestr Urbanistyczny)",
+    add(
+        "mpzp_acts",
+        "Akty MPZP przecinające działkę (Rejestr Urbanistyczny)",
         "Granice aktów MPZP z Rejestru Urbanistycznego (przycięte do okna wokół działki) i części działki objęte "
         "aktem (obliczone w EPSG:2180). Akt to granica i dokument, nie strefa przeznaczenia.",
-        acts, act_sources)
+        acts,
+        act_sources,
+    )
 
     if response.pog is not None:
         pog = response.pog
-        add("pog_zones", "Strefy POG przecinające działkę",
+        add(
+            "pog_zones",
+            "Strefy POG przecinające działkę",
             "Przecięcia stref planu ogólnego z działką (obliczone w EPSG:2180).",
-            [f for zone in pog.zones
-             for f in _features(zone.geometry_geojson,
-                                {"layer": "pog_zone", "zone_id": zone.id, "symbol": zone.symbol,
-                                 "type": zone.type, "share_pct": zone.area_pct})],
-            [zone.source or pog.source for zone in pog.zones])
-        overlays = (("OUZ", pog.ouz), ("OZS", pog.downtown_areas),
-                    ("OSDIS", pog.social_infrastructure_standard_areas))
-        add("pog_overlays", "OUZ, OZS i OSDIS przecinające działkę",
+            [
+                f
+                for zone in pog.zones
+                for f in _features(
+                    zone.geometry_geojson,
+                    {
+                        "layer": "pog_zone",
+                        "zone_id": zone.id,
+                        "symbol": zone.symbol,
+                        "type": zone.type,
+                        "share_pct": zone.area_pct,
+                    },
+                )
+            ],
+            [zone.source or pog.source for zone in pog.zones],
+        )
+        overlays = (("OUZ", pog.ouz), ("OZS", pog.downtown_areas), ("OSDIS", pog.social_infrastructure_standard_areas))
+        add(
+            "pog_overlays",
+            "OUZ, OZS i OSDIS przecinające działkę",
             "Obszary uzupełnienia zabudowy, śródmiejskie i standardu infrastruktury społecznej.",
-            [f for kind, group in overlays for item in group
-             for f in _features(item.geometry_geojson,
-                                {"layer": "pog_overlay", "kind": kind, "area_id": item.id,
-                                 "symbol": item.symbol, "share_pct": item.area_pct})],
-            [item.source or pog.source for _, group in overlays for item in group])
+            [
+                f
+                for kind, group in overlays
+                for item in group
+                for f in _features(
+                    item.geometry_geojson,
+                    {
+                        "layer": "pog_overlay",
+                        "kind": kind,
+                        "area_id": item.id,
+                        "symbol": item.symbol,
+                        "share_pct": item.area_pct,
+                    },
+                )
+            ],
+            [item.source or pog.source for _, group in overlays for item in group],
+        )
 
-    for section, name, title in (("flood", "flood_risk", "Strefy zagrożenia powodziowego (ISOK)"),
-                                 ("nature", "nature_protection", "Formy ochrony przyrody (GDOŚ)")):
+    for section, name, title in (
+        ("flood", "flood_risk", "Strefy zagrożenia powodziowego (ISOK)"),
+        ("nature", "nature_protection", "Formy ochrony przyrody (GDOŚ)"),
+    ):
         items = [item for item in response.risks if _risk_section(item.section, item.risk_type) == section]
-        add(name, title, "Obiekty źródła przecinające działkę (geometria przycięta do działki).",
-            [f for item in items
-             for f in _features(item.geometry_geojson,
-                                {"layer": name, "risk_type": item.risk_type,
-                                 "feature_id": item.feature_id, "name": item.name,
-                                 "severity": item.severity, "share_pct": item.intersection_pct,
-                                 "touches_boundary": item.touches_boundary})],
-            [item.source for item in items])
+        add(
+            name,
+            title,
+            "Obiekty przecinające działkę lub najbliższe w promieniu wyszukiwania; geometria przycięta do działki albo jej bufora.",
+            [
+                f
+                for item in items
+                for f in _features(
+                    item.geometry_geojson,
+                    {
+                        "layer": name,
+                        "risk_type": item.risk_type,
+                        "feature_id": item.feature_id,
+                        "name": item.name,
+                        "severity": item.severity,
+                        "share_pct": item.intersection_pct,
+                        "touches_boundary": item.touches_boundary,
+                        "proximity_status": item.proximity_status,
+                        "distance_m": item.distance_m,
+                        "search_radius_m": item.search_radius_m,
+                        "source_layer": item.layer_name,
+                        "informational_only": item.informational_only,
+                    },
+                )
+            ],
+            [item.source for item in items],
+        )
 
     infra = response.infrastructure
-    add("infrastructure_buffers", "Sieci uzbrojenia i bufory techniczne (przybliżenie)",
+    add(
+        "infrastructure_buffers",
+        "Sieci uzbrojenia i bufory techniczne (przybliżenie)",
         "Bufory sieci są przybliżeniem technicznym wg reguły konfiguracyjnej.",
-        [f for item in infra
-         for key, value in (("network", item.network_geometry_geojson),
-                            ("protection_zone", item.protection_zone_geojson))
-         for f in _features(value, {"layer": "infrastructure_buffer", "part": key,
-                                    "network_type": item.network_type, "buffer_m": item.buffer_m})],
-        [item.source for item in infra])
+        [
+            f
+            for item in infra
+            for key, value in (
+                ("network", item.network_geometry_geojson),
+                ("protection_zone", item.protection_zone_geojson),
+            )
+            for f in _features(
+                value,
+                {
+                    "layer": "infrastructure_buffer",
+                    "part": key,
+                    "network_type": item.network_type,
+                    "buffer_m": item.buffer_m,
+                },
+            )
+        ],
+        [item.source for item in infra],
+    )
 
     terrain = response.terrain
     if terrain is not None and terrain.relief is not None and terrain.relief.profile is not None:
         relief = terrain.relief
-        add("terrain_profile", "Linia profilu wysokościowego (NMT)",
+        add(
+            "terrain_profile",
+            "Linia profilu wysokościowego (NMT)",
             "Linia, wzdłuż której próbkowano profil wysokościowy z rastra NMT.",
             _features(relief.profile.line_geojson, {"layer": "terrain_profile"}),
-            [relief.source or terrain.source])
+            [relief.source or terrain.source],
+        )
     road = response.road_context
     if road is not None and road.nearest is not None:
         properties = {
@@ -482,30 +566,53 @@ def _layers(response: AnalyzeResponse, catalog: DataSourceCatalog | None) -> lis
             "category": road.nearest.category,
             "road_class": road.nearest.road_class,
         }
-        add("road_context", "Najbliższa oś jezdni (BDOT10k) i odcinek działka → oś",
+        add(
+            "road_context",
+            "Najbliższa oś jezdni (BDOT10k) i odcinek działka → oś",
             "Oś jezdni OT_SKJZ_L najbliższa działce oraz najkrótszy odcinek łączący (odległość liczona w EPSG:2180). "
             + road.interpretation_note,
             _features(road.nearest.road_geojson, {**properties, "part": "road_axis"})
             + _features(road.nearest.link_geojson, {**properties, "part": "shortest_link"}),
-            [road.source])
+            [road.source],
+        )
     buildings = response.neighbour_buildings
     if buildings is not None and buildings.buildings:
-        add("neighbour_buildings", "Budynki na działce i w najbliższym buforze (BDOT10k)",
+        add(
+            "neighbour_buildings",
+            "Budynki na działce i w najbliższym buforze (BDOT10k)",
             "Obrysy istniejących budynków (OT_BUBD_A) na działce i w najbliższym buforze, bez nazw i właścicieli; "
             "położenie względem działki obliczono w EPSG:2180. " + buildings.interpretation_note,
-            [f for item in buildings.buildings
-             for f in _features(item.geometry_geojson,
-                                {"layer": "neighbour_buildings", "building_id": item.building_id,
-                                 "distance_m": item.distance_m, "relation": item.relation,
-                                 "floors": item.floors, "general_function": item.general_function})],
-            [buildings.source])
+            [
+                f
+                for item in buildings.buildings
+                for f in _features(
+                    item.geometry_geojson,
+                    {
+                        "layer": "neighbour_buildings",
+                        "building_id": item.building_id,
+                        "distance_m": item.distance_m,
+                        "relation": item.relation,
+                        "floors": item.floors,
+                        "general_function": item.general_function,
+                    },
+                )
+            ],
+            [buildings.source],
+        )
     cover = response.land_cover
     if cover is not None:
-        add("land_cover", "Pokrycie terenu BDOT10k", cover.interpretation_note,
-            [f for item in cover.features_geojson for f in _features(item, {"layer": "land_cover"})], [cover.source])
+        add(
+            "land_cover",
+            "Pokrycie terenu BDOT10k",
+            cover.interpretation_note,
+            [f for item in cover.features_geojson for f in _features(item, {"layer": "land_cover"})],
+            [cover.source],
+        )
         forest_features = _features(cover.forest.geometry_geojson, {"layer": "forest"})
         for buffer in cover.forest.buffers:
-            forest_features += _features(buffer.geometry_geojson, {"layer": "forest_buffer", "radius_m": buffer.radius_m})
+            forest_features += _features(
+                buffer.geometry_geojson, {"layer": "forest_buffer", "radius_m": buffer.radius_m}
+            )
         add("forest_context", "Las i bufory orientacyjne", cover.interpretation_note, forest_features, [cover.source])
     return layers
 

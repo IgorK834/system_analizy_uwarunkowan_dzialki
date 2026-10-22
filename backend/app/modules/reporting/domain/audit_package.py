@@ -38,7 +38,7 @@ AUDIT_PACKAGE_SCHEMA_VERSION: Final[str] = "audit-package/1"
 # ``layers/neighbour_buildings.geojson`` (obrysy budynków na działce i w najbliższym buforze) oraz sekcje
 # ``road_context`` i ``neighbour_buildings`` w ``analysis.json``; warstwy trafiają do pakietu wyłącznie, gdy
 # ``redistribution`` źródła ``bdot10k`` w katalogu pozwala na dane pochodne (``allowed`` albo ``derived_only``).
-AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.6.0"
+AUDIT_EXPORTER_VERSION: Final[str] = "audit-exporter/1.7.0"
 MANIFEST_NAME: Final[str] = "manifest.json"
 README_NAME: Final[str] = "README.md"
 
