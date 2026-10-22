@@ -124,9 +124,7 @@ class AnalysisRecordMeta:
     cache_signature: str | None = None
 
 
-def generate_analysis_report_pdf(
-    analysis_id: int, db: Session, *, export_at: datetime | None = None
-) -> bytes:
+def generate_analysis_report_pdf(analysis_id: int, db: Session, *, export_at: datetime | None = None) -> bytes:
     """Generuje raport PDF dla zapisanej analizy wyłącznie z jej snapshotu.
 
     Zgłasza ``AnalysisReportNotFoundError``, gdy analiza nie istnieje, oraz
@@ -139,9 +137,7 @@ def generate_analysis_report_pdf(
     """
     analysis = db.get(Analysis, analysis_id)
     if analysis is None:
-        raise AnalysisReportNotFoundError(
-            f"Analiza o identyfikatorze {analysis_id} nie istnieje."
-        )
+        raise AnalysisReportNotFoundError(f"Analiza o identyfikatorze {analysis_id} nie istnieje.")
 
     response = build_analyze_response_from_analysis(analysis, db)
     maps = _render_maps(analysis, response)
@@ -150,9 +146,7 @@ def generate_analysis_report_pdf(
         data_release_ids=tuple(analysis.data_release_ids or ()),
         cache_signature=analysis.cache_signature,
     )
-    html = _render_report_html(
-        _build_report_context(response, maps, record, export_at=export_at)
-    )
+    html = _render_report_html(_build_report_context(response, maps, record, export_at=export_at))
     logger.info("Wygenerowano HTML raportu dla analizy %s", analysis_id)
     return _html_to_pdf(html)
 
@@ -195,9 +189,7 @@ def _build_report_context(
     quality = response.section_quality or build_section_quality(response, origin="reconstructed")
     domains = _domain_assessments(response, quality, export_time)
     map_unavailable = (
-        "Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna."
-        if maps is None
-        else None
+        "Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna." if maps is None else None
     )
     return {
         "title": REPORT_TITLE,
@@ -205,9 +197,7 @@ def _build_report_context(
         "disclaimer": REPORT_DISCLAIMER,
         "layout_version": REPORT_LAYOUT_VERSION,
         "not_specified": NOT_SPECIFIED,
-        "sections": [
-            {"id": item.id, "number": item.number, "title": item.title} for item in REPORT_SECTIONS
-        ],
+        "sections": [{"id": item.id, "number": item.number, "title": item.title} for item in REPORT_SECTIONS],
         "section": {item.id: {"number": item.number, "title": item.title} for item in REPORT_SECTIONS},
         "finding_kinds": [
             {"id": key, "label": FINDING_KIND_LABELS[key], "description": FINDING_KIND_DESCRIPTIONS[key]}
@@ -220,9 +210,7 @@ def _build_report_context(
         "completeness": _completeness_context(response),
         "analyzed_at": _format_datetime(response.analyzed_at),
         "parcel_identifier": parcel.parcel_identifier if parcel else None,
-        "manual_zone_declared": any(
-            zone.assignment_method == "manual_user_input" for zone in response.mpzp_zones
-        ),
+        "manual_zone_declared": any(zone.assignment_method == "manual_user_input" for zone in response.mpzp_zones),
         "map_unavailable": map_unavailable,
         "maps": _maps_context(maps),
         "parcel": _parcel_context(response),
@@ -232,9 +220,7 @@ def _build_report_context(
         },
         "mpzp": _mpzp_section_context(response),
         "pog": _pog_context(response.pog),
-        "compatibility": _compatibility_context(
-            response.pog.compatibility_assessment if response.pog else None
-        ),
+        "compatibility": _compatibility_context(response.pog.compatibility_assessment if response.pog else None),
         "risk_sections": _risk_sections_context(response),
         "terrain": _terrain_context(response.terrain),
         "land_cover": _land_cover_context(response.land_cover),
@@ -391,21 +377,26 @@ def _domain_assessments(
         "mpzp": _mpzp_finding(response),
         "pog": _pog_finding(response.pog),
         "pog_overlays": _overlays_finding(response.pog),
-        **{
-            section.section: _risk_finding(section)
-            for section in _risk_sections(response)
-        },
+        **{section.section: _risk_finding(section) for section in _risk_sections(response)},
         "terrain": _terrain_finding(response.terrain),
         "utilities": _utilities_finding(response),
         "transport": _road_finding(response.road_context),
         "buildings": _buildings_finding(response.neighbour_buildings),
-        "land_cover": ("Pokrycie terenu i lasy: " + _BDOT_STATUS_LABELS[(response.land_cover or land_cover_from_snapshot(None)).status], "computed" if response.land_cover and response.land_cover.status == "available" else None),
+        "land_cover": (
+            "Pokrycie terenu i lasy: "
+            + _BDOT_STATUS_LABELS[(response.land_cover or land_cover_from_snapshot(None)).status],
+            "computed" if response.land_cover and response.land_cover.status == "available" else None,
+        ),
         "mpzp_pog_relation": _compatibility_finding(response.pog),
     }
     by_key = {item.section: item for item in quality.sections}
     # Stary snapshot może nie mieć później dodanej sekcji (np. buildings). Nie zmieniamy historycznej macierzy.
     missing = any(spec.key not in by_key for spec in QUALITY_SECTIONS)
-    fallbacks = {item.section: item for item in build_section_quality(response, origin="reconstructed").sections} if missing else {}
+    fallbacks = (
+        {item.section: item for item in build_section_quality(response, origin="reconstructed").sections}
+        if missing
+        else {}
+    )
     rows: list[dict[str, Any]] = []
     for spec in QUALITY_SECTIONS:
         item = by_key.get(spec.key) or fallbacks[spec.key]
@@ -431,9 +422,7 @@ def _domain_assessments(
                 "freshness_state": item.freshness.state,
                 "freshness_label": FRESHNESS_LABELS_PL[item.freshness.state],
                 "freshness_detail": _freshness_detail(item),
-                "reason_codes": [
-                    {"code": code, "label": reason_label_pl(code)} for code in item.reason_codes
-                ],
+                "reason_codes": [{"code": code, "label": reason_label_pl(code)} for code in item.reason_codes],
                 "reason": "; ".join(reason_label_pl(code) for code in item.reason_codes) or None,
                 "export": _export_age(item, export_at),
             }
@@ -507,13 +496,11 @@ def _quality_context(
         "integrity_ok": quality.integrity_ok(),
         "legend": {
             "statuses": [
-                {"id": item.id, "label": item.label, "description": item.description,
-                 "used": item.id in used_statuses}
+                {"id": item.id, "label": item.label, "description": item.description, "used": item.id in used_statuses}
                 for item in legend.statuses
             ],
             "freshness": [
-                {"id": item.id, "label": item.label, "description": item.description,
-                 "used": item.id in used_freshness}
+                {"id": item.id, "label": item.label, "description": item.description, "used": item.id in used_freshness}
                 for item in legend.freshness
             ],
         },
@@ -557,9 +544,10 @@ def _mpzp_finding(response: AnalyzeResponse) -> tuple[str, str | None]:
 def _pog_finding(pog: PogResult | None) -> tuple[str, str | None]:
     if pog is None:
         return "Snapshot nie zawiera wyniku POG.", None
-    zones = ", ".join(
-        f"{zone.symbol or zone.type} ({_share(zone.area_pct)})" for zone in pog.zones
-    ) or "brak stref przecinających działkę w danych"
+    zones = (
+        ", ".join(f"{zone.symbol or zone.type} ({_share(zone.area_pct)})" for zone in pog.zones)
+        or "brak stref przecinających działkę w danych"
+    )
     parts = [f"Status aktu: {LEGAL_STATUS_LABELS_PL[pog.legal_status]}. Strefy: {zones}."]
     reason_parts = []
     if pog.legal_status != "binding":
@@ -604,6 +592,8 @@ def _risk_finding(section: RiskSectionResult) -> tuple[str, str | None]:
         finding = RISK_RELATION_LABELS[section.relation]
         if section.union_intersection_pct is not None and section.relation == "intersection":
             finding += f" — łącznie {_area(section.union_intersection_area_sqm)} ({_share(section.union_intersection_pct)} działki)"
+        elif section.nearest_distance_m is not None:
+            finding += f" — najbliższy obiekt {_meters(section.nearest_distance_m, 1)} od granicy działki"
         return finding + ".", "computed"
     return "Nie ustalono — brak obiektów nie oznacza braku ograniczeń.", None
 
@@ -732,7 +722,9 @@ class _EvidenceRegistry:
                 "value": (
                     f"{_format_trimmed(float(value), 3)}{_unit_suffix(unit)}"
                     if isinstance(value, (int, float))
-                    else value if value is not None else NOT_SPECIFIED
+                    else value
+                    if value is not None
+                    else NOT_SPECIFIED
                 ),
                 "raw_value": parameter.raw_value,
                 "page": parameter.page_number,
@@ -745,8 +737,12 @@ class _EvidenceRegistry:
                 "conflict": parameter.value_kind == "conflict",
                 "value_kind": parameter.value_kind,
                 "conditions": [
-                    {"kind": condition.kind, "kind_label": _CONDITION_KIND_LABELS[condition.kind],
-                     "label": condition.label, "quote": condition.quote}
+                    {
+                        "kind": condition.kind,
+                        "kind_label": _CONDITION_KIND_LABELS[condition.kind],
+                        "label": condition.label,
+                        "quote": condition.quote,
+                    }
                     for condition in parameter.conditions
                 ],
                 "manual_review": parameter.manual_review_required,
@@ -1126,7 +1122,9 @@ def _mpzp_parameter_rows(zone: MpzpZoneResult, registry: _EvidenceRegistry) -> l
                 text += f"; warunkowo: {conditional_text}"
             row = _parameter_row(zone, label, text, None, refs, kind, "conflict")
         elif conditional_text:
-            head = f"{base_text}{_unit_suffix(unit)}" if base_text is not None else "brak jednej wartości dla całej strefy"
+            head = (
+                f"{base_text}{_unit_suffix(unit)}" if base_text is not None else "brak jednej wartości dla całej strefy"
+            )
             row = _parameter_row(zone, label, f"{head}; warunkowo: {conditional_text}", None, refs, kind, "conditional")
         else:
             row = _parameter_row(zone, label, base_text, unit, refs, kind, "ok" if value is not None else "null")
@@ -1178,9 +1176,7 @@ def _parameter_row(
         "parameter": label,
         "value": value,
         "unit": unit,
-        "display": (
-            f"{value}{_unit_suffix(unit)}" if value is not None and status == "ok" else value
-        ),
+        "display": (f"{value}{_unit_suffix(unit)}" if value is not None and status == "ok" else value),
         "refs": refs,
         "kind": kind,
         "kind_label": FINDING_KIND_LABELS[kind],
@@ -1232,9 +1228,7 @@ def _pog_context(pog: PogResult | None) -> dict[str, Any] | None:
         "coverage_status": pog.coverage_status,
         "coverage_status_label": COVERAGE_STATUS_LABELS_PL[pog.coverage_status],
         "data_availability_label": DATA_AVAILABILITY_LABELS_PL[pog.data_availability],
-        "status_confirmed_at": (
-            _format_datetime(pog.status_confirmed_at) if pog.status_confirmed_at else None
-        ),
+        "status_confirmed_at": (_format_datetime(pog.status_confirmed_at) if pog.status_confirmed_at else None),
         "status_evidence": (
             {
                 "source_name": evidence.source_name,
@@ -1255,9 +1249,7 @@ def _pog_context(pog: PogResult | None) -> dict[str, Any] | None:
                 "raw_value": coverage_evidence.raw_value,
                 "reference": coverage_evidence.reference,
                 "confirmed_at": (
-                    _format_datetime(coverage_evidence.confirmed_at)
-                    if coverage_evidence.confirmed_at
-                    else None
+                    _format_datetime(coverage_evidence.confirmed_at) if coverage_evidence.confirmed_at else None
                 ),
             }
             if coverage_evidence is not None
@@ -1288,17 +1280,30 @@ def _pog_context(pog: PogResult | None) -> dict[str, Any] | None:
             f"{COVERAGE_STATUS_LABELS_PL[pog.coverage_status]}). Nie oznacza to braku planu."
         ),
         "overlays": [
-            _overlay_group("ouz", "Tabela 4.4. Obszar uzupełnienia zabudowy (OUZ)", pog.ouz, pog,
-                           decision=_format_bool(pog.in_ouz),
-                           decision_label="Działka w OUZ (decyzja wg jawnych progów)",
-                           total=(pog.ouz_intersection_area_sqm, pog.ouz_intersection_pct),
-                           touches=pog.touches_ouz_boundary),
-            _overlay_group("downtown", "Tabela 4.5. Obszar zabudowy śródmiejskiej (OZS)",
-                           pog.downtown_areas, pog,
-                           decision=_format_bool(pog.in_downtown_area),
-                           decision_label="Działka w OZS"),
-            _overlay_group("social", "Tabela 4.6. Obszar standardów dostępności infrastruktury społecznej (OSDIS)",
-                           pog.social_infrastructure_standard_areas, pog),
+            _overlay_group(
+                "ouz",
+                "Tabela 4.4. Obszar uzupełnienia zabudowy (OUZ)",
+                pog.ouz,
+                pog,
+                decision=_format_bool(pog.in_ouz),
+                decision_label="Działka w OUZ (decyzja wg jawnych progów)",
+                total=(pog.ouz_intersection_area_sqm, pog.ouz_intersection_pct),
+                touches=pog.touches_ouz_boundary,
+            ),
+            _overlay_group(
+                "downtown",
+                "Tabela 4.5. Obszar zabudowy śródmiejskiej (OZS)",
+                pog.downtown_areas,
+                pog,
+                decision=_format_bool(pog.in_downtown_area),
+                decision_label="Działka w OZS",
+            ),
+            _overlay_group(
+                "social",
+                "Tabela 4.6. Obszar standardów dostępności infrastruktury społecznej (OSDIS)",
+                pog.social_infrastructure_standard_areas,
+                pog,
+            ),
         ],
         "act": _pog_act_context(pog.act, binding),
     }
@@ -1326,9 +1331,7 @@ def _pog_zone_row(zone: Any, pog: PogResult) -> dict[str, Any]:
         parameters.append(
             {
                 "label": label,
-                "value": (
-                    f"{_format_trimmed(float(value), 3)}{_unit_suffix(unit)}" if value is not None else None
-                ),
+                "value": (f"{_format_trimmed(float(value), 3)}{_unit_suffix(unit)}" if value is not None else None),
             }
         )
     return {
@@ -1431,14 +1434,10 @@ def _pog_act_context(act: Any, binding: bool) -> dict[str, Any] | None:
         "resolution_number": act.resolution_number,
         "resolution_date": _format_date(act.resolution_date),
         "publication_id": act.publication_id,
-        "version_started_at": (
-            _format_datetime(act.version_started_at) if act.version_started_at else None
-        ),
+        "version_started_at": (_format_datetime(act.version_started_at) if act.version_started_at else None),
         # BK-406: dla projektu nie używamy języka „obowiązuje”.
         "valid_from_label": (
-            "Początek obowiązywania wersji (wg APP)"
-            if binding
-            else "Data początkowa w atrybucie APP (akt niewiążący)"
+            "Początek obowiązywania wersji (wg APP)" if binding else "Data początkowa w atrybucie APP (akt niewiążący)"
         ),
         "valid_from": _format_date(act.valid_from),
         "valid_to": _format_date(act.valid_to),
@@ -1518,9 +1517,7 @@ def _compatibility_context(assessment: Any) -> dict[str, Any] | None:
             {
                 "label": f"{pair.mpzp_zone_symbol} × {pair.pog_zone_symbol or pair.pog_zone_type}",
                 "ids": f"MPZP {pair.mpzp_zone_id or '—'} / POG {pair.pog_zone_id}",
-                "mpzp_method": _MPZP_ASSIGNMENT_LABELS.get(
-                    pair.mpzp_assignment_method, pair.mpzp_assignment_method
-                ),
+                "mpzp_method": _MPZP_ASSIGNMENT_LABELS.get(pair.mpzp_assignment_method, pair.mpzp_assignment_method),
                 "mpzp_function": pair.mpzp_function,
                 "status_label": COMPATIBILITY_STATUS_LABELS_PL[pair.status],
                 "rule_result": pair.rule_result,
@@ -1545,9 +1542,7 @@ def _compatibility_context(assessment: Any) -> dict[str, Any] | None:
                 "conflict": legacy.conflict_with_mpzp,
                 "result": legacy.result,
                 "reasoning": legacy.reasoning,
-                "confidence": (
-                    _format_percent(legacy.confidence * 100.0) if legacy.confidence is not None else None
-                ),
+                "confidence": (_format_percent(legacy.confidence * 100.0) if legacy.confidence is not None else None),
             }
             if legacy is not None
             else None
@@ -1560,7 +1555,7 @@ def _compatibility_context(assessment: Any) -> dict[str, Any] | None:
 
 RISK_SECTION_TITLES: dict[str, str] = {
     "flood": "Zagrożenie powodziowe (ISOK)",
-    "nature": "Formy ochrony przyrody (GDOŚ)",
+    "nature": "Przyroda i obiekty środowiskowe (GDOŚ)",
 }
 RISK_STATUS_LABELS: dict[str, str] = {
     "available": "sprawdzono",
@@ -1570,18 +1565,18 @@ RISK_STATUS_LABELS: dict[str, str] = {
 }
 RISK_RELATION_LABELS: dict[str, str] = {
     "no_match": "brak obiektów przecinających działkę",
+    "none_within_radius": "brak obiektów w sprawdzonych promieniach",
+    "near": "najbliższe obiekty poza działką, w sprawdzonym promieniu",
     "boundary_only": "wyłącznie styk z granicą działki (bez wspólnej powierzchni)",
     "intersection": "obiekty przecinają działkę",
     "unknown": "nieustalona",
 }
 RISK_STATUS_NOTES: dict[str, str] = {
     "unavailable": (
-        "Nie udało się sprawdzić źródła. Brak obiektów w tej sekcji NIE oznacza "
-        "braku ryzyka ani ograniczeń."
+        "Nie udało się sprawdzić źródła. Brak obiektów w tej sekcji NIE oznacza braku ryzyka ani ograniczeń."
     ),
     "error": (
-        "Sprawdzenie zakończyło się nieoczekiwanym błędem. Brak obiektów NIE "
-        "oznacza braku ryzyka ani ograniczeń."
+        "Sprawdzenie zakończyło się nieoczekiwanym błędem. Brak obiektów NIE oznacza braku ryzyka ani ograniczeń."
     ),
     "unknown": (
         "Zapis sprzed strukturalnych sekcji ryzyka nie zawiera statusu "
@@ -1622,14 +1617,50 @@ def _risk_section_context(section: RiskSectionResult, items: list[RiskResult]) -
         "feature_count": section.feature_count,
         "intersecting_count": section.intersecting_feature_count,
         "boundary_count": section.boundary_feature_count,
+        "near_count": section.near_feature_count,
+        "nearest_distance": (
+            _meters(section.nearest_distance_m, 1) if section.nearest_distance_m is not None else None
+        ),
         "union_area": _area(section.union_intersection_area_sqm)
         if section.union_intersection_area_sqm is not None
         else None,
-        "union_pct": _share(section.union_intersection_pct)
-        if section.union_intersection_pct is not None
-        else None,
+        "union_pct": _share(section.union_intersection_pct) if section.union_intersection_pct is not None else None,
         "source": _source_brief(section.source) if section.source else None,
         "warnings": list(section.warnings),
+        "proximities": [
+            {
+                "label": item.label,
+                "layer_name": item.layer_name,
+                "status": item.status,
+                "result": (
+                    "przecięcie (0 m)"
+                    if item.status == "intersection"
+                    else f"{_meters(item.distance_m, 1)} od granicy działki"
+                    if item.status == "near" and item.distance_m is not None
+                    else f"brak obiektu w promieniu {_meters(item.search_radius_m, 0)}"
+                ),
+                "distance": (_meters(item.distance_m, 1) if item.distance_m is not None else None),
+                "radius": _meters(item.search_radius_m, 0),
+                "name": item.name,
+                "feature_id": item.feature_id,
+                "probability_class": item.probability_class,
+                "return_period": (f"{item.return_period_years} lat" if item.return_period_years is not None else None),
+                "informational_only": item.informational_only,
+            }
+            for item in section.proximities
+        ],
+        "preliminary_assessment": (
+            {
+                "status": section.preliminary_assessment.status,
+                "method": section.preliminary_assessment.method,
+                "reason_code": section.preliminary_assessment.reason_code,
+                "value": section.preliminary_assessment.value,
+                "note": section.preliminary_assessment.note,
+                "source_layers": ", ".join(section.preliminary_assessment.source_layers),
+            }
+            if section.preliminary_assessment is not None
+            else None
+        ),
         "features": [_risk_context(item) for item in items],
     }
 
@@ -1639,15 +1670,18 @@ def _risk_context(item: RiskResult) -> dict[str, Any]:
         "risk_type": item.risk_type,
         "feature_id": item.feature_id,
         "probability_class": item.probability_class,
-        "return_period": (
-            f"{item.return_period_years} lat" if item.return_period_years is not None else None
-        ),
+        "return_period": (f"{item.return_period_years} lat" if item.return_period_years is not None else None),
         "protection_type": item.protection_type,
         "name": item.name,
         "severity": _SEVERITY_LABELS_PL.get(item.severity or "", item.severity),
         "area": _area(item.intersection_area_sqm) if item.intersection_area_sqm is not None else None,
         "pct": _share(item.intersection_pct) if item.intersection_pct is not None else None,
         "touches_boundary": item.touches_boundary,
+        "proximity_status": item.proximity_status,
+        "distance": _meters(item.distance_m, 1) if item.distance_m is not None else None,
+        "search_radius": (_meters(item.search_radius_m, 0) if item.search_radius_m is not None else None),
+        "layer_name": item.layer_name,
+        "informational_only": item.informational_only,
         "description": item.description,
         "warnings": list(item.warnings),
         "confidence": _confidence_context(item.source),
@@ -1669,8 +1703,7 @@ _TERRAIN_STATUS_NOTES: dict[str, str] = {
         "Deniwelacja jest nieznana — brak pokrycia nie oznacza płaskiego terenu."
     ),
     "unavailable": (
-        "Nie udało się uzyskać danych wysokościowych. Deniwelacja jest nieznana — "
-        "wynik nie oznacza płaskiego terenu."
+        "Nie udało się uzyskać danych wysokościowych. Deniwelacja jest nieznana — wynik nie oznacza płaskiego terenu."
     ),
     "unknown": (
         "Zapisany wynik pochodzi sprzed wprowadzenia sekcji rzeźby terenu i nie "
@@ -1697,10 +1730,7 @@ def _terrain_context(terrain: TerrainResult | None) -> dict[str, Any]:
     terrain = terrain or terrain_from_snapshot(None)
     note = _TERRAIN_STATUS_NOTES.get(terrain.status)
     if terrain.status == "available" and terrain.height_difference_m == 0:
-        note = (
-            "Zmierzona deniwelacja wynosi 0 m — w siatce próbkowania teren w "
-            "obrysie działki jest płaski."
-        )
+        note = "Zmierzona deniwelacja wynosi 0 m — w siatce próbkowania teren w obrysie działki jest płaski."
     return {
         "status": terrain.status,
         "status_label": _TERRAIN_STATUS_LABELS[terrain.status],
@@ -2118,9 +2148,7 @@ def _source_context(source: SourceMetadata) -> dict[str, Any]:
         "act_version": source.act_version,
         "artifact_sha256": source.artifact_sha256,
         "fetched_at": _format_datetime(source.fetched_at) if source.fetched_at else None,
-        "response_status": (
-            str(source.response_status) if source.response_status is not None else "brak danych"
-        ),
+        "response_status": (str(source.response_status) if source.response_status is not None else "brak danych"),
         "confidence_pct": _format_percent(source.confidence * 100.0),
         "confidence_label": describe_confidence(source.confidence, source.manual_review_required),
         "manual_review_required": source.manual_review_required,
@@ -2194,9 +2222,7 @@ def _provenance_context(
         ),
         (
             "Teren — raster",
-            response.terrain.relief.schema_version
-            if response.terrain and response.terrain.relief
-            else None,
+            response.terrain.relief.schema_version if response.terrain and response.terrain.relief else None,
         ),
     ]
     map_context = None
@@ -2211,10 +2237,7 @@ def _provenance_context(
             "integrity_ok": maps.integrity_ok,
             "environment": maps.environment,
             "basemap": maps.basemap,
-            "images": [
-                {"title": item.title, "sha256": item.png_sha256, "status": item.status}
-                for item in maps.maps
-            ],
+            "images": [{"title": item.title, "sha256": item.png_sha256, "status": item.status} for item in maps.maps],
         }
     return {
         "releases": releases,
@@ -2277,9 +2300,7 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
         "uśrednionych parametrów różnych stref — każda strefa jest opisana osobno.",
     ]
     if maps is None:
-        limitations.append(
-            "Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna."
-        )
+        limitations.append("Nie udało się wygenerować map raportu. Pozostała część raportu jest kompletna.")
     else:
         limitations.extend(maps.warnings)
         if not maps.from_snapshot:
@@ -2307,14 +2328,11 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
         )
     if response.pog is None:
         limitations.append(
-            "Snapshot nie zawiera wyniku Planu Ogólnego Gminy (POG); brak wyniku "
-            "nie oznacza braku planu."
+            "Snapshot nie zawiera wyniku Planu Ogólnego Gminy (POG); brak wyniku nie oznacza braku planu."
         )
     else:
         if response.pog.legal_status != "binding":
-            limitations.append(
-                f"Status prawny POG: {LEGAL_STATUS_LABELS_PL[response.pog.legal_status]}."
-            )
+            limitations.append(f"Status prawny POG: {LEGAL_STATUS_LABELS_PL[response.pog.legal_status]}.")
         if response.pog.manual_review_required:
             limitations.append("Wynik POG wymaga ręcznej weryfikacji.")
 
@@ -2324,13 +2342,10 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
             "nie może być interpretowany jako brak sieci."
         )
     elif response.utilities_preview.coverage_status == "unknown":
-        limitations.append(
-            "Nie udało się sprawdzić pokrycia KIUT. Pusty podgląd nie oznacza braku sieci."
-        )
+        limitations.append("Nie udało się sprawdzić pokrycia KIUT. Pusty podgląd nie oznacza braku sieci.")
     elif response.utilities_preview.coverage_status == "not_covered":
         limitations.append(
-            "KIUT nie potwierdził publikacji GESUT przez powiat. Nie jest to "
-            "potwierdzenie braku sieci na działce."
+            "KIUT nie potwierdził publikacji GESUT przez powiat. Nie jest to potwierdzenie braku sieci na działce."
         )
     limitations.append(
         "Transport i dostęp do drogi publicznej nie są analizowane (brak potwierdzonego "
@@ -2342,20 +2357,11 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
             "Strefę MPZP przypisano bez wektora wydzieleń (punktowe discovery i "
             "dokument); przypisanie ma obniżoną pewność."
         )
-    if any(
-        parameter.value_kind == "conflict"
-        for zone in response.mpzp_zones
-        for parameter in zone.parameters
-    ):
+    if any(parameter.value_kind == "conflict" for zone in response.mpzp_zones for parameter in zone.parameters):
         limitations.append(
-            "Uchwała zawiera sprzeczne wartości parametrów MPZP; żadna nie została "
-            "wybrana automatycznie."
+            "Uchwała zawiera sprzeczne wartości parametrów MPZP; żadna nie została wybrana automatycznie."
         )
-    if any(
-        parameter.value_kind == "conditional"
-        for zone in response.mpzp_zones
-        for parameter in zone.parameters
-    ):
+    if any(parameter.value_kind == "conditional" for zone in response.mpzp_zones for parameter in zone.parameters):
         limitations.append(
             "Część parametrów MPZP ma wartości zależne od warunków (np. rodzaj dachu, rodzaj zabudowy, "
             "podstrefa); płaskie pole strefy jest puste, gdy uchwała nie podaje jednej wartości dla całej "
@@ -2367,8 +2373,7 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
             f"{MODEL_READING_DISCLAIMER} Tabela evidence podaje model, wersję instrukcji i skrót odpowiedzi modelu."
         )
     if any(
-        zone.assignment_method == "manual_user_input"
-        or zone.source.source_name.casefold() == "manual_user_input"
+        zone.assignment_method == "manual_user_input" or zone.source.source_name.casefold() == "manual_user_input"
         for zone in response.mpzp_zones
     ):
         limitations.append(
@@ -2394,8 +2399,7 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
         for zone in response.mpzp_zones
     ):
         limitations.append(
-            "Część parametrów MPZP pochodzi z niepewnego parsera dokumentów i "
-            "wymaga ręcznej weryfikacji."
+            "Część parametrów MPZP pochodzi z niepewnego parsera dokumentów i wymaga ręcznej weryfikacji."
         )
     if response.infrastructure:
         limitations.append(
@@ -2408,8 +2412,7 @@ def _build_limitations(response: AnalyzeResponse, maps: ReportMaps | None = None
         limitations.append("Dane o ryzykach wymagają ręcznej weryfikacji.")
     if response.buildable_area_sqm is not None:
         limitations.append(
-            "Szacowany obszar zabudowy jest przybliżeniem technicznym (odsunięcie od granic), "
-            "a nie ustaleniem prawnym."
+            "Szacowany obszar zabudowy jest przybliżeniem technicznym (odsunięcie od granic), a nie ustaleniem prawnym."
         )
 
     limitations.extend(_risk_section_limitations(response))
@@ -2438,13 +2441,9 @@ def _terrain_limitations(terrain: TerrainResult | None) -> list[str]:
     if terrain.status == "unknown":
         limitations.append("Zapisany wynik nie zawiera pomiaru NMT — rzeźba terenu jest nieznana.")
     elif terrain.status == "no_coverage":
-        limitations.append(
-            "Brak pokrycia danymi NMT — deniwelacja nieznana; nie oznacza to płaskiego terenu."
-        )
+        limitations.append("Brak pokrycia danymi NMT — deniwelacja nieznana; nie oznacza to płaskiego terenu.")
     elif terrain.status == "unavailable":
-        limitations.append(
-            "Pomiar NMT był niedostępny — deniwelacja nieznana; nie oznacza to płaskiego terenu."
-        )
+        limitations.append("Pomiar NMT był niedostępny — deniwelacja nieznana; nie oznacza to płaskiego terenu.")
     relief = terrain.relief
     if relief is not None and relief.status != "available":
         limitations.append(
@@ -2504,9 +2503,7 @@ def _html_to_pdf(html: str) -> bytes:
     try:
         from weasyprint import HTML  # import leniwy
     except (ImportError, OSError) as exc:  # pragma: no cover - zależne od środowiska
-        raise AnalysisReportRenderError(
-            "Biblioteka WeasyPrint lub jej zależności systemowe nie są dostępne."
-        ) from exc
+        raise AnalysisReportRenderError("Biblioteka WeasyPrint lub jej zależności systemowe nie są dostępne.") from exc
 
     try:
         return HTML(string=html, url_fetcher=_offline_url_fetcher()).write_pdf()
@@ -2619,13 +2616,28 @@ def _plural(count: int, one: str, few: str, many: str) -> str:
 
 def _land_cover_context(value):
     value = value or land_cover_from_snapshot(None)
-    return {"value": value, "status_label": "nieustalony — brak pełnych danych" if value.status == "unknown" else _BDOT_STATUS_LABELS[value.status],
-        "forest_status_label": "nieustalony — brak pełnych danych" if value.forest.status == "unknown" else _BDOT_STATUS_LABELS[value.forest.status],
+    return {
+        "value": value,
+        "status_label": "nieustalony — brak pełnych danych"
+        if value.status == "unknown"
+        else _BDOT_STATUS_LABELS[value.status],
+        "forest_status_label": "nieustalony — brak pełnych danych"
+        if value.forest.status == "unknown"
+        else _BDOT_STATUS_LABELS[value.forest.status],
         "distance": _meters(value.forest.distance_m, 2) if value.forest.distance_m is not None else NOT_SPECIFIED,
         "source": _source_brief(value.source),
         "release": _bdot_release_context(value.release),
-        "zones": [{"label": label, "area": _area(zone.area_sqm),
-            "classes": [{"label": c.label, "area": _area(c.area_sqm), "share": _share(c.share_pct)} for c in zone.classes],
-            "sum": _share(zone.classified_share_pct)}
-            for label, zone in (("Na działce", value.parcel), ("W pierścieniu do 200 m", value.surroundings)) if zone is not None],
-        "buffers": [{"radius": b.radius_m, "area": _area(b.overlap_with_parcel_sqm)} for b in value.forest.buffers]}
+        "zones": [
+            {
+                "label": label,
+                "area": _area(zone.area_sqm),
+                "classes": [
+                    {"label": c.label, "area": _area(c.area_sqm), "share": _share(c.share_pct)} for c in zone.classes
+                ],
+                "sum": _share(zone.classified_share_pct),
+            }
+            for label, zone in (("Na działce", value.parcel), ("W pierścieniu do 200 m", value.surroundings))
+            if zone is not None
+        ],
+        "buffers": [{"radius": b.radius_m, "area": _area(b.overlap_with_parcel_sqm)} for b in value.forest.buffers],
+    }

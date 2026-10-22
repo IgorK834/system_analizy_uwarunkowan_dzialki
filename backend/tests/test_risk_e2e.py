@@ -161,7 +161,8 @@ def test_structured_risks_survive_api_db_cache_pdf_and_feed_evaluator() -> None:
     assert by_id["HA-EDGE"].touches_boundary is True
     assert by_id["N2K-1"].intersection_pct == 60.0 and by_id["N2K-1"].name == "Dolina Testowa"
     assert saved_sections == body["risk_sections"]
-    assert {"ISOK", "GDOS"} <= {record.source_name for record in records}
+    assert {"ISOK", "GDOŚ"} <= {record.source_name for record in records}
+    assert sum(record.source_name == "GDOŚ" for record in records) == 1
 
     # Odczyt historyczny i cache: identyczne sekcje i obiekty.
     reread = _reread(analysis_id)
@@ -179,7 +180,7 @@ def test_structured_risks_survive_api_db_cache_pdf_and_feed_evaluator() -> None:
     text = _pdf_text(report.content)
     for expected in (
         "Zagrożenie powodziowe (ISOK)",
-        "Formy ochrony przyrody (GDOŚ)",
+        "Przyroda i obiekty środowiskowe (GDOŚ)",
         "obiekty przecinają działkę",
         "100 lat",
         "500 lat",
@@ -245,7 +246,7 @@ def test_unavailable_sources_are_visible_with_provenance_not_as_no_risk() -> Non
             record.source_name: record.response_status
             for record in db.scalars(select(SourceRecord).where(SourceRecord.analysis_id == body["analysis_id"]))
         }
-    assert statuses["ISOK"] == "unavailable" and statuses["GDOS"] == "unavailable"
+    assert statuses["ISOK"] == "unavailable" and statuses["GDOŚ"] == "unavailable"
 
     # Ewaluator nie liczy awarii jako „brak ryzyka”.
     actual = sections_from_analyze_response(reread)

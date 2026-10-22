@@ -579,33 +579,50 @@
     <tr><th>Status sekcji</th><td><span class="st st-{{ 'complete' if risk.status == 'available' else 'unavailable' }}">{{ risk.status_label }}</span>{% if risk.reason_code %} <span class="mono">({{ risk.reason_code }})</span>{% endif %}</td></tr>
     <tr><th>Relacja z działką</th><td>{{ risk.relation_label }}</td></tr>
     {% if risk.status == "available" %}
-    <tr><th>Obiekty</th><td>{{ na(risk.feature_count) }} (przecięcie: {{ na(risk.intersecting_count) }}, styk granicy: {{ na(risk.boundary_count) }})</td></tr>
+    <tr><th>Obiekty</th><td>{{ na(risk.feature_count) }} (przecięcie: {{ na(risk.intersecting_count) }}, styk granicy: {{ na(risk.boundary_count) }}, blisko: {{ na(risk.near_count) }})</td></tr>
+    <tr><th>Najbliższy obiekt</th><td>{{ na(risk.nearest_distance) }}{% if risk.nearest_distance %} od granicy działki {{ kind("computed") }}{% endif %}</td></tr>
     <tr><th>Łączne pokrycie działki</th><td>{{ na(risk.union_area) }} ({{ na(risk.union_pct) }}) {{ kind("computed") }}<br><small>suma mnogościowa, bez podwójnego liczenia</small></td></tr>
     {% endif %}
     <tr><th>Źródło</th><td>{{ source_line(risk.source) }}{% if risk.source and risk.source.sha256 %}<br><span class="mono">SHA-256: {{ risk.source.sha256 }}</span>{% endif %}</td></tr>
   </table>
   {% if risk.note %}<p class="empty">{{ risk.note }}</p>{% endif %}
+  {% if risk.preliminary_assessment %}
+  <p class="informational"><strong>Wstępna ocena {{ risk.preliminary_assessment.method }}:</strong>
+    {% if risk.preliminary_assessment.status == "contract_required" %}niewyliczona — kontrakt wymaga potwierdzenia{% else %}{{ risk.preliminary_assessment.value or risk.preliminary_assessment.status }}{% endif %}.
+    {{ risk.preliminary_assessment.note }} <span class="mono">{{ risk.preliminary_assessment.reason_code }}</span>
+  </p>
+  {% endif %}
+  {% if risk.proximities %}
+  <table class="data">
+    <thead><tr><th>Klasa / warstwa</th><th>Wynik pomiaru</th><th>Nazwa / klasa</th><th>ID obiektu</th></tr></thead>
+    <tbody>
+    {% for item in risk.proximities %}
+      <tr><td>{{ item.label }}{% if item.informational_only %}<br><small>informacja geometryczna</small>{% endif %}</td><td>{{ item.result }} {{ kind("computed") }}</td><td>{{ item.name or item.probability_class or "—" }}{% if item.return_period %}<br><small>{{ item.return_period }}</small>{% endif %}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
   {% if risk.features %}
   <table class="data">
     {% if risk.name == "flood" %}
-    <thead><tr><th>Klasa prawdopodobieństwa</th><th>Okres powtarzalności</th><th>Poziom</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <thead><tr><th>Klasa prawdopodobieństwa</th><th>Okres powtarzalności</th><th>Poziom</th><th>Odległość</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
     <tbody>
     {% for item in risk.features %}
-      <tr><td>{{ item.probability_class or "nieustalona" }}</td><td>{{ na(item.return_period) }}</td><td>{{ na(item.severity) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
+      <tr><td>{{ item.probability_class or "nieustalona" }}</td><td>{{ na(item.return_period) }}</td><td>{{ na(item.severity) }}</td><td>{{ na(item.distance) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
     {% endfor %}
     </tbody>
     {% else %}
-    <thead><tr><th>Rodzaj formy ochrony</th><th>Nazwa</th><th>Poziom</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
+    <thead><tr><th>Rodzaj obiektu</th><th>Nazwa</th><th>Poziom</th><th>Odległość</th><th class="num">Pole przecięcia</th><th class="num">Udział w działce</th><th>ID obiektu</th></tr></thead>
     <tbody>
     {% for item in risk.features %}
-      <tr><td>{{ item.protection_type or item.risk_type }}</td><td>{{ na(item.name) }}</td><td>{{ na(item.severity) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
+      <tr><td>{{ item.protection_type or item.risk_type }}{% if item.informational_only %}<br><small>informacja geometryczna</small>{% endif %}</td><td>{{ na(item.name) }}</td><td>{{ na(item.severity) }}</td><td>{{ na(item.distance) }}</td><td class="num">{% if item.touches_boundary %}styk granicy{% else %}{{ na(item.area) }}{% endif %}</td><td class="num">{{ na(item.pct) }}</td><td><span class="mono">{{ item.feature_id or "—" }}</span></td></tr>
     {% endfor %}
     </tbody>
     {% endif %}
   </table>
   {% for item in risk.features %}<p class="note">{{ item.description }}{% if item.confidence %} Pewność danych: {{ item.confidence.pct }} ({{ item.confidence.label }}).{% endif %}{% for warning in item.warnings %} {{ warning }}{% endfor %}</p>{% endfor %}
   {% elif risk.status == "available" %}
-  <p class="note">Sprawdzono — brak obiektów przecinających działkę ani stykających się z nią.</p>
+  <p class="note">Sprawdzono — brak obiektów w zadanych promieniach. Wynik nie opisuje obiektów poza tymi promieniami.</p>
   {% endif %}
   {% for warning in risk.warnings %}<p class="informational">{{ warning }}</p>{% endfor %}
   {% endfor %}
