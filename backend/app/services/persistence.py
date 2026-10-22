@@ -99,9 +99,7 @@ MANUAL_ZONE_NOTICE_NO_DOCUMENT = (
 )
 
 
-PERSISTENCE_FAILED_MESSAGE = (
-    "Nie udało się zapisać wyniku analizy. Podaj kod zgłoszenia operatorowi."
-)
+PERSISTENCE_FAILED_MESSAGE = "Nie udało się zapisać wyniku analizy. Podaj kod zgłoszenia operatorowi."
 _STATEMENT_TARGET = re.compile(r"^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+\"?(\w+)\"?", re.IGNORECASE)
 
 
@@ -130,9 +128,7 @@ class PersistenceError(Exception):
         self.table = table
 
 
-def persistence_error_from(
-    exc: DBAPIError, *, operation: str, **context: object
-) -> PersistenceError:
+def persistence_error_from(exc: DBAPIError, *, operation: str, **context: object) -> PersistenceError:
     """Loguje pełny kontekst błędu zapisu (z ``request_id``) i zwraca ``PersistenceError``.
 
     Do logu trafiają: operacja, typ wyjątku SQLAlchemy i sterownika (np. ``DataError`` /
@@ -159,9 +155,7 @@ def persistence_error_from(
         driver_message,
         " ".join(f"{key}={value}" for key, value in sorted(context.items())),
     )
-    return PersistenceError(
-        operation=operation, error_type=error_type, sqlstate=sqlstate, table=table
-    )
+    return PersistenceError(operation=operation, error_type=error_type, sqlstate=sqlstate, table=table)
 
 
 @dataclass(frozen=True)
@@ -205,15 +199,11 @@ def get_or_create_parcel(
     jest opakowywany bez zmiany współrzędnych. Funkcja wykonuje tylko
     ``flush``; granicę transakcji kontroluje wywołujący.
     """
-    existing = db.execute(
-        select(Parcel).where(Parcel.parcel_identifier == parcel_identifier)
-    ).scalar_one_or_none()
+    existing = db.execute(select(Parcel).where(Parcel.parcel_identifier == parcel_identifier)).scalar_one_or_none()
     if existing is not None:
         return existing
 
-    multi_geometry = (
-        geometry if geometry.geom_type == "MultiPolygon" else MultiPolygon([geometry])
-    )
+    multi_geometry = geometry if geometry.geom_type == "MultiPolygon" else MultiPolygon([geometry])
     parcel = Parcel(
         parcel_identifier=parcel_identifier,
         geometry=from_shape(multi_geometry, srid=2180),
@@ -257,16 +247,12 @@ def collect_source_records(
         records.append(_source_record_data(result.parcel.source, result))
 
     records.extend(_source_record_data(source, result) for source in result.sources)
-    records.extend(
-        _source_record_data(zone.source, result) for zone in result.mpzp_zones
-    )
+    records.extend(_source_record_data(zone.source, result) for zone in result.mpzp_zones)
 
     if result.pog is not None and result.pog.source is not None:
         records.append(_source_record_data(result.pog.source, result))
 
-    records.extend(
-        _source_record_data(item.source, result) for item in result.infrastructure
-    )
+    records.extend(_source_record_data(item.source, result) for item in result.infrastructure)
     if result.utilities_preview is not None:
         records.append(_source_record_data(result.utilities_preview.source, result))
     records.extend(_source_record_data(item.source, result) for item in result.risks)
@@ -277,29 +263,36 @@ def collect_source_records(
     if context_result is not None:
         for section in context_result.sections():
             source = section.source_metadata
-            response_status: str | None
-            if section.status in {"unavailable", "error"}:
-                response_status = section.status
-            elif source is not None and source.response_status is not None:
-                response_status = str(source.response_status)
-            else:
-                response_status = "available"
-
-            records.append(
-                SourceRecordData(
-                    source_name=source.source_name if source else section.section,
-                    source_url=source.source_url if source else None,
-                    fetched_at=source.fetched_at if source else None,
-                    response_status=response_status,
-                    confidence=source.confidence if source else None,
-                    manual_review_required=(
-                        (source.manual_review_required if source else False)
-                        or section.status != "available"
-                    ),
-                    warnings=list(section.warnings),
-                    checksum=None,
-                )
+            response_status = (
+                section.status
+                if section.status in {"unavailable", "error"}
+                else str(source.response_status)
+                if source is not None and source.response_status is not None
+                else "available"
             )
+            if source is not None:
+                record = _source_record_data(source, result)
+                records.append(
+                    replace(
+                        record,
+                        response_status=response_status,
+                        manual_review_required=(record.manual_review_required or section.status != "available"),
+                        warnings=list(dict.fromkeys([*record.warnings, *section.warnings])),
+                    )
+                )
+            else:
+                records.append(
+                    SourceRecordData(
+                        source_name=section.section,
+                        source_url=None,
+                        fetched_at=None,
+                        response_status=response_status,
+                        confidence=None,
+                        manual_review_required=section.status != "available",
+                        warnings=list(section.warnings),
+                        checksum=None,
+                    )
+                )
 
     return _deduplicate_source_records(records)
 
@@ -363,51 +356,28 @@ def save_analysis(
             analyzed_at=result.analyzed_at,
             status=database_status or result.status,
             buildable_area_sqm=result.buildable_area_sqm,
-            warnings=(
-                [warning.model_dump(mode="json") for warning in result.warnings] or None
-            ),
+            warnings=([warning.model_dump(mode="json") for warning in result.warnings] or None),
             utilities_preview=(
-                result.utilities_preview.model_dump(mode="json")
-                if result.utilities_preview is not None
-                else None
+                result.utilities_preview.model_dump(mode="json") if result.utilities_preview is not None else None
             ),
             # ``None`` tylko, gdy wynik nie zawiera sekcji NMT — odczyt
             # zinterpretuje to jako ``unknown``, nigdy jako płaski teren.
-            terrain=(
-                result.terrain.model_dump(mode="json")
-                if result.terrain is not None
-                else None
-            ),
-            risk_sections=(
-                [section.model_dump(mode="json") for section in result.risk_sections]
-                or None
-            ),
+            terrain=(result.terrain.model_dump(mode="json") if result.terrain is not None else None),
+            risk_sections=([section.model_dump(mode="json") for section in result.risk_sections] or None),
             # ``None`` tylko, gdy wynik nie zawiera sekcji (wywołanie bezpośrednie): odczyt da ``unknown``.
             land_cover=result.land_cover.model_dump(mode="json") if result.land_cover else None,
-            road_context=(
-                result.road_context.model_dump(mode="json") if result.road_context is not None else None
-            ),
+            road_context=(result.road_context.model_dump(mode="json") if result.road_context is not None else None),
             neighbour_buildings=(
-                result.neighbour_buildings.model_dump(mode="json")
-                if result.neighbour_buildings is not None
-                else None
+                result.neighbour_buildings.model_dump(mode="json") if result.neighbour_buildings is not None else None
             ),
             mpzp_discovery=(
-                result.mpzp_discovery.model_dump(mode="json")
-                if result.mpzp_discovery is not None
-                else None
+                result.mpzp_discovery.model_dump(mode="json") if result.mpzp_discovery is not None else None
             ),
             # Zapis stanu razem z aktami: ``NULL`` kolumny aktów ma znaczenie tylko bez stanu (zapis sprzed AU-101).
             mpzp_acts=(
-                [act.model_dump(mode="json") for act in result.mpzp_acts]
-                if result.mpzp_status is not None
-                else None
+                [act.model_dump(mode="json") for act in result.mpzp_acts] if result.mpzp_status is not None else None
             ),
-            mpzp_status=(
-                result.mpzp_status.model_dump(mode="json")
-                if result.mpzp_status is not None
-                else None
-            ),
+            mpzp_status=(result.mpzp_status.model_dump(mode="json") if result.mpzp_status is not None else None),
             pending_uchwala_url=pending_uchwala_url,
             pending_plan_id=pending_plan_id,
             pending_zone_symbol_candidates=pending_zone_symbol_candidates,
@@ -426,9 +396,7 @@ def save_analysis(
                 analysis.id,
                 pending_document,
                 requested_url=pending_uchwala_url,
-                planning_act_identifier=bounded_act_identifier(
-                    pending_plan_id, pending_uchwala_url
-                ),
+                planning_act_identifier=bounded_act_identifier(pending_plan_id, pending_uchwala_url),
             )
 
         for zone in result.mpzp_zones:
@@ -455,11 +423,7 @@ def save_analysis(
                     uchwala_date=result.pog.uchwala_date,
                     manual_review_required=(
                         result.pog.manual_review_required
-                        or (
-                            pog_source.manual_review_required
-                            if pog_source
-                            else False
-                        )
+                        or (pog_source.manual_review_required if pog_source else False)
                     ),
                     compatibility_assessment=(
                         result.pog.compatibility_assessment.model_dump(mode="json")
@@ -488,21 +452,13 @@ def save_analysis(
                     rule_source=infrastructure_item.rule_source,
                     rule_confidence=infrastructure_item.rule_confidence,
                     rule_note=infrastructure_item.rule_note,
-                    affects_buildable_area=(
-                        infrastructure_item.affects_buildable_area
-                    ),
-                    network_geometry_geojson=(
-                        infrastructure_item.network_geometry_geojson
-                    ),
-                    protection_zone_geojson=(
-                        infrastructure_item.protection_zone_geojson
-                    ),
+                    affects_buildable_area=(infrastructure_item.affects_buildable_area),
+                    network_geometry_geojson=(infrastructure_item.network_geometry_geojson),
+                    protection_zone_geojson=(infrastructure_item.protection_zone_geojson),
                     source_url=infrastructure_item.source.source_url,
                     fetched_at=infrastructure_item.source.fetched_at,
                     confidence=infrastructure_item.source.confidence,
-                    manual_review_required=(
-                        infrastructure_item.source.manual_review_required
-                    ),
+                    manual_review_required=(infrastructure_item.source.manual_review_required),
                 )
             )
 
@@ -683,9 +639,7 @@ def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
         )
     else:
         document = None
-        document_status = (
-            "unavailable" if analysis.pending_uchwala_url else "not_provided"
-        )
+        document_status = "unavailable" if analysis.pending_uchwala_url else "not_provided"
     return ManualZoneContext(
         plan_id=analysis.pending_plan_id,
         candidate_zone_symbols=list(analysis.pending_zone_symbol_candidates or []),
@@ -694,8 +648,7 @@ def build_manual_zone_context(analysis: Analysis) -> ManualZoneContext:
         symbol_max_length=ZONE_SYMBOL_MAX_LENGTH,
         symbol_allowed_pattern=ZONE_SYMBOL_ALLOWED_PATTERN,
         symbol_rules_version=ZONE_SYMBOL_RULES_VERSION,
-        notice=MANUAL_ZONE_NOTICE
-        + ("" if pinned is not None else MANUAL_ZONE_NOTICE_NO_DOCUMENT),
+        notice=MANUAL_ZONE_NOTICE + ("" if pinned is not None else MANUAL_ZONE_NOTICE_NO_DOCUMENT),
     )
 
 
@@ -740,9 +693,7 @@ def add_mpzp_zone_snapshot(
                     parameter_name=parameter.name,
                     # Kolumna ``ClippedString(255)`` przycina za długą wartość przy zapisie.
                     normalized_value=(
-                        str(parameter.normalized_value)
-                        if parameter.normalized_value is not None
-                        else None
+                        str(parameter.normalized_value) if parameter.normalized_value is not None else None
                     ),
                     unit=parameter.unit,
                     source_fragment=parameter.evidence_text,
@@ -819,11 +770,7 @@ def build_analyze_response_from_analysis(
     setback = calculate_technical_setback(parcel_geometry)
     sources = [_source_metadata_from_record(record) for record in loaded.source_records]
     parcel_source_record = next(
-        (
-            record
-            for record in loaded.source_records
-            if record.source_name.casefold() == "uldk"
-        ),
+        (record for record in loaded.source_records if record.source_name.casefold() == "uldk"),
         None,
     )
     parcel_source = (
@@ -856,15 +803,12 @@ def build_analyze_response_from_analysis(
                 setback.buildable_geometry,
                 setback.setback_m,
             )
-            if not setback.buildable_geometry.is_empty
-            and setback.buildable_area_sqm > 0.0
+            if not setback.buildable_geometry.is_empty and setback.buildable_area_sqm > 0.0
             else None
         ),
     )
 
-    zones = [
-        _mpzp_zone_response(zone, loaded.source_records) for zone in loaded.mpzp_zones
-    ]
+    zones = [_mpzp_zone_response(zone, loaded.source_records) for zone in loaded.mpzp_zones]
     pog = (
         pog_result_from_record(
             loaded.pog_data[0],
@@ -900,9 +844,7 @@ def build_analyze_response_from_analysis(
         _risk_response(item, loaded.source_records)
         for item in sorted(loaded.risk_records, key=lambda record: record.id)
     ]
-    warnings = [
-        WarningMessage.model_validate(warning) for warning in (loaded.warnings or [])
-    ]
+    warnings = [WarningMessage.model_validate(warning) for warning in (loaded.warnings or [])]
     waiting = loaded.status == "waiting_for_zone_symbol"
 
     response = AnalyzeResponse(
@@ -936,17 +878,11 @@ def build_analyze_response_from_analysis(
     # Ocena jakości pochodzi z zapisu (historyczny stan); stary zapis bez macierzy
     # jest odtwarzany z ``origin=reconstructed`` i nie jest zapisywany wstecz.
     with_quality = response.model_copy(
-        update={
-            "section_quality": quality_from_snapshot(
-                loaded.section_quality, response, loaded.analyzed_at
-            )
-        }
+        update={"section_quality": quality_from_snapshot(loaded.section_quality, response, loaded.analyzed_at)}
     )
     # AU-104: zapisana kompletność albo, dla zapisu sprzed zmiany, odtworzona z macierzy (status zostaje zapisany).
     completeness = completeness_from_snapshot(loaded.completeness, with_quality)
-    return with_quality.model_copy(
-        update={"completeness": completeness, "headline": completeness.headline}
-    )
+    return with_quality.model_copy(update={"completeness": completeness, "headline": completeness.headline})
 
 
 def mpzp_discovery_from_snapshot(snapshot: dict | None) -> MpzpDiscoverySection | None:
@@ -972,16 +908,11 @@ def _source_record_data(
     source: SourceMetadata,
     result: AnalyzeResponse,
 ) -> SourceRecordData:
-    response_status = (
-        str(source.response_status)
-        if source.response_status is not None
-        else "available"
-    )
+    response_status = str(source.response_status) if source.response_status is not None else "available"
     source_warnings = [
         warning.message
         for warning in result.warnings
-        if warning.source_name is not None
-        and warning.source_name.casefold() == source.source_name.casefold()
+        if warning.source_name is not None and warning.source_name.casefold() == source.source_name.casefold()
     ]
     return SourceRecordData(
         source_name=source.source_name,
@@ -997,7 +928,9 @@ def _source_record_data(
         artifact_sha256=source.artifact_sha256,
         data_release_id=source.data_release_id,
         act_version=source.act_version,
-        dataset_metadata=source.model_dump(mode="json", include={"data_as_of", "data_as_of_basis", "data_as_of_reason"}),
+        dataset_metadata=source.model_dump(
+            mode="json", include={"data_as_of", "data_as_of_basis", "data_as_of_reason"}
+        ),
     )
 
 
@@ -1028,7 +961,7 @@ def _risk_response(item: Risk, source_records: list[SourceRecord]) -> RiskResult
             source_records,
             item.source_url,
             item.fetched_at,
-            fallback_name="ISOK" if is_flood else "GDOS",
+            fallback_name="ISOK" if is_flood else "GDOŚ",
             confidence=item.confidence,
             manual_review_required=item.manual_review_required,
         ),
@@ -1090,9 +1023,13 @@ def _deduplicate_source_records(
     records: list[SourceRecordData],
 ) -> list[SourceRecordData]:
     unique: list[SourceRecordData] = []
-    indexes: dict[tuple[str, str | None, datetime | None], int] = {}
+    indexes: dict[tuple[str, str | None, datetime | None] | tuple[str, str], int] = {}
     for record in records:
-        key = (record.source_name, record.source_url, record.fetched_at)
+        key = (
+            ("source_id", record.source_id)
+            if record.source_id
+            else (record.source_name, record.source_url, record.fetched_at)
+        )
         existing_index = indexes.get(key)
         if existing_index is None:
             indexes[key] = len(unique)
@@ -1111,14 +1048,8 @@ def _deduplicate_source_records(
             source_url=existing.source_url,
             fetched_at=existing.fetched_at,
             response_status=response_status,
-            confidence=(
-                existing.confidence
-                if existing.confidence is not None
-                else record.confidence
-            ),
-            manual_review_required=(
-                existing.manual_review_required or record.manual_review_required
-            ),
+            confidence=(existing.confidence if existing.confidence is not None else record.confidence),
+            manual_review_required=(existing.manual_review_required or record.manual_review_required),
             warnings=list(dict.fromkeys([*existing.warnings, *record.warnings])),
             checksum=existing.checksum or record.checksum,
             source_id=existing.source_id or record.source_id,
@@ -1146,23 +1077,17 @@ def _mpzp_zone_response(
     if zone.result_snapshot is not None:
         return MpzpZoneResult.model_validate(zone.result_snapshot)
     parameters = {parameter.parameter_name: parameter for parameter in zone.parameters}
-    manual_review_required = any(
-        parameter.manual_review_required for parameter in zone.parameters
-    )
+    manual_review_required = any(parameter.manual_review_required for parameter in zone.parameters)
     return MpzpZoneResult(
         zone_symbol=zone.zone_symbol,
         primary_use=zone.primary_use,
         supplementary_use=None,
         max_building_height_m=_parameter_float(parameters.get("max_building_height_m")),
         max_floors=_parameter_int(parameters.get("max_floors")),
-        min_biologically_active_pct=_parameter_float(
-            parameters.get("min_biologically_active_pct")
-        ),
+        min_biologically_active_pct=_parameter_float(parameters.get("min_biologically_active_pct")),
         max_floor_area_ratio=_parameter_float(parameters.get("max_floor_area_ratio")),
         min_floor_area_ratio=_parameter_float(parameters.get("min_floor_area_ratio")),
-        max_building_coverage_pct=_parameter_float(
-            parameters.get("max_building_coverage_pct")
-        ),
+        max_building_coverage_pct=_parameter_float(parameters.get("max_building_coverage_pct")),
         intersection_area_sqm=zone.intersection_area_sqm,
         intersection_pct=zone.intersection_pct,
         is_dominant=zone.is_dominant,
@@ -1187,22 +1112,14 @@ def pog_result_from_record(
     if pog.result_v2 is not None:
         return PogResult.model_validate(pog.result_v2)
     area = pog.ouz_intersection_area_sqm
-    area_pct = (
-        area / parcel_area_sqm * 100.0
-        if area is not None and parcel_area_sqm > 0
-        else None
-    )
+    area_pct = area / parcel_area_sqm * 100.0 if area is not None and parcel_area_sqm > 0 else None
     source_record = _find_source_record(
         source_records,
         pog.source_url,
         pog.fetched_at,
         preferred_name="POG",
     )
-    source = (
-        _source_metadata_from_record(source_record)
-        if source_record is not None
-        else None
-    )
+    source = _source_metadata_from_record(source_record) if source_record is not None else None
     # Snapshot v1: status prawny jest odtwarzany wspólnym mapperem aliasów —
     # ``adopted`` bez zachowanego potwierdzenia źródłowego daje ``unknown``.
     return PogResult(
@@ -1267,20 +1184,14 @@ def _find_source_record(
             if record.source_url == source_url and record.fetched_at == fetched_at:
                 return record
     return next(
-        (
-            record
-            for record in source_records
-            if record.source_name.casefold() == preferred
-        ),
+        (record for record in source_records if record.source_name.casefold() == preferred),
         None,
     )
 
 
 def _source_metadata_from_record(record: SourceRecord) -> SourceMetadata:
     response_status = (
-        int(record.response_status)
-        if record.response_status and record.response_status.isdecimal()
-        else None
+        int(record.response_status) if record.response_status and record.response_status.isdecimal() else None
     )
     return SourceMetadata(
         **(record.dataset_metadata or {}),
@@ -1295,8 +1206,7 @@ def _source_metadata_from_record(record: SourceRecord) -> SourceMetadata:
         response_status=response_status,
         confidence=record.confidence or 0.0,
         manual_review_required=(
-            record.manual_review_required
-            or record.response_status in {"unavailable", "error", "not_attempted"}
+            record.manual_review_required or record.response_status in {"unavailable", "error", "not_attempted"}
         ),
     )
 
