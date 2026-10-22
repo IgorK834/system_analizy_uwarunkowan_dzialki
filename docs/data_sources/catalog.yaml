@@ -404,6 +404,10 @@ sources:
       - "GDOS:ZespolyPrzyrodniczoKrajobrazowe"
       - "GDOS:StanowiskaDokumentacyjne"
       - "GDOS:PomnikiPrzyrodyPowierzchniowe"
+      - "GDOS:PomnikiPrzyrodyPunktowe"
+      - "GDOS:ramsar"
+      - "GDOS:korytarzeEkologiczne"
+      - "GDOS:ElektrownieWiatrowe"
     layers: null
     protocol_version: "2.0.0"
     source_crs: "EPSG:2180"
@@ -428,11 +432,12 @@ sources:
         quality_policy_version.
     redistribution: derived_only
     sla: "not_published"
-    last_manual_verification: 2026-07-30
+    last_manual_verification: 2026-10-20
     notes: >-
-      Kontrakt potwierdzony realnymi zapytaniami 2026-07-30 (fixtures
+      Kontrakt podstawowy potwierdzono realnymi zapytaniami 2026-07-30 (fixtures
       gdos_getcapabilities.xml, gdos_describe.xml, gdos_getfeature.xml,
-      gdos_exception_report.xml). Trzy ustalenia istotne dla adaptera:
+      gdos_exception_report.xml), a warstwy bliskości ponownie zweryfikowano
+      2026-10-20 (fixtures source_contracts/gdos_proximity/). Ustalenia istotne dla adaptera:
       (1) parametr typeNames jest obowiązkowy, a jego brak daje ows:ExceptionReport
       ze statusem HTTP 200; (2) usługa odrzuca kilka warstw w jednym zapytaniu
       ("Join filter inconsistent with regard to feature types"), więc każda
@@ -441,10 +446,14 @@ sources:
       CRS to EPSG:2180, ale srsName jest w formie URN, czyli kolejność osi w
       zwracanej geometrii to (northing, easting) — odwrotnie niż w geometrii
       kanonicznej z ULDK; parametr bbox przyjmuje kolejność (minE,minN,maxE,maxN).
-      Warstwy punktowe (GDOS:PomnikiPrzyrodyPunktowe) oraz warstwy, które nie są
-      formami ochrony przyrody (korytarzeEkologiczne, Mezoregiony, ramsar,
-      ElektrownieWiatrowe) i warstwy proponowanych zmian Natura 2000 są świadomie
-      pominięte. Adapter: app/services/gdos.py (GDOS_PROTECTION_LAYERS).
+      Adapter odpytuje 14 warstw. Dla pomników powierzchniowych i punktowych
+      raportuje najbliższy obiekt w promieniu 200 m, a dla pozostałych warstw —
+      w promieniu 1 km. Ramsar, korytarze ekologiczne i elektrownie wiatrowe są
+      oznaczone jako wyłącznie informacja geometryczna: wynik nie wyznacza strefy
+      wyłączenia ani samodzielnego ograniczenia prawnego. Warstwy proponowanych
+      zmian Natura 2000 i Mezoregiony pozostają poza zakresem. Odległość jest
+      liczona od poligonu działki do rzeczywistej geometrii w EPSG:2180.
+      Adapter: app/services/gdos.py (GDOS_PROTECTION_LAYERS).
 
   - source_id: isok
     name: "Zagrożenie powodziowe (ISOK / MZP INSPIRE)"
@@ -457,6 +466,8 @@ sources:
     file_url: null
     type_names:
       - "nz-core:HazardArea"
+      - "nz-core:RiskZone"
+      - "nz-core:ExposedElement"
     layers: null
     protocol_version: "2.0.0"
     source_crs: "EPSG:2180"
@@ -481,10 +492,11 @@ sources:
         quality_policy_version.
     redistribution: allowed
     sla: "not_published"
-    last_manual_verification: 2026-07-30
+    last_manual_verification: 2026-10-20
     notes: >-
-      Kontrakt potwierdzony realnymi zapytaniami 2026-07-30 (fixtures
-      isok_getcapabilities.xml, isok_getfeature.xml). Poprzedni adres
+      Kontrakt HazardArea potwierdzono realnymi zapytaniami 2026-07-30 i
+      ponownie 2026-10-20 (fixtures isok_getcapabilities.xml,
+      isok_getfeature.xml oraz source_contracts/isok_proximity/). Poprzedni adres
       wms.isok.gov.pl był placeholderem i jego nazwa domenowa nie rozwiązuje się
       już w DNS. Domyślnym układem warstw jest EPSG:4258, a EPSG:2180 występuje
       jako OtherCRS, dlatego adapter jawnie żąda srsName — wyłącznie w formie URN
@@ -494,9 +506,16 @@ sources:
       nz-core:qualitativeLikelihood ("scenariusz Q 1% (raz na 100 lat)");
       pole liczbowe probabilityOfOccurrence jest w danych źródłowych niespójne
       (0.002 i 0.02 dla tego samego scenariusza 0,2%), więc NIE jest używane —
-      zapasem jest returnPeriod. Warstwy nz-core:RiskZone (ok. 1,7 mln cech,
-      ryzyko dla elementów narażonych) i nz-core:ExposedElement istnieją w
-      usłudze, ale nie są używane w tej sekcji. Adapter: app/services/isok.py.
+      zapasem jest returnPeriod. Adapter odpytuje HazardArea w buforze 1 km i
+      zwraca odległość od poligonu działki do najbliższej bazowej strefy Q10,
+      Q100 i Q500 (scenariusze awarii wałów nie są utożsamiane z bazową klasą).
+      Dla działki 141801_4.0701.23/8 pomiar z odpowiedzi 2026-10-20 wyniósł
+      163,395 m do Q10 (referencja OnGeo: 164 m ± 5 m).
+      GetCapabilities i DescribeFeatureType potwierdzają istnienie oraz ogólne
+      znaczenie RiskZone i ExposedElement, ale nie potwierdzają, że ich agregacja
+      jest produktem WORP semantycznie równoważnym wstępnej ocenie OnGeo.
+      Kontrakt WORP ma zatem status contract_required; aplikacja jawnie pokazuje
+      ten stan i nie wylicza klasy ryzyka. Adapter: app/services/isok.py.
 
   - source_id: nmt
     name: "Numeryczny Model Terenu (NMT) — usługa wysokościowa GUGiK"
