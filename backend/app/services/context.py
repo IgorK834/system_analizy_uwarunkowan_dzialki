@@ -44,6 +44,8 @@ from typing import Any, Literal
 import httpx
 from shapely.geometry.base import BaseGeometry
 
+from app.modules.analysis.application.environment import EnvironmentalSectionPort
+from app.modules.analysis.infrastructure.environment_wfs import GdosWfsAdapter, IsokWfsAdapter
 from app.schemas.analyze import SourceMetadata
 from app.services.gdos import (
     GdosServiceUnavailableError,
@@ -58,6 +60,7 @@ from app.services.kiut import (
     fetch_kiut_network_section,
 )
 from app.services.nmt import NmtServiceUnavailableError, fetch_terrain_extremes
+from app.shared.geometry import GeometryPayload
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +91,7 @@ class ContextSectionResult:
     section: SectionName
     status: Literal["available", "unavailable", "error"]
     data: list[Any] = field(default_factory=list)
+    proximities: list[Any] = field(default_factory=list)
     source_metadata: SourceMetadata | None = None
     warnings: list[str] = field(default_factory=list)
     reason_code: str | None = None
@@ -142,11 +146,14 @@ async def analyze_context(parcel_geometry: BaseGeometry) -> ContextResult:
     konkretnej sekcji i nigdy nie przerywają pozostałych operacji.
     """
     parcel_bounds = bbox_from_geometry(parcel_geometry)
+    parcel_payload = GeometryPayload(wkt=parcel_geometry.wkt)
     async with httpx.AsyncClient() as client:
+        isok_port = IsokWfsAdapter(client, fetcher=fetch_flood_risk_section)
+        gdos_port = GdosWfsAdapter(client, fetcher=fetch_nature_protection_section)
         kiut_outcome, isok_outcome, gdos_outcome, nmt_outcome = await asyncio.gather(
             _run_kiut_section(parcel_bounds, client),
-            _run_isok_section(parcel_geometry, client),
-            _run_gdos_section(parcel_geometry, client),
+            _run_isok_section(parcel_payload, isok_port),
+            _run_gdos_section(parcel_payload, gdos_port),
             _run_nmt_section(parcel_geometry, client),
             return_exceptions=True,
         )
@@ -172,25 +179,25 @@ async def _run_kiut_section(
 
 
 async def _run_isok_section(
-    parcel_geometry: BaseGeometry,
-    client: httpx.AsyncClient,
+    parcel: GeometryPayload,
+    port: EnvironmentalSectionPort[Any],
 ) -> Any:
     """Zwraca sekcję ISOK z provenance zapytania także przy braku stref."""
     start = time.monotonic()
     try:
-        return await fetch_flood_risk_section(parcel_geometry, client=client)
+        return await port.fetch(parcel)
     finally:
         logger.info("Sekcja ISOK zakończona po %.3fs.", time.monotonic() - start)
 
 
 async def _run_gdos_section(
-    parcel_geometry: BaseGeometry,
-    client: httpx.AsyncClient,
+    parcel: GeometryPayload,
+    port: EnvironmentalSectionPort[Any],
 ) -> Any:
     """Zwraca sekcję GDOŚ z provenance zapytania także przy braku przecięć."""
     start = time.monotonic()
     try:
-        return await fetch_nature_protection_section(parcel_geometry, client=client)
+        return await port.fetch(parcel)
     finally:
         logger.info("Sekcja GDOŚ zakończona po %.3fs.", time.monotonic() - start)
 
@@ -248,10 +255,7 @@ def _finalize_section(
         return ContextSectionResult(
             section=section,
             status="error",
-            warnings=[
-                "Wystąpił nieoczekiwany błąd podczas pobierania danych "
-                f"sekcji {section}."
-            ],
+            warnings=[f"Wystąpił nieoczekiwany błąd podczas pobierania danych sekcji {section}."],
         )
 
     # Sekcje KIUT/ISOK/GDOŚ zwracają obiekt z ``features`` i provenance całego
@@ -267,6 +271,7 @@ def _finalize_section(
         section=section,
         status="available",
         data=data,
+        proximities=list(getattr(outcome, "proximities", []) or []),
         source_metadata=source_metadata,
         warnings=_collect_feature_warnings(data),
     )
@@ -279,10 +284,8 @@ def _unavailable_warning(section: SectionName, outcome: BaseException) -> str:
             "(brak potwierdzonego kontraktu źródła) — brak danych nie oznacza "
             "braku sieci."
         )
-    return (
-        f"Usługa {section.upper()} jest tymczasowo niedostępna — "
-        "dane tej sekcji mogą być niepełne."
-    )
+    display_name = {"gdos": "GDOŚ"}.get(section, section.upper())
+    return f"Usługa {display_name} jest tymczasowo niedostępna — dane tej sekcji mogą być niepełne."
 
 
 def _collect_feature_warnings(features: list[Any]) -> list[str]:
