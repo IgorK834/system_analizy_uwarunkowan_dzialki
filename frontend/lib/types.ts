@@ -844,6 +844,30 @@ export type UtilitiesPreviewResult = {
 
 export type RiskSectionName = "flood" | "nature";
 export type RiskSeverity = "low" | "medium" | "high";
+export type RiskProximityStatus = "intersection" | "near" | "none_within_radius";
+
+export type RiskProximityResult = {
+  category: string;
+  label: string;
+  layer_name: string;
+  status: RiskProximityStatus;
+  search_radius_m: number;
+  distance_m: number | null;
+  feature_id: string | null;
+  name: string | null;
+  probability_class: string | null;
+  return_period_years: number | null;
+  informational_only: boolean;
+};
+
+export type PreliminaryFloodRiskAssessment = {
+  status: "contract_required" | "available" | "unavailable" | "unknown";
+  method: "WORP";
+  reason_code: string;
+  source_layers: string[];
+  value: string | null;
+  note: string;
+};
 
 /**
  * Obiekt ryzyka (BK-303). Pola strukturalne są jedynym nośnikiem danych;
@@ -865,6 +889,12 @@ export type RiskResult = {
   intersection_pct?: number | null;
   /** True: obiekt wyłącznie styka się z granicą działki. */
   touches_boundary?: boolean | null;
+  proximity_status?: RiskProximityStatus | null;
+  /** Odległość od poligonu działki w EPSG:2180; null oznacza brak pomiaru. */
+  distance_m?: number | null;
+  search_radius_m?: number | null;
+  layer_name?: string | null;
+  informational_only?: boolean;
   description: string;
   /** Przecięcie strefy ryzyka z działką jako GeoJSON Feature w WGS84. */
   geometry_geojson: Record<string, unknown> | null;
@@ -873,7 +903,13 @@ export type RiskResult = {
 };
 
 export type RiskSectionStatus = "available" | "unavailable" | "error" | "unknown";
-export type RiskRelation = "no_match" | "boundary_only" | "intersection" | "unknown";
+export type RiskRelation =
+  | "no_match"
+  | "none_within_radius"
+  | "near"
+  | "boundary_only"
+  | "intersection"
+  | "unknown";
 
 /** Status i provenance sekcji ryzyka niezależnie od listy obiektów. */
 export type RiskSectionResult = {
@@ -885,11 +921,15 @@ export type RiskSectionResult = {
   feature_count: number | null;
   intersecting_feature_count: number | null;
   boundary_feature_count: number | null;
+  near_feature_count: number | null;
   /** Pole sumy mnogościowej przecięć (bez podwójnego liczenia), m². */
   union_intersection_area_sqm: number | null;
   /** Udział sumy mnogościowej przecięć w działce, % (≤ 100). */
   union_intersection_pct: number | null;
   feature_ids: string[];
+  nearest_distance_m: number | null;
+  proximities: RiskProximityResult[];
+  preliminary_assessment: PreliminaryFloodRiskAssessment | null;
   source: SourceMetadata | null;
   warnings: string[];
 };

@@ -57,6 +57,8 @@ export const RISK_LINE_WIDTH = 2;
 export const RISK_SOURCE_ID = "risk-source";
 export const RISK_FILL_LAYER_ID = "risk-fill-layer";
 export const RISK_LINE_LAYER_ID = "risk-line-layer";
+export const RISK_POINT_LAYER_ID = "risk-point-layer";
+export const RISK_POINT_RADIUS = 6;
 
 // --- Akty MPZP z Rejestru Urbanistycznego (AU-101): część działki objęta aktem i granica aktu ---
 // Akt nie jest strefą, więc kolor różni się od stref/ryzyk; granica jest przerywana (kontekst), a część
