@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-10-20T22:00:00+02:00",
+  "parcel_identifier": "141801_4.0701.23/8",
+  "parcel_wkt_epsg2180": "POLYGON((652131.49914 460398.698376,652159.798258 460406.037279,652162.371949 460411.358288,652147.068906 460444.158444,652121.452724 460437.443381,652131.49914 460398.698376))",
+  "search_radius_m": 1000.0,
+  "response_sha256": "d44b0f143937456be04f52c8b4c688209105e96726d5f3170c9963172cd24794",
+  "response_feature_count": 7,
+  "nearest_q10": {
+    "feature_id": "http://iip.wody.gov.pl/so/NZ/HazardArea/PL.ZIPGW.6453/MZP-MRP/ID_R2.10-724",
+    "identifier": "ID_R2.10-724",
+    "qualitative_likelihood": "scenariusz Q 10% (raz na 10 lat)",
+    "return_period_years": 10,
+    "distance_m": 163.39473346899322,
+    "nearest_point_on_parcel_wkt": "POINT (652147.068906 460444.158444)",
+    "nearest_point_on_hazard_wkt": "POINT (652271.37280026 460550.20739872)",
+    "measurement_crs": "EPSG:2180",
+    "measurement_method": "shapely.distance(parcel_polygon, full_source_geometry)"
+  }
+}

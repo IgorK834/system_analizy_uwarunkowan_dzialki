@@ -1,9 +1,11 @@
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 import pytest
 import respx
+from shapely import from_wkt
 from shapely.geometry import Polygon
 
 from app.core.settings import settings
@@ -15,8 +17,10 @@ from app.services.isok import (
     RiskFeature,
     _build_risk_feature,
     _classify_flood_probability,
+    _flood_class,
     _parse_zone_response,
     fetch_flood_risks,
+    fetch_flood_risk_section,
 )
 
 SQUARE_PARCEL = Polygon.from_bounds(500000, 200000, 500100, 200100)
@@ -171,8 +175,13 @@ def test_zone_unknown_probability_gets_conservative_severity_and_warning() -> No
     assert len(result[0].warnings) >= 1
 
 
-def test_empty_response_returns_empty_list_not_exception() -> None:
+def test_valid_empty_collection_returns_empty_list_not_exception() -> None:
     assert _parse_zone_response(EMPTY_GML) == []
+
+
+def test_blank_response_is_unavailable_not_no_match() -> None:
+    with pytest.raises(IsokServiceUnavailableError):
+        _parse_zone_response("   ")
 
 
 # --- Rozróżnienie wyjątek-vs-pusta-lista (critical_design_deviation) ---------
@@ -231,6 +240,49 @@ async def test_fetch_flood_risks_sends_bbox_with_epsg2180() -> None:
     await fetch_flood_risks(SQUARE_PARCEL)
 
     assert "EPSG:2180" in route.calls.last.request.url.params["bbox"]
+    assert route.calls.last.request.url.params["bbox"].startswith(
+        "499000.0,199000.0,501100.0,201100.0"
+    )
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_nearest_base_q100_distance_is_measured_from_parcel_polygon() -> None:
+    payload = MOCK_GML_ZONE_OUTSIDE.replace(
+        "<isok:prawdopodobienstwo>1%</isok:prawdopodobienstwo>",
+        "<isok:qualitativeLikelihood>scenariusz Q 1% (raz na 100 lat)</isok:qualitativeLikelihood>"
+        "<isok:returnPeriod>100</isok:returnPeriod>",
+    )
+    payload = payload.replace("500200 200000", "500264 200000").replace(
+        "500250 200000", "500300 200000"
+    ).replace("500250 200050", "500300 200050").replace(
+        "500200 200050", "500264 200050"
+    )
+    respx.get(settings.isok_wfs_base_url).mock(
+        return_value=httpx.Response(200, text=payload)
+    )
+
+    section = await fetch_flood_risk_section(SQUARE_PARCEL)
+
+    q100 = next(item for item in section.proximities if item.category == "q100")
+    assert q100.status == "near"
+    assert q100.distance_m == pytest.approx(164.0)
+    assert section.features[0].flood_class == "q100"
+
+
+def test_levee_failure_scenario_is_not_classified_as_base_q100() -> None:
+    assert (
+        _flood_class(
+            {
+                "qualitativeLikelihood": (
+                    "scenariusz calkowitego zniszczenia walu "
+                    "przeciwpowodziowego przy przeplywie Q 1%"
+                ),
+                "returnPeriod": "100",
+            }
+        )
+        is None
+    )
 
 
 @pytest.mark.asyncio
@@ -371,6 +423,25 @@ def test_real_getfeature_fixture_classifies_probability_from_inspire_field() -> 
     assert probability_class == "scenariusz Q 0,2% (raz na 500 lat)"
     assert severity == "low"
     assert warning is None
+
+
+def test_gora_kalwaria_q10_measurement_from_frozen_real_geometry_evidence() -> None:
+    evidence = json.loads(
+        (_CONTRACTS / "isok_proximity" / "gora-kalwaria-q10.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    parcel = from_wkt(evidence["parcel_wkt_epsg2180"])
+    nearest_hazard_point = from_wkt(
+        evidence["nearest_q10"]["nearest_point_on_hazard_wkt"]
+    )
+
+    assert evidence["parcel_identifier"] == "141801_4.0701.23/8"
+    assert parcel.distance(nearest_hazard_point) == pytest.approx(
+        evidence["nearest_q10"]["distance_m"], abs=1e-9
+    )
+    assert evidence["nearest_q10"]["distance_m"] == pytest.approx(164.0, abs=5.0)
+    assert evidence["nearest_q10"]["return_period_years"] == 10
 
 
 def test_probability_ignores_inconsistent_numeric_field() -> None:

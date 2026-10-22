@@ -31,15 +31,16 @@ adapter:
    niespójne (dla scenariusza 0,2% występują zarówno 0.002, jak i 0.02).
    Zapasem jest ``returnPeriod`` (10/100/500 lat), spójny z tekstem.
 
-Zakres świadomie ograniczony do ``nz-core:HazardArea`` (obszary zagrożenia, MZP).
-Warstwa ``nz-core:RiskZone`` opisuje ryzyko dla elementów narażonych (ok. 1,7 mln
-cech) i odpowiada na inne pytanie niż "czy działka leży w obszarze zagrożenia",
-a ``nz-core:ExposedElement`` to pojedyncze obiekty narażone. Mieszanie ich w
-jednej sekcji zaciemniłoby znaczenie severity.
+Obliczenia pozostają oparte na ``nz-core:HazardArea`` (MZP), lecz zapytanie
+obejmuje bufor 1 km i pozwala zmierzyć odległość od poligonu działki do bazowych
+klas Q10/Q100/Q500. ``RiskZone`` i ``ExposedElement`` są widoczne w kontrakcie
+INSPIRE, ale ich równoważność z produktem WORP OnGeo nie została potwierdzona;
+sekcja API zwraca zatem ``contract_required`` zamiast pozornej oceny.
 """
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 from dataclasses import dataclass, replace, field
@@ -50,6 +51,7 @@ import httpx
 from shapely.geometry.base import BaseGeometry
 
 from app.core.settings import settings
+from app.modules.analysis.domain.environment import EnvironmentalProximity
 from app.schemas.analyze import SourceMetadata
 from app.services.dataset_dates import response_dataset_date
 from app.services.gml import GmlFeature, GmlResponseError, parse_feature_collection
@@ -61,6 +63,10 @@ logger = logging.getLogger(__name__)
 # wierzchołków, a odpowiedź dla małego BBOX-u działki osiągała 8-10 MB przy
 # czasie odpowiedzi 6-9 s. Limit 10 s był więc na granicy timeoutu.
 ISOK_TIMEOUT_S: Final[float] = 30.0
+ISOK_MAX_RESPONSE_BYTES: Final[int] = 32 * 1024 * 1024
+ISOK_MAX_ATTEMPTS: Final[int] = 2
+FLOOD_SEARCH_RADIUS_M: Final[float] = 1_000.0
+_ISOK_ALLOWED_HOSTS: Final[frozenset[str]] = frozenset({"wody.isok.gov.pl"})
 
 # Warstwa obszarów zagrożenia powodziowego (Mapy Zagrożenia Powodziowego).
 ISOK_TYPE_NAME: Final[str] = "nz-core:HazardArea"
@@ -100,6 +106,12 @@ _FLOOD_PROBABILITY_SEVERITY_RULES: Final[tuple[tuple[str, str], ...]] = (
 # tekstowymi powyżej (10 lat = p10%, 100 lat = p1%, 500 lat = p0,2%).
 _RETURN_PERIOD_SEVERITY: Final[dict[int, str]] = {10: "medium", 100: "high", 500: "low"}
 _RETURN_PERIOD_ATTRIBUTE: Final[str] = "returnperiod"
+
+_FLOOD_CLASS_SPECS: Final[tuple[tuple[str, str, int, str], ...]] = (
+    ("q10", "Q10 (10%, raz na 10 lat)", 10, "scenariusz q 10%"),
+    ("q100", "Q100 (1%, raz na 100 lat)", 100, "scenariusz q 1%"),
+    ("q500", "Q500 (0,2%, raz na 500 lat)", 500, "scenariusz q 0,2%"),
+)
 
 # Próg poniżej którego przecięcie traktujemy jako czysto brzegowe (styk),
 # nie powierzchniowe — działki dotykające granicy strefy mają matematycznie
@@ -164,6 +176,11 @@ class RiskFeature:
     return_period_years: int | None = None
     # Styk granicy bez wspólnej powierzchni (pole przecięcia < epsilon).
     touches_boundary: bool = False
+    distance_m: float = 0.0
+    proximity_status: str = "intersection"
+    search_radius_m: float = FLOOD_SEARCH_RADIUS_M
+    flood_class: str | None = None
+    layer_name: str = ISOK_TYPE_NAME
 
 
 @dataclass(frozen=True)
@@ -176,6 +193,7 @@ class FloodRiskSection:
 
     features: list[RiskFeature]
     source_metadata: SourceMetadata
+    proximities: list[EnvironmentalProximity] = field(default_factory=list)
 
 
 async def fetch_flood_risks(
@@ -215,6 +233,10 @@ async def fetch_flood_risk_section(
     Strefy o tym samym ``gml:id`` (np. powtórzone w odpowiedzi) są liczone raz.
     """
     minx, miny, maxx, maxy = bbox_from_geometry(parcel_geometry)
+    minx -= FLOOD_SEARCH_RADIUS_M
+    miny -= FLOOD_SEARCH_RADIUS_M
+    maxx += FLOOD_SEARCH_RADIUS_M
+    maxy += FLOOD_SEARCH_RADIUS_M
     params = {
         "service": "WFS",
         "version": "2.0.0",
@@ -233,9 +255,7 @@ async def fetch_flood_risk_section(
         response_text, source_url, dates = await _fetch_isok_response_text(client, params)
     else:
         async with httpx.AsyncClient() as owned_client:
-            response_text, source_url, dates = await _fetch_isok_response_text(
-                owned_client, params
-            )
+            response_text, source_url, dates = await _fetch_isok_response_text(owned_client, params)
 
     fetched_at = datetime.now(timezone.utc)
     artifact_sha256 = hashlib.sha256(response_text.encode("utf-8")).hexdigest()
@@ -244,7 +264,7 @@ async def fetch_flood_risk_section(
         _section_source(source_url, fetched_at, artifact_sha256, failed=True),
     )
 
-    results: list[RiskFeature] = []
+    candidates: list[RiskFeature] = []
     seen_ids: set[str] = set()
     for zone in zone_features:
         if zone.feature_id is not None:
@@ -258,14 +278,45 @@ async def fetch_flood_risk_section(
             source_url,
             fetched_at,
             feature_id=zone.feature_id,
+            include_near=True,
+            search_radius_m=FLOOD_SEARCH_RADIUS_M,
         )
         if risk is not None:
             risk = replace(risk, source_metadata=risk.source_metadata.model_copy(update=dates))
-            results.append(risk)
+            candidates.append(risk)
+
+    # Zachowujemy wszystkie przecięcia oraz po jednej najbliższej strefie
+    # każdej klasy Q10/Q100/Q500. Scenariusze awarii wału pozostają widoczne,
+    # gdy przecinają działkę, ale nie udają klasy podstawowej Q100.
+    selected: list[RiskFeature] = [item for item in candidates if item.proximity_status == "intersection"]
+    proximities: list[EnvironmentalProximity] = []
+    for category, label, period, _token in _FLOOD_CLASS_SPECS:
+        matching = [item for item in candidates if item.flood_class == category]
+        nearest = min(matching, key=lambda item: item.distance_m) if matching else None
+        if nearest is not None and all(_risk_identity(existing) != _risk_identity(nearest) for existing in selected):
+            selected.append(nearest)
+        proximities.append(
+            EnvironmentalProximity(
+                category=category,
+                label=label,
+                layer_name=ISOK_TYPE_NAME,
+                status=(nearest.proximity_status if nearest is not None else "none_within_radius"),  # type: ignore[arg-type]
+                search_radius_m=FLOOD_SEARCH_RADIUS_M,
+                distance_m=nearest.distance_m if nearest is not None else None,
+                feature_id=nearest.feature_id if nearest is not None else None,
+                probability_class=nearest.probability_class if nearest is not None else None,
+                return_period_years=period,
+            )
+        )
     return FloodRiskSection(
-        features=results,
+        features=selected,
         source_metadata=_section_source(source_url, fetched_at, artifact_sha256).model_copy(update=dates),
+        proximities=proximities,
     )
+
+
+def _risk_identity(feature: RiskFeature) -> tuple[str | None, str | None]:
+    return feature.feature_id, feature.flood_class
 
 
 def _section_source(
@@ -296,54 +347,92 @@ async def _fetch_isok_response_text(
 ) -> tuple[str, str, dict]:
     request_url = str(httpx.URL(settings.isok_wfs_base_url, params=params))
     attempted_at = datetime.now(timezone.utc)
-    try:
-        response = await client.get(
-            settings.isok_wfs_base_url,
-            params=params,
-            timeout=ISOK_TIMEOUT_S,
+    parsed = httpx.URL(settings.isok_wfs_base_url)
+    if parsed.scheme != "https" or parsed.host not in _ISOK_ALLOWED_HOSTS:
+        raise IsokServiceUnavailableError(
+            "Adres usługi ISOK nie należy do allowlisty HTTPS.",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=_section_source(request_url, attempted_at, None, failed=True, response_status=None),
         )
-        response.raise_for_status()
-    except httpx.TimeoutException as exc:
-        raise IsokServiceUnavailableError(
-            "Usługa ISOK nie odpowiedziała w wymaganym czasie.",
-            reason_code=REASON_TIMEOUT,
-            source_metadata=_section_source(
-                request_url, attempted_at, None, failed=True, response_status=None
-            ),
-        ) from exc
-    except httpx.HTTPStatusError as exc:
-        raise IsokServiceUnavailableError(
-            f"Usługa ISOK zwróciła błąd: {exc}",
-            reason_code=REASON_HTTP_ERROR,
-            source_metadata=_section_source(
-                request_url,
-                attempted_at,
-                None,
-                failed=True,
-                response_status=exc.response.status_code,
-            ),
-        ) from exc
-    except httpx.HTTPError as exc:
-        raise IsokServiceUnavailableError(
-            f"Usługa ISOK zwróciła błąd: {exc}",
-            reason_code=REASON_HTTP_ERROR,
-            source_metadata=_section_source(
-                request_url, attempted_at, None, failed=True, response_status=None
-            ),
-        ) from exc
 
-    return response.text, str(response.url), response_dataset_date(response)
+    last_error: httpx.HTTPError | None = None
+    for attempt in range(ISOK_MAX_ATTEMPTS):
+        try:
+            response = await client.get(
+                settings.isok_wfs_base_url,
+                params=params,
+                timeout=ISOK_TIMEOUT_S,
+            )
+            response.raise_for_status()
+            declared = response.headers.get("content-length")
+            if declared and declared.isdigit() and int(declared) > ISOK_MAX_RESPONSE_BYTES:
+                raise IsokServiceUnavailableError(
+                    f"Odpowiedź ISOK przekracza limit {ISOK_MAX_RESPONSE_BYTES} bajtów.",
+                    reason_code=REASON_INVALID_RESPONSE,
+                    source_metadata=_section_source(
+                        str(response.url), attempted_at, None, failed=True, response_status=response.status_code
+                    ),
+                )
+            if len(response.content) > ISOK_MAX_RESPONSE_BYTES:
+                raise IsokServiceUnavailableError(
+                    f"Odpowiedź ISOK przekracza limit {ISOK_MAX_RESPONSE_BYTES} bajtów.",
+                    reason_code=REASON_INVALID_RESPONSE,
+                    source_metadata=_section_source(
+                        str(response.url), attempted_at, None, failed=True, response_status=response.status_code
+                    ),
+                )
+            return response.text, str(response.url), response_dataset_date(response)
+        except IsokServiceUnavailableError:
+            raise
+        except httpx.TimeoutException as exc:
+            last_error = exc
+            if attempt + 1 < ISOK_MAX_ATTEMPTS:
+                await asyncio.sleep(0.2 * (attempt + 1))
+                continue
+            raise IsokServiceUnavailableError(
+                "Usługa ISOK nie odpowiedziała w wymaganym czasie.",
+                reason_code=REASON_TIMEOUT,
+                source_metadata=_section_source(request_url, attempted_at, None, failed=True, response_status=None),
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            last_error = exc
+            if exc.response.status_code in {429, 502, 503, 504} and attempt + 1 < ISOK_MAX_ATTEMPTS:
+                await asyncio.sleep(0.2 * (attempt + 1))
+                continue
+            raise IsokServiceUnavailableError(
+                f"Usługa ISOK zwróciła błąd: {exc}",
+                reason_code=REASON_HTTP_ERROR,
+                source_metadata=_section_source(
+                    request_url, attempted_at, None, failed=True, response_status=exc.response.status_code
+                ),
+            ) from exc
+        except httpx.HTTPError as exc:
+            last_error = exc
+            if attempt + 1 < ISOK_MAX_ATTEMPTS:
+                await asyncio.sleep(0.2 * (attempt + 1))
+                continue
+            raise IsokServiceUnavailableError(
+                f"Usługa ISOK zwróciła błąd: {exc}",
+                reason_code=REASON_HTTP_ERROR,
+                source_metadata=_section_source(request_url, attempted_at, None, failed=True, response_status=None),
+            ) from exc
+    assert last_error is not None  # pragma: no cover - pętla zawsze zwraca lub podnosi
+    raise last_error
 
 
-def _parse_zone_response(
-    text: str, failure_source: SourceMetadata | None = None
-) -> list[GmlFeature]:
+def _parse_zone_response(text: str, failure_source: SourceMetadata | None = None) -> list[GmlFeature]:
     """Parsuje odpowiedź WFS na listę cech powierzchniowych w EPSG:2180.
 
     W odróżnieniu od kiut.py: błąd parsowania, nieoczekiwany układ współrzędnych
     oraz ``ows:ExceptionReport`` podnoszą wyjątek, nie zwracają [] — patrz
     critical_design_deviation w docstringu modułu.
     """
+    if not text.strip():
+        raise IsokServiceUnavailableError(
+            "Pusta odpowiedź ISOK nie potwierdza braku stref w promieniu.",
+            reason_code=REASON_INVALID_RESPONSE,
+            source_metadata=failure_source,
+        )
     try:
         return parse_feature_collection(text)
     except GmlResponseError as exc:
@@ -370,6 +459,24 @@ def _return_period_years(properties: dict) -> int | None:
         if period > 0 and period.is_integer():
             return int(period)
         return None
+    return None
+
+
+def _flood_class(properties: dict) -> str | None:
+    """Klasa podstawowego scenariusza Q; scenariusze awarii wału są odrębne."""
+    likelihood = next(
+        (
+            str(value).casefold().replace(".", ",")
+            for key, value in properties.items()
+            if key.casefold() == "qualitativelikelihood"
+        ),
+        "",
+    )
+    if "zniszczenia walu" in likelihood or "zniszczenia wału" in likelihood:
+        return None
+    for category, _label, period, token in _FLOOD_CLASS_SPECS:
+        if token in likelihood and _return_period_years(properties) == period:
+            return category
     return None
 
 
@@ -435,6 +542,9 @@ def _build_risk_feature(
     source_url: str,
     fetched_at: datetime,
     feature_id: str | None = None,
+    *,
+    include_near: bool = False,
+    search_radius_m: float = FLOOD_SEARCH_RADIUS_M,
 ) -> RiskFeature | None:
     """
     Zwraca None gdy strefa jest rozłączna z działką (rzeczywiste sprawdzenie
@@ -446,7 +556,9 @@ def _build_risk_feature(
     sugerować fałszywie pełnego ryzyka tam, gdzie nie ma rzeczywistego
     nakładania powierzchni.
     """
-    if not parcel.intersects(zone):
+    distance_m = float(parcel.distance(zone))
+    intersects = parcel.intersects(zone)
+    if not intersects and (not include_near or distance_m > search_radius_m):
         return None
 
     intersection_geom = parcel.intersection(zone)
@@ -454,14 +566,12 @@ def _build_risk_feature(
     parcel_area = parcel.area
     area_ratio = (intersection_area_sqm / parcel_area) if parcel_area > 0 else 0.0
 
-    probability_class, probability_severity, probability_warning = (
-        _classify_flood_probability(properties)
-    )
+    probability_class, probability_severity, probability_warning = _classify_flood_probability(properties)
     warnings: list[str] = []
     if probability_warning:
         warnings.append(probability_warning)
 
-    touches_boundary = intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM
+    touches_boundary = intersects and intersection_area_sqm < _INTERSECTION_AREA_EPSILON_SQM
     if touches_boundary:
         # Styk brzegowy nadpisuje severity z klasyfikacji prawdopodobieństwa —
         # inaczej użytkownik zobaczyłby np. severity='high' dla działki, która
@@ -472,19 +582,29 @@ def _build_risk_feature(
             "powodziowego, bez rzeczywistego nakładania powierzchni — nie "
             "traktuj jako pełnego ryzyka."
         )
-    else:
+    elif intersects:
         severity = probability_severity
+    else:
+        # Bliskość nie jest przecięciem ani oceną prawną. Zachowujemy
+        # klasę strefy, lecz severity opisuje wyłącznie jej scenariusz.
+        severity = probability_severity
+
+    display_geometry = intersection_geom if intersects else zone.intersection(parcel.buffer(search_radius_m))
 
     return RiskFeature(
         risk_type="flood",
         severity=severity,
-        geometry=intersection_geom,
+        geometry=display_geometry,
         intersection_area_sqm=intersection_area_sqm,
         area_ratio=area_ratio,
         probability_class=probability_class,
         feature_id=feature_id,
         return_period_years=_return_period_years(properties),
         touches_boundary=touches_boundary,
+        distance_m=0.0 if intersects else distance_m,
+        proximity_status="intersection" if intersects else "near",
+        search_radius_m=search_radius_m,
+        flood_class=_flood_class(properties),
         source_metadata=SourceMetadata(
             source_id=ISOK_SOURCE_ID,
             source_name=ISOK_SOURCE_NAME,
