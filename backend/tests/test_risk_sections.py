@@ -45,6 +45,7 @@ from tests.risk_fixtures import (
 
 PARCEL = box(637000, 486000, 637100, 486100)
 Q1 = "scenariusz Q 1% (raz na 100 lat)"
+Q10 = "scenariusz Q 10% (raz na 10 lat)"
 Q02 = "scenariusz Q 0,2% (raz na 500 lat)"
 
 
@@ -74,13 +75,36 @@ async def test_flood_no_match_keeps_provenance_with_empty_features() -> None:
 
     assert outcome.features == []
     assert section.status == "available"
-    assert section.relation == "no_match"
+    assert section.relation == "none_within_radius"
     assert (section.feature_count, section.union_intersection_area_sqm) == (0, 0.0)
     assert section.source is not None
     assert section.source.source_id == "isok"
     assert section.source.response_status == 200
     assert section.source.artifact_sha256 is not None
     assert "HazardArea" in (section.source.source_url or "")
+    assert [item.category for item in section.proximities] == ["q10", "q100", "q500"]
+    assert all(item.status == "none_within_radius" for item in section.proximities)
+    assert section.preliminary_assessment is not None
+    assert section.preliminary_assessment.status == "contract_required"
+
+
+@pytest.mark.asyncio
+async def test_flood_nearest_q10_distance_is_measured_from_parcel_polygon() -> None:
+    outcome = await _flood(
+        isok_collection(
+            Zone("HA-Q10", (637263.395, 486000, 637300, 486100), Q10, "10")
+        )
+    )
+    section = _section("flood", outcome)
+    result = flood_risk_result(outcome.features[0])
+
+    assert section.relation == "near"
+    assert section.nearest_distance_m == pytest.approx(163.395, abs=0.001)
+    assert section.near_feature_count == 1
+    assert result.proximity_status == "near"
+    assert result.distance_m == pytest.approx(163.395, abs=0.001)
+    assert result.intersection_area_sqm is None and result.intersection_pct is None
+    assert "163,4 m od granicy działki" in result.description
 
 
 @pytest.mark.asyncio
@@ -192,7 +216,7 @@ async def test_two_overlapping_protection_forms_are_not_summed_above_100_percent
     assert section.union_intersection_pct == 100.0
     assert section.relation == "intersection"
     assert section.source is not None and section.source.source_id == "gdos"
-    assert "10 warstw" in (section.source.source_version or "")
+    assert "14 warstw" in (section.source.source_version or "")
 
 
 @pytest.mark.asyncio
@@ -209,7 +233,11 @@ async def test_nature_no_match_and_boundary_only() -> None:
         ),
     )
 
-    assert (empty.status, empty.relation, empty.feature_count) == ("available", "no_match", 0)
+    assert (empty.status, empty.relation, empty.feature_count) == (
+        "available",
+        "none_within_radius",
+        0,
+    )
     assert empty.source is not None and empty.source.artifact_sha256 is not None
     assert edge.relation == "boundary_only"
 
@@ -253,7 +281,7 @@ def _source() -> SourceMetadata:
 def test_error_section_uses_attempt_provenance_and_unknown_legacy() -> None:
     error = build_risk_section("nature", ContextSectionResult(section="gdos", status="error", warnings=["x"]), PARCEL)
     assert (error.status, error.reason_code) == ("error", "UNEXPECTED_ERROR")
-    assert error.source is not None and error.source.source_name == "GDOS"
+    assert error.source is not None and error.source.source_name == "GDOŚ"
 
     legacy = risk_sections_from_snapshot(None)
     assert [(item.section, item.status, item.reason_code) for item in legacy] == [

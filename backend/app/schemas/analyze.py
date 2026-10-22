@@ -130,10 +130,7 @@ class ParcelIdAnalyzeRequest(BaseModel):
     parcel_identifier: str = Field(
         min_length=5,
         max_length=50,
-        description=(
-            "Identyfikator działki ewidencyjnej w formacie ULDK, "
-            "np. 122101_1.0001.1234/2."
-        ),
+        description=("Identyfikator działki ewidencyjnej w formacie ULDK, np. 122101_1.0001.1234/2."),
         json_schema_extra={"example": "122101_1.0001.1234/2"},
     )
 
@@ -148,8 +145,7 @@ class AnalyzeResumeRequest(BaseModel):
     analysis_id: int = Field(
         gt=0,
         description=(
-            "Identyfikator analizy oczekującej na ręczne podanie symbolu strefy "
-            "(status='waiting_for_zone_symbol')."
+            "Identyfikator analizy oczekującej na ręczne podanie symbolu strefy (status='waiting_for_zone_symbol')."
         ),
         json_schema_extra={"example": 123},
     )
@@ -267,9 +263,7 @@ class ParcelGeometryResponse(BaseModel):
     )
 
 
-MpzpAssignmentMethod = Literal[
-    "vector_intersection", "document_candidate", "manual_user_input", "legacy"
-]
+MpzpAssignmentMethod = Literal["vector_intersection", "document_candidate", "manual_user_input", "legacy"]
 # 2.2 (PV3-04): symbole stref ze spacjami i przecinkami są przyjmowane i dopasowywane
 # w tekście tolerancyjnie na odstępy, więc wynik parsera dla tego samego dokumentu
 # może się różnić od zapisanego przed zmianą; ręczny dowód niesie też oryginał wpisu.
@@ -458,7 +452,8 @@ class MpzpActResult(BaseModel):
         json_schema_extra={"example": "IV/30/2024"},
     )
     resolution_number_basis: Literal["document_number", "document_title", "identifier", "kimpzp"] | None = Field(
-        default=None, description="Skąd pochodzi numer: pole dokumentu RU, tytuł dokumentu, identyfikator RU albo KIMPZP."
+        default=None,
+        description="Skąd pochodzi numer: pole dokumentu RU, tytuł dokumentu, identyfikator RU albo KIMPZP.",
     )
     resolution_date: date | None = None
     effective_from: date | None = Field(
@@ -468,7 +463,9 @@ class MpzpActResult(BaseModel):
     effective_to: date | None = Field(default=None, description="„Obowiązuje do” / „utracił moc”.")
     legal_status: MpzpActLegalStatus = "unknown"
     raw_status: str | None = Field(default=None, description="Status wprost ze źródła (np. „w opracowaniu”).")
-    document_url: str | None = Field(default=None, description="Link do tekstu uchwały (lub uchwały o przystąpieniu — patrz document_kind).")
+    document_url: str | None = Field(
+        default=None, description="Link do tekstu uchwały (lub uchwały o przystąpieniu — patrz document_kind)."
+    )
     document_kind: Literal["adopting", "commencement", "other"] | None = Field(
         default=None,
         description="adopting — uchwała uchwalająca plan; commencement — uchwała o przystąpieniu; other — dokument ogólny.",
@@ -481,7 +478,10 @@ class MpzpActResult(BaseModel):
         default=None, ge=0.0, description="Pole części działki objętej aktem [m², EPSG:2180]; null = brak granicy aktu."
     )
     intersection_pct: float | None = Field(
-        default=None, ge=0.0, le=100.0, description="Udział powierzchni działki objętej aktem [%]; null = brak granicy aktu."
+        default=None,
+        ge=0.0,
+        le=100.0,
+        description="Udział powierzchni działki objętej aktem [%]; null = brak granicy aktu.",
     )
     intersection_geojson: dict[str, Any] | None = Field(
         default=None, description="Część aktu leżąca na działce (GeoJSON Feature, EPSG:4326)."
@@ -512,9 +512,7 @@ class MpzpActResult(BaseModel):
     @property
     def verified_links(self) -> list[str]:
         return [
-            name
-            for name in ("document_url", "legend_url", "drawing_url")
-            if is_verified_https_url(getattr(self, name))
+            name for name in ("document_url", "legend_url", "drawing_url") if is_verified_https_url(getattr(self, name))
         ]
 
 
@@ -596,12 +594,8 @@ class ManualZoneSelection(BaseModel):
         default_factory=list,
         description="Kandydaci symboli pokazani użytkownikowi przed wyborem.",
     )
-    symbol_in_candidates: bool = Field(
-        description="Czy wpisany symbol był jednym z pokazanych kandydatów."
-    )
-    document_url: str | None = Field(
-        default=None, description="Adres dokumentu zapisany przy wstrzymaniu analizy."
-    )
+    symbol_in_candidates: bool = Field(description="Czy wpisany symbol był jednym z pokazanych kandydatów.")
+    document_url: str | None = Field(default=None, description="Adres dokumentu zapisany przy wstrzymaniu analizy.")
     document_sha256: str | None = Field(
         default=None,
         min_length=64,
@@ -626,9 +620,7 @@ MpzpValueKind = Literal["unconditional", "conditional", "conflict"]
 class MpzpValueCondition(BaseModel):
     """Warunek wartości parametru (PV3-08): rodzaj, nazwa do wyświetlenia i dosłowny cytat."""
 
-    kind: MpzpConditionKind = Field(
-        description="building_type, roof_type, subzone, location albo other."
-    )
+    kind: MpzpConditionKind = Field(description="building_type, roof_type, subzone, location albo other.")
     label: str = Field(description="Znormalizowana, krótka nazwa warunku (np. „dach płaski”).")
     quote: str = Field(
         description=(
@@ -802,9 +794,7 @@ class MpzpZoneResult(BaseModel):
         default=None,
         ge=0.0,
         le=100.0,
-        description=(
-            "Udział powierzchni działki w tej strefie MPZP; None — udział nieustalony."
-        ),
+        description=("Udział powierzchni działki w tej strefie MPZP; None — udział nieustalony."),
         json_schema_extra={"example": 66.4},
     )
     is_dominant: bool = Field(
@@ -815,13 +805,9 @@ class MpzpZoneResult(BaseModel):
         ),
         json_schema_extra={"example": True},
     )
-    zone_id: str | None = Field(
-        default=None, description="Stabilne ID wydzielenia z wersjonowanego wektora."
-    )
+    zone_id: str | None = Field(default=None, description="Stabilne ID wydzielenia z wersjonowanego wektora.")
     act_identifier: str | None = None
-    act_version: str | None = Field(
-        default=None, description="Hash snapshotu wersji aktu użytej w analizie."
-    )
+    act_version: str | None = Field(default=None, description="Hash snapshotu wersji aktu użytej w analizie.")
     act_version_id: int | None = None
     data_release_id: int | None = None
     document_url: str | None = None
@@ -890,10 +876,7 @@ class ManualZoneSourceDocument(BaseModel):
     fetched_at: datetime | None = None
     document_version_id: int | None = None
     preview_path: str = Field(
-        description=(
-            "Względna ścieżka API serwująca przypiętą kopię dokumentu; nie jest "
-            "adresem zewnętrznym."
-        )
+        description=("Względna ścieżka API serwująca przypiętą kopię dokumentu; nie jest adresem zewnętrznym.")
     )
 
     @model_validator(mode="after")
@@ -929,14 +912,10 @@ class ManualZoneContext(BaseModel):
         default=ZONE_SYMBOL_RULES_VERSION,
         description="Wersja reguł symbolu (kanoniczna forma i wzorzec).",
     )
-    notice: str = Field(
-        description="Ograniczenia trybu ręcznego pokazywane przed formularzem."
-    )
+    notice: str = Field(description="Ograniczenia trybu ręcznego pokazywane przed formularzem.")
 
 
-CompatibilityStatus = Literal[
-    "compatible", "incompatible", "uncertain", "not_applicable", "unknown"
-]
+CompatibilityStatus = Literal["compatible", "incompatible", "uncertain", "not_applicable", "unknown"]
 COMPATIBILITY_ASSESSMENT_SCHEMA_VERSION = "1.0"
 
 
@@ -961,16 +940,13 @@ class CompatibilityZonePair(BaseModel):
     mpzp_zone_symbol: str
     mpzp_zone_id: str | None = None
     mpzp_assignment_method: MpzpAssignmentMethod
-    mpzp_function: str | None = Field(
-        default=None, description="Znormalizowana funkcja MPZP; None — nieustalona."
-    )
+    mpzp_function: str | None = Field(default=None, description="Znormalizowana funkcja MPZP; None — nieustalona.")
     pog_zone_id: str
     pog_zone_symbol: str | None = None
     pog_zone_type: str
     spatially_identified: bool = Field(
         description=(
-            "True — obie strefy mają geometrię EPSG:2180, a ich przecięcie w "
-            "obrębie działki ma dodatnie pole."
+            "True — obie strefy mają geometrię EPSG:2180, a ich przecięcie w obrębie działki ma dodatnie pole."
         )
     )
     overlap_area_sqm: float | None = Field(default=None, ge=0.0)
@@ -990,11 +966,7 @@ class CompatibilityZonePair(BaseModel):
     @model_validator(mode="after")
     def resolved_pair_has_rule(self) -> Self:
         if self.status in {"compatible", "incompatible"}:
-            missing = [
-                name
-                for name in ("rule_id", "rule_version", "source", "as_of")
-                if getattr(self, name) is None
-            ]
+            missing = [name for name in ("rule_id", "rule_version", "source", "as_of") if getattr(self, name) is None]
             if missing or not self.spatially_identified:
                 raise ValueError(
                     "Rozstrzygnięta para MPZP–POG wymaga reguły (rule_id, "
@@ -1025,9 +997,7 @@ class CompatibilityAssessment(BaseModel):
     schema_version: str = Field(default=COMPATIBILITY_ASSESSMENT_SCHEMA_VERSION)
     status: CompatibilityStatus
     reason_code: str = Field(description="Stabilny kod ścieżki decyzji.")
-    as_of: date | None = Field(
-        default=None, description="Data stanu prawnego, do którego odnosi się ocena."
-    )
+    as_of: date | None = Field(default=None, description="Data stanu prawnego, do którego odnosi się ocena.")
     rule_id: str | None = Field(default=None, description="ID zestawu reguł.")
     rule_version: str | None = None
     aggregation: str = Field(description="Jawny opis reguły agregacji par.")
@@ -1041,14 +1011,10 @@ class CompatibilityAssessment(BaseModel):
     @model_validator(mode="after")
     def validate_contract(self) -> Self:
         if self.legacy_evidence is not None and self.status != "unknown":
-            raise ValueError(
-                "Zapis legacy bez danych reguły nie może udawać pełnej oceny zgodności."
-            )
+            raise ValueError("Zapis legacy bez danych reguły nie może udawać pełnej oceny zgodności.")
         if self.status in {"compatible", "incompatible"}:
             if not self.zone_pairs or self.rule_id is None or self.rule_version is None:
-                raise ValueError(
-                    "Rozstrzygnięta ocena wymaga zestawu reguł i co najmniej jednej pary."
-                )
+                raise ValueError("Rozstrzygnięta ocena wymaga zestawu reguł i co najmniej jednej pary.")
             if not any(pair.status == self.status for pair in self.zone_pairs):
                 raise ValueError("Status oceny musi wynikać z co najmniej jednej pary.")
         return self
@@ -1066,28 +1032,18 @@ class PogActResult(BaseModel):
     title: str | None = None
     resolution_number: str | None = None
     resolution_date: date | None = None
-    act_identifier: str | None = Field(
-        default=None, description="Stabilny idIIP aktu (przestrzeń nazw/lokalnyId)."
-    )
+    act_identifier: str | None = Field(default=None, description="Stabilny idIIP aktu (przestrzeń nazw/lokalnyId).")
     act_version: str | None = Field(default=None, description="wersjaId idIIP aktu.")
-    publication_id: str | None = Field(
-        default=None, description="gml:identifier opublikowanej wersji aktu w RU."
-    )
-    version_started_at: datetime | None = Field(
-        default=None, description="poczatekWersjiObiektu z APP."
-    )
+    publication_id: str | None = Field(default=None, description="gml:identifier opublikowanej wersji aktu w RU.")
+    version_started_at: datetime | None = Field(default=None, description="poczatekWersjiObiektu z APP.")
     publication_date: date | None = Field(
         default=None, description="Data publikacji zbioru danych aktu z metadanych CSW."
     )
     valid_from: date | None = Field(default=None, description="obowiazujeOd z APP.")
     valid_to: date | None = Field(default=None, description="obowiazujeDo z APP.")
-    gml_url: str | None = Field(
-        default=None, description="Oficjalny URL GML dokładnej wersji aktu (WFS RU)."
-    )
+    gml_url: str | None = Field(default=None, description="Oficjalny URL GML dokładnej wersji aktu (WFS RU).")
     gml_url_verified: bool = False
-    card_url: str | None = Field(
-        default=None, description="Oficjalny URL karty metadanych aktu (CSW RU)."
-    )
+    card_url: str | None = Field(default=None, description="Oficjalny URL karty metadanych aktu (CSW RU).")
     card_url_verified: bool = False
     data_release_id: int | None = None
     release_label: str | None = None
@@ -1128,9 +1084,7 @@ class PogZoneResult(BaseModel):
         description="Artefakt styku sąsiednich stref (AU-110): zachowany w zapisie, poza tabelą główną i obliczeniami.",
     )
     feature_version: str | None = Field(default=None, description="wersjaId obiektu strefy.")
-    gml_url: str | None = Field(
-        default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów."
-    )
+    gml_url: str | None = Field(default=None, description="Oficjalny URL GML obiektu strefy — źródło parametrów.")
     gml_url_verified: bool = False
     geometry_geojson: dict[str, Any] | None = Field(
         default=None,
@@ -1143,8 +1097,7 @@ class PogZoneResult(BaseModel):
         default=None,
         exclude=True,
         description=(
-            "Wewnętrzne przecięcie strefy z działką w EPSG:2180 do oceny par "
-            "MPZP–POG; nie jest serializowane."
+            "Wewnętrzne przecięcie strefy z działką w EPSG:2180 do oceny par MPZP–POG; nie jest serializowane."
         ),
     )
 
@@ -1196,17 +1149,13 @@ class PogStatusEvidence(BaseModel):
     """Wskazanie źródła, które potwierdziło status prawny albo pokrycie."""
 
     source_name: str
-    official: bool = Field(
-        description="Czy źródło jest właściwym źródłem urzędowym (RU/organ gminy)."
-    )
+    official: bool = Field(description="Czy źródło jest właściwym źródłem urzędowym (RU/organ gminy).")
     reference: str | None = Field(
         default=None,
         description="URL, identyfikator wydania albo sygnatura urzędowego potwierdzenia.",
     )
     source_id: str | None = None
-    raw_value: str | None = Field(
-        default=None, description="Surowy urzędowy kod statusu, np. INSPIRE legalForce."
-    )
+    raw_value: str | None = Field(default=None, description="Surowy urzędowy kod statusu, np. INSPIRE legalForce.")
     confirmed_at: datetime | None = None
 
 
@@ -1271,10 +1220,7 @@ class PogResult(BaseModel):
     social_infrastructure_standard_areas: list[PogAreaResult] = Field(default_factory=list)
     status: str = Field(
         default="unknown",
-        description=(
-            "Przestarzałe lustro legal_status zachowane dla klientów POG v1; "
-            "zawsze równe legal_status."
-        ),
+        description=("Przestarzałe lustro legal_status zachowane dla klientów POG v1; zawsze równe legal_status."),
         json_schema_extra={"example": "binding"},
     )
     planning_zone: str | None = Field(
@@ -1375,7 +1321,6 @@ class PogResult(BaseModel):
         },
     )
 
-
     @model_validator(mode="before")
     @classmethod
     def upgrade_legacy_statuses(cls, data: Any) -> Any:
@@ -1397,17 +1342,11 @@ class PogResult(BaseModel):
             or legacy in LEGAL_STATUS_VALUES
         ):
             evidence = _legacy_status_evidence(payload)
-            payload["legal_status"] = upgrade_legacy_legal_status(
-                legacy, confirmed=evidence is not None
-            )
-            if payload["legal_status"] == "binding" and not payload.get(
-                "legal_status_evidence"
-            ):
+            payload["legal_status"] = upgrade_legacy_legal_status(legacy, confirmed=evidence is not None)
+            if payload["legal_status"] == "binding" and not payload.get("legal_status_evidence"):
                 payload["legal_status_evidence"] = evidence
             if "data_availability" not in payload:
-                payload["data_availability"] = (
-                    "unavailable" if legacy in {None, "unknown"} else "current"
-                )
+                payload["data_availability"] = "unavailable" if legacy in {None, "unknown"} else "current"
             if "status_confirmed_at" not in payload and evidence is not None:
                 payload["status_confirmed_at"] = evidence.get("confirmed_at")
         coverage = payload.get("coverage_status")
@@ -1425,20 +1364,13 @@ class PogResult(BaseModel):
         # ``status`` jest wyłącznie lustrem kanonicznego statusu prawnego.
         self.status = self.legal_status
         if self.legal_status == "binding" and not (
-            self.legal_status_evidence is not None
-            and self.legal_status_evidence.official
+            self.legal_status_evidence is not None and self.legal_status_evidence.official
         ):
-            raise ValueError(
-                "legal_status=binding wymaga urzędowego potwierdzenia statusu"
-            )
+            raise ValueError("legal_status=binding wymaga urzędowego potwierdzenia statusu")
         if self.coverage_status == "no_act_confirmed" and not (
-            self.coverage_evidence is not None
-            and self.coverage_evidence.official
-            and self.coverage_evidence.reference
+            self.coverage_evidence is not None and self.coverage_evidence.official and self.coverage_evidence.reference
         ):
-            raise ValueError(
-                "coverage_status=no_act_confirmed wymaga wskazania urzędowego potwierdzenia"
-            )
+            raise ValueError("coverage_status=no_act_confirmed wymaga wskazania urzędowego potwierdzenia")
         if self.data_availability == "stale" and self.status_confirmed_at is None:
             raise ValueError("data_availability=stale wymaga daty ostatniego potwierdzenia")
         return self
@@ -1476,9 +1408,7 @@ def legacy_compatibility_assessment(
         "informational_notice": COMPATIBILITY_INFORMATIONAL_NOTICE,
         "legacy_evidence": {
             "origin": (
-                "pog_data.conflict_with_mpzp"
-                if compatibility is None
-                else "raw_attributes.scenario.compatibility"
+                "pog_data.conflict_with_mpzp" if compatibility is None else "raw_attributes.scenario.compatibility"
             ),
             "conflict_with_mpzp": conflict_with_mpzp,
             "result": (compatibility or {}).get("result"),
@@ -1491,9 +1421,7 @@ def legacy_compatibility_assessment(
 def _legacy_status_evidence(payload: dict[str, Any]) -> dict[str, Any] | None:
     """Odtwarza potwierdzenie statusu z zachowanego snapshotu sprzed BK-106."""
     raw_attributes = payload.get("raw_attributes") or {}
-    app_metadata = (
-        raw_attributes.get("app_metadata") if isinstance(raw_attributes, dict) else None
-    ) or {}
+    app_metadata = (raw_attributes.get("app_metadata") if isinstance(raw_attributes, dict) else None) or {}
     raw_status = app_metadata.get("raw_legal_status") if isinstance(app_metadata, dict) else None
     source = payload.get("source") or {}
     if hasattr(source, "model_dump"):
@@ -1543,8 +1471,7 @@ class InfrastructureResult(BaseModel):
         default=0.0,
         ge=0.0,
         description=(
-            "Powierzchnia technicznego obszaru zabudowy odjęta przez tę "
-            "strefę ochronną, w metrach kwadratowych."
+            "Powierzchnia technicznego obszaru zabudowy odjęta przez tę strefę ochronną, w metrach kwadratowych."
         ),
     )
     rule_source: str | None = Field(
@@ -1571,10 +1498,7 @@ class InfrastructureResult(BaseModel):
     )
     protection_zone_geojson: dict[str, Any] | None = Field(
         default=None,
-        description=(
-            "Efektywna strefa ochronna pomniejszająca obszar zabudowy, "
-            "w WGS84 jako GeoJSON Feature."
-        ),
+        description=("Efektywna strefa ochronna pomniejszająca obszar zabudowy, w WGS84 jako GeoJSON Feature."),
     )
     source: SourceMetadata = Field(
         description="Metadane źródła danych o uzbrojeniu terenu.",
@@ -1611,10 +1535,7 @@ class UtilitiesPreviewResult(BaseModel):
         json_schema_extra={"example": True},
     )
     note: str = Field(
-        description=(
-            "Nota wyjaśniająca ograniczenia podglądu. Nie zawiera odległości "
-            "ani liczby obiektów sieciowych."
-        ),
+        description=("Nota wyjaśniająca ograniczenia podglądu. Nie zawiera odległości ani liczby obiektów sieciowych."),
     )
     source: SourceMetadata = Field(
         description="Metadane zapytania do publicznej warstwy WMS KIUT.",
@@ -1623,20 +1544,73 @@ class UtilitiesPreviewResult(BaseModel):
     @model_validator(mode="after")
     def validate_layer_available(self) -> Self:
         if self.layer_available != (self.coverage_status == "covered"):
-            raise ValueError(
-                "layer_available musi być True wyłącznie dla statusu covered"
-            )
+            raise ValueError("layer_available musi być True wyłącznie dla statusu covered")
         return self
 
 
-RISK_RESULT_SCHEMA_VERSION = "1.0"
+RISK_RESULT_SCHEMA_VERSION = "2.0"
 # Tolerancja udziałów w procentach (zaokrąglenia do 1e-4 pp).
 _RISK_PCT_TOLERANCE = 0.01
 
 RiskSectionName = Literal["flood", "nature"]
 RiskSeverity = Literal["low", "medium", "high"]
 RiskSectionStatus = Literal["available", "unavailable", "error", "unknown"]
-RiskRelation = Literal["no_match", "boundary_only", "intersection", "unknown"]
+RiskRelation = Literal[
+    "no_match",  # wyłącznie snapshoty kontraktu 1.x
+    "none_within_radius",
+    "near",
+    "boundary_only",
+    "intersection",
+    "unknown",
+]
+RiskProximityStatus = Literal["intersection", "near", "none_within_radius"]
+
+
+class RiskProximityResult(BaseModel):
+    """Najbliższy wynik jednej klasy powodziowej albo warstwy GDOŚ.
+
+    Odległość jest liczona od poligonu działki do geometrii źródłowej
+    w EPSG:2180. ``none_within_radius`` oznacza wyłącznie poprawnie
+    sprawdzony brak obiektu w podanym promieniu; ``distance_m`` pozostaje wtedy
+    ``null``, nigdy 0.
+    """
+
+    category: str
+    label: str
+    layer_name: str
+    status: RiskProximityStatus
+    search_radius_m: float = Field(gt=0.0)
+    distance_m: float | None = Field(default=None, ge=0.0)
+    feature_id: str | None = Field(default=None, max_length=500)
+    name: str | None = None
+    probability_class: str | None = None
+    return_period_years: int | None = Field(default=None, gt=0)
+    informational_only: bool = False
+
+    @model_validator(mode="after")
+    def validate_measurement(self) -> Self:
+        if self.status == "none_within_radius":
+            if self.distance_m is not None or self.feature_id is not None:
+                raise ValueError("Brak obiektu w promieniu wymaga distance_m=null i feature_id=null.")
+        else:
+            if self.distance_m is None:
+                raise ValueError("Wynik intersection/near wymaga odległości.")
+            if self.status == "intersection" and self.distance_m > 1e-6:
+                raise ValueError("Przecięcie musi mieć odległość 0 m.")
+            if self.status == "near" and self.distance_m <= 0.0:
+                raise ValueError("Wynik near wymaga dodatniej odległości.")
+        return self
+
+
+class PreliminaryFloodRiskAssessment(BaseModel):
+    """Stan opcjonalnej oceny WORP, niezależny od stref ``HazardArea``."""
+
+    status: Literal["contract_required", "available", "unavailable", "unknown"]
+    method: Literal["WORP"] = "WORP"
+    reason_code: str
+    source_layers: list[str] = Field(default_factory=list)
+    value: str | None = None
+    note: str
 
 
 class RiskResult(BaseModel):
@@ -1660,9 +1634,7 @@ class RiskResult(BaseModel):
         max_length=500,
         description="Unikalny identyfikator obiektu w źródle (gml:id).",
     )
-    severity: RiskSeverity | None = Field(
-        default=None, description="Poziom istotności low/medium/high."
-    )
+    severity: RiskSeverity | None = Field(default=None, description="Poziom istotności low/medium/high.")
     probability_class: str | None = Field(
         default=None,
         description="Klasa prawdopodobieństwa powodzi dosłownie ze źródła.",
@@ -1676,9 +1648,7 @@ class RiskResult(BaseModel):
             "wyliczany z tekstu klasy prawdopodobieństwa."
         ),
     )
-    protection_type: str | None = Field(
-        default=None, description="Rodzaj formy ochrony przyrody (warstwa GDOŚ)."
-    )
+    protection_type: str | None = Field(default=None, description="Rodzaj formy ochrony przyrody (warstwa GDOŚ).")
     name: str | None = Field(default=None, description="Nazwa formy ochrony.")
     intersection_area_sqm: float | None = Field(
         default=None, ge=0.0, description="Pole przecięcia z działką w m² (EPSG:2180)."
@@ -1693,17 +1663,32 @@ class RiskResult(BaseModel):
         default=None,
         description="True: obiekt wyłącznie styka się z granicą działki (pole ≈ 0).",
     )
+    proximity_status: RiskProximityStatus | None = Field(
+        default=None,
+        description="Relacja w ograniczonym promieniu wyszukiwania; null dla snapshotu 1.x.",
+    )
+    distance_m: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Odległość od poligonu działki do obiektu [m, EPSG:2180]; null = nie zmierzono.",
+    )
+    search_radius_m: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Promień, w którym wyszukiwano obiekt [m].",
+    )
+    layer_name: str | None = Field(default=None, description="Nazwa klasy/warstwy źródłowej.")
+    informational_only: bool = Field(
+        default=False,
+        description="True: wyłącznie informacja geometryczna, bez wyznaczania strefy prawnej.",
+    )
     description: str = Field(
         description="Tekst prezentacyjny zbudowany z pól strukturalnych.",
-        json_schema_extra={
-            "example": "Część działki znajduje się w obszarze zagrożenia powodziowego."
-        },
+        json_schema_extra={"example": "Część działki znajduje się w obszarze zagrożenia powodziowego."},
     )
     geometry_geojson: dict[str, Any] | None = Field(
         default=None,
-        description=(
-            "Geometria przecięcia ryzyka z działką w WGS84 jako GeoJSON Feature."
-        ),
+        description=("Geometria przecięcia ryzyka z działką w WGS84 jako GeoJSON Feature."),
     )
     warnings: list[str] = Field(default_factory=list)
     source: SourceMetadata = Field(
@@ -1723,6 +1708,13 @@ class RiskResult(BaseModel):
     def validate_boundary_consistency(self) -> Self:
         if self.touches_boundary is True and (self.intersection_area_sqm or 0.0) > 1e-3:
             raise ValueError("Styk granicy nie może mieć dodatniego pola przecięcia.")
+        if self.proximity_status is not None:
+            if self.search_radius_m is None or self.distance_m is None:
+                raise ValueError("Pomiar bliskości wymaga distance_m i search_radius_m.")
+            if self.proximity_status == "intersection" and self.distance_m > 1e-6:
+                raise ValueError("Przecięcie musi mieć odległość 0 m.")
+            if self.proximity_status == "near" and self.distance_m <= 0.0:
+                raise ValueError("Wynik near wymaga dodatniej odległości.")
         return self
 
 
@@ -1738,9 +1730,7 @@ class RiskSectionResult(BaseModel):
     schema_version: str = RISK_RESULT_SCHEMA_VERSION
     section: RiskSectionName
     status: RiskSectionStatus
-    reason_code: str | None = Field(
-        default=None, description="Kod przyczyny statusu innego niż available."
-    )
+    reason_code: str | None = Field(default=None, description="Kod przyczyny statusu innego niż available.")
     relation: RiskRelation = Field(
         description=(
             "no_match — brak obiektów; boundary_only — wyłącznie styk granicy; "
@@ -1750,13 +1740,11 @@ class RiskSectionResult(BaseModel):
     feature_count: int | None = Field(default=None, ge=0)
     intersecting_feature_count: int | None = Field(default=None, ge=0)
     boundary_feature_count: int | None = Field(default=None, ge=0)
+    near_feature_count: int | None = Field(default=None, ge=0)
     union_intersection_area_sqm: float | None = Field(
         default=None,
         ge=0.0,
-        description=(
-            "Pole sumy mnogościowej przecięć (bez podwójnego liczenia "
-            "nakładających się obiektów), m²."
-        ),
+        description=("Pole sumy mnogościowej przecięć (bez podwójnego liczenia nakładających się obiektów), m²."),
     )
     union_intersection_pct: float | None = Field(
         default=None,
@@ -1764,8 +1752,19 @@ class RiskSectionResult(BaseModel):
         le=100.0 + _RISK_PCT_TOLERANCE,
         description="Udział sumy mnogościowej przecięć w działce, % (≤ 100).",
     )
-    feature_ids: list[str] = Field(
-        default_factory=list, description="Unikalne ID obiektów sekcji."
+    feature_ids: list[str] = Field(default_factory=list, description="Unikalne ID obiektów sekcji.")
+    nearest_distance_m: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Najmniejsza zmierzona odległość w sekcji [m]; null, gdy nic nie znaleziono lub nie sprawdzono.",
+    )
+    proximities: list[RiskProximityResult] = Field(
+        default_factory=list,
+        description="Wynik per klasa Q10/Q100/Q500 albo per warstwa GDOŚ, także none_within_radius.",
+    )
+    preliminary_assessment: PreliminaryFloodRiskAssessment | None = Field(
+        default=None,
+        description="Warunkowa ocena WORP; contract_required dopóki semantyka produktu nie jest potwierdzona.",
     )
     source: SourceMetadata | None = Field(
         default=None,
@@ -1785,24 +1784,36 @@ class RiskSectionResult(BaseModel):
         if self.status == "available":
             if any(value is None for value in measured):
                 raise ValueError("Sekcja available wymaga liczników i pola sumy.")
+            if self.schema_version != "1.0" and self.near_feature_count is None:
+                raise ValueError("Sekcja kontraktu 2.x wymaga licznika obiektów bliskich.")
             if self.source is None:
                 raise ValueError("Sekcja available wymaga provenance źródła.")
             expected = (
-                "no_match"
-                if self.feature_count == 0
-                else "intersection"
+                "intersection"
                 if (self.intersecting_feature_count or 0) > 0
                 else "boundary_only"
+                if (self.boundary_feature_count or 0) > 0
+                else "near"
+                if (self.near_feature_count or 0) > 0
+                else "no_match"
+                if self.schema_version == "1.0"
+                else "none_within_radius"
             )
             if self.relation != expected:
                 raise ValueError("Relacja sekcji nie odpowiada licznikom obiektów.")
         else:
             if self.relation != "unknown" or any(value is not None for value in measured):
-                raise ValueError(
-                    "Sekcja niesprawdzona nie może mieć relacji ani pomiarów (null, nie 0)."
-                )
+                raise ValueError("Sekcja niesprawdzona nie może mieć relacji ani pomiarów (null, nie 0).")
             if self.feature_ids:
                 raise ValueError("Sekcja niesprawdzona nie może mieć obiektów.")
+            if self.near_feature_count is not None or self.nearest_distance_m is not None or self.proximities:
+                raise ValueError("Sekcja niesprawdzona nie może mieć pomiarów bliskości.")
+        if self.nearest_distance_m is not None:
+            distances = [item.distance_m for item in self.proximities if item.distance_m is not None]
+            if distances and abs(self.nearest_distance_m - min(distances)) > 0.01:
+                raise ValueError("nearest_distance_m musi odpowiadać minimum pomiarów sekcji.")
+        if self.section != "flood" and self.preliminary_assessment is not None:
+            raise ValueError("Wstępna ocena WORP dotyczy wyłącznie sekcji flood.")
         return self
 
 
@@ -1852,9 +1863,7 @@ class TerrainSlopeClass(BaseModel):
     )
     pixel_count: int = Field(ge=0, description="Liczba pikseli klasy w działce.")
     area_sqm: float = Field(ge=0.0, description="Powierzchnia klasy w m².")
-    share_pct: float = Field(
-        ge=0.0, le=100.0, description="Udział w zmierzonej powierzchni działki, %."
-    )
+    share_pct: float = Field(ge=0.0, le=100.0, description="Udział w zmierzonej powierzchni działki, %.")
 
 
 AspectDirection = Literal["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
@@ -1888,12 +1897,8 @@ class TerrainAspectResult(BaseModel):
         default_factory=dict,
         description="Udział pikseli nachylonych w 8 sektorach ekspozycji, %.",
     )
-    non_flat_share_pct: float = Field(
-        ge=0.0, le=100.0, description="Udział pikseli ze spadkiem ≥ progu płaskości, %."
-    )
-    flat_threshold_pct: float = Field(
-        ge=0.0, description="Próg spadku, poniżej którego piksel jest płaski, %."
-    )
+    non_flat_share_pct: float = Field(ge=0.0, le=100.0, description="Udział pikseli ze spadkiem ≥ progu płaskości, %.")
+    flat_threshold_pct: float = Field(ge=0.0, description="Próg spadku, poniżej którego piksel jest płaski, %.")
 
     @model_validator(mode="after")
     def validate_direction_nulls(self) -> Self:
@@ -1903,9 +1908,7 @@ class TerrainAspectResult(BaseModel):
             or self.dominant_direction is not None
         ):
             raise ValueError("Ekspozycja płaskiego terenu musi mieć null, nie 0°.")
-        if self.status != "flat" and (
-            self.mean_azimuth_deg is None or self.resultant_length is None
-        ):
+        if self.status != "flat" and (self.mean_azimuth_deg is None or self.resultant_length is None):
             raise ValueError("Ekspozycja terenu nachylonego wymaga azymutu i wypadkowej.")
         if (self.status == "defined") != (self.dominant_direction is not None):
             raise ValueError("Kierunek dominujący jest dozwolony wyłącznie dla defined.")
@@ -1952,14 +1955,10 @@ class TerrainRasterMetadata(BaseModel):
     )
     buffer_m: float = Field(ge=0.0, description="Bufor wokół bbox działki (kernel 3×3).")
     size_bytes: int = Field(ge=0, description="Rozmiar pobranego GeoTIFF.")
-    nodata_value: float | None = Field(
-        default=None, description="NoData zadeklarowane w GeoTIFF (GDAL_NODATA)."
-    )
+    nodata_value: float | None = Field(default=None, description="NoData zadeklarowane w GeoTIFF (GDAL_NODATA).")
     nodata_policy: str = Field(description="Jawna reguła maskowania NoData.")
     vertical_datum: str | None = Field(default=None, description="Układ wysokości.")
-    gdal_version: str | None = Field(
-        default=None, description="Wersja GDAL użyta do dekodowania rastra."
-    )
+    gdal_version: str | None = Field(default=None, description="Wersja GDAL użyta do dekodowania rastra.")
 
 
 class TerrainReliefResult(BaseModel):
@@ -1969,21 +1968,11 @@ class TerrainReliefResult(BaseModel):
     algorithm_version: str = Field(description="Wersja algorytmu pochodnych.")
     slope_classes_version: str = Field(description="Wersja tabeli klas nachylenia.")
     status: TerrainStatus = Field(description=_TERRAIN_STATUS_DESCRIPTION)
-    reason_code: str | None = Field(
-        default=None, description="Kod przyczyny statusu innego niż available."
-    )
-    resolution_m: float | None = Field(
-        default=None, gt=0.0, description="Rozdzielczość danych źródłowych, m."
-    )
-    parcel_pixel_count: int | None = Field(
-        default=None, ge=0, description="Piksele, których środek leży w działce."
-    )
-    valid_pixel_count: int | None = Field(
-        default=None, ge=0, description="Piksele działki z poprawnym oknem 3×3."
-    )
-    nodata_pixel_count: int | None = Field(
-        default=None, ge=0, description="Piksele działki bez danych (maskowane)."
-    )
+    reason_code: str | None = Field(default=None, description="Kod przyczyny statusu innego niż available.")
+    resolution_m: float | None = Field(default=None, gt=0.0, description="Rozdzielczość danych źródłowych, m.")
+    parcel_pixel_count: int | None = Field(default=None, ge=0, description="Piksele, których środek leży w działce.")
+    valid_pixel_count: int | None = Field(default=None, ge=0, description="Piksele działki z poprawnym oknem 3×3.")
+    nodata_pixel_count: int | None = Field(default=None, ge=0, description="Piksele działki bez danych (maskowane).")
     valid_area_share_pct: float | None = Field(
         default=None, ge=0.0, le=100.0, description="Udział zmierzonych pikseli działki, %."
     )
@@ -2019,9 +2008,7 @@ class TerrainReliefResult(BaseModel):
                 raise ValueError("Udziały klas nachylenia muszą sumować się do 100%.")
         else:
             if any(value is not None for value in measured) or self.slope_classes:
-                raise ValueError(
-                    "Wynik bez pomiaru nie może zawierać statystyk (null, nie 0)."
-                )
+                raise ValueError("Wynik bez pomiaru nie może zawierać statystyk (null, nie 0).")
             if self.status in {"no_coverage", "unavailable"} and self.source is None:
                 raise ValueError("Pusty wynik musi zachować provenance źródła.")
         return self
@@ -2106,9 +2093,7 @@ class TerrainResult(BaseModel):
             if abs(self.height_difference_m - expected) > HEIGHT_DIFFERENCE_TOLERANCE_M:
                 raise ValueError("height_difference_m musi równać się max − min.")
         elif any(value is not None for value in heights):
-            raise ValueError(
-                "Bez pomiaru wysokości muszą być null — brak danych to nie 0 m."
-            )
+            raise ValueError("Bez pomiaru wysokości muszą być null — brak danych to nie 0 m.")
         if self.status != "unknown" and self.source is None:
             raise ValueError("Wynik NMT musi zachować provenance źródła.")
         return self

@@ -17,7 +17,12 @@ from typing import Any, Final, Iterable, Literal, Sequence
 from shapely import union_all
 from shapely.geometry.base import BaseGeometry
 
-from app.schemas.analyze import RiskResult, RiskSectionResult
+from app.schemas.analyze import (
+    PreliminaryFloodRiskAssessment,
+    RiskProximityResult,
+    RiskResult,
+    RiskSectionResult,
+)
 from app.schemas.source import SourceMetadata
 from app.services.context import ContextSectionResult
 from app.services.gdos import NatureProtectionFeature
@@ -27,12 +32,11 @@ from app.services.isok import RiskFeature
 REASON_UNEXPECTED_ERROR: Final[str] = "UNEXPECTED_ERROR"
 REASON_LEGACY_SNAPSHOT: Final[str] = "LEGACY_SNAPSHOT"
 LEGACY_RISK_WARNING: Final[str] = (
-    "Zapis sprzed BK-303 nie zawiera statusu sekcji — brak obiektów nie oznacza "
-    "potwierdzonego braku ryzyka."
+    "Zapis sprzed BK-303 nie zawiera statusu sekcji — brak obiektów nie oznacza potwierdzonego braku ryzyka."
 )
 _SECTION_SOURCES: Final[dict[str, tuple[str, str]]] = {
     "flood": ("isok", "ISOK"),
-    "nature": ("gdos", "GDOS"),
+    "nature": ("gdos", "GDOŚ"),
 }
 _PROTECTION_LABELS: Final[dict[str, str]] = {
     "park_narodowy": "park narodowy",
@@ -44,6 +48,9 @@ _PROTECTION_LABELS: Final[dict[str, str]] = {
     "zespol_przyrodniczo_krajobrazowy": "zespół przyrodniczo-krajobrazowy",
     "stanowisko_dokumentacyjne": "stanowisko dokumentacyjne",
     "pomnik_przyrody": "pomnik przyrody",
+    "obszar_ramsar": "obszar Ramsar",
+    "korytarz_ekologiczny": "korytarz ekologiczny",
+    "elektrownia_wiatrowa": "elektrownia wiatrowa",
     "unknown": "forma ochrony o nieustalonym typie",
 }
 _SEVERITY_LABELS: Final[dict[str, str]] = {
@@ -57,8 +64,9 @@ _ROUND_PCT: Final[int] = 4
 
 def flood_risk_result(feature: RiskFeature) -> RiskResult:
     """Strefa zagrożenia powodziowego z wszystkimi polami domenowymi."""
-    area = round(feature.intersection_area_sqm, _ROUND_AREA)
-    pct = _pct(feature.area_ratio)
+    is_near = feature.proximity_status == "near"
+    area = None if is_near else round(feature.intersection_area_sqm, _ROUND_AREA)
+    pct = None if is_near else _pct(feature.area_ratio)
     return RiskResult(
         risk_type=feature.risk_type,
         section="flood",
@@ -68,14 +76,22 @@ def flood_risk_result(feature: RiskFeature) -> RiskResult:
         return_period_years=feature.return_period_years,
         intersection_area_sqm=area,
         intersection_pct=pct,
-        touches_boundary=feature.touches_boundary,
-        description=flood_description(
-            feature.probability_class,
-            feature.return_period_years,
-            feature.severity,
-            area,
-            pct,
-            feature.touches_boundary,
+        touches_boundary=False if is_near else feature.touches_boundary,
+        proximity_status=feature.proximity_status,  # type: ignore[arg-type]
+        distance_m=round(feature.distance_m, 3),
+        search_radius_m=feature.search_radius_m,
+        layer_name=feature.layer_name,
+        description=_with_proximity(
+            flood_description(
+                feature.probability_class,
+                feature.return_period_years,
+                feature.severity,
+                area,
+                pct,
+                False if is_near else feature.touches_boundary,
+            ),
+            feature.proximity_status,
+            feature.distance_m,
         ),
         geometry_geojson=analysis_layer_geometry_to_geojson(
             feature.geometry,
@@ -84,6 +100,10 @@ def flood_risk_result(feature: RiskFeature) -> RiskResult:
                 "risk_type": feature.risk_type,
                 "severity": feature.severity,
                 "feature_id": feature.feature_id,
+                "proximity_status": feature.proximity_status,
+                "distance_m": round(feature.distance_m, 3),
+                "search_radius_m": feature.search_radius_m,
+                "layer_name": feature.layer_name,
             },
         ),
         warnings=list(feature.warnings),
@@ -93,11 +113,10 @@ def flood_risk_result(feature: RiskFeature) -> RiskResult:
 
 def nature_risk_result(feature: NatureProtectionFeature) -> RiskResult:
     """Forma ochrony przyrody z typem, nazwą i polami przecięcia."""
-    risk_type = (
-        "natura_2000" if feature.protection_type == "natura2000" else feature.protection_type
-    )
-    area = round(feature.intersection_area_sqm, _ROUND_AREA)
-    pct = _pct(feature.area_ratio)
+    risk_type = "natura_2000" if feature.protection_type == "natura2000" else feature.protection_type
+    is_near = feature.proximity_status == "near"
+    area = None if is_near else round(feature.intersection_area_sqm, _ROUND_AREA)
+    pct = None if is_near else _pct(feature.area_ratio)
     return RiskResult(
         risk_type=risk_type,
         section="nature",
@@ -107,14 +126,23 @@ def nature_risk_result(feature: NatureProtectionFeature) -> RiskResult:
         name=feature.name,
         intersection_area_sqm=area,
         intersection_pct=pct,
-        touches_boundary=feature.touches_boundary,
-        description=nature_description(
-            feature.protection_type,
-            feature.name,
-            feature.severity,
-            area,
-            pct,
-            feature.touches_boundary,
+        touches_boundary=False if is_near else feature.touches_boundary,
+        proximity_status=feature.proximity_status,  # type: ignore[arg-type]
+        distance_m=round(feature.distance_m, 3),
+        search_radius_m=feature.search_radius_m,
+        layer_name=feature.layer_name,
+        informational_only=feature.informational_only,
+        description=_with_proximity(
+            nature_description(
+                feature.protection_type,
+                feature.name,
+                feature.severity,
+                area,
+                pct,
+                False if is_near else feature.touches_boundary,
+            ),
+            feature.proximity_status,
+            feature.distance_m,
         ),
         geometry_geojson=analysis_layer_geometry_to_geojson(
             feature.geometry,
@@ -124,6 +152,11 @@ def nature_risk_result(feature: NatureProtectionFeature) -> RiskResult:
                 "severity": feature.severity,
                 "name": feature.name,
                 "feature_id": feature.feature_id,
+                "proximity_status": feature.proximity_status,
+                "distance_m": round(feature.distance_m, 3),
+                "search_radius_m": feature.search_radius_m,
+                "layer_name": feature.layer_name,
+                "informational_only": feature.informational_only,
             },
         ),
         warnings=list(feature.warnings),
@@ -150,21 +183,21 @@ def build_risk_section(
             relation="unknown",
             source=context_section.source_metadata or _attempt_source(name),
             warnings=list(context_section.warnings),
+            preliminary_assessment=(_worp_contract_required() if name == "flood" else None),
         )
 
     features: Sequence[Any] = context_section.data
-    intersecting = [item for item in features if not item.touches_boundary]
-    boundary = [item for item in features if item.touches_boundary]
+    intersecting = [item for item in features if item.proximity_status == "intersection" and not item.touches_boundary]
+    boundary = [item for item in features if item.proximity_status == "intersection" and item.touches_boundary]
+    near = [item for item in features if item.proximity_status == "near"]
     union_area = _union_area(item.geometry for item in intersecting)
     parcel_area = parcel_geometry.area
-    union_pct = (
-        min(100.0, round(100.0 * union_area / parcel_area, _ROUND_PCT))
-        if parcel_area > 0
-        else 0.0
+    union_pct = min(100.0, round(100.0 * union_area / parcel_area, _ROUND_PCT)) if parcel_area > 0 else 0.0
+    relation: Literal["none_within_radius", "near", "intersection", "boundary_only"] = (
+        "intersection" if intersecting else "boundary_only" if boundary else "near" if near else "none_within_radius"
     )
-    relation: Literal["no_match", "intersection", "boundary_only"] = (
-        "no_match" if not features else "intersection" if intersecting else "boundary_only"
-    )
+    proximities = [_proximity_result(item) for item in context_section.proximities]
+    measured_distances = [item.distance_m for item in proximities if item.distance_m is not None]
     return RiskSectionResult(
         section=name,  # type: ignore[arg-type]
         status="available",
@@ -172,9 +205,13 @@ def build_risk_section(
         feature_count=len(features),
         intersecting_feature_count=len(intersecting),
         boundary_feature_count=len(boundary),
+        near_feature_count=len(near),
         union_intersection_area_sqm=round(union_area, _ROUND_AREA),
         union_intersection_pct=union_pct,
         feature_ids=[item.feature_id for item in features if item.feature_id],
+        nearest_distance_m=(round(min(measured_distances), 3) if measured_distances else None),
+        proximities=proximities,
+        preliminary_assessment=(_worp_contract_required() if name == "flood" else None),
         source=context_section.source_metadata or _attempt_source(name),
         warnings=list(context_section.warnings),
     )
@@ -242,6 +279,45 @@ def _with_measurement(
     elif area_sqm is not None and pct is not None:
         parts.append(f"przecięcie {_pl(area_sqm, 2)} m² ({_pl(pct, 2)}% działki)")
     return "; ".join(parts) + "."
+
+
+def _with_proximity(
+    description: str,
+    status: str,
+    distance_m: float,
+) -> str:
+    if status != "near":
+        return description
+    return f"{description.rstrip('.')} Najbliższy obiekt: {_pl(distance_m, 1)} m od granicy działki."
+
+
+def _proximity_result(item: Any) -> RiskProximityResult:
+    return RiskProximityResult(
+        category=item.category,
+        label=item.label,
+        layer_name=item.layer_name,
+        status=item.status,
+        search_radius_m=item.search_radius_m,
+        distance_m=(round(item.distance_m, 3) if item.distance_m is not None else None),
+        feature_id=item.feature_id,
+        name=item.name,
+        probability_class=item.probability_class,
+        return_period_years=item.return_period_years,
+        informational_only=item.informational_only,
+    )
+
+
+def _worp_contract_required() -> PreliminaryFloodRiskAssessment:
+    return PreliminaryFloodRiskAssessment(
+        status="contract_required",
+        reason_code="WORP_CONTRACT_NOT_CONFIRMED",
+        source_layers=["nz-core:RiskZone", "nz-core:ExposedElement"],
+        note=(
+            "Warstwy INSPIRE opisują strefę ryzyka i elementy narażone, ale ich "
+            "semantyka nie została potwierdzona jako produkt WORP porównywalny z "
+            "oceną OnGeo. Ocena nie jest wyliczana."
+        ),
+    )
 
 
 def _union_area(geometries: Iterable[BaseGeometry]) -> float:

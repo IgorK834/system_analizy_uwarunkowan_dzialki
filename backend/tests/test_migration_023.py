@@ -34,7 +34,7 @@ def test_migration_follows_head_022() -> None:
     assert 'revision: str = "023_structured_risks"' in migration
     assert 'down_revision: Union[str, None] = "022_analysis_terrain"' in migration
     assert "description" not in migration.split('"""', 2)[2].replace("``description``", "")
-    assert "+risk-v1.0" in RESULT_CONTRACT_VERSION
+    assert "+risk-v2.0" in RESULT_CONTRACT_VERSION
     assert len(RESULT_CONTRACT_VERSION) <= 224  # String(256) od migracji 036 (zapas 32 znaków)
 
 
@@ -101,7 +101,7 @@ def test_old_risks_stay_unknown_after_upgrade_and_downgrade_roundtrips() -> None
         assert [risk.section for risk in response.risks] == ["flood", "nature"]
         assert all(risk.intersection_pct is None and risk.severity is None for risk in response.risks)
         assert response.risks[0].source.source_name == "ISOK"
-        assert response.risks[1].source.source_name == "GDOS"
+        assert response.risks[1].source.source_name == "GDOŚ"
         assert [(s.section, s.status) for s in response.risk_sections] == [("flood", "unknown"), ("nature", "unknown")]
 
         command.downgrade(config, "022_analysis_terrain")
