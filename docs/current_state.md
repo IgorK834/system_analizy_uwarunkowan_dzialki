@@ -856,3 +856,32 @@ lokalny plik override ustawia port i CORS, nie trafia do Git. Kontenery pozostaw
 [Protokół, polecenia i artefakty](evaluation/au202-204-local-deployment-2026-10-19.md).
 Wszystkie zmiany nadal bez commitów. Powyższe wcześniejsze wpisy o izolowanych bazach opisują historyczny odbiór,
 przed tym poleceniem wdrożenia.
+
+## AU-205 / AU-206 — odległości powodziowe i obiekty GDOŚ (2026-10-21)
+
+Sekcja powodziowa nie ogranicza się już do przecięcia. WFS HazardArea jest
+sprawdzany w promieniu 1 km, a API zwraca osobny wynik Q10/Q100/Q500 ze stanem
+`intersection|near|none_within_radius`, odległością od poligonu działki w
+EPSG:2180 i promieniem wyszukiwania. Dla `141801_4.0701.23/8` niezależny pomiar
+na żywej odpowiedzi z 20.10.2026 dał **163,395 m do Q10** (OnGeo: 164 m ± 5 m).
+Ocena WORP nie jest zgadywana: RiskZone/ExposedElement potwierdzono w kontrakcie
+INSPIRE, lecz nie potwierdzono równoważności produktu, więc wynik jawnie ma
+`contract_required`.
+
+GDOŚ obejmuje 14 warstw, w tym punktowe i powierzchniowe pomniki przyrody,
+parki, rezerwaty, użytki, stanowiska, zespoły, Ramsar, korytarze ekologiczne i
+elektrownie wiatrowe. Pomniki są sprawdzane w 200 m, pozostałe w 1 km. Ramsar,
+korytarze i turbiny są wyłącznie informacją geometryczną, bez wyprowadzania
+strefy prawnej. Jedna pozycja źródła „GDOŚ” trafia do wyniku i jakości.
+
+Wywołania obu źródeł przechodzą przez wspólny port application
+`EnvironmentalSectionPort` oraz adaptery infrastruktury `IsokWfsAdapter` i
+`GdosWfsAdapter`. Geometria przekracza granicę modułu jako `GeometryPayload`, a
+adapter odrzuca CRS inny niż EPSG:2180 przed I/O.
+
+Kontrakt ryzyka ma wersję 2.0 i unieważnia starszy cache. Nowe pola są zapisane
+w istniejących snapshotach JSON, więc nie dodano migracji po aktualnym head
+`040_bdot_powerlines`. API, panel wyniku, warstwa punktowa MapLibre, PDF,
+mapowanie pól i ZIP audytowy zachowują nowe pomiary. Decyzję i ograniczenia
+opisuje [ADR-030](adr/ADR-030-odleglosci-srodowiskowe-i-kontrakt-worp.md), a
+dowody odbiorowe: [AU-205/206](evaluation/au205-206-verification.md).
