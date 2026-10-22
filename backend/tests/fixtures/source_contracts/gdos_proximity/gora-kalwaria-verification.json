@@ -1,0 +1,24 @@
+{
+  "captured_at": "2026-10-21T14:42:45+02:00",
+  "parcel_identifier": "141801_4.0701.23/8",
+  "parcel_wkt_epsg2180": "POLYGON((652131.49914 460398.698376,652159.798258 460406.037279,652162.371949 460411.358288,652147.068906 460444.158444,652121.452724 460437.443381,652131.49914 460398.698376))",
+  "protected_landscape": {
+    "layer": "GDOS:ObszaryChronionegoKrajobrazu",
+    "feature_id": "ObszaryChronionegoKrajobrazu.fid--27a05ee7_1a15e65c89d_2179",
+    "name": "Warszawski",
+    "intersection_pct": 100.0,
+    "distance_m": 0.0,
+    "full_response_sha256": "544e8b0e4c9956e7cd1e6895469de840fecc26f9874e482b74f109f42dfdc2f9"
+  },
+  "monuments": {
+    "search_radius_m": 200.0,
+    "point_number_matched": 0,
+    "point_response_sha256": "684bec98ce205776020d3fc70526cf926484589d2751337b6c1a4860296a78f4",
+    "point_fixture_sha256": "9c5d3a718bee7b3875f2dff25492eb0b93515670b51cf253ce9f1dca7a249a84",
+    "surface_number_matched": 0,
+    "surface_response_sha256": "0afebe7745cbbd0a709538283c76a4fff9fb24f6d0b7daa92f0d71c7583b7c4f",
+    "surface_fixture_sha256": "324afdc60154f9cc932d4cbc9b07a36bfe6e1d4bc94d1d25c5f99797e296a97b"
+  },
+  "measurement_crs": "EPSG:2180",
+  "measurement_method": "shapely distance/intersection against the full source geometry"
+}

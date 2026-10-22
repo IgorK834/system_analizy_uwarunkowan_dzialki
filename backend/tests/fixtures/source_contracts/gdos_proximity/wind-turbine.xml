@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection numberMatched="6614" numberReturned="1" timeStamp="2026-10-20T21:49:40.815Z" xmlns:GDOS="GDOS" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:wfs="http://www.opengis.net/wfs/2.0">
+  <wfs:member>
+    <GDOS:ElektrownieWiatrowe gml:id="ElektrownieWiatrowe.6290">
+      <GDOS:nazwa_przedsiewziecia>Budowa elektrowni wiatrowej o mocy 1,5 Mwe w miejscowści Bargły</GDOS:nazwa_przedsiewziecia>
+      <GDOS:numer_identyfikacyjny>2</GDOS:numer_identyfikacyjny>
+      <GDOS:wysokosc_calkowita_elektrowni>139.00</GDOS:wysokosc_calkowita_elektrowni>
+      <GDOS:srednica_turbiny>77.00</GDOS:srednica_turbiny>
+      <GDOS:maks_moc_farmy_wiatrowej>1.50</GDOS:maks_moc_farmy_wiatrowej>
+      <GDOS:liczba_elektrowni_w_farmie>1</GDOS:liczba_elektrowni_w_farmie>
+      <GDOS:status_farmy_wiatrowej>Brak danych</GDOS:status_farmy_wiatrowej>
+      <GDOS:geom><gml:Point srsDimension="2" srsName="urn:ogc:def:crs:EPSG::2180"><gml:pos>315524.8191028603 508490.717309904</gml:pos></gml:Point></GDOS:geom>
+    </GDOS:ElektrownieWiatrowe>
+  </wfs:member>
+</wfs:FeatureCollection>
+

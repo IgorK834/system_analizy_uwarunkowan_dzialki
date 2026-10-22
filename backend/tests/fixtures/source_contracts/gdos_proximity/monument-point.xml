@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection numberMatched="119964" numberReturned="1" timeStamp="2026-10-20T21:49:39.762Z" xmlns:GDOS="GDOS" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:wfs="http://www.opengis.net/wfs/2.0">
+  <wfs:member>
+    <GDOS:PomnikiPrzyrodyPunktowe gml:id="PomnikiPrzyrodyPunktowe.fid--27a05ee7_1a15b291353_-311e">
+      <GDOS:gid>245439</GDOS:gid>
+      <GDOS:geom><gml:Point srsDimension="2" srsName="urn:ogc:def:crs:EPSG::2180"><gml:pos>575509.9 295613.17</gml:pos></gml:Point></GDOS:geom>
+      <GDOS:kodinspire>PL.ZIPOP.1393.PP.0806013.1765</GDOS:kodinspire>
+      <GDOS:typ>jednoobiektowy</GDOS:typ>
+      <GDOS:obiekt>drzewo</GDOS:obiekt>
+      <GDOS:nazwa>Wojtek</GDOS:nazwa>
+      <GDOS:fop_id>122881</GDOS:fop_id>
+      <GDOS:gatunek>Dąb szypułkowy - Quercus robur</GDOS:gatunek>
+      <GDOS:data_utwor>2023-10-19Z</GDOS:data_utwor>
+    </GDOS:PomnikiPrzyrodyPunktowe>
+  </wfs:member>
+</wfs:FeatureCollection>
+

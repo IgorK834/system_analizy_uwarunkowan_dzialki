@@ -8,6 +8,7 @@ odpytanej warstwy (nie z atrybutu cechy), a każda warstwa wymaga osobnego
 zapytania.
 """
 
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,7 +16,7 @@ from pathlib import Path
 import httpx
 import pytest
 import respx
-from shapely.geometry import box
+from shapely.geometry import Point, box, shape
 
 from app.core.settings import settings
 from app.services.gdos import (
@@ -27,6 +28,7 @@ from app.services.gdos import (
     _parse_layer_response,
     _ratio_based_severity,
     fetch_nature_protection_areas,
+    fetch_nature_protection_section,
 )
 
 SQUARE_PARCEL = box(500000, 200000, 500100, 200100)
@@ -248,6 +250,10 @@ def test_all_declared_layers_map_to_known_protection_types() -> None:
         "GDOS:ZespolyPrzyrodniczoKrajobrazowe",
         "GDOS:StanowiskaDokumentacyjne",
         "GDOS:PomnikiPrzyrodyPowierzchniowe",
+        "GDOS:PomnikiPrzyrodyPunktowe",
+        "GDOS:ramsar",
+        "GDOS:korytarzeEkologiczne",
+        "GDOS:ElektrownieWiatrowe",
     }
     # Oba warianty Natura 2000 muszą dawać ten sam znormalizowany typ, bo
     # analysis_orchestrator odwzorowuje 'natura2000' na risk_type 'natura_2000'.
@@ -258,9 +264,10 @@ def test_all_declared_layers_map_to_known_protection_types() -> None:
 # --- Parsowanie odpowiedzi ----------------------------------------------------
 
 
-def test_empty_response_returns_empty_list() -> None:
+def test_valid_empty_collection_returns_empty_list_but_blank_response_is_unavailable() -> None:
     assert _parse_layer_response(EMPTY_GML) == []
-    assert _parse_layer_response("   ") == []
+    with pytest.raises(GdosServiceUnavailableError):
+        _parse_layer_response("   ")
 
 
 def test_geojson_without_geometry_is_ignored() -> None:
@@ -271,7 +278,7 @@ def test_geojson_without_geometry_is_ignored() -> None:
     assert _parse_layer_response(payload) == []
 
 
-def test_geojson_non_polygon_geometry_is_ignored() -> None:
+def test_geojson_point_geometry_is_parsed() -> None:
     payload = json.dumps(
         {
             "type": "FeatureCollection",
@@ -284,7 +291,28 @@ def test_geojson_non_polygon_geometry_is_ignored() -> None:
         }
     )
 
-    assert _parse_layer_response(payload) == []
+    parsed = _parse_layer_response(payload)
+    assert len(parsed) == 1
+    assert parsed[0].geometry.equals(Point(1, 2))
+
+
+def test_point_monument_distance_uses_parcel_polygon_and_has_no_fake_area() -> None:
+    feature = _build_nature_protection_feature(
+        SQUARE_PARCEL,
+        Point(500250, 200050),
+        {"nazwa": "Dąb testowy"},
+        "https://example.test/gdos",
+        datetime.now(UTC),
+        protection_type="pomnik_przyrody",
+        include_near=True,
+        search_radius_m=200.0,
+        layer_name="GDOS:PomnikiPrzyrodyPunktowe",
+    )
+
+    assert feature is not None
+    assert feature.proximity_status == "near"
+    assert feature.distance_m == pytest.approx(150.0)
+    assert feature.intersection_area_sqm == 0.0
 
 
 def test_real_getfeature_fixture_is_parsed_with_swapped_axes() -> None:
@@ -322,6 +350,136 @@ def test_real_getfeature_fixture_tolerates_missing_name() -> None:
     assert feature is not None
     assert feature.name is None
     assert feature.protection_type == "pomnik_przyrody"
+
+
+@pytest.mark.parametrize(
+    ("filename", "layer", "expected_name", "expected_xy"),
+    [
+        (
+            "monument-point.xml",
+            "PomnikiPrzyrodyPunktowe",
+            "Wojtek",
+            (295613.17, 575509.9),
+        ),
+        (
+            "wind-turbine.xml",
+            "ElektrownieWiatrowe",
+            "Budowa elektrowni wiatrowej o mocy 1,5 Mwe w miejscowści Bargły",
+            (508490.717309904, 315524.8191028603),
+        ),
+    ],
+)
+def test_real_point_contract_fixtures_preserve_axis_order_and_name(
+    filename: str,
+    layer: str,
+    expected_name: str,
+    expected_xy: tuple[float, float],
+) -> None:
+    payload = (_CONTRACTS / "gdos_proximity" / filename).read_text(encoding="utf-8")
+
+    parsed = _parse_layer_response(payload)
+
+    assert len(parsed) == 1
+    assert parsed[0].layer == layer
+    assert parsed[0].geometry.x == pytest.approx(expected_xy[0])
+    assert parsed[0].geometry.y == pytest.approx(expected_xy[1])
+    assert (
+        parsed[0].properties.get("nazwa")
+        or parsed[0].properties.get("nazwa_przedsiewziecia")
+    ) == expected_name
+
+
+def test_real_audit_parcel_has_no_monuments_within_200m_and_keeps_response_hashes() -> None:
+    root = _CONTRACTS / "gdos_proximity"
+    evidence = json.loads((root / "gora-kalwaria-verification.json").read_text(encoding="utf-8"))
+
+    for kind in ("point", "surface"):
+        path = root / f"gora-kalwaria-monuments-{kind}-empty.xml"
+        payload = path.read_text(encoding="utf-8")
+        assert _parse_layer_response(payload) == []
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == evidence["monuments"][f"{kind}_fixture_sha256"]
+
+    assert evidence["parcel_identifier"] == "141801_4.0701.23/8"
+    assert evidence["protected_landscape"]["name"] == "Warszawski"
+    assert evidence["protected_landscape"]["intersection_pct"] == 100.0
+    assert evidence["monuments"]["search_radius_m"] == 200.0
+
+
+@pytest.mark.parametrize(
+    (
+        "filename",
+        "layer",
+        "expected_sha256",
+        "expected_name",
+        "expected_area_sqm",
+        "expected_area_ratio",
+        "expected_severity",
+    ),
+    [
+        (
+            "ruciane-nida-birds.xml",
+            "GDOS:ObszarySpecjalnejOchrony",
+            "f0bc9dd6c9fc74379e40b339a45f1a65934d07dad1bbc67de6422c8334e03911",
+            "Puszcza Piska",
+            265703.139,
+            1.0,
+            "high",
+        ),
+        (
+            "ruciane-nida-habitats.xml",
+            "GDOS:SpecjalneObszaryOchrony",
+            "6314e89cd5e938000e37bdacdca13307ba5a257887dcd4f7e03437fcd2189a33",
+            "Ostoja Piska",
+            2766.727,
+            0.01041285,
+            "low",
+        ),
+    ],
+)
+def test_real_ruciane_nida_parcel_intersects_natura_2000_contract_fixtures(
+    filename: str,
+    layer: str,
+    expected_sha256: str,
+    expected_name: str,
+    expected_area_sqm: float,
+    expected_area_ratio: float,
+    expected_severity: str,
+) -> None:
+    """Regresja odbiorowa dla rzeczywistej działki z Rucianego-Nidy."""
+    fixture_path = _CONTRACTS / "gdos_proximity" / filename
+    payload = fixture_path.read_text(encoding="utf-8")
+    parcel_path = (
+        Path(__file__).resolve().parent
+        / "fixtures"
+        / "reference_corpus"
+        / "artifacts"
+        / "parcels"
+        / "real-026-281604-5-0011-107.geojson"
+    )
+    parcel = shape(json.loads(parcel_path.read_text(encoding="utf-8"))["geometry"])
+
+    parsed = _parse_layer_response(payload, layer)
+
+    assert hashlib.sha256(fixture_path.read_bytes()).hexdigest() == expected_sha256
+    assert len(parsed) == 1
+    feature = _build_nature_protection_feature(
+        parcel,
+        parsed[0].geometry,
+        parsed[0].properties,
+        "https://sdi.gdos.gov.pl/wfs",
+        datetime(2026, 10, 21, tzinfo=UTC),
+        protection_type="natura2000",
+        feature_id=parsed[0].feature_id,
+        layer_name=layer,
+    )
+
+    assert feature is not None
+    assert feature.name == expected_name
+    assert feature.protection_type == "natura2000"
+    assert feature.proximity_status == "intersection"
+    assert feature.intersection_area_sqm == pytest.approx(expected_area_sqm, abs=1.0)
+    assert feature.area_ratio == pytest.approx(expected_area_ratio, abs=0.0001)
+    assert feature.severity == expected_severity
 
 
 def test_exception_report_with_http_200_raises_not_empty_list() -> None:
@@ -433,7 +591,19 @@ async def test_fetch_sends_bbox_with_epsg2180() -> None:
     assert "EPSG:2180" in route.calls.last.request.url.params["bbox"]
     # Kolejność bbox to (minE,minN,maxE,maxN) — odwrotny bbox usługa odrzuca.
     assert route.calls.last.request.url.params["bbox"].startswith(
-        "500000.0,200000.0,500100.0,200100.0"
+        "499000.0,199000.0,501100.0,201100.0"
+    )
+    monument_calls = [
+        call
+        for call in route.calls
+        if call.request.url.params["typeNames"]
+        in {"GDOS:PomnikiPrzyrodyPowierzchniowe", "GDOS:PomnikiPrzyrodyPunktowe"}
+    ]
+    assert all(
+        call.request.url.params["bbox"].startswith(
+            "499800.0,199800.0,500300.0,200300.0"
+        )
+        for call in monument_calls
     )
 
 
@@ -465,5 +635,22 @@ async def test_risk_feature_has_source_metadata_gdos() -> None:
 
     result = await fetch_nature_protection_areas(SQUARE_PARCEL)
 
-    assert result[0].source_metadata.source_name == "GDOS"
+    assert result[0].source_metadata.source_name == "GDOŚ"
     assert result[0].source_metadata.manual_review_required is False
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_empty_layers_return_explicit_none_within_radius_per_layer() -> None:
+    respx.get(settings.gdos_wfs_base_url).mock(
+        return_value=httpx.Response(200, text=EMPTY_GML)
+    )
+
+    section = await fetch_nature_protection_section(SQUARE_PARCEL)
+
+    assert section.features == []
+    assert len(section.proximities) == len(GDOS_PROTECTION_LAYERS) == 14
+    assert all(item.status == "none_within_radius" for item in section.proximities)
+    monuments = [item for item in section.proximities if "Pomniki" in item.label]
+    assert len(monuments) == 2
+    assert all(item.search_radius_m == 200.0 for item in monuments)
