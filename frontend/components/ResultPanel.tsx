@@ -74,6 +74,8 @@ import {
   RISK_LINE_COLOR,
   RISK_LINE_LAYER_ID,
   RISK_LINE_WIDTH,
+  RISK_POINT_LAYER_ID,
+  RISK_POINT_RADIUS,
   RISK_SOURCE_ID,
   ROAD_FILL_LAYER_ID,
   ROAD_LINE_COLOR,
@@ -106,6 +108,7 @@ import type {
   MpzpZoneResult,
   PogZoneResult,
   RiskResult,
+  RiskSectionResult,
   SourceMetadata,
   WarningMessage,
 } from "@/lib/types";
@@ -200,11 +203,14 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
       sourceId: RISK_SOURCE_ID,
       fillLayerId: RISK_FILL_LAYER_ID,
       lineLayerId: RISK_LINE_LAYER_ID,
+      circleLayerId: RISK_POINT_LAYER_ID,
       geojson: risksGeojson,
       fillColor: RISK_FILL_COLOR,
       fillOpacity: RISK_FILL_OPACITY,
       lineColor: RISK_LINE_COLOR,
       lineWidth: RISK_LINE_WIDTH,
+      circleColor: RISK_FILL_COLOR,
+      circleRadius: RISK_POINT_RADIUS,
     });
     addOrUpdateGeojsonLayer(map, {
       sourceId: BUILDINGS_SOURCE_ID,
@@ -318,6 +324,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         sourceId: RISK_SOURCE_ID,
         fillLayerId: RISK_FILL_LAYER_ID,
         lineLayerId: RISK_LINE_LAYER_ID,
+        circleLayerId: RISK_POINT_LAYER_ID,
       });
       removeGeojsonLayer(map, {
         sourceId: BUILDINGS_SOURCE_ID,
@@ -417,7 +424,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
     if (!map || !layersReadyRef.current) return;
     setLayerVisibility(
       map,
-      [RISK_FILL_LAYER_ID, RISK_LINE_LAYER_ID],
+      [RISK_FILL_LAYER_ID, RISK_LINE_LAYER_ID, RISK_POINT_LAYER_ID],
       risksVisible,
     );
   }, [map, risksVisible]);
@@ -575,7 +582,7 @@ export function ResultPanel({ result, map }: ResultPanelProps) {
         <CompatibilityAssessmentCard assessment={result.pog.compatibility_assessment} />
       )}
       <InfrastructureSection items={result.infrastructure} />
-      <RisksSection items={result.risks} />
+      <RisksSection items={result.risks} sections={result.risk_sections ?? []} />
       <TerrainCard terrain={result.terrain} />
       <RoadContextCard road={result.road_context} />
       <BuildingsCard buildings={result.neighbour_buildings} />
@@ -866,11 +873,66 @@ function InfrastructureSection({ items }: { items: InfrastructureResult[] }) {
   );
 }
 
-function RisksSection({ items }: { items: RiskResult[] }) {
+const RISK_SECTION_LABEL: Record<RiskSectionResult["section"], string> = {
+  flood: "Zagrożenie powodziowe",
+  nature: "Przyroda i obiekty środowiskowe",
+};
+
+function proximityText(item: RiskSectionResult["proximities"][number]): string {
+  if (item.status === "intersection") return "przecina działkę (0 m)";
+  if (item.status === "near" && item.distance_m !== null) {
+    return `${item.distance_m.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} m od granicy działki`;
+  }
+  return `brak obiektu w promieniu ${item.search_radius_m.toLocaleString("pl-PL")} m`;
+}
+
+function RisksSection({
+  items,
+  sections,
+}: {
+  items: RiskResult[];
+  sections: RiskSectionResult[];
+}) {
   return (
     <section className="result-section" aria-label="Ryzyka środowiskowe i przestrzenne">
       <h3>Ryzyka</h3>
-      {items.length === 0 && (
+      {sections.map((section) => (
+        <article key={section.section} className="result-list-item">
+          <strong>{RISK_SECTION_LABEL[section.section]}</strong>
+          {section.status !== "available" ? (
+            <p className="manual-review">
+              Dane niedostępne ({section.reason_code ?? "nieustalona przyczyna"}). Brak wyniku nie oznacza braku ograniczeń.
+            </p>
+          ) : (
+            <>
+              {section.relation === "none_within_radius" && (
+                <p className="section-empty">Nie wykryto obiektów w sprawdzonych promieniach.</p>
+              )}
+              {section.nearest_distance_m !== null && (
+                <p>
+                  Najbliższy obiekt: {section.nearest_distance_m.toLocaleString("pl-PL", { maximumFractionDigits: 1 })} m od granicy działki.
+                </p>
+              )}
+              <ul className="result-list">
+                {section.proximities.map((proximity) => (
+                  <li key={`${section.section}-${proximity.layer_name}`}>
+                    <span>{proximity.label}: {proximityText(proximity)}</span>
+                    {proximity.name && <span> · {proximity.name}</span>}
+                    {proximity.informational_only && <span> · informacja geometryczna</span>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {section.preliminary_assessment?.status === "contract_required" && (
+            <p className="field-hint">
+              Wstępna ocena {section.preliminary_assessment.method}: niewyliczona — kontrakt wymaga potwierdzenia. {section.preliminary_assessment.note}
+            </p>
+          )}
+          <ConfidenceBadge source={section.source} />
+        </article>
+      ))}
+      {sections.length === 0 && items.length === 0 && (
         <p className="section-empty">
           Nie sprawdzono albo nie wykryto ryzyk środowiskowych ani przestrzennych.
         </p>
@@ -1029,13 +1091,16 @@ type GeojsonLayerConfig = {
   lineColor: string;
   lineWidth: number;
   lineDasharray?: [number, number];
+  circleLayerId?: string;
+  circleColor?: string;
+  circleRadius?: number;
 };
 
 function addOrUpdateGeojsonLayer(map: maplibregl.Map, config: GeojsonLayerConfig): void {
-  const { sourceId, fillLayerId, lineLayerId, geojson } = config;
+  const { sourceId, fillLayerId, lineLayerId, circleLayerId, geojson } = config;
 
   if (!geojson) {
-    removeGeojsonLayer(map, { sourceId, fillLayerId, lineLayerId });
+    removeGeojsonLayer(map, { sourceId, fillLayerId, lineLayerId, circleLayerId });
     return;
   }
 
@@ -1075,12 +1140,34 @@ function addOrUpdateGeojsonLayer(map: maplibregl.Map, config: GeojsonLayerConfig
       ...(config.lineDasharray ? { "line-dasharray": config.lineDasharray } : {}),
     },
   });
+
+  if (circleLayerId) {
+    map.addLayer({
+      id: circleLayerId,
+      type: "circle",
+      source: sourceId,
+      paint: {
+        "circle-color": config.circleColor ?? config.lineColor,
+        "circle-radius": config.circleRadius ?? 5,
+        "circle-stroke-color": config.lineColor,
+        "circle-stroke-width": 1.5,
+      },
+    });
+  }
 }
 
 function removeGeojsonLayer(
   map: maplibregl.Map,
-  config: { sourceId: string; fillLayerId: string; lineLayerId: string },
+  config: {
+    sourceId: string;
+    fillLayerId: string;
+    lineLayerId: string;
+    circleLayerId?: string;
+  },
 ): void {
+  if (config.circleLayerId && map.getLayer(config.circleLayerId)) {
+    map.removeLayer(config.circleLayerId);
+  }
   if (map.getLayer(config.lineLayerId)) map.removeLayer(config.lineLayerId);
   if (map.getLayer(config.fillLayerId)) map.removeLayer(config.fillLayerId);
   if (map.getSource(config.sourceId)) map.removeSource(config.sourceId);

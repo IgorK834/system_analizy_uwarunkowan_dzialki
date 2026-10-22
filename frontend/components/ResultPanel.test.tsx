@@ -177,6 +177,101 @@ describe("ResultPanel", () => {
     expect(screen.getByText("Dane częściowe")).toBeVisible();
   });
 
+  it("pokazuje odległości powodziowe, brak pomników w 200 m i jawny stan WORP", () => {
+    const source = {
+      source_id: "isok",
+      source_name: "ISOK",
+      source_url: null,
+      fetched_at: "2026-10-20T20:00:00Z",
+      response_status: 200,
+      confidence: 0.85,
+      manual_review_required: false,
+    };
+    const result = buildAnalyzeResponse({
+      risk_sections: [
+        {
+          schema_version: "2.0",
+          section: "flood",
+          status: "available",
+          reason_code: null,
+          relation: "near",
+          feature_count: 1,
+          intersecting_feature_count: 0,
+          boundary_feature_count: 0,
+          near_feature_count: 1,
+          union_intersection_area_sqm: 0,
+          union_intersection_pct: 0,
+          feature_ids: ["HA-Q10"],
+          nearest_distance_m: 163.395,
+          proximities: [
+            {
+              category: "q10",
+              label: "Q10 (10%, raz na 10 lat)",
+              layer_name: "nz-core:HazardArea",
+              status: "near",
+              search_radius_m: 1000,
+              distance_m: 163.395,
+              feature_id: "HA-Q10",
+              name: null,
+              probability_class: "scenariusz Q 10% (raz na 10 lat)",
+              return_period_years: 10,
+              informational_only: false,
+            },
+          ],
+          preliminary_assessment: {
+            status: "contract_required",
+            method: "WORP",
+            reason_code: "WORP_CONTRACT_NOT_CONFIRMED",
+            source_layers: ["nz-core:RiskZone"],
+            value: null,
+            note: "Nie potwierdzono równoważności produktu.",
+          },
+          source,
+          warnings: [],
+        },
+        {
+          schema_version: "2.0",
+          section: "nature",
+          status: "available",
+          reason_code: null,
+          relation: "none_within_radius",
+          feature_count: 0,
+          intersecting_feature_count: 0,
+          boundary_feature_count: 0,
+          near_feature_count: 0,
+          union_intersection_area_sqm: 0,
+          union_intersection_pct: 0,
+          feature_ids: [],
+          nearest_distance_m: null,
+          proximities: [
+            {
+              category: "pomnik_przyrody",
+              label: "Pomniki przyrody (punktowe)",
+              layer_name: "GDOS:PomnikiPrzyrodyPunktowe",
+              status: "none_within_radius",
+              search_radius_m: 200,
+              distance_m: null,
+              feature_id: null,
+              name: null,
+              probability_class: null,
+              return_period_years: null,
+              informational_only: false,
+            },
+          ],
+          preliminary_assessment: null,
+          source: { ...source, source_id: "gdos", source_name: "GDOŚ" },
+          warnings: [],
+        },
+      ],
+    });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getAllByText(/163,4 m od granicy działki/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Pomniki przyrody \(punktowe\): brak obiektu w promieniu 200 m/)).toBeVisible();
+    expect(screen.getByText(/Wstępna ocena WORP: niewyliczona — kontrakt wymaga potwierdzenia/)).toBeVisible();
+  });
+
   it("dodaje warstwy GeoJSON działki i obszaru zabudowy na mapie", () => {
     const result = buildAnalyzeResponse({
       parcel: {
