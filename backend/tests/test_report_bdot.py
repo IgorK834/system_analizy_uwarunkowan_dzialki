@@ -50,7 +50,7 @@ def test_the_nearest_road_table_shows_distance_relation_category_class_and_the_r
 def test_every_road_state_without_a_road_says_that_data_does_not_mean_no_road() -> None:
     expectations = {
         "no_match": ("nic nie znaleziono w ograniczonym zasięgu", "nie dowodzi braku drogi"),
-        "no_coverage": ("brak pokrycia", "Brak danych nie oznacza braku drogi"),
+        "no_coverage": ("brak pełnego pokrycia", "Brak danych nie oznacza braku drogi"),
         "unavailable": ("źródło niedostępne", "Brak danych nie oznacza braku drogi"),
     }
     for status, (label, phrase) in expectations.items():
