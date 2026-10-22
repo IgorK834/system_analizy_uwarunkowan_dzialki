@@ -218,9 +218,7 @@ async def run_analysis(
     async def reuse() -> AnalyzeResponse | None:
         # Po zdjęciu blokady (także tej między workerami) wynik mógł już zostać zapisany.
         if force_refresh:
-            row = await asyncio.to_thread(
-                get_analysis_completed_since, parcel_identifier, db, requested_at
-            )
+            row = await asyncio.to_thread(get_analysis_completed_since, parcel_identifier, db, requested_at)
         else:
             row = await asyncio.to_thread(get_cached_analysis, parcel_identifier, db)
         if row is None:
@@ -253,9 +251,7 @@ async def _resolve_parcel_shared(
     )
 
 
-async def _cached_response(
-    cached: Analysis, db: Session, parcel_identifier: str, started: float
-) -> AnalyzeResponse:
+async def _cached_response(cached: Analysis, db: Session, parcel_identifier: str, started: float) -> AnalyzeResponse:
     response = await asyncio.to_thread(build_analyze_response_from_analysis, cached, db)
     elapsed_ms = _elapsed_ms(started)
     log_analysis_event(
@@ -275,9 +271,7 @@ async def _cached_response(
     return response
 
 
-async def _analyze_uncached(
-    lookup: ParcelLookupResult, db: Session, started: float
-) -> AnalyzeResponse:
+async def _analyze_uncached(lookup: ParcelLookupResult, db: Session, started: float) -> AnalyzeResponse:
     """Pełna analiza po chybieniu cache: GIS, kontekst, MPZP, POG, ocena jakości i zapis."""
     parcel_identifier = lookup.parcel_identifier
     log_analysis_event(
@@ -313,8 +307,7 @@ async def _analyze_uncached(
                 setback.buildable_geometry,
                 setback.setback_m,
             )
-            if not setback.buildable_geometry.is_empty
-            and setback.buildable_area_sqm > 0.0
+            if not setback.buildable_geometry.is_empty and setback.buildable_area_sqm > 0.0
             else None
         ),
     )
@@ -343,9 +336,7 @@ async def _analyze_uncached(
     warnings.extend(terrain_warnings(terrain))
     # Droga i zabudowa sąsiednia z lokalnego wydania BDOT10k (Task 23.2–23.3): zapytania PostGIS na sesji ``db`` biegną
     # sekwencyjnie w wątku roboczym (sesja nie jest bezpieczna współbieżnie), a ich porażka to jawne ``unavailable``.
-    road_context, neighbour_buildings = await asyncio.to_thread(
-        _analyze_bdot_context_safely, db, parcel_geometry
-    )
+    road_context, neighbour_buildings = await asyncio.to_thread(_analyze_bdot_context_safely, db, parcel_geometry)
     warnings.extend(bdot_warnings(road_context, neighbour_buildings))
     land_cover = missing_land_cover("unavailable", "FEATURE_DISABLED")
     if settings.land_cover_enabled:
@@ -354,8 +345,15 @@ async def _analyze_uncached(
         except Exception as exc:
             log_analysis_event("section_error", section="land_cover", status=type(exc).__name__)
             land_cover = missing_land_cover("unavailable", "UNEXPECTED_ERROR")
-    warnings.extend(WarningMessage(code=f"LAND_COVER_{land_cover.reason_code or 'WARNING'}", message=m,
-                    severity="warning", source_name="bdot10k") for m in land_cover.warnings)
+    warnings.extend(
+        WarningMessage(
+            code=f"LAND_COVER_{land_cover.reason_code or 'WARNING'}",
+            message=m,
+            severity="warning",
+            source_name="bdot10k",
+        )
+        for m in land_cover.warnings
+    )
     # Status i provenance sekcji ryzyka niezależnie od listy obiektów (BK-303).
     risk_sections = [
         build_risk_section("flood", context.isok, parcel_geometry),
@@ -366,9 +364,7 @@ async def _analyze_uncached(
     # wydzieleń dla całej analizy, a zapisany snapshot nie zależy od
     # późniejszego przełączenia wydania.
     mpzp_as_of = datetime.now(timezone.utc)
-    vector, vector_warnings = await asyncio.to_thread(
-        _assess_mpzp_vectors_safely, db, parcel_geometry, mpzp_as_of
-    )
+    vector, vector_warnings = await asyncio.to_thread(_assess_mpzp_vectors_safely, db, parcel_geometry, mpzp_as_of)
     warnings.extend(vector_warnings)
     # Kanały MPZP pytane równolegle (AU-101): KIMPZP (punkty, bez geometrii) i Rejestr Urbanistyczny (granice aktów).
     (discovery, discovery_warnings), ru_channel = await asyncio.gather(
@@ -407,9 +403,7 @@ async def _analyze_uncached(
         )
         pog = with_presentation_style(pog)
         warnings.extend(scenario_warnings)
-        pending_document, pending_warnings = await _pin_pending_document(
-            discovery.uchwala_url, parcel_identifier
-        )
+        pending_document, pending_warnings = await _pin_pending_document(discovery.uchwala_url, parcel_identifier)
         warnings.extend(pending_warnings)
         warnings.append(
             WarningMessage(
@@ -443,7 +437,12 @@ async def _analyze_uncached(
             manual_zone_required=True,
             warnings=warnings,
             sources=_unique_sources(
-                [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings), *([land_cover.source] if land_cover.source else [])]
+                [
+                    *sources,
+                    *terrain_sources(terrain),
+                    *bdot_sources(road_context, neighbour_buildings),
+                    *([land_cover.source] if land_cover.source else []),
+                ]
             ),
         )
         # BK-504: ocena jakości z punktem odniesienia analyzed_at trafia do
@@ -478,24 +477,19 @@ async def _analyze_uncached(
     llm_budget = new_analysis_llm_budget(started=started)  # termin liczony od startu analizy
     if has_vector_zones:
         assert vector is not None
-        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
-            await _analyze_mpzp_vector_zones(vector, discovery, parcel_identifier, db, llm_budget=llm_budget)
+        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = await _analyze_mpzp_vector_zones(
+            vector, discovery, parcel_identifier, db, llm_budget=llm_budget
         )
     else:
-        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = (
-            await _analyze_mpzp_best_effort(
-                discovery,
-                metrics.area_sqm,
-                parcel_identifier,
-                db,
-                llm_budget=llm_budget,
-            )
+        mpzp_zones, mpzp_warnings, mpzp_sources, parser_status = await _analyze_mpzp_best_effort(
+            discovery,
+            metrics.area_sqm,
+            parcel_identifier,
+            db,
+            llm_budget=llm_budget,
         )
         if mpzp_zones:
-            mpzp_zones = [
-                cap_fallback_zone(zone, assignment_method="document_candidate")
-                for zone in mpzp_zones
-            ]
+            mpzp_zones = [cap_fallback_zone(zone, assignment_method="document_candidate") for zone in mpzp_zones]
             mpzp_sources = [
                 source.model_copy(
                     update={
@@ -550,7 +544,12 @@ async def _analyze_uncached(
         manual_zone_required=False,
         warnings=warnings,
         sources=_unique_sources(
-            [*sources, *terrain_sources(terrain), *bdot_sources(road_context, neighbour_buildings), *([land_cover.source] if land_cover.source else [])]
+            [
+                *sources,
+                *terrain_sources(terrain),
+                *bdot_sources(road_context, neighbour_buildings),
+                *([land_cover.source] if land_cover.source else []),
+            ]
         ),
     )
     response = with_completeness(with_section_quality(response))
@@ -594,19 +593,13 @@ def _acts_contract_safely(resolution: MpzpActsResolution) -> list[MpzpActResult]
         return []
 
 
-def _mpzp_status_safely(
-    resolution: MpzpActsResolution, *, has_zones: bool, manual_zone_required: bool
-) -> MpzpStatus:
+def _mpzp_status_safely(resolution: MpzpActsResolution, *, has_zones: bool, manual_zone_required: bool) -> MpzpStatus:
     """Stan MPZP; przy błędzie obliczenia jawne ``unknown`` — nigdy „nie znaleziono planu”."""
     try:
-        return build_mpzp_status(
-            resolution, has_zones=has_zones, manual_zone_required=manual_zone_required
-        )
+        return build_mpzp_status(resolution, has_zones=has_zones, manual_zone_required=manual_zone_required)
     except Exception as exc:  # noqa: BLE001
         log_analysis_event("section_error", section="mpzp_status", status=type(exc).__name__)
-        return build_mpzp_status(
-            unresolved_resolution(resolution.parcel), has_zones=False, manual_zone_required=False
-        )
+        return build_mpzp_status(unresolved_resolution(resolution.parcel), has_zones=False, manual_zone_required=False)
 
 
 def _discovery_with_selected_act(
@@ -626,9 +619,7 @@ def _discovery_with_selected_act(
         candidate_zone_symbols=list(act.zone_symbols),
         multiple_acts_at_point=False,
         multiple_acts_on_parcel=False,
-        reason_codes=[
-            code for code in discovery.reason_codes if code != "MPZP_MULTIPLE_ACTS_AT_POINT"
-        ],
+        reason_codes=[code for code in discovery.reason_codes if code != "MPZP_MULTIPLE_ACTS_AT_POINT"],
     )
 
 
@@ -646,18 +637,10 @@ async def _analyze_context_safely(parcel_geometry: BaseGeometry) -> ContextResul
             "KIUT, ISOK, GDOŚ i NMT wymagają ręcznej weryfikacji."
         )
         return ContextResult(
-            kiut=ContextSectionResult(
-                section="kiut", status="error", warnings=[message]
-            ),
-            isok=ContextSectionResult(
-                section="isok", status="error", warnings=[message]
-            ),
-            gdos=ContextSectionResult(
-                section="gdos", status="error", warnings=[message]
-            ),
-            nmt=ContextSectionResult(
-                section="nmt", status="error", warnings=[message]
-            ),
+            kiut=ContextSectionResult(section="kiut", status="error", warnings=[message]),
+            isok=ContextSectionResult(section="isok", status="error", warnings=[message]),
+            gdos=ContextSectionResult(section="gdos", status="error", warnings=[message]),
+            nmt=ContextSectionResult(section="nmt", status="error", warnings=[message]),
         )
 
 
@@ -689,10 +672,7 @@ async def _analyze_terrain_relief_safely(
                 complete=False,
                 error_code=type(exc).__name__,
             ),
-            warnings=(
-                "Wystąpił nieoczekiwany błąd analizy rastra NMT — spadku i "
-                "ekspozycji nie policzono.",
-            ),
+            warnings=("Wystąpił nieoczekiwany błąd analizy rastra NMT — spadku i ekspozycji nie policzono.",),
         )
 
 
@@ -793,10 +773,7 @@ async def _discover_mpzp_safely(
         return None, [
             WarningMessage(
                 code="MPZP_DISCOVERY_ERROR",
-                message=(
-                    "Nie udało się rozpoznać MPZP dla działki. Sekcja wymaga "
-                    "ręcznej weryfikacji."
-                ),
+                message=("Nie udało się rozpoznać MPZP dla działki. Sekcja wymaga ręcznej weryfikacji."),
                 severity="error",
                 source_name="mpzp",
             )
@@ -823,20 +800,15 @@ def _assess_mpzp_vectors_safely(
     # naprawie dokłada ``assess_vector_zones`` na podstawie oryginału.
     query_geometry = parcel_geometry if parcel_geometry.is_valid else make_valid(parcel_geometry)
     try:
-        rows = find_mpzp_zone_intersections(
-            db, GeometryPayload(query_geometry.wkt), as_of=as_of
-        )
+        rows = find_mpzp_zone_intersections(db, GeometryPayload(query_geometry.wkt), as_of=as_of)
     except Exception as exc:
         db.rollback()
-        log_analysis_event(
-            "section_error", section="mpzp_vector", status=type(exc).__name__
-        )
+        log_analysis_event("section_error", section="mpzp_vector", status=type(exc).__name__)
         return None, [
             WarningMessage(
                 code="MPZP_VECTOR_QUERY_FAILED",
                 message=(
-                    "Nie udało się odczytać lokalnych wydzieleń MPZP; użyto "
-                    "ścieżki zastępczej z obniżoną pewnością."
+                    "Nie udało się odczytać lokalnych wydzieleń MPZP; użyto ścieżki zastępczej z obniżoną pewnością."
                 ),
                 severity="warning",
                 source_name="mpzp",
@@ -881,17 +853,19 @@ async def _parse_document_with_audit(
             status=type(exc).__name__,
             parcel_identifier=parcel_identifier,
         )
-        return None, None, DocumentEvidenceContext(act_version=act_version), [
-            WarningMessage(
-                code="MPZP_DOCUMENT_UNAVAILABLE",
-                message=(
-                    "Nie udało się bezpiecznie pobrać dokumentu MPZP. Pozostałe "
-                    "sekcje analizy są dostępne."
-                ),
-                severity="warning",
-                source_name="mpzp",
-            )
-        ]
+        return (
+            None,
+            None,
+            DocumentEvidenceContext(act_version=act_version),
+            [
+                WarningMessage(
+                    code="MPZP_DOCUMENT_UNAVAILABLE",
+                    message=("Nie udało się bezpiecznie pobrać dokumentu MPZP. Pozostałe sekcje analizy są dostępne."),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            ],
+        )
 
     warnings = [
         WarningMessage(
@@ -1022,10 +996,7 @@ async def _analyze_mpzp_vector_zones(
                 warnings.append(
                     WarningMessage(
                         code="MPZP_ZONE_PARAMETERS_NOT_FOUND",
-                        message=(
-                            f"Nie znaleziono parametrów strefy {zones[index].zone_symbol} "
-                            "w dokumencie uchwały."
-                        ),
+                        message=(f"Nie znaleziono parametrów strefy {zones[index].zone_symbol} w dokumencie uchwały."),
                         severity="warning",
                         source_name="mpzp",
                     )
@@ -1049,7 +1020,8 @@ async def _analyze_mpzp_vector_zones(
                     )
                 )
     parser_status = (
-        "complete" if statuses and all(status == "complete" for status in statuses)
+        "complete"
+        if statuses and all(status == "complete" for status in statuses)
         else (statuses[0] if statuses else None)
     )
     return zones, warnings, sources, parser_status
@@ -1068,17 +1040,19 @@ async def _analyze_mpzp_best_effort(
     str | None,
 ]:
     if discovery is None or discovery.status == "no_match":
-        return [], [
-            WarningMessage(
-                code="MPZP_NOT_FOUND",
-                message=(
-                    "Nie znaleziono danych MPZP pozwalających przypisać strefę "
-                    "do działki."
-                ),
-                severity="warning",
-                source_name="mpzp",
-            )
-        ], [], None
+        return (
+            [],
+            [
+                WarningMessage(
+                    code="MPZP_NOT_FOUND",
+                    message=("Nie znaleziono danych MPZP pozwalających przypisać strefę do działki."),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            ],
+            [],
+            None,
+        )
     if discovery.status in {"no_coverage", "unavailable", "unknown"}:
         # Brak usługi, błąd źródła i nierozpoznana odpowiedź mają własne kody
         # z discovery — to nie jest „nie znaleziono planu”.
@@ -1096,24 +1070,27 @@ async def _analyze_mpzp_best_effort(
             if not discovery.uchwala_url
             else "symbolu strefy (warstwa granic planów nie zawiera stref)"
         )
-        return [], [
-            WarningMessage(
-                code="MPZP_DOCUMENT_OR_SYMBOL_MISSING",
-                message=(
-                    f"KIMPZP wskazało {plan}, ale nie podało {missing}. Parametry "
-                    "strefy nie zostały ustalone — sprawdź rysunek i tekst planu."
-                ),
-                severity="warning",
-                source_name="mpzp",
-            )
-        ], [], None
+        return (
+            [],
+            [
+                WarningMessage(
+                    code="MPZP_DOCUMENT_OR_SYMBOL_MISSING",
+                    message=(
+                        f"KIMPZP wskazało {plan}, ale nie podało {missing}. Parametry "
+                        "strefy nie zostały ustalone — sprawdź rysunek i tekst planu."
+                    ),
+                    severity="warning",
+                    source_name="mpzp",
+                )
+            ],
+            [],
+            None,
+        )
 
     parsed, document_source, evidence, warnings = await _parse_document_with_audit(
         discovery.uchwala_url,
         discovery.candidate_zone_symbols,
-        planning_act_identifier=bounded_act_identifier(
-            discovery.plan_id, discovery.uchwala_url
-        ),
+        planning_act_identifier=bounded_act_identifier(discovery.plan_id, discovery.uchwala_url),
         act_version=None,
         parcel_identifier=parcel_identifier,
         db=db,
@@ -1185,10 +1162,7 @@ def _map_context(
         # Znana luka źródła (KIUT bez potwierdzonego kontraktu) to informacja,
         # nie awaria — nie może wyglądać jak błąd przy każdej analizie.
         severity: Literal["warning", "error"] = (
-            "error"
-            if section.status in {"unavailable", "error"}
-            and not section.is_known_source_gap
-            else "warning"
+            "error" if section.status in {"unavailable", "error"} and not section.is_known_source_gap else "warning"
         )
         warnings.extend(
             warnings_from_domain_messages(
@@ -1245,10 +1219,7 @@ def _map_context(
             warnings.append(
                 WarningMessage(
                     code="KIUT_NETWORK_RULE_MISSING",
-                    message=(
-                        f"Brak jawnej reguły bufora dla sieci "
-                        f"{feature.network_type!r}; wpis pominięto."
-                    ),
+                    message=(f"Brak jawnej reguły bufora dla sieci {feature.network_type!r}; wpis pominięto."),
                     severity="warning",
                     source_name="kiut",
                 )
@@ -1277,31 +1248,17 @@ def _map_context(
             sources.append(feature.source_metadata)
             continue
         matching_zone = next(
-            (
-                zone
-                for zone in network_result.zones
-                if zone.input_index == index
-            ),
+            (zone for zone in network_result.zones if zone.input_index == index),
             None,
         )
         infrastructure.append(
             InfrastructureResult(
                 network_type=feature.network_type,
                 buffer_m=rule.default_buffer_m,
-                zone_area_sqm=(
-                    matching_zone.zone_area_sqm if matching_zone is not None else 0.0
-                ),
-                rule_source=(
-                    matching_zone.source if matching_zone is not None else rule.source
-                ),
-                rule_confidence=(
-                    matching_zone.confidence
-                    if matching_zone is not None
-                    else rule.confidence
-                ),
-                rule_note=(
-                    matching_zone.note if matching_zone is not None else rule.note
-                ),
+                zone_area_sqm=(matching_zone.zone_area_sqm if matching_zone is not None else 0.0),
+                rule_source=(matching_zone.source if matching_zone is not None else rule.source),
+                rule_confidence=(matching_zone.confidence if matching_zone is not None else rule.confidence),
+                rule_note=(matching_zone.note if matching_zone is not None else rule.note),
                 # Strefa reguły symulacyjnej (bez zweryfikowanej podstawy) jest tylko
                 # przybliżeniem — nie pomniejsza obszaru zabudowy (BK-306).
                 affects_buildable_area=(
@@ -1340,8 +1297,6 @@ def _map_context(
     # prezentacją zbudowaną z tych pól.
     risks = [flood_risk_result(feature) for feature in context.isok.data]
     risks.extend(nature_risk_result(feature) for feature in context.gdos.data)
-    sources.extend(feature.source_metadata for feature in context.isok.data)
-    sources.extend(feature.source_metadata for feature in context.gdos.data)
     return (
         infrastructure,
         risks,
@@ -1429,13 +1384,9 @@ async def _analyze_pog_best_effort(
     local_error = False
     if db is not None:
         try:
-            local = await asyncio.to_thread(
-                _analyze_pog_local_release, db, parcel_geometry, teryt
-            )
+            local = await asyncio.to_thread(_analyze_pog_local_release, db, parcel_geometry, teryt)
         except Exception as exc:
-            log_analysis_event(
-                "section_error", section="pog_local_release", status=type(exc).__name__
-            )
+            log_analysis_event("section_error", section="pog_local_release", status=type(exc).__name__)
             local = None
             local_error = True
         if local is not None:
@@ -1456,14 +1407,16 @@ async def _analyze_pog_best_effort(
 
     local_warning = WarningMessage(
         code="POG_LOCAL_RELEASE_UNAVAILABLE" if local_error else "NO_LOCAL_RELEASE",
-        message=("Nie udało się sprawdzić lokalnego wydania POG." if local_error else
-                 "Brak lokalnych danych POG (≠ brak planu). Sprawdź pokrycie danych lub poproś o import gminy."),
-        severity="warning", source_name="pog",
+        message=(
+            "Nie udało się sprawdzić lokalnego wydania POG."
+            if local_error
+            else "Brak lokalnych danych POG (≠ brak planu). Sprawdź pokrycie danych lub poproś o import gminy."
+        ),
+        severity="warning",
+        source_name="pog",
     )
     if discovery is None or not discovery.source_responded:
-        failure = await asyncio.to_thread(
-            _pog_upstream_failure, parcel_geometry, teryt, db, discovery
-        )
+        failure = await asyncio.to_thread(_pog_upstream_failure, parcel_geometry, teryt, db, discovery)
         failure[2].append(local_warning)
         # Wykaz RU (``pog_ru_catalog``) może wskazywać plan gminy mimo awarii discovery — import jest zlecany w tle.
         queued = await asyncio.to_thread(request_commune_import, db, teryt, discovery_found_act=False)
@@ -1567,9 +1520,7 @@ async def _analyze_pog_best_effort(
     if parsed_date is not None and pog.uchwala_date is None:
         pog = pog.model_copy(update={"uchwala_date": parsed_date})
     # Issue 300 / ADR-026: RU ma plan tej gminy, a lokalnego stanu brak → import w tle, jawnie w odpowiedzi.
-    queued = await asyncio.to_thread(
-        request_commune_import, db, teryt, discovery_found_act=bool(discovery.act_found)
-    )
+    queued = await asyncio.to_thread(request_commune_import, db, teryt, discovery_found_act=bool(discovery.act_found))
     if queued is not None:
         warnings.append(queued.warning())
     return pog, ouz_status, warnings, _unique_sources(sources)
@@ -1603,17 +1554,20 @@ def _pog_upstream_failure(
         )
     )
     ouz_status = calculate_ouz_status(parcel_geometry, None)
-    warnings: list[WarningMessage] = list(discovery.warnings) if discovery else [
-        WarningMessage(
-            code="POG_DISCOVERY_ERROR",
-            message=(
-                "Nie udało się uruchomić discovery POG. Brak wyniku "
-                "nie oznacza braku ograniczeń planistycznych."
-            ),
-            severity="error",
-            source_name="pog",
-        )
-    ]
+    warnings: list[WarningMessage] = (
+        list(discovery.warnings)
+        if discovery
+        else [
+            WarningMessage(
+                code="POG_DISCOVERY_ERROR",
+                message=(
+                    "Nie udało się uruchomić discovery POG. Brak wyniku nie oznacza braku ograniczeń planistycznych."
+                ),
+                severity="error",
+                source_name="pog",
+            )
+        ]
+    )
     warnings.extend(ouz_status.warnings)
     warnings.extend(_status_warnings(decision))
     return (
@@ -1632,13 +1586,9 @@ def _previous_confirmed_status(
     if db is None:
         return None
     try:
-        row = last_confirmed_pog_status(
-            db, GeometryPayload(parcel_geometry.wkt), teryt=teryt
-        )
+        row = last_confirmed_pog_status(db, GeometryPayload(parcel_geometry.wkt), teryt=teryt)
     except Exception as exc:
-        log_analysis_event(
-            "section_error", section="pog_last_confirmed", status=type(exc).__name__
-        )
+        log_analysis_event("section_error", section="pog_last_confirmed", status=type(exc).__name__)
         return None
     if row is None or row.get("status_confirmed_at") is None:
         return None
@@ -1650,9 +1600,7 @@ def _previous_confirmed_status(
         source_name="Rejestr Urbanistyczny (ostatnie potwierdzone wydanie)",
         source_id="pog_app",
         official=True,
-        reference=(
-            f"data_release:{row.get('data_release_id')};sha256:{row.get('content_hash')}"
-        ),
+        reference=(f"data_release:{row.get('data_release_id')};sha256:{row.get('content_hash')}"),
         raw_value=str(raw),
         confirmed_at=row["status_confirmed_at"],
     )
@@ -1681,9 +1629,7 @@ def _analyze_pog_local_release(
         return None
     state_id = int(pinned_state["id"])
     parcel_payload = GeometryPayload(parcel_geometry.wkt)
-    acts = find_pog_acts_for_parcel(
-        db, parcel_payload, state_id=state_id, teryt=teryt
-    )
+    acts = find_pog_acts_for_parcel(db, parcel_payload, state_id=state_id, teryt=teryt)
     if not acts:
         return None
     acts.sort(
@@ -1724,9 +1670,17 @@ def _analyze_pog_local_release(
     if act_result is not None and act_result.metadata is not None:
         metadata = act_result.metadata
         day = metadata.revision_date or metadata.publication_date or metadata.creation_date
-        basis = "ISO19139:revision" if metadata.revision_date else "ISO19139:publication" if metadata.publication_date else "ISO19139:creation"
+        basis = (
+            "ISO19139:revision"
+            if metadata.revision_date
+            else "ISO19139:publication"
+            if metadata.publication_date
+            else "ISO19139:creation"
+        )
         if day is not None:
-            vector_data = replace(vector_data, source_metadata=vector_data.source_metadata.model_copy(update=dataset_date(day, basis)))
+            vector_data = replace(
+                vector_data, source_metadata=vector_data.source_metadata.model_copy(update=dataset_date(day, basis))
+            )
     raw_status = primary.get("raw_legal_status")
     confirmed_at = primary.get("status_confirmed_at") or pinned.get("fetched_at")
     evidence = StatusEvidence(
@@ -1763,9 +1717,7 @@ def _analyze_pog_local_release(
                 legal_evidence=evidence,
                 act_found=True,
                 act_has_spatial_data=True,
-                spatial_features_on_parcel=(
-                    spatial_feature_count(analysis) if analyzed else 0
-                ),
+                spatial_features_on_parcel=(spatial_feature_count(analysis) if analyzed else 0),
                 zones_cover_parcel=analyzed and zones_cover_parcel(analysis),
                 # Import publikuje wyłącznie wydania z potwierdzoną pełną
                 # paginacją (PogSourceBatch.complete) i przejściem QA.
@@ -1795,9 +1747,7 @@ def _analyze_pog_local_release(
         )
     )
     ouz_status = calculate_ouz_status(parcel_geometry, None)
-    source = vector_data.source_metadata.model_copy(
-        update={"confidence": 0.5, "manual_review_required": True}
-    )
+    source = vector_data.source_metadata.model_copy(update={"confidence": 0.5, "manual_review_required": True})
     pog = _pog_from_decision(decision, None, source).model_copy(
         update={
             "act": act_result,
@@ -1821,8 +1771,7 @@ def _provenance_warnings(act: PogActResult | None) -> list[WarningMessage]:
             WarningMessage(
                 code="POG_CSW_METADATA_MISSING",
                 message=(
-                    "Wydanie nie zawiera metadanych CSW aktu; karta metadanych i "
-                    "data publikacji zbioru są niedostępne."
+                    "Wydanie nie zawiera metadanych CSW aktu; karta metadanych i data publikacji zbioru są niedostępne."
                 ),
                 severity="warning",
                 source_name="pog",
@@ -1882,20 +1831,25 @@ def _local_pog_vector_data(
                 row.get("feature_version"),  # type: ignore[arg-type]
             ),
         )
-        buckets[feature_type].append(PogVectorFeature(
-            geometry=from_wkt(str(row["geometry_wkt"])),
-            attributes=attributes,
-            source_crs="EPSG:2180",
-            layer_type=feature_type,  # type: ignore[arg-type]
-        ))
-        app_metadata.update({
-            "act_name": row.get("act_name"),
-            "resolution_number": row.get("resolution_number"),
-            "resolution_date": (
-                row["resolution_date"].isoformat()  # type: ignore[attr-defined]
-                if row.get("resolution_date") else None
-            ),
-        })
+        buckets[feature_type].append(
+            PogVectorFeature(
+                geometry=from_wkt(str(row["geometry_wkt"])),
+                attributes=attributes,
+                source_crs="EPSG:2180",
+                layer_type=feature_type,  # type: ignore[arg-type]
+            )
+        )
+        app_metadata.update(
+            {
+                "act_name": row.get("act_name"),
+                "resolution_number": row.get("resolution_number"),
+                "resolution_date": (
+                    row["resolution_date"].isoformat()  # type: ignore[attr-defined]
+                    if row.get("resolution_date")
+                    else None
+                ),
+            }
+        )
     binding = canonical_legal_status(str(act.get("legal_status"))) == "binding"
     source = SourceMetadata(
         source_id="pog_app",
@@ -1946,9 +1900,7 @@ def _pog_from_decision(
         uchwala_nr=discovery.uchwala_nr if discovery else None,
         uchwala_date=parsed_date,
         manual_review_required=True,
-        raw_attributes=(
-            _pog_raw_attributes(discovery, None, None) if discovery else None
-        ),
+        raw_attributes=(_pog_raw_attributes(discovery, None, None) if discovery else None),
         ouz_intersection_area_sqm=None,
         ouz_intersection_pct=None,
         touches_ouz_boundary=False,
@@ -1981,9 +1933,7 @@ def _apply_pog_scenario(
         pog.model_copy(
             update={
                 "compatibility_assessment": scenario.assessment,
-                "manual_review_required": (
-                    pog.manual_review_required or scenario.manual_review_required
-                ),
+                "manual_review_required": (pog.manual_review_required or scenario.manual_review_required),
             }
         ),
         scenario.warnings,
@@ -2070,9 +2020,7 @@ def _parse_pog_date(raw_value: str | None) -> tuple[date | None, WarningMessage 
 
 def _json_safe(value: dict[str, object]) -> dict[str, object]:
     """Normalizuje wartości źródłowe do typów obsługiwanych przez JSONB."""
-    normalized: dict[str, object] = json.loads(
-        json.dumps(value, default=str, ensure_ascii=False)
-    )
+    normalized: dict[str, object] = json.loads(json.dumps(value, default=str, ensure_ascii=False))
     return normalized
 
 
@@ -2106,11 +2054,15 @@ def _unique_sources(
     sources: Sequence[SourceMetadata | None],
 ) -> list[SourceMetadata]:
     unique: list[SourceMetadata] = []
-    keys: set[tuple[str, str | None, datetime | None]] = set()
+    keys: set[tuple[str, str | None, datetime | None] | tuple[str, str]] = set()
     for source in sources:
         if source is None:
             continue
-        key = (source.source_name, source.source_url, source.fetched_at)
+        key = (
+            ("source_id", source.source_id)
+            if source.source_id
+            else (source.source_name, source.source_url, source.fetched_at)
+        )
         if key not in keys:
             keys.add(key)
             unique.append(source)
