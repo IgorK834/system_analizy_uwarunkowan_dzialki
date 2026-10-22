@@ -12,7 +12,7 @@ from typing import Final, Literal
 
 from app.shared.data_quality import QUALITY_STATUS_LABELS_PL
 
-REPORT_LAYOUT_VERSION: Final[str] = "report-v2/2026.10.17-1"
+REPORT_LAYOUT_VERSION: Final[str] = "report-v2/2026.10.21-1"
 
 FindingKind = Literal["source_fact", "computed", "approximation", "manual"]
 

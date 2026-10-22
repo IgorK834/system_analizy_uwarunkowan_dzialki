@@ -130,12 +130,17 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `risks[].geometry_geojson` | 5 | Mapa 5 — obiekty ISOK/GDOŚ (zamrożone, przycięte do kadru) | fakt źródłowy |
 | `risks[].intersection_*` | 5 | Tabele 5.1/5.2 — pole [m²] i udział [%] przecięcia | wynik obliczenia |
 | `risks[].touches_boundary` | 5 | Tabele 5.1/5.2 — styk granicy | wynik obliczenia |
+| `risks[].distance_m` | 5 | Tabele 5.1/5.2 — odległość od poligonu działki w EPSG:2180 | wynik obliczenia |
+| `risks[].proximity_status` | 5 | Tabele 5.1/5.2 — przecięcie albo najbliższy obiekt w promieniu | wynik obliczenia |
 | `risks[].description` | 5 | Tabele 5.1/5.2 — opis prezentacyjny (pochodny z pól strukturalnych) | metadane |
 | `risks[].source.*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `risks[].*` | 5 | Tabele 5.1/5.2 — klasa, okres powtarzalności, poziom, forma ochrony, nazwa, ID, ostrzeżenia | fakt źródłowy |
 | `risk_sections[].schema_version` | 9 | Tabela 9.3 — wersje kontraktów | metadane |
 | `risk_sections[].source.*` | 9 | Tabela 5.x — źródło sekcji; Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `risk_sections[].union_*` | 5 | Tabela 5.x — łączne pokrycie (suma mnogościowa) | wynik obliczenia |
+| `risk_sections[].proximities[].*` | 5 | Tabela 5.x — wynik per klasa Q10/Q100/Q500 albo warstwa GDOŚ: status, odległość i promień | wynik obliczenia |
+| `risk_sections[].nearest_distance_m` | 5 | Tabela 5.x — najmniejsza odległość od poligonu działki w sekcji | wynik obliczenia |
+| `risk_sections[].preliminary_assessment.*` | 5 | Nota Tabeli 5.1 — stan kontraktu wstępnej oceny WORP; bez wyliczania przed potwierdzeniem | metadane |
 | `risk_sections[].*` | 5 | Tabela 5.x — status sekcji, relacja, liczność obiektów, powód, ostrzeżenia; macierz 8.1 | wynik obliczenia |
 | `terrain.elevation_method` | 6 | Tabela 6.1 — nadrzędny produkt wysokościowy WCS lub usługa zastępcza | metadane |
 | `terrain.elevation_note` | 6 | Nota tabeli 6.1 — siatka, produkty i układy wysokości | metadane |
@@ -195,4 +200,4 @@ Pierwszy pasujący wzorzec wygrywa. Ten sam wykaz jest załącznikiem A każdego
 | `sources[].*` | 9 | Tabela 9.1 — rejestr źródeł (nazwa, ID, wersja, URL, data, HTTP, SHA-256, wydanie) | fakt źródłowy |
 | `access_token` | 9 | *pominięte:* sekret dostępu do API — nigdy nie jest umieszczany w dokumencie PDF | metadane |
 
-Liczba ścieżek liści kontraktu objętych mapowaniem: 995.
+Liczba ścieżek liści kontraktu objętych mapowaniem: 1019.
