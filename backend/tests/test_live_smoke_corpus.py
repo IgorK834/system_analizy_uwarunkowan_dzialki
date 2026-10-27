@@ -228,6 +228,104 @@ def test_comparison_and_markdown_show_the_change_of_the_distributions() -> None:
     assert "### Droga i zabudowa sąsiednia" in markdown
 
 
+def _risk_body(**sections: dict[str, Any]) -> dict[str, Any]:
+    return _ok(risk_sections=[{"section": name, **value} for name, value in sections.items()])
+
+
+def test_summary_carries_the_risk_sections_and_worp_without_inventing_zeros() -> None:
+    summary = smoke.summarize_response(
+        200,
+        _risk_body(
+            flood={
+                "status": "available", "reason_code": None, "relation": "near", "nearest_distance_m": 144.4,
+                "preliminary_assessment": {"status": "contract_required", "reason_code": "WORP_CONTRACT_NOT_CONFIRMED"},
+            },
+            nature={"status": "available", "reason_code": None, "relation": "intersection", "nearest_distance_m": 0.0},
+        ),
+    )
+    assert (summary["flood_status"], summary["flood_relation"], summary["flood_nearest_distance_m"]) == (
+        "available", "near", 144.4,
+    )
+    assert (summary["worp_status"], summary["worp_reason"]) == ("contract_required", "WORP_CONTRACT_NOT_CONFIRMED")
+    assert summary["nature_nearest_distance_m"] == 0.0  # przecięcie to prawdziwe 0, nie brak pomiaru
+
+    failed = smoke.summarize_response(
+        200,
+        _risk_body(
+            flood={"status": "unavailable", "reason_code": "SERVICE_HTTP_ERROR", "relation": "unknown", "nearest_distance_m": None},
+            nature={"status": "available", "relation": "none_within_radius", "nearest_distance_m": True},
+        ),
+    )
+    assert failed["flood_nearest_distance_m"] is None and failed["worp_status"] is None  # null ≠ 0
+    assert failed["nature_nearest_distance_m"] is None  # bool nie jest odległością
+    legacy = smoke.summarize_response(200, _ok())  # odpowiedź sprzed sekcji
+    assert legacy["flood_status"] is None and legacy["nature_status"] is None and legacy["worp_status"] is None
+    assert smoke.summarize_response(200, _ok(risk_sections="x"))["flood_status"] is None
+    assert smoke.summarize_response(200, _ok(risk_sections=[1, {"section": "other", "status": "available"}]))[
+        "flood_status"
+    ] is None
+
+
+def test_risk_histograms_never_merge_a_source_outage_with_an_empty_radius() -> None:
+    def result(case: str, flood: dict | None, nature: dict | None) -> dict[str, Any]:
+        sections = {name: value for name, value in (("flood", flood), ("nature", nature)) if value is not None}
+        return _result(case, 200, status="partial") | smoke.summarize_response(200, _risk_body(**sections)) | {
+            "http_class": "2xx"
+        }
+
+    results = [
+        result("a", {"status": "available", "relation": "near"}, {"status": "available", "relation": "none_within_radius"}),
+        result("b", {"status": "available", "relation": "none_within_radius"}, {"status": "unavailable", "reason_code": "SERVICE_TIMEOUT"}),
+        result("c", {"status": "unavailable", "reason_code": "SERVICE_HTTP_ERROR"}, {"status": "error", "reason_code": "INVALID_RESPONSE"}),
+        result("d", None, None),
+    ]
+
+    summary = smoke.build_summary(results)
+
+    assert summary["flood_status_histogram"] == {
+        "available (near)": 1,
+        "available (none_within_radius)": 1,
+        "brak sekcji": 1,
+        "unavailable (SERVICE_HTTP_ERROR)": 1,
+    }
+    assert summary["nature_status_histogram"] == {
+        "available (none_within_radius)": 1,
+        "brak sekcji": 1,
+        "error (INVALID_RESPONSE)": 1,
+        "unavailable (SERVICE_TIMEOUT)": 1,
+    }
+    assert summary["worp_status_histogram"] == {"brak sekcji": 4}
+
+
+def test_comparison_and_markdown_show_the_change_of_the_risk_distributions() -> None:
+    def with_risk(result: dict[str, Any], flood: str, relation: str | None) -> dict[str, Any]:
+        return result | {
+            "flood_status": flood, "flood_reason": None, "flood_relation": relation,
+            "nature_status": "available", "nature_reason": None, "nature_relation": "intersection",
+            "worp_status": "contract_required", "worp_reason": "WORP_CONTRACT_NOT_CONFIRMED",
+        }
+
+    previous = _report([_result("a", 200, status="partial")])
+    previous["summary"]["flood_status_histogram"] = {"brak sekcji": 1}
+    metadata = {
+        "generated_at": "2026-10-14T10:00:00Z", "started_at": "s", "finished_at": "f", "run_date": "2026-10-14",
+        "duration_seconds": 1.0, "base_url": "http://x", "corpus_id": "BK-002", "manifest_sha256": "a" * 64,
+        "commit_sha": "deadbeef", "concurrency": 3, "timeout_seconds": 180.0, "force_refresh": False,
+    }
+
+    report = smoke.build_report(
+        [with_risk(_result("a", 200, status="partial"), "available", "near")], metadata=metadata, previous=previous
+    )
+    markdown = smoke.render_markdown(report)
+
+    deltas = report["comparison"]["histogram_deltas"]
+    assert deltas["flood_status_histogram"] == {"before": {"brak sekcji": 1}, "after": {"available (near)": 1}}
+    assert deltas["worp_status_histogram"]["after"] == {"contract_required (WORP_CONTRACT_NOT_CONFIRMED)": 1}
+    assert "### Zagrożenie powodziowe i formy ochrony przyrody" in markdown
+    assert "| `available (near)` | 0 | 1 |" in markdown and "| `brak sekcji` | 1 | 0 |" in markdown
+    assert "Wstępna ocena WORP" in markdown and "nigdy brak ograniczenia" in markdown
+
+
 def test_missing_sections_are_null_not_zero() -> None:
     summary = smoke.summarize_response(200, _ok(mpzp=None, pog=None))
 

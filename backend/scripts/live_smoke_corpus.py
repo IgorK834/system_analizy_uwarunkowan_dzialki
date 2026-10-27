@@ -188,6 +188,28 @@ def _summarize_bdot(summary: dict[str, Any], road: object, buildings: object) ->
         summary["buildings_on_parcel"] = count if isinstance(count, int) else None
 
 
+def _summarize_risk(summary: dict[str, Any], risk_sections: object) -> None:
+    """Sekcje ryzyka ISOK/GDOŚ (AU-205/206): status, powód, relacja i najbliższa odległość (null ≠ 0) oraz stan WORP."""
+    if not isinstance(risk_sections, list):
+        return
+    for item in risk_sections:
+        if not isinstance(item, dict) or item.get("section") not in {"flood", "nature"}:
+            continue
+        prefix = str(item["section"])
+        status, reason, relation = item.get("status"), item.get("reason_code"), item.get("relation")
+        summary[f"{prefix}_status"] = status if isinstance(status, str) else None
+        summary[f"{prefix}_reason"] = reason if isinstance(reason, str) else None
+        summary[f"{prefix}_relation"] = relation if isinstance(relation, str) else None
+        distance = item.get("nearest_distance_m")
+        is_number = isinstance(distance, (int, float)) and not isinstance(distance, bool)
+        summary[f"{prefix}_nearest_distance_m"] = distance if is_number else None
+        worp = item.get("preliminary_assessment")
+        if prefix == "flood" and isinstance(worp, dict):
+            worp_status, worp_reason = worp.get("status"), worp.get("reason_code")
+            summary["worp_status"] = worp_status if isinstance(worp_status, str) else None
+            summary["worp_reason"] = worp_reason if isinstance(worp_reason, str) else None
+
+
 def summarize_response(status_code: int, body: object) -> dict[str, Any]:
     """Pola pochodne odpowiedzi: nigdy ``access_token`` ani pełna treść."""
     summary: dict[str, Any] = {
@@ -213,6 +235,16 @@ def summarize_response(status_code: int, body: object) -> dict[str, Any]:
         "buildings_status": None,
         "buildings_reason": None,
         "buildings_on_parcel": None,
+        "flood_status": None,
+        "flood_reason": None,
+        "flood_relation": None,
+        "flood_nearest_distance_m": None,
+        "worp_status": None,
+        "worp_reason": None,
+        "nature_status": None,
+        "nature_reason": None,
+        "nature_relation": None,
+        "nature_nearest_distance_m": None,
         "body_valid": isinstance(body, dict),
     }
     if not isinstance(body, dict):
@@ -239,6 +271,7 @@ def summarize_response(status_code: int, body: object) -> dict[str, Any]:
     summary["manual_zone_required"] = required if isinstance(required, bool) else None
     _summarize_completeness(summary, body.get("completeness"))
     _summarize_bdot(summary, body.get("road_context"), body.get("neighbour_buildings"))
+    _summarize_risk(summary, body.get("risk_sections"))
     cover = body.get("land_cover")
     if isinstance(cover, dict):
         summary["land_cover_status"] = cover.get("status")
@@ -404,6 +437,18 @@ def _bdot_label(status: object, reason: object) -> str:
     return f"{status} ({reason})" if isinstance(reason, str) and status != "available" else status
 
 
+def _risk_label(status: object, reason: object, relation: object) -> str:
+    """Etykieta histogramu ryzyka: ``available`` z relacją (przecięcie, bliskość, brak w promieniu), awaria z powodem.
+
+    Awaria źródła (``unavailable``/``error``) nigdy nie zlewa się z ``available (none_within_radius)``.
+    """
+    if not isinstance(status, str):
+        return "brak sekcji"
+    if status == "available":
+        return f"available ({relation})" if isinstance(relation, str) else status
+    return f"{status} ({reason})" if isinstance(reason, str) else status
+
+
 def build_summary(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     http_hist = Counter(
         "brak odpowiedzi" if result["http_status"] is None else str(result["http_status"])
@@ -423,9 +468,15 @@ def build_summary(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     checked_hist: Counter[str] = Counter()
     road_hist: Counter[str] = Counter()
     buildings_hist: Counter[str] = Counter()
+    flood_hist: Counter[str] = Counter()
+    nature_hist: Counter[str] = Counter()
+    worp_hist: Counter[str] = Counter()
     for result in ok:
         road_hist[_bdot_label(result.get("road_status"), result.get("road_reason"))] += 1
         buildings_hist[_bdot_label(result.get("buildings_status"), result.get("buildings_reason"))] += 1
+        flood_hist[_risk_label(result.get("flood_status"), result.get("flood_reason"), result.get("flood_relation"))] += 1
+        nature_hist[_risk_label(result.get("nature_status"), result.get("nature_reason"), result.get("nature_relation"))] += 1
+        worp_hist[_bdot_label(result.get("worp_status"), result.get("worp_reason"))] += 1
         missing_hist.update(result.get("completeness_missing") or [])
         if result.get("mpzp_basis"):
             basis_hist[str(result["mpzp_basis"])] += 1
@@ -442,6 +493,9 @@ def build_summary(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "mpzp_basis_histogram": _sorted_counts(basis_hist),
         "road_status_histogram": _sorted_counts(road_hist),
         "buildings_status_histogram": _sorted_counts(buildings_hist),
+        "flood_status_histogram": _sorted_counts(flood_hist),
+        "nature_status_histogram": _sorted_counts(nature_hist),
+        "worp_status_histogram": _sorted_counts(worp_hist),
         "five_xx": five_xx,
         "transport_errors": transport,
         "client_errors": sum(1 for result in results if result["http_class"] == "4xx"),
@@ -569,6 +623,9 @@ def compare_runs(previous: Mapping[str, Any] | None, current: Mapping[str, Any])
                 "completeness_missing_histogram",
                 "road_status_histogram",
                 "buildings_status_histogram",
+                "flood_status_histogram",
+                "nature_status_histogram",
+                "worp_status_histogram",
             )
         },
     }
@@ -670,6 +727,9 @@ _HISTOGRAM_DELTA_TITLES: dict[str, str] = {
     "completeness_missing_histogram": "Kompletność: sekcje, których brakowało",
     "road_status_histogram": "Droga (`road_context.status`)",
     "buildings_status_histogram": "Zabudowa sąsiednia (`neighbour_buildings.status`)",
+    "flood_status_histogram": "Zagrożenie powodziowe (`risk_sections[flood]`: status i relacja)",
+    "nature_status_histogram": "Formy ochrony przyrody (`risk_sections[nature]`: status i relacja)",
+    "worp_status_histogram": "Wstępna ocena WORP (`preliminary_assessment.status`)",
 }
 
 
@@ -781,6 +841,21 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         "Zabudowa sąsiednia (`neighbour_buildings.status`):",
         "",
         *_histogram_table(("status", "Przypadki"), summary.get("buildings_status_histogram", {})),
+        "### Zagrożenie powodziowe i formy ochrony przyrody (`risk_sections`; ISOK, GDOŚ, HTTP 2xx; AU-205/206)",
+        "",
+        "Etykieta: `available (relacja)` — sprawdzono w ograniczonym promieniu (`intersection`, `near`, "
+        "`none_within_radius`; brak obiektu w promieniu nie jest brakiem ograniczenia poza nim) albo status awarii "
+        "z powodem (`unavailable`/`error` — nigdy brak ograniczenia).",
+        "",
+        "Zagrożenie powodziowe (`risk_sections[flood]`):",
+        "",
+        *_histogram_table(("status", "Przypadki"), summary.get("flood_status_histogram", {})),
+        "Formy ochrony przyrody (`risk_sections[nature]`):",
+        "",
+        *_histogram_table(("status", "Przypadki"), summary.get("nature_status_histogram", {})),
+        "Wstępna ocena WORP (`risk_sections[flood].preliminary_assessment`; `contract_required` do potwierdzenia kontraktu):",
+        "",
+        *_histogram_table(("status", "Przypadki"), summary.get("worp_status_histogram", {})),
         "### Ostrzeżenia (`warnings[].code`, HTTP 2xx)",
         "",
         *_histogram_table(("kod", "Przypadki"), summary["warning_code_histogram"]),
