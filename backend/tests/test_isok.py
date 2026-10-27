@@ -11,6 +11,7 @@ from shapely.geometry import Polygon
 from app.core.settings import settings
 from app.services.gml import GmlFeature
 from app.services.isok import (
+    ISOK_MAX_ATTEMPTS,
     ISOK_SRS_NAME,
     ISOK_TYPE_NAME,
     IsokServiceUnavailableError,
@@ -205,6 +206,69 @@ async def test_fetch_flood_risks_http_500_raises_isok_service_unavailable() -> N
 
     with pytest.raises(IsokServiceUnavailableError):
         await fetch_flood_risks(SQUARE_PARCEL)
+
+
+# Rzeczywista odpowiedź ISOK z 2026-10-27: wewnętrzny NPE GeoServera pod kodem HTTP 400.
+_UPSTREAM_NPE_400 = (
+    Path(__file__).parent / "fixtures" / "source_contracts" / "isok_proximity" / "upstream-npe-400.xml"
+).read_text(encoding="utf-8")
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_upstream_npe_400_is_retried_and_the_next_response_is_used() -> None:
+    route = respx.get(settings.isok_wfs_base_url).mock(
+        side_effect=[
+            httpx.Response(400, text=_UPSTREAM_NPE_400),
+            httpx.Response(200, text=MOCK_GML_ZONE_HIGH_OVERLAP),
+        ]
+    )
+
+    result = await fetch_flood_risks(SQUARE_PARCEL)
+
+    assert route.call_count == 2
+    assert len(result) == 1
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_persistent_upstream_npe_400_is_unavailable_never_an_empty_result() -> None:
+    route = respx.get(settings.isok_wfs_base_url).mock(return_value=httpx.Response(400, text=_UPSTREAM_NPE_400))
+
+    with pytest.raises(IsokServiceUnavailableError) as excinfo:
+        await fetch_flood_risk_section(SQUARE_PARCEL)
+
+    assert route.call_count == ISOK_MAX_ATTEMPTS  # ponowienia są ograniczone
+    assert excinfo.value.reason_code == "SERVICE_HTTP_ERROR"
+    assert excinfo.value.source_metadata is not None and excinfo.value.source_metadata.response_status == 400
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_other_http_400_is_a_client_error_and_is_not_retried() -> None:
+    route = respx.get(settings.isok_wfs_base_url).mock(return_value=httpx.Response(400, text="Invalid BBOX"))
+
+    with pytest.raises(IsokServiceUnavailableError):
+        await fetch_flood_risks(SQUARE_PARCEL)
+
+    assert route.call_count == 1
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_two_consecutive_upstream_npe_400_are_survived_by_the_third_attempt() -> None:
+    route = respx.get(settings.isok_wfs_base_url).mock(
+        side_effect=[
+            httpx.Response(400, text=_UPSTREAM_NPE_400),
+            httpx.Response(400, text=_UPSTREAM_NPE_400),
+            httpx.Response(200, text=MOCK_GML_ZONE_HIGH_OVERLAP),
+        ]
+    )
+
+    section = await fetch_flood_risk_section(SQUARE_PARCEL)
+
+    assert route.call_count == 3 == ISOK_MAX_ATTEMPTS
+    assert len(section.features) == 1
 
 
 @pytest.mark.asyncio

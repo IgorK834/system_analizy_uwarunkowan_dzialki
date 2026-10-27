@@ -64,7 +64,15 @@ logger = logging.getLogger(__name__)
 # czasie odpowiedzi 6-9 s. Limit 10 s był więc na granicy timeoutu.
 ISOK_TIMEOUT_S: Final[float] = 30.0
 ISOK_MAX_RESPONSE_BYTES: Final[int] = 32 * 1024 * 1024
-ISOK_MAX_ATTEMPTS: Final[int] = 2
+# Trzy próby: pomiar 2026-10-27 dla bufora 1 km pokazał, że ok. połowa pierwszych
+# prób kończy się znanym błędem serwera opisanym niżej (a nieudana próba wraca po
+# 2-3 s), więc przy dwóch próbach ok. 1/4 analiz traciła sekcję powodziową.
+ISOK_MAX_ATTEMPTS: Final[int] = 3
+# GeoServer ISOK sporadycznie zwraca wewnętrzny ``java.lang.NullPointerException``
+# jako HTTP 400 z ``ows:ExceptionReport`` (pomiar 2026-10-27: 5 z 11 identycznych
+# żądań, a następne żądanie zwykle przechodziło). To błąd po stronie serwera, nie
+# żądania, więc jest ponawiany jak 5xx; poprawne żądanie z innym 400 nie.
+_ISOK_TRANSIENT_FAULT_MARKER: Final[str] = "NullPointerException"
 FLOOD_SEARCH_RADIUS_M: Final[float] = 1_000.0
 _ISOK_ALLOWED_HOSTS: Final[frozenset[str]] = frozenset({"wody.isok.gov.pl"})
 
@@ -341,6 +349,13 @@ def _section_source(
     )
 
 
+def _is_transient_http_fault(response: httpx.Response) -> bool:
+    """Błąd HTTP wart ponowienia: przeciążenie/5xx bramy albo znany NPE serwera ISOK pod kodem 400."""
+    if response.status_code in {429, 502, 503, 504}:
+        return True
+    return response.status_code == 400 and _ISOK_TRANSIENT_FAULT_MARKER in response.text
+
+
 async def _fetch_isok_response_text(
     client: httpx.AsyncClient,
     params: dict[str, str],
@@ -396,7 +411,7 @@ async def _fetch_isok_response_text(
             ) from exc
         except httpx.HTTPStatusError as exc:
             last_error = exc
-            if exc.response.status_code in {429, 502, 503, 504} and attempt + 1 < ISOK_MAX_ATTEMPTS:
+            if _is_transient_http_fault(exc.response) and attempt + 1 < ISOK_MAX_ATTEMPTS:
                 await asyncio.sleep(0.2 * (attempt + 1))
                 continue
             raise IsokServiceUnavailableError(

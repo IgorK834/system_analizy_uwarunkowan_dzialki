@@ -234,9 +234,10 @@ def _finalize_section(
     """
     if isinstance(outcome, _EXPECTED_UNAVAILABLE_ERRORS):
         logger.warning(
-            "Sekcja %s niedostępna; error_type=%s",
+            "Sekcja %s niedostępna; error_type=%s reason_code=%s",
             section,
             type(outcome).__name__,
+            getattr(outcome, "reason_code", None),
         )
         return ContextSectionResult(
             section=section,

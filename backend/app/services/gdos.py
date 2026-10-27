@@ -58,6 +58,10 @@ logger = logging.getLogger(__name__)
 GDOS_TIMEOUT_S: Final[float] = 20.0
 GDOS_MAX_RESPONSE_BYTES: Final[int] = 16 * 1024 * 1024
 GDOS_MAX_ATTEMPTS: Final[int] = 2
+# Sekcja jest atomowa (14 warstw), więc jedno przejściowe 500 unieważniałoby cały wynik.
+# Pojedyncze 500 warstwy StanowiskaDokumentacyjne zaobserwowano 2026-10-27; trzy kolejne
+# identyczne żądania zwróciły 200, dlatego 500 jest ponawiane jak 5xx bramy.
+_GDOS_RETRYABLE_STATUSES: Final[frozenset[int]] = frozenset({429, 500, 502, 503, 504})
 GDOS_DEFAULT_SEARCH_RADIUS_M: Final[float] = 1_000.0
 GDOS_MONUMENT_SEARCH_RADIUS_M: Final[float] = 200.0
 _GDOS_ALLOWED_HOSTS: Final[frozenset[str]] = frozenset({"sdi.gdos.gov.pl"})
@@ -437,7 +441,7 @@ async def _fetch_gdos_response_text(
             ) from exc
         except httpx.HTTPStatusError as exc:
             last_error = exc
-            if exc.response.status_code in {429, 502, 503, 504} and attempt + 1 < GDOS_MAX_ATTEMPTS:
+            if exc.response.status_code in _GDOS_RETRYABLE_STATUSES and attempt + 1 < GDOS_MAX_ATTEMPTS:
                 await asyncio.sleep(0.2 * (attempt + 1))
                 continue
             raise GdosServiceUnavailableError(

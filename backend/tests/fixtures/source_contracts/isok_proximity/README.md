@@ -16,3 +16,9 @@ GetCapabilities potwierdza także `nz-core:RiskZone` i
 równoważności z produktem WORP OnGeo. Ocena WORP pozostaje
 `contract_required` i nie jest wyliczana.
 
+`upstream-npe-400.xml` (586 B, SHA-256
+`4155c1ea2f9de9428c3c031f94eef4092daa29587b56abeb0aeb330fdc6bbfa4`) to
+rzeczywista odpowiedź z 27.10.2026 na to samo żądanie, które chwilę wcześniej i
+później zwracało 200: wewnętrzny `java.lang.NullPointerException` GeoServera
+pod kodem HTTP 400. Pomiar: 5 z 11 żądań dla tego BBOX-u. Adapter ponawia ten
+przypadek (trzy próby; ADR-030, aktualizacja 2026-10-27).

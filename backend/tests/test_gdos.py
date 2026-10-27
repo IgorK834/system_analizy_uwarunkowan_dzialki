@@ -20,6 +20,7 @@ from shapely.geometry import Point, box, shape
 
 from app.core.settings import settings
 from app.services.gdos import (
+    GDOS_MAX_ATTEMPTS,
     GDOS_PROTECTION_LAYERS,
     GdosServiceUnavailableError,
     NatureProtectionFeature,
@@ -510,6 +511,51 @@ async def test_fetch_http_500_raises_gdos_service_unavailable() -> None:
 
     with pytest.raises(GdosServiceUnavailableError):
         await fetch_nature_protection_areas(SQUARE_PARCEL)
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_transient_http_500_of_one_layer_is_retried_and_the_section_stays_complete() -> None:
+    """Sekcja jest atomowa, więc jedno przejściowe 500 warstwy nie może unieważnić pozostałych 13."""
+    attempts: dict[str, int] = {}
+
+    def _respond(request: httpx.Request) -> httpx.Response:
+        type_name = request.url.params["typeNames"]
+        attempts[type_name] = attempts.get(type_name, 0) + 1
+        if type_name == "GDOS:StanowiskaDokumentacyjne" and attempts[type_name] == 1:
+            return httpx.Response(500)
+        return httpx.Response(200, text=EMPTY_GML)
+
+    respx.get(settings.gdos_wfs_base_url).mock(side_effect=_respond)
+
+    section = await fetch_nature_protection_section(SQUARE_PARCEL)
+
+    assert attempts["GDOS:StanowiskaDokumentacyjne"] == 2
+    assert all(count == 1 for name, count in attempts.items() if name != "GDOS:StanowiskaDokumentacyjne")
+    assert len(section.proximities) == len(GDOS_PROTECTION_LAYERS)
+    assert all(item.status == "none_within_radius" for item in section.proximities)
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_persistent_http_500_is_bounded_and_unavailable_not_no_object() -> None:
+    attempts: dict[str, int] = {}
+
+    def _respond(request: httpx.Request) -> httpx.Response:
+        type_name = request.url.params["typeNames"]
+        attempts[type_name] = attempts.get(type_name, 0) + 1
+        return httpx.Response(500)
+
+    respx.get(settings.gdos_wfs_base_url).mock(side_effect=_respond)
+
+    with pytest.raises(GdosServiceUnavailableError) as excinfo:
+        await fetch_nature_protection_section(SQUARE_PARCEL)
+
+    assert excinfo.value.reason_code == "SERVICE_HTTP_ERROR"
+    # gather zwraca pierwszy wyjątek, więc łączna liczba wywołań zależy od chwili asercji;
+    # stałe jest ograniczenie prób per warstwa.
+    assert attempts and all(1 <= count <= GDOS_MAX_ATTEMPTS for count in attempts.values())
+    assert max(attempts.values()) == GDOS_MAX_ATTEMPTS
 
 
 @respx.mock
