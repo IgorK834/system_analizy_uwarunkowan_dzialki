@@ -915,7 +915,7 @@ function RisksSection({
               )}
               <ul className="result-list">
                 {section.proximities.map((proximity) => (
-                  <li key={`${section.section}-${proximity.layer_name}`}>
+                  <li key={`${section.section}-${proximity.layer_name}-${proximity.category}`}>
                     <span>{proximity.label}: {proximityText(proximity)}</span>
                     {proximity.name && <span> · {proximity.name}</span>}
                     {proximity.informational_only && <span> · informacja geometryczna</span>}

@@ -272,6 +272,76 @@ describe("ResultPanel", () => {
     expect(screen.getByText(/Wstępna ocena WORP: niewyliczona — kontrakt wymaga potwierdzenia/)).toBeVisible();
   });
 
+  it("renderuje klasy Q10/Q100/Q500 i warstwy o tej samej kategorii bez zduplikowanych kluczy", () => {
+    const source = {
+      source_id: "isok",
+      source_name: "ISOK",
+      source_url: null,
+      fetched_at: "2026-10-27T08:30:00Z",
+      response_status: 200,
+      confidence: 0.85,
+      manual_review_required: false,
+    };
+    const proximity = (category: string, label: string, layer_name: string, distance_m: number) => ({
+      category,
+      label,
+      layer_name,
+      status: "near" as const,
+      search_radius_m: 1000,
+      distance_m,
+      feature_id: `${category}-id`,
+      name: null,
+      probability_class: null,
+      return_period_years: null,
+      informational_only: false,
+    });
+    const section = (name: "flood" | "nature", proximities: ReturnType<typeof proximity>[]) => ({
+      schema_version: "2.0",
+      section: name,
+      status: "available" as const,
+      reason_code: null,
+      relation: "near" as const,
+      feature_count: proximities.length,
+      intersecting_feature_count: 0,
+      boundary_feature_count: 0,
+      near_feature_count: proximities.length,
+      union_intersection_area_sqm: 0,
+      union_intersection_pct: 0,
+      feature_ids: proximities.map((item) => item.feature_id),
+      nearest_distance_m: Math.min(...proximities.map((item) => item.distance_m)),
+      proximities,
+      preliminary_assessment: null,
+      source,
+      warnings: [],
+    });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const result = buildAnalyzeResponse({
+      risk_sections: [
+        // Wszystkie klasy powodziowe pochodzą z jednej warstwy nz-core:HazardArea.
+        section("flood", [
+          proximity("q10", "Q10 (10%, raz na 10 lat)", "nz-core:HazardArea", 163.395),
+          proximity("q100", "Q100 (1%, raz na 100 lat)", "nz-core:HazardArea", 150.741),
+          proximity("q500", "Q500 (0,2%, raz na 500 lat)", "nz-core:HazardArea", 144.385),
+        ]),
+        // Dwie warstwy Natura 2000 mają tę samą kategorię natura2000.
+        section("nature", [
+          proximity("natura2000", "Natura 2000 — ptaki", "GDOS:ObszarySpecjalnejOchrony", 190.091),
+          proximity("natura2000", "Natura 2000 — siedliska", "GDOS:SpecjalneObszaryOchrony", 410.5),
+        ]),
+      ],
+    });
+
+    render(<ResultPanel result={result} map={null} />);
+
+    expect(screen.getByText(/Q10 \(10%, raz na 10 lat\): 163,4 m/)).toBeVisible();
+    expect(screen.getByText(/Q100 \(1%, raz na 100 lat\): 150,7 m/)).toBeVisible();
+    expect(screen.getByText(/Q500 \(0,2%, raz na 500 lat\): 144,4 m/)).toBeVisible();
+    expect(screen.getByText(/Natura 2000 — siedliska: 410,5 m/)).toBeVisible();
+    const duplicateKeyWarnings = consoleError.mock.calls.filter((call) => String(call[0]).includes("same key"));
+    expect(duplicateKeyWarnings).toEqual([]);
+    consoleError.mockRestore();
+  });
+
   it("dodaje warstwy GeoJSON działki i obszaru zabudowy na mapie", () => {
     const result = buildAnalyzeResponse({
       parcel: {
