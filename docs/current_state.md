@@ -885,3 +885,49 @@ w istniejących snapshotach JSON, więc nie dodano migracji po aktualnym head
 mapowanie pól i ZIP audytowy zachowują nowe pomiary. Decyzję i ograniczenia
 opisuje [ADR-030](adr/ADR-030-odleglosci-srodowiskowe-i-kontrakt-worp.md), a
 dowody odbiorowe: [AU-205/206](evaluation/au205-206-verification.md).
+
+## Odświeżenie zależności po bramce `pip-audit` (2026-10-22)
+
+Po opublikowaniu nowych wpisów bezpieczeństwa lock backendu został odświeżony
+wyłącznie dla `certifi` (**2026.7.22 → 2026.10.19**) i `Pillow`
+(**12.3.0 → 13.0.0**), razem z hashami wszystkich artefaktów. Obrazy `runtime`
+i `test` budują się z `--require-hashes`; audyt obu locków nie zgłasza znanych
+podatności, a `pip check` nie wykrywa konfliktów. Testy OCR, rastrów i map:
+**81/81**, pełny backend: **5367 passed**, 3 deselected, 0 failed, pokrycie
+**95,27%**. Zmiana nie modyfikuje kontraktu API ani danych analiz.
+
+## AU-205 / AU-206 — powtórna weryfikacja na żywych usługach (2026-10-27)
+
+Odbiór z 21–22.10 powtórzono na działce `141801_4.0701.23/8` i `281604_5.0011.107`
+w izolowanym stosie z żywymi ISOK i GDOŚ. Kryteria akceptacji potwierdzono:
+Q10/Q100/Q500 = **163,395 / 150,741 / 144,385 m**, OChK „Warszawski” **100%**
+(1199,011 m²), brak pomników przyrody w 200 m, po jednym wpisie `isok` i `gdos`
+w rejestrze źródeł i macierzy jakości, a WORP jawnie `contract_required`.
+
+Powtórka ujawniła cztery luki, które domknięto bez zmiany kontraktu API (wersja
+ryzyka nadal 2.0):
+
+- **Live smoke** (`backend/scripts/live_smoke_corpus.py`) nie streszczał sekcji
+  ryzyka. Raport ma teraz rozkłady `flood`, `nature` i `WORP` (status + relacja albo
+  powód awarii), więc awaria źródła jest widoczna osobno od `none_within_radius`.
+  Korpus 30 działek **nie zawiera** działki odbiorowej Góra Kalwaria, więc przebieg
+  30/30 nie sprawdzał kryterium 164 m; do tego służy manifest z dwoma przypadkami.
+- **ISOK** zwraca dla BBOX-u działki odbiorowej wewnętrzny `NullPointerException`
+  jako HTTP 400 przy ok. połowie pierwszych prób (5 z 11). Adapter ponawia ten
+  przypadek, `ISOK_MAX_ATTEMPTS` = 3 (wcześniej 2: ok. 1/4 analiz traciła sekcję).
+- **GDOŚ**: pojedyncze przejściowe HTTP 500 jednej z 14 warstw unieważniało atomową
+  sekcję; 500 jest teraz ponawiane.
+- **UI**: lista odległości używała klucza React zbudowanego z `layer_name`, który
+  powtarza się dla Q10/Q100/Q500 (`flood-nz-core:HazardArea`). Klucz zawiera teraz
+  także kategorię; dodano test regresyjny (pada na starym kodzie).
+
+Wynik po poprawkach: 6 z 6 kolejnych analiz działki odbiorowej na żywo z ISOK
+`available`; HTTP 200 dla PDF (33 strony, odległości, nota WORP, pisownia „GDOŚ”) i
+ZIP (9/9 plików zgodnych z manifestem). Live smoke 30 działek: 30/30 HTTP 200, 5xx = 0,
+powódź `available` dla 26, przyroda dla 28; cztery działki z Krakowa nie mają sekcji
+powodziowej, bo ISOK zwraca ok. 59 MiB przy limicie 32 MiB (ograniczenie źródła obecne
+już przy buforze 0 m, otwarta decyzja w protokole). Backend: **5376 passed**, 3 deselected, 0 failed, pokrycie **95,27%**;
+frontend: typecheck, lint, **685 testów w 59 plikach**, pokrycie 97,96% / 91,22% /
+98,97% / 98,99% i `next build`. Szczegóły i otwarte decyzje:
+[AU-205/206](evaluation/au205-206-verification.md), [ADR-030](adr/ADR-030-odleglosci-srodowiskowe-i-kontrakt-worp.md).
+

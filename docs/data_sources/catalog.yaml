@@ -453,7 +453,9 @@ sources:
       wyłączenia ani samodzielnego ograniczenia prawnego. Warstwy proponowanych
       zmian Natura 2000 i Mezoregiony pozostają poza zakresem. Odległość jest
       liczona od poligonu działki do rzeczywistej geometrii w EPSG:2180.
-      Adapter: app/services/gdos.py (GDOS_PROTECTION_LAYERS).
+      Sekcja jest atomowa (14 żądań); pojedyncze przejściowe HTTP 500 jednej
+      warstwy (zaobserwowane 2026-10-27) jest ponawiane, a trwały błąd daje
+      unavailable. Adapter: app/services/gdos.py (GDOS_PROTECTION_LAYERS).
 
   - source_id: isok
     name: "Zagrożenie powodziowe (ISOK / MZP INSPIRE)"
@@ -515,7 +517,11 @@ sources:
       znaczenie RiskZone i ExposedElement, ale nie potwierdzają, że ich agregacja
       jest produktem WORP semantycznie równoważnym wstępnej ocenie OnGeo.
       Kontrakt WORP ma zatem status contract_required; aplikacja jawnie pokazuje
-      ten stan i nie wylicza klasy ryzyka. Adapter: app/services/isok.py.
+      ten stan i nie wylicza klasy ryzyka. Zachowanie w produkcji (pomiar 2026-10-27,
+      11 żądań dla bufora 1 km działki 141801_4.0701.23/8): odpowiedź ma ok. 15,7 MB,
+      a 5 z 11 żądań kończy się wewnętrznym NullPointerException serwera pod kodem
+      HTTP 400 (fixture source_contracts/isok_proximity/upstream-npe-400.xml);
+      adapter ponawia taki 400 (trzy próby), inne kody 400 nie. Adapter: app/services/isok.py.
 
   - source_id: nmt
     name: "Numeryczny Model Terenu (NMT) — usługa wysokościowa GUGiK"
